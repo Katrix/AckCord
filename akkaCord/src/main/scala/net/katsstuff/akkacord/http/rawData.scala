@@ -28,10 +28,9 @@ import java.time.OffsetDateTime
 import net.katsstuff.akkacord.data._
 
 sealed trait RawChannel {
-  def id: Snowflake
+  def id:        Snowflake
   def isPrivate: Boolean
 }
-
 
 case class RawGuildChannel(id:                   Snowflake,
                            guildId:              Option[Snowflake], //guildId can be missing
@@ -41,14 +40,15 @@ case class RawGuildChannel(id:                   Snowflake,
                            isPrivate:            Boolean,
                            permissionOverwrites: Seq[PermissionValue],
                            topic:                Option[String],
-                           lastMessageId:        Option[String],
+                           lastMessageId:        Option[Snowflake],
                            bitrate:              Option[Int],
-                           userLimit:            Option[Int]) extends RawChannel
+                           userLimit:            Option[Int])
+    extends RawChannel
 
 case class RawGuildMember(user: User, nick: Option[String], roles: Seq[Snowflake], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
 
 //Can't lastMessageId be null here?
-case class RawDMChannel(id: Snowflake, isPrivate: Boolean, recipient: User, lastMessageId: Snowflake) extends RawChannel
+case class RawDMChannel(id: Snowflake, isPrivate: Boolean, recipient: User, lastMessageId: Option[Snowflake]) extends RawChannel
 
 case class RawMessage(id:              Snowflake,
                       channelId:       Snowflake,

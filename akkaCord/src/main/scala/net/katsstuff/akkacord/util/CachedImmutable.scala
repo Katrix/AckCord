@@ -35,10 +35,13 @@ class CachedImmutable[Mutable, Immutable](private val mutable: Mutable)(implicit
 
     immutableCache
   }
+
   def modify(f: Mutable => Unit): Unit = {
     f(mutable)
     requiresUpdate = true
   }
+
+  def getUnsafe: Mutable = mutable
 
   override def toString = s"CachedImmutable(mutable=$mutable, value=$value)"
 

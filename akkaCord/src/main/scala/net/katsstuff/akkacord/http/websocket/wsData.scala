@@ -187,7 +187,7 @@ object WsEvent {
   case class GuildMemberRemoveData(guildId: Snowflake, user: User)
   object GuildMemberRemove extends WsEvent("GUILD_MEMBER_REMOVE") { override type Data = GuildMemberRemoveData }
 
-  case class GuildMemberUpdateData(guildId: Snowflake, roles: Seq[Snowflake], user: User, nick: String)
+  case class GuildMemberUpdateData(guildId: Snowflake, roles: Seq[Snowflake], user: User, nick: Option[String]) //Nick can probably be null here
   object GuildMemberUpdate extends WsEvent("GUILD_MEMBER_UPDATE") { override type Data = GuildMemberUpdateData }
 
   case class GuildMemberChunkData(guildId: Snowflake, members: Seq[RawGuildMember])
@@ -197,7 +197,7 @@ object WsEvent {
   object GuildRoleCreate extends WsEvent("GUILD_ROLE_CREATE") { override type Data = GuildRoleModifyData }
   object GuildRoleUpdate extends WsEvent("GUILD_ROLE_UPDATE") { override type Data = GuildRoleModifyData }
 
-  case class GuildRoleDeleteData(guildId: Snowflake, role: Role)
+  case class GuildRoleDeleteData(guildId: Snowflake, roleId: Snowflake)
   object GuildRoleDelete extends WsEvent("GUILD_ROLE_DELETE") { override type Data = GuildRoleDeleteData }
 
   object MessageCreate extends WsEvent("MESSAGE_CREATE") { override type Data = RawMessage }

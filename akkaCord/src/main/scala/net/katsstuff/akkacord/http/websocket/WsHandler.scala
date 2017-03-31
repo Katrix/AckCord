@@ -37,7 +37,8 @@ import akka.stream.actor.ActorSubscriberMessage.{OnComplete, OnError, OnNext}
 import akka.stream.actor.{ActorSubscriber, OneByOneRequestStrategy}
 import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import net.katsstuff.akkacord.RawWsEvent
+import net.katsstuff.akkacord.data.Snowflake
+import net.katsstuff.akkacord.{RawWsEvent, ShutdownClient}
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
 import net.katsstuff.akkacord.http.{RawMessage, Routes}
 import spray.json._
@@ -95,9 +96,9 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
         stay using WithResumeData(data.resume)
       } else {
         data.sourceOpt.foreach(_.watchCompletion().foreach { _ =>
-          system.terminate()
+          mat.shutdown()
         })
-        stay
+        stop()
       }
     case Event(ReceivedGateway(uri), WithResumeData(resume)) =>
       reconnectAttempts = 0
@@ -122,7 +123,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
   }
 
   when(Active) {
-    case Event(Shutdown, _) =>
+    case Event(ShutdownClient, _) =>
       shouldShutDown = true
 
       goto(Inactive)
@@ -142,7 +143,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
     case Event(Hello(data), WithSource(source, resume)) =>
       val payload = resume match {
         case Some(resumeData) => (Resume(resumeData): WsMessage[ResumeData]).toJson.compactPrint
-        case None =>
+        case None             =>
           //TODO: Allow customizing
           (Identify(IdentifyObject(token, IdentifyObject.createProperties, compress = false, 100, Seq(0, 1))): WsMessage[IdentifyObject]).toJson.compactPrint
       }
@@ -151,9 +152,9 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
       val cancellable = system.scheduler.schedule(0 seconds, data.heartbeatInterval millis, self, SendHeartbeat)
       stay using WithHeartbeat(data.heartbeatInterval, cancellable, receivedAck = true, source, resume)
     case Event(Dispatch(seq, event, d), data: WithHeartbeat) =>
-      val untyped = event.asInstanceOf[WsEvent]
+      val untyped       = event.asInstanceOf[WsEvent]
       val updatedResume = data.resume.map(_.copy(seq = seq))
-      val updatedData = data.copy(resume = updatedResume)
+      val updatedData   = data.copy(resume = updatedResume)
 
       val stayRes = untyped match {
         case WsEvent.Ready =>
@@ -163,11 +164,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
           val resumeData = ResumeData(token, readyData.sessionId, seq)
 
           stay using data.copy(resume = Some(resumeData))
-        case otherEvents =>
-          if (otherEvents == WsEvent.MessageCreate && d.asInstanceOf[RawMessage].content == "!kill") {
-            self ! Shutdown
-          }
-
+        case _ =>
           stay using updatedData
       }
 
@@ -196,6 +193,12 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
     case Event(InvalidSession, _) =>
       log.error("Invalid session. Trying to establish new session")
       goto(Inactive) using WithResumeData(None)
+    case Event(request :RequestGuildMembers, WithHeartbeat(_, _, _, source, _)) =>
+      val payload = (request: WsMessage[RequestGuildMembersData]).toJson.compactPrint
+      source.offer(TextMessage(payload))
+      log.debug("Requested guild data for {}", request.d.guildId)
+
+      stay
   }
 
   initialize()
@@ -207,7 +210,6 @@ object WsHandler {
   case class ReceivedGateway(uri: Uri)
   case object SendHeartbeat
   case object ValidWsUpgrade
-  case object Shutdown
 
   sealed trait State
   case object Inactive extends State

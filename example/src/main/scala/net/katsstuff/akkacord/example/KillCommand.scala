@@ -23,29 +23,18 @@
  */
 package net.katsstuff.akkacord.example
 
-import akka.actor.ActorSystem
-import akka.event.EventStream
-import net.katsstuff.akkacord.{APIMessage, DiscordClientSettings}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import net.katsstuff.akkacord.{APIMessage, ShutdownClient}
 
-object Example {
-
-  implicit val system: ActorSystem = ActorSystem("AkkaCord")
-
-  def main(args: Array[String]): Unit = {
-    if(args.isEmpty) {
-      println("Please specify a token")
-      sys.exit()
-    }
-
-    val eventStream = new EventStream(system)
-    val token = args.head
-
-    val client = DiscordClientSettings(
-      token = token,
-      system = system,
-      eventStream = eventStream
-    ).connect
-
-    eventStream.subscribe(system.actorOf(KillCommand.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
+class KillCommand(client: ActorRef) extends Actor with ActorLogging {
+  override def receive: Receive = {
+    case APIMessage.MessageCreate(message, cache) =>
+      if(message.content == "!kill") {
+        log.info("Received shutdown command")
+        client ! ShutdownClient
+      }
   }
+}
+object KillCommand {
+  def props(client: ActorRef): Props = Props(classOf[KillCommand], client)
 }
