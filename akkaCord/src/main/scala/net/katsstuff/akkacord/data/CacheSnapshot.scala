@@ -25,13 +25,15 @@ package net.katsstuff.akkacord.data
 
 import java.time.Instant
 
+//All nested maps should use default maps
 case class CacheSnapshot(botUser:           User,
                          dmChannels:        Map[Snowflake, DMChannel],
                          unavailableGuilds: Map[Snowflake, UnavailableGuild],
                          guilds:            Map[Snowflake, AvailableGuild],
                          messages:          Map[Snowflake, Map[Snowflake, Message]],
                          lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
-                         users:             Map[Snowflake, User]) {
+                         users:             Map[Snowflake, User],
+                         presences:         Map[Snowflake, Map[Snowflake, Presence]]) {
 
   def getDmChannel(id: Snowflake): Option[DMChannel] = dmChannels.get(id)
 
@@ -64,5 +66,7 @@ case class CacheSnapshot(botUser:           User,
   def getLastTyped(channelId:        Snowflake, userId: Snowflake): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
 
   def getUser(id: Snowflake): Option[User] = users.get(id)
+
+  def getPresence(guildId: Snowflake, userId: Snowflake): Option[Presence] = presences(guildId).get(userId)
 
 }

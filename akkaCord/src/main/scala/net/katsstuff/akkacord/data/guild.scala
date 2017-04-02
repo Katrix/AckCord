@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord.data
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 sealed trait Guild {
   def id:          Snowflake
@@ -50,8 +50,8 @@ case class AvailableGuild(id:                          Snowflake,
                           memberCount: Int,
                           voiceStates: Seq[VoiceState],
                           members:     Map[Snowflake, GuildMember],
-                          channels:    Map[Snowflake, GuildChannel]
-                          //presences:                   Seq[GuildPresence]) //TODO
+                          channels:    Map[Snowflake, GuildChannel],
+                          presences:   Seq[Presence]
 ) extends Guild {
   override def unavailable: Boolean = false
 }
@@ -63,3 +63,16 @@ case class UnavailableGuild(id: Snowflake) extends Guild {
 case class GuildMember(userId: Snowflake, nick: Option[String], roles: Seq[Snowflake], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
     extends GetUser
 case class GuildEmoji(id: Snowflake, name: String, roles: Seq[Snowflake], requireColons: Boolean, managed: Boolean)
+
+sealed trait PresenceContent {
+  def name: String
+}
+case class PresenceGame(name: String) extends PresenceContent
+case class PresenceStreaming(name: String, uri: String) extends PresenceContent
+sealed trait PresenceStatus
+object PresenceStatus {
+  case object Idle extends PresenceStatus
+  case object Online extends PresenceStatus
+  case object Offline extends PresenceStatus
+}
+case class Presence(userId: Snowflake, game: Option[PresenceContent], status: PresenceStatus) extends GetUser

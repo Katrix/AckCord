@@ -23,164 +23,238 @@
  */
 package net.katsstuff.akkacord.http.websocket
 
-import java.time.{LocalDateTime, OffsetDateTime}
+import java.time.OffsetDateTime
 
 import akka.NotUsed
-import net.katsstuff.akkacord.http._
-import spray.json._
+import io.circe._
+import io.circe.syntax._
+import io.circe.shapes._
+import io.circe.generic.extras.semiauto._
 import net.katsstuff.akkacord.data.{Attachment, Embed, Reaction, Snowflake, User, VoiceState, WebhookAuthor}
-import net.katsstuff.akkacord.http.websocket.WsEvent.RawOptionalMessage
+import net.katsstuff.akkacord.http._
 
 object WsProtocol extends DiscordProtocol {
 
-  implicit object EventFormat extends JsonFormat[WsEvent] {
-    override def read(json: JsValue): WsEvent   = WsEvent.forName(json.convertTo[String]).getOrElse(throw DeserializationException("Invalid event"))
-    override def write(obj: WsEvent):   JsValue = JsString(obj.name)
+  implicit val opCodeEncoder: Encoder[OpCode] = (a: OpCode) => Json.fromInt(a.code)
+  implicit val opCodeDecoder: Decoder[OpCode] = (c: HCursor) =>
+    c.as[Int]
+      .flatMap(OpCode.forCode(_).toRight(DecodingFailure("Not an opCode", c.history)))
+
+  implicit def wsEventEncoder[A]: Encoder[WsEvent[A]] = (a: WsEvent[A]) => Json.fromString(a.name)
+  implicit def wsEventDecoder: Decoder[WsEvent[_]] =
+    (c: HCursor) =>
+      c.as[String]
+        .flatMap(WsEvent.forName(_).toRight(DecodingFailure("Not an event", c.history)))
+
+  implicit val readyDataEncoder: Encoder[WsEvent.ReadyData] = deriveEncoder
+  implicit val readyDataDecoder: Decoder[WsEvent.ReadyData] = deriveDecoder
+
+  implicit val resumedDataEncoder: Encoder[WsEvent.ResumedData] = deriveEncoder
+  implicit val resumedDataDecoder: Decoder[WsEvent.ResumedData] = deriveDecoder
+
+  implicit val guildDeleteDataEncoder: Encoder[WsEvent.GuildDeleteData] = deriveEncoder
+  implicit val guildDeleteDataDecoder: Decoder[WsEvent.GuildDeleteData] = deriveDecoder
+
+  implicit val guildEmojisUpdateDataEncoder: Encoder[WsEvent.GuildEmojisUpdateData] = {
+    import io.circe.generic.extras.auto._
+    deriveEncoder
+  }
+  implicit val guildEmojisUpdateDataDecoder: Decoder[WsEvent.GuildEmojisUpdateData] = {
+    import io.circe.generic.extras.auto._
+    deriveDecoder
   }
 
-  implicit object OpCodeFormat extends JsonFormat[OpCode] {
-    override def read(json: JsValue): OpCode  = OpCode.forCode(json.convertTo[Int]).getOrElse(throw DeserializationException("Invalid opCode"))
-    override def write(obj: OpCode):  JsValue = JsNumber(obj.code)
+  implicit val guildIntegrationsUpdateDataEncoder: Encoder[WsEvent.GuildIntegrationsUpdateData] = deriveEncoder
+  implicit val guildIntegrationsUpdateDataDecoder: Decoder[WsEvent.GuildIntegrationsUpdateData] = deriveDecoder
+
+  implicit val guildMemberRemoveDataEncoder: Encoder[WsEvent.GuildMemberRemoveData] = deriveEncoder
+  implicit val guildMemberRemoveDataDecoder: Decoder[WsEvent.GuildMemberRemoveData] = deriveDecoder
+
+  implicit val guildMemberUpdateDataEncoder: Encoder[WsEvent.GuildMemberUpdateData] = deriveEncoder
+  implicit val guildMemberUpdateDataDecoder: Decoder[WsEvent.GuildMemberUpdateData] = deriveDecoder
+
+  implicit val guildMemberChunkDataEncoder: Encoder[WsEvent.GuildMemberChunkData] = deriveEncoder
+  implicit val guildMemberChunkDataDecoder: Decoder[WsEvent.GuildMemberChunkData] = deriveDecoder
+
+  implicit val guildRoleModifyDataEncoder: Encoder[WsEvent.GuildRoleModifyData] = deriveEncoder
+  implicit val guildRoleModifyDataDecoder: Decoder[WsEvent.GuildRoleModifyData] = deriveDecoder
+
+  implicit val guildRoleDeleteDataEncoder: Encoder[WsEvent.GuildRoleDeleteData] = deriveEncoder
+  implicit val guildRoleDeleteDataDecoder: Decoder[WsEvent.GuildRoleDeleteData] = deriveDecoder
+
+  implicit val messageDeleteDataEncoder: Encoder[WsEvent.MessageDeleteData] = deriveEncoder
+  implicit val messageDeleteDataDecoder: Decoder[WsEvent.MessageDeleteData] = deriveDecoder
+
+  implicit val messageDeleteBulkDataEncoder: Encoder[WsEvent.MessageDeleteBulkData] = deriveEncoder
+  implicit val messageDeleteBulkDataDecoder: Decoder[WsEvent.MessageDeleteBulkData] = deriveDecoder
+
+  implicit val presenceUpdateDataEncoder: Encoder[WsEvent.PresenceUpdateData] = {
+    import io.circe.generic.extras.auto._
+    deriveEncoder
+  }
+  implicit val presenceUpdateDataDecoder: Decoder[WsEvent.PresenceUpdateData] = {
+    import io.circe.generic.extras.auto._
+    deriveDecoder
   }
 
-  implicit val ReadyDataFormat:                   RootJsonFormat[WsEvent.ReadyData]                   = jsonFormat6(WsEvent.ReadyData)
-  implicit val ResumedDataFormat:                 RootJsonFormat[WsEvent.ResumedData]                 = jsonFormat1(WsEvent.ResumedData)
-  implicit val GuildDeleteDataFormat:             RootJsonFormat[WsEvent.GuildDeleteData]             = jsonFormat2(WsEvent.GuildDeleteData)
-  implicit val GuildUserFormat:                   RootJsonFormat[WsEvent.GuildUser]                   = jsonFormat9(WsEvent.GuildUser)
-  implicit val GuildEmojiUpdateDataFormat:        RootJsonFormat[WsEvent.GuildEmojisUpdateData]       = jsonFormat2(WsEvent.GuildEmojisUpdateData)
-  implicit val GuildIntegrationsUpdateDataFormat: RootJsonFormat[WsEvent.GuildIntegrationsUpdateData] = jsonFormat1(WsEvent.GuildIntegrationsUpdateData)
-  implicit val RawGuildMemberWithGuildFormat:     RootJsonFormat[WsEvent.RawGuildMemberWithGuild]     = jsonFormat7(WsEvent.RawGuildMemberWithGuild)
-  implicit val GuildMemberRemoveDataFormat:       RootJsonFormat[WsEvent.GuildMemberRemoveData]       = jsonFormat2(WsEvent.GuildMemberRemoveData)
-  implicit val GuildMemberUpdateDataFormat:       RootJsonFormat[WsEvent.GuildMemberUpdateData]       = jsonFormat4(WsEvent.GuildMemberUpdateData)
-  implicit val GuildMemberChunkDataFormat:        RootJsonFormat[WsEvent.GuildMemberChunkData]        = jsonFormat2(WsEvent.GuildMemberChunkData)
-  implicit val GuildRoleModifyDataFormat:         RootJsonFormat[WsEvent.GuildRoleModifyData]         = jsonFormat2(WsEvent.GuildRoleModifyData)
-  implicit val GuildRoleDeleteDataFormat:         RootJsonFormat[WsEvent.GuildRoleDeleteData]         = jsonFormat2(WsEvent.GuildRoleDeleteData)
-  implicit val MessageDeleteDataFormat:           RootJsonFormat[WsEvent.MessageDeleteData]           = jsonFormat2(WsEvent.MessageDeleteData)
-  implicit val MessageDeleteBulkDataFormat:       RootJsonFormat[WsEvent.MessageDeleteBulkData]       = jsonFormat2(WsEvent.MessageDeleteBulkData)
-  implicit val TypingStartDataFormat:             RootJsonFormat[WsEvent.TypingStartData]             = jsonFormat3(WsEvent.TypingStartData)
+  implicit val typingStartDataEncoder: Encoder[WsEvent.TypingStartData] = deriveEncoder
+  implicit val typingStartDataDecoder: Decoder[WsEvent.TypingStartData] = deriveDecoder
 
-  implicit object RawOptionalMessageFormat extends RootJsonFormat[WsEvent.RawOptionalMessage] {
-    override def read(json: JsValue): RawOptionalMessage = {
-      val fields = json.asJsObject.fields
-      val isWebhook = fields.contains("webhook_id")
+  implicit val voiceServerUpdateDataEncoder: Encoder[VoiceServerUpdateData] = deriveEncoder
+  implicit val voiceServerUpdateDataDecoder: Decoder[VoiceServerUpdateData] = deriveDecoder
 
-      RawOptionalMessage(
-        id = fields("id").convertTo[Snowflake],
-        channelId = fields("channel_id").convertTo[Snowflake],
-        author = if (isWebhook) fields.get("author").flatMap(_.convertTo[Option[WebhookAuthor]]) else fields.get("author").flatMap(_.convertTo[Option[User]]),
-        content =         fields.get("content").flatMap(_.convertTo[Option[String]]),
-        timestamp =       fields.get("timestamp").flatMap(_.convertTo[Option[OffsetDateTime]]),
-        editedTimestamp = fields.get("edited_timestamp").flatMap(_.convertTo[Option[OffsetDateTime]]),
-        tts =             fields.get("tts").flatMap(_.convertTo[Option[Boolean]]),
-        mentionEveryone = fields.get("mention_everyone").flatMap(_.convertTo[Option[Boolean]]),
-        mentions =        fields.get("mentions").flatMap(_.convertTo[Option[Seq[User]]]),
-        mentionRoles =    fields.get("mention_roles").flatMap(_.convertTo[Option[Seq[Snowflake]]]),
-        attachment =      fields.get("attachments").flatMap(_.convertTo[Option[Seq[Attachment]]]),
-        embeds =          fields.get("embeds").flatMap(_.convertTo[Option[Seq[Embed]]]),
-        reactions =       fields.get("reactions").flatMap(_.convertTo[Option[Seq[Reaction]]]),
-        nonce =           fields.get("nonce").flatMap(_.convertTo[Option[Snowflake]]),
-        pinned =          fields.get("pinned").flatMap(_.convertTo[Option[Boolean]]),
-        webhookId =       fields.get("webhook_id").flatMap(_.convertTo[Option[String]])
-      )
+  implicit val identifyObjectEncoder: Encoder[IdentifyObject] = deriveEncoder
+  implicit val identifyObjectDecoder: Decoder[IdentifyObject] = deriveDecoder
+
+  implicit val statusDataEncoder: Encoder[StatusData] = {
+    import io.circe.generic.extras.auto._
+    deriveEncoder
+  }
+  implicit val statusDataDecoder: Decoder[StatusData] = {
+    import io.circe.generic.extras.auto._
+    deriveDecoder
+  }
+
+  implicit val voiceStatusDataEncoder: Encoder[VoiceStatusData] = deriveEncoder
+  implicit val voiceStatusDataDecoder: Decoder[VoiceStatusData] = deriveDecoder
+
+  implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
+  implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
+
+  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = deriveEncoder
+  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = deriveDecoder
+
+  implicit val helloDataEncoder: Encoder[HelloData] = deriveEncoder
+  implicit val helloDataDecoder: Decoder[HelloData] = deriveDecoder
+
+  implicit def wsMessageEncoder[Data: Encoder]: Encoder[WsMessage[Data]] =
+    (a: WsMessage[Data]) =>
+      Json
+        .obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
+
+  implicit val rawPartialMessageEncoder: Encoder[WsEvent.RawPartialMessage] = (a: WsEvent.RawPartialMessage) => {
+    val base = Seq(
+      "id"               -> a.id.asJson,
+      "channel_id"       -> a.channelId.asJson,
+      "content"          -> a.content.asJson,
+      "timestamp"        -> a.timestamp.asJson,
+      "edited_timestamp" -> a.editedTimestamp.asJson,
+      "tts"              -> a.tts.asJson,
+      "mention_everyone" -> a.mentionEveryone.asJson,
+      "mentions"         -> a.mentions.asJson,
+      "mention_roles"    -> a.mentionRoles.asJson,
+      "attachments"      -> a.attachment.asJson,
+      "embeds"           -> a.embeds.asJson,
+      "reactions"        -> a.reactions.asJson,
+      "nonce"            -> a.nonce.asJson,
+      "pinned"           -> a.pinned.asJson,
+      "webhook_id"       -> a.webhookId.asJson
+    )
+
+    a.author match {
+      case Some(user:    User)          => Json.obj(base :+ "author" -> user.asJson:    _*)
+      case Some(webhook: WebhookAuthor) => Json.obj(base :+ "author" -> webhook.asJson: _*)
+      case None => Json.obj(base: _*)
     }
-    override def write(obj: RawOptionalMessage): JsValue = {
-      val base = Seq(
-        "id"               -> obj.id.toJson,
-        "channel_id"       -> obj.channelId.toJson,
-        "content"          -> obj.content.toJson,
-        "timestamp"        -> obj.timestamp.toJson,
-        "edited_timestamp" -> obj.editedTimestamp.toJson,
-        "tts"              -> obj.tts.toJson,
-        "mention_everyone" -> obj.mentionEveryone.toJson,
-        "mentions"         -> obj.mentions.toJson,
-        "mention_roles"    -> obj.mentionRoles.toJson,
-        "attachments"      -> obj.attachment.toJson,
-        "embeds"           -> obj.embeds.toJson,
-        "reactions"        -> obj.reactions.toJson,
-        "nonce"            -> obj.nonce.toJson,
-        "pinned"           -> obj.pinned.toJson,
-        "webhook_id"       -> obj.webhookId.toJson
-      )
-
-      obj.author match {
-        case Some(user:    User)          => JsObject(base :+ "author" -> user.toJson:    _*)
-        case Some(webhook: WebhookAuthor) => JsObject(base :+ "author" -> webhook.toJson: _*)
-        case None => JsObject(base: _*)
-      }
-    }
   }
 
-  implicit val IdentifyObjectFormat:          RootJsonFormat[IdentifyObject]          = jsonFormat5(IdentifyObject.apply)
-  implicit val GameFormat:                    RootJsonFormat[Game]                    = jsonFormat1(Game)
-  implicit val StatusDataFormat:              RootJsonFormat[StatusData]              = jsonFormat2(StatusData)
-  implicit val VoiceStatusDataFormat:         RootJsonFormat[VoiceStatusData]         = jsonFormat4(VoiceStatusData)
-  implicit val VoiceServerUpdateDataFormat:   RootJsonFormat[VoiceServerUpdateData]   = jsonFormat3(VoiceServerUpdateData)
-  implicit val ResumeDataFormat:              RootJsonFormat[ResumeData]              = jsonFormat3(ResumeData)
-  implicit val RequestGuildMembersDataFormat: RootJsonFormat[RequestGuildMembersData] = jsonFormat3(RequestGuildMembersData)
-  implicit val HelloDataFormat:               RootJsonFormat[HelloData]               = jsonFormat2(HelloData)
+  implicit val rawPartialMessageDecoder: Decoder[WsEvent.RawPartialMessage] = (c: HCursor) => {
+    val isWebhook = c.fields.exists(_.contains("webhook_id"))
 
-  implicit object wsMessageReader extends RootJsonReader[WsMessage[_]] {
-    override def read(json: JsValue): WsMessage[_] = {
-      val obj = json.asJsObject
-      val d   = obj.fields("d")
-      obj.fields("op").convertTo[OpCode] match {
+    for {
+      id              <- c.downField("id").as[Snowflake]
+      channelId       <- c.downField("channel_id").as[Snowflake]
+      author          <- if (isWebhook) c.downField("author").as[Option[WebhookAuthor]] else c.downField("author").as[Option[User]]
+      content         <- c.downField("content").as[Option[String]]
+      timestamp       <- c.downField("timestamp").as[Option[OffsetDateTime]]
+      editedTimestamp <- c.downField("edited_timestamp").as[Option[OffsetDateTime]]
+      tts             <- c.downField("tts").as[Option[Boolean]]
+      mentionEveryone <- c.downField("mention_everyone").as[Option[Boolean]]
+      mentions        <- c.downField("mentions").as[Option[Seq[User]]]
+      mentionRoles    <- c.downField("mention_roles").as[Option[Seq[Snowflake]]]
+      attachment      <- c.downField("attachments").as[Option[Seq[Attachment]]]
+      embeds          <- c.downField("embeds").as[Option[Seq[Embed]]]
+      reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
+      nonce           <- c.downField("nonce").as[Option[Snowflake]]
+      pinned          <- c.downField("pinned").as[Option[Boolean]]
+      webhookId       <- c.downField("webhook_id").as[Option[String]]
+    } yield
+      WsEvent.RawPartialMessage(
+        id,
+        channelId,
+        author,
+        content,
+        timestamp,
+        editedTimestamp,
+        tts,
+        mentionEveryone,
+        mentions,
+        mentionRoles,
+        attachment,
+        embeds,
+        reactions,
+        nonce,
+        pinned,
+        webhookId
+      )
+  }
+
+  implicit val wsMessageDecoder = new Decoder[WsMessage[_]] {
+    override def apply(c: HCursor): Decoder.Result[WsMessage[_]] = {
+      val opC = c.downField("op")
+      val dC  = c.downField("d")
+
+      val op = opC.as[OpCode]
+
+      op.flatMap {
         case OpCode.Dispatch =>
-          val seq      = obj.fields("s").convertTo[Int]
-          val event    = obj.fields("t").convertTo[WsEvent]
-          val auxEvent = event.asInstanceOf[WsEvent.Aux[AnyRef]]
-          val data = event match {
-            case WsEvent.Ready                   => d.convertTo[WsEvent.ReadyData]
-            case WsEvent.Resumed                 => d.convertTo[WsEvent.ResumedData]
-            case WsEvent.ChannelCreate           => d.convertTo[RawChannel]
-            case WsEvent.ChannelUpdate           => d.convertTo[RawGuildChannel]
-            case WsEvent.ChannelDelete           => d.convertTo[RawChannel]
-            case WsEvent.GuildCreate             => d.convertTo[RawGuild]
-            case WsEvent.GuildUpdate             => d.convertTo[RawGuild]
-            case WsEvent.GuildDelete             => d.convertTo[WsEvent.GuildDeleteData]
-            case WsEvent.GuildBanAdd             => d.convertTo[WsEvent.GuildUser]
-            case WsEvent.GuildBanRemove          => d.convertTo[WsEvent.GuildUser]
-            case WsEvent.GuildEmojisUpdate       => d.convertTo[WsEvent.GuildEmojisUpdateData]
-            case WsEvent.GuildIntegrationsUpdate => d.convertTo[WsEvent.GuildIntegrationsUpdateData]
-            case WsEvent.GuildMemberAdd          => d.convertTo[WsEvent.RawGuildMemberWithGuild]
-            case WsEvent.GuildMemberRemove       => d.convertTo[WsEvent.GuildMemberRemoveData]
-            case WsEvent.GuildMemberUpdate       => d.convertTo[WsEvent.GuildMemberUpdateData]
-            case WsEvent.GuildMemberChunk        => d.convertTo[WsEvent.GuildMemberChunkData]
-            case WsEvent.GuildRoleCreate         => d.convertTo[WsEvent.GuildRoleModifyData]
-            case WsEvent.GuildRoleUpdate         => d.convertTo[WsEvent.GuildRoleModifyData]
-            case WsEvent.GuildRoleDelete         => d.convertTo[WsEvent.GuildRoleDeleteData]
-            case WsEvent.MessageCreate           => d.convertTo[RawMessage]
-            case WsEvent.MessageUpdate           => d.convertTo[WsEvent.RawOptionalMessage]
-            case WsEvent.MessageDelete           => d.convertTo[WsEvent.MessageDeleteData]
-            case WsEvent.MessageDeleteBulk       => d.convertTo[WsEvent.MessageDeleteBulkData]
-            //case Event.PresenceUpdate =>
-            case WsEvent.TypingStart => d.convertTo[WsEvent.TypingStartData]
-            //case Event.UserSettingsUpdate =>
-            case WsEvent.UserUpdate        => d.convertTo[User]
-            case WsEvent.VoiceStateUpdate  => d.convertTo[VoiceState]
-            case WsEvent.VoiceServerUpdate => d.convertTo[VoiceServerUpdateData]
-            case _ => throw DeserializationException("Illegal event")
-          }
-
-          Dispatch(seq, auxEvent, data)
-        case OpCode.Heartbeat           => Heartbeat(d.convertTo[Option[Int]])
-        case OpCode.Identify            => Identify(d.convertTo[IdentifyObject])
-        case OpCode.StatusUpdate        => StatusUpdate(d.convertTo[StatusData])
-        case OpCode.VoiceStateUpdate    => VoiceStateUpdate(d.convertTo[VoiceStatusData])
-        case OpCode.VoiceServerPing     => VoiceServerUpdate(d.convertTo[VoiceServerUpdateData])
-        case OpCode.Resume              => Resume(d.convertTo[ResumeData])
-        case OpCode.Reconnect           => Reconnect(NotUsed)
-        case OpCode.RequestGuildMembers => RequestGuildMembers(d.convertTo[RequestGuildMembersData])
-        case OpCode.InvalidSession      => InvalidSession(NotUsed)
-        case OpCode.Hello               => Hello(d.convertTo[HelloData])
-        case OpCode.HeartbeatACK        => HeartbeatACK(NotUsed)
-        case _ => throw DeserializationException("Illegal OpCode")
+          for {
+            seq   <- c.downField("s").as[Int]
+            event <- c.downField("t").as[WsEvent[_]]
+            data <- event match {
+              case WsEvent.Ready                   => dC.as[WsEvent.ReadyData]
+              case WsEvent.Resumed                 => dC.as[WsEvent.ResumedData]
+              case WsEvent.ChannelCreate           => dC.as[RawChannel]
+              case WsEvent.ChannelUpdate           => dC.as[RawGuildChannel]
+              case WsEvent.ChannelDelete           => dC.as[RawChannel]
+              case WsEvent.GuildCreate             => dC.as[RawGuild]
+              case WsEvent.GuildUpdate             => dC.as[RawGuild]
+              case WsEvent.GuildDelete             => dC.as[WsEvent.GuildDeleteData]
+              case WsEvent.GuildBanAdd             => dC.as[WsEvent.GuildUser]
+              case WsEvent.GuildBanRemove          => dC.as[WsEvent.GuildUser]
+              case WsEvent.GuildEmojisUpdate       => dC.as[WsEvent.GuildEmojisUpdateData]
+              case WsEvent.GuildIntegrationsUpdate => dC.as[WsEvent.GuildIntegrationsUpdateData]
+              case WsEvent.GuildMemberAdd          => dC.as[WsEvent.RawGuildMemberWithGuild]
+              case WsEvent.GuildMemberRemove       => dC.as[WsEvent.GuildMemberRemoveData]
+              case WsEvent.GuildMemberUpdate       => dC.as[WsEvent.GuildMemberUpdateData]
+              case WsEvent.GuildMemberChunk        => dC.as[WsEvent.GuildMemberChunkData]
+              case WsEvent.GuildRoleCreate         => dC.as[WsEvent.GuildRoleModifyData]
+              case WsEvent.GuildRoleUpdate         => dC.as[WsEvent.GuildRoleModifyData]
+              case WsEvent.GuildRoleDelete         => dC.as[WsEvent.GuildRoleDeleteData]
+              case WsEvent.MessageCreate           => dC.as[RawMessage]
+              case WsEvent.MessageUpdate           => dC.as[WsEvent.RawPartialMessage]
+              case WsEvent.MessageDelete           => dC.as[WsEvent.MessageDeleteData]
+              case WsEvent.MessageDeleteBulk       => dC.as[WsEvent.MessageDeleteBulkData]
+              case WsEvent.PresenceUpdate          => dC.as[WsEvent.PresenceUpdateData]
+              case WsEvent.TypingStart             => dC.as[WsEvent.TypingStartData]
+              //case Event.UserSettingsUpdate =>
+              case WsEvent.UserUpdate        => dC.as[User]
+              case WsEvent.VoiceStateUpdate  => dC.as[VoiceState]
+              case WsEvent.VoiceServerUpdate => dC.as[VoiceServerUpdateData]
+            }
+          } yield Dispatch(seq, event, data)
+        case OpCode.Heartbeat           => dC.as[Option[Int]].map(Heartbeat.apply)
+        case OpCode.Identify            => dC.as[IdentifyObject].map(Identify.apply)
+        case OpCode.StatusUpdate        => dC.as[StatusData].map(StatusUpdate.apply)
+        case OpCode.VoiceStateUpdate    => dC.as[VoiceStatusData].map(VoiceStateUpdate.apply)
+        case OpCode.VoiceServerPing     => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)
+        case OpCode.Resume              => dC.as[ResumeData].map(Resume.apply)
+        case OpCode.Reconnect           => Right(Reconnect(NotUsed))
+        case OpCode.RequestGuildMembers => dC.as[RequestGuildMembersData].map(RequestGuildMembers.apply)
+        case OpCode.InvalidSession      => Right(InvalidSession(NotUsed))
+        case OpCode.Hello               => dC.as[HelloData].map(Hello.apply)
+        case OpCode.HeartbeatACK        => Right(HeartbeatACK(NotUsed))
       }
-
     }
-
-  }
-
-  implicit def wsMessageWriter[Data: JsonFormat]: RootJsonWriter[WsMessage[Data]] = new RootJsonWriter[WsMessage[Data]] {
-    override def write(obj: WsMessage[Data]) = JsObject("d" -> obj.d.toJson, "op" -> obj.op.toJson, "s" -> obj.s.toJson, "t" -> obj.t.toJson)
   }
 }

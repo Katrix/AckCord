@@ -28,7 +28,6 @@ import scala.language.postfixOps
 
 import akka.actor.{ActorRef, Cancellable, FSM, Props}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, TextMessage, ValidUpgrade}
@@ -37,15 +36,16 @@ import akka.stream.actor.ActorSubscriberMessage.{OnComplete, OnError, OnNext}
 import akka.stream.actor.{ActorSubscriber, OneByOneRequestStrategy}
 import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import net.katsstuff.akkacord.data.Snowflake
-import net.katsstuff.akkacord.{RawWsEvent, ShutdownClient}
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import io.circe.{parser, _}
+import io.circe.syntax._
+import net.katsstuff.akkacord.http.Routes
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
-import net.katsstuff.akkacord.http.{RawMessage, Routes}
-import spray.json._
+import net.katsstuff.akkacord.{RawWsEvent, ShutdownClient}
 
-class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsHandler.Data] with ActorSubscriber {
+class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsHandler.Data] with ActorSubscriber with FailFastCirceSupport {
   import WsHandler._
-  import net.katsstuff.akkacord.http.websocket.WsProtocol._
+  import WsProtocol._
 
   private implicit val system = context.system
   private implicit val mat    = ActorMaterializer()
@@ -82,15 +82,15 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
           .singleRequest(HttpRequest(uri = Routes.Gateway))
           .flatMap {
             case HttpResponse(StatusCodes.OK, headers, entity, _) =>
-              log.debug(s"Got WS gateway.\nHeaders:\n${headers.mkString("\n")}\n Entity: $entity")
-              Unmarshal(entity).to[JsObject]
+              log.debug(s"Got WS gateway.\nHeaders:\n${headers.mkString("\n")}\n Entity:$entity")
+              Unmarshal(entity).to[Json]
             case HttpResponse(code, headers, entity, protocol) =>
               throw new IllegalStateException(
                 s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}\nEntity: $entity\nProtocol: ${protocol.value}"
               )
           }
           .foreach { js =>
-            self ! ReceivedGateway(js.fields("url").convertTo[String])
+            js.hcursor.downField("url").as[String].foreach(gateway => self ! ReceivedGateway(gateway))
           }
 
         stay using WithResumeData(data.resume)
@@ -135,28 +135,29 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
     case Event(OnNext(msg: TextMessage), _) =>
       msg.textStream.runWith(Sink.fold("")(_ + _)).foreach { payload =>
         log.debug(s"Received payload:\n$payload")
-        val message = payload.parseJson.convertTo[WsMessage[_]]
-        self ! message
+        parser.parse(payload).flatMap(_.as[WsMessage[_]]) match {
+          case Right(message) => self ! message
+          case Left(e) => e.fillInStackTrace()
+        }
       }
 
       stay
     case Event(Hello(data), WithSource(source, resume)) =>
       val payload = resume match {
-        case Some(resumeData) => (Resume(resumeData): WsMessage[ResumeData]).toJson.compactPrint
+        case Some(resumeData) => (Resume(resumeData): WsMessage[ResumeData]).asJson.noSpaces
         case None             =>
           //TODO: Allow customizing
-          (Identify(IdentifyObject(token, IdentifyObject.createProperties, compress = false, 100, Seq(0, 1))): WsMessage[IdentifyObject]).toJson.compactPrint
+          (Identify(IdentifyObject(token, IdentifyObject.createProperties, compress = false, 100, Seq(0, 1))): WsMessage[IdentifyObject]).asJson.noSpaces
       }
-
+      log.debug(s"Sending payload: $payload")
       source.offer(TextMessage(payload))
       val cancellable = system.scheduler.schedule(0 seconds, data.heartbeatInterval millis, self, SendHeartbeat)
       stay using WithHeartbeat(data.heartbeatInterval, cancellable, receivedAck = true, source, resume)
     case Event(Dispatch(seq, event, d), data: WithHeartbeat) =>
-      val untyped       = event.asInstanceOf[WsEvent]
       val updatedResume = data.resume.map(_.copy(seq = seq))
       val updatedData   = data.copy(resume = updatedResume)
 
-      val stayRes = untyped match {
+      val stayRes = event match {
         case WsEvent.Ready =>
           val readyData = d.asInstanceOf[ReadyData]
           log.debug("Ready trace:")
@@ -168,7 +169,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
           stay using updatedData
       }
 
-      cache ! RawWsEvent(untyped, d)
+      cache ! RawWsEvent(event, d)
 
       stayRes
     case Event(HeartbeatACK(_), data: WithHeartbeat) =>
@@ -181,7 +182,8 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
       } else {
         val seq = resume.map(_.seq)
 
-        val payload = (Heartbeat(seq): WsMessage[Option[Int]]).toJson.compactPrint
+        val payload = (Heartbeat(seq): WsMessage[Option[Int]]).asJson.noSpaces
+        log.debug(s"Sending payload: $payload")
         source.offer(TextMessage(payload))
         log.debug("Sent Heartbeat")
 
@@ -194,7 +196,8 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
       log.error("Invalid session. Trying to establish new session")
       goto(Inactive) using WithResumeData(None)
     case Event(request :RequestGuildMembers, WithHeartbeat(_, _, _, source, _)) =>
-      val payload = (request: WsMessage[RequestGuildMembersData]).toJson.compactPrint
+      val payload = (request: WsMessage[RequestGuildMembersData]).asJson.noSpaces
+      log.debug(s"Sending payload: $payload")
       source.offer(TextMessage(payload))
       log.debug("Requested guild data for {}", request.d.guildId)
 

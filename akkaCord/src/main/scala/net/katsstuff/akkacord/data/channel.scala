@@ -23,10 +23,10 @@
  */
 package net.katsstuff.akkacord.data
 
-sealed case class ChannelType(name: String)
+sealed trait ChannelType
 object ChannelType {
-  object Text  extends ChannelType("text")
-  object Voice extends ChannelType("voice")
+  case object Text  extends ChannelType
+  case object Voice extends ChannelType
 
   def forName(name: String): Option[ChannelType] = name match {
     case "text"  => Some(Text)
@@ -35,10 +35,10 @@ object ChannelType {
   }
 }
 
-sealed case class PermissionValueType(name: String)
+sealed trait PermissionValueType
 object PermissionValueType {
-  object Role   extends PermissionValueType("role")
-  object Member extends PermissionValueType("member")
+  case object Role   extends PermissionValueType
+  case object Member extends PermissionValueType
 
   def forName(name: String): Option[PermissionValueType] = name match {
     case "role"   => Some(Role)

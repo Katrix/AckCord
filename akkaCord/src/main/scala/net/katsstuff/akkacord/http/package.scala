@@ -21,21 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord.http
+package net.katsstuff.akkacord
 
-import java.util.Locale
+import net.katsstuff.akkacord.data.{Snowflake, User}
+import shapeless.labelled._
+import shapeless._
+import shapeless.ops.hlist.Mapper
 
-import spray.json.DefaultJsonProtocol
+package object http {
 
-trait SnakeCaseProtocol extends DefaultJsonProtocol {
-
-  override protected def extractFieldNames(classManifest: ClassManifest[_]): Array[String] = {
-    super.extractFieldNames(classManifest).map(snakify)
+  object mapPartialId extends mapPartialId
+  trait mapPartialId extends FieldPoly with atOption {
+    implicit def atId = atField[Snowflake]('id)(identity)
   }
 
-  private def snakify(name: String) = PASS2.replaceAllIn(PASS1.replaceAllIn(name, REPLACEMENT), REPLACEMENT).toLowerCase(Locale.US)
+  trait atOption extends normal {
+    implicit def atOption[K, V] = at[FieldType[K, Option[V]]]((v: Option[V]) => field[K](v))
+  }
 
-  private val PASS1 = """([A-Z]+)([A-Z][a-z])""".r
-  private val PASS2 = """([a-z\d])([A-Z])""".r
-  private val REPLACEMENT = "$1_$2"
+  trait normal extends Poly1 {
+    implicit def normal[K, V] = at[FieldType[K, V]]((v: V) => field[K](Option(v)))
+  }
+
+  val userGen = LabelledGeneric[User]
+  val partialUserMapper = Mapper[mapPartialId.type, userGen.Repr]
+  type PartialUser = partialUserMapper.Out
 }

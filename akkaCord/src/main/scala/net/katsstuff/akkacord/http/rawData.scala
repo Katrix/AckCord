@@ -89,8 +89,10 @@ case class RawGuild(id:                          Snowflake,
                     memberCount: Option[Int],
                     voiceStates: Option[Seq[VoiceState]],
                     members:     Option[Seq[RawGuildMember]],
-                    channels:    Option[Seq[RawGuildChannel]]
-                    //presences: Option[Seq[Presence]]
+                    channels:    Option[Seq[RawGuildChannel]],
+                    presences:   Option[Seq[RawPresence]]
 )
 
 case class RawUnavailableGuild(id: Snowflake, unavailable: Boolean)
+case class RawPresenceGame(name: Option[String], `type`: Option[Int], url: Option[String])
+case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[String])

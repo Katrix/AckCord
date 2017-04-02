@@ -28,18 +28,20 @@ import java.time.OffsetDateTime
 import akka.NotUsed
 import net.katsstuff.akkacord.data.{Attachment, Author, Embed, GuildEmoji, Reaction, Role, Snowflake, User, VoiceState}
 import net.katsstuff.akkacord.http._
+import shapeless._
+import shapeless.labelled.FieldType
 
 sealed trait WsMessage[D] {
   def op: OpCode
   def d:  D
-  def s: Option[Int]   = None
-  def t: Option[WsEvent] = None
+  def s: Option[Int]        = None
+  def t: Option[WsEvent[D]] = None
 }
 
-case class Dispatch[Data](sequence: Int, event: WsEvent.Aux[Data], d: Data) extends WsMessage[Data] {
-  override val s:  Some[Int]     = Some(sequence)
-  override val t:  Some[WsEvent] = Some(event)
-  override def op: OpCode      = OpCode.Dispatch
+case class Dispatch[Data](sequence: Int, event: WsEvent[Data], d: Data) extends WsMessage[Data] {
+  override val s:  Some[Int]           = Some(sequence)
+  override val t:  Some[WsEvent[Data]] = Some(event)
+  override def op: OpCode              = OpCode.Dispatch
 }
 
 case class Heartbeat(d: Option[Int]) extends WsMessage[Option[Int]] {
@@ -131,78 +133,64 @@ object OpCode {
   }
 }
 
-sealed case class WsEvent(name: String) {
-  type Data
-}
+sealed case class WsEvent[+Data](name: String)
 object WsEvent {
-  type Aux[Data0] = WsEvent { type Data = Data0 }
   case class ReadyData(v:               Int,
                        user:            User,
                        privateChannels: Seq[RawDMChannel],
                        guilds:          Seq[RawUnavailableGuild],
                        sessionId:       String,
                        _trace:          Seq[String])
-  object Ready extends WsEvent("READY") { override type Data = ReadyData }
+  object Ready extends WsEvent[ReadyData]("READY")
 
   case class ResumedData(_trace: Seq[String])
-  object Resumed extends WsEvent("RESUMED") { override type Data = ResumedData }
+  object Resumed extends WsEvent[ResumedData]("RESUMED")
 
-  object ChannelCreate extends WsEvent("CHANNEL_CREATE") { override type Data = RawChannel      }
-  object ChannelUpdate extends WsEvent("CHANNEL_UPDATE") { override type Data = RawGuildChannel }
-  object ChannelDelete extends WsEvent("CHANNEL_DELETE") { override type Data = RawChannel      }
+  object ChannelCreate extends WsEvent[RawChannel]("CHANNEL_CREATE")
+  object ChannelUpdate extends WsEvent[RawGuildChannel]("CHANNEL_UPDATE")
+  object ChannelDelete extends WsEvent[RawChannel]("CHANNEL_DELETE")
 
-  object GuildCreate extends WsEvent("GUILD_CREATE") { override type Data = RawGuild }
-  object GuildUpdate extends WsEvent("GUILD_UPDATE") { override type Data = RawGuild }
+  object GuildCreate extends WsEvent[RawGuild]("GUILD_CREATE")
+  object GuildUpdate extends WsEvent[RawGuild]("GUILD_UPDATE")
 
   case class GuildDeleteData(id: Snowflake, unavailable: Boolean)
-  object GuildDelete extends WsEvent("GUILD_DELETE") { override type Data = GuildDeleteData }
+  object GuildDelete extends WsEvent[GuildDeleteData]("GUILD_DELETE")
 
-  case class GuildUser(id:            Snowflake,
-                       guildId:       Snowflake,
-                       username:      String,
-                       discriminator: String,
-                       avatar:        String,
-                       bot:           Boolean,
-                       mfaEnabled:    Boolean,
-                       verified:      Boolean,
-                       email:         String)
-  object GuildBanAdd    extends WsEvent("GUILD_BAN_ADD")    { override type Data = GuildUser }
-  object GuildBanRemove extends WsEvent("GUILD_BAN_REMOVE") { override type Data = GuildUser }
+  val userGen = LabelledGeneric[User]
+  type GuildUser = FieldType[Witness.`'guildId`.T, Snowflake] :: userGen.Repr
+  object GuildBanAdd    extends WsEvent[GuildUser]("GUILD_BAN_ADD")
+  object GuildBanRemove extends WsEvent[GuildUser]("GUILD_BAN_REMOVE")
 
   case class GuildEmojisUpdateData(guildId: Snowflake, emojis: Seq[GuildEmoji])
-  object GuildEmojisUpdate extends WsEvent("GUILD_EMOJIS_UPDATE") { override type Data = GuildEmojisUpdateData }
+  object GuildEmojisUpdate extends WsEvent[GuildEmojisUpdateData]("GUILD_EMOJIS_UPDATE")
 
   case class GuildIntegrationsUpdateData(guildId: Snowflake)
-  object GuildIntegrationsUpdate extends WsEvent("GUILD_INTEGRATIONS_UPDATE") { override type Data = GuildIntegrationsUpdateData }
+  object GuildIntegrationsUpdate extends WsEvent[GuildIntegrationsUpdateData]("GUILD_INTEGRATIONS_UPDATE")
 
-  case class RawGuildMemberWithGuild(user:     User,
-                                     guildId:  Snowflake,
-                                     nick:     Option[String],
-                                     roles:    Seq[Snowflake],
-                                     joinedAt: OffsetDateTime,
-                                     deaf:     Boolean,
-                                     mute:     Boolean)
-  object GuildMemberAdd extends WsEvent("GUILD_MEMBER_ADD") { override type Data = RawGuildMemberWithGuild }
+  val guildMemberGen = LabelledGeneric[RawGuildMember]
+  type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, Snowflake] :: guildMemberGen.Repr
+  object GuildMemberAdd extends WsEvent[RawGuildMemberWithGuild]("GUILD_MEMBER_ADD")
 
   case class GuildMemberRemoveData(guildId: Snowflake, user: User)
-  object GuildMemberRemove extends WsEvent("GUILD_MEMBER_REMOVE") { override type Data = GuildMemberRemoveData }
+  object GuildMemberRemove extends WsEvent[GuildMemberRemoveData]("GUILD_MEMBER_REMOVE")
 
   case class GuildMemberUpdateData(guildId: Snowflake, roles: Seq[Snowflake], user: User, nick: Option[String]) //Nick can probably be null here
-  object GuildMemberUpdate extends WsEvent("GUILD_MEMBER_UPDATE") { override type Data = GuildMemberUpdateData }
+  object GuildMemberUpdate extends WsEvent[GuildMemberUpdateData]("GUILD_MEMBER_UPDATE")
 
   case class GuildMemberChunkData(guildId: Snowflake, members: Seq[RawGuildMember])
-  object GuildMemberChunk extends WsEvent("GUILD_MEMBER_CHUNK") { override type Data = GuildMemberChunkData }
+  object GuildMemberChunk extends WsEvent[GuildMemberChunkData]("GUILD_MEMBER_CHUNK")
 
   case class GuildRoleModifyData(guildId: Snowflake, role: Role)
-  object GuildRoleCreate extends WsEvent("GUILD_ROLE_CREATE") { override type Data = GuildRoleModifyData }
-  object GuildRoleUpdate extends WsEvent("GUILD_ROLE_UPDATE") { override type Data = GuildRoleModifyData }
+  object GuildRoleCreate extends WsEvent[GuildRoleModifyData]("GUILD_ROLE_CREATE")
+  object GuildRoleUpdate extends WsEvent[GuildRoleModifyData]("GUILD_ROLE_UPDATE")
 
   case class GuildRoleDeleteData(guildId: Snowflake, roleId: Snowflake)
-  object GuildRoleDelete extends WsEvent("GUILD_ROLE_DELETE") { override type Data = GuildRoleDeleteData }
+  object GuildRoleDelete extends WsEvent[GuildRoleDeleteData]("GUILD_ROLE_DELETE")
 
-  object MessageCreate extends WsEvent("MESSAGE_CREATE") { override type Data = RawMessage }
+  object MessageCreate extends WsEvent[RawMessage]("MESSAGE_CREATE")
 
-  case class RawOptionalMessage(id:              Snowflake,
+  //RawPartialMessage is defined explicitly because we need to handle the author
+  case class RawPartialMessage(id:              Snowflake,
                                 channelId:       Snowflake,
                                 author:          Option[Author],
                                 content:         Option[String],
@@ -218,26 +206,31 @@ object WsEvent {
                                 nonce:           Option[Snowflake],
                                 pinned:          Option[Boolean],
                                 webhookId:       Option[String])
-  object MessageUpdate extends WsEvent("MESSAGE_UPDATE") { override type Data = RawOptionalMessage }
+  object MessageUpdate extends WsEvent[RawPartialMessage]("MESSAGE_UPDATE")
 
   case class MessageDeleteData(id: Snowflake, channelId: Snowflake)
-  object MessageDelete extends WsEvent("MESSAGE_DELETE") { override type Data = MessageDeleteData }
+  object MessageDelete extends WsEvent[MessageDeleteData]("MESSAGE_DELETE")
 
   case class MessageDeleteBulkData(ids: Seq[Snowflake], channelId: Snowflake)
-  object MessageDeleteBulk extends WsEvent("MESSAGE_DELETE_BULK") { override type Data = MessageDeleteBulkData }
+  object MessageDeleteBulk extends WsEvent[MessageDeleteBulkData]("MESSAGE_DELETE_BULK")
 
-  //object PresenceUpdate extends Event("PRESENCE_UPDATE") //TODO
+  case class PresenceUpdateData(user:    PartialUser,
+                                roles:   Seq[Snowflake],
+                                game:    Option[RawPresenceGame],
+                                guildId: Option[Snowflake],
+                                status:  Option[String])
+  object PresenceUpdate extends WsEvent[PresenceUpdateData]("PRESENCE_UPDATE")
 
   case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Int)
-  object TypingStart extends WsEvent("TYPING_START") { override type Data = TypingStartData }
+  object TypingStart extends WsEvent[TypingStartData]("TYPING_START")
 
   //object UserSettingsUpdate extends Event("USER_SETTINGS_UPDATE") //TODO
 
-  object UserUpdate        extends WsEvent("USER_UPDATE")         { override type Data = User                  }
-  object VoiceStateUpdate  extends WsEvent("VOICE_STATUS_UPDATE") { override type Data = VoiceState            }
-  object VoiceServerUpdate extends WsEvent("VOICE_SERVER_UPDATE") { override type Data = VoiceServerUpdateData }
+  object UserUpdate        extends WsEvent[User]("USER_UPDATE")
+  object VoiceStateUpdate  extends WsEvent[VoiceState]("VOICE_STATUS_UPDATE")
+  object VoiceServerUpdate extends WsEvent[VoiceServerUpdateData]("VOICE_SERVER_UPDATE")
 
-  def forName(name: String): Option[WsEvent] = name match {
+  def forName(name: String): Option[WsEvent[_]] = name match {
     case "READY"                     => Some(Ready)
     case "RESUMED"                   => Some(Resumed)
     case "CHANNEL_CREATE"            => Some(ChannelCreate)
@@ -261,11 +254,11 @@ object WsEvent {
     case "MESSAGE_UPDATE"            => Some(MessageUpdate)
     case "MESSAGE_DELETE"            => Some(MessageDelete)
     case "MESSAGE_DELETE_BULK"       => Some(MessageDeleteBulk)
-    case "PRESENCE_UPDATE"           => ??? //Some(PresenceUpdate)
+    case "PRESENCE_UPDATE"           => Some(PresenceUpdate)
     case "TYPING_START"              => Some(TypingStart)
     case "USER_SETTINGS_UPDATE"      => ??? //Some(UserSettingsUpdate)
     case "USER_UPDATE"               => Some(UserUpdate)
-    case "VOICE_STATE_UPDATE"       => Some(VoiceStateUpdate)
+    case "VOICE_STATE_UPDATE"        => Some(VoiceStateUpdate)
     case "VOICE_SERVER_UPDATE"       => Some(VoiceServerUpdate)
     case _                           => None
   }
