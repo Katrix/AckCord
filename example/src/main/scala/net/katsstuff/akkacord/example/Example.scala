@@ -32,19 +32,15 @@ object Example {
   implicit val system: ActorSystem = ActorSystem("AkkaCord")
 
   def main(args: Array[String]): Unit = {
-    if(args.isEmpty) {
+    if (args.isEmpty) {
       println("Please specify a token")
       sys.exit()
     }
 
     val eventStream = new EventStream(system)
-    val token = args.head
+    val token       = args.head
 
-    val client = DiscordClientSettings(
-      token = token,
-      system = system,
-      eventStream = eventStream
-    ).connect
+    val client = DiscordClientSettings(token = token, system = system, eventStream = eventStream).connect
 
     eventStream.subscribe(system.actorOf(KillCommand.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
   }

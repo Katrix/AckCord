@@ -28,7 +28,7 @@ class CachedImmutable[Mutable, Immutable](private val mutable: Mutable)(implicit
   private var requiresUpdate = false
 
   def value: Immutable = {
-    if(requiresUpdate) {
+    if (requiresUpdate) {
       immutableCache = createImmutable.create(mutable)
       requiresUpdate = false
     }

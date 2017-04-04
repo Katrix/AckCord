@@ -28,11 +28,11 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy
 import akka.event.EventStream
 import net.katsstuff.akkacord.http.websocket.WsHandler
 
-class DiscordClient(token: String, eventStream: EventStream) extends Actor with ActorLogging{
+class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
   private implicit val system = context.system
 
-  private val cache = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val wsHandler = system.actorOf(WsHandler.props(token, cache), "WsHandler")
+  private val cache     = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val wsHandler = system.actorOf(WsHandler.props(token, cache, settings), "WsHandler")
 
   override def supervisorStrategy: SupervisorStrategy = {
     val strategy: PartialFunction[Throwable, SupervisorStrategy.Directive] = {
@@ -45,21 +45,29 @@ class DiscordClient(token: String, eventStream: EventStream) extends Actor with 
     OneForOneStrategy()(strategy orElse SupervisorStrategy.defaultDecider)
   }
 
-  override def preStart(): Unit = {
+  override def preStart(): Unit =
     context.watch(wsHandler)
-  }
 
   override def receive: Receive = {
-    case ShutdownClient => wsHandler.forward(ShutdownClient)
+    case ShutdownClient          => wsHandler.forward(ShutdownClient)
     case Terminated(`wsHandler`) => system.terminate()
   }
 }
 object DiscordClient {
-  def props(token: String, eventStream: EventStream): Props = Props(classOf[DiscordClient], token, eventStream)
+  def props(token: String, eventStream: EventStream, settings: DiscordClientSettings): Props =
+    Props(classOf[DiscordClient], token, eventStream, settings)
 }
 
-case class DiscordClientSettings(token: String, system: ActorSystem, eventStream: EventStream) {
-  def connect: ActorRef = system.actorOf(DiscordClient.props(token, eventStream), "DiscordClient")
+case class DiscordClientSettings(
+    token:                String,
+    system:               ActorSystem,
+    eventStream:          EventStream,
+    maxReconnectAttempts: Int = 5,
+    largeThreshold:       Int = 100,
+    shardNum:             Int = 0,
+    shardTotal:           Int = 1
+) {
+  def connect: ActorRef = system.actorOf(DiscordClient.props(token, eventStream, this), "DiscordClient")
 }
 
 case object ShutdownClient

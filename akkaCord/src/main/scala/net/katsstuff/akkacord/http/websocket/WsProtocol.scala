@@ -37,14 +37,11 @@ object WsProtocol extends DiscordProtocol {
 
   implicit val opCodeEncoder: Encoder[OpCode] = (a: OpCode) => Json.fromInt(a.code)
   implicit val opCodeDecoder: Decoder[OpCode] = (c: HCursor) =>
-    c.as[Int]
-      .flatMap(OpCode.forCode(_).toRight(DecodingFailure("Not an opCode", c.history)))
+    c.as[Int].flatMap(OpCode.forCode(_).toRight(DecodingFailure("Not an opCode", c.history)))
 
   implicit def wsEventEncoder[A]: Encoder[WsEvent[A]] = (a: WsEvent[A]) => Json.fromString(a.name)
   implicit def wsEventDecoder: Decoder[WsEvent[_]] =
-    (c: HCursor) =>
-      c.as[String]
-        .flatMap(WsEvent.forName(_).toRight(DecodingFailure("Not an event", c.history)))
+    (c: HCursor) => c.as[String].flatMap(WsEvent.forName(_).toRight(DecodingFailure("Not an event", c.history)))
 
   implicit val readyDataEncoder: Encoder[WsEvent.ReadyData] = deriveEncoder
   implicit val readyDataDecoder: Decoder[WsEvent.ReadyData] = deriveDecoder
@@ -128,9 +125,7 @@ object WsProtocol extends DiscordProtocol {
   implicit val helloDataDecoder: Decoder[HelloData] = deriveDecoder
 
   implicit def wsMessageEncoder[Data: Encoder]: Encoder[WsMessage[Data]] =
-    (a: WsMessage[Data]) =>
-      Json
-        .obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
+    (a: WsMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
 
   implicit val rawPartialMessageEncoder: Encoder[WsEvent.RawPartialMessage] = (a: WsEvent.RawPartialMessage) => {
     val base = Seq(

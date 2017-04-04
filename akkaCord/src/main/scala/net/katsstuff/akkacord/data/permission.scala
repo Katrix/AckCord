@@ -33,7 +33,7 @@ class Permission private (val int: Int) extends AnyVal {
 object Permission {
 
   private def apply(int: Int):         Permission = new Permission(int)
-  def apply(permissions:     Permission*): Permission = permissions.fold(NoPermissions)((a1, a2) => a1.addPermissions(a2))
+  def apply(permissions: Permission*): Permission = permissions.fold(NoPermissions)((a1, a2) => a1.addPermissions(a2))
 
   def fromInt(int: Int): Permission = apply(int)
 
@@ -68,11 +68,13 @@ object Permission {
   val ManageEmojis        = Permission(0x40000000)
 }
 
-case class Role(id:          Snowflake,
-                name:        String,
-                color:       Int,
-                hoist:       Boolean,
-                position:    Int,
-                permissions: Permission,
-                managed:     Boolean,
-                mentionable: Boolean)
+case class Role(
+    id:          Snowflake,
+    name:        String,
+    color:       Int,
+    hoist:       Boolean,
+    position:    Int,
+    permissions: Permission,
+    managed:     Boolean,
+    mentionable: Boolean
+)

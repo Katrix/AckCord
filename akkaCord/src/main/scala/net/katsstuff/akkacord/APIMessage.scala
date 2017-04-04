@@ -50,15 +50,16 @@ object APIMessage {
       extends APIMessage
   case class GuildIntegrationsUpdate(guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildMemberAdd(member:          GuildMember, guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildMemberRemove(user:         User, guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildMemberUpdate(guild:        AvailableGuild,
-                               roles:        Seq[Role],
-                               user:         User,
-                               nick:         Option[String],
-                               snapshot:     CacheSnapshot,
-                               prevSnapshot: CacheSnapshot)
-      extends APIMessage
+  case class GuildMemberAdd(member:  GuildMember, guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildMemberRemove(user: User, guild:        AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildMemberUpdate(
+      guild:        AvailableGuild,
+      roles:        Seq[Role],
+      user:         User,
+      nick:         Option[String],
+      snapshot:     CacheSnapshot,
+      prevSnapshot: CacheSnapshot
+  ) extends APIMessage
   case class GuildMembersChunk(guild: AvailableGuild, members: Seq[GuildMember], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
       extends APIMessage
 

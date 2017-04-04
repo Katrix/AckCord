@@ -40,14 +40,14 @@ trait GetUser {
 
 trait GetChannel {
   def channelId: Snowflake
-  def channel(implicit snapshot: CacheSnapshot): Option[Channel] = snapshot.getChannel(channelId)
-  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.getDmChannel(channelId)
+  def channel(implicit snapshot:      CacheSnapshot): Option[Channel]      = snapshot.getChannel(channelId)
+  def dmChannel(implicit snapshot:    CacheSnapshot): Option[DMChannel]    = snapshot.getDmChannel(channelId)
   def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = snapshot.getGuildChannel(channelId)
 }
 
 trait GetChannelOpt {
   def channelId: Option[Snowflake]
-  def channel(implicit snapshot: CacheSnapshot): Option[Channel] = channelId.flatMap(snapshot.getChannel)
-  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = channelId.flatMap(snapshot.getDmChannel)
+  def channel(implicit snapshot:      CacheSnapshot): Option[Channel]      = channelId.flatMap(snapshot.getChannel)
+  def dmChannel(implicit snapshot:    CacheSnapshot): Option[DMChannel]    = channelId.flatMap(snapshot.getDmChannel)
   def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = channelId.flatMap(snapshot.getGuildChannel)
 }

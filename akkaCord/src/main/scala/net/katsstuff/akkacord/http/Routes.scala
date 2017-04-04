@@ -25,7 +25,7 @@ package net.katsstuff.akkacord.http
 
 object Routes {
 
-  val Base = "https://discordapp.com/api"
+  val Base    = "https://discordapp.com/api"
   val Gateway = s"$Base/gateway"
 
 }

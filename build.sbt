@@ -11,12 +11,11 @@ lazy val akkaCord = project
     version := "0.1",
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor"           % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"          % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core"       % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.14.0",
-
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core",
       //"io.circe" %% "circe-generic",

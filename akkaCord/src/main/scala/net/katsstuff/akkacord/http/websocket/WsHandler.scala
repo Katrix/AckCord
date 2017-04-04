@@ -37,13 +37,16 @@ import akka.stream.actor.{ActorSubscriber, OneByOneRequestStrategy}
 import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.{parser, _}
 import io.circe.syntax._
+import io.circe.{parser, _}
 import net.katsstuff.akkacord.http.Routes
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
-import net.katsstuff.akkacord.{RawWsEvent, ShutdownClient}
+import net.katsstuff.akkacord.{DiscordClientSettings, RawWsEvent, ShutdownClient}
 
-class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsHandler.Data] with ActorSubscriber with FailFastCirceSupport {
+class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
+    extends FSM[WsHandler.State, WsHandler.Data]
+    with ActorSubscriber
+    with FailFastCirceSupport {
   import WsHandler._
   import WsProtocol._
 
@@ -54,12 +57,11 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
 
   override protected def requestStrategy = OneByOneRequestStrategy
 
-  val wsQuery                      = Query("v" -> "5", "encoding" -> "json")
   private var shouldShutDown       = false
   private var reconnectAttempts    = 0
-  private val maxReconnectAttempts = 5 //TODO: Expose this later
+  private val maxReconnectAttempts = settings.maxReconnectAttempts
 
-  def wsUri(uri: Uri): Uri = uri.withQuery(wsQuery)
+  def wsUri(uri: Uri): Uri = uri.withQuery(Query("v" -> "5", "encoding" -> "json"))
 
   startWith(Inactive, WithResumeData(None))
 
@@ -86,11 +88,14 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
               Unmarshal(entity).to[Json]
             case HttpResponse(code, headers, entity, protocol) =>
               throw new IllegalStateException(
-                s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}\nEntity: $entity\nProtocol: ${protocol.value}"
+                s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}\nEntity: $entity\n"
               )
           }
           .foreach { js =>
-            js.hcursor.downField("url").as[String].foreach(gateway => self ! ReceivedGateway(gateway))
+            js.hcursor.downField("url").as[String] match {
+              case Right(gateway) => self ! ReceivedGateway(gateway)
+              case Left(e)        => throw e
+            }
           }
 
         stay using WithResumeData(data.resume)
@@ -123,11 +128,8 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
   }
 
   when(Active) {
-    case Event(ShutdownClient, _) =>
-      shouldShutDown = true
-
-      goto(Inactive)
     case Event(OnComplete, _) =>
+      log.info("Websocket connection completed")
       goto(Inactive)
     case Event(OnError(e), _) =>
       log.error(e, "Connection interrupted")
@@ -137,7 +139,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
         log.debug(s"Received payload:\n$payload")
         parser.parse(payload).flatMap(_.as[WsMessage[_]]) match {
           case Right(message) => self ! message
-          case Left(e) => e.fillInStackTrace()
+          case Left(e)        => throw e
         }
       }
 
@@ -145,9 +147,16 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
     case Event(Hello(data), WithSource(source, resume)) =>
       val payload = resume match {
         case Some(resumeData) => (Resume(resumeData): WsMessage[ResumeData]).asJson.noSpaces
-        case None             =>
-          //TODO: Allow customizing
-          (Identify(IdentifyObject(token, IdentifyObject.createProperties, compress = false, 100, Seq(0, 1))): WsMessage[IdentifyObject]).asJson.noSpaces
+        case None =>
+          (Identify(
+            IdentifyObject(
+              token,
+              IdentifyObject.createProperties,
+              compress = false,
+              settings.largeThreshold,
+              Seq(settings.shardNum, settings.shardTotal)
+            )
+          ): WsMessage[IdentifyObject]).asJson.noSpaces
       }
       log.debug(s"Sending payload: $payload")
       source.offer(TextMessage(payload))
@@ -177,7 +186,7 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
       stay using data.copy(receivedAck = true)
     case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, source, resume)) =>
       if (!receivedAck) {
-        log.error("Did not receive a Heartbeat ACK between heartbeats")
+        log.error("Did not receive a Heartbeat ACK between heartbeats, reconnecting")
         goto(Inactive) using WithResumeData(resume)
       } else {
         val seq = resume.map(_.seq)
@@ -195,19 +204,24 @@ class WsHandler(token: String, cache: ActorRef) extends FSM[WsHandler.State, WsH
     case Event(InvalidSession, _) =>
       log.error("Invalid session. Trying to establish new session")
       goto(Inactive) using WithResumeData(None)
-    case Event(request :RequestGuildMembers, WithHeartbeat(_, _, _, source, _)) =>
+
+    //External messages
+    case Event(request: RequestGuildMembers, WithHeartbeat(_, _, _, source, _)) =>
       val payload = (request: WsMessage[RequestGuildMembersData]).asJson.noSpaces
       log.debug(s"Sending payload: $payload")
       source.offer(TextMessage(payload))
       log.debug("Requested guild data for {}", request.d.guildId)
 
       stay
+    case Event(ShutdownClient, _) =>
+      shouldShutDown = true
+      goto(Inactive)
   }
 
   initialize()
 }
 object WsHandler {
-  def props(token: String, cache: ActorRef): Props = Props(classOf[WsHandler], token, cache)
+  def props(token: String, cache: ActorRef, settings: DiscordClientSettings): Props = Props(classOf[WsHandler], token, cache, settings)
 
   case object TryToConnect
   case class ReceivedGateway(uri: Uri)
@@ -231,12 +245,13 @@ object WsHandler {
     override def heartbeatCancelableOpt: Option[Cancellable]                      = None
     override def sourceOpt:              Option[SourceQueueWithComplete[Message]] = Some(source)
   }
-  case class WithHeartbeat(heartbeatInterval:   Int,
-                           heartbeatCancelable: Cancellable,
-                           receivedAck:         Boolean,
-                           source:              SourceQueueWithComplete[Message],
-                           resume:              Option[ResumeData])
-      extends Data {
+  case class WithHeartbeat(
+      heartbeatInterval:   Int,
+      heartbeatCancelable: Cancellable,
+      receivedAck:         Boolean,
+      source:              SourceQueueWithComplete[Message],
+      resume:              Option[ResumeData]
+  ) extends Data {
     override def heartbeatCancelableOpt: Option[Cancellable]                      = Some(heartbeatCancelable)
     override def sourceOpt:              Option[SourceQueueWithComplete[Message]] = Some(source)
   }

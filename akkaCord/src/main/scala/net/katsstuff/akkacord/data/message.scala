@@ -26,50 +26,56 @@ package net.katsstuff.akkacord.data
 import java.time.OffsetDateTime
 
 sealed trait Author
-case class WebhookAuthor(id:   Snowflake, name: String, avatar: String) extends Author
-case class User(id:            Snowflake,
-                username:      String,
-                discriminator: String,
-                avatar:        String,
-                bot:           Option[Boolean], //Bot can be missing
-                mfaEnabled:    Option[Boolean], //mfaEnabled can be missing
-                verified:      Option[Boolean], //verified can be missing
-                email:         Option[String]) //Email can be null
+case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
+case class User(
+    id:            Snowflake,
+    username:      String,
+    discriminator: String,
+    avatar:        String,
+    bot:           Option[Boolean], //Bot can be missing
+    mfaEnabled:    Option[Boolean], //mfaEnabled can be missing
+    verified:      Option[Boolean], //verified can be missing
+    email:         Option[String]
+) //Email can be null
     extends Author
 
-case class Message(id:              Snowflake,
-                   channelId:       Snowflake,
-                   author:          Author, //TODO: Factor webhook messages and normal messages into separate classes, to remove a reference to a user
-                   content:         String,
-                   timestamp:       OffsetDateTime,
-                   editedTimestamp: Option[OffsetDateTime],
-                   tts:             Boolean,
-                   mentionEveryone: Boolean,
-                   mentions:        Seq[Snowflake],
-                   mentionRoles:    Seq[Snowflake],
-                   attachment:      Seq[Attachment],
-                   embeds:          Seq[Embed],
-                   reactions:       Seq[Reaction],
-                   nonce:           Option[Snowflake],
-                   pinned:          Boolean,
-                   webhookId:       Option[String]) extends GetChannel
+case class Message(
+    id:              Snowflake,
+    channelId:       Snowflake,
+    author:          Author, //TODO: Factor webhook messages and normal messages into separate classes, to remove a reference to a user
+    content:         String,
+    timestamp:       OffsetDateTime,
+    editedTimestamp: Option[OffsetDateTime],
+    tts:             Boolean,
+    mentionEveryone: Boolean,
+    mentions:        Seq[Snowflake],
+    mentionRoles:    Seq[Snowflake],
+    attachment:      Seq[Attachment],
+    embeds:          Seq[Embed],
+    reactions:       Seq[Reaction],
+    nonce:           Option[Snowflake],
+    pinned:          Boolean,
+    webhookId:       Option[String]
+) extends GetChannel
 
 case class Reaction(count:  Int, me:                 Boolean, emoji: MessageEmoji)
 case class MessageEmoji(id: Option[Snowflake], name: String)
 
-case class Embed(title:       String,
-                 embedType:   String,
-                 description: String,
-                 url:         String,
-                 timestamp:   OffsetDateTime,
-                 color:       Int,
-                 footer:      EmbedFooter,
-                 image:       EmbedImage,
-                 thumbnail:   EmbedThumbnail,
-                 video:       EmbedVideo,
-                 provider:    EmbedProvider,
-                 author:      EmbedAuthor,
-                 fields:      Seq[EmbedField])
+case class Embed(
+    title:       String,
+    embedType:   String,
+    description: String,
+    url:         String,
+    timestamp:   OffsetDateTime,
+    color:       Int,
+    footer:      EmbedFooter,
+    image:       EmbedImage,
+    thumbnail:   EmbedThumbnail,
+    video:       EmbedVideo,
+    provider:    EmbedProvider,
+    author:      EmbedAuthor,
+    fields:      Seq[EmbedField]
+)
 
 case class EmbedThumbnail(url: String, proxyUrl: String, height: Int, width: Int)
 case class EmbedVideo(url:     String, height:   Int, width: Int)

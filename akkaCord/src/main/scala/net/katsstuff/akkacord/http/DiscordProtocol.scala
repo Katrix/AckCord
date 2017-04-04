@@ -90,25 +90,25 @@ trait DiscordProtocol {
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
-      "id" -> a.id.asJson,
-      "channel_id" -> a.channelId.asJson,
-      "content" -> a.content.asJson,
-      "timestamp" -> a.timestamp.asJson,
+      "id"               -> a.id.asJson,
+      "channel_id"       -> a.channelId.asJson,
+      "content"          -> a.content.asJson,
+      "timestamp"        -> a.timestamp.asJson,
       "edited_timestamp" -> a.editedTimestamp.asJson,
-      "tts" -> a.tts.asJson,
+      "tts"              -> a.tts.asJson,
       "mention_everyone" -> a.mentionEveryone.asJson,
-      "mentions" -> a.mentions.asJson,
-      "mention_roles" -> a.mentionRoles.asJson,
-      "attachments" -> a.attachment.asJson,
-      "embeds" -> a.embeds.asJson,
-      "reactions" -> a.reactions.asJson,
-      "nonce" -> a.nonce.asJson,
-      "pinned" -> a.pinned.asJson,
-      "webhook_id" -> a.webhookId.asJson
+      "mentions"         -> a.mentions.asJson,
+      "mention_roles"    -> a.mentionRoles.asJson,
+      "attachments"      -> a.attachment.asJson,
+      "embeds"           -> a.embeds.asJson,
+      "reactions"        -> a.reactions.asJson,
+      "nonce"            -> a.nonce.asJson,
+      "pinned"           -> a.pinned.asJson,
+      "webhook_id"       -> a.webhookId.asJson
     )
 
     a.author match {
-      case user: User => Json.obj(base :+ "author" -> user.asJson: _*)
+      case user:    User          => Json.obj(base :+ "author" -> user.asJson:    _*)
       case webhook: WebhookAuthor => Json.obj(base :+ "author" -> webhook.asJson: _*)
     }
   }
@@ -116,24 +116,41 @@ trait DiscordProtocol {
     val isWebhook = c.fields.exists(_.contains("webhook_id"))
 
     for {
-      id <- c.downField("id").as[Snowflake]
-      channelId <- c.downField("channel_id").as[Snowflake]
-      author <- if (isWebhook) c.downField("author").as[WebhookAuthor] else c.downField("author").as[User]
-      content <- c.downField("content").as[String]
-      timestamp <- c.downField("timestamp").as[OffsetDateTime]
+      id              <- c.downField("id").as[Snowflake]
+      channelId       <- c.downField("channel_id").as[Snowflake]
+      author          <- if (isWebhook) c.downField("author").as[WebhookAuthor] else c.downField("author").as[User]
+      content         <- c.downField("content").as[String]
+      timestamp       <- c.downField("timestamp").as[OffsetDateTime]
       editedTimestamp <- c.downField("edited_timestamp").as[Option[OffsetDateTime]]
-      tts <- c.downField("tts").as[Boolean]
+      tts             <- c.downField("tts").as[Boolean]
       mentionEveryone <- c.downField("mention_everyone").as[Boolean]
-      mentions <- c.downField("mentions").as[Seq[User]]
-      mentionRoles <- c.downField("mention_roles").as[Seq[Snowflake]]
-      attachment <- c.downField("attachments").as[Seq[Attachment]]
-      embeds <- c.downField("embeds").as[Seq[Embed]]
-      reactions <- c.downField("reactions").as[Option[Seq[Reaction]]]
-      nonce <- c.downField("nonce").as[Option[Snowflake]]
-      pinned <- c.downField("pinned").as[Boolean]
-      webhookId <- c.downField("webhook_id").as[Option[String]]
-    } yield RawMessage(id, channelId, author, content, timestamp, editedTimestamp, tts, mentionEveryone, mentions, mentionRoles, attachment, embeds,
-      reactions, nonce, pinned, webhookId)
+      mentions        <- c.downField("mentions").as[Seq[User]]
+      mentionRoles    <- c.downField("mention_roles").as[Seq[Snowflake]]
+      attachment      <- c.downField("attachments").as[Seq[Attachment]]
+      embeds          <- c.downField("embeds").as[Seq[Embed]]
+      reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
+      nonce           <- c.downField("nonce").as[Option[Snowflake]]
+      pinned          <- c.downField("pinned").as[Boolean]
+      webhookId       <- c.downField("webhook_id").as[Option[String]]
+    } yield
+      RawMessage(
+        id,
+        channelId,
+        author,
+        content,
+        timestamp,
+        editedTimestamp,
+        tts,
+        mentionEveryone,
+        mentions,
+        mentionRoles,
+        attachment,
+        embeds,
+        reactions,
+        nonce,
+        pinned,
+        webhookId
+      )
   }
 
   implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = (a: OffsetDateTime) => Json.fromString(a.toString)
@@ -141,11 +158,4 @@ trait DiscordProtocol {
 
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder
-
-  /*
-  implicit object InstantFormat extends JsonFormat[Instant] {
-    override def read(json: JsValue): Instant = Instant.ofEpochSecond(json.convertTo[Long])
-    override def write(obj: Instant): JsValue = JsNumber(obj.getEpochSecond)
-  }
-  */
 }

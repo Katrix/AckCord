@@ -29,7 +29,7 @@ import net.katsstuff.akkacord.{APIMessage, ShutdownClient}
 class KillCommand(client: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
     case APIMessage.MessageCreate(message, _, _) =>
-      if(message.content == "!kill") {
+      if (message.content == "!kill") {
         log.info("Received shutdown command")
         client ! ShutdownClient
       }

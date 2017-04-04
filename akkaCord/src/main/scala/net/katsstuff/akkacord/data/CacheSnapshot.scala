@@ -26,14 +26,16 @@ package net.katsstuff.akkacord.data
 import java.time.Instant
 
 //All nested maps should use default maps
-case class CacheSnapshot(botUser:           User,
-                         dmChannels:        Map[Snowflake, DMChannel],
-                         unavailableGuilds: Map[Snowflake, UnavailableGuild],
-                         guilds:            Map[Snowflake, AvailableGuild],
-                         messages:          Map[Snowflake, Map[Snowflake, Message]],
-                         lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
-                         users:             Map[Snowflake, User],
-                         presences:         Map[Snowflake, Map[Snowflake, Presence]]) {
+case class CacheSnapshot(
+    botUser:           User,
+    dmChannels:        Map[Snowflake, DMChannel],
+    unavailableGuilds: Map[Snowflake, UnavailableGuild],
+    guilds:            Map[Snowflake, AvailableGuild],
+    messages:          Map[Snowflake, Map[Snowflake, Message]],
+    lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
+    users:             Map[Snowflake, User],
+    presences:         Map[Snowflake, Map[Snowflake, Presence]]
+) {
 
   def getDmChannel(id: Snowflake): Option[DMChannel] = dmChannels.get(id)
 
@@ -46,24 +48,28 @@ case class CacheSnapshot(botUser:           User,
 
   def getChannel(id: Snowflake): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
 
-  def getRole(id:   Snowflake): Option[Role] = guilds.values.collectFirst {
+  def getRole(id: Snowflake): Option[Role] = guilds.values.collectFirst {
     case guild if guild.roles.contains(id) => guild.roles(id)
   }
-  def getEmoji(id:  Snowflake): Option[GuildEmoji] = guilds.values.collectFirst {
+
+  def getEmoji(id: Snowflake): Option[GuildEmoji] = guilds.values.collectFirst {
     case guild if guild.emojis.contains(id) => guild.emojis(id)
   }
+
   def getMember(id: Snowflake): Option[GuildMember] = guilds.values.collectFirst {
     case guild if guild.members.contains(id) => guild.members(id)
   }
 
   def getChannelMessages(channelId: Snowflake): Map[Snowflake, Message] = messages.getOrElse(channelId, Map.empty)
-  def getMessage(channelId:         Snowflake, messageId: Snowflake): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
-  def getMessage(messageId:         Snowflake): Option[Message] = messages.values.collectFirst {
+
+  def getMessage(channelId: Snowflake, messageId: Snowflake): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
+  def getMessage(messageId: Snowflake): Option[Message] = messages.values.collectFirst {
     case channelMap if channelMap.contains(messageId) => channelMap(messageId)
   }
 
   def getChannelLastTyped(channelId: Snowflake): Map[Snowflake, Instant] = lastTyped.getOrElse(channelId, Map.empty)
-  def getLastTyped(channelId:        Snowflake, userId: Snowflake): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
+
+  def getLastTyped(channelId: Snowflake, userId: Snowflake): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
 
   def getUser(id: Snowflake): Option[User] = users.get(id)
 

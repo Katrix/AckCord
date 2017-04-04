@@ -43,7 +43,7 @@ package object http {
     implicit def normal[K, V] = at[FieldType[K, V]]((v: V) => field[K](Option(v)))
   }
 
-  val userGen = LabelledGeneric[User]
+  val userGen           = LabelledGeneric[User]
   val partialUserMapper = Mapper[mapPartialId.type, userGen.Repr]
   type PartialUser = partialUserMapper.Out
 }

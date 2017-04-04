@@ -27,8 +27,31 @@ import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.EventStream
 import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.http.websocket.WsEvent
-import net.katsstuff.akkacord.http.websocket.WsEvent.{GuildDeleteData, GuildEmojisUpdateData, GuildIntegrationsUpdateData, GuildMemberChunkData, GuildMemberRemoveData, GuildMemberUpdateData, GuildRoleDeleteData, GuildRoleModifyData, MessageDeleteBulkData, MessageDeleteData, PresenceUpdateData, RawGuildMemberWithGuild, RawPartialMessage}
-import net.katsstuff.akkacord.http.{RawChannel, RawDMChannel, RawGuild, RawGuildChannel, RawGuildMember, RawMessage, RawPresenceGame, RawUnavailableGuild}
+import net.katsstuff.akkacord.http.websocket.WsEvent.{
+  GuildDeleteData,
+  GuildEmojisUpdateData,
+  GuildIntegrationsUpdateData,
+  GuildMemberChunkData,
+  GuildMemberRemoveData,
+  GuildMemberUpdateData,
+  GuildRoleDeleteData,
+  GuildRoleModifyData,
+  MessageDeleteBulkData,
+  MessageDeleteData,
+  PresenceUpdateData,
+  RawGuildMemberWithGuild,
+  RawPartialMessage
+}
+import net.katsstuff.akkacord.http.{
+  RawChannel,
+  RawDMChannel,
+  RawGuild,
+  RawGuildChannel,
+  RawGuildMember,
+  RawMessage,
+  RawPresenceGame,
+  RawUnavailableGuild
+}
 
 class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
@@ -152,15 +175,15 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
         import shapeless.record._
 
         val status = pres.status.map {
-          case "idle" => PresenceStatus.Idle
-          case "online" => PresenceStatus.Online
+          case "idle"    => PresenceStatus.Idle
+          case "online"  => PresenceStatus.Online
           case "offline" => PresenceStatus.Offline
         }
 
         val content = pres.game.flatMap {
-          case RawPresenceGame(Some(name), Some(0), url) => Some(PresenceGame(name))
+          case RawPresenceGame(Some(name), Some(0), url)       => Some(PresenceGame(name))
           case RawPresenceGame(Some(name), Some(1), Some(url)) => Some(PresenceStreaming(name, url))
-          case _ => None
+          case _                                               => None
         }
 
         status.map(s => Presence(pres.user.get('id), content, s))
@@ -235,7 +258,7 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       val RawGuildMember(user, nick, roles, joinedAt, deaf, mute) = WsEvent.guildMemberGen.from(withGuild.tail)
       import shapeless.record._
       val guildId = withGuild.get('guildId)
-      val member = GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
+      val member  = GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
 
       snapshot.getGuild(guildId).foreach { guild =>
         val newGuild = guild.copy(members = guild.members + ((user.id, member)))
@@ -438,20 +461,24 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
                 }
           }
 
-          val guild = snapshot.guilds(guildId)
+          val guild       = snapshot.guilds(guildId)
           val withNewUser = newUser.map(u => snapshot.copy(users = snapshot.users + ((u.id, u)))).getOrElse(snapshot)
 
           val withUpdatedRoles = {
-            val newMembers = guild.members.get(rPartialUser.id).map(m => guild.members + ((rPartialUser.id, m.copy(roles = roles))))
+            val newMembers = guild.members
+              .get(rPartialUser.id)
+              .map(m => guild.members + ((rPartialUser.id, m.copy(roles = roles))))
               .getOrElse(guild.members)
             val newGuild = guild.copy(members = newMembers)
             withNewUser.copy(guilds = withNewUser.guilds + ((guildId, newGuild)))
           }
 
-          val withNewPresence = optNewPresence.map { newPresence =>
-            val newGuildPresences = withUpdatedRoles.presences(guildId) + ((rPartialUser.id, newPresence))
-            withUpdatedRoles.copy(presences = withUpdatedRoles.presences + ((guildId, newGuildPresences)))
-          }.getOrElse(withUpdatedRoles)
+          val withNewPresence = optNewPresence
+            .map { newPresence =>
+              val newGuildPresences = withUpdatedRoles.presences(guildId) + ((rPartialUser.id, newPresence))
+              withUpdatedRoles.copy(presences = withUpdatedRoles.presences + ((guildId, newGuildPresences)))
+            }
+            .getOrElse(withUpdatedRoles)
 
           //Did I miss anything here?
           updateSnapshot(withNewPresence)

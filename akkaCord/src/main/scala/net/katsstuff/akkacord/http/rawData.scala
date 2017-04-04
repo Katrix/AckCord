@@ -32,67 +32,71 @@ sealed trait RawChannel {
   def isPrivate: Boolean
 }
 
-case class RawGuildChannel(id:                   Snowflake,
-                           guildId:              Option[Snowflake], //guildId can be missing
-                           name:                 String,
-                           `type`:               String,
-                           position:             Int,
-                           isPrivate:            Boolean,
-                           permissionOverwrites: Seq[PermissionValue],
-                           topic:                Option[String],
-                           lastMessageId:        Option[Snowflake],
-                           bitrate:              Option[Int],
-                           userLimit:            Option[Int])
-    extends RawChannel
+case class RawGuildChannel(
+    id:                   Snowflake,
+    guildId:              Option[Snowflake], //guildId can be missing
+    name:                 String,
+    `type`:               String,
+    position:             Int,
+    isPrivate:            Boolean,
+    permissionOverwrites: Seq[PermissionValue],
+    topic:                Option[String],
+    lastMessageId:        Option[Snowflake],
+    bitrate:              Option[Int],
+    userLimit:            Option[Int]
+) extends RawChannel
 
 case class RawGuildMember(user: User, nick: Option[String], roles: Seq[Snowflake], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
 
 //Can't lastMessageId be null here?
 case class RawDMChannel(id: Snowflake, isPrivate: Boolean, recipient: User, lastMessageId: Option[Snowflake]) extends RawChannel
 
-case class RawMessage(id:              Snowflake,
-                      channelId:       Snowflake,
-                      author:          Author,
-                      content:         String,
-                      timestamp:       OffsetDateTime,
-                      editedTimestamp: Option[OffsetDateTime],
-                      tts:             Boolean,
-                      mentionEveryone: Boolean,
-                      mentions:        Seq[User],
-                      mentionRoles:    Seq[Snowflake],
-                      attachment:      Seq[Attachment],
-                      embeds:          Seq[Embed],
-                      reactions:       Option[Seq[Reaction]], //reactions can be missing
-                      nonce:           Option[Snowflake],
-                      pinned:          Boolean,
-                      webhookId:       Option[String])
+case class RawMessage(
+    id:              Snowflake,
+    channelId:       Snowflake,
+    author:          Author,
+    content:         String,
+    timestamp:       OffsetDateTime,
+    editedTimestamp: Option[OffsetDateTime],
+    tts:             Boolean,
+    mentionEveryone: Boolean,
+    mentions:        Seq[User],
+    mentionRoles:    Seq[Snowflake],
+    attachment:      Seq[Attachment],
+    embeds:          Seq[Embed],
+    reactions:       Option[Seq[Reaction]], //reactions can be missing
+    nonce:           Option[Snowflake],
+    pinned:          Boolean,
+    webhookId:       Option[String]
+)
 
-case class RawGuild(id:                          Snowflake,
-                    name:                        String,
-                    icon:                        Option[String], //Icon can be null
-                    splash:                      Option[String], //Splash can be null
-                    ownerId:                     Snowflake,
-                    region:                      String,
-                    afkChannelId:                Option[Snowflake], //AfkChannelId can be null
-                    afkTimeout:                  Int,
-                    embedEnabled:                Option[Boolean], //embedEnabled can be missing
-                    embedChannelId:              Option[Snowflake], //embedChannelId can be missing
-                    verificationLevel:           Int,
-                    defaultMessageNotifications: Int,
-                    roles:                       Seq[Role],
-                    emojis:                      Seq[GuildEmoji],
-                    //features: Seq[Feature],
-                    mfaLevel:    Int,
-                    joinedAt:    Option[OffsetDateTime],
-                    large:       Option[Boolean],
-                    unavailable: Option[Boolean],
-                    memberCount: Option[Int],
-                    voiceStates: Option[Seq[VoiceState]],
-                    members:     Option[Seq[RawGuildMember]],
-                    channels:    Option[Seq[RawGuildChannel]],
-                    presences:   Option[Seq[RawPresence]]
+case class RawGuild(
+    id:                          Snowflake,
+    name:                        String,
+    icon:                        Option[String], //Icon can be null
+    splash:                      Option[String], //Splash can be null
+    ownerId:                     Snowflake,
+    region:                      String,
+    afkChannelId:                Option[Snowflake], //AfkChannelId can be null
+    afkTimeout:                  Int,
+    embedEnabled:                Option[Boolean], //embedEnabled can be missing
+    embedChannelId:              Option[Snowflake], //embedChannelId can be missing
+    verificationLevel:           Int,
+    defaultMessageNotifications: Int,
+    roles:                       Seq[Role],
+    emojis:                      Seq[GuildEmoji],
+    //features: Seq[Feature],
+    mfaLevel:    Int,
+    joinedAt:    Option[OffsetDateTime],
+    large:       Option[Boolean],
+    unavailable: Option[Boolean],
+    memberCount: Option[Int],
+    voiceStates: Option[Seq[VoiceState]],
+    members:     Option[Seq[RawGuildMember]],
+    channels:    Option[Seq[RawGuildChannel]],
+    presences:   Option[Seq[RawPresence]]
 )
 
 case class RawUnavailableGuild(id: Snowflake, unavailable: Boolean)
-case class RawPresenceGame(name: Option[String], `type`: Option[Int], url: Option[String])
-case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[String])
+case class RawPresenceGame(name:   Option[String], `type`: Option[Int], url: Option[String])
+case class RawPresence(user:       PartialUser, game:      Option[RawPresenceGame], status: Option[String])

@@ -79,7 +79,7 @@ case class Resume(d:         ResumeData) extends WsMessage[ResumeData] {
   override def op: OpCode = OpCode.Resume
 }
 
-case class Reconnect(d: NotUsed.type) extends WsMessage[NotUsed.type] {
+case class Reconnect(d: NotUsed) extends WsMessage[NotUsed] {
   override def op: OpCode = OpCode.Reconnect
 }
 
@@ -88,7 +88,7 @@ case class RequestGuildMembers(d:           RequestGuildMembersData) extends WsM
   override def op: OpCode = OpCode.RequestGuildMembers
 }
 
-case class InvalidSession(d: NotUsed.type) extends WsMessage[NotUsed.type] {
+case class InvalidSession(d: NotUsed) extends WsMessage[NotUsed] {
   override def op: OpCode = OpCode.InvalidSession
 }
 
@@ -97,7 +97,7 @@ case class Hello(d:                     HelloData) extends WsMessage[HelloData] 
   override def op: OpCode = OpCode.Hello
 }
 
-case class HeartbeatACK(d: NotUsed.type) extends WsMessage[NotUsed.type] {
+case class HeartbeatACK(d: NotUsed) extends WsMessage[NotUsed] {
   override def op: OpCode = OpCode.HeartbeatACK
 }
 
@@ -135,12 +135,14 @@ object OpCode {
 
 sealed case class WsEvent[+Data](name: String)
 object WsEvent {
-  case class ReadyData(v:               Int,
-                       user:            User,
-                       privateChannels: Seq[RawDMChannel],
-                       guilds:          Seq[RawUnavailableGuild],
-                       sessionId:       String,
-                       _trace:          Seq[String])
+  case class ReadyData(
+      v:               Int,
+      user:            User,
+      privateChannels: Seq[RawDMChannel],
+      guilds:          Seq[RawUnavailableGuild],
+      sessionId:       String,
+      _trace:          Seq[String]
+  )
   object Ready extends WsEvent[ReadyData]("READY")
 
   case class ResumedData(_trace: Seq[String])
@@ -190,22 +192,24 @@ object WsEvent {
   object MessageCreate extends WsEvent[RawMessage]("MESSAGE_CREATE")
 
   //RawPartialMessage is defined explicitly because we need to handle the author
-  case class RawPartialMessage(id:              Snowflake,
-                                channelId:       Snowflake,
-                                author:          Option[Author],
-                                content:         Option[String],
-                                timestamp:       Option[OffsetDateTime],
-                                editedTimestamp: Option[OffsetDateTime],
-                                tts:             Option[Boolean],
-                                mentionEveryone: Option[Boolean],
-                                mentions:        Option[Seq[User]],
-                                mentionRoles:    Option[Seq[Snowflake]],
-                                attachment:      Option[Seq[Attachment]],
-                                embeds:          Option[Seq[Embed]],
-                                reactions:       Option[Seq[Reaction]],
-                                nonce:           Option[Snowflake],
-                                pinned:          Option[Boolean],
-                                webhookId:       Option[String])
+  case class RawPartialMessage(
+      id:              Snowflake,
+      channelId:       Snowflake,
+      author:          Option[Author],
+      content:         Option[String],
+      timestamp:       Option[OffsetDateTime],
+      editedTimestamp: Option[OffsetDateTime],
+      tts:             Option[Boolean],
+      mentionEveryone: Option[Boolean],
+      mentions:        Option[Seq[User]],
+      mentionRoles:    Option[Seq[Snowflake]],
+      attachment:      Option[Seq[Attachment]],
+      embeds:          Option[Seq[Embed]],
+      reactions:       Option[Seq[Reaction]],
+      nonce:           Option[Snowflake],
+      pinned:          Option[Boolean],
+      webhookId:       Option[String]
+  )
   object MessageUpdate extends WsEvent[RawPartialMessage]("MESSAGE_UPDATE")
 
   case class MessageDeleteData(id: Snowflake, channelId: Snowflake)
@@ -214,11 +218,13 @@ object WsEvent {
   case class MessageDeleteBulkData(ids: Seq[Snowflake], channelId: Snowflake)
   object MessageDeleteBulk extends WsEvent[MessageDeleteBulkData]("MESSAGE_DELETE_BULK")
 
-  case class PresenceUpdateData(user:    PartialUser,
-                                roles:   Seq[Snowflake],
-                                game:    Option[RawPresenceGame],
-                                guildId: Option[Snowflake],
-                                status:  Option[String])
+  case class PresenceUpdateData(
+      user:    PartialUser,
+      roles:   Seq[Snowflake],
+      game:    Option[RawPresenceGame],
+      guildId: Option[Snowflake],
+      status:  Option[String]
+  )
   object PresenceUpdate extends WsEvent[PresenceUpdateData]("PRESENCE_UPDATE")
 
   case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Int)
