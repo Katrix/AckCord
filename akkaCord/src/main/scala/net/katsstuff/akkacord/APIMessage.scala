@@ -72,7 +72,7 @@ object APIMessage {
   case class MessageDelete(message:      Message, channel:      Channel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class MessageDeleteBulk(messages: Seq[Message], channel: Channel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  //case class PresenceUpdate(presence: Presence, cache: CacheSnapshot) //TODO
+  case class PresenceUpdate(presence: Presence, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class TypingStart(channel: Channel, user: User, timestamp: Instant, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
