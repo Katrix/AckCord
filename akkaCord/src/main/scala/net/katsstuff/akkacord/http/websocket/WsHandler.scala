@@ -39,9 +39,10 @@ import akka.stream.{ActorMaterializer, OverflowStrategy}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.syntax._
 import io.circe.{parser, _}
+import net.katsstuff.akkacord.DiscordClient.ShutdownClient
 import net.katsstuff.akkacord.http.Routes
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
-import net.katsstuff.akkacord.{DiscordClientSettings, RawWsEvent, ShutdownClient}
+import net.katsstuff.akkacord.{DiscordClientSettings, RawWsEvent}
 
 class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
     extends FSM[WsHandler.State, WsHandler.Data]
@@ -81,7 +82,7 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
 
         log.info("Trying to get gateway")
         Http()
-          .singleRequest(HttpRequest(uri = Routes.Gateway))
+          .singleRequest(HttpRequest(uri = Routes.gateway))
           .flatMap {
             case HttpResponse(StatusCodes.OK, headers, entity, _) =>
               log.debug(s"Got WS gateway.\nHeaders:\n${headers.mkString("\n")}\n Entity:$entity")

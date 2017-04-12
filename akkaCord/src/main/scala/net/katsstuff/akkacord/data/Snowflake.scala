@@ -29,4 +29,6 @@ case class Snowflake(content: String) {
 
   def creationDate: LocalDateTime = ???
 
+  override def toString: String = content
+
 }

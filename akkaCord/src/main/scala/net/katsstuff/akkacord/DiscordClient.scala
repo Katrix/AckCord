@@ -26,7 +26,7 @@ package net.katsstuff.akkacord
 import akka.AkkaException
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import akka.event.EventStream
-import net.katsstuff.akkacord.http.websocket.WsHandler
+import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 
 class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
   private implicit val system = context.system
@@ -49,13 +49,15 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
     context.watch(wsHandler)
 
   override def receive: Receive = {
-    case ShutdownClient          => wsHandler.forward(ShutdownClient)
+    case DiscordClient.ShutdownClient => wsHandler.forward(DiscordClient.ShutdownClient)
+    case wsMessage: WsMessage[_] => wsHandler.forward(wsMessage)
     case Terminated(`wsHandler`) => system.terminate()
   }
 }
 object DiscordClient {
   def props(token: String, eventStream: EventStream, settings: DiscordClientSettings): Props =
     Props(classOf[DiscordClient], token, eventStream, settings)
+  case object ShutdownClient
 }
 
 case class DiscordClientSettings(
@@ -69,5 +71,3 @@ case class DiscordClientSettings(
 ) {
   def connect: ActorRef = system.actorOf(DiscordClient.props(token, eventStream, this), "DiscordClient")
 }
-
-case object ShutdownClient
