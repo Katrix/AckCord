@@ -82,8 +82,8 @@ trait DiscordProtocol {
   implicit val attachementEncoder: Encoder[Attachment] = deriveEncoder
   implicit val attachementDecoder: Decoder[Attachment] = deriveDecoder
 
-  implicit val embedEncoder: Encoder[Embed] = deriveEncoder
-  implicit val embedDecoder: Decoder[Embed] = deriveDecoder
+  implicit val embedEncoder: Encoder[ReceivedEmbed] = deriveEncoder
+  implicit val embedDecoder: Decoder[ReceivedEmbed] = deriveDecoder
 
   implicit val reactionEncoder: Encoder[Reaction] = deriveEncoder
   implicit val reactionDecoder: Decoder[Reaction] = deriveDecoder
@@ -127,7 +127,7 @@ trait DiscordProtocol {
       mentions        <- c.downField("mentions").as[Seq[User]]
       mentionRoles    <- c.downField("mention_roles").as[Seq[Snowflake]]
       attachment      <- c.downField("attachments").as[Seq[Attachment]]
-      embeds          <- c.downField("embeds").as[Seq[Embed]]
+      embeds          <- c.downField("embeds").as[Seq[ReceivedEmbed]]
       reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
       nonce           <- c.downField("nonce").as[Option[Snowflake]]
       pinned          <- c.downField("pinned").as[Boolean]
@@ -159,3 +159,4 @@ trait DiscordProtocol {
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder
 }
+object DiscordProtocol extends DiscordProtocol

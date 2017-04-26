@@ -143,7 +143,7 @@ object WsHandlerPresenceUpdate extends Handler[PresenceUpdateData, APIMessage.Pr
         //Did I miss anything here?
         //TODO: This is techically wrong. The event function should be created when the presence is in scope
         val createMessage = (snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) =>
-          prevSnapshot.presences(guildId).get(rPartialUser.id).map(p => APIMessage.PresenceUpdate(p, snapshot, prevSnapshot))
+          prevSnapshot.presences.get(guildId).flatMap(_.get(rPartialUser.id)).map(p => APIMessage.PresenceUpdate(p, snapshot, prevSnapshot))
         OptionalMessageHandlerResult(withNewPresence, createMessage)
       case _ =>
         //TODO: What to do if no guild id?

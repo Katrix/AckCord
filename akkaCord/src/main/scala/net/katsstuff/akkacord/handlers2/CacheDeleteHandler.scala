@@ -21,24 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord
+package net.katsstuff.akkacord.handlers2
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.data.{AvailableGuild, CacheSnapshot, Snowflake}
 
-package object handlers {
-
-  def guildUpdate[RetMessage <: AnyRef](id: Snowflake, updateType: String, snapshot: CacheSnapshot)(
-      f:                                    AvailableGuild => HandlerResult[RetMessage]
-  )(implicit log:                           LoggingAdapter): AbstractHandlerResult[RetMessage] =
-    snapshot.getGuild(id) match {
-      case Some(guild) => f.apply(guild)
-      case None =>
-        log.warning("Received {} for unknown guild {}", updateType, id)
-        NoHandlerResult
-    }
-
-  def newGuild(snapshot: CacheSnapshot, guildId: Snowflake, guild: AvailableGuild): CacheSnapshot = {
-    snapshot.copy(guilds = snapshot.guilds + ((guildId, guild)))
+trait CacheDeleteHandler[Obj] extends CacheHandler[Obj]
+object CacheDeleteHandler {
+  def deleteHandler[Obj](f: (CacheSnapshotBuilder, Obj, LoggingAdapter) => Unit): CacheDeleteHandler[Obj] = new CacheDeleteHandler[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit = f(builder, obj, log)
   }
+
+  implicit def seqHandler[Obj](implicit objHandler: CacheDeleteHandler[Obj]): CacheDeleteHandler[Seq[Obj]] =
+    deleteHandler((builder, obj, log) => obj.foreach(objHandler.handle(builder, _)(log)))
+
+  def handleDelete[Obj](builder: CacheSnapshotBuilder, obj: Obj)(implicit handler: CacheDeleteHandler[Obj], log: LoggingAdapter): Unit =
+    handler.handle(builder, obj)
+
+  def handleDeleteLog[Obj](builder: CacheSnapshotBuilder, obj: Obj, log: LoggingAdapter)(implicit handler: CacheDeleteHandler[Obj]): Unit =
+    handler.handle(builder, obj)(log)
 }

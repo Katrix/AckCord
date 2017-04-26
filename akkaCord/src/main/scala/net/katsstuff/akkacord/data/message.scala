@@ -51,7 +51,7 @@ case class Message(
     mentions:        Seq[Snowflake],
     mentionRoles:    Seq[Snowflake],
     attachment:      Seq[Attachment],
-    embeds:          Seq[Embed],
+    embeds:          Seq[ReceivedEmbed],
     reactions:       Seq[Reaction],
     nonce:           Option[Snowflake],
     pinned:          Boolean,
@@ -61,28 +61,46 @@ case class Message(
 case class Reaction(count:  Int, me:                 Boolean, emoji: MessageEmoji)
 case class MessageEmoji(id: Option[Snowflake], name: String)
 
-case class Embed(
+case class ReceivedEmbed(
     title:       String,
-    embedType:   String,
+    `type`:      String,
     description: String,
     url:         String,
     timestamp:   OffsetDateTime,
     color:       Int,
-    footer:      EmbedFooter,
-    image:       EmbedImage,
-    thumbnail:   EmbedThumbnail,
+    footer:      ReceivedEmbedFooter,
+    image:       ReceivedEmbedImage,
+    thumbnail:   ReceivedEmbedThumbnail,
     video:       EmbedVideo,
     provider:    EmbedProvider,
-    author:      EmbedAuthor,
+    author:      ReceivedEmbedAuthor,
     fields:      Seq[EmbedField]
 )
 
-case class EmbedThumbnail(url: String, proxyUrl: String, height: Int, width: Int)
-case class EmbedVideo(url:     String, height:   Int, width: Int)
-case class EmbedImage(url:     String, proxyUrl: String, height: Int, width: Int)
-case class EmbedProvider(name: String, url:      String)
-case class EmbedAuthor(name:   String, url:      String, iconUrl: String, proxyIconUrl: String)
-case class EmbedFooter(text:   String, iconUrl:  String, proxyIconUrl: String)
-case class EmbedField(name:    String, value:    String, inline: Boolean)
+case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, width: Int)
+case class EmbedVideo(url:             String, height:   Int, width: Int)
+case class ReceivedEmbedImage(url:     String, proxyUrl: String, height: Int, width: Int)
+case class EmbedProvider(name:         String, url:      String)
+case class ReceivedEmbedAuthor(name:   String, url:      String, iconUrl: String, proxyIconUrl: String)
+case class ReceivedEmbedFooter(text:   String, iconUrl:  String, proxyIconUrl: String)
+case class EmbedField(name:            String, value:    String, inline: Boolean)
 
 case class Attachment(id: Snowflake, filename: String, size: Int, url: String, proxyUrl: String, height: Option[Int], width: Option[Int])
+
+case class OutgoingEmbed(
+    title:       String,
+    description: String,
+    url:         String,
+    timestamp:   OffsetDateTime,
+    color:       Int,
+    footer:      OutgoingEmbedFooter,
+    image:       OutgoingEmbedImage,
+    thumbnail:   OutgoingEmbedThumbnail,
+    author:      OutgoingEmbedAuthor,
+    fields:      Seq[EmbedField]
+)
+
+case class OutgoingEmbedThumbnail(url: String)
+case class OutgoingEmbedImage(url:     String)
+case class OutgoingEmbedAuthor(name:   String, url: String, iconUrl: String)
+case class OutgoingEmbedFooter(text:   String, iconUrl: String)

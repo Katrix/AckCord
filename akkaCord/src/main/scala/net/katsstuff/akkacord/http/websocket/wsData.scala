@@ -26,7 +26,10 @@ package net.katsstuff.akkacord.http.websocket
 import java.time.OffsetDateTime
 
 import akka.NotUsed
-import net.katsstuff.akkacord.data.{Attachment, Author, Embed, GuildEmoji, Reaction, Role, Snowflake, User, VoiceState}
+import akka.event.LoggingAdapter
+import net.katsstuff.akkacord.APIMessage
+import net.katsstuff.akkacord.data.{Attachment, Author, CacheSnapshot, GuildEmoji, Reaction, ReceivedEmbed, Role, Snowflake, User, VoiceState}
+import net.katsstuff.akkacord.handlers2.{CacheHandler, CacheSnapshotBuilder, PresenceUpdateHandler, RawHandlers, ReadyHandler}
 import net.katsstuff.akkacord.http._
 import shapeless._
 import shapeless.labelled.FieldType
@@ -133,7 +136,11 @@ object OpCode {
   }
 }
 
-sealed case class WsEvent[+Data](name: String)
+sealed case class WsEvent[Data](
+    name:        String,
+    handler:     CacheHandler[Data],
+    createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
+)
 object WsEvent {
   case class ReadyData(
       v:               Int,
@@ -143,53 +150,156 @@ object WsEvent {
       sessionId:       String,
       _trace:          Seq[String]
   )
-  object Ready extends WsEvent[ReadyData]("READY")
+  object Ready extends WsEvent[ReadyData]("READY", ReadyHandler, _ => (n, o) => Some(APIMessage.Ready(n, o)))
 
   case class ResumedData(_trace: Seq[String])
-  object Resumed extends WsEvent[ResumedData]("RESUMED")
 
-  object ChannelCreate extends WsEvent[RawChannel]("CHANNEL_CREATE")
-  object ChannelUpdate extends WsEvent[RawGuildChannel]("CHANNEL_UPDATE")
-  object ChannelDelete extends WsEvent[RawChannel]("CHANNEL_DELETE")
+  private val resumeHandler = new CacheHandler[ResumedData] {
+    override def handle(builder: CacheSnapshotBuilder, obj: ResumedData)(implicit log: LoggingAdapter): Unit = ()
+  }
 
-  object GuildCreate extends WsEvent[RawGuild]("GUILD_CREATE")
-  object GuildUpdate extends WsEvent[RawGuild]("GUILD_UPDATE")
+  private def notImplementedHandler[A] = new CacheHandler[A] {
+    override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
+      log.warning(s"Not implemented handler for $obj")
+  }
+
+  private def notImplementedMessage[A]: A => (CacheSnapshot, CacheSnapshot) => Option[APIMessage] = _ => (_, _) => None
+
+  object Resumed extends WsEvent[ResumedData]("RESUMED", resumeHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
+
+  object ChannelCreate
+      extends WsEvent[RawChannel](
+        "CHANNEL_CREATE",
+        RawHandlers.rawChannelUpdateHandler,
+        data => (current, prev) => current.getChannel(data.id).map(c => APIMessage.ChannelCreate(c, current, prev))
+      )
+
+  object ChannelUpdate
+      extends WsEvent[RawGuildChannel](
+        "CHANNEL_UPDATE",
+        RawHandlers.rawGuildChannelUpdateHandler,
+        data => (current, prev) => current.getGuildChannel(data.id).map(c => APIMessage.ChannelUpdate(c, current, prev))
+      )
+
+  object ChannelDelete
+      extends WsEvent[RawChannel](
+        "CHANNEL_DELETE",
+        RawHandlers.rawChannelDeleteHandler,
+        data => (current, prev) => prev.getGuildChannel(data.id).map(c => APIMessage.ChannelDelete(c, current, prev))
+      )
+
+  object GuildCreate
+      extends WsEvent[RawGuild](
+        "GUILD_CREATE",
+        RawHandlers.rawGuildUpdateHandler,
+        data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildCreate(g, current, prev))
+      )
+  object GuildUpdate
+      extends WsEvent[RawGuild](
+        "GUILD_UPDATE",
+        RawHandlers.rawGuildUpdateHandler,
+        data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, current, prev))
+      )
 
   case class GuildDeleteData(id: Snowflake, unavailable: Boolean)
-  object GuildDelete extends WsEvent[GuildDeleteData]("GUILD_DELETE")
+  object GuildDelete
+      extends WsEvent[GuildDeleteData](
+        "GUILD_DELETE",
+        RawHandlers.deleteGuildDataHandler,
+        data => (current, prev) => prev.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, current, prev))
+      )
 
   val userGen = LabelledGeneric[User]
   type GuildUser = FieldType[Witness.`'guildId`.T, Snowflake] :: userGen.Repr
-  object GuildBanAdd    extends WsEvent[GuildUser]("GUILD_BAN_ADD")
-  object GuildBanRemove extends WsEvent[GuildUser]("GUILD_BAN_REMOVE")
+  object GuildBanAdd    extends WsEvent[GuildUser]("GUILD_BAN_ADD", notImplementedHandler, notImplementedMessage)
+  object GuildBanRemove extends WsEvent[GuildUser]("GUILD_BAN_REMOVE", notImplementedHandler, notImplementedMessage)
 
   case class GuildEmojisUpdateData(guildId: Snowflake, emojis: Seq[GuildEmoji])
-  object GuildEmojisUpdate extends WsEvent[GuildEmojisUpdateData]("GUILD_EMOJIS_UPDATE")
+  object GuildEmojisUpdate
+      extends WsEvent[GuildEmojisUpdateData](
+        "GUILD_EMOJIS_UPDATE",
+        RawHandlers.guildEmojisUpdateDataHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, current, prev))
+      )
 
   case class GuildIntegrationsUpdateData(guildId: Snowflake)
-  object GuildIntegrationsUpdate extends WsEvent[GuildIntegrationsUpdateData]("GUILD_INTEGRATIONS_UPDATE")
+  object GuildIntegrationsUpdate
+      extends WsEvent[GuildIntegrationsUpdateData]("GUILD_INTEGRATIONS_UPDATE", notImplementedHandler, notImplementedMessage)
 
   val guildMemberGen = LabelledGeneric[RawGuildMember]
   type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, Snowflake] :: guildMemberGen.Repr
-  object GuildMemberAdd extends WsEvent[RawGuildMemberWithGuild]("GUILD_MEMBER_ADD")
+  object GuildMemberAdd
+      extends WsEvent[RawGuildMemberWithGuild](
+        "GUILD_MEMBER_ADD",
+        RawHandlers.rawGuildMemberWithGuildUpdateHandler,
+        data =>
+          (current, prev) =>
+            for {
+              g   <- current.getGuild(data.head)
+              mem <- g.members.get(guildMemberGen.from(data.tail).user.id)
+            } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
+      )
 
   case class GuildMemberRemoveData(guildId: Snowflake, user: User)
-  object GuildMemberRemove extends WsEvent[GuildMemberRemoveData]("GUILD_MEMBER_REMOVE")
+  object GuildMemberRemove
+      extends WsEvent[GuildMemberRemoveData](
+        "GUILD_MEMBER_REMOVE",
+        RawHandlers.rawGuildMemberDeleteHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
+      )
 
   case class GuildMemberUpdateData(guildId: Snowflake, roles: Seq[Snowflake], user: User, nick: Option[String]) //Nick can probably be null here
-  object GuildMemberUpdate extends WsEvent[GuildMemberUpdateData]("GUILD_MEMBER_UPDATE")
+  object GuildMemberUpdate
+      extends WsEvent[GuildMemberUpdateData](
+        "GUILD_MEMBER_UPDATE",
+        RawHandlers.rawGuildMemberUpdateHandler,
+        data =>
+          (current, prev) =>
+            current
+              .getGuild(data.guildId)
+              .map(g => APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole), data.user, data.nick, current, prev))
+      )
 
   case class GuildMemberChunkData(guildId: Snowflake, members: Seq[RawGuildMember])
-  object GuildMemberChunk extends WsEvent[GuildMemberChunkData]("GUILD_MEMBER_CHUNK")
+  object GuildMemberChunk
+      extends WsEvent[GuildMemberChunkData](
+        "GUILD_MEMBER_CHUNK",
+        RawHandlers.rawGuildMemberChunkHandler,
+        data =>
+          (current, prev) =>
+            current
+              .getGuild(data.guildId)
+              .map(g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), current, prev))
+      )
 
   case class GuildRoleModifyData(guildId: Snowflake, role: Role)
-  object GuildRoleCreate extends WsEvent[GuildRoleModifyData]("GUILD_ROLE_CREATE")
-  object GuildRoleUpdate extends WsEvent[GuildRoleModifyData]("GUILD_ROLE_UPDATE")
+  object GuildRoleCreate
+      extends WsEvent[GuildRoleModifyData](
+        "GUILD_ROLE_CREATE",
+        RawHandlers.roleUpdateHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleCreate(g, data.role, current, prev))
+      )
+  object GuildRoleUpdate
+      extends WsEvent[GuildRoleModifyData](
+        "GUILD_ROLE_UPDATE",
+        RawHandlers.roleUpdateHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleUpdate(g, data.role, current, prev))
+      )
 
   case class GuildRoleDeleteData(guildId: Snowflake, roleId: Snowflake)
-  object GuildRoleDelete extends WsEvent[GuildRoleDeleteData]("GUILD_ROLE_DELETE")
+  object GuildRoleDelete
+      extends WsEvent[GuildRoleDeleteData](
+        "GUILD_ROLE_DELETE",
+        RawHandlers.roleDeleteHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleDelete(g, data.roleId, current, prev))
+      )
 
-  object MessageCreate extends WsEvent[RawMessage]("MESSAGE_CREATE")
+  object MessageCreate
+      extends WsEvent[RawMessage](
+        "MESSAGE_CREATE",
+        RawHandlers.rawMessageUpdateHandler,
+        data => (current, prev) => current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+      )
 
   //RawPartialMessage is defined explicitly because we need to handle the author
   case class RawPartialMessage(
@@ -204,19 +314,43 @@ object WsEvent {
       mentions:        Option[Seq[User]],
       mentionRoles:    Option[Seq[Snowflake]],
       attachment:      Option[Seq[Attachment]],
-      embeds:          Option[Seq[Embed]],
+      embeds:          Option[Seq[ReceivedEmbed]],
       reactions:       Option[Seq[Reaction]],
       nonce:           Option[Snowflake],
       pinned:          Option[Boolean],
       webhookId:       Option[String]
   )
-  object MessageUpdate extends WsEvent[RawPartialMessage]("MESSAGE_UPDATE")
+  object MessageUpdate
+      extends WsEvent[RawPartialMessage](
+        "MESSAGE_UPDATE",
+        RawHandlers.rawPartialMessageUpdateHandler,
+        data => (current, prev) => current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+      )
 
   case class MessageDeleteData(id: Snowflake, channelId: Snowflake)
-  object MessageDelete extends WsEvent[MessageDeleteData]("MESSAGE_DELETE")
+  object MessageDelete
+      extends WsEvent[MessageDeleteData](
+        "MESSAGE_DELETE",
+        RawHandlers.rawMessageDeleteHandler,
+        data =>
+          (current, prev) =>
+            for {
+              message <- prev.getMessage(data.id)
+              channel <- current.getChannel(data.channelId)
+            } yield APIMessage.MessageDelete(message, channel, current, prev)
+      )
 
   case class MessageDeleteBulkData(ids: Seq[Snowflake], channelId: Snowflake)
-  object MessageDeleteBulk extends WsEvent[MessageDeleteBulkData]("MESSAGE_DELETE_BULK")
+  object MessageDeleteBulk
+      extends WsEvent[MessageDeleteBulkData](
+        "MESSAGE_DELETE_BULK",
+        RawHandlers.rawMessageDeleteBulkHandler,
+        data =>
+          (current, prev) =>
+            current
+              .getChannel(data.channelId)
+              .map(channel => APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev))
+      )
 
   case class PresenceUpdateData(
       user:    PartialUser,
@@ -225,16 +359,27 @@ object WsEvent {
       guildId: Option[Snowflake],
       status:  Option[String]
   )
-  object PresenceUpdate extends WsEvent[PresenceUpdateData]("PRESENCE_UPDATE")
+  object PresenceUpdate
+      extends WsEvent[PresenceUpdateData](
+        "PRESENCE_UPDATE",
+        PresenceUpdateHandler,
+        data =>
+          (current, prev) =>
+            data.guildId.flatMap { guildId =>
+              current
+                .getPresence(guildId, data.user.head)
+                .map(presence => APIMessage.PresenceUpdate(presence, current, prev))
+        }
+      )
 
   case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Int)
-  object TypingStart extends WsEvent[TypingStartData]("TYPING_START")
+  object TypingStart extends WsEvent[TypingStartData]("TYPING_START", notImplementedHandler, notImplementedMessage)
 
   //object UserSettingsUpdate extends Event("USER_SETTINGS_UPDATE") //TODO
 
-  object UserUpdate        extends WsEvent[User]("USER_UPDATE")
-  object VoiceStateUpdate  extends WsEvent[VoiceState]("VOICE_STATUS_UPDATE")
-  object VoiceServerUpdate extends WsEvent[VoiceServerUpdateData]("VOICE_SERVER_UPDATE")
+  object UserUpdate        extends WsEvent[User]("USER_UPDATE", notImplementedHandler, notImplementedMessage)
+  object VoiceStateUpdate  extends WsEvent[VoiceState]("VOICE_STATUS_UPDATE", notImplementedHandler, notImplementedMessage)
+  object VoiceServerUpdate extends WsEvent[VoiceServerUpdateData]("VOICE_SERVER_UPDATE", notImplementedHandler, notImplementedMessage)
 
   def forName(name: String): Option[WsEvent[_]] = name match {
     case "READY"                     => Some(Ready)

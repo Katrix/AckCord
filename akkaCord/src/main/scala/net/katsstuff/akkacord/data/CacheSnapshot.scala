@@ -25,7 +25,8 @@ package net.katsstuff.akkacord.data
 
 import java.time.Instant
 
-//All nested maps should use default maps
+import net.katsstuff.akkacord.CacheSnapshotLike
+
 case class CacheSnapshot(
     botUser:           User,
     dmChannels:        Map[Snowflake, DMChannel],
@@ -35,44 +36,11 @@ case class CacheSnapshot(
     lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
     users:             Map[Snowflake, User],
     presences:         Map[Snowflake, Map[Snowflake, Presence]]
-) {
+) extends CacheSnapshotLike {
 
-  def getDmChannel(id: Snowflake): Option[DMChannel] = dmChannels.get(id)
+  override type MapType[A, B] = Map[A, B]
 
-  def getGuild(id:             Snowflake): Option[AvailableGuild] = guilds.get(id)
-  def getGuildWithFallback(id: Snowflake): Option[Guild]          = guilds.get(id).orElse(unavailableGuilds.get(id))
+  override def getChannelMessages(channelId: Snowflake): Map[Snowflake, Message] = messages.getOrElse(channelId, Map.empty)
 
-  def getGuildChannel(id: Snowflake): Option[GuildChannel] = guilds.values.collectFirst {
-    case guild if guild.channels.contains(id) => guild.channels(id)
-  }
-
-  def getChannel(id: Snowflake): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
-
-  def getRole(id: Snowflake): Option[Role] = guilds.values.collectFirst {
-    case guild if guild.roles.contains(id) => guild.roles(id)
-  }
-
-  def getEmoji(id: Snowflake): Option[GuildEmoji] = guilds.values.collectFirst {
-    case guild if guild.emojis.contains(id) => guild.emojis(id)
-  }
-
-  def getMember(id: Snowflake): Option[GuildMember] = guilds.values.collectFirst {
-    case guild if guild.members.contains(id) => guild.members(id)
-  }
-
-  def getChannelMessages(channelId: Snowflake): Map[Snowflake, Message] = messages.getOrElse(channelId, Map.empty)
-
-  def getMessage(channelId: Snowflake, messageId: Snowflake): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
-  def getMessage(messageId: Snowflake): Option[Message] = messages.values.collectFirst {
-    case channelMap if channelMap.contains(messageId) => channelMap(messageId)
-  }
-
-  def getChannelLastTyped(channelId: Snowflake): Map[Snowflake, Instant] = lastTyped.getOrElse(channelId, Map.empty)
-
-  def getLastTyped(channelId: Snowflake, userId: Snowflake): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
-
-  def getUser(id: Snowflake): Option[User] = users.get(id)
-
-  def getPresence(guildId: Snowflake, userId: Snowflake): Option[Presence] = presences(guildId).get(userId)
-
+  override def getChannelLastTyped(channelId: Snowflake): Map[Snowflake, Instant] = lastTyped.getOrElse(channelId, Map.empty)
 }

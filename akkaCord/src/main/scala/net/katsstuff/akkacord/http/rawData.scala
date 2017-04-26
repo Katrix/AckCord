@@ -63,7 +63,7 @@ case class RawMessage(
     mentions:        Seq[User],
     mentionRoles:    Seq[Snowflake],
     attachment:      Seq[Attachment],
-    embeds:          Seq[Embed],
+    embeds:          Seq[ReceivedEmbed],
     reactions:       Option[Seq[Reaction]], //reactions can be missing
     nonce:           Option[Snowflake],
     pinned:          Boolean,

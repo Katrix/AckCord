@@ -23,42 +23,19 @@
  */
 package net.katsstuff.akkacord
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.event.EventStream
+import scala.collection.mutable
+
+import akka.NotUsed
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.event.{EventStream, LoggingAdapter}
 import net.katsstuff.akkacord.data._
-import net.katsstuff.akkacord.handlers._
-import net.katsstuff.akkacord.handlers.ws._
-import net.katsstuff.akkacord.http.websocket.WsEvent
-import net.katsstuff.akkacord.http.websocket.WsEvent.GuildIntegrationsUpdateData
-import net.katsstuff.akkacord.http.{RawDMChannel, RawUnavailableGuild}
+import net.katsstuff.akkacord.handlers2.{CacheHandler, CacheSnapshotBuilder}
+import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
 
 class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
   private var prevSnapshot: CacheSnapshot = _
   private var snapshot:     CacheSnapshot = _
-
-  private val handlers: Map[Any, Handler[_, _]] = Map(
-    WsEvent.Resumed           -> WsHandlerResumed,
-    WsEvent.ChannelCreate     -> WsHandlerChannelCreate,
-    WsEvent.ChannelUpdate     -> WsHandlerChannelUpdate,
-    WsEvent.ChannelDelete     -> WsHandlerChannelDelete,
-    WsEvent.GuildCreate       -> WsHandlerGuildCreate,
-    WsEvent.GuildUpdate       -> WsHandlerGuildUpdate,
-    WsEvent.GuildDelete       -> WsHandlerGuildDelete,
-    WsEvent.GuildEmojisUpdate -> WsHandlerGuildEmojiUpdate,
-    WsEvent.GuildMemberAdd    -> WsHandlerGuildMemberAdd,
-    WsEvent.GuildMemberRemove -> WsHandlerGuildMemberRemove,
-    WsEvent.GuildMemberUpdate -> WsHandlerGuildMemberUpdate,
-    WsEvent.GuildMemberChunk  -> WsHandlerGuildMemberChunk,
-    WsEvent.GuildRoleCreate   -> WsHandlerGuildRoleCreate,
-    WsEvent.GuildRoleUpdate   -> WsHandlerGuildRoleUpdate,
-    WsEvent.GuildRoleDelete   -> WsHandlerGuildRoleDelete,
-    WsEvent.MessageCreate     -> WsHandlerMessageCreate,
-    WsEvent.MessageUpdate     -> WsHandlerMessageUpdate,
-    WsEvent.MessageDelete     -> WsHandlerMessageDelete,
-    WsEvent.MessageDeleteBulk -> WsHandlerMessageDeleteBulk,
-    WsEvent.PresenceUpdate    -> WsHandlerPresenceUpdate
-  )
 
   private def updateSnapshot(newSnapshot: CacheSnapshot): Unit = {
     if (newSnapshot ne snapshot) {
@@ -67,65 +44,60 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
     }
   }
 
-  private def getHandler[Event[_], EventData](event: Event[EventData]): Handler[EventData, AnyRef] =
-    handlers(event).asInstanceOf[Handler[EventData, AnyRef]]
-
   private def isReady: Boolean = prevSnapshot != null && snapshot != null
 
-  private def guildUpdate(id: Snowflake, updateType: String)(f: AvailableGuild => AvailableGuild): Unit =
-    snapshot.getGuild(id) match {
-      case Some(guild) =>
-        updateSnapshot(snapshot.copy(guilds = snapshot.guilds + ((id, f(guild)))))
-      case None => log.warning("Received {} for unknown guild {}", updateType, id)
-    }
-
   override def receive: Receive = {
-    case RawWsEvent(WsEvent.Ready, WsEvent.ReadyData(_, user, rawPrivateChannels, rawGuilds, _, _)) =>
-      val (dmChannels, users) = rawPrivateChannels.map {
-        case RawDMChannel(id, _, recipient, lastMessageId) =>
-          (id -> DMChannel(id, lastMessageId, recipient.id), recipient.id -> recipient)
-      }.unzip
-
-      val guilds = rawGuilds.map {
-        case RawUnavailableGuild(id, _) =>
-          id -> UnavailableGuild(id)
-      }
-
-      val firstSnapshot = CacheSnapshot(
-        botUser = user,
-        dmChannels = dmChannels.toMap,
-        unavailableGuilds = guilds.toMap,
-        guilds = Map(),
-        messages = Map().withDefaultValue(Map()),
-        lastTyped = Map().withDefaultValue(Map()),
-        users = users.toMap,
-        presences = Map().withDefaultValue(Map())
+    case readyHandler: CacheHandlerEvent[_]
+        if readyHandler.data.isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
+      val builder = new CacheSnapshotBuilder(
+        null, //The event will populate this
+        mutable.Map.empty,
+        mutable.Map.empty,
+        mutable.Map.empty,
+        mutable.Map.empty,
+        mutable.Map.empty,
+        mutable.Map.empty,
+        mutable.Map.empty
       )
 
-      prevSnapshot = firstSnapshot
-      snapshot = firstSnapshot
+      readyHandler.handle(builder)(log)
 
-      eventStream.publish(APIMessage.Ready(snapshot, prevSnapshot))
-    case raw: RawWsEvent[_] if isReady && handlers.contains(raw.event) =>
-      val handlerResult = getHandler(raw.event).handle(snapshot, raw.data)(log)
-      handlerResult match {
-        case HandlerResult(newSnapshot, createMessage) =>
-          updateSnapshot(newSnapshot)
-          eventStream.publish(createMessage(snapshot, prevSnapshot))
-        case OptionalMessageHandlerResult(newSnapshot, createMessage) =>
-          updateSnapshot(newSnapshot)
-          createMessage.apply(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case NoHandlerResult =>
+      prevSnapshot = builder.toImmutable
+      snapshot = prevSnapshot
+
+      readyHandler match {
+        case APIMessageHandlerEvent(data, event)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case RequestHandlerEvent(data, sendTo, contextual) => sendTo ! RequestResponse(data, contextual)
+        case _                                             =>
       }
-    case RawWsEvent(WsEvent.GuildBanAdd, user) if isReady                                             => ???
-    case RawWsEvent(WsEvent.GuildBanRemove, user) if isReady                                          => ???
-    case RawWsEvent(WsEvent.GuildIntegrationsUpdate, GuildIntegrationsUpdateData(guildId)) if isReady => ???
-    case RawWsEvent(_, _) if !isReady => log.error("Received event before ready")
+    case handlerEvent: CacheHandlerEvent[_] if isReady =>
+      val builder = CacheSnapshotBuilder(snapshot)
+      handlerEvent.handle(builder)(log)
+
+      updateSnapshot(builder.toImmutable)
+      handlerEvent match {
+        case APIMessageHandlerEvent(data, event)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case RequestHandlerEvent(data, sendTo, contextual) => sendTo ! RequestResponse(data, contextual)
+        case _                                             =>
+      }
+    case _ if !isReady => log.error("Received event before ready")
   }
 }
 object SnowflakeCache {
   def props(eventStream: EventStream): Props = Props(classOf[SnowflakeCache], eventStream)
 }
 
-sealed trait RawEvent
-case class RawWsEvent[Data](event: WsEvent[Data], data: Data) extends RawEvent
+sealed trait CacheHandlerEvent[Data] {
+  def data:    Data
+  def handler: CacheHandler[Data]
+
+  def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit = handler.handle(builder, data)
+}
+case class APIMessageHandlerEvent[Data](data: Data, sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage])(
+    implicit val handler:                     CacheHandler[Data]
+) extends CacheHandlerEvent[Data]
+case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context = NotUsed)(implicit val handler: CacheHandler[Data])
+    extends CacheHandlerEvent[Data]
+case class MiscHandlerEvent[Data](data: Data)(implicit val handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
+
+case class RequestResponse[Data, Context](data: Data, context: Context)

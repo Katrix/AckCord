@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord.data
 
-import java.time.{Instant, OffsetDateTime}
+import java.time.OffsetDateTime
 
 sealed trait Guild {
   def id:          Snowflake

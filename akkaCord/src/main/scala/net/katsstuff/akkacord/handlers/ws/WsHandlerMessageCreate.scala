@@ -52,7 +52,7 @@ object WsHandlerMessageCreate extends Handler[RawMessage, APIMessage.MessageCrea
       webhookId = rawMessage.webhookId
     )
 
-    val newChannelMessages = snapshot.messages(rawMessage.channelId) + ((message.id, message))
+    val newChannelMessages = snapshot.messages.getOrElse(rawMessage.channelId, Map.empty) + ((message.id, message))
     val newMessages        = snapshot.messages + ((rawMessage.channelId, newChannelMessages))
     val newSnapshot = snapshot.copy(users = snapshot.users ++ users, messages = newMessages)
 

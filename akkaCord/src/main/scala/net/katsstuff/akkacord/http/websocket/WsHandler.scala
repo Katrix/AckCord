@@ -42,7 +42,7 @@ import io.circe.{parser, _}
 import net.katsstuff.akkacord.DiscordClient.ShutdownClient
 import net.katsstuff.akkacord.http.Routes
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
-import net.katsstuff.akkacord.{DiscordClientSettings, RawWsEvent}
+import net.katsstuff.akkacord.{DiscordClientSettings, APIMessageHandlerEvent}
 
 class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
     extends FSM[WsHandler.State, WsHandler.Data]
@@ -87,9 +87,10 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
             case HttpResponse(StatusCodes.OK, headers, entity, _) =>
               log.debug(s"Got WS gateway.\nHeaders:\n${headers.mkString("\n")}\n Entity:$entity")
               Unmarshal(entity).to[Json]
-            case HttpResponse(code, headers, entity, protocol) =>
+            case HttpResponse(code, headers, entity, _) =>
+              entity.discardBytes()
               throw new IllegalStateException(
-                s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}\nEntity: $entity\n"
+                s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"
               )
           }
           .foreach { js =>
@@ -118,8 +119,11 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
       val (futureResponse, (dest, source)) = Http().singleWebSocketRequest(wsUri(uri), flow)
 
       futureResponse.foreach {
-        case InvalidUpgradeResponse(_, cause) => throw new IllegalStateException(s"Could not connect to gateway: $cause")
-        case ValidUpgrade(_, _) =>
+        case InvalidUpgradeResponse(response, cause) =>
+          response.discardEntityBytes()
+          throw new IllegalStateException(s"Could not connect to gateway: $cause")
+        case ValidUpgrade(response, _) =>
+          response.discardEntityBytes()
           dest.subscribe(ActorSubscriber(self)) //Is this safe to do in another thread?
           self ! ValidWsUpgrade
       }
@@ -163,7 +167,11 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
       source.offer(TextMessage(payload))
       val cancellable = system.scheduler.schedule(0 seconds, data.heartbeatInterval millis, self, SendHeartbeat)
       stay using WithHeartbeat(data.heartbeatInterval, cancellable, receivedAck = true, source, resume)
-    case Event(Dispatch(seq, event, d), data: WithHeartbeat) =>
+    case Event(dispatch: Dispatch[d], data: WithHeartbeat) =>
+      val seq = dispatch.sequence
+      val event = dispatch.event
+      val d = dispatch.d
+
       val updatedResume = data.resume.map(_.copy(seq = seq))
       val updatedData   = data.copy(resume = updatedResume)
 
@@ -179,7 +187,7 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
           stay using updatedData
       }
 
-      cache ! RawWsEvent(event, d)
+      cache ! APIMessageHandlerEvent(d, event.createEvent)(event.handler)
 
       stayRes
     case Event(HeartbeatACK(_), data: WithHeartbeat) =>

@@ -21,24 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord
+package net.katsstuff.akkacord.handlers2
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.data.{AvailableGuild, CacheSnapshot, Snowflake}
+import net.katsstuff.akkacord.data.{DMChannel, UnavailableGuild}
+import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
+import net.katsstuff.akkacord.http.{RawDMChannel, RawUnavailableGuild}
 
-package object handlers {
+//We handle this one seperately is it's kind of special
+object ReadyHandler extends CacheHandler[ReadyData] {
+  override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
+    val ReadyData(_, user, rawPrivateChannels, rawGuilds, _, _) = obj
 
-  def guildUpdate[RetMessage <: AnyRef](id: Snowflake, updateType: String, snapshot: CacheSnapshot)(
-      f:                                    AvailableGuild => HandlerResult[RetMessage]
-  )(implicit log:                           LoggingAdapter): AbstractHandlerResult[RetMessage] =
-    snapshot.getGuild(id) match {
-      case Some(guild) => f.apply(guild)
-      case None =>
-        log.warning("Received {} for unknown guild {}", updateType, id)
-        NoHandlerResult
+    val (dmChannels, users) = rawPrivateChannels.map {
+      case RawDMChannel(id, _, recipient, lastMessageId) => (id -> DMChannel(id, lastMessageId, recipient.id), recipient.id -> recipient)
+    }.unzip
+
+    val guilds = rawGuilds.map {
+      case RawUnavailableGuild(id, _) => id -> UnavailableGuild(id)
     }
 
-  def newGuild(snapshot: CacheSnapshot, guildId: Snowflake, guild: AvailableGuild): CacheSnapshot = {
-    snapshot.copy(guilds = snapshot.guilds + ((guildId, guild)))
+    builder.botUser = user
+    builder.dmChannels ++= dmChannels.toMap
+    builder.unavailableGuilds ++= guilds.toMap
+    builder.users ++= users.toMap
   }
 }

@@ -23,22 +23,8 @@
  */
 package net.katsstuff.akkacord
 
-import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.data.{AvailableGuild, CacheSnapshot, Snowflake}
+object AkkaCord {
 
-package object handlers {
+  val Version = "0.1"
 
-  def guildUpdate[RetMessage <: AnyRef](id: Snowflake, updateType: String, snapshot: CacheSnapshot)(
-      f:                                    AvailableGuild => HandlerResult[RetMessage]
-  )(implicit log:                           LoggingAdapter): AbstractHandlerResult[RetMessage] =
-    snapshot.getGuild(id) match {
-      case Some(guild) => f.apply(guild)
-      case None =>
-        log.warning("Received {} for unknown guild {}", updateType, id)
-        NoHandlerResult
-    }
-
-  def newGuild(snapshot: CacheSnapshot, guildId: Snowflake, guild: AvailableGuild): CacheSnapshot = {
-    snapshot.copy(guilds = snapshot.guilds + ((guildId, guild)))
-  }
 }
