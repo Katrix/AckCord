@@ -79,6 +79,7 @@ object Routes {
   val getChannelMessage:  (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, GET))
   val createMessage:      ChannelId => RestRoute              = channelMessages.andThen(RestRoute(_, POST))
   val editMessage:        (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, PATCH))
+  val deleteMessage:      (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, DELETE))
   val bulkDeleteMessages: (ChannelId) => RestRoute            = channelMessages.andThen(uri => RestRoute(s"$uri/bulk-delete", POST))
 
   val reactions:        (MessageId, ChannelId) => Uri        = channelMessage.andThen(uri => s"$uri/reactions")
@@ -87,8 +88,8 @@ object Routes {
 
   val createReaction:    (Emoji, MessageId, ChannelId) => RestRoute = modifyMeReaction.andThen(RestRoute(_, PUT))
   val deleteOwnReaction: (Emoji, MessageId, ChannelId) => RestRoute = modifyMeReaction.andThen(RestRoute(_, DELETE))
-  val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => Uri =
-    Function.uncurried((userId: UserId) => emojiReactions.andThen(uri => s"$uri/$userId": Uri).curried)
+  val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => RestRoute =
+    Function.uncurried((userId: UserId) => emojiReactions.andThen(uri => RestRoute(s"$uri/$userId", DELETE)).curried)
 
   val getReactions:       (Emoji, MessageId, ChannelId) => RestRoute = emojiReactions.andThen(RestRoute(_, GET))
   val deleteAllReactions: (MessageId, ChannelId) => RestRoute        = reactions.andThen(RestRoute(_, DELETE))
@@ -105,7 +106,10 @@ object Routes {
 
   val triggerTyping: ChannelId => RestRoute = channel.andThen(uri => RestRoute(s"$uri/typing", POST))
 
-  val channelPinnedMessage:       (MessageId, ChannelId) => Uri       = Function.uncurried(messageId => channel.andThen(uri => s"$uri/pins/$messageId"))
+  val pinnedMessage:    ChannelId => Uri       = channel.andThen(uri => s"$uri/pins")
+  val getPinnedMessage: ChannelId => RestRoute = pinnedMessage.andThen(RestRoute(_, GET))
+
+  val channelPinnedMessage:       (MessageId, ChannelId) => Uri       = Function.uncurried(messageId => pinnedMessage.andThen(uri => s"$uri/$messageId"))
   val addPinnedChannelMessage:    (MessageId, ChannelId) => RestRoute = channelPinnedMessage.andThen(RestRoute(_, PUT))
   val deletePinnedChannelMessage: (MessageId, ChannelId) => RestRoute = channelPinnedMessage.andThen(RestRoute(_, DELETE))
 

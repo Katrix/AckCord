@@ -96,8 +96,6 @@ sealed trait CacheHandlerEvent[Data] {
 case class APIMessageHandlerEvent[Data](data: Data, sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage])(
     implicit val handler:                     CacheHandler[Data]
 ) extends CacheHandlerEvent[Data]
-case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context = NotUsed)(implicit val handler: CacheHandler[Data])
+case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context)(implicit val handler: CacheHandler[Data])
     extends CacheHandlerEvent[Data]
 case class MiscHandlerEvent[Data](data: Data)(implicit val handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
-
-case class RequestResponse[Data, Context](data: Data, context: Context)

@@ -70,3 +70,4 @@ trait Handlers {
   )
   implicit val userDeleteHandler: CacheDeleteHandler[User] = deleteHandler((builder, obj, _) => builder.users.remove(obj.id))
 }
+object Handlers extends Handlers

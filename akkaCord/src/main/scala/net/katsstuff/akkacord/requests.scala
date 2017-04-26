@@ -21,27 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord.example
+package net.katsstuff.akkacord
 
-import akka.actor.ActorSystem
-import akka.event.EventStream
-import net.katsstuff.akkacord.{APIMessage, DiscordClientSettings}
+import akka.NotUsed
 
-object Example {
-
-  implicit val system: ActorSystem = ActorSystem("AkkaCord")
-
-  def main(args: Array[String]): Unit = {
-    if (args.isEmpty) {
-      println("Please specify a token")
-      sys.exit()
-    }
-
-    val eventStream = new EventStream(system)
-    val token       = args.head
-
-    val client = DiscordClientSettings(token = token, system = system, eventStream = eventStream).connect
-
-    eventStream.subscribe(system.actorOf(Commands.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
-  }
-}
+case class RequestResponse[Data, Context](data: Data, context: Context)
+case class Request[Request, Context](request: Request, context: Context = NotUsed)

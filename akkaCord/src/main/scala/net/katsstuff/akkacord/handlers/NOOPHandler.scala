@@ -21,20 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord.example
+package net.katsstuff.akkacord.handlers
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import net.katsstuff.akkacord.{APIMessage, ShutdownClient}
+import akka.event.LoggingAdapter
 
-class KillCommand(client: ActorRef) extends Actor with ActorLogging {
-  override def receive: Receive = {
-    case APIMessage.MessageCreate(message, _, _) =>
-      if (message.content == "!kill") {
-        log.info("Received shutdown command")
-        client ! ShutdownClient
-      }
-  }
-}
-object KillCommand {
-  def props(client: ActorRef): Props = Props(classOf[KillCommand], client)
+class NOOPHandler[A] extends CacheHandler[A] {
+  override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit = ()
 }

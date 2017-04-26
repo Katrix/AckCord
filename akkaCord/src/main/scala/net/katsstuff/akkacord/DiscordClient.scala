@@ -26,13 +26,16 @@ package net.katsstuff.akkacord
 import akka.AkkaException
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import akka.event.EventStream
+import akka.http.scaladsl.model.headers.GenericHttpCredentials
+import net.katsstuff.akkacord.http.rest.{RESTHandler, RESTRequest}
 import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 
 class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
   private implicit val system = context.system
 
-  private val cache     = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val wsHandler = system.actorOf(WsHandler.props(token, cache, settings), "WsHandler")
+  private val cache       = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val wsHandler   = system.actorOf(WsHandler.props(token, cache, settings), "WsHandler")
+  private val restHandler = system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
   override def supervisorStrategy: SupervisorStrategy = {
     val strategy: PartialFunction[Throwable, SupervisorStrategy.Directive] = {
@@ -49,8 +52,11 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
     context.watch(wsHandler)
 
   override def receive: Receive = {
-    case DiscordClient.ShutdownClient => wsHandler.forward(DiscordClient.ShutdownClient)
-    case wsMessage: WsMessage[_] => wsHandler.forward(wsMessage)
+    case DiscordClient.ShutdownClient =>
+      restHandler.forward(DiscordClient.ShutdownClient)
+      wsHandler.forward(DiscordClient.ShutdownClient)
+    case request @ Request(_: WsMessage[_], _) => wsHandler.forward(request)
+    case request @ Request(_: RESTRequest[_, _], _) => restHandler.forward(request)
     case Terminated(`wsHandler`) => system.terminate()
   }
 }

@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.event.LoggingAdapter
 import net.katsstuff.akkacord.APIMessage
 import net.katsstuff.akkacord.data.{Attachment, Author, CacheSnapshot, GuildEmoji, Reaction, ReceivedEmbed, Role, Snowflake, User, VoiceState}
-import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, PresenceUpdateHandler, RawHandlers, ReadyHandler}
+import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
 import net.katsstuff.akkacord.http._
 import shapeless._
 import shapeless.labelled.FieldType
@@ -154,10 +154,6 @@ object WsEvent {
 
   case class ResumedData(_trace: Seq[String])
 
-  private val resumeHandler = new CacheHandler[ResumedData] {
-    override def handle(builder: CacheSnapshotBuilder, obj: ResumedData)(implicit log: LoggingAdapter): Unit = ()
-  }
-
   private def notImplementedHandler[A] = new CacheHandler[A] {
     override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
       log.warning(s"Not implemented handler for $obj")
@@ -165,7 +161,7 @@ object WsEvent {
 
   private def notImplementedMessage[A]: A => (CacheSnapshot, CacheSnapshot) => Option[APIMessage] = _ => (_, _) => None
 
-  object Resumed extends WsEvent[ResumedData]("RESUMED", resumeHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
+  object Resumed extends WsEvent[ResumedData]("RESUMED", new NOOPHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
 
   object ChannelCreate
       extends WsEvent[RawChannel](
