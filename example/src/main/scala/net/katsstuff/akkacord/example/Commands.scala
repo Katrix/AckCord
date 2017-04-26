@@ -31,6 +31,7 @@ import net.katsstuff.akkacord.data.{EmbedField, OutgoingEmbed}
 import net.katsstuff.akkacord.http.rest.RESTRequest
 import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessageData
 import net.katsstuff.akkacord.{APIMessage, Request}
+import net.katsstuff.akkacord.syntax._
 
 class Commands(client: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
@@ -44,7 +45,10 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
             description = Some("This embed is sent together with a file"),
             fields = Seq(EmbedField("FileName", "theFile.txt"))
           )
-          client ! Request(RESTRequest.CreateMessage(message.channelId, CreateMessageData("Here is the file", None, tts = false, Some(Paths.get("theFile.txt")), Some(embed))))
+
+          message.tChannel.foreach { tChannel =>
+            client ! tChannel.sendMessage("Here is the file", file = Some(Paths.get("theFile.txt")), embed = Some(embed))
+          }
         case "!kill" =>
           log.info("Received shutdown command")
           client ! ShutdownClient

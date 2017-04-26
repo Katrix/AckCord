@@ -83,12 +83,12 @@ object RESTRequest {
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
   }
 
-  case class GetChannelMessageData(around: Option[Snowflake], before: Option[Snowflake], after: Option[Snowflake], limit: Option[Int]) {
-    require(around.isDefined || before.isDefined || after.isDefined)
+  case class GetChannelMessagesData(around: Option[Snowflake], before: Option[Snowflake], after: Option[Snowflake], limit: Option[Int]) {
+    require(Seq(around, before, after).count(_.isDefined) <= 1)
   }
-  case class GetChannelMessages(channelId: Snowflake, params: GetChannelMessageData) extends RESTRequest[GetChannelMessageData, Seq[RawMessage]] {
+  case class GetChannelMessages(channelId: Snowflake, params: GetChannelMessagesData) extends RESTRequest[GetChannelMessagesData, Seq[RawMessage]] {
     override def route:           RestRoute                      = Routes.getChannelMessages(channelId)
-    override def paramsEncoder:   Encoder[GetChannelMessageData] = deriveEncoder[GetChannelMessageData]
+    override def paramsEncoder:   Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
     override def responseDecoder: Decoder[Seq[RawMessage]]       = implicitly[Decoder[Seq[RawMessage]]]
     override def handleResponse:  CacheHandler[Seq[RawMessage]]  = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
@@ -100,7 +100,7 @@ object RESTRequest {
   }
 
   case class CreateMessageData(content: String, nonce: Option[Snowflake], tts: Boolean, file: Option[Path], embed: Option[OutgoingEmbed]) {
-    if (file.isDefined) require(Files.isRegularFile(file.get))
+    file.foreach(path => require(Files.isRegularFile(path)))
   }
 
   //We handle this here as the file argument needs special treatment
@@ -198,8 +198,8 @@ object RESTRequest {
     override def route: RestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
   }
 
-  case class GroupDMAddRecipientData(accessToken: String, nick: String)
   /*
+  case class GroupDMAddRecipientData(accessToken: String, nick: String)
   case class GroupDMAddRecipient(channelId:       Snowflake, userId: Snowflake, params: GroupDMAddRecipientData)
       extends RESTRequest[GroupDMAddRecipientData] {
     override def route:         RestRoute                        = Routes.groupDmAddRecipient(userId, channelId)

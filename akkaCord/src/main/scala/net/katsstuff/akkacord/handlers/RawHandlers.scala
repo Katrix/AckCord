@@ -117,7 +117,7 @@ object RawHandlers extends Handlers {
       voiceStates = obj.voiceStates.orElse(oldGuild.map(_.voiceStates)).get,
       members = members.toMap,
       channels = Map.empty,
-      presences = presences
+      presences = presences.map(p => p.userId -> p).toMap
     )
 
     handleUpdateLog(builder, guild, log)

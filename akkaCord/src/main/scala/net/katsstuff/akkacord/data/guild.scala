@@ -52,7 +52,7 @@ case class AvailableGuild(
     voiceStates: Seq[VoiceState],
     members:     Map[Snowflake, GuildMember],
     channels:    Map[Snowflake, GuildChannel],
-    presences:   Seq[Presence]
+    presences:   Map[Snowflake, Presence]
 ) extends Guild {
   override def unavailable: Boolean = false
 }

@@ -75,15 +75,39 @@ case class ReceivedEmbed(
     provider:    Option[EmbedProvider],
     author:      Option[ReceivedEmbedAuthor],
     fields:      Seq[EmbedField]
-)
+) {
 
-case class ReceivedEmbedThumbnail(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int])
-case class EmbedVideo(url:             Option[String], height:   Option[Int], width: Option[Int])
-case class ReceivedEmbedImage(url:     Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int])
-case class EmbedProvider(name:         Option[String], url:      Option[String])
-case class ReceivedEmbedAuthor(name:   Option[String], url:      Option[String], iconUrl: Option[String], proxyIconUrl: Option[String])
-case class ReceivedEmbedFooter(text:   Option[String], iconUrl:  Option[String], proxyIconUrl: Option[String])
-case class EmbedField(name:            String, value:    String, inline: Option[Boolean] = None)
+  def toOutgoing: OutgoingEmbed = OutgoingEmbed(
+    title = title,
+    description = description,
+    url = url,
+    timestamp = timestamp,
+    color = color,
+    footer = footer.map(_.toOutgoing),
+    image = image.map(_.toOutgoing),
+    thumbnail = thumbnail.map(_.toOutgoing),
+    author = author.map(_.toOutgoing),
+    fields = fields
+  )
+}
+
+case class ReceivedEmbedThumbnail(url: String, proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+
+  def toOutgoing: OutgoingEmbedThumbnail = OutgoingEmbedThumbnail(url)
+}
+case class EmbedVideo(url:         Option[String], height: Option[Int], width:     Option[Int])
+case class ReceivedEmbedImage(url: String, proxyUrl:       Option[String], height: Option[Int], width: Option[Int]) {
+  def toOutgoing: OutgoingEmbedImage = OutgoingEmbedImage(url)
+}
+case class EmbedProvider(name:       Option[String], url: Option[String])
+case class ReceivedEmbedAuthor(name: String, url:         Option[String], iconUrl: Option[String], proxyIconUrl: Option[String]) {
+
+  def toOutgoing: OutgoingEmbedAuthor = OutgoingEmbedAuthor(name, url, iconUrl)
+}
+case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String]) {
+  def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
+}
+case class EmbedField(name: String, value: String, inline: Option[Boolean] = None)
 
 case class Attachment(id: Snowflake, filename: String, size: Int, url: String, proxyUrl: String, height: Option[Int], width: Option[Int])
 
