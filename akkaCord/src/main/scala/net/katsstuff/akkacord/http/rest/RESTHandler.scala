@@ -29,37 +29,36 @@ import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.pattern.pipe
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessage
-import net.katsstuff.akkacord.{AkkaCord, DiscordClient}
+import net.katsstuff.akkacord.{AkkaCord, DiscordClient, Request, RequestHandlerEvent}
 
 //Designed after http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html#examples
 class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Actor with ActorLogging with FailFastCirceSupport {
-
-  import akka.pattern.pipe
 
   import context.dispatcher
   implicit val mat = ActorMaterializer()
 
   private val requestQueue = {
-    val poolClientFlow = Http(context.system).cachedHostConnectionPool[Promise[HttpResponse]]("discordapp.com")
+    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[Promise[HttpResponse]]("discordapp.com")
     Source
       .queue[(HttpRequest, Promise[HttpResponse])](64, OverflowStrategy.fail)
       .via(poolClientFlow)
-      .toMat(Sink.foreach({
-        case ((Success(resp), p)) => p.success(resp)
-        case ((Failure(e), p))    => p.failure(e)
-      }))(Keep.left)
+      .toMat(Sink.foreach {
+        case (Success(resp), p) => p.success(resp)
+        case (Failure(e), p)    => p.failure(e)
+      })(Keep.left)
       .run()
   }
 
@@ -70,37 +69,48 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
     case DiscordClient.ShutdownClient =>
       requestQueue.complete()
       self ! PoisonPill
-    case request: RESTRequest[_, _] =>
-      request match {
+    case Request(request: RESTRequest[_, _], contextual) =>
+      val body = request match {
         case CreateMessage(_, data) if data.file.isDefined =>
           val file = data.file.get
           val filePart = FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
-          ???
+          val jsonPart = FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces))
+
+          FormData(filePart, jsonPart).toEntity()
         case _ =>
+          val params =
+            if (request.params == NotUsed) None
+            else Some(request.toJsonParams)
+
+          params.fold(HttpEntity.Empty)(json => HttpEntity(ContentTypes.`application/json`, json.noSpaces))
       }
 
-      val params =
-        if (request.params == NotUsed) None
-        else Some(request.toJsonParams)
-
       val route = request.route
-      val httpRequest =
-        HttpRequest(method = route.method, uri = route.uri, immutable.Seq(auth, userAgent), params.fold(HttpEntity.Empty)(_.noSpaces))
+      val from  = sender()
 
-      val from = sender()
+      val httpRequest = HttpRequest(method = route.method, uri = route.uri, immutable.Seq(auth, userAgent), body)
+
+      log.debug(s"Sending request $httpRequest")
 
       queueRequest(httpRequest).onComplete {
         case Success(HttpResponse(StatusCodes.TooManyRequests, headers, entity, _)) =>
           handleHeaders(headers)
           entity.discardBytes()
-          ???
+          log.error("Ratelimit handling is not implemented")
         case Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)) if request.expectedResponseCode == StatusCodes.NoContent =>
           handleHeaders(headers)
           entity.discardBytes()
         case Success(HttpResponse(response, headers, entity, _)) =>
           handleHeaders(headers)
           if (request.expectedResponseCode == response) {
-            Unmarshal(entity).to[Json].flatMap(json => Future.fromTry(json.as(request.responseDecoder).toTry)).pipeTo(snowflakeCache)
+            Unmarshal(entity)
+              .to[Json]
+              .flatMap { json =>
+                log.debug(s"Received response: ${json.noSpaces}")
+                Future.fromTry(json.as(request.responseDecoder).toTry)
+              }
+              .map(data => RequestHandlerEvent(data, from, contextual)(request.handleResponse))
+              .pipeTo(snowflakeCache)
           } else {
             log.warning(s"Unexpected response code ${response.intValue()} for $request")
             entity.discardBytes()
@@ -115,16 +125,21 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
       }
   }
 
-  def handleHeaders(headers: Seq[HttpHeader]): Unit = ???
+  def handleHeaders(headers: Seq[HttpHeader]): Unit = {
+    log.warning("Header handling is not implemented")
+  }
 
   def queueRequest(request: HttpRequest): Future[HttpResponse] = {
     val responsePromise = Promise[HttpResponse]()
     requestQueue.offer(request -> responsePromise).flatMap {
       case QueueOfferResult.Enqueued    => responsePromise.future
-      case QueueOfferResult.Dropped     => Future.failed(new RuntimeException("Queue overflowed. Try again later."))
+      case QueueOfferResult.Dropped     => Future.failed(new RuntimeException("Queue overflowed."))
       case QueueOfferResult.Failure(ex) => Future.failed(ex)
       case QueueOfferResult.QueueClosed =>
-        Future.failed(new RuntimeException("Queue was closed (pool shut down) while running the request. Try again later."))
+        Future.failed(new RuntimeException("Queue was closed (pool shut down) while running the request."))
     }
   }
+}
+object RESTHandler {
+  def props(token: HttpCredentials, snowflakeCache: ActorRef): Props = Props(classOf[RESTHandler], token, snowflakeCache)
 }

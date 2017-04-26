@@ -28,10 +28,11 @@ import java.nio.file.{Files, Path}
 import akka.NotUsed
 import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import io.circe._
-import io.circe.syntax._
-import io.circe.generic.extras.semiauto._
 import io.circe.generic.extras.auto._
+import io.circe.generic.extras.semiauto._
+import io.circe.syntax._
 import net.katsstuff.akkacord.data.{OutgoingEmbed, Permission, Snowflake, User}
+import net.katsstuff.akkacord.handlers.{CacheHandler, CacheUpdateHandler, Handlers, NOOPHandler, RawHandlers}
 import net.katsstuff.akkacord.http.{RawChannel, RawGuildChannel, RawMessage, Routes}
 
 sealed trait RESTRequest[Params, Response] {
@@ -42,6 +43,7 @@ sealed trait RESTRequest[Params, Response] {
   def toJsonParams: Json = paramsEncoder(params)
 
   def responseDecoder: Decoder[Response]
+  def handleResponse:  CacheHandler[Response]
   def expectedResponseCode: StatusCode = StatusCodes.OK
 }
 object RESTRequest {
@@ -53,6 +55,7 @@ object RESTRequest {
 
   trait NoResponseRequest[Params] extends RESTRequest[Params, NotUsed] {
     override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
+    override val handleResponse       = new NOOPHandler[NotUsed]
     override def expectedResponseCode = StatusCodes.NoContent
   }
 
@@ -61,20 +64,23 @@ object RESTRequest {
   //Channels
 
   case class GetChannel(channelId: Snowflake) extends NoParamsRequest[RawChannel] {
-    def route:                    RestRoute           = Routes.getChannel(channelId)
-    override def responseDecoder: Decoder[RawChannel] = implicitly[Decoder[RawChannel]]
+    def route:                    RestRoute                = Routes.getChannel(channelId)
+    override def responseDecoder: Decoder[RawChannel]      = implicitly[Decoder[RawChannel]]
+    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
   }
 
   case class ModifyChannelData(name:  String, position:  Int, topic: Option[String], bitrate: Option[Int], userLimit: Option[Int])
   case class ModifyChannel(channelId: Snowflake, params: ModifyChannelData) extends RESTRequest[ModifyChannelData, RawGuildChannel] {
-    override def route:           RestRoute                  = Routes.modifyChannelPut(channelId)
-    override def paramsEncoder:   Encoder[ModifyChannelData] = deriveEncoder[ModifyChannelData]
-    override def responseDecoder: Decoder[RawGuildChannel]   = implicitly[Decoder[RawGuildChannel]]
+    override def route:           RestRoute                     = Routes.modifyChannelPut(channelId)
+    override def paramsEncoder:   Encoder[ModifyChannelData]    = deriveEncoder[ModifyChannelData]
+    override def responseDecoder: Decoder[RawGuildChannel]      = implicitly[Decoder[RawGuildChannel]]
+    override def handleResponse:  CacheHandler[RawGuildChannel] = RawHandlers.rawGuildChannelUpdateHandler
   }
 
   case class DeleteCloseChannel(channelId: Snowflake) extends NoParamsRequest[RawChannel] {
-    override def route:           RestRoute           = Routes.deleteCloseChannel(channelId)
-    override def responseDecoder: Decoder[RawChannel] = implicitly[Decoder[RawChannel]]
+    override def route:           RestRoute                = Routes.deleteCloseChannel(channelId)
+    override def responseDecoder: Decoder[RawChannel]      = implicitly[Decoder[RawChannel]]
+    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
   }
 
   case class GetChannelMessageData(around: Option[Snowflake], before: Option[Snowflake], after: Option[Snowflake], limit: Option[Int]) {
@@ -84,11 +90,13 @@ object RESTRequest {
     override def route:           RestRoute                      = Routes.getChannelMessages(channelId)
     override def paramsEncoder:   Encoder[GetChannelMessageData] = deriveEncoder[GetChannelMessageData]
     override def responseDecoder: Decoder[Seq[RawMessage]]       = implicitly[Decoder[Seq[RawMessage]]]
+    override def handleResponse:  CacheHandler[Seq[RawMessage]]  = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
 
   case class GetChannelMessage(channelId: Snowflake, messageId: Snowflake) extends NoParamsRequest[RawMessage] {
-    override def route:           RestRoute           = Routes.getChannelMessage(messageId, channelId)
-    override def responseDecoder: Decoder[RawMessage] = implicitly[Decoder[RawMessage]]
+    override def route:           RestRoute                = Routes.getChannelMessage(messageId, channelId)
+    override def responseDecoder: Decoder[RawMessage]      = implicitly[Decoder[RawMessage]]
+    override def handleResponse:  CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
   }
 
   case class CreateMessageData(content: String, nonce: Option[Snowflake], tts: Boolean, file: Option[Path], embed: Option[OutgoingEmbed]) {
@@ -96,12 +104,14 @@ object RESTRequest {
   }
 
   //We handle this here as the file argument needs special treatment
-  implicit private val createMessageDataEncoder: Encoder[CreateMessageData] = (a: CreateMessageData) => Json
-    .obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
+  implicit private val createMessageDataEncoder: Encoder[CreateMessageData] = (a: CreateMessageData) =>
+    Json
+      .obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
   case class CreateMessage(channelId: Snowflake, params: CreateMessageData) extends RESTRequest[CreateMessageData, RawMessage] {
     override def route:           RestRoute                  = Routes.createMessage(channelId)
     override def paramsEncoder:   Encoder[CreateMessageData] = createMessageDataEncoder
     override def responseDecoder: Decoder[RawMessage]        = implicitly[Decoder[RawMessage]]
+    override def handleResponse:  CacheHandler[RawMessage]   = RawHandlers.rawMessageUpdateHandler
   }
 
   case class CreateReaction(channelId: Snowflake, messageId: Snowflake, emoji: String) extends NoParamsResponseRequest {
@@ -119,13 +129,12 @@ object RESTRequest {
   case class GetReactions(channelId: Snowflake, messageId: Snowflake, emoji: String) extends NoParamsRequest[Seq[User]] {
     override def route:           RestRoute          = Routes.getReactions(emoji, messageId, channelId)
     override def responseDecoder: Decoder[Seq[User]] = implicitly[Decoder[Seq[User]]]
+    override def handleResponse: CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
   }
 
-  /*
-  case class DeleteAllReactions(channelId: Snowflake, messageId: Snowflake) extends NoParamsRequest {
+  case class DeleteAllReactions(channelId: Snowflake, messageId: Snowflake) extends NoParamsResponseRequest {
     override def route: RestRoute = Routes.deleteAllReactions(messageId, channelId)
   }
-  */
 
   case class EditMessageData(content: Option[String], embed: Option[OutgoingEmbed]) {
     require(content.forall(_.length < 2000))
@@ -134,6 +143,7 @@ object RESTRequest {
     override def route:           RestRoute                = Routes.editMessage(messageId, channelId)
     override def paramsEncoder:   Encoder[EditMessageData] = deriveEncoder[EditMessageData]
     override def responseDecoder: Decoder[RawMessage]      = implicitly[Decoder[RawMessage]]
+    override def handleResponse:  CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
   }
 
   case class DeleteMessage(channelId: Snowflake, messageId: Snowflake) extends NoParamsResponseRequest {
@@ -175,8 +185,9 @@ object RESTRequest {
   }
 
   case class GetPinnedMessages(channelId: Snowflake) extends NoParamsRequest[Seq[RawMessage]] {
-    override def route:           RestRoute                = Routes.getPinnedMessage(channelId)
-    override def responseDecoder: Decoder[Seq[RawMessage]] = implicitly[Decoder[Seq[RawMessage]]]
+    override def route:           RestRoute                     = Routes.getPinnedMessage(channelId)
+    override def responseDecoder: Decoder[Seq[RawMessage]]      = implicitly[Decoder[Seq[RawMessage]]]
+    override def handleResponse:  CacheHandler[Seq[RawMessage]] = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
 
   case class AddPinnedChannelMessages(channelId: Snowflake, messageId: Snowflake) extends NoParamsResponseRequest {
@@ -187,7 +198,7 @@ object RESTRequest {
     override def route: RestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
   }
 
-  case class GroupDMAddRecipientData(accessToken: String, nick:      String)
+  case class GroupDMAddRecipientData(accessToken: String, nick: String)
   /*
   case class GroupDMAddRecipient(channelId:       Snowflake, userId: Snowflake, params: GroupDMAddRecipientData)
       extends RESTRequest[GroupDMAddRecipientData] {
@@ -198,5 +209,5 @@ object RESTRequest {
   case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) extends NoParamsRequest {
     override def route: RestRoute = Routes.groupDmRemoveRecipient(userId, channelId)
   }
-  */
+ */
 }
