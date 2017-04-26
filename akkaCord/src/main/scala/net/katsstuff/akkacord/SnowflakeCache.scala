@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.{EventStream, LoggingAdapter}
 import net.katsstuff.akkacord.data._
-import net.katsstuff.akkacord.handlers2.{CacheHandler, CacheSnapshotBuilder}
+import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder}
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
 
 class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {

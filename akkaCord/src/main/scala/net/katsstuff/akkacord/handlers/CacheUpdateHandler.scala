@@ -22,21 +22,21 @@
  * SOFTWARE.
  */
 package net.katsstuff.akkacord.handlers
-package ws
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.APIMessage
-import net.katsstuff.akkacord.data.CacheSnapshot
-import net.katsstuff.akkacord.http.websocket.WsEvent.GuildRoleModifyData
 
-object WsHandlerGuildRoleUpdate extends Handler[GuildRoleModifyData, APIMessage.GuildRoleUpdate] {
-  override def handle(snapshot: CacheSnapshot,
-      data: GuildRoleModifyData)(implicit
-      log: LoggingAdapter): AbstractHandlerResult[APIMessage.GuildRoleUpdate] = {
-    val GuildRoleModifyData(guildId, role) = data
-    guildUpdate(guildId, "role", snapshot) { guild =>
-      val newSnapshot = newGuild(snapshot, guildId, guild.copy(roles = guild.roles + ((role.id, role))))
-      HandlerResult(newSnapshot, APIMessage.GuildRoleUpdate(guild, role, _, _))
-    }
+trait CacheUpdateHandler[Obj] extends CacheHandler[Obj]
+object CacheUpdateHandler {
+  def updateHandler[Obj](f: (CacheSnapshotBuilder, Obj, LoggingAdapter) => Unit): CacheUpdateHandler[Obj] = new CacheUpdateHandler[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit = f(builder, obj, log)
   }
+
+  implicit def seqHandler[Obj](implicit objHandler: CacheUpdateHandler[Obj]): CacheUpdateHandler[Seq[Obj]] =
+    updateHandler((builder, obj, log) => obj.foreach(objHandler.handle(builder, _)(log)))
+
+  def handleUpdate[Obj](builder: CacheSnapshotBuilder, obj: Obj)(implicit handler: CacheUpdateHandler[Obj], log: LoggingAdapter): Unit =
+    handler.handle(builder, obj)
+
+  def handleUpdateLog[Obj](builder: CacheSnapshotBuilder, obj: Obj, log: LoggingAdapter)(implicit handler: CacheUpdateHandler[Obj]): Unit =
+    handler.handle(builder, obj)(log)
 }

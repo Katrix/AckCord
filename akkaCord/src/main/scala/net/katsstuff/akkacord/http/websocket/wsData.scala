@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.event.LoggingAdapter
 import net.katsstuff.akkacord.APIMessage
 import net.katsstuff.akkacord.data.{Attachment, Author, CacheSnapshot, GuildEmoji, Reaction, ReceivedEmbed, Role, Snowflake, User, VoiceState}
-import net.katsstuff.akkacord.handlers2.{CacheHandler, CacheSnapshotBuilder, PresenceUpdateHandler, RawHandlers, ReadyHandler}
+import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, PresenceUpdateHandler, RawHandlers, ReadyHandler}
 import net.katsstuff.akkacord.http._
 import shapeless._
 import shapeless.labelled.FieldType

@@ -22,25 +22,21 @@
  * SOFTWARE.
  */
 package net.katsstuff.akkacord.handlers
-package ws
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.APIMessage
-import net.katsstuff.akkacord.data.CacheSnapshot
-import net.katsstuff.akkacord.http.websocket.WsEvent.MessageDeleteData
 
-object WsHandlerMessageDelete extends Handler[MessageDeleteData, APIMessage.MessageDelete] {
-  override def handle(snapshot: CacheSnapshot,
-      data: MessageDeleteData)(implicit
-      log: LoggingAdapter): AbstractHandlerResult[APIMessage.MessageDelete] = {
-    val MessageDeleteData(id, channelId) = data
-    val newSnapshot = snapshot.copy(messages = snapshot.messages + ((channelId, snapshot.messages(channelId) - id)))
-
-    val createMessage = (snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) => for {
-      channel <- prevSnapshot.getChannel(channelId)
-      message <- prevSnapshot.getMessage(channelId, id)
-    } yield APIMessage.MessageDelete(message, channel, snapshot, prevSnapshot)
-
-    OptionalMessageHandlerResult(newSnapshot, createMessage)
+trait CacheDeleteHandler[Obj] extends CacheHandler[Obj]
+object CacheDeleteHandler {
+  def deleteHandler[Obj](f: (CacheSnapshotBuilder, Obj, LoggingAdapter) => Unit): CacheDeleteHandler[Obj] = new CacheDeleteHandler[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit = f(builder, obj, log)
   }
+
+  implicit def seqHandler[Obj](implicit objHandler: CacheDeleteHandler[Obj]): CacheDeleteHandler[Seq[Obj]] =
+    deleteHandler((builder, obj, log) => obj.foreach(objHandler.handle(builder, _)(log)))
+
+  def handleDelete[Obj](builder: CacheSnapshotBuilder, obj: Obj)(implicit handler: CacheDeleteHandler[Obj], log: LoggingAdapter): Unit =
+    handler.handle(builder, obj)
+
+  def handleDeleteLog[Obj](builder: CacheSnapshotBuilder, obj: Obj, log: LoggingAdapter)(implicit handler: CacheDeleteHandler[Obj]): Unit =
+    handler.handle(builder, obj)(log)
 }

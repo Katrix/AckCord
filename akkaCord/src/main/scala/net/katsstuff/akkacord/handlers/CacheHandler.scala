@@ -22,22 +22,10 @@
  * SOFTWARE.
  */
 package net.katsstuff.akkacord.handlers
-package ws
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.APIMessage
-import net.katsstuff.akkacord.data.CacheSnapshot
-import net.katsstuff.akkacord.http.websocket.WsEvent.GuildMemberRemoveData
 
-object WsHandlerGuildMemberRemove extends Handler[GuildMemberRemoveData, APIMessage.GuildMemberRemove] {
-  override def handle(snapshot: CacheSnapshot, data: GuildMemberRemoveData)(
-      implicit log:             LoggingAdapter
-  ): AbstractHandlerResult[APIMessage.GuildMemberRemove] = {
-    val GuildMemberRemoveData(guildId, user) = data
+trait CacheHandler[Obj] {
 
-    guildUpdate(guildId, "user", snapshot) { guild =>
-      val newSnapshot = newGuild(snapshot, guildId, guild.copy(members = guild.members - user.id))
-      HandlerResult(newSnapshot, APIMessage.GuildMemberRemove(user, guild, _, _))
-    }
-  }
+  def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit
 }
