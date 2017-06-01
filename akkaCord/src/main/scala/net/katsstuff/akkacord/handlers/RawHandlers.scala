@@ -122,7 +122,7 @@ object RawHandlers extends Handlers {
     )
 
     handleUpdateLog(builder, guild, log)
-    handleUpdateLog(builder, rawChannels, log)
+    handleUpdateLog(builder, rawChannels.map(_.copy(guildId = Some(guild.id))), log)
     handleUpdateLog(builder, users, log)
   }
 
