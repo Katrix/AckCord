@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord
 
-import java.time.{Instant, LocalDateTime}
+import java.time.Instant
 
 import net.katsstuff.akkacord.data._
 

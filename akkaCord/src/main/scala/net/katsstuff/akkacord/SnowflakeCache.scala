@@ -25,7 +25,6 @@ package net.katsstuff.akkacord
 
 import scala.collection.mutable
 
-import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.{EventStream, LoggingAdapter}
 import net.katsstuff.akkacord.data._

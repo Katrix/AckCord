@@ -104,7 +104,7 @@ case class HeartbeatACK(d: NotUsed) extends WsMessage[NotUsed] {
   override def op: OpCode = OpCode.HeartbeatACK
 }
 
-sealed case class OpCode(code: Int)
+sealed abstract case class OpCode(code: Int)
 object OpCode {
   object Dispatch            extends OpCode(0)
   object Heartbeat           extends OpCode(1)
@@ -136,7 +136,7 @@ object OpCode {
   }
 }
 
-sealed case class WsEvent[Data](
+sealed abstract case class WsEvent[Data](
     name:        String,
     handler:     CacheHandler[Data],
     createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
