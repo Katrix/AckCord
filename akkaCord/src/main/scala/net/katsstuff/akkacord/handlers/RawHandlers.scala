@@ -82,10 +82,11 @@ object RawHandlers extends Handlers {
         case "idle"    => PresenceStatus.Idle
         case "online"  => PresenceStatus.Online
         case "offline" => PresenceStatus.Offline
+        case "dnd" =>     PresenceStatus.DoNotDisturb
       }
 
       val content = pres.game.flatMap {
-        case RawPresenceGame(Some(name), Some(0), url)       => Some(PresenceGame(name))
+        case RawPresenceGame(Some(name), Some(0), _)         => Some(PresenceGame(name))
         case RawPresenceGame(Some(name), Some(1), Some(url)) => Some(PresenceStreaming(name, url))
         case _                                               => None
       }

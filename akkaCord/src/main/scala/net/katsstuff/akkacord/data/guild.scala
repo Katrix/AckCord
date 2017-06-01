@@ -72,8 +72,9 @@ case class PresenceGame(name:      String) extends PresenceContent
 case class PresenceStreaming(name: String, uri: String) extends PresenceContent
 sealed trait PresenceStatus
 object PresenceStatus {
-  case object Idle    extends PresenceStatus
-  case object Online  extends PresenceStatus
-  case object Offline extends PresenceStatus
+  case object Idle         extends PresenceStatus
+  case object Online       extends PresenceStatus
+  case object Offline      extends PresenceStatus
+  case object DoNotDisturb extends PresenceStatus
 }
 case class Presence(userId: Snowflake, game: Option[PresenceContent], status: PresenceStatus) extends GetUser

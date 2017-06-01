@@ -94,6 +94,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                       case "online"  => PresenceStatus.Online
                       case "idle"    => PresenceStatus.Idle
                       case "offline" => PresenceStatus.Offline
+                      case "dnd" =>     PresenceStatus.DoNotDisturb
                     }
                     .getOrElse(presence.status)
 
@@ -116,6 +117,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                   case "online"  => PresenceStatus.Online
                   case "idle"    => PresenceStatus.Idle
                   case "offline" => PresenceStatus.Offline
+                  case "dnd"     => PresenceStatus.DoNotDisturb
                 }
 
                 newStatus.foreach { status =>
