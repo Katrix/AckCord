@@ -60,11 +60,8 @@ package object syntax {
 
     def editChannelPermissions[Context](role: Role, allow: Permission, deny: Permission, context: Context = NotUsed) =
       Request(EditChannelPermissions(tChannel.id, role.id, EditChannelPermissionsData(allow, deny, "role")), context)
-    def editChannelPermissions[Context](user: User, allow: Permission, deny: Permission, context: Context = NotUsed) =
-      Request(EditChannelPermissions(tChannel.id, user.id, EditChannelPermissionsData(allow, deny, "user")), context)
 
     def deleteChannelPermissions[Context](user: User, context: Context = NotUsed) = Request(DeleteChannelPermission(tChannel.id, user.id), context)
-    def deleteChannelPermissions[Context](role: Role, context: Context = NotUsed) = Request(DeleteChannelPermission(tChannel.id, role.id), context)
 
     def triggerTyping[Context](context: Context = NotUsed) = Request(TriggerTypingIndicator(tChannel.id), context)
 
@@ -91,7 +88,7 @@ package object syntax {
   }
 
   implicit class GuildSyntax(val guild: AvailableGuild) extends AnyVal {
-    def rolesForUser(userId: Snowflake): Seq[Role] = guild.members.get(userId).flatMap(_.roles.flatMap(guild.roles.get)).toSeq
+    def rolesForUser(userId: Snowflake): Seq[Role] = guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
 
     def tChannels: Seq[TGuildChannel] =
       guild.channels.values.collect {
