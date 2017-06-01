@@ -30,7 +30,7 @@ import io.circe.generic.extras.semiauto._
 import io.circe.generic.extras.auto._
 import io.circe.shapes._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, HCursor, Json}
+import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
 import net.katsstuff.akkacord.data._
 
 trait DiscordProtocol {
@@ -40,8 +40,9 @@ trait DiscordProtocol {
   implicit val channelTypeEncoder: Encoder[ChannelType] = deriveEnumerationEncoder
   implicit val channelTypeDecoder: Decoder[ChannelType] = deriveEnumerationDecoder
 
-  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = deriveEnumerationEncoder
-  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] = deriveEnumerationDecoder
+  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = (a: PermissionValueType) => Json.fromString(PermissionValueType.nameOf(a))
+  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
+    (c: HCursor) => c.as[String].flatMap(PermissionValueType.forName(_).toRight(DecodingFailure("Not a permission value type", c.history)))
 
   implicit val presenceStatusEncoder: Encoder[PresenceStatus] = deriveEnumerationEncoder
   implicit val presenceStatusDecoder: Decoder[PresenceStatus] = deriveEnumerationDecoder

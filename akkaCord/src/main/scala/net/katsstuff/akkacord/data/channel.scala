@@ -45,9 +45,14 @@ object PermissionValueType {
     case "member" => Some(Member)
     case _        => None
   }
+
+  def nameOf(tpe: PermissionValueType): String = tpe match {
+    case Role => "role"
+    case Member => "member"
+  }
 }
 
-case class PermissionValue(id: Snowflake, permissionType: PermissionValueType, allow: Permission, deny: Permission)
+case class PermissionValue(id: Snowflake, `type`: PermissionValueType, allow: Permission, deny: Permission)
 
 sealed trait Channel {
   def id:        Snowflake
