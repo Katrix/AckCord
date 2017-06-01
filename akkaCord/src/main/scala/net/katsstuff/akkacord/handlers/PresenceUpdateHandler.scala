@@ -45,7 +45,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
             val newUser = existingUser.copy(
               username = rPartialUser.username.getOrElse(existingUser.username),
               discriminator = rPartialUser.discriminator.getOrElse(existingUser.discriminator),
-              avatar = rPartialUser.avatar.getOrElse(existingUser.avatar),
+              avatar = rPartialUser.avatar.orElse(existingUser.avatar),
               bot = rPartialUser.bot.orElse(existingUser.bot),
               mfaEnabled = rPartialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
               verified = rPartialUser.verified.orElse(existingUser.verified),
@@ -58,13 +58,12 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
             for {
               username      <- rPartialUser.username
               discriminator <- rPartialUser.discriminator
-              avatar        <- rPartialUser.avatar
             } {
               val newUser = User(
                 rPartialUser.id,
                 username,
                 discriminator,
-                avatar,
+                rPartialUser.avatar,
                 rPartialUser.bot,
                 rPartialUser.mfaEnabled,
                 rPartialUser.verified,

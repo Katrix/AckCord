@@ -31,7 +31,7 @@ case class User(
     id:            Snowflake,
     username:      String,
     discriminator: String,
-    avatar:        String,
+    avatar:        Option[String], //avatar can be null
     bot:           Option[Boolean], //Bot can be missing
     mfaEnabled:    Option[Boolean], //mfaEnabled can be missing
     verified:      Option[Boolean], //verified can be missing
