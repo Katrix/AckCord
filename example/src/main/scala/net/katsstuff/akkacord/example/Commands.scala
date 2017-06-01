@@ -27,15 +27,17 @@ import java.nio.file.Paths
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.akkacord.DiscordClient.ShutdownClient
-import net.katsstuff.akkacord.data.{EmbedField, OutgoingEmbed}
+import net.katsstuff.akkacord.data.{CacheSnapshot, EmbedField, OutgoingEmbed, Snowflake, TGuildChannel, VGuildChannel}
+import net.katsstuff.akkacord.example.Commands.GetChannelInfo
 import net.katsstuff.akkacord.http.rest.RESTRequest
 import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessageData
-import net.katsstuff.akkacord.{APIMessage, Request}
+import net.katsstuff.akkacord.{APIMessage, Request, RequestResponse}
 import net.katsstuff.akkacord.syntax._
 
 class Commands(client: ActorRef) extends Actor with ActorLogging {
   override def receive: Receive = {
-    case APIMessage.MessageCreate(message, _, _) =>
+    case APIMessage.MessageCreate(message, c, _) =>
+      implicit val cache = c
       message.content match {
         case "!ping" =>
           client ! Request(RESTRequest.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None)))
@@ -49,13 +51,35 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           message.tChannel.foreach { tChannel =>
             client ! tChannel.sendMessage("Here is the file", file = Some(Paths.get("theFile.txt")), embed = Some(embed))
           }
+        case s if s.startsWith("!infoChannel") =>
+          val withChannel = message.content.substring("!infoChannel".length)
+          val r = """<#(\d+)>""".r
+
+          val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map(Snowflake.apply).flatMap(id => message.guild.flatMap(_.channelById(id)))
+          channel.foreach { gChannel =>
+            client ! Request(RESTRequest.GetChannel(gChannel.id), GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c))
+          }
         case "!kill" =>
           log.info("Received shutdown command")
           client ! ShutdownClient
         case _ =>
       }
+    case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
+      implicit val cache = c
+      val optName = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
+      optName match {
+        case Some(name) => cache.getGuildChannel(guildId, senderChannelId) match {
+          case Some(channel: TGuildChannel) => client ! channel.sendMessage(s"Info for $name:\n$res")
+          case Some(channel: VGuildChannel) => log.warning("{} is not a valid text channel", channel.name)
+          case None => log.warning("No channel found for {}", requestedChannelId)
+        }
+        case None => log.warning("No channel found for {}", requestedChannelId)
+      }
+
+      log.info(res.toString)
   }
 }
 object Commands {
   def props(client: ActorRef): Props = Props(classOf[Commands], client)
+  case class GetChannelInfo(guildId: Snowflake, requestedChannelId: Snowflake, senderChannelId: Snowflake, c: CacheSnapshot)
 }
