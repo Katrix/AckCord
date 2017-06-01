@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord.http.rest
 
-import scala.collection.immutable
+import scala.collection.{immutable, mutable}
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
@@ -34,13 +34,14 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.pipe
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
+import net.katsstuff.akkacord.http.rest.RESTHandler.{RateLimitStop, RemoveRateLimit}
 import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessage
 import net.katsstuff.akkacord.{AkkaCord, DiscordClient, Request, RequestHandlerEvent}
 
@@ -62,17 +63,25 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
       .run()
   }
 
+  private val rateLimits           = new mutable.HashMap[Uri, Int]
+  private val globalRateLimitQueue = new mutable.Queue[Any]
+
   private val auth      = Authorization(token)
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AkkaCord, ${AkkaCord.Version})")
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
+      requestQueue.watchCompletion().foreach { _ =>
+        mat.shutdown()
+        context.stop(self)
+      }
       requestQueue.complete()
-      self ! PoisonPill
-    case Request(request: RESTRequest[_, _], contextual) =>
+    case RemoveRateLimit(uri) => rateLimits.remove(uri)
+    case fullRequest @ Request(request: RESTRequest[_, d], contextual) //The d here makes IntelliJ happy. It serves no other purpose
+        if !rateLimits.contains(request.route.uri) =>
       val body = request match {
         case CreateMessage(_, data) if data.file.isDefined =>
-          val file = data.file.get
+          val file     = data.file.get
           val filePart = FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
           val jsonPart = FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces))
 
@@ -94,14 +103,14 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
 
       queueRequest(httpRequest).onComplete {
         case Success(HttpResponse(StatusCodes.TooManyRequests, headers, entity, _)) =>
-          handleHeaders(headers)
+          updateRateLimit(route.uri, headers)
+          handleRatelimit(headers, fullRequest)
           entity.discardBytes()
-          log.error("Ratelimit handling is not implemented")
         case Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)) if request.expectedResponseCode == StatusCodes.NoContent =>
-          handleHeaders(headers)
+          updateRateLimit(route.uri, headers)
           entity.discardBytes()
         case Success(HttpResponse(response, headers, entity, _)) =>
-          handleHeaders(headers)
+          updateRateLimit(route.uri, headers)
           if (request.expectedResponseCode == response) {
             Unmarshal(entity)
               .to[Json]
@@ -117,16 +126,64 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
           }
         case Success(HttpResponse(e @ ServerError(intValue), _, entity, _)) =>
           log.error(s"Server error $intValue ${e.reason}")
-          entity.toStrict(1.seconds).map(e => log.error(e.toString()))
+          entity.toStrict(1.seconds).onComplete {
+            case Success(ent) => log.error(ent.toString())
+            case Failure(_) => entity.discardBytes()
+          }
         case Success(HttpResponse(e @ ClientError(intValue), _, entity, _)) =>
           log.error(s"Client error $intValue: ${e.reason}")
           entity.discardBytes()
         case Failure(e) => e.printStackTrace()
       }
+    //If we get here then the request is rate limited
+    case fullRequest @ Request(request: RESTRequest[_, _], _) =>
+      val duration = rateLimits.getOrElse(request.route.uri, 0)
+      context.system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
   }
 
-  def handleHeaders(headers: Seq[HttpHeader]): Unit = {
-    log.warning("Header handling is not implemented")
+  def onGlobalRateLimit: Receive = {
+    case DiscordClient.ShutdownClient =>
+      requestQueue.watchCompletion().foreach { _ =>
+        context.stop(self)
+        mat.shutdown()
+      }
+      requestQueue.complete()
+    case RateLimitStop =>
+      context.unbecome()
+      globalRateLimitQueue.foreach(self ! _)
+      globalRateLimitQueue.clear()
+    case others =>
+      globalRateLimitQueue.enqueue(others)
+  }
+
+  def updateRateLimit(uri: Uri, headers: Seq[HttpHeader]): Unit = {
+    for {
+      remaining <- headers.find(_.is("X-RateLimit-Remaining"))
+      remainingInt = remaining.value().toInt
+      if remainingInt <= 0
+      retry <- headers.find(_.is("Retry-After"))
+    } {
+      val retryInt = retry.value().toInt
+      rateLimits.put(uri, retryInt)
+      context.system.scheduler.scheduleOnce(retryInt.millis, self, RemoveRateLimit(uri))
+    }
+  }
+
+  def handleRatelimit(headers: Seq[HttpHeader], request: Request[_, _]): Unit = {
+    if (headers.exists(header => header.is("X-RateLimit-Global") && header.value == "true")) {
+      log.error("Hit global rate limit")
+      headers
+        .find(_.is("Retry-After"))
+        .map(_.value().toLong)
+        .orElse(headers.find(_.is("X-RateLimit-Reset")).map(_.value().toLong - System.currentTimeMillis())) match {
+        case Some(duration) =>
+          context.become(onGlobalRateLimit, discardOld = false)
+          context.system.scheduler.scheduleOnce(duration.millis, self, RateLimitStop)
+        case None => log.error("No retry time for global rate limit")
+      }
+    } else {
+      headers.find(_.is("Retry-After")).foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, request))
+    }
   }
 
   def queueRequest(request: HttpRequest): Future[HttpResponse] = {
@@ -142,4 +199,6 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
 }
 object RESTHandler {
   def props(token: HttpCredentials, snowflakeCache: ActorRef): Props = Props(classOf[RESTHandler], token, snowflakeCache)
+  case object RateLimitStop
+  case class RemoveRateLimit(uri: Uri)
 }
