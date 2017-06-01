@@ -37,6 +37,8 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
   private val wsHandler   = system.actorOf(WsHandler.props(token, cache, settings), "WsHandler")
   private val restHandler = system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
+  private var shutdownCount = 0
+
   override def supervisorStrategy: SupervisorStrategy = {
     val strategy: PartialFunction[Throwable, SupervisorStrategy.Directive] = {
       case _: NotImplementedError => SupervisorStrategy.Resume
@@ -48,8 +50,10 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
     OneForOneStrategy()(strategy orElse SupervisorStrategy.defaultDecider)
   }
 
-  override def preStart(): Unit =
+  override def preStart(): Unit = {
     context.watch(wsHandler)
+    context.watch(restHandler)
+  }
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
@@ -57,7 +61,11 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
       wsHandler.forward(DiscordClient.ShutdownClient)
     case request @ Request(_: WsMessage[_], _) => wsHandler.forward(request)
     case request @ Request(_: RESTRequest[_, _], _) => restHandler.forward(request)
-    case Terminated(`wsHandler`) => system.terminate()
+    case Terminated(_) =>
+      shutdownCount += 1
+      if(shutdownCount == 2) {
+        system.terminate()
+      }
   }
 }
 object DiscordClient {
