@@ -69,14 +69,13 @@ object APIMessage {
 
   case class MessageCreate(message:      Message, snapshot:     CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class MessageUpdate(message:      Message, snapshot:     CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class MessageDelete(message:      Message, channel:      Channel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class MessageDeleteBulk(messages: Seq[Message], channel: Channel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class MessageDelete(message:      Message, channel:      TChannel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class PresenceUpdate(presence: Presence, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class TypingStart(channel: Channel, user: User, timestamp: Instant, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  //case class UserSettingsUpdate(user: UserSettings)
   case class UserUpdate(user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage

@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord.data
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 sealed trait UnknownStatusGuild {
   def id:          Snowflake
@@ -78,3 +78,19 @@ object PresenceStatus {
   case object DoNotDisturb extends PresenceStatus
 }
 case class Presence(userId: Snowflake, game: Option[PresenceContent], status: PresenceStatus) extends GetUser
+
+case class Integration(
+    id: Snowflake,
+    name: String,
+    `type`: String, //TODO: Use enum here
+    enabled: Boolean,
+    syncing: Boolean,
+    roleId: Snowflake,
+    expireBehavior: Int, //TODO: Better than Int here
+    expireGracePeriod: Int,
+    user: User,
+    account: IntegrationAccount,
+    syncedAt: Instant
+)
+
+case class IntegrationAccount(id: String /*TODO: Is String correct here*/, name: String)

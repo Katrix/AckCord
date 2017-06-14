@@ -241,6 +241,10 @@ object RawHandlers extends Handlers {
     handleUpdateLog(builder, newUsers, log)
   }
 
+  implicit val lastTypedHandler: CacheUpdateHandler[TypingStartData] = updateHandler { (builder, obj, log) =>
+    builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
+  }
+
   //Delete
   implicit val rawDmChannelDeleteHandler: CacheDeleteHandler[RawDMChannel] = deleteHandler((builder, obj, _) => builder.dmChannels.remove(obj.id))
   implicit val rawGuildChannelDeleteHandler: CacheDeleteHandler[RawGuildChannel] = deleteHandler { (builder, obj, log) =>

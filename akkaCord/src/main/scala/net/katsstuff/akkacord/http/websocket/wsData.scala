@@ -23,12 +23,12 @@
  */
 package net.katsstuff.akkacord.http.websocket
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 import akka.NotUsed
 import akka.event.LoggingAdapter
 import net.katsstuff.akkacord.APIMessage
-import net.katsstuff.akkacord.data.{Attachment, Author, CacheSnapshot, GuildEmoji, Reaction, ReceivedEmbed, Role, Snowflake, User, VoiceState}
+import net.katsstuff.akkacord.data.{Attachment, Author, CacheSnapshot, GuildEmoji, Reaction, ReceivedEmbed, Role, Snowflake, TChannel, User, VoiceState}
 import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
 import net.katsstuff.akkacord.http._
 import shapeless._
@@ -159,8 +159,6 @@ object WsEvent {
       log.warning(s"Not implemented handler for $obj")
   }
 
-  private def notImplementedMessage[A]: A => (CacheSnapshot, CacheSnapshot) => Option[APIMessage] = _ => (_, _) => None
-
   object Resumed extends WsEvent[ResumedData]("RESUMED", new NOOPHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
 
   object ChannelCreate
@@ -207,8 +205,18 @@ object WsEvent {
 
   val userGen = LabelledGeneric[User]
   type GuildUser = FieldType[Witness.`'guildId`.T, Snowflake] :: userGen.Repr
-  object GuildBanAdd    extends WsEvent[GuildUser]("GUILD_BAN_ADD", notImplementedHandler, notImplementedMessage)
-  object GuildBanRemove extends WsEvent[GuildUser]("GUILD_BAN_REMOVE", notImplementedHandler, notImplementedMessage)
+
+  object GuildBanAdd extends WsEvent[GuildUser](
+    "GUILD_BAN_ADD",
+    notImplementedHandler,
+    data => (current, prev) => current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), current, prev))
+  )
+
+  object GuildBanRemove extends WsEvent[GuildUser](
+    "GUILD_BAN_REMOVE",
+    notImplementedHandler,
+    data => (current, prev) => current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
+  )
 
   case class GuildEmojisUpdateData(guildId: Snowflake, emojis: Seq[GuildEmoji])
   object GuildEmojisUpdate
@@ -220,7 +228,11 @@ object WsEvent {
 
   case class GuildIntegrationsUpdateData(guildId: Snowflake)
   object GuildIntegrationsUpdate
-      extends WsEvent[GuildIntegrationsUpdateData]("GUILD_INTEGRATIONS_UPDATE", notImplementedHandler, notImplementedMessage)
+      extends WsEvent[GuildIntegrationsUpdateData](
+        "GUILD_INTEGRATIONS_UPDATE",
+        notImplementedHandler,
+        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
+      )
 
   val guildMemberGen = LabelledGeneric[RawGuildMember]
   type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, Snowflake] :: guildMemberGen.Repr
@@ -330,10 +342,9 @@ object WsEvent {
         RawHandlers.rawMessageDeleteHandler,
         data =>
           (current, prev) =>
-            for {
-              message <- prev.getMessage(data.id)
-              channel <- current.getChannel(data.channelId)
-            } yield APIMessage.MessageDelete(message, channel, current, prev)
+            prev.getMessage(data.id).flatMap(message => current.getChannel(data.channelId).collect { case channel: TChannel =>
+              APIMessage.MessageDelete(message, channel, current, prev)
+            })
       )
 
   case class MessageDeleteBulkData(ids: Seq[Snowflake], channelId: Snowflake)
@@ -345,7 +356,7 @@ object WsEvent {
           (current, prev) =>
             current
               .getChannel(data.channelId)
-              .map(channel => APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev))
+              .collect { case channel: TChannel => APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev)}
       )
 
   case class PresenceUpdateData(
@@ -368,14 +379,32 @@ object WsEvent {
         }
       )
 
-  case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Int)
-  object TypingStart extends WsEvent[TypingStartData]("TYPING_START", notImplementedHandler, notImplementedMessage)
+  case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Instant)
+  object TypingStart extends WsEvent[TypingStartData](
+    "TYPING_START",
+    RawHandlers.lastTypedHandler,
+    data => (current, prev) => current.getUser(data.userId).flatMap(user => current.getChannel(data.channelId).collect {
+      case channel: TChannel => APIMessage.TypingStart(channel, user, data.timestamp, current, prev)
+    })
+  )
 
-  //object UserSettingsUpdate extends Event("USER_SETTINGS_UPDATE") //TODO
+  object UserUpdate extends WsEvent[User](
+    "USER_UPDATE",
+    RawHandlers.userUpdateHandler,
+    (data) => (current, prev) => Some(APIMessage.UserUpdate(data, current, prev))
+  )
 
-  object UserUpdate        extends WsEvent[User]("USER_UPDATE", notImplementedHandler, notImplementedMessage)
-  object VoiceStateUpdate  extends WsEvent[VoiceState]("VOICE_STATUS_UPDATE", notImplementedHandler, notImplementedMessage)
-  object VoiceServerUpdate extends WsEvent[VoiceServerUpdateData]("VOICE_SERVER_UPDATE", notImplementedHandler, notImplementedMessage)
+  object VoiceStateUpdate extends WsEvent[VoiceState](
+    "VOICE_STATUS_UPDATE",
+    notImplementedHandler,
+    data => (current, prev) => Some(APIMessage.VoiceStateUpdate(data, current, prev))
+  )
+
+  object VoiceServerUpdate extends WsEvent[VoiceServerUpdateData](
+    "VOICE_SERVER_UPDATE",
+    notImplementedHandler,
+    data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, current, prev))
+  )
 
   def forName(name: String): Option[WsEvent[_]] = name match {
     case "READY"                     => Some(Ready)
