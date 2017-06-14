@@ -47,7 +47,7 @@ trait Handlers {
     }
   }
 
-  implicit val guildUpdateHandler: CacheUpdateHandler[AvailableGuild] = updateHandler { (builder, obj, log) =>
+  implicit val guildUpdateHandler: CacheUpdateHandler[Guild] = updateHandler { (builder, obj, log) =>
     builder.guilds.put(obj.id, obj)
   }
 
@@ -64,10 +64,10 @@ trait Handlers {
     }
   }
 
-  implicit val guildDeleteHandler: CacheDeleteHandler[Guild] = deleteHandler((builder, obj, _) => builder.guilds.remove(obj.id))
-  implicit val messageDeleteHandler: CacheDeleteHandler[Message] = deleteHandler(
+  implicit val guildDeleteHandler: CacheDeleteHandler[UnknownStatusGuild] = deleteHandler((builder, obj, _) => builder.guilds.remove(obj.id))
+  implicit val messageDeleteHandler: CacheDeleteHandler[Message]          = deleteHandler(
     (builder, obj, _) => builder.getChannelMessages(obj.channelId).remove(obj.id)
   )
-  implicit val userDeleteHandler: CacheDeleteHandler[User] = deleteHandler((builder, obj, _) => builder.users.remove(obj.id))
+  implicit val userDeleteHandler: CacheDeleteHandler[User]                = deleteHandler((builder, obj, _) => builder.users.remove(obj.id))
 }
 object Handlers extends Handlers

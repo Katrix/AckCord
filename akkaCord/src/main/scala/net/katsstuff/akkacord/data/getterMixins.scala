@@ -25,12 +25,12 @@ package net.katsstuff.akkacord.data
 
 trait GetGuild {
   def guildId: Snowflake
-  def guild(implicit snapshot: CacheSnapshot): Option[AvailableGuild] = snapshot.getGuild(guildId)
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
   def guildId: Option[Snowflake]
-  def guild(implicit snapshot: CacheSnapshot): Option[AvailableGuild] = guildId.flatMap(snapshot.getGuild)
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildId.flatMap(snapshot.getGuild)
 }
 
 trait GetUser {
@@ -48,7 +48,7 @@ trait GetChannel {
   def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = guildChannel.collect { case tChannel: TGuildChannel => tChannel}
   def vGuildChannel(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = guildChannel.collect { case vChannel: VGuildChannel => vChannel}
 
-  def guild(implicit snapshot: CacheSnapshot): Option[AvailableGuild] = guildChannel.flatMap(_.guild)
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildChannel.flatMap(_.guild)
 }
 
 trait GetChannelOpt {

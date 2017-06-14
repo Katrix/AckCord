@@ -25,12 +25,12 @@ package net.katsstuff.akkacord.data
 
 import java.time.OffsetDateTime
 
-sealed trait Guild {
+sealed trait UnknownStatusGuild {
   def id:          Snowflake
   def unavailable: Boolean
 }
 
-case class AvailableGuild(
+case class Guild(
     id:                          Snowflake,
     name:                        String,
     icon:                        Option[String], ////Icon can be null
@@ -53,11 +53,11 @@ case class AvailableGuild(
     members:     Map[Snowflake, GuildMember],
     channels:    Map[Snowflake, GuildChannel],
     presences:   Map[Snowflake, Presence]
-) extends Guild {
+) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 }
 
-case class UnavailableGuild(id: Snowflake) extends Guild {
+case class UnavailableGuild(id: Snowflake) extends UnknownStatusGuild {
   override def unavailable: Boolean = true
 }
 

@@ -39,33 +39,33 @@ object APIMessage {
   case class ChannelUpdate(channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class ChannelDelete(channel: Channel, snapshot:      CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildCreate(guild: AvailableGuild, snapshot:    CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildUpdate(guild: AvailableGuild, snapshot:    CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildDelete(guild: AvailableGuild, unavailable: Boolean, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildCreate(guild: Guild, snapshot:    CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildUpdate(guild: Guild, snapshot:    CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildDelete(guild: Guild, unavailable: Boolean, snapshot:           CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildBanAdd(guild:    AvailableGuild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildBanRemove(guild: AvailableGuild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildBanAdd(guild:    Guild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildBanRemove(guild: Guild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildEmojiUpdate(guild: AvailableGuild, emojis: Seq[GuildEmoji], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+  case class GuildEmojiUpdate(guild: Guild, emojis: Seq[GuildEmoji], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
       extends APIMessage
-  case class GuildIntegrationsUpdate(guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildIntegrationsUpdate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildMemberAdd(member:  GuildMember, guild: AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildMemberRemove(user: User, guild:        AvailableGuild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildMemberAdd(member:  GuildMember, guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildMemberRemove(user: User, guild:        Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class GuildMemberUpdate(
-      guild:        AvailableGuild,
+      guild:        Guild,
       roles:        Seq[Role],
       user:         User,
       nick:         Option[String],
       snapshot:     CacheSnapshot,
       prevSnapshot: CacheSnapshot
   ) extends APIMessage
-  case class GuildMembersChunk(guild: AvailableGuild, members: Seq[GuildMember], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
       extends APIMessage
 
-  case class GuildRoleCreate(guild: AvailableGuild, role:   Role, snapshot:      CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildRoleUpdate(guild: AvailableGuild, role:   Role, snapshot:      CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class GuildRoleDelete(guild: AvailableGuild, roleId: Snowflake, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildRoleCreate(guild: Guild, role:   Role, snapshot:      CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildRoleUpdate(guild: Guild, role:   Role, snapshot:      CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildRoleDelete(guild: Guild, roleId: Snowflake, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class MessageCreate(message:      Message, snapshot:     CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class MessageUpdate(message:      Message, snapshot:     CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
@@ -80,7 +80,7 @@ object APIMessage {
   case class UserUpdate(user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class VoiceServerUpdate(token:     String, guild:        AvailableGuild, endpoint:    String, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+  case class VoiceServerUpdate(token:     String, guild:        Guild, endpoint:    String, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
       extends APIMessage
 
 }

@@ -28,13 +28,13 @@ import java.time.Instant
 import scala.collection.mutable
 
 import net.katsstuff.akkacord.CacheSnapshotLike
-import net.katsstuff.akkacord.data.{AvailableGuild, CacheSnapshot, DMChannel, Message, Presence, Snowflake, UnavailableGuild, User}
+import net.katsstuff.akkacord.data.{Guild, CacheSnapshot, DMChannel, Message, Presence, Snowflake, UnavailableGuild, User}
 
 class CacheSnapshotBuilder(
     var botUser:           User,
     var dmChannels:        mutable.Map[Snowflake, DMChannel],
     var unavailableGuilds: mutable.Map[Snowflake, UnavailableGuild],
-    var guilds:            mutable.Map[Snowflake, AvailableGuild],
+    var guilds:            mutable.Map[Snowflake, Guild],
     var messages:          mutable.Map[Snowflake, mutable.Map[Snowflake, Message]],
     var lastTyped:         mutable.Map[Snowflake, mutable.Map[Snowflake, Instant]],
     var users:             mutable.Map[Snowflake, User],

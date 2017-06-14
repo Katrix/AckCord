@@ -97,7 +97,7 @@ object RawHandlers extends Handlers {
     val oldGuild = builder.getGuild(obj.id)
 
     //Gets here are because everything should be sent here
-    val guild = AvailableGuild(
+    val guild = Guild(
       id = obj.id,
       name = obj.name,
       icon = obj.icon,

@@ -31,7 +31,7 @@ case class CacheSnapshot(
     botUser:           User,
     dmChannels:        Map[Snowflake, DMChannel],
     unavailableGuilds: Map[Snowflake, UnavailableGuild],
-    guilds:            Map[Snowflake, AvailableGuild],
+    guilds:            Map[Snowflake, Guild],
     messages:          Map[Snowflake, Map[Snowflake, Message]],
     lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
     users:             Map[Snowflake, User],

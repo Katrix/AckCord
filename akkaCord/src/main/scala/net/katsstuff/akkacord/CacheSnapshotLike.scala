@@ -35,7 +35,7 @@ trait CacheSnapshotLike {
   def botUser:           User
   def dmChannels:        MapType[Snowflake, DMChannel]
   def unavailableGuilds: MapType[Snowflake, UnavailableGuild]
-  def guilds:            MapType[Snowflake, AvailableGuild]
+  def guilds:            MapType[Snowflake, Guild]
   def messages:          MapType[Snowflake, MapType[Snowflake, Message]]
   def lastTyped:         MapType[Snowflake, MapType[Snowflake, Instant]]
   def users:             MapType[Snowflake, User]
@@ -43,8 +43,8 @@ trait CacheSnapshotLike {
 
   def getDmChannel(id: Snowflake): Option[DMChannel] = dmChannels.get(id)
 
-  def getGuild(id:             Snowflake): Option[AvailableGuild] = guilds.get(id)
-  def getGuildWithUnavailable(id: Snowflake): Option[Guild]       = guilds.get(id).orElse(unavailableGuilds.get(id))
+  def getGuild(id:             Snowflake): Option[Guild] = guilds.get(id)
+  def getGuildWithUnavailable(id: Snowflake): Option[UnknownStatusGuild]       = guilds.get(id).orElse(unavailableGuilds.get(id))
 
   def getGuildChannel(guildId: Snowflake, id: Snowflake): Option[GuildChannel] = guilds.get(guildId).flatMap(_.channels.get(id))
   def getGuildChannel(id: Snowflake): Option[GuildChannel] = guilds.values.collectFirst {

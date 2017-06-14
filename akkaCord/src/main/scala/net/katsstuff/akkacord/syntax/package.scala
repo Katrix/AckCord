@@ -87,7 +87,7 @@ package object syntax {
     ) = Request(ModifyChannel(channel.id, ModifyChannelData(name, position, None, Some(bitrate), Some(userLimit))), context)
   }
 
-  implicit class GuildSyntax(val guild: AvailableGuild) extends AnyVal {
+  implicit class GuildSyntax(val guild: Guild) extends AnyVal {
     def rolesForUser(userId: Snowflake): Seq[Role] = guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
 
     def tChannels: Seq[TGuildChannel] =
