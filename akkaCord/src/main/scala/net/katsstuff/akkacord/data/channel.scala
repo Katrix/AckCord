@@ -47,7 +47,7 @@ object PermissionValueType {
   }
 
   def nameOf(tpe: PermissionValueType): String = tpe match {
-    case Role => "role"
+    case Role   => "role"
     case Member => "member"
   }
 }
@@ -74,26 +74,26 @@ sealed trait GuildChannel extends Channel with GetGuild {
 }
 
 case class TGuildChannel(
-    id:                   Snowflake,
-    guildId:              Snowflake,
-    name:                 String,
-    position:             Int,
+    id: Snowflake,
+    guildId: Snowflake,
+    name: String,
+    position: Int,
     permissionOverwrites: Seq[PermissionValue],
-    topic:                Option[String],
-    lastMessageId:        Option[Snowflake]
+    topic: Option[String],
+    lastMessageId: Option[Snowflake]
 ) extends GuildChannel
     with TChannel {
   override def channelType: ChannelType = ChannelType.Text
 }
 
 case class VGuildChannel(
-    id:                   Snowflake,
-    guildId:              Snowflake,
-    name:                 String,
-    position:             Int,
+    id: Snowflake,
+    guildId: Snowflake,
+    name: String,
+    position: Int,
     permissionOverwrites: Seq[PermissionValue],
-    bitrate:              Int,
-    userLimit:            Int
+    bitrate: Int,
+    userLimit: Int
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.Voice
 }

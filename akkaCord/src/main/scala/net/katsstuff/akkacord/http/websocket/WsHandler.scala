@@ -199,9 +199,9 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
       stay using WithHeartbeat(data.heartbeatInterval, cancellable, receivedAck = true, source, resume)
     case Event(dispatch: Dispatch[_], data: WithHeartbeat) =>
-      val seq = dispatch.sequence
+      val seq   = dispatch.sequence
       val event = dispatch.event
-      val d = dispatch.d
+      val d     = dispatch.d
 
       val stayData = event match {
         case WsEvent.Ready =>
@@ -228,7 +228,10 @@ class WsHandler(token: String, cache: ActorRef, settings: DiscordClientSettings)
       goto(Inactive) using WithResumeData(None)
 
     //External messages
-    case Event(Request(request: RequestGuildMembers, requestCtx /*TODO: Find a way to send back the ctx here*/), WithHeartbeat(_, _, _, source, _)) =>
+    case Event(
+        Request(request: RequestGuildMembers, requestCtx /*TODO: Find a way to send back the ctx here*/ ),
+        WithHeartbeat(_, _, _, source, _)
+        ) =>
       val payload = (request: WsMessage[RequestGuildMembersData]).asJson.noSpaces
       log.debug(s"Sending payload: $payload")
       source.offer(TextMessage(payload))
@@ -269,11 +272,11 @@ object WsHandler {
     override def sourceOpt:              Option[SourceQueueWithComplete[Message]] = Some(source)
   }
   case class WithHeartbeat(
-      heartbeatInterval:   Int,
+      heartbeatInterval: Int,
       heartbeatCancelable: Cancellable,
-      receivedAck:         Boolean,
-      source:              SourceQueueWithComplete[Message],
-      resume:              Option[ResumeData]
+      receivedAck: Boolean,
+      source: SourceQueueWithComplete[Message],
+      resume: Option[ResumeData]
   ) extends Data {
     override def heartbeatCancelableOpt: Option[Cancellable]                      = Some(heartbeatCancelable)
     override def sourceOpt:              Option[SourceQueueWithComplete[Message]] = Some(source)

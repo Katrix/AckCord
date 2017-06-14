@@ -25,9 +25,9 @@ package net.katsstuff.akkacord.data
 
 class Permission private (val int: Int) extends AnyVal {
 
-  def addPermissions(other:       Permission): Permission = Permission(this.int | other.int)
-  def removePermissions(other:    Permission): Permission = Permission(this.int & ~other.int)
-  def togglePermissions(other:    Permission): Permission = Permission(this.int ^ other.int)
+  def addPermissions(other: Permission):       Permission = Permission(this.int | other.int)
+  def removePermissions(other: Permission):    Permission = Permission(this.int & ~other.int)
+  def togglePermissions(other: Permission):    Permission = Permission(this.int ^ other.int)
   def hasPermissions(permissions: Permission): Boolean    = (this.int & permissions.int) != 0
 }
 object Permission {
@@ -69,12 +69,12 @@ object Permission {
 }
 
 case class Role(
-    id:          Snowflake,
-    name:        String,
-    color:       Int,
-    hoist:       Boolean,
-    position:    Int,
+    id: Snowflake,
+    name: String,
+    color: Int,
+    hoist: Boolean,
+    position: Int,
     permissions: Permission,
-    managed:     Boolean,
+    managed: Boolean,
     mentionable: Boolean
 )

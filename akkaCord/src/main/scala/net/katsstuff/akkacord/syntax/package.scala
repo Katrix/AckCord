@@ -38,9 +38,9 @@ package object syntax {
   implicit class TChannelSyntax(val tChannel: TChannel) extends AnyVal {
     def sendMessage[Context](
         content: String,
-        tts:     Boolean = false,
-        file:    Option[Path] = None,
-        embed:   Option[OutgoingEmbed] = None,
+        tts: Boolean = false,
+        file: Option[Path] = None,
+        embed: Option[OutgoingEmbed] = None,
         context: Context = NotUsed
     ) = Request(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, file, embed)), NotUsed)
 
@@ -70,20 +70,20 @@ package object syntax {
 
   implicit class TGuildChannelSyntax(val channel: TGuildChannel) extends AnyVal {
     def modify[Context](
-        name:     String = channel.name,
+        name: String = channel.name,
         position: Int = channel.position,
-        topic:    Option[String] = channel.topic,
-        context:  Context = NotUsed
+        topic: Option[String] = channel.topic,
+        context: Context = NotUsed
     ) = Request(ModifyChannel(channel.id, ModifyChannelData(name, position, topic, None, None)), context)
   }
 
   implicit class VGuildChannelSyntax(val channel: VGuildChannel) extends AnyVal {
     def modify[Context](
-        name:      String = channel.name,
-        position:  Int = channel.position,
-        bitrate:   Int = channel.bitrate,
+        name: String = channel.name,
+        position: Int = channel.position,
+        bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
-        context:   Context = NotUsed
+        context: Context = NotUsed
     ) = Request(ModifyChannel(channel.id, ModifyChannelData(name, position, None, Some(bitrate), Some(userLimit))), context)
   }
 
@@ -100,27 +100,27 @@ package object syntax {
         case tChannel: VGuildChannel => tChannel
       }.toSeq
 
-    def channelById(id:  Snowflake): Option[GuildChannel]  = guild.channels.get(id)
+    def channelById(id: Snowflake):  Option[GuildChannel]  = guild.channels.get(id)
     def tChannelById(id: Snowflake): Option[TGuildChannel] = channelById(id).collect { case tChannel: TGuildChannel => tChannel }
     def vChannelById(id: Snowflake): Option[VGuildChannel] = channelById(id).collect { case vChannel: VGuildChannel => vChannel }
 
-    def channelsByName(name:  String): Seq[GuildChannel]  = guild.channels.values.filter(_.name == name).toSeq
+    def channelsByName(name: String):  Seq[GuildChannel]  = guild.channels.values.filter(_.name == name).toSeq
     def tChannelsByName(name: String): Seq[TGuildChannel] = tChannels.filter(_.name == name)
     def vChannelsByName(name: String): Seq[VGuildChannel] = vChannels.filter(_.name == name)
 
     def afkChannel: Option[VGuildChannel] = guild.afkChannelId.flatMap(vChannelById)
 
-    def roleById(id:      Snowflake): Option[Role] = guild.roles.get(id)
-    def rolesByName(name: String):    Seq[Role]    = guild.roles.values.filter(_.name == name).toSeq
+    def roleById(id: Snowflake):   Option[Role] = guild.roles.get(id)
+    def rolesByName(name: String): Seq[Role]    = guild.roles.values.filter(_.name == name).toSeq
 
-    def emojiById(id:      Snowflake): Option[GuildEmoji] = guild.emojis.get(id)
-    def emojisByName(name: String):    Seq[GuildEmoji]    = guild.emojis.values.filter(_.name == name).toSeq
+    def emojiById(id: Snowflake):   Option[GuildEmoji] = guild.emojis.get(id)
+    def emojisByName(name: String): Seq[GuildEmoji]    = guild.emojis.values.filter(_.name == name).toSeq
 
-    def memberById(id:       Snowflake): Option[GuildMember] = guild.members.get(id)
-    def memberFromUser(user: User):      Option[GuildMember] = memberById(user.id)
+    def memberById(id: Snowflake):  Option[GuildMember] = guild.members.get(id)
+    def memberFromUser(user: User): Option[GuildMember] = memberById(user.id)
 
-    def presenceById(id:      Snowflake): Option[Presence] = guild.presences.get(id)
-    def presenceForUser(user: User):      Option[Presence] = presenceById(user.id)
+    def presenceById(id: Snowflake): Option[Presence] = guild.presences.get(id)
+    def presenceForUser(user: User): Option[Presence] = presenceById(user.id)
   }
 
   implicit class GuildEmojiSyntax(val emoji: GuildEmoji) extends AnyVal {
@@ -146,13 +146,13 @@ package object syntax {
 
     def edit[Context](
         content: Option[String] = Some(message.content),
-        embed:   Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
+        embed: Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
         context: Context = NotUsed
     ) = Request(EditMessage(message.channelId, message.id, EditMessageData(content, embed)))
 
     def delete[Context](context: Context = NotUsed) = Request(DeleteMessage(message.channelId, message.id), context)
 
-    def addPinnedMessages[Context](context:    Context = NotUsed) = Request(AddPinnedChannelMessages(message.channelId, message.id), context)
+    def addPinnedMessages[Context](context: Context = NotUsed)    = Request(AddPinnedChannelMessages(message.channelId, message.id), context)
     def removePinnedMessages[Context](context: Context = NotUsed) = Request(DeletePinnedChannelMessages(message.channelId, message.id), context)
   }
 }

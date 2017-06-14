@@ -24,26 +24,26 @@
 package net.katsstuff.akkacord.data
 
 case class VoiceState(
-    guildId:   Option[Snowflake],
+    guildId: Option[Snowflake],
     channelId: Option[Snowflake], //channelId can be null
-    userId:    Snowflake,
+    userId: Snowflake,
     sessionId: String,
-    deaf:      Boolean,
-    mute:      Boolean,
-    selfDeaf:  Boolean,
-    selfMute:  Boolean,
-    suppress:  Boolean
+    deaf: Boolean,
+    mute: Boolean,
+    selfDeaf: Boolean,
+    selfMute: Boolean,
+    suppress: Boolean
 ) extends GetGuildOpt
     with GetChannelOpt
     with GetUser
 
 case class VoiceRegion(
-    id:             String,
-    name:           String,
+    id: String,
+    name: String,
     sampleHostname: String,
-    samplePort:     Int,
-    vip:            Boolean,
-    optimal:        Boolean,
-    deprecated:     Boolean,
-    custom:         Boolean
+    samplePort: Int,
+    vip: Boolean,
+    optimal: Boolean,
+    deprecated: Boolean,
+    custom: Boolean
 )

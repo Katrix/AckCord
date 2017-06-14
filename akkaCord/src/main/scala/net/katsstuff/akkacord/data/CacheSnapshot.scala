@@ -28,14 +28,14 @@ import java.time.Instant
 import net.katsstuff.akkacord.CacheSnapshotLike
 
 case class CacheSnapshot(
-    botUser:           User,
-    dmChannels:        Map[Snowflake, DMChannel],
+    botUser: User,
+    dmChannels: Map[Snowflake, DMChannel],
     unavailableGuilds: Map[Snowflake, UnavailableGuild],
-    guilds:            Map[Snowflake, Guild],
-    messages:          Map[Snowflake, Map[Snowflake, Message]],
-    lastTyped:         Map[Snowflake, Map[Snowflake, Instant]],
-    users:             Map[Snowflake, User],
-    presences:         Map[Snowflake, Map[Snowflake, Presence]]
+    guilds: Map[Snowflake, Guild],
+    messages: Map[Snowflake, Map[Snowflake, Message]],
+    lastTyped: Map[Snowflake, Map[Snowflake, Instant]],
+    users: Map[Snowflake, User],
+    presences: Map[Snowflake, Map[Snowflake, Presence]]
 ) extends CacheSnapshotLike {
 
   override type MapType[A, B] = Map[A, B]

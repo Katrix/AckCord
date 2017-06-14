@@ -93,7 +93,7 @@ sealed trait CacheHandlerEvent[Data] {
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit = handler.handle(builder, data)
 }
 case class APIMessageHandlerEvent[Data](data: Data, sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage])(
-    implicit val handler:                     CacheHandler[Data]
+    implicit val handler: CacheHandler[Data]
 ) extends CacheHandlerEvent[Data]
 case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context)(implicit val handler: CacheHandler[Data])
     extends CacheHandlerEvent[Data]

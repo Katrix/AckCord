@@ -59,11 +59,11 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
     case DiscordClient.ShutdownClient =>
       restHandler.forward(DiscordClient.ShutdownClient)
       wsHandler.forward(DiscordClient.ShutdownClient)
-    case request @ Request(_: WsMessage[_], _) => wsHandler.forward(request)
+    case request @ Request(_: WsMessage[_], _)      => wsHandler.forward(request)
     case request @ Request(_: RESTRequest[_, _], _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1
-      if(shutdownCount == 2) {
+      if (shutdownCount == 2) {
         system.terminate()
       }
   }
@@ -75,13 +75,13 @@ object DiscordClient {
 }
 
 case class DiscordClientSettings(
-    token:                String,
-    system:               ActorSystem,
-    eventStream:          EventStream,
+    token: String,
+    system: ActorSystem,
+    eventStream: EventStream,
     maxReconnectAttempts: Int = 5,
-    largeThreshold:       Int = 100,
-    shardNum:             Int = 0,
-    shardTotal:           Int = 1
+    largeThreshold: Int = 100,
+    shardNum: Int = 0,
+    shardTotal: Int = 1
 ) {
   def connect: ActorRef = system.actorOf(DiscordClient.props(token, eventStream, this), "DiscordClient")
 }

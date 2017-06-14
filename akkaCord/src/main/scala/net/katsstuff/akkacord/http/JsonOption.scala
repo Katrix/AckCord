@@ -65,7 +65,7 @@ object JsonOption {
       else implicitly[Decoder[A]].apply(c).map(JsonSome.apply)
 
     override def tryDecode(c: ACursor): Result[JsonOption[A]] = c match {
-      case hc: HCursor => apply(hc)
+      case hc: HCursor   => apply(hc)
       case _ if c.failed => Right(JsonNone)
     }
 
@@ -88,6 +88,6 @@ object JsonOption {
   }
 }
 
-case object JsonNull extends JsonOption[Nothing]
-case object JsonNone extends JsonOption[Nothing]
+case object JsonNull             extends JsonOption[Nothing]
+case object JsonNone             extends JsonOption[Nothing]
 case class JsonSome[A](value: A) extends JsonOption[A]

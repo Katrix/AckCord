@@ -109,7 +109,7 @@ trait DiscordProtocol {
     )
 
     a.author match {
-      case user:    User          => Json.obj(base :+ "author" -> user.asJson:    _*)
+      case user: User             => Json.obj(base :+ "author" -> user.asJson: _*)
       case webhook: WebhookAuthor => Json.obj(base :+ "author" -> webhook.asJson: _*)
     }
   }

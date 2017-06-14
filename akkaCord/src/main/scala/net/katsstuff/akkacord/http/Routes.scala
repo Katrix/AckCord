@@ -125,65 +125,66 @@ object Routes {
   val guilds: Uri = s"$base/guilds"
   val createGuild = RestRoute(guilds, POST)
 
-  val guild: GuildId => Uri = guildId => s"$guilds.$guildId"
-  val getGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, GET))
+  val guild:       GuildId => Uri       = guildId => s"$guilds.$guildId"
+  val getGuild:    GuildId => RestRoute = guild.andThen(RestRoute(_, GET))
   val modifyGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, PATCH))
   val deleteGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, DELETE))
 
-  val guildChannels: GuildId => Uri = guild.andThen(uri => s"$uri/channels")
-  val getGuildChannels: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, GET))
+  val guildChannels:       GuildId => Uri       = guild.andThen(uri => s"$uri/channels")
+  val getGuildChannels:    GuildId => RestRoute = guildChannels.andThen(RestRoute(_, GET))
   val createGuildChannels: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, POST))
   val modifyGuildChannels: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, PATCH))
 
-  val guildMembers: GuildId => Uri = guild.andThen(uri => s"$uri/members")
-  val guildMember: (UserId, GuildId) => Uri = Function.uncurried(userId => guildMembers.andThen(uri => s"$uri/$userId"))
-  val getGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, GET))
-  val listGuildMembers: GuildId => RestRoute = guildMembers.andThen(RestRoute(_, GET))
-  val addGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, PUT))
+  val guildMembers:      GuildId => Uri                 = guild.andThen(uri => s"$uri/members")
+  val guildMember:       (UserId, GuildId) => Uri       = Function.uncurried(userId => guildMembers.andThen(uri => s"$uri/$userId"))
+  val getGuildMember:    (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, GET))
+  val listGuildMembers:  GuildId => RestRoute           = guildMembers.andThen(RestRoute(_, GET))
+  val addGuildMember:    (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, PUT))
   val modifyGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, PATCH))
   val removeGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, DELETE))
-  val modifyCurrentNick: GuildId => RestRoute = guildMembers.andThen(uri => RestRoute(s"$uri/@me/nick", PATCH))
+  val modifyCurrentNick: GuildId => RestRoute           = guildMembers.andThen(uri => RestRoute(s"$uri/@me/nick", PATCH))
 
   val guildMemberRole: (RoleId, UserId, GuildId) => Uri =
     Function.uncurried(roleId => guildMember.andThen(uri => s"$uri/roles/$roleId": Uri).curried)
 
-  val addGuildMemberRole   : (RoleId, UserId, GuildId) => RestRoute = guildMemberRole.andThen(RestRoute(_, PUT))
+  val addGuildMemberRole:    (RoleId, UserId, GuildId) => RestRoute = guildMemberRole.andThen(RestRoute(_, PUT))
   val removeGuildMemberRole: (RoleId, UserId, GuildId) => RestRoute = guildMemberRole.andThen(RestRoute(_, DELETE))
 
-  val guildBans     : (GuildId) => String         = guild.andThen(uri => s"$uri/bans")
+  val guildBans:      (GuildId) => String         = guild.andThen(uri => s"$uri/bans")
   val guildMemberBan: (UserId, GuildId) => String = Function.uncurried(userId => guildBans.andThen(uri => s"$uri/$userId"))
 
-  val getGuildBans: GuildId => RestRoute = guildBans.andThen(RestRoute(_, GET))
+  val getGuildBans:         GuildId => RestRoute           = guildBans.andThen(RestRoute(_, GET))
   val createGuildMemberBan: (UserId, GuildId) => RestRoute = guildMemberBan.andThen(RestRoute(_, PUT))
   val removeGuildMemberBan: (UserId, GuildId) => RestRoute = guildMemberBan.andThen(RestRoute(_, DELETE))
 
-  val guildRoles: GuildId => Uri = guild.andThen(uri => s"$uri/roles")
-  val getGuildRole: GuildId => RestRoute = guildRoles.andThen(RestRoute(_, GET))
-  val createGuildRole: GuildId => RestRoute = guildRoles.andThen(RestRoute(_, POST))
+  val guildRoles:               GuildId => Uri       = guild.andThen(uri => s"$uri/roles")
+  val getGuildRole:             GuildId => RestRoute = guildRoles.andThen(RestRoute(_, GET))
+  val createGuildRole:          GuildId => RestRoute = guildRoles.andThen(RestRoute(_, POST))
   val modifyGuildRolePositions: GuildId => RestRoute = guildRoles.andThen(RestRoute(_, PATCH))
 
-  val guildRole: (RoleId, GuildId) => Uri = Function.uncurried(roleId => guildRoles.andThen(uri => s"$uri/$roleId"))
+  val guildRole:       (RoleId, GuildId) => Uri       = Function.uncurried(roleId => guildRoles.andThen(uri => s"$uri/$roleId"))
   val modifyGuildRole: (RoleId, GuildId) => RestRoute = guildRole.andThen(RestRoute(_, PATCH))
   val deleteGuildRole: (RoleId, GuildId) => RestRoute = guildRole.andThen(RestRoute(_, DELETE))
 
-  val guildPrune: GuildId => Uri = guild.andThen(uri => s"$uri/prune")
+  val guildPrune:         GuildId => Uri       = guild.andThen(uri => s"$uri/prune")
   val getGuildPruneCount: GuildId => RestRoute = guildPrune.andThen(RestRoute(_, GET))
-  val beginGuildPrune: GuildId => RestRoute = guildPrune.andThen(RestRoute(_, POST))
+  val beginGuildPrune:    GuildId => RestRoute = guildPrune.andThen(RestRoute(_, POST))
 
   val getGuildVoiceRegions: GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/regions", GET))
-  val getGuildInvites: GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/invites", GET))
+  val getGuildInvites:      GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/invites", GET))
 
-  val guildIntegrations: GuildId => Uri = guild.andThen(uri => s"$uri/integrations")
-  val getGuildIntegrations: GuildId => RestRoute = guildIntegrations.andThen(RestRoute(_, GET))
+  val guildIntegrations:       GuildId => Uri       = guild.andThen(uri => s"$uri/integrations")
+  val getGuildIntegrations:    GuildId => RestRoute = guildIntegrations.andThen(RestRoute(_, GET))
   val createGuildIntegrations: GuildId => RestRoute = guildIntegrations.andThen(RestRoute(_, POST))
 
-  val guildIntegration: (IntegrationId, GuildId) => Uri = Function.uncurried(integrationId => guildIntegrations.andThen(uri => s"$uri/$integrationId"))
+  val guildIntegration: (IntegrationId, GuildId) => Uri =
+    Function.uncurried(integrationId => guildIntegrations.andThen(uri => s"$uri/$integrationId"))
   val modifyGuildIntegration: (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(RestRoute(_, PATCH))
   val deleteGuildIntegration: (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(RestRoute(_, DELETE))
-  val syncGuildIntegration: (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(uri => RestRoute(s"$uri/sync", PATCH))
+  val syncGuildIntegration:   (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(uri => RestRoute(s"$uri/sync", PATCH))
 
-  val guildEmbed: GuildId => Uri = guild.andThen(uri => s"$uri/embed")
-  val getGuildEmbed: GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, GET))
+  val guildEmbed:       GuildId => Uri       = guild.andThen(uri => s"$uri/embed")
+  val getGuildEmbed:    GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, GET))
   val modifyGuildEmbed: GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, PATCH))
 
 }

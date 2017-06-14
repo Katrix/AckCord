@@ -31,28 +31,28 @@ sealed trait UnknownStatusGuild {
 }
 
 case class Guild(
-    id:                          Snowflake,
-    name:                        String,
-    icon:                        Option[String], ////Icon can be null
-    splash:                      Option[String], //Splash can be null
-    ownerId:                     Snowflake,
-    afkChannelId:                Option[Snowflake], //AfkChannelId can be null
-    afkTimeout:                  Int,
-    embedEnabled:                Option[Boolean], //embedEnabled can be missing
-    embedChannelId:              Option[Snowflake], //embedChannelId can be missing
-    verificationLevel:           Int, //TODO: Better than Int here
+    id: Snowflake,
+    name: String,
+    icon: Option[String], ////Icon can be null
+    splash: Option[String], //Splash can be null
+    ownerId: Snowflake,
+    afkChannelId: Option[Snowflake], //AfkChannelId can be null
+    afkTimeout: Int,
+    embedEnabled: Option[Boolean], //embedEnabled can be missing
+    embedChannelId: Option[Snowflake], //embedChannelId can be missing
+    verificationLevel: Int, //TODO: Better than Int here
     defaultMessageNotifications: Int, //TODO: Better than int here
-    roles:                       Map[Snowflake, Role],
-    emojis:                      Map[Snowflake, GuildEmoji],
+    roles: Map[Snowflake, Role],
+    emojis: Map[Snowflake, GuildEmoji],
     //features:                    Seq[Feature], //TODO: What is a feature?
-    mfaLevel:    Int, //TODO: Better than int here
-    joinedAt:    OffsetDateTime,
-    large:       Boolean,
+    mfaLevel: Int, //TODO: Better than int here
+    joinedAt: OffsetDateTime,
+    large: Boolean,
     memberCount: Int,
     voiceStates: Seq[VoiceState],
-    members:     Map[Snowflake, GuildMember],
-    channels:    Map[Snowflake, GuildChannel],
-    presences:   Map[Snowflake, Presence]
+    members: Map[Snowflake, GuildMember],
+    channels: Map[Snowflake, GuildChannel],
+    presences: Map[Snowflake, Presence]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 }
@@ -68,7 +68,7 @@ case class GuildEmoji(id: Snowflake, name: String, roles: Seq[Snowflake], requir
 sealed trait PresenceContent {
   def name: String
 }
-case class PresenceGame(name:      String) extends PresenceContent
+case class PresenceGame(name: String)                   extends PresenceContent
 case class PresenceStreaming(name: String, uri: String) extends PresenceContent
 sealed trait PresenceStatus
 object PresenceStatus {

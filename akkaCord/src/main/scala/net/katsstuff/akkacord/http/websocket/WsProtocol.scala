@@ -147,9 +147,9 @@ object WsProtocol extends DiscordProtocol {
     )
 
     a.author match {
-      case Some(user:    User)          => Json.obj(base :+ "author" -> user.asJson:    _*)
+      case Some(user: User)             => Json.obj(base :+ "author" -> user.asJson: _*)
       case Some(webhook: WebhookAuthor) => Json.obj(base :+ "author" -> webhook.asJson: _*)
-      case None => Json.obj(base: _*)
+      case None                         => Json.obj(base: _*)
     }
   }
 

@@ -53,7 +53,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           }
         case s if s.startsWith("!infoChannel") =>
           val withChannel = message.content.substring("!infoChannel".length)
-          val r = """<#(\d+)>""".r
+          val r           = """<#(\d+)>""".r
 
           val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map(Snowflake.apply).flatMap(id => message.guild.flatMap(_.channelById(id)))
           channel.foreach { gChannel =>
@@ -66,13 +66,14 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
       }
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
       implicit val cache = c
-      val optName = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
+      val optName        = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
       optName match {
-        case Some(name) => cache.getGuildChannel(guildId, senderChannelId) match {
-          case Some(channel: TGuildChannel) => client ! channel.sendMessage(s"Info for $name:\n$res")
-          case Some(channel: VGuildChannel) => log.warning("{} is not a valid text channel", channel.name)
-          case None => log.warning("No channel found for {}", requestedChannelId)
-        }
+        case Some(name) =>
+          cache.getGuildChannel(guildId, senderChannelId) match {
+            case Some(channel: TGuildChannel) => client ! channel.sendMessage(s"Info for $name:\n$res")
+            case Some(channel: VGuildChannel) => log.warning("{} is not a valid text channel", channel.name)
+            case None                         => log.warning("No channel found for {}", requestedChannelId)
+          }
         case None => log.warning("No channel found for {}", requestedChannelId)
       }
 

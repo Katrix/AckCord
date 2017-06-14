@@ -33,7 +33,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
-import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
+import akka.http.scaladsl.model.headers.{`User-Agent`, Authorization, HttpCredentials}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.pipe
@@ -128,7 +128,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
           log.error(s"Server error $intValue ${e.reason}")
           entity.toStrict(1.seconds).onComplete {
             case Success(ent) => log.error(ent.toString())
-            case Failure(_) => entity.discardBytes()
+            case Failure(_)   => entity.discardBytes()
           }
         case Success(HttpResponse(e @ ClientError(intValue), _, entity, _)) =>
           log.error(s"Client error $intValue: ${e.reason}")

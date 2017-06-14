@@ -69,7 +69,7 @@ object RESTRequest {
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
   }
 
-  case class ModifyChannelData(name:  String, position:  Int, topic: Option[String], bitrate: Option[Int], userLimit: Option[Int])
+  case class ModifyChannelData(name: String, position: Int, topic: Option[String], bitrate: Option[Int], userLimit: Option[Int])
   case class ModifyChannel(channelId: Snowflake, params: ModifyChannelData) extends RESTRequest[ModifyChannelData, RawGuildChannel] {
     override def route:           RestRoute                     = Routes.modifyChannelPut(channelId)
     override def paramsEncoder:   Encoder[ModifyChannelData]    = deriveEncoder[ModifyChannelData]
@@ -87,10 +87,10 @@ object RESTRequest {
     require(Seq(around, before, after).count(_.isDefined) <= 1)
   }
   case class GetChannelMessages(channelId: Snowflake, params: GetChannelMessagesData) extends RESTRequest[GetChannelMessagesData, Seq[RawMessage]] {
-    override def route:           RestRoute                      = Routes.getChannelMessages(channelId)
+    override def route:           RestRoute                       = Routes.getChannelMessages(channelId)
     override def paramsEncoder:   Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
-    override def responseDecoder: Decoder[Seq[RawMessage]]       = implicitly[Decoder[Seq[RawMessage]]]
-    override def handleResponse:  CacheHandler[Seq[RawMessage]]  = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
+    override def responseDecoder: Decoder[Seq[RawMessage]]        = implicitly[Decoder[Seq[RawMessage]]]
+    override def handleResponse:  CacheHandler[Seq[RawMessage]]   = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
 
   case class GetChannelMessage(channelId: Snowflake, messageId: Snowflake) extends NoParamsRequest[RawMessage] {
@@ -127,9 +127,9 @@ object RESTRequest {
   }
 
   case class GetReactions(channelId: Snowflake, messageId: Snowflake, emoji: String) extends NoParamsRequest[Seq[User]] {
-    override def route:           RestRoute          = Routes.getReactions(emoji, messageId, channelId)
-    override def responseDecoder: Decoder[Seq[User]] = implicitly[Decoder[Seq[User]]]
-    override def handleResponse: CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
+    override def route:           RestRoute               = Routes.getReactions(emoji, messageId, channelId)
+    override def responseDecoder: Decoder[Seq[User]]      = implicitly[Decoder[Seq[User]]]
+    override def handleResponse:  CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
   }
 
   case class DeleteAllReactions(channelId: Snowflake, messageId: Snowflake) extends NoParamsResponseRequest {
@@ -151,13 +151,13 @@ object RESTRequest {
   }
 
   case class BulkDeleteMessagesData(messages: Seq[Snowflake])
-  case class BulkDeleteMessages(channelId:    Snowflake, params: BulkDeleteMessagesData) extends NoResponseRequest[BulkDeleteMessagesData] {
+  case class BulkDeleteMessages(channelId: Snowflake, params: BulkDeleteMessagesData) extends NoResponseRequest[BulkDeleteMessagesData] {
     override def route:         RestRoute                       = Routes.bulkDeleteMessages(channelId)
     override def paramsEncoder: Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
   }
 
-  case class EditChannelPermissionsData(allow: Permission, deny:       Permission, `type`: String)
-  case class EditChannelPermissions(channelId: Snowflake, overwriteId: Snowflake, params:  EditChannelPermissionsData)
+  case class EditChannelPermissionsData(allow: Permission, deny: Permission, `type`: String)
+  case class EditChannelPermissions(channelId: Snowflake, overwriteId: Snowflake, params: EditChannelPermissionsData)
       extends NoResponseRequest[EditChannelPermissionsData] {
     override def route:         RestRoute                           = Routes.editChannelPermissions(overwriteId, channelId)
     override def paramsEncoder: Encoder[EditChannelPermissionsData] = deriveEncoder[EditChannelPermissionsData]

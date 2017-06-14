@@ -42,7 +42,7 @@ trait Handlers {
   }
   implicit val channelUpdateHandler: CacheUpdateHandler[Channel] = updateHandler { (builder, obj, log) =>
     obj match {
-      case dmChannel: DMChannel => handleUpdateLog(builder, dmChannel, log)
+      case dmChannel: DMChannel       => handleUpdateLog(builder, dmChannel, log)
       case guildChannel: GuildChannel => handleUpdateLog(builder, guildChannel, log)
     }
   }
@@ -65,9 +65,9 @@ trait Handlers {
   }
 
   implicit val guildDeleteHandler: CacheDeleteHandler[UnknownStatusGuild] = deleteHandler((builder, obj, _) => builder.guilds.remove(obj.id))
-  implicit val messageDeleteHandler: CacheDeleteHandler[Message]          = deleteHandler(
+  implicit val messageDeleteHandler: CacheDeleteHandler[Message] = deleteHandler(
     (builder, obj, _) => builder.getChannelMessages(obj.channelId).remove(obj.id)
   )
-  implicit val userDeleteHandler: CacheDeleteHandler[User]                = deleteHandler((builder, obj, _) => builder.users.remove(obj.id))
+  implicit val userDeleteHandler: CacheDeleteHandler[User] = deleteHandler((builder, obj, _) => builder.users.remove(obj.id))
 }
 object Handlers extends Handlers

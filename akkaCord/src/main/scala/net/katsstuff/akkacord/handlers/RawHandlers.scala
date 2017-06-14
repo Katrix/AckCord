@@ -62,7 +62,7 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawChannelUpdateHandler: CacheUpdateHandler[RawChannel] = updateHandler {
-    case (builder, dmChannel:    RawDMChannel, log)    => handleUpdateLog(builder, dmChannel, log)
+    case (builder, dmChannel: RawDMChannel, log)       => handleUpdateLog(builder, dmChannel, log)
     case (builder, guildChannel: RawGuildChannel, log) => handleUpdateLog(builder, guildChannel, log)
   }
 
@@ -82,7 +82,7 @@ object RawHandlers extends Handlers {
         case "idle"    => PresenceStatus.Idle
         case "online"  => PresenceStatus.Online
         case "offline" => PresenceStatus.Offline
-        case "dnd" =>     PresenceStatus.DoNotDisturb
+        case "dnd"     => PresenceStatus.DoNotDisturb
       }
 
       val content = pres.game.flatMap {
@@ -257,7 +257,7 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler {
-    case (builder, dmChannel:    RawDMChannel, log)    => handleDeleteLog(builder, dmChannel, log)
+    case (builder, dmChannel: RawDMChannel, log)       => handleDeleteLog(builder, dmChannel, log)
     case (builder, guildChannel: RawGuildChannel, log) => handleDeleteLog(builder, guildChannel, log)
   }
 

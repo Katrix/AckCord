@@ -24,13 +24,13 @@
 package net.katsstuff.akkacord.data
 
 case class Webhook(
-    id:        Snowflake,
-    guildId:   Option[Snowflake],
+    id: Snowflake,
+    guildId: Option[Snowflake],
     channelId: Snowflake,
-    user:      Option[Snowflake],
-    name:      Option[String],
-    avatar:    Option[String],
-    token:     String
+    user: Option[Snowflake],
+    name: Option[String],
+    avatar: Option[String],
+    token: String
 ) extends GetGuildOpt
     with GetChannel {
 

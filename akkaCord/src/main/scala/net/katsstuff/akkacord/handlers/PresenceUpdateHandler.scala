@@ -93,7 +93,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                       case "online"  => PresenceStatus.Online
                       case "idle"    => PresenceStatus.Idle
                       case "offline" => PresenceStatus.Offline
-                      case "dnd" =>     PresenceStatus.DoNotDisturb
+                      case "dnd"     => PresenceStatus.DoNotDisturb
                     }
                     .getOrElse(presence.status)
 
@@ -137,7 +137,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
           }
 
       case _ =>
-        //TODO: What to do if no guild id?
+      //TODO: What to do if no guild id?
     }
   }
 }
