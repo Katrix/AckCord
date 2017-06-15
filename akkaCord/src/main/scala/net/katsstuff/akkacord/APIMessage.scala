@@ -61,9 +61,9 @@ object APIMessage {
   ) extends APIMessage
   case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class GuildRoleCreate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)        extends APIMessage
-  case class GuildRoleUpdate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)        extends APIMessage
-  case class GuildRoleDelete(guild: Guild, roleId: Snowflake, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class GuildRoleCreate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)     extends APIMessage
+  case class GuildRoleUpdate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)     extends APIMessage
+  case class GuildRoleDelete(guild: Guild, roleId: RoleId, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class MessageCreate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                              extends APIMessage
   case class MessageUpdate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                              extends APIMessage

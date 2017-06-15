@@ -68,13 +68,4 @@ object Permission {
   val ManageEmojis        = Permission(0x40000000)
 }
 
-case class Role(
-    id: Snowflake,
-    name: String,
-    color: Int,
-    hoist: Boolean,
-    position: Int,
-    permissions: Permission,
-    managed: Boolean,
-    mentionable: Boolean
-)
+case class Role(id: RoleId, name: String, color: Int, hoist: Boolean, position: Int, permissions: Permission, managed: Boolean, mentionable: Boolean)

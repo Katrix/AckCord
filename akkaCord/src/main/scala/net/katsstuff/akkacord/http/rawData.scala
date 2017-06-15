@@ -28,32 +28,32 @@ import java.time.OffsetDateTime
 import net.katsstuff.akkacord.data._
 
 sealed trait RawChannel {
-  def id:        Snowflake
+  def id:        ChannelId
   def isPrivate: Boolean
 }
 
 case class RawGuildChannel(
-    id: Snowflake,
-    guildId: Option[Snowflake], //guildId can be missing
+    id: ChannelId,
+    guildId: Option[GuildId], //guildId can be missing
     name: String,
     `type`: ChannelType,
     position: Int,
     isPrivate: Boolean,
     permissionOverwrites: Seq[PermissionValue],
     topic: Option[String],
-    lastMessageId: Option[Snowflake],
+    lastMessageId: Option[MessageId],
     bitrate: Option[Int],
     userLimit: Option[Int]
 ) extends RawChannel
 
-case class RawGuildMember(user: User, nick: Option[String], roles: Seq[Snowflake], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
+case class RawGuildMember(user: User, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
 
 //Can't lastMessageId be null here?
-case class RawDMChannel(id: Snowflake, isPrivate: Boolean, recipient: User, lastMessageId: Option[Snowflake]) extends RawChannel
+case class RawDMChannel(id: ChannelId, isPrivate: Boolean, recipient: User, lastMessageId: Option[MessageId]) extends RawChannel
 
 case class RawMessage(
-    id: Snowflake,
-    channelId: Snowflake,
+    id: MessageId,
+    channelId: ChannelId,
     author: Author,
     content: String,
     timestamp: OffsetDateTime,
@@ -61,7 +61,7 @@ case class RawMessage(
     tts: Boolean,
     mentionEveryone: Boolean,
     mentions: Seq[User],
-    mentionRoles: Seq[Snowflake],
+    mentionRoles: Seq[RoleId],
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
@@ -71,16 +71,16 @@ case class RawMessage(
 )
 
 case class RawGuild(
-    id: Snowflake,
+    id: GuildId,
     name: String,
     icon: Option[String], //Icon can be null
     splash: Option[String], //Splash can be null
-    ownerId: Snowflake,
+    ownerId: UserId,
     region: String,
-    afkChannelId: Option[Snowflake], //AfkChannelId can be null
+    afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     embedEnabled: Option[Boolean], //embedEnabled can be missing
-    embedChannelId: Option[Snowflake], //embedChannelId can be missing
+    embedChannelId: Option[ChannelId], //embedChannelId can be missing
     verificationLevel: Int,
     defaultMessageNotifications: Int,
     roles: Seq[Role],
@@ -97,6 +97,6 @@ case class RawGuild(
     presences: Option[Seq[RawPresence]]
 )
 
-case class RawUnavailableGuild(id: Snowflake, unavailable: Boolean)
+case class RawUnavailableGuild(id: GuildId, unavailable: Boolean)
 case class RawPresenceGame(name: Option[String], `type`: Option[Int], url: Option[String])
 case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[String])

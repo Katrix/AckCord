@@ -26,44 +26,44 @@ package net.katsstuff.akkacord.data
 import java.time.{Instant, OffsetDateTime}
 
 sealed trait UnknownStatusGuild {
-  def id:          Snowflake
+  def id:          GuildId
   def unavailable: Boolean
 }
 
 case class Guild(
-    id: Snowflake,
+    id: GuildId,
     name: String,
     icon: Option[String], ////Icon can be null
     splash: Option[String], //Splash can be null
-    ownerId: Snowflake,
-    afkChannelId: Option[Snowflake], //AfkChannelId can be null
+    ownerId: UserId,
+    afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     embedEnabled: Option[Boolean], //embedEnabled can be missing
-    embedChannelId: Option[Snowflake], //embedChannelId can be missing
+    embedChannelId: Option[ChannelId], //embedChannelId can be missing
     verificationLevel: Int, //TODO: Better than Int here
     defaultMessageNotifications: Int, //TODO: Better than int here
-    roles: Map[Snowflake, Role],
-    emojis: Map[Snowflake, GuildEmoji],
+    roles: Map[RoleId, Role],
+    emojis: Map[EmojiId, GuildEmoji],
     //features:                    Seq[Feature], //TODO: What is a feature?
     mfaLevel: Int, //TODO: Better than int here
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
     voiceStates: Seq[VoiceState],
-    members: Map[Snowflake, GuildMember],
-    channels: Map[Snowflake, GuildChannel],
-    presences: Map[Snowflake, Presence]
+    members: Map[UserId, GuildMember],
+    channels: Map[ChannelId, GuildChannel],
+    presences: Map[UserId, Presence]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 }
 
-case class UnavailableGuild(id: Snowflake) extends UnknownStatusGuild {
+case class UnavailableGuild(id: GuildId) extends UnknownStatusGuild {
   override def unavailable: Boolean = true
 }
 
-case class GuildMember(userId: Snowflake, nick: Option[String], roles: Seq[Snowflake], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
+case class GuildMember(userId: UserId, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
     extends GetUser
-case class GuildEmoji(id: Snowflake, name: String, roles: Seq[Snowflake], requireColons: Boolean, managed: Boolean)
+case class GuildEmoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
 
 sealed trait PresenceContent {
   def name: String
@@ -77,15 +77,15 @@ object PresenceStatus {
   case object Offline      extends PresenceStatus
   case object DoNotDisturb extends PresenceStatus
 }
-case class Presence(userId: Snowflake, game: Option[PresenceContent], status: PresenceStatus) extends GetUser
+case class Presence(userId: UserId, game: Option[PresenceContent], status: PresenceStatus) extends GetUser
 
 case class Integration(
-    id: Snowflake,
+    id: IntegrationId,
     name: String,
     `type`: String, //TODO: Use enum here
     enabled: Boolean,
     syncing: Boolean,
-    roleId: Snowflake,
+    roleId: RoleId,
     expireBehavior: Int, //TODO: Better than Int here
     expireGracePeriod: Int,
     user: User,
@@ -95,4 +95,4 @@ case class Integration(
 
 case class IntegrationAccount(id: String /*TODO: Is String correct here*/, name: String)
 
-case class GuildEmbed(enabled: Boolean, channelId: Snowflake)
+case class GuildEmbed(enabled: Boolean, channelId: ChannelId)

@@ -33,50 +33,50 @@ trait CacheSnapshotLike {
   type MapType[A, B] <: collection.Map[A, B]
 
   def botUser:           User
-  def dmChannels:        MapType[Snowflake, DMChannel]
-  def unavailableGuilds: MapType[Snowflake, UnavailableGuild]
-  def guilds:            MapType[Snowflake, Guild]
-  def messages:          MapType[Snowflake, MapType[Snowflake, Message]]
-  def lastTyped:         MapType[Snowflake, MapType[Snowflake, Instant]]
-  def users:             MapType[Snowflake, User]
-  def presences:         MapType[Snowflake, MapType[Snowflake, Presence]]
+  def dmChannels:        MapType[ChannelId, DMChannel]
+  def unavailableGuilds: MapType[GuildId, UnavailableGuild]
+  def guilds:            MapType[GuildId, Guild]
+  def messages:          MapType[ChannelId, MapType[MessageId, Message]]
+  def lastTyped:         MapType[ChannelId, MapType[UserId, Instant]]
+  def users:             MapType[UserId, User]
+  def presences:         MapType[GuildId, MapType[UserId, Presence]]
 
-  def getDmChannel(id: Snowflake): Option[DMChannel] = dmChannels.get(id)
+  def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannels.get(id)
 
-  def getGuild(id: Snowflake):                Option[Guild]              = guilds.get(id)
-  def getGuildWithUnavailable(id: Snowflake): Option[UnknownStatusGuild] = guilds.get(id).orElse(unavailableGuilds.get(id))
+  def getGuild(id: GuildId):                Option[Guild]              = guilds.get(id)
+  def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] = guilds.get(id).orElse(unavailableGuilds.get(id))
 
-  def getGuildChannel(guildId: Snowflake, id: Snowflake): Option[GuildChannel] = guilds.get(guildId).flatMap(_.channels.get(id))
-  def getGuildChannel(id: Snowflake): Option[GuildChannel] = guilds.values.collectFirst {
+  def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] = guilds.get(guildId).flatMap(_.channels.get(id))
+  def getGuildChannel(id: GuildId): Option[GuildChannel] = guilds.values.collectFirst {
     case guild if guild.channels.contains(id) => guild.channels(id)
   }
 
-  def getChannel(id: Snowflake): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
+  def getChannel(id: ChannelId): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
 
-  def getRole(id: Snowflake): Option[Role] = guilds.values.collectFirst {
+  def getRole(id: RoleId): Option[Role] = guilds.values.collectFirst {
     case guild if guild.roles.contains(id) => guild.roles(id)
   }
 
-  def getEmoji(id: Snowflake): Option[GuildEmoji] = guilds.values.collectFirst {
+  def getEmoji(id: EmojiId): Option[GuildEmoji] = guilds.values.collectFirst {
     case guild if guild.emojis.contains(id) => guild.emojis(id)
   }
 
-  def getMember(id: Snowflake): Option[GuildMember] = guilds.values.collectFirst {
+  def getMember(id: UserId): Option[GuildMember] = guilds.values.collectFirst {
     case guild if guild.members.contains(id) => guild.members(id)
   }
 
-  def getChannelMessages(channelId: Snowflake): MapType[Snowflake, Message]
+  def getChannelMessages(channelId: ChannelId): MapType[MessageId, Message]
 
-  def getMessage(channelId: Snowflake, messageId: Snowflake): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
-  def getMessage(messageId: Snowflake): Option[Message] = messages.values.collectFirst {
+  def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
+  def getMessage(messageId: MessageId): Option[Message] = messages.values.collectFirst {
     case channelMap if channelMap.contains(messageId) => channelMap(messageId)
   }
 
-  def getChannelLastTyped(channelId: Snowflake): MapType[Snowflake, Instant]
+  def getChannelLastTyped(channelId: ChannelId): MapType[UserId, Instant]
 
-  def getLastTyped(channelId: Snowflake, userId: Snowflake): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
+  def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
 
-  def getUser(id: Snowflake): Option[User] = users.get(id)
+  def getUser(id: UserId): Option[User] = users.get(id)
 
-  def getPresence(guildId: Snowflake, userId: Snowflake): Option[Presence] = presences.get(guildId).flatMap(_.get(userId))
+  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] = presences.get(guildId).flatMap(_.get(userId))
 }

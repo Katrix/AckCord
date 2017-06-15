@@ -25,10 +25,9 @@ package net.katsstuff.akkacord.data
 
 import java.time.LocalDateTime
 
-case class Snowflake(content: String) {
-
+class Snowflake(val content: String) extends AnyVal {
   def creationDate: LocalDateTime = ???
-
-  override def toString: String = content
-
+}
+object Snowflake {
+  def apply(content: String): Snowflake = new Snowflake(content)
 }

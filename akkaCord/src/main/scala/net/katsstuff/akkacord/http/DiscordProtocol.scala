@@ -122,8 +122,8 @@ trait DiscordProtocol {
     val isWebhook = c.fields.exists(_.contains("webhook_id"))
 
     for {
-      id              <- c.downField("id").as[Snowflake]
-      channelId       <- c.downField("channel_id").as[Snowflake]
+      id              <- c.downField("id").as[MessageId]
+      channelId       <- c.downField("channel_id").as[ChannelId]
       author          <- if (isWebhook) c.downField("author").as[WebhookAuthor] else c.downField("author").as[User]
       content         <- c.downField("content").as[String]
       timestamp       <- c.downField("timestamp").as[OffsetDateTime]
@@ -131,7 +131,7 @@ trait DiscordProtocol {
       tts             <- c.downField("tts").as[Boolean]
       mentionEveryone <- c.downField("mention_everyone").as[Boolean]
       mentions        <- c.downField("mentions").as[Seq[User]]
-      mentionRoles    <- c.downField("mention_roles").as[Seq[Snowflake]]
+      mentionRoles    <- c.downField("mention_roles").as[Seq[RoleId]]
       attachment      <- c.downField("attachments").as[Seq[Attachment]]
       embeds          <- c.downField("embeds").as[Seq[ReceivedEmbed]]
       reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]

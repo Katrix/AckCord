@@ -27,6 +27,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.Uri
 import net.katsstuff.akkacord.data.Snowflake
 import net.katsstuff.akkacord.http.rest.RestRoute
+import net.katsstuff.akkacord.data._
 
 object Routes {
 
@@ -36,16 +37,7 @@ object Routes {
   val gateway: Uri = s"$base/gateway"
 
   //REST
-
-  //Some type aliases for better documentation by the types
-  type GuildId   = Snowflake
-  type ChannelId = Snowflake
-  type MessageId = Snowflake
-  type UserId    = Snowflake
-  type RoleId    = Snowflake
-
-  type IntegrationId = String
-  type InviteCode    = String
+  type InviteCode = String
 
   /**
     * Emoji is a bit more complicated than the others.
@@ -53,11 +45,6 @@ object Routes {
     * If it's a normal emoji, it's encoded using percent encoding, for example `%F0%9F%92%A9`.
     */
   type Emoji = String
-
-  /**
-    * The id of the thing the overwrite applies to. Can come either from a user or a role.
-    */
-  type OverwriteId = Snowflake
 
   implicit class Func2Syntax[T1, T2, R](val f: (T1, T2) => R) extends AnyVal {
     def andThen[A](g: R => A): (T1, T2) => A = (t1, t2) => g(f(t1, t2))
@@ -98,10 +85,10 @@ object Routes {
   val getReactions:       (Emoji, MessageId, ChannelId) => RestRoute = emojiReactions.andThen(RestRoute(_, GET))
   val deleteAllReactions: (MessageId, ChannelId) => RestRoute        = reactions.andThen(RestRoute(_, DELETE))
 
-  val channelPermissions: (OverwriteId, ChannelId) => Uri = Function.uncurried(overwrite => channel.andThen(uri => s"$uri/permissions/$overwrite"))
+  val channelPermissions: (UserOrRoleId, ChannelId) => Uri = Function.uncurried(overwrite => channel.andThen(uri => s"$uri/permissions/$overwrite"))
 
-  val editChannelPermissions:   (OverwriteId, ChannelId) => RestRoute = channelPermissions.andThen(RestRoute(_, PUT))
-  val deleteChannelPermissions: (OverwriteId, ChannelId) => RestRoute = channelPermissions.andThen(RestRoute(_, DELETE))
+  val editChannelPermissions:   (UserOrRoleId, ChannelId) => RestRoute = channelPermissions.andThen(RestRoute(_, PUT))
+  val deleteChannelPermissions: (UserOrRoleId, ChannelId) => RestRoute = channelPermissions.andThen(RestRoute(_, DELETE))
 
   val channelInvites: ChannelId => Uri = channel.andThen(uri => s"$uri/invites")
 

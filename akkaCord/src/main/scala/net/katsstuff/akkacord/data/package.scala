@@ -21,12 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.akkacord.data
+package net.katsstuff.akkacord
 
-import java.time.OffsetDateTime
+package object data {
 
-case class Invite(code: String, guild: InviteGuild, channel: InviteChannel)
-case class InviteMetadata(inviter: User, uses: Int, maxUses: Int, maxAge: Int, temporary: Boolean, createdAt: OffsetDateTime, revoked: Boolean)
-
-case class InviteGuild(id: GuildId, name: String, splash: Option[String], icon: Option[String])
-case class InviteChannel(id: ChannelId, name: String, `type`: ChannelType)
+  //Some type aliases for better documentation by the types
+  type GuildId       = Snowflake
+  type ChannelId     = Snowflake
+  type MessageId     = Snowflake
+  type UserId        = Snowflake
+  type RoleId        = Snowflake
+  type UserOrRoleId  = Snowflake
+  type EmojiId       = Snowflake
+  type IntegrationId = Snowflake
+}

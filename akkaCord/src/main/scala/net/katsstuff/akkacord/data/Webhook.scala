@@ -25,9 +25,9 @@ package net.katsstuff.akkacord.data
 
 case class Webhook(
     id: Snowflake,
-    guildId: Option[Snowflake],
-    channelId: Snowflake,
-    user: Option[Snowflake],
+    guildId: Option[GuildId],
+    channelId: ChannelId,
+    user: Option[UserId],
     name: Option[String],
     avatar: Option[String],
     token: String

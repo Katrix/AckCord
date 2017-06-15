@@ -44,18 +44,18 @@ package object syntax {
         context: Context = NotUsed
     ) = Request(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, file, embed)), NotUsed)
 
-    def fetchMessagesAround[Context](around: Snowflake, limit: Option[Int] = Some(50), context: Context = NotUsed) =
+    def fetchMessagesAround[Context](around: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(Some(around), None, None, limit)), context)
-    def fetchMessagesBefore[Context](before: Snowflake, limit: Option[Int] = Some(50), context: Context = NotUsed) =
+    def fetchMessagesBefore[Context](before: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, Some(before), None, limit)), context)
-    def fetchMessagesAfter[Context](after: Snowflake, limit: Option[Int] = Some(50), context: Context = NotUsed) =
+    def fetchMessagesAfter[Context](after: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, Some(after), limit)), context)
     def fetchMessages[Context](limit: Option[Int] = Some(50), context: Context = NotUsed) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context)
 
-    def fetchMessage[Context](id: Snowflake, context: Context = NotUsed) = Request(GetChannelMessage(tChannel.id, id), context)
+    def fetchMessage[Context](id: MessageId, context: Context = NotUsed) = Request(GetChannelMessage(tChannel.id, id), context)
 
-    def bulkDelete[Context](ids: Seq[Snowflake], context: Context = NotUsed) =
+    def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed) =
       Request(BulkDeleteMessages(tChannel.id, BulkDeleteMessagesData(ids)), context)
 
     def editChannelPermissions[Context](role: Role, allow: Permission, deny: Permission, context: Context = NotUsed) =
@@ -88,7 +88,7 @@ package object syntax {
   }
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
-    def rolesForUser(userId: Snowflake): Seq[Role] = guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
+    def rolesForUser(userId: UserId): Seq[Role] = guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
 
     def tChannels: Seq[TGuildChannel] =
       guild.channels.values.collect {
@@ -100,9 +100,9 @@ package object syntax {
         case tChannel: VGuildChannel => tChannel
       }.toSeq
 
-    def channelById(id: Snowflake):  Option[GuildChannel]  = guild.channels.get(id)
-    def tChannelById(id: Snowflake): Option[TGuildChannel] = channelById(id).collect { case tChannel: TGuildChannel => tChannel }
-    def vChannelById(id: Snowflake): Option[VGuildChannel] = channelById(id).collect { case vChannel: VGuildChannel => vChannel }
+    def channelById(id: ChannelId):  Option[GuildChannel]  = guild.channels.get(id)
+    def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).collect { case tChannel: TGuildChannel => tChannel }
+    def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).collect { case vChannel: VGuildChannel => vChannel }
 
     def channelsByName(name: String):  Seq[GuildChannel]  = guild.channels.values.filter(_.name == name).toSeq
     def tChannelsByName(name: String): Seq[TGuildChannel] = tChannels.filter(_.name == name)
@@ -110,16 +110,16 @@ package object syntax {
 
     def afkChannel: Option[VGuildChannel] = guild.afkChannelId.flatMap(vChannelById)
 
-    def roleById(id: Snowflake):   Option[Role] = guild.roles.get(id)
+    def roleById(id: RoleId):      Option[Role] = guild.roles.get(id)
     def rolesByName(name: String): Seq[Role]    = guild.roles.values.filter(_.name == name).toSeq
 
-    def emojiById(id: Snowflake):   Option[GuildEmoji] = guild.emojis.get(id)
+    def emojiById(id: EmojiId):     Option[GuildEmoji] = guild.emojis.get(id)
     def emojisByName(name: String): Seq[GuildEmoji]    = guild.emojis.values.filter(_.name == name).toSeq
 
-    def memberById(id: Snowflake):  Option[GuildMember] = guild.members.get(id)
+    def memberById(id: UserId):     Option[GuildMember] = guild.members.get(id)
     def memberFromUser(user: User): Option[GuildMember] = memberById(user.id)
 
-    def presenceById(id: Snowflake): Option[Presence] = guild.presences.get(id)
+    def presenceById(id: UserId):    Option[Presence] = guild.presences.get(id)
     def presenceForUser(user: User): Option[Presence] = presenceById(user.id)
   }
 
@@ -135,7 +135,7 @@ package object syntax {
     def deleteOwnReaction[Context](guildEmoji: GuildEmoji, context: Context = NotUsed) =
       Request(DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString), context)
 
-    def deleteUserReaction[Context](guildEmoji: GuildEmoji, userId: Snowflake, context: Context = NotUsed) =
+    def deleteUserReaction[Context](guildEmoji: GuildEmoji, userId: UserId, context: Context = NotUsed) =
       Request(DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId), context)
 
     def fetchReactions[Context](guildEmoji: GuildEmoji, context: Context = NotUsed) =

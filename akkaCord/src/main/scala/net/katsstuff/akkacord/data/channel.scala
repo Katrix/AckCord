@@ -62,21 +62,21 @@ object PermissionValueType {
   }
 }
 
-case class PermissionValue(id: Snowflake, `type`: PermissionValueType, allow: Permission, deny: Permission)
+case class PermissionValue(id: UserOrRoleId, `type`: PermissionValueType, allow: Permission, deny: Permission)
 
 sealed trait Channel {
-  def id:        Snowflake
+  def id:        ChannelId
   def isPrivate: Boolean
 }
 
 sealed trait TChannel extends Channel {
-  def lastMessageId: Option[Snowflake]
+  def lastMessageId: Option[MessageId]
 }
 
 sealed trait GuildChannel extends Channel with GetGuild {
   def isPrivate: Boolean = false
 
-  def guildId:              Snowflake
+  def guildId:              GuildId
   def name:                 String
   def channelType:          ChannelType
   def position:             Int
@@ -84,21 +84,21 @@ sealed trait GuildChannel extends Channel with GetGuild {
 }
 
 case class TGuildChannel(
-    id: Snowflake,
-    guildId: Snowflake,
+    id: ChannelId,
+    guildId: GuildId,
     name: String,
     position: Int,
     permissionOverwrites: Seq[PermissionValue],
     topic: Option[String],
-    lastMessageId: Option[Snowflake]
+    lastMessageId: Option[MessageId]
 ) extends GuildChannel
     with TChannel {
   override def channelType: ChannelType = ChannelType.Text
 }
 
 case class VGuildChannel(
-    id: Snowflake,
-    guildId: Snowflake,
+    id: ChannelId,
+    guildId: GuildId,
     name: String,
     position: Int,
     permissionOverwrites: Seq[PermissionValue],
@@ -108,6 +108,6 @@ case class VGuildChannel(
   override def channelType: ChannelType = ChannelType.Voice
 }
 
-case class DMChannel(id: Snowflake, lastMessageId: Option[Snowflake], userId: Snowflake) extends Channel with TChannel with GetUser {
+case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId) extends Channel with TChannel with GetUser {
   override def isPrivate: Boolean = true
 }

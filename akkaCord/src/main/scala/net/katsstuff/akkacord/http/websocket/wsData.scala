@@ -28,20 +28,8 @@ import java.time.{Instant, OffsetDateTime}
 import akka.NotUsed
 import akka.event.LoggingAdapter
 import net.katsstuff.akkacord.APIMessage
-import net.katsstuff.akkacord.data.{
-  Attachment,
-  Author,
-  CacheSnapshot,
-  GuildEmoji,
-  Reaction,
-  ReceivedEmbed,
-  Role,
-  Snowflake,
-  TChannel,
-  User,
-  VoiceState
-}
-import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
+import net.katsstuff.akkacord.data._
+import net.katsstuff.akkacord.handlers._
 import net.katsstuff.akkacord.http._
 import shapeless._
 import shapeless.labelled.FieldType
@@ -78,13 +66,13 @@ case class StatusUpdate(d: StatusData) extends WsMessage[StatusData] {
   override def op: OpCode = OpCode.StatusUpdate
 }
 
-case class VoiceStatusData(guildId: Snowflake, channelId: Snowflake, selfMute: Boolean, selfDeaf: Boolean)
+case class VoiceStatusData(guildId: GuildId, channelId: ChannelId, selfMute: Boolean, selfDeaf: Boolean)
 case class VoiceStateUpdate(d: VoiceStatusData) extends WsMessage[VoiceStatusData] {
   override def op: OpCode = OpCode.VoiceStateUpdate
 }
 
 //Is it serverUpdate or ping?
-case class VoiceServerUpdateData(token: String, guildId: Snowflake, endpoint: String)
+case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
 case class VoiceServerUpdate(d: VoiceServerUpdateData) extends WsMessage[VoiceServerUpdateData] {
   override def op: OpCode = OpCode.VoiceServerPing
 }
@@ -98,7 +86,7 @@ case class Reconnect(d: NotUsed) extends WsMessage[NotUsed] {
   override def op: OpCode = OpCode.Reconnect
 }
 
-case class RequestGuildMembersData(guildId: Snowflake, query: String, limit: Int)
+case class RequestGuildMembersData(guildId: GuildId, query: String, limit: Int)
 case class RequestGuildMembers(d: RequestGuildMembersData) extends WsMessage[RequestGuildMembersData] {
   override def op: OpCode = OpCode.RequestGuildMembers
 }
@@ -207,7 +195,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, current, prev))
       )
 
-  case class GuildDeleteData(id: Snowflake, unavailable: Boolean)
+  case class GuildDeleteData(id: GuildId, unavailable: Boolean)
   object GuildDelete
       extends WsEvent[GuildDeleteData](
         "GUILD_DELETE",
@@ -216,7 +204,7 @@ object WsEvent {
       )
 
   val userGen = LabelledGeneric[User]
-  type GuildUser = FieldType[Witness.`'guildId`.T, Snowflake] :: userGen.Repr
+  type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
 
   object GuildBanAdd
       extends WsEvent[GuildUser](
@@ -232,7 +220,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
       )
 
-  case class GuildEmojisUpdateData(guildId: Snowflake, emojis: Seq[GuildEmoji])
+  case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[GuildEmoji])
   object GuildEmojisUpdate
       extends WsEvent[GuildEmojisUpdateData](
         "GUILD_EMOJIS_UPDATE",
@@ -240,7 +228,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, current, prev))
       )
 
-  case class GuildIntegrationsUpdateData(guildId: Snowflake)
+  case class GuildIntegrationsUpdateData(guildId: GuildId)
   object GuildIntegrationsUpdate
       extends WsEvent[GuildIntegrationsUpdateData](
         "GUILD_INTEGRATIONS_UPDATE",
@@ -249,7 +237,7 @@ object WsEvent {
       )
 
   val guildMemberGen = LabelledGeneric[RawGuildMember]
-  type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, Snowflake] :: guildMemberGen.Repr
+  type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, GuildId] :: guildMemberGen.Repr
   object GuildMemberAdd
       extends WsEvent[RawGuildMemberWithGuild](
         "GUILD_MEMBER_ADD",
@@ -262,7 +250,7 @@ object WsEvent {
             } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
       )
 
-  case class GuildMemberRemoveData(guildId: Snowflake, user: User)
+  case class GuildMemberRemoveData(guildId: GuildId, user: User)
   object GuildMemberRemove
       extends WsEvent[GuildMemberRemoveData](
         "GUILD_MEMBER_REMOVE",
@@ -270,7 +258,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
       )
 
-  case class GuildMemberUpdateData(guildId: Snowflake, roles: Seq[Snowflake], user: User, nick: Option[String]) //Nick can probably be null here
+  case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //Nick can probably be null here
   object GuildMemberUpdate
       extends WsEvent[GuildMemberUpdateData](
         "GUILD_MEMBER_UPDATE",
@@ -282,7 +270,7 @@ object WsEvent {
               .map(g => APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole), data.user, data.nick, current, prev))
       )
 
-  case class GuildMemberChunkData(guildId: Snowflake, members: Seq[RawGuildMember])
+  case class GuildMemberChunkData(guildId: GuildId, members: Seq[RawGuildMember])
   object GuildMemberChunk
       extends WsEvent[GuildMemberChunkData](
         "GUILD_MEMBER_CHUNK",
@@ -294,7 +282,7 @@ object WsEvent {
               .map(g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), current, prev))
       )
 
-  case class GuildRoleModifyData(guildId: Snowflake, role: Role)
+  case class GuildRoleModifyData(guildId: GuildId, role: Role)
   object GuildRoleCreate
       extends WsEvent[GuildRoleModifyData](
         "GUILD_ROLE_CREATE",
@@ -308,7 +296,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleUpdate(g, data.role, current, prev))
       )
 
-  case class GuildRoleDeleteData(guildId: Snowflake, roleId: Snowflake)
+  case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)
   object GuildRoleDelete
       extends WsEvent[GuildRoleDeleteData](
         "GUILD_ROLE_DELETE",
@@ -325,8 +313,8 @@ object WsEvent {
 
   //RawPartialMessage is defined explicitly because we need to handle the author
   case class RawPartialMessage(
-      id: Snowflake,
-      channelId: Snowflake,
+      id: MessageId,
+      channelId: ChannelId,
       author: Option[Author],
       content: Option[String],
       timestamp: Option[OffsetDateTime],
@@ -334,7 +322,7 @@ object WsEvent {
       tts: Option[Boolean],
       mentionEveryone: Option[Boolean],
       mentions: Option[Seq[User]],
-      mentionRoles: Option[Seq[Snowflake]],
+      mentionRoles: Option[Seq[RoleId]],
       attachment: Option[Seq[Attachment]],
       embeds: Option[Seq[ReceivedEmbed]],
       reactions: Option[Seq[Reaction]],
@@ -349,7 +337,7 @@ object WsEvent {
         data => (current, prev) => current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
       )
 
-  case class MessageDeleteData(id: Snowflake, channelId: Snowflake)
+  case class MessageDeleteData(id: MessageId, channelId: ChannelId)
   object MessageDelete
       extends WsEvent[MessageDeleteData](
         "MESSAGE_DELETE",
@@ -367,7 +355,7 @@ object WsEvent {
           )
       )
 
-  case class MessageDeleteBulkData(ids: Seq[Snowflake], channelId: Snowflake)
+  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId)
   object MessageDeleteBulk
       extends WsEvent[MessageDeleteBulkData](
         "MESSAGE_DELETE_BULK",
@@ -381,9 +369,9 @@ object WsEvent {
 
   case class PresenceUpdateData(
       user: PartialUser,
-      roles: Seq[Snowflake],
+      roles: Seq[RoleId],
       game: Option[RawPresenceGame],
-      guildId: Option[Snowflake],
+      guildId: Option[GuildId],
       status: Option[String]
   )
   object PresenceUpdate
@@ -399,7 +387,7 @@ object WsEvent {
         }
       )
 
-  case class TypingStartData(channelId: Snowflake, userId: Snowflake, timestamp: Instant)
+  case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)
   object TypingStart
       extends WsEvent[TypingStartData](
         "TYPING_START",

@@ -23,16 +23,14 @@
  */
 package net.katsstuff.akkacord.http.websocket
 
-import java.time.{Instant, OffsetDateTime}
-
-import scala.util.Try
+import java.time.OffsetDateTime
 
 import akka.NotUsed
 import io.circe._
 import io.circe.syntax._
 import io.circe.shapes._
 import io.circe.generic.extras.semiauto._
-import net.katsstuff.akkacord.data.{Attachment, Reaction, ReceivedEmbed, Snowflake, User, VoiceState, WebhookAuthor}
+import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.http._
 
 object WsProtocol extends DiscordProtocol {
@@ -157,8 +155,8 @@ object WsProtocol extends DiscordProtocol {
     val isWebhook = c.fields.exists(_.contains("webhook_id"))
 
     for {
-      id              <- c.downField("id").as[Snowflake]
-      channelId       <- c.downField("channel_id").as[Snowflake]
+      id              <- c.downField("id").as[MessageId]
+      channelId       <- c.downField("channel_id").as[ChannelId]
       author          <- if (isWebhook) c.downField("author").as[Option[WebhookAuthor]] else c.downField("author").as[Option[User]]
       content         <- c.downField("content").as[Option[String]]
       timestamp       <- c.downField("timestamp").as[Option[OffsetDateTime]]
@@ -166,7 +164,7 @@ object WsProtocol extends DiscordProtocol {
       tts             <- c.downField("tts").as[Option[Boolean]]
       mentionEveryone <- c.downField("mention_everyone").as[Option[Boolean]]
       mentions        <- c.downField("mentions").as[Option[Seq[User]]]
-      mentionRoles    <- c.downField("mention_roles").as[Option[Seq[Snowflake]]]
+      mentionRoles    <- c.downField("mention_roles").as[Option[Seq[RoleId]]]
       attachment      <- c.downField("attachments").as[Option[Seq[Attachment]]]
       embeds          <- c.downField("embeds").as[Option[Seq[ReceivedEmbed]]]
       reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]

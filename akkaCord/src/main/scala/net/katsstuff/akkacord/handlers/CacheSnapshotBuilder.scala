@@ -28,17 +28,17 @@ import java.time.Instant
 import scala.collection.mutable
 
 import net.katsstuff.akkacord.CacheSnapshotLike
-import net.katsstuff.akkacord.data.{CacheSnapshot, DMChannel, Guild, Message, Presence, Snowflake, UnavailableGuild, User}
+import net.katsstuff.akkacord.data._
 
 class CacheSnapshotBuilder(
     var botUser: User,
-    var dmChannels: mutable.Map[Snowflake, DMChannel],
-    var unavailableGuilds: mutable.Map[Snowflake, UnavailableGuild],
-    var guilds: mutable.Map[Snowflake, Guild],
-    var messages: mutable.Map[Snowflake, mutable.Map[Snowflake, Message]],
-    var lastTyped: mutable.Map[Snowflake, mutable.Map[Snowflake, Instant]],
-    var users: mutable.Map[Snowflake, User],
-    var presences: mutable.Map[Snowflake, mutable.Map[Snowflake, Presence]]
+    var dmChannels: mutable.Map[ChannelId, DMChannel],
+    var unavailableGuilds: mutable.Map[GuildId, UnavailableGuild],
+    var guilds: mutable.Map[GuildId, Guild],
+    var messages: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
+    var lastTyped: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
+    var users: mutable.Map[UserId, User],
+    var presences: mutable.Map[GuildId, mutable.Map[UserId, Presence]]
 ) extends CacheSnapshotLike {
 
   override type MapType[A, B] = mutable.Map[A, B]
@@ -53,8 +53,8 @@ class CacheSnapshotBuilder(
     users = users.toMap,
     presences = presences.map { case (k, v) => k -> v.toMap }.toMap
   )
-  override def getChannelMessages(channelId: Snowflake):  mutable.Map[Snowflake, Message] = messages.getOrElse(channelId, mutable.Map.empty)
-  override def getChannelLastTyped(channelId: Snowflake): mutable.Map[Snowflake, Instant] = lastTyped.getOrElse(channelId, mutable.Map.empty)
+  override def getChannelMessages(channelId: ChannelId):  mutable.Map[MessageId, Message] = messages.getOrElse(channelId, mutable.Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[UserId, Instant]    = lastTyped.getOrElse(channelId, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
   import scala.collection.breakOut

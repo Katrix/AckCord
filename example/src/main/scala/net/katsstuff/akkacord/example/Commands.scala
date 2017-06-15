@@ -27,7 +27,7 @@ import java.nio.file.Paths
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.akkacord.DiscordClient.ShutdownClient
-import net.katsstuff.akkacord.data.{CacheSnapshot, EmbedField, OutgoingEmbed, Snowflake, TGuildChannel, VGuildChannel}
+import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.example.Commands.GetChannelInfo
 import net.katsstuff.akkacord.http.rest.Requests
 import net.katsstuff.akkacord.http.rest.Requests.CreateMessageData
@@ -82,5 +82,5 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
 }
 object Commands {
   def props(client: ActorRef): Props = Props(classOf[Commands], client)
-  case class GetChannelInfo(guildId: Snowflake, requestedChannelId: Snowflake, senderChannelId: Snowflake, c: CacheSnapshot)
+  case class GetChannelInfo(guildId: GuildId, requestedChannelId: ChannelId, senderChannelId: ChannelId, c: CacheSnapshot)
 }

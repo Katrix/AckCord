@@ -138,7 +138,7 @@ object RawHandlers extends Handlers {
   implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler { (builder, obj, log) =>
     val RawGuildMember(user, nick, roles, joinedAt, deaf, mute) = WsEvent.guildMemberGen.from(obj.tail)
     import shapeless.record._
-    val guildId: Snowflake = obj.get('guildId)
+    val guildId: GuildId = obj.get('guildId)
     val member = GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
 
     builder.getGuild(guildId) match {

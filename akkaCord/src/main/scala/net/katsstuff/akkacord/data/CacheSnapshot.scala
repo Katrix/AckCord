@@ -29,18 +29,18 @@ import net.katsstuff.akkacord.CacheSnapshotLike
 
 case class CacheSnapshot(
     botUser: User,
-    dmChannels: Map[Snowflake, DMChannel],
-    unavailableGuilds: Map[Snowflake, UnavailableGuild],
-    guilds: Map[Snowflake, Guild],
-    messages: Map[Snowflake, Map[Snowflake, Message]],
-    lastTyped: Map[Snowflake, Map[Snowflake, Instant]],
-    users: Map[Snowflake, User],
-    presences: Map[Snowflake, Map[Snowflake, Presence]]
+    dmChannels: Map[ChannelId, DMChannel],
+    unavailableGuilds: Map[GuildId, UnavailableGuild],
+    guilds: Map[GuildId, Guild],
+    messages: Map[ChannelId, Map[MessageId, Message]],
+    lastTyped: Map[ChannelId, Map[UserId, Instant]],
+    users: Map[UserId, User],
+    presences: Map[GuildId, Map[UserId, Presence]]
 ) extends CacheSnapshotLike {
 
   override type MapType[A, B] = Map[A, B]
 
-  override def getChannelMessages(channelId: Snowflake): Map[Snowflake, Message] = messages.getOrElse(channelId, Map.empty)
+  override def getChannelMessages(channelId: ChannelId): Map[MessageId, Message] = messages.getOrElse(channelId, Map.empty)
 
-  override def getChannelLastTyped(channelId: Snowflake): Map[Snowflake, Instant] = lastTyped.getOrElse(channelId, Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): Map[UserId, Instant] = lastTyped.getOrElse(channelId, Map.empty)
 }

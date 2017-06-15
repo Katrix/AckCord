@@ -28,28 +28,27 @@ import java.time.OffsetDateTime
 sealed trait Author
 case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
 case class User(
-    id: Snowflake,
+    id: ChannelId,
     username: String,
     discriminator: String,
     avatar: Option[String], //avatar can be null
     bot: Option[Boolean], //Bot can be missing
     mfaEnabled: Option[Boolean], //mfaEnabled can be missing
     verified: Option[Boolean], //verified can be missing
-    email: Option[String]
-) //Email can be null
-    extends Author
+    email: Option[String] //Email can be null
+) extends Author
 
 case class Message(
-    id: Snowflake,
-    channelId: Snowflake,
+    id: MessageId,
+    channelId: ChannelId,
     author: Author, //TODO: Factor webhook messages and normal messages into separate classes, to remove a reference to a user
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
     tts: Boolean,
     mentionEveryone: Boolean,
-    mentions: Seq[Snowflake],
-    mentionRoles: Seq[Snowflake],
+    mentions: Seq[UserId],
+    mentionRoles: Seq[RoleId],
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
@@ -59,7 +58,7 @@ case class Message(
 ) extends GetChannel
 
 case class Reaction(count: Int, me: Boolean, emoji: MessageEmoji)
-case class MessageEmoji(id: Option[Snowflake], name: String)
+case class MessageEmoji(id: Option[EmojiId], name: String)
 
 case class ReceivedEmbed(
     title: Option[String],

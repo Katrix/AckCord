@@ -24,9 +24,9 @@
 package net.katsstuff.akkacord.data
 
 case class VoiceState(
-    guildId: Option[Snowflake],
-    channelId: Option[Snowflake], //channelId can be null
-    userId: Snowflake,
+    guildId: Option[GuildId],
+    channelId: Option[ChannelId], //channelId can be null
+    userId: UserId,
     sessionId: String,
     deaf: Boolean,
     mute: Boolean,
