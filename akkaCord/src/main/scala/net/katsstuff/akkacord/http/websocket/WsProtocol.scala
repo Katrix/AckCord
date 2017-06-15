@@ -41,7 +41,7 @@ object WsProtocol extends DiscordProtocol {
   implicit val opCodeDecoder: Decoder[OpCode] = Decoder[Int].emap(OpCode.forCode(_).toRight("Not an opCode"))
 
   implicit def wsEventEncoder[A]: Encoder[WsEvent[A]] = Encoder[String].contramap(_.name)
-  implicit val wsEventDecoder: Decoder[WsEvent[_]] = Decoder[String].emap(WsEvent.forName(_).toRight("Not an event"))
+  implicit val wsEventDecoder:    Decoder[WsEvent[_]] = Decoder[String].emap(WsEvent.forName(_).toRight("Not an event"))
 
   implicit val readyDataEncoder: Encoder[WsEvent.ReadyData] = deriveEncoder
   implicit val readyDataDecoder: Decoder[WsEvent.ReadyData] = deriveDecoder

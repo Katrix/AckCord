@@ -45,7 +45,7 @@ object Routes {
   type RoleId    = Snowflake
 
   type IntegrationId = String
-  type InviteCode = String
+  type InviteCode    = String
 
   /**
     * Emoji is a bit more complicated than the others.
@@ -189,8 +189,8 @@ object Routes {
 
   //Invites
   val invites = s"$base/invites"
-  val inviteCode: InviteCode => Uri = code => s"$invites/$code"
-  val getInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, GET))
+  val inviteCode:   InviteCode => Uri       = code => s"$invites/$code"
+  val getInvite:    InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, GET))
   val deleteInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, DELETE))
   val acceptInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, POST))
 }

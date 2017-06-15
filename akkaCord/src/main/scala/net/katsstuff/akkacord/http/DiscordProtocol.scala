@@ -43,7 +43,8 @@ trait DiscordProtocol {
   implicit val channelTypeDecoder: Decoder[ChannelType] = deriveEnumerationDecoder
 
   implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = Encoder[String].contramap(PermissionValueType.nameOf)
-  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] = Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
+  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
+    Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
 
   implicit val presenceStatusEncoder: Encoder[PresenceStatus] = deriveEnumerationEncoder
   implicit val presenceStatusDecoder: Decoder[PresenceStatus] = deriveEnumerationDecoder

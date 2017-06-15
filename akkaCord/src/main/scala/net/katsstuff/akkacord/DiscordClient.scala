@@ -59,7 +59,7 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
     case DiscordClient.ShutdownClient =>
       restHandler.forward(DiscordClient.ShutdownClient)
       wsHandler.forward(DiscordClient.ShutdownClient)
-    case request @ Request(_: WsMessage[_], _)      => wsHandler.forward(request)
+    case request @ Request(_: WsMessage[_], _)                => wsHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1

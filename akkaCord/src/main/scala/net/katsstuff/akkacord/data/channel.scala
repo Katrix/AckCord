@@ -37,7 +37,7 @@ object ChannelType {
   }
 
   def nameFor(channelType: ChannelType): String = channelType match {
-    case Text => "text"
+    case Text  => "text"
     case Voice => "voice"
   }
 
