@@ -27,7 +27,7 @@ import java.nio.file.Path
 
 import akka.NotUsed
 import net.katsstuff.akkacord.data._
-import net.katsstuff.akkacord.http.rest.RESTRequest._
+import net.katsstuff.akkacord.http.rest.Requests._
 
 package object syntax {
 

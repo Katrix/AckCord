@@ -44,8 +44,8 @@ object Routes {
   type UserId    = Snowflake
   type RoleId    = Snowflake
 
-  //TODO: Is this one correct?
   type IntegrationId = String
+  type InviteCode = String
 
   /**
     * Emoji is a bit more complicated than the others.
@@ -130,10 +130,10 @@ object Routes {
   val modifyGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, PATCH))
   val deleteGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, DELETE))
 
-  val guildChannels:       GuildId => Uri       = guild.andThen(uri => s"$uri/channels")
-  val getGuildChannels:    GuildId => RestRoute = guildChannels.andThen(RestRoute(_, GET))
-  val createGuildChannels: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, POST))
-  val modifyGuildChannels: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, PATCH))
+  val guildChannels:                GuildId => Uri       = guild.andThen(uri => s"$uri/channels")
+  val getGuildChannels:             GuildId => RestRoute = guildChannels.andThen(RestRoute(_, GET))
+  val createGuildChannel:           GuildId => RestRoute = guildChannels.andThen(RestRoute(_, POST))
+  val modifyGuildChannelsPositions: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, PATCH))
 
   val guildMembers:      GuildId => Uri                 = guild.andThen(uri => s"$uri/members")
   val guildMember:       (UserId, GuildId) => Uri       = Function.uncurried(userId => guildMembers.andThen(uri => s"$uri/$userId"))
@@ -187,4 +187,10 @@ object Routes {
   val getGuildEmbed:    GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, GET))
   val modifyGuildEmbed: GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, PATCH))
 
+  //Invites
+  val invites = s"$base/invites"
+  val inviteCode: InviteCode => Uri = code => s"$invites/$code"
+  val getInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, GET))
+  val deleteInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, DELETE))
+  val acceptInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, POST))
 }

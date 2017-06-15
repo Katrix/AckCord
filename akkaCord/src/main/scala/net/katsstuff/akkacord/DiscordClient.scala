@@ -27,7 +27,7 @@ import akka.AkkaException
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import akka.event.EventStream
 import akka.http.scaladsl.model.headers.GenericHttpCredentials
-import net.katsstuff.akkacord.http.rest.{RESTHandler, RESTRequest}
+import net.katsstuff.akkacord.http.rest.{ComplexRESTRequest, RESTHandler, Requests}
 import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 
 class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
@@ -60,7 +60,7 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
       restHandler.forward(DiscordClient.ShutdownClient)
       wsHandler.forward(DiscordClient.ShutdownClient)
     case request @ Request(_: WsMessage[_], _)      => wsHandler.forward(request)
-    case request @ Request(_: RESTRequest[_, _], _) => restHandler.forward(request)
+    case request @ Request(_: ComplexRESTRequest[_, _, _], _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1
       if (shutdownCount == 2) {

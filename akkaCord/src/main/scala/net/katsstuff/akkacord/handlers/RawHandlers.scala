@@ -48,8 +48,8 @@ object RawHandlers extends Handlers {
 
     val channel: Either[String, GuildChannel] = optGuildId.toRight(s"Tried to update raw guild channel with no guild id $obj").flatMap { guildId =>
       tpe match {
-        case "text" => Right(TGuildChannel(id, guildId, name, position, permissionOverwrites, topic, lastMessageId))
-        case "voice" =>
+        case ChannelType.Text => Right(TGuildChannel(id, guildId, name, position, permissionOverwrites, topic, lastMessageId))
+        case ChannelType.Voice =>
           for {
             bitrate   <- optBitrate.toRight(s"Tried to update voice guild channel with no bitrate $obj")
             userLimit <- optUserLimit.toRight(s"Tried to update voice guild channel with no userLimit $obj")

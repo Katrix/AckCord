@@ -29,8 +29,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.akkacord.DiscordClient.ShutdownClient
 import net.katsstuff.akkacord.data.{CacheSnapshot, EmbedField, OutgoingEmbed, Snowflake, TGuildChannel, VGuildChannel}
 import net.katsstuff.akkacord.example.Commands.GetChannelInfo
-import net.katsstuff.akkacord.http.rest.RESTRequest
-import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessageData
+import net.katsstuff.akkacord.http.rest.Requests
+import net.katsstuff.akkacord.http.rest.Requests.CreateMessageData
 import net.katsstuff.akkacord.{APIMessage, Request, RequestResponse}
 import net.katsstuff.akkacord.syntax._
 
@@ -40,7 +40,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
       implicit val cache = c
       message.content match {
         case "!ping" =>
-          client ! Request(RESTRequest.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None)))
+          client ! Request(Requests.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None)))
         case "!sendFile" =>
           val embed = OutgoingEmbed(
             title = Some("This is an embed"),
@@ -57,7 +57,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
 
           val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map(Snowflake.apply).flatMap(id => message.guild.flatMap(_.channelById(id)))
           channel.foreach { gChannel =>
-            client ! Request(RESTRequest.GetChannel(gChannel.id), GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c))
+            client ! Request(Requests.GetChannel(gChannel.id), GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c))
           }
         case "!kill" =>
           log.info("Received shutdown command")

@@ -94,3 +94,5 @@ case class Integration(
 )
 
 case class IntegrationAccount(id: String /*TODO: Is String correct here*/, name: String)
+
+case class GuildEmbed(enabled: Boolean, channelId: Snowflake)

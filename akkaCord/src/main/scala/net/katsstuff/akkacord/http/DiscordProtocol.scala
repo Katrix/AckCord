@@ -23,7 +23,9 @@
  */
 package net.katsstuff.akkacord.http
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
+
+import scala.util.Try
 
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
@@ -40,15 +42,17 @@ trait DiscordProtocol {
   implicit val channelTypeEncoder: Encoder[ChannelType] = deriveEnumerationEncoder
   implicit val channelTypeDecoder: Decoder[ChannelType] = deriveEnumerationDecoder
 
-  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = (a: PermissionValueType) => Json.fromString(PermissionValueType.nameOf(a))
-  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
-    (c: HCursor) => c.as[String].flatMap(PermissionValueType.forName(_).toRight(DecodingFailure("Not a permission value type", c.history)))
+  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = Encoder[String].contramap(PermissionValueType.nameOf)
+  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] = Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
 
   implicit val presenceStatusEncoder: Encoder[PresenceStatus] = deriveEnumerationEncoder
   implicit val presenceStatusDecoder: Decoder[PresenceStatus] = deriveEnumerationDecoder
 
-  implicit val snowflakeEncoder: Encoder[Snowflake] = (a: Snowflake) => Json.fromString(a.content)
-  implicit val snowflakeDecoder: Decoder[Snowflake] = (c: HCursor) => c.as[String].map(Snowflake.apply)
+  implicit val snowflakeEncoder: Encoder[Snowflake] = Encoder[String].contramap(_.content)
+  implicit val snowflakeDecoder: Decoder[Snowflake] = Decoder[String].emap(s => Right(Snowflake(s)))
+
+  implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
+  implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))
 
   implicit val rawDmChannelEncoder: Encoder[RawDMChannel] = deriveEncoder
   implicit val rawDmChannelDecoder: Decoder[RawDMChannel] = deriveDecoder
@@ -65,8 +69,8 @@ trait DiscordProtocol {
   implicit val rawUnavailableGuildEncoder: Encoder[RawUnavailableGuild] = deriveEncoder
   implicit val rawUnavailableGuildDecoder: Decoder[RawUnavailableGuild] = deriveDecoder
 
-  implicit val permissionEncoder: Encoder[Permission] = (a: Permission) => Json.fromInt(a.int)
-  implicit val permissionDecoder: Decoder[Permission] = (c: HCursor) => c.as[Int].map(Permission.fromInt)
+  implicit val permissionEncoder: Encoder[Permission] = Encoder[Int].contramap(_.int)
+  implicit val permissionDecoder: Decoder[Permission] = Decoder[Int].emap(i => Right(Permission.fromInt(i)))
 
   implicit val userEncoder: Encoder[User] = deriveEncoder
   implicit val userDecoder: Decoder[User] = deriveDecoder
@@ -154,10 +158,28 @@ trait DiscordProtocol {
       )
   }
 
-  implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = (a: OffsetDateTime) => Json.fromString(a.toString)
-  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] = (c: HCursor) => c.as[String].map(OffsetDateTime.parse)
+  implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
+  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] = Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
 
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder
+
+  implicit val inviteEncoder: Encoder[Invite] = deriveEncoder
+  implicit val inviteDecoder: Decoder[Invite] = deriveDecoder
+
+  implicit val guildEmbedEncoder: Encoder[GuildEmbed] = deriveEncoder
+  implicit val guildEmbedDecoder: Decoder[GuildEmbed] = deriveDecoder
+
+  implicit val outgoingEmbedEncoder: Encoder[OutgoingEmbed] = deriveEncoder
+  implicit val outgoingEmbedDecoder: Decoder[OutgoingEmbed] = deriveDecoder
+
+  implicit val integrationAccountEncoder: Encoder[IntegrationAccount] = deriveEncoder
+  implicit val integrationAccountDecoder: Decoder[IntegrationAccount] = deriveDecoder
+
+  implicit val integrationEncoder: Encoder[Integration] = deriveEncoder
+  implicit val integrationDecoder: Decoder[Integration] = deriveDecoder
+
+  implicit val voiceRegionEncoder: Encoder[VoiceRegion] = deriveEncoder
+  implicit val voiceRegionDecoder: Decoder[VoiceRegion] = deriveDecoder
 }
 object DiscordProtocol extends DiscordProtocol

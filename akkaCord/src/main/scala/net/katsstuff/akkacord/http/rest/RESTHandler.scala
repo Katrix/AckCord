@@ -42,7 +42,7 @@ import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.akkacord.http.rest.RESTHandler.{RateLimitStop, RemoveRateLimit}
-import net.katsstuff.akkacord.http.rest.RESTRequest.CreateMessage
+import net.katsstuff.akkacord.http.rest.Requests.CreateMessage
 import net.katsstuff.akkacord.{AkkaCord, DiscordClient, Request, RequestHandlerEvent}
 
 //Designed after http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html#examples
@@ -77,7 +77,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
       }
       requestQueue.complete()
     case RemoveRateLimit(uri) => rateLimits.remove(uri)
-    case fullRequest @ Request(request: RESTRequest[_, d], contextual) //The d here makes IntelliJ happy. It serves no other purpose
+    case fullRequest @ Request(request: ComplexRESTRequest[_, d, h], contextual) //The d and h here makes IntelliJ happy. They serves no other purpose
         if !rateLimits.contains(request.route.uri) =>
       val body = request match {
         case CreateMessage(_, data) if data.file.isDefined =>
@@ -116,7 +116,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
               .to[Json]
               .flatMap { json =>
                 log.debug(s"Received response: ${json.noSpaces}")
-                Future.fromTry(json.as(request.responseDecoder).toTry)
+                Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
               }
               .map(data => RequestHandlerEvent(data, from, contextual)(request.handleResponse))
               .pipeTo(snowflakeCache)
@@ -136,7 +136,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
         case Failure(e) => e.printStackTrace()
       }
     //If we get here then the request is rate limited
-    case fullRequest @ Request(request: RESTRequest[_, _], _) =>
+    case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _) =>
       val duration = rateLimits.getOrElse(request.route.uri, 0)
       context.system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
   }

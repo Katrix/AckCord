@@ -36,7 +36,7 @@ case class RawGuildChannel(
     id: Snowflake,
     guildId: Option[Snowflake], //guildId can be missing
     name: String,
-    `type`: String,
+    `type`: ChannelType,
     position: Int,
     isPrivate: Boolean,
     permissionOverwrites: Seq[PermissionValue],

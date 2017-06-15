@@ -23,7 +23,9 @@
  */
 package net.katsstuff.akkacord.http.websocket
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
+
+import scala.util.Try
 
 import akka.NotUsed
 import io.circe._
@@ -35,13 +37,11 @@ import net.katsstuff.akkacord.http._
 
 object WsProtocol extends DiscordProtocol {
 
-  implicit val opCodeEncoder: Encoder[OpCode] = (a: OpCode) => Json.fromInt(a.code)
-  implicit val opCodeDecoder: Decoder[OpCode] = (c: HCursor) =>
-    c.as[Int].flatMap(OpCode.forCode(_).toRight(DecodingFailure("Not an opCode", c.history)))
+  implicit val opCodeEncoder: Encoder[OpCode] = Encoder[Int].contramap(_.code)
+  implicit val opCodeDecoder: Decoder[OpCode] = Decoder[Int].emap(OpCode.forCode(_).toRight("Not an opCode"))
 
-  implicit def wsEventEncoder[A]: Encoder[WsEvent[A]] = (a: WsEvent[A]) => Json.fromString(a.name)
-  implicit def wsEventDecoder: Decoder[WsEvent[_]] =
-    (c: HCursor) => c.as[String].flatMap(WsEvent.forName(_).toRight(DecodingFailure("Not an event", c.history)))
+  implicit def wsEventEncoder[A]: Encoder[WsEvent[A]] = Encoder[String].contramap(_.name)
+  implicit val wsEventDecoder: Decoder[WsEvent[_]] = Decoder[String].emap(WsEvent.forName(_).toRight("Not an event"))
 
   implicit val readyDataEncoder: Encoder[WsEvent.ReadyData] = deriveEncoder
   implicit val readyDataDecoder: Decoder[WsEvent.ReadyData] = deriveDecoder
