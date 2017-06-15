@@ -47,7 +47,7 @@ trait CacheSnapshotLike {
   def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] = guilds.get(id).orElse(unavailableGuilds.get(id))
 
   def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] = guilds.get(guildId).flatMap(_.channels.get(id))
-  def getGuildChannel(id: GuildId): Option[GuildChannel] = guilds.values.collectFirst {
+  def getGuildChannel(id: ChannelId): Option[GuildChannel] = guilds.values.collectFirst {
     case guild if guild.channels.contains(id) => guild.channels(id)
   }
 

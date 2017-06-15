@@ -281,7 +281,7 @@ object RawHandlers extends Handlers {
   implicit val roleDeleteHandler: CacheDeleteHandler[GuildRoleDeleteData] = deleteHandler {
     case (builder, obj @ GuildRoleDeleteData(guildId, roleId), log) =>
       builder.getGuild(guildId) match {
-        case Some(guild) => builder.guilds.put(guildId, guild.copy(members = guild.members - roleId))
+        case Some(guild) => builder.guilds.put(guildId, guild.copy(roles = guild.roles - roleId))
         case None        => log.warning(s"Couldn't get guild for member delete $obj")
       }
   }

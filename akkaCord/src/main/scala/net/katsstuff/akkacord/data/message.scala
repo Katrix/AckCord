@@ -28,7 +28,7 @@ import java.time.OffsetDateTime
 sealed trait Author
 case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
 case class User(
-    id: ChannelId,
+    id: UserId,
     username: String,
     discriminator: String,
     avatar: Option[String], //avatar can be null
