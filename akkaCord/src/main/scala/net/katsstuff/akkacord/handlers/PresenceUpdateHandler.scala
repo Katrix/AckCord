@@ -26,7 +26,7 @@ package net.katsstuff.akkacord.handlers
 import scala.collection.mutable
 
 import akka.event.LoggingAdapter
-import net.katsstuff.akkacord.data.{Presence, PresenceGame, PresenceStatus, PresenceStreaming, User}
+import net.katsstuff.akkacord.data.{Presence, PresenceGame, PresenceStreaming, User}
 import net.katsstuff.akkacord.http.RawPresenceGame
 import net.katsstuff.akkacord.http.websocket.WsEvent.PresenceUpdateData
 

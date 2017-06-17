@@ -23,11 +23,6 @@
  */
 package net.katsstuff.akkacord
 
-import net.katsstuff.akkacord.data.{Author, User, UserId}
-import shapeless._
-import shapeless.labelled._
-import shapeless.ops.hlist.Mapper
-
 package object http {
 
   /*

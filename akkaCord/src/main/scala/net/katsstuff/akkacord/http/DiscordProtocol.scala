@@ -30,10 +30,8 @@ import scala.util.Try
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
 import io.circe.generic.extras.auto._
-import io.circe.shapes._
 import io.circe.syntax._
-import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
-import net.katsstuff.akkacord.data.ChannelType
+import io.circe._
 import net.katsstuff.akkacord.data._
 import shapeless._
 import shapeless.tag._

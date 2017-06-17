@@ -27,9 +27,9 @@ import java.time.OffsetDateTime
 
 import akka.NotUsed
 import io.circe._
-import io.circe.syntax._
-import io.circe.shapes._
 import io.circe.generic.extras.semiauto._
+import io.circe.shapes._
+import io.circe.syntax._
 import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.http._
 

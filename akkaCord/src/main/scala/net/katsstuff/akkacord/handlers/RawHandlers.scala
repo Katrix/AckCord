@@ -26,7 +26,6 @@ package net.katsstuff.akkacord.handlers
 import scala.collection.mutable
 
 import net.katsstuff.akkacord.data._
-import net.katsstuff.akkacord.http.websocket.WsEvent
 import net.katsstuff.akkacord.http.websocket.WsEvent._
 import net.katsstuff.akkacord.http.{RawChannel, RawDMChannel, RawGuild, RawGuildChannel, RawGuildMember, RawMessage, RawPresenceGame}
 

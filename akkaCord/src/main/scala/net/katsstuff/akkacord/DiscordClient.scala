@@ -27,7 +27,7 @@ import akka.AkkaException
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import akka.event.EventStream
 import akka.http.scaladsl.model.headers.GenericHttpCredentials
-import net.katsstuff.akkacord.http.rest.{ComplexRESTRequest, RESTHandler, Requests}
+import net.katsstuff.akkacord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 
 class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {

@@ -26,8 +26,8 @@ package net.katsstuff.akkacord.handlers
 import net.katsstuff.akkacord.data._
 
 trait Handlers {
-  import CacheUpdateHandler._
   import CacheDeleteHandler._
+  import CacheUpdateHandler._
 
   //Update
   implicit val dmChannelUpdateHandler: CacheUpdateHandler[DMChannel] = updateHandler((builder, obj, _) => builder.dmChannels.put(obj.id, obj))

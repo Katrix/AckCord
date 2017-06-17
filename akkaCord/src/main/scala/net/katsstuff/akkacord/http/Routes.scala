@@ -25,9 +25,8 @@ package net.katsstuff.akkacord.http
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.Uri
-import net.katsstuff.akkacord.data.Snowflake
-import net.katsstuff.akkacord.http.rest.RestRoute
 import net.katsstuff.akkacord.data._
+import net.katsstuff.akkacord.http.rest.RestRoute
 
 object Routes {
 
