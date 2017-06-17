@@ -76,7 +76,6 @@ object RawHandlers extends Handlers {
     }.unzip
 
     val presences = obj.presences.getOrElse(Seq.empty).flatMap { pres =>
-      import shapeless.record._
 
       val status = pres.status.map {
         case "idle"    => PresenceStatus.Idle
@@ -91,7 +90,7 @@ object RawHandlers extends Handlers {
         case _                                               => None
       }
 
-      status.map(s => Presence(pres.user.get('id), content, s))
+      status.map(s => Presence(pres.user.id, content, s))
     }
 
     val oldGuild = builder.getGuild(obj.id)
@@ -136,9 +135,7 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler { (builder, obj, log) =>
-    val RawGuildMember(user, nick, roles, joinedAt, deaf, mute) = WsEvent.guildMemberGen.from(obj.tail)
-    import shapeless.record._
-    val guildId: GuildId = obj.get('guildId)
+    val RawGuildMemberWithGuild(guildId, user, nick, roles, joinedAt, deaf, mute) = obj
     val member = GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
 
     builder.getGuild(guildId) match {

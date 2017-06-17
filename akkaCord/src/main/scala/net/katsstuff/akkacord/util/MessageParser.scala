@@ -105,14 +105,14 @@ trait MessageParserInstances {
   val roleRegex:    Regex = """<@&\d+>""".r
   val emojiRegex:   Regex = """<:\w+:\d+>""".r
 
-  def regexParser[A](name: String, regex: Regex, getObj: (CacheSnapshot, Snowflake) => Option[A]): MessageParser[A] = new MessageParser[A] {
+  def regexParser[A](name: String, regex: Regex, getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
       val head = strings.head
 
       for {
         m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified").right
         _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-        obj <- getObj(c, Snowflake(m.matched)).toRight(s"${name.capitalize} not found")
+        obj <- getObj(c, tag[A](Snowflake(m.matched))).toRight(s"${name.capitalize} not found")
       } yield strings.tail -> obj
     }
   }

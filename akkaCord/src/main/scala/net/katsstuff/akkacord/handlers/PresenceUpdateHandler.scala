@@ -36,46 +36,44 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
 
     optGuildId match {
       case Some(guildId) if builder.guilds.contains(guildId) =>
-        import shapeless.record._
-        val rPartialUser = partialUser.record
 
         //Add the user
-        builder.getUser(rPartialUser.id) match {
+        builder.getUser(partialUser.id) match {
           case Some(existingUser) =>
             val newUser = existingUser.copy(
-              username = rPartialUser.username.getOrElse(existingUser.username),
-              discriminator = rPartialUser.discriminator.getOrElse(existingUser.discriminator),
-              avatar = rPartialUser.avatar.orElse(existingUser.avatar),
-              bot = rPartialUser.bot.orElse(existingUser.bot),
-              mfaEnabled = rPartialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
-              verified = rPartialUser.verified.orElse(existingUser.verified),
-              email = rPartialUser.email.orElse(existingUser.email)
+              username = partialUser.username.getOrElse(existingUser.username),
+              discriminator = partialUser.discriminator.getOrElse(existingUser.discriminator),
+              avatar = partialUser.avatar.orElse(existingUser.avatar),
+              bot = partialUser.bot.orElse(existingUser.bot),
+              mfaEnabled = partialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
+              verified = partialUser.verified.orElse(existingUser.verified),
+              email = partialUser.email.orElse(existingUser.email)
             )
             builder.users.put(existingUser.id, newUser)
 
           case None =>
             //Let's try to create a user
             for {
-              username      <- rPartialUser.username
-              discriminator <- rPartialUser.discriminator
+              username      <- partialUser.username
+              discriminator <- partialUser.discriminator
             } {
               val newUser = User(
-                rPartialUser.id,
+                partialUser.id,
                 username,
                 discriminator,
-                rPartialUser.avatar,
-                rPartialUser.bot,
-                rPartialUser.mfaEnabled,
-                rPartialUser.verified,
-                rPartialUser.email
+                partialUser.avatar,
+                partialUser.bot,
+                partialUser.mfaEnabled,
+                partialUser.verified,
+                partialUser.email
               )
 
-              builder.users.put(rPartialUser.id, newUser)
+              builder.users.put(partialUser.id, newUser)
             }
         }
 
         //Add the presence
-        builder.getPresence(guildId, rPartialUser.id) match {
+        builder.getPresence(guildId, partialUser.id) match {
           case Some(presence) =>
             val newPresence = game
               .map {
@@ -97,11 +95,11 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                     }
                     .getOrElse(presence.status)
 
-                  Presence(rPartialUser.id, content, newStatus)
+                  Presence(partialUser.id, content, newStatus)
               }
               .getOrElse(presence)
 
-            builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(rPartialUser.id, newPresence)
+            builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
           case None =>
             game.foreach {
               case RawPresenceGame(name, gameType, url) =>
@@ -120,7 +118,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                 }
 
                 newStatus.foreach { status =>
-                  builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(rPartialUser.id, Presence(rPartialUser.id, content, status))
+                  builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, Presence(partialUser.id, content, status))
                 }
             }
         }
@@ -129,8 +127,8 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
 
         //Update roles
         guild.members
-          .get(rPartialUser.id)
-          .map(m => guild.members + ((rPartialUser.id, m.copy(roles = roles))))
+          .get(partialUser.id)
+          .map(m => guild.members + ((partialUser.id, m.copy(roles = roles))))
           .foreach { newMembers =>
             val newGuild = guild.copy(members = newMembers)
             builder.guilds.put(guildId, newGuild)

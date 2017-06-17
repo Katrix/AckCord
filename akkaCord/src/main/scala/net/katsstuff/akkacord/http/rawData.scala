@@ -46,6 +46,7 @@ case class RawGuildChannel(
     userLimit: Option[Int]
 ) extends RawChannel
 
+//Remember to edit RawGuildMemberWithGuild when editing this
 case class RawGuildMember(user: User, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
 
 //Can't lastMessageId be null here?
@@ -100,3 +101,16 @@ case class RawGuild(
 case class RawUnavailableGuild(id: GuildId, unavailable: Boolean)
 case class RawPresenceGame(name: Option[String], `type`: Option[Int], url: Option[String])
 case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[String])
+
+//Remember to edit User when editing this
+//TODO: Remove once shapeless PartialUser works again
+case class PartialUser(
+    id: UserId,
+    username: Option[String],
+    discriminator: Option[String],
+    avatar: Option[String], //avatar can be null
+    bot: Option[Boolean], //Bot can be missing
+    mfaEnabled: Option[Boolean], //mfaEnabled can be missing
+    verified: Option[Boolean], //verified can be missing
+    email: Option[String] //Email can be null
+)

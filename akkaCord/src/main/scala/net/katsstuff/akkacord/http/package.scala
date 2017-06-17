@@ -23,16 +23,18 @@
  */
 package net.katsstuff.akkacord
 
-import net.katsstuff.akkacord.data.{Snowflake, User}
-import shapeless.labelled._
+import net.katsstuff.akkacord.data.{Author, User, UserId}
 import shapeless._
+import shapeless.labelled._
 import shapeless.ops.hlist.Mapper
 
 package object http {
 
-  object mapPartialId extends mapPartialId
-  trait mapPartialId extends FieldPoly with atOption {
-    implicit def atId = atField[Snowflake]('id)(identity)
+  /*
+  TODO: Wait for https://github.com/milessabin/shapeless/issues/734 to be fixed for this to work
+  object mapPartialUserId extends mapPartialId[UserId]
+  trait mapPartialId[A] extends FieldPoly with atOption {
+    implicit def atId = atField[A]('id)(identity)
   }
 
   trait atOption extends normal {
@@ -44,6 +46,7 @@ package object http {
   }
 
   val userGen           = LabelledGeneric[User]
-  val partialUserMapper = Mapper[mapPartialId.type, userGen.Repr]
+  val partialUserMapper = Mapper[mapPartialUserId.type, userGen.Repr]
   type PartialUser = partialUserMapper.Out
+  */
 }

@@ -236,6 +236,8 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
       )
 
+  /*
+  TODO: Wait for https://github.com/milessabin/shapeless/issues/734 to be fixed for this to work
   val guildMemberGen = LabelledGeneric[RawGuildMember]
   type RawGuildMemberWithGuild = FieldType[Witness.`'guildId`.T, GuildId] :: guildMemberGen.Repr
   object GuildMemberAdd
@@ -249,6 +251,27 @@ object WsEvent {
               mem <- g.members.get(guildMemberGen.from(data.tail).user.id)
             } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
       )
+  */
+  //Remember to edit RawGuildMember when editing this
+  case class RawGuildMemberWithGuild(guildId: GuildId, user: User, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean) {
+    def toRawGuildMember: RawGuildMember = RawGuildMember(user, nick, roles, joinedAt, deaf, mute)
+  }
+  object RawGuildMemberWithGuild {
+    def apply(guildId: GuildId, m: RawGuildMember): RawGuildMemberWithGuild =
+      new RawGuildMemberWithGuild(guildId, m.user, m.nick, m.roles, m.joinedAt, m.deaf, m.mute)
+  }
+
+  object GuildMemberAdd
+    extends WsEvent[RawGuildMemberWithGuild](
+      "GUILD_MEMBER_ADD",
+      RawHandlers.rawGuildMemberWithGuildUpdateHandler,
+      data =>
+        (current, prev) =>
+          for {
+            g   <- current.getGuild(data.guildId)
+            mem <- g.members.get(data.user.id)
+          } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
+    )
 
   case class GuildMemberRemoveData(guildId: GuildId, user: User)
   object GuildMemberRemove
@@ -382,7 +405,7 @@ object WsEvent {
           (current, prev) =>
             data.guildId.flatMap { guildId =>
               current
-                .getPresence(guildId, data.user.head)
+                .getPresence(guildId, data.user.id)
                 .map(presence => APIMessage.PresenceUpdate(presence, current, prev))
         }
       )
@@ -451,7 +474,6 @@ object WsEvent {
     case "MESSAGE_DELETE_BULK"       => Some(MessageDeleteBulk)
     case "PRESENCE_UPDATE"           => Some(PresenceUpdate)
     case "TYPING_START"              => Some(TypingStart)
-    case "USER_SETTINGS_UPDATE"      => ??? //Some(UserSettingsUpdate)
     case "USER_UPDATE"               => Some(UserUpdate)
     case "VOICE_STATE_UPDATE"        => Some(VoiceStateUpdate)
     case "VOICE_SERVER_UPDATE"       => Some(VoiceServerUpdate)

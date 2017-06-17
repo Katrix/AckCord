@@ -55,7 +55,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           val withChannel = message.content.substring("!infoChannel".length)
           val r           = """<#(\d+)>""".r
 
-          val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map(Snowflake.apply).flatMap(id => message.guild.flatMap(_.channelById(id)))
+          val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map((ChannelId.apply _).compose(Snowflake.apply)).flatMap(id => message.guild.flatMap(_.channelById(id)))
           channel.foreach { gChannel =>
             client ! Request(Requests.GetChannel(gChannel.id), GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c))
           }

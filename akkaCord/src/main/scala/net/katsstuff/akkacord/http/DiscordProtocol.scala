@@ -34,6 +34,8 @@ import io.circe.shapes._
 import io.circe.syntax._
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
 import net.katsstuff.akkacord.data._
+import shapeless._
+import shapeless.tag._
 
 trait DiscordProtocol {
 
@@ -51,6 +53,25 @@ trait DiscordProtocol {
 
   implicit val snowflakeEncoder: Encoder[Snowflake] = Encoder[String].contramap(_.content)
   implicit val snowflakeDecoder: Decoder[Snowflake] = Decoder[String].emap(s => Right(Snowflake(s)))
+
+  def snowflakeTagEncoder[A]: Encoder[Snowflake @@ A] = snowflakeEncoder.contramap(identity)
+  def snowflakeTagDecoder[A]: Decoder[Snowflake @@ A] = snowflakeDecoder.emap(s => Right(tag[A](s)))
+
+  implicit val guildIdEncoder:       Encoder[GuildId]       = snowflakeTagEncoder
+  implicit val channelIdEncoder:     Encoder[ChannelId]     = snowflakeTagEncoder
+  implicit val messageIdEncoder:     Encoder[MessageId]     = snowflakeTagEncoder
+  implicit val userIdEncoder:        Encoder[UserId]        = snowflakeTagEncoder
+  implicit val roleIdEncoder:        Encoder[RoleId]        = snowflakeTagEncoder
+  implicit val emojiIdEncoder:       Encoder[EmojiId]       = snowflakeTagEncoder
+  implicit val integrationIdEncoder: Encoder[IntegrationId] = snowflakeTagEncoder
+
+  implicit val guildIdDecoder:       Decoder[GuildId]       = snowflakeTagDecoder
+  implicit val channelIdDecoder:     Decoder[ChannelId]     = snowflakeTagDecoder
+  implicit val messageIdDecoder:     Decoder[MessageId]     = snowflakeTagDecoder
+  implicit val userIdDecoder:        Decoder[UserId]        = snowflakeTagDecoder
+  implicit val roleIdDecoder:        Decoder[RoleId]        = snowflakeTagDecoder
+  implicit val emojiIdDecoder:       Decoder[EmojiId]       = snowflakeTagDecoder
+  implicit val integrationIdDecoder: Decoder[IntegrationId] = snowflakeTagDecoder
 
   implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
   implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))

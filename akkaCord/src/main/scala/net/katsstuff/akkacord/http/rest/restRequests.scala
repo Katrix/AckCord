@@ -311,14 +311,7 @@ object Requests {
     def guildId: GuildId
     override def responseDecoder: Decoder[RawGuildMember]                       = Decoder[RawGuildMember]
     override def handleResponse:  CacheHandler[WsEvent.RawGuildMemberWithGuild] = RawHandlers.rawGuildMemberWithGuildUpdateHandler
-    override def processResponse(response: RawGuildMember): WsEvent.RawGuildMemberWithGuild = {
-      import shapeless._
-      import shapeless.labelled._
-      val head = field[Witness.`'guildId`.T](guildId)
-      val tail = WsEvent.guildMemberGen.to(response)
-
-      head :: tail
-    }
+    override def processResponse(response: RawGuildMember): WsEvent.RawGuildMemberWithGuild = WsEvent.RawGuildMemberWithGuild(guildId, response)
   }
 
   case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberRequest[NotUsed] {

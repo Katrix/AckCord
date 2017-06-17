@@ -122,6 +122,9 @@ object WsProtocol extends DiscordProtocol {
   implicit val helloDataEncoder: Encoder[HelloData] = deriveEncoder
   implicit val helloDataDecoder: Decoder[HelloData] = deriveDecoder
 
+  implicit val rawGuildMemberWithGuildEncoder: Encoder[WsEvent.RawGuildMemberWithGuild] = deriveEncoder
+  implicit val rawGuildMemberWithGuildDecoder: Decoder[WsEvent.RawGuildMemberWithGuild] = deriveDecoder
+
   implicit def wsMessageEncoder[Data: Encoder]: Encoder[WsMessage[Data]] =
     (a: WsMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
 
@@ -252,10 +255,9 @@ object WsProtocol extends DiscordProtocol {
             case event @ WsEvent.MessageDeleteBulk       => dC.as[WsEvent.MessageDeleteBulkData].map(createDispatch(seq, event))
             case event @ WsEvent.PresenceUpdate          => dC.as[WsEvent.PresenceUpdateData].map(createDispatch(seq, event))
             case event @ WsEvent.TypingStart             => dC.as[WsEvent.TypingStartData].map(createDispatch(seq, event))
-            //case Event.UserSettingsUpdate =>
-            case event @ WsEvent.UserUpdate        => dC.as[User].map(createDispatch(seq, event))
-            case event @ WsEvent.VoiceStateUpdate  => dC.as[VoiceState].map(createDispatch(seq, event))
-            case event @ WsEvent.VoiceServerUpdate => dC.as[VoiceServerUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.UserUpdate              => dC.as[User].map(createDispatch(seq, event))
+            case event @ WsEvent.VoiceStateUpdate        => dC.as[VoiceState].map(createDispatch(seq, event))
+            case event @ WsEvent.VoiceServerUpdate       => dC.as[VoiceServerUpdateData].map(createDispatch(seq, event))
           }
       }
   }

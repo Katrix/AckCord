@@ -22,16 +22,71 @@
  * SOFTWARE.
  */
 package net.katsstuff.akkacord
+import shapeless._
+import shapeless.tag._
 
 package object data {
 
   //Some type aliases for better documentation by the types
-  type GuildId       = Snowflake
-  type ChannelId     = Snowflake
-  type MessageId     = Snowflake
-  type UserId        = Snowflake
-  type RoleId        = Snowflake
-  type UserOrRoleId  = Snowflake
-  type EmojiId       = Snowflake
-  type IntegrationId = Snowflake
+  type GuildId = Snowflake @@ Guild
+  object GuildId {
+    def apply(s: Snowflake): GuildId = {
+      val t = tag[Guild](s)
+      t
+    }
+  }
+
+  type ChannelId = Snowflake @@ Channel
+  object ChannelId {
+    def apply(s: Snowflake): ChannelId = {
+      val t = tag[Channel](s)
+      t
+    }
+  }
+
+
+  type MessageId = Snowflake @@ Message
+  object MessageId {
+    def apply(s: Snowflake): MessageId = {
+      val t = tag[Message](s)
+      t
+    }
+  }
+
+  type UserId = Snowflake @@ User
+  object UserId {
+    def apply(s: Snowflake): UserId = {
+      val t = tag[User](s)
+      t
+    }
+  }
+
+  type RoleId = Snowflake @@ Role
+  object RoleId {
+    def apply(s: Snowflake): RoleId = {
+      val t = tag[Role](s)
+      t
+    }
+  }
+
+  type UserOrRoleId = Snowflake
+  object UserOrRoleId {
+    def apply(s: Snowflake): UserOrRoleId = s
+  }
+
+  type EmojiId = Snowflake @@ GuildEmoji
+  object EmojiId {
+    def apply(s: Snowflake): EmojiId = {
+      val t = tag[GuildEmoji](s)
+      t
+    }
+  }
+
+  type IntegrationId = Snowflake @@ Integration
+  object IntegrationId {
+    def apply(s: Snowflake): IntegrationId = {
+      val t = tag[Integration](s)
+      t
+    }
+  }
 }
