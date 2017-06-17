@@ -86,15 +86,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                     }
                   }
 
-                  val newStatus = status
-                    .map {
-                      case "online"  => PresenceStatus.Online
-                      case "idle"    => PresenceStatus.Idle
-                      case "offline" => PresenceStatus.Offline
-                      case "dnd"     => PresenceStatus.DoNotDisturb
-                    }
-                    .getOrElse(presence.status)
-
+                  val newStatus = status.getOrElse(presence.status)
                   Presence(partialUser.id, content, newStatus)
               }
               .getOrElse(presence)
@@ -110,14 +102,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
                   }
                 }
 
-                val newStatus = status.map {
-                  case "online"  => PresenceStatus.Online
-                  case "idle"    => PresenceStatus.Idle
-                  case "offline" => PresenceStatus.Offline
-                  case "dnd"     => PresenceStatus.DoNotDisturb
-                }
-
-                newStatus.foreach { status =>
+                status.foreach { status =>
                   builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, Presence(partialUser.id, content, status))
                 }
             }

@@ -23,8 +23,6 @@
  */
 package net.katsstuff.akkacord.data
 
-import io.circe.{Decoder, Encoder}
-
 sealed trait ChannelType
 object ChannelType {
   case object Text  extends ChannelType
@@ -40,9 +38,6 @@ object ChannelType {
     case Text  => "text"
     case Voice => "voice"
   }
-
-  implicit val encoder: Encoder[ChannelType] = Encoder[String].contramap(nameFor)
-  implicit val decoder: Decoder[ChannelType] = Decoder[String].emap(forName(_).toRight("Not a valid channel type"))
 }
 
 sealed trait PermissionValueType

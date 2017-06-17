@@ -395,7 +395,7 @@ object WsEvent {
       roles: Seq[RoleId],
       game: Option[RawPresenceGame],
       guildId: Option[GuildId],
-      status: Option[String]
+      status: Option[PresenceStatus]
   )
   object PresenceUpdate
       extends WsEvent[PresenceUpdateData](

@@ -33,6 +33,7 @@ import io.circe.generic.extras.auto._
 import io.circe.shapes._
 import io.circe.syntax._
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, Json}
+import net.katsstuff.akkacord.data.ChannelType
 import net.katsstuff.akkacord.data._
 import shapeless._
 import shapeless.tag._
@@ -41,15 +42,15 @@ trait DiscordProtocol {
 
   implicit val config: Configuration = Configuration.default.withSnakeCaseKeys.withDefaults
 
-  implicit val channelTypeEncoder: Encoder[ChannelType] = deriveEnumerationEncoder
-  implicit val channelTypeDecoder: Decoder[ChannelType] = deriveEnumerationDecoder
+  implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[String].contramap(ChannelType.nameFor)
+  implicit val channelTypeDecoder: Decoder[ChannelType] = Decoder[String].emap(ChannelType.forName(_).toRight("Not a valid channel type"))
 
   implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = Encoder[String].contramap(PermissionValueType.nameOf)
   implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
     Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
 
-  implicit val presenceStatusEncoder: Encoder[PresenceStatus] = deriveEnumerationEncoder
-  implicit val presenceStatusDecoder: Decoder[PresenceStatus] = deriveEnumerationDecoder
+  implicit val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[String].contramap(PresenceStatus.nameOf)
+  implicit val presenceStatusDecoder: Decoder[PresenceStatus] = Decoder[String].emap(PresenceStatus.forName(_).toRight("Not a presence status"))
 
   implicit val snowflakeEncoder: Encoder[Snowflake] = Encoder[String].contramap(_.content)
   implicit val snowflakeDecoder: Decoder[Snowflake] = Decoder[String].emap(s => Right(Snowflake(s)))

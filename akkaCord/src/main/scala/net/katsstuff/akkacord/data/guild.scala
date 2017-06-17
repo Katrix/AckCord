@@ -76,6 +76,21 @@ object PresenceStatus {
   case object Online       extends PresenceStatus
   case object Offline      extends PresenceStatus
   case object DoNotDisturb extends PresenceStatus
+
+  def nameOf(status: PresenceStatus): String = status match {
+    case Idle => "idle"
+    case Online => "online"
+    case Offline => "offline"
+    case DoNotDisturb => "dnd"
+  }
+
+  def forName(name: String): Option[PresenceStatus] = name match {
+    case "idle" => Some(Idle)
+    case "online" => Some(Online)
+    case "offline" => Some(Offline)
+    case "dnd" => Some(DoNotDisturb)
+    case _ => None
+  }
 }
 case class Presence(userId: UserId, game: Option[PresenceContent], status: PresenceStatus) extends GetUser
 

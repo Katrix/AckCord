@@ -100,7 +100,7 @@ case class RawGuild(
 
 case class RawUnavailableGuild(id: GuildId, unavailable: Boolean)
 case class RawPresenceGame(name: Option[String], `type`: Option[Int], url: Option[String])
-case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[String])
+case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus])
 
 //Remember to edit User when editing this
 //TODO: Remove once shapeless PartialUser works again

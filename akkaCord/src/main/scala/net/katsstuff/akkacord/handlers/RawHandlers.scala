@@ -77,20 +77,13 @@ object RawHandlers extends Handlers {
 
     val presences = obj.presences.getOrElse(Seq.empty).flatMap { pres =>
 
-      val status = pres.status.map {
-        case "idle"    => PresenceStatus.Idle
-        case "online"  => PresenceStatus.Online
-        case "offline" => PresenceStatus.Offline
-        case "dnd"     => PresenceStatus.DoNotDisturb
-      }
-
       val content = pres.game.flatMap {
         case RawPresenceGame(Some(name), Some(0), _)         => Some(PresenceGame(name))
         case RawPresenceGame(Some(name), Some(1), Some(url)) => Some(PresenceStreaming(name, url))
         case _                                               => None
       }
 
-      status.map(s => Presence(pres.user.id, content, s))
+      pres.status.map(s => Presence(pres.user.id, content, s))
     }
 
     val oldGuild = builder.getGuild(obj.id)
