@@ -46,6 +46,7 @@ object Permission {
   val ManageChannels      = Permission(0x00000010)
   val ManageGuild         = Permission(0x00000020)
   val AddReactions        = Permission(0x00000040)
+  val ViewAuditLog        = Permission(0x00000080)
   val ReadMessages        = Permission(0x00000400)
   val SendMessages        = Permission(0x00000800)
   val SendTtsMessages     = Permission(0x00001000)

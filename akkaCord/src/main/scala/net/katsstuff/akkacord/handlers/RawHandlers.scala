@@ -234,6 +234,19 @@ object RawHandlers extends Handlers {
     builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
   }
 
+  implicit val rawMessageReactionUpdateHandler: CacheUpdateHandler[MessageReactionData] = updateHandler { (builder, obj, _) =>
+    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+      val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
+      val changed = toChange.map { e =>
+        e.copy(count = e.count + 1, me = if(builder.botUser.id == obj.userId) true else e.me)
+      }
+
+      val newMessage = message.copy(reactions = toNotChange ++ changed)
+
+      builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
+    }
+  }
+
   //Delete
   implicit val rawDmChannelDeleteHandler: CacheDeleteHandler[RawDMChannel] = deleteHandler((builder, obj, _) => builder.dmChannels.remove(obj.id))
   implicit val rawGuildChannelDeleteHandler: CacheDeleteHandler[RawGuildChannel] = deleteHandler { (builder, obj, log) =>
@@ -283,5 +296,24 @@ object RawHandlers extends Handlers {
   implicit val rawMessageDeleteBulkHandler: CacheDeleteHandler[MessageDeleteBulkData] = deleteHandler {
     case (builder, MessageDeleteBulkData(ids, channelId), _) =>
       builder.messages.get(channelId).foreach(_ --= ids)
+  }
+
+  implicit val rawMessageReactionRemoveHandler: CacheDeleteHandler[MessageReactionData] = deleteHandler { (builder, obj, _) =>
+    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+      val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
+      val changed = toChange.map { e =>
+        e.copy(count = e.count - 1, me = if(builder.botUser.id == obj.userId) false else e.me)
+      }
+
+      val newMessage = message.copy(reactions = toNotChange ++ changed)
+
+      builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
+    }
+  }
+
+  implicit val rawMessageReactionRemoveAllHandler: CacheDeleteHandler[MessageReactionRemoveAllData] = deleteHandler { (builder, obj, _) =>
+    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+      builder.messages(obj.channelId).put(obj.messageId, message.copy(reactions = Nil))
+    }
   }
 }

@@ -65,6 +65,11 @@ sealed trait Channel {
 }
 
 sealed trait TChannel extends Channel {
+
+  /**
+    * Points to the last message id in the channel.
+    * The id might not point to a valid or existing message.
+    */
   def lastMessageId: Option[MessageId]
 }
 

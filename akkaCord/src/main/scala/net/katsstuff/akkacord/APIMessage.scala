@@ -70,14 +70,31 @@ object APIMessage {
   case class MessageDelete(message: Message, channel: TChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)           extends APIMessage
   case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
+  case class MessageReactionAdd(
+      user: User,
+      channel: TChannel,
+      message: Message,
+      emoji: MessageEmoji,
+      snapshot: CacheSnapshot,
+      prevSnapshot: CacheSnapshot
+  ) extends APIMessage
+  case class MessageReactionRemove(
+      user: User,
+      channel: TChannel,
+      message: Message,
+      emoji: MessageEmoji,
+      snapshot: CacheSnapshot,
+      prevSnapshot: CacheSnapshot
+  ) extends APIMessage
+  case class MessageReactionRemoveAll(channel: TChannel, message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+
   case class PresenceUpdate(presence: Presence, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class TypingStart(channel: TChannel, user: User, timestamp: Instant, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
   case class UserUpdate(user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
-  case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
-  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends APIMessage
+  case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                         extends APIMessage
+  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
 }

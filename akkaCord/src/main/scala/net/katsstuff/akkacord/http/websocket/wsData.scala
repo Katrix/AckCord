@@ -390,6 +390,40 @@ object WsEvent {
               .collect { case channel: TChannel => APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev) }
       )
 
+  case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: MessageEmoji)
+  object MessageReactionAdd extends WsEvent[MessageReactionData](
+    "MESSAGE_REACTION_ADD",
+    RawHandlers.rawMessageReactionUpdateHandler,
+    data => (current, prev) => for {
+      user <- current.getUser(data.userId)
+      channel <- current.getChannel(data.channelId)
+      tChannel <- Typeable[TChannel].cast(channel)
+      message <- current.getMessage(data.channelId, data.messageId)
+    } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, current, prev)
+  )
+
+  object MessageReactionRemove extends WsEvent[MessageReactionData](
+    "MESSAGE_REACTION_REMOVE",
+    RawHandlers.rawMessageReactionRemoveHandler,
+    data => (current, prev) => for {
+      user <- current.getUser(data.userId)
+      channel <- current.getChannel(data.channelId)
+      tChannel <- Typeable[TChannel].cast(channel)
+      message <- current.getMessage(data.channelId, data.messageId)
+    } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, current, prev)
+  )
+
+  case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId)
+  object MessageReactionRemoveAll extends WsEvent[MessageReactionRemoveAllData](
+    "MESSAGE_REACTION_REMOVE_ALL",
+    RawHandlers.rawMessageReactionRemoveAllHandler,
+    data => (current, prev) => for {
+      channel <- current.getChannel(data.channelId)
+      tChannel <- Typeable[TChannel].cast(channel)
+      message <- current.getMessage(data.channelId, data.messageId)
+    } yield APIMessage.MessageReactionRemoveAll(tChannel, message, current, prev)
+  )
+
   case class PresenceUpdateData(
       user: PartialUser,
       roles: Seq[RoleId],
@@ -449,34 +483,37 @@ object WsEvent {
       )
 
   def forName(name: String): Option[WsEvent[_]] = name match {
-    case "READY"                     => Some(Ready)
-    case "RESUMED"                   => Some(Resumed)
-    case "CHANNEL_CREATE"            => Some(ChannelCreate)
-    case "CHANNEL_UPDATE"            => Some(ChannelUpdate)
-    case "CHANNEL_DELETE"            => Some(ChannelDelete)
-    case "GUILD_CREATE"              => Some(GuildCreate)
-    case "GUILD_UPDATE"              => Some(GuildUpdate)
-    case "GUILD_DELETE"              => Some(GuildDelete)
-    case "GUILD_BAN_ADD"             => Some(GuildBanAdd)
-    case "GUILD_BAN_REMOVE"          => Some(GuildBanRemove)
-    case "GUILD_EMOJIS_UPDATE"       => Some(GuildEmojisUpdate)
-    case "GUILD_INTEGRATIONS_UPDATE" => Some(GuildIntegrationsUpdate)
-    case "GUILD_MEMBER_ADD"          => Some(GuildMemberAdd)
-    case "GUILD_MEMBER_REMOVE"       => Some(GuildMemberRemove)
-    case "GUILD_MEMBER_UPDATE"       => Some(GuildMemberUpdate)
-    case "GUILD_MEMBER_CHUNK"        => Some(GuildMemberChunk)
-    case "GUILD_ROLE_CREATE"         => Some(GuildRoleCreate)
-    case "GUILD_ROLE_UPDATE"         => Some(GuildRoleUpdate)
-    case "GUILD_ROLE_DELETE"         => Some(GuildRoleDelete)
-    case "MESSAGE_CREATE"            => Some(MessageCreate)
-    case "MESSAGE_UPDATE"            => Some(MessageUpdate)
-    case "MESSAGE_DELETE"            => Some(MessageDelete)
-    case "MESSAGE_DELETE_BULK"       => Some(MessageDeleteBulk)
-    case "PRESENCE_UPDATE"           => Some(PresenceUpdate)
-    case "TYPING_START"              => Some(TypingStart)
-    case "USER_UPDATE"               => Some(UserUpdate)
-    case "VOICE_STATE_UPDATE"        => Some(VoiceStateUpdate)
-    case "VOICE_SERVER_UPDATE"       => Some(VoiceServerUpdate)
-    case _                           => None
+    case "READY"                       => Some(Ready)
+    case "RESUMED"                     => Some(Resumed)
+    case "CHANNEL_CREATE"              => Some(ChannelCreate)
+    case "CHANNEL_UPDATE"              => Some(ChannelUpdate)
+    case "CHANNEL_DELETE"              => Some(ChannelDelete)
+    case "GUILD_CREATE"                => Some(GuildCreate)
+    case "GUILD_UPDATE"                => Some(GuildUpdate)
+    case "GUILD_DELETE"                => Some(GuildDelete)
+    case "GUILD_BAN_ADD"               => Some(GuildBanAdd)
+    case "GUILD_BAN_REMOVE"            => Some(GuildBanRemove)
+    case "GUILD_EMOJIS_UPDATE"         => Some(GuildEmojisUpdate)
+    case "GUILD_INTEGRATIONS_UPDATE"   => Some(GuildIntegrationsUpdate)
+    case "GUILD_MEMBER_ADD"            => Some(GuildMemberAdd)
+    case "GUILD_MEMBER_REMOVE"         => Some(GuildMemberRemove)
+    case "GUILD_MEMBER_UPDATE"         => Some(GuildMemberUpdate)
+    case "GUILD_MEMBER_CHUNK"          => Some(GuildMemberChunk)
+    case "GUILD_ROLE_CREATE"           => Some(GuildRoleCreate)
+    case "GUILD_ROLE_UPDATE"           => Some(GuildRoleUpdate)
+    case "GUILD_ROLE_DELETE"           => Some(GuildRoleDelete)
+    case "MESSAGE_CREATE"              => Some(MessageCreate)
+    case "MESSAGE_UPDATE"              => Some(MessageUpdate)
+    case "MESSAGE_DELETE"              => Some(MessageDelete)
+    case "MESSAGE_DELETE_BULK"         => Some(MessageDeleteBulk)
+    case "MESSAGE_REACTION_ADD"        => Some(MessageReactionAdd)
+    case "MESSAGE_REACTION_REMOVE"     => Some(MessageReactionRemove)
+    case "MESSAGE_REACTION_REMOVE_ALL" => Some(MessageReactionRemoveAll)
+    case "PRESENCE_UPDATE"             => Some(PresenceUpdate)
+    case "TYPING_START"                => Some(TypingStart)
+    case "USER_UPDATE"                 => Some(UserUpdate)
+    case "VOICE_STATE_UPDATE"          => Some(VoiceStateUpdate)
+    case "VOICE_SERVER_UPDATE"         => Some(VoiceServerUpdate)
+    case _                             => None
   }
 }

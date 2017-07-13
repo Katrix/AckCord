@@ -24,9 +24,20 @@
 package net.katsstuff.akkacord.data
 
 import java.time.OffsetDateTime
+import java.util.Base64
+
+//TODO
+class AvatarData(val rawData: String) extends AnyVal
+object AvatarData {
+
+  def forData(imageType: String, data: Array[Byte]): AvatarData = {
+    val base64Data = Base64.getEncoder.encodeToString(data)
+    new AvatarData(s"data:image/$imageType;base64,$base64Data")
+  }
+}
 
 sealed trait Author
-case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
+case class WebhookAuthor(id: Snowflake, name: String, avatar: AvatarData) extends Author
 //Remember to edit PartialUser when editing this
 case class User(
     id: UserId,

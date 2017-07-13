@@ -226,10 +226,10 @@ object Requests {
       name: String,
       region: String,
       icon: String,
-      verificationLevel: Int,
-      defaultMessageNotifications: Int,
+      verificationLevel: Int, //TODO: Better than Int
+      defaultMessageNotifications: Int, //TODO: Better than Int
       roles: Seq[Role],
-      channel: CreateGuildChannelData
+      channels: CreateGuildChannelData
   )
   case class CreateGuild(params: CreateGuildData) extends SimpleRESTRequest[CreateGuildData, RawGuild] {
     override def route: RestRoute = Routes.createGuild
