@@ -27,12 +27,15 @@ import java.time.Instant
 
 import scala.language.higherKinds
 
+import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
 import net.katsstuff.akkacord.data._
+
+import shapeless.tag._
 
 trait CacheSnapshotLike {
   type MapType[A, B] <: collection.Map[A, B]
 
-  def botUser:           User
+  def botUser:           User @@ BotUser
   def dmChannels:        MapType[ChannelId, DMChannel]
   def unavailableGuilds: MapType[GuildId, UnavailableGuild]
   def guilds:            MapType[GuildId, Guild]
@@ -79,4 +82,7 @@ trait CacheSnapshotLike {
   def getUser(id: UserId): Option[User] = users.get(id)
 
   def getPresence(guildId: GuildId, userId: UserId): Option[Presence] = presences.get(guildId).flatMap(_.get(userId))
+}
+object CacheSnapshotLike {
+  sealed trait BotUser
 }

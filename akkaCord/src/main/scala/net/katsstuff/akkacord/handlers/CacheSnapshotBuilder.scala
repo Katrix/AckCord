@@ -28,10 +28,13 @@ import java.time.Instant
 import scala.collection.mutable
 
 import net.katsstuff.akkacord.CacheSnapshotLike
+import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
 import net.katsstuff.akkacord.data._
 
+import shapeless.tag._
+
 class CacheSnapshotBuilder(
-    var botUser: User,
+    var botUser: User @@ BotUser,
     var dmChannels: mutable.Map[ChannelId, DMChannel],
     var unavailableGuilds: mutable.Map[GuildId, UnavailableGuild],
     var guilds: mutable.Map[GuildId, Guild],

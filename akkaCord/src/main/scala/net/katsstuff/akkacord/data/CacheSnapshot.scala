@@ -26,9 +26,12 @@ package net.katsstuff.akkacord.data
 import java.time.Instant
 
 import net.katsstuff.akkacord.CacheSnapshotLike
+import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
+
+import shapeless.tag._
 
 case class CacheSnapshot(
-    botUser: User,
+    botUser: User @@ BotUser,
     dmChannels: Map[ChannelId, DMChannel],
     unavailableGuilds: Map[GuildId, UnavailableGuild],
     guilds: Map[GuildId, Guild],

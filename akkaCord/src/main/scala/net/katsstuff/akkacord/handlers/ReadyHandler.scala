@@ -24,9 +24,11 @@
 package net.katsstuff.akkacord.handlers
 
 import akka.event.LoggingAdapter
+import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
 import net.katsstuff.akkacord.data.{DMChannel, UnavailableGuild}
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
 import net.katsstuff.akkacord.http.{RawDMChannel, RawUnavailableGuild}
+import shapeless._
 
 //We handle this one seperately is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
@@ -41,7 +43,7 @@ object ReadyHandler extends CacheHandler[ReadyData] {
       case RawUnavailableGuild(id, _) => id -> UnavailableGuild(id)
     }
 
-    builder.botUser = user
+    builder.botUser = tag[BotUser](user)
     builder.dmChannels ++= dmChannels.toMap
     builder.unavailableGuilds ++= guilds.toMap
     builder.users ++= users.toMap
