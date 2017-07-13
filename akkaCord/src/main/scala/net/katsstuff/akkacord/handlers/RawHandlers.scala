@@ -71,7 +71,7 @@ object RawHandlers extends Handlers {
 
     val (users, members) = rawMembers.map {
       case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) =>
-        user -> (user.id -> GuildMember(user.id, nick, roles, joinedAt, deaf, mute))
+        user -> (user.id -> GuildMember(user.id, obj.id, nick, roles, joinedAt, deaf, mute))
     }.unzip
 
     val presences = obj.presences.getOrElse(Seq.empty).flatMap { pres =>
@@ -128,7 +128,7 @@ object RawHandlers extends Handlers {
 
   implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler { (builder, obj, log) =>
     val RawGuildMemberWithGuild(guildId, user, nick, roles, joinedAt, deaf, mute) = obj
-    val member = GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
+    val member = GuildMember(user.id, obj.guildId, nick, roles, joinedAt, deaf, mute)
 
     builder.getGuild(guildId) match {
       case Some(guild) => builder.guilds.put(guildId, guild.copy(members = guild.members + ((user.id, member))))
@@ -141,7 +141,7 @@ object RawHandlers extends Handlers {
   implicit val rawGuildMemberChunkHandler: CacheUpdateHandler[GuildMemberChunkData] = updateHandler {
     case (builder, obj @ GuildMemberChunkData(guildId, newRawMembers), log) =>
       val (newUsers, newMembers) = newRawMembers.map {
-        case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) => user -> GuildMember(user.id, nick, roles, joinedAt, deaf, mute)
+        case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) => user -> GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
       }.unzip
 
       builder.getGuild(guildId) match {

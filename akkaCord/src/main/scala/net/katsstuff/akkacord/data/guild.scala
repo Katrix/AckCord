@@ -61,8 +61,8 @@ case class UnavailableGuild(id: GuildId) extends UnknownStatusGuild {
   override def unavailable: Boolean = true
 }
 
-case class GuildMember(userId: UserId, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
-    extends GetUser
+case class GuildMember(userId: UserId, guildId: GuildId, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
+    extends GetUser with GetGuild
 case class GuildEmoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
 
 sealed trait PresenceContent {
