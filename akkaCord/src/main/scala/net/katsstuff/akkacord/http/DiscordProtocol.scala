@@ -40,8 +40,25 @@ trait DiscordProtocol {
 
   implicit val config: Configuration = Configuration.default.withSnakeCaseKeys.withDefaults
 
-  implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[String].contramap(ChannelType.nameFor)
-  implicit val channelTypeDecoder: Decoder[ChannelType] = Decoder[String].emap(ChannelType.forName(_).toRight("Not a valid channel type"))
+  implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[Int].contramap(ChannelType.idFor)
+  implicit val channelTypeDecoder: Decoder[ChannelType] = Decoder[Int].emap(ChannelType.forId(_).toRight("Not a valid channel type"))
+
+  implicit val verificationLevelEncoder: Encoder[VerificationLevel] = Encoder[Int].contramap(VerificationLevel.idFor)
+  implicit val verificationLevelDecoder: Decoder[VerificationLevel] =
+    Decoder[Int].emap(VerificationLevel.forId(_).toRight("Not a valid verification level"))
+
+  implicit val notificationLevelEncoder: Encoder[NotificationLevel] = Encoder[Int].contramap(NotificationLevel.idFor)
+  implicit val notificationLevelDecoder: Decoder[NotificationLevel] =
+    Decoder[Int].emap(NotificationLevel.forId(_).toRight("Not a valid notification level"))
+
+  implicit val filterLevelEncoder: Encoder[FilterLevel] = Encoder[Int].contramap(FilterLevel.idFor)
+  implicit val filterLevelDecoder: Decoder[FilterLevel] = Decoder[Int].emap(FilterLevel.forId(_).toRight("Not a valid filter level"))
+
+  implicit val mfaLevelEncoder: Encoder[MFALevel] = Encoder[Int].contramap(MFALevel.idFor)
+  implicit val mfaLevelDecoder: Decoder[MFALevel] = Decoder[Int].emap(MFALevel.forId(_).toRight("Not a valid MFA level"))
+
+  implicit val messageTypeEncoder: Encoder[MessageType] = Encoder[Int].contramap(MessageType.idFor)
+  implicit val messageTypeDecoder: Decoder[MessageType] = Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
 
   implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = Encoder[String].contramap(PermissionValueType.nameOf)
   implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
@@ -75,20 +92,14 @@ trait DiscordProtocol {
   implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
   implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))
 
-  implicit val rawDmChannelEncoder: Encoder[RawDMChannel] = deriveEncoder
-  implicit val rawDmChannelDecoder: Decoder[RawDMChannel] = deriveDecoder
-
-  implicit val rawGuildChannelEncoder: Encoder[RawGuildChannel] = deriveEncoder
-  implicit val rawGuildChannelDecoder: Decoder[RawGuildChannel] = deriveDecoder
-
   implicit val rawChannelEncoder: Encoder[RawChannel] = deriveEncoder
   implicit val rawChannelDecoder: Decoder[RawChannel] = deriveDecoder
 
   implicit val rawGuildEncoder: Encoder[RawGuild] = deriveEncoder
   implicit val rawGuildDecoder: Decoder[RawGuild] = deriveDecoder
 
-  implicit val rawUnavailableGuildEncoder: Encoder[RawUnavailableGuild] = deriveEncoder
-  implicit val rawUnavailableGuildDecoder: Decoder[RawUnavailableGuild] = deriveDecoder
+  implicit val unavailableGuildEncoder: Encoder[UnavailableGuild] = deriveEncoder
+  implicit val unavailableGuildDecoder: Decoder[UnavailableGuild] = deriveDecoder
 
   implicit val permissionEncoder: Encoder[Permission] = Encoder[Int].contramap(_.int)
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Int].emap(i => Right(Permission.fromInt(i)))
@@ -142,22 +153,23 @@ trait DiscordProtocol {
     val isWebhook = c.fields.exists(_.contains("webhook_id"))
 
     for {
-      id              <- c.downField("id").as[MessageId]
-      channelId       <- c.downField("channel_id").as[ChannelId]
-      author          <- if (isWebhook) c.downField("author").as[WebhookAuthor] else c.downField("author").as[User]
-      content         <- c.downField("content").as[String]
-      timestamp       <- c.downField("timestamp").as[OffsetDateTime]
-      editedTimestamp <- c.downField("edited_timestamp").as[Option[OffsetDateTime]]
-      tts             <- c.downField("tts").as[Boolean]
-      mentionEveryone <- c.downField("mention_everyone").as[Boolean]
-      mentions        <- c.downField("mentions").as[Seq[User]]
-      mentionRoles    <- c.downField("mention_roles").as[Seq[RoleId]]
-      attachment      <- c.downField("attachments").as[Seq[Attachment]]
-      embeds          <- c.downField("embeds").as[Seq[ReceivedEmbed]]
-      reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
-      nonce           <- c.downField("nonce").as[Option[Snowflake]]
-      pinned          <- c.downField("pinned").as[Boolean]
-      webhookId       <- c.downField("webhook_id").as[Option[String]]
+      id              <- c.get[MessageId]("id")
+      channelId       <- c.get[ChannelId]("channel_id")
+      author          <- if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")
+      content         <- c.get[String]("content")
+      timestamp       <- c.get[OffsetDateTime]("timestamp")
+      editedTimestamp <- c.get[Option[OffsetDateTime]]("edited_timestamp")
+      tts             <- c.get[Boolean]("tts")
+      mentionEveryone <- c.get[Boolean]("mention_everyone")
+      mentions        <- c.get[Seq[User]]("mentions")
+      mentionRoles    <- c.get[Seq[RoleId]]("mention_roles")
+      attachment      <- c.get[Seq[Attachment]]("attachments")
+      embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
+      reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
+      nonce           <- c.get[Option[Snowflake]]("nonce")
+      pinned          <- c.get[Boolean]("pinned")
+      webhookId       <- c.get[Option[String]]("webhook_id")
+      tpe             <- c.get[MessageType]("type")
     } yield
       RawMessage(
         id,
@@ -175,7 +187,8 @@ trait DiscordProtocol {
         reactions,
         nonce,
         pinned,
-        webhookId
+        webhookId,
+        tpe
       )
   }
 

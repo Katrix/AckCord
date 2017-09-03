@@ -31,6 +31,7 @@ trait Handlers {
 
   //Update
   implicit val dmChannelUpdateHandler: CacheUpdateHandler[DMChannel] = updateHandler((builder, obj, _) => builder.dmChannels.put(obj.id, obj))
+  implicit val groupDmChannelUpdateHandler: CacheUpdateHandler[GroupDMChannel] = updateHandler((builder, obj, _) => builder.groupDmChannels.put(obj.id, obj))
   implicit val guildChannelUpdateHandler: CacheUpdateHandler[GuildChannel] = updateHandler { (builder, obj, log) =>
     builder
       .getGuild(obj.guildId)
@@ -40,10 +41,12 @@ trait Handlers {
       case Left(e)      => log.warning(e)
     }
   }
+
   implicit val channelUpdateHandler: CacheUpdateHandler[Channel] = updateHandler { (builder, obj, log) =>
     obj match {
-      case dmChannel: DMChannel       => handleUpdateLog(builder, dmChannel, log)
-      case guildChannel: GuildChannel => handleUpdateLog(builder, guildChannel, log)
+      case dmChannel: DMChannel           => handleUpdateLog(builder, dmChannel, log)
+      case groupDmChannel: GroupDMChannel => handleUpdateLog(builder, groupDmChannel, log)
+      case guildChannel: GuildChannel     => handleUpdateLog(builder, guildChannel, log)
     }
   }
 
@@ -57,6 +60,7 @@ trait Handlers {
 
   //Delete
   implicit val dmChannelDeleteHandler: CacheDeleteHandler[DMChannel] = deleteHandler((builder, obj, _) => builder.dmChannels.remove(obj.id))
+  implicit val groupDmChannelDeleteHandler: CacheDeleteHandler[GroupDMChannel] = deleteHandler((builder, obj, _) => builder.groupDmChannels.remove(obj.id))
   implicit val guildChannelDeleteHandler: CacheDeleteHandler[GuildChannel] = deleteHandler { (builder, obj, log) =>
     builder.getGuild(obj.guildId) match {
       case Some(guild) => builder.guilds.put(guild.id, guild.copy(channels = guild.channels - obj.id))

@@ -23,11 +23,91 @@
  */
 package net.katsstuff.akkacord.data
 
-import java.time.{Instant, OffsetDateTime}
+import java.time.OffsetDateTime
 
 sealed trait UnknownStatusGuild {
   def id:          GuildId
   def unavailable: Boolean
+}
+
+trait VerificationLevel
+object VerificationLevel {
+  object NoneVerification extends VerificationLevel
+  object Low              extends VerificationLevel
+  object Medium           extends VerificationLevel
+  object High             extends VerificationLevel
+  object VeryHigh         extends VerificationLevel
+
+  def forId(id: Int): Option[VerificationLevel] = id match {
+    case 0 => Some(NoneVerification)
+    case 1 => Some(Low)
+    case 2 => Some(Medium)
+    case 3 => Some(High)
+    case 4 => Some(VeryHigh)
+    case _ => None
+  }
+
+  def idFor(lvl: VerificationLevel): Int = lvl match {
+    case NoneVerification => 0
+    case Low              => 1
+    case Medium           => 2
+    case High             => 3
+    case VeryHigh         => 4
+  }
+}
+
+trait NotificationLevel
+object NotificationLevel {
+  object AllMessages  extends NotificationLevel
+  object OnlyMentions extends NotificationLevel
+
+  def forId(id: Int): Option[NotificationLevel] = id match {
+    case 0 => Some(AllMessages)
+    case 1 => Some(OnlyMentions)
+    case _ => None
+  }
+
+  def idFor(lvl: NotificationLevel): Int = lvl match {
+    case AllMessages  => 0
+    case OnlyMentions => 1
+  }
+}
+
+trait FilterLevel
+object FilterLevel {
+  object Disabled            extends FilterLevel
+  object MembersWithoutRoles extends FilterLevel
+  object AllMembers          extends FilterLevel
+
+  def forId(id: Int): Option[FilterLevel] = id match {
+    case 0 => Some(Disabled)
+    case 1 => Some(MembersWithoutRoles)
+    case 2 => Some(AllMembers)
+    case _ => None
+  }
+
+  def idFor(lvl: FilterLevel): Int = lvl match {
+    case Disabled            => 0
+    case MembersWithoutRoles => 1
+    case AllMembers          => 2
+  }
+}
+
+trait MFALevel
+object MFALevel {
+  object NoneMFA  extends MFALevel
+  object Elevated extends MFALevel
+
+  def forId(id: Int): Option[MFALevel] = id match {
+    case 0 => Some(NoneMFA)
+    case 1 => Some(Elevated)
+    case _ => None
+  }
+
+  def idFor(lvl: MFALevel): Int = lvl match {
+    case NoneMFA  => 0
+    case Elevated => 1
+  }
 }
 
 case class Guild(
@@ -36,20 +116,25 @@ case class Guild(
     icon: Option[String], ////Icon can be null
     splash: Option[String], //Splash can be null
     ownerId: UserId,
+    region: String,
     afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     embedEnabled: Option[Boolean], //embedEnabled can be missing
     embedChannelId: Option[ChannelId], //embedChannelId can be missing
-    verificationLevel: Int, //TODO: Better than Int here
-    defaultMessageNotifications: Int, //TODO: Better than int here
+    verificationLevel: VerificationLevel,
+    defaultMessageNotifications: NotificationLevel,
+    explicitContentFilter: FilterLevel,
     roles: Map[RoleId, Role],
     emojis: Map[EmojiId, GuildEmoji],
-    //features:                    Seq[Feature], //TODO: What is a feature?
-    mfaLevel: Int, //TODO: Better than int here
+    features: Seq[String], //TODO: What is a feature?
+    mfaLevel: MFALevel,
+    applicationId: Option[Snowflake],
+    widgetEnabled: Boolean,
+    widgetChannelId: ChannelId,
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
-    voiceStates: Seq[VoiceState],
+    voiceStates: Seq[VoiceState], //guildId is always absent in these
     members: Map[UserId, GuildMember],
     channels: Map[ChannelId, GuildChannel],
     presences: Map[UserId, Presence]
@@ -57,12 +142,18 @@ case class Guild(
   override def unavailable: Boolean = false
 }
 
-case class UnavailableGuild(id: GuildId) extends UnknownStatusGuild {
-  override def unavailable: Boolean = true
-}
+case class UnavailableGuild(id: GuildId, unavailable: Boolean) extends UnknownStatusGuild
 
-case class GuildMember(userId: UserId, guildId: GuildId, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
-    extends GetUser with GetGuild
+case class GuildMember(
+    userId: UserId,
+    guildId: GuildId,
+    nick: Option[String],
+    roles: Seq[RoleId],
+    joinedAt: OffsetDateTime,
+    deaf: Boolean,
+    mute: Boolean
+) extends GetUser
+    with GetGuild
 case class GuildEmoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
 
 sealed trait PresenceContent {
@@ -72,24 +163,27 @@ case class PresenceGame(name: String)                   extends PresenceContent
 case class PresenceStreaming(name: String, uri: String) extends PresenceContent
 sealed trait PresenceStatus
 object PresenceStatus {
-  case object Idle         extends PresenceStatus
   case object Online       extends PresenceStatus
-  case object Offline      extends PresenceStatus
   case object DoNotDisturb extends PresenceStatus
+  case object Idle         extends PresenceStatus
+  case object Invisible    extends PresenceStatus
+  case object Offline      extends PresenceStatus
 
   def nameOf(status: PresenceStatus): String = status match {
-    case Idle => "idle"
-    case Online => "online"
-    case Offline => "offline"
+    case Online       => "online"
     case DoNotDisturb => "dnd"
+    case Idle         => "idle"
+    case Invisible    => "invisible"
+    case Offline      => "offline"
   }
 
   def forName(name: String): Option[PresenceStatus] = name match {
-    case "idle" => Some(Idle)
-    case "online" => Some(Online)
-    case "offline" => Some(Offline)
-    case "dnd" => Some(DoNotDisturb)
-    case _ => None
+    case "online"    => Some(Online)
+    case "dnd"       => Some(DoNotDisturb)
+    case "idle"      => Some(Idle)
+    case "invisible" => Some(Invisible)
+    case "offline"   => Some(Offline)
+    case _           => None
   }
 }
 case class Presence(userId: UserId, game: Option[PresenceContent], status: PresenceStatus) extends GetUser
@@ -105,9 +199,9 @@ case class Integration(
     expireGracePeriod: Int,
     user: User,
     account: IntegrationAccount,
-    syncedAt: Instant
+    syncedAt: OffsetDateTime
 )
 
-case class IntegrationAccount(id: String /*TODO: Is String correct here*/, name: String)
+case class IntegrationAccount(id: String, name: String)
 
 case class GuildEmbed(enabled: Boolean, channelId: ChannelId)

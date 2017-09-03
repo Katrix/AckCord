@@ -37,6 +37,7 @@ trait CacheSnapshotLike {
 
   def botUser:           User @@ BotUser
   def dmChannels:        MapType[ChannelId, DMChannel]
+  def groupDmChannels:   MapType[ChannelId, GroupDMChannel]
   def unavailableGuilds: MapType[GuildId, UnavailableGuild]
   def guilds:            MapType[GuildId, Guild]
   def messages:          MapType[ChannelId, MapType[MessageId, Message]]
@@ -45,6 +46,7 @@ trait CacheSnapshotLike {
   def presences:         MapType[GuildId, MapType[UserId, Presence]]
 
   def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannels.get(id)
+  def getGroupDmChannel(id: ChannelId): Option[GroupDMChannel] = groupDmChannels.get(id)
 
   def getGuild(id: GuildId):                Option[Guild]              = guilds.get(id)
   def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] = guilds.get(id).orElse(unavailableGuilds.get(id))

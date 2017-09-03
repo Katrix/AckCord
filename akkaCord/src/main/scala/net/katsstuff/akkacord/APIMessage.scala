@@ -39,6 +39,8 @@ object APIMessage {
   case class ChannelUpdate(channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
   case class ChannelDelete(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)      extends APIMessage
 
+  case class ChannelPinsUpdate(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+
   case class GuildCreate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                       extends APIMessage
   case class GuildUpdate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                       extends APIMessage
   case class GuildDelete(guild: Guild, unavailable: Boolean, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
@@ -96,5 +98,7 @@ object APIMessage {
 
   case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)                         extends APIMessage
   case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+
+  case class WebhookUpdate(guild: Guild, channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
 
 }

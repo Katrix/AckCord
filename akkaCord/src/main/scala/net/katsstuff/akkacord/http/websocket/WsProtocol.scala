@@ -47,9 +47,6 @@ object WsProtocol extends DiscordProtocol {
   implicit val resumedDataEncoder: Encoder[WsEvent.ResumedData] = deriveEncoder
   implicit val resumedDataDecoder: Decoder[WsEvent.ResumedData] = deriveDecoder
 
-  implicit val guildDeleteDataEncoder: Encoder[WsEvent.GuildDeleteData] = deriveEncoder
-  implicit val guildDeleteDataDecoder: Decoder[WsEvent.GuildDeleteData] = deriveDecoder
-
   implicit val guildEmojisUpdateDataEncoder: Encoder[WsEvent.GuildEmojisUpdateData] = {
     import io.circe.generic.extras.auto._
     deriveEncoder
@@ -110,8 +107,8 @@ object WsProtocol extends DiscordProtocol {
     deriveDecoder
   }
 
-  implicit val voiceStatusDataEncoder: Encoder[VoiceStatusData] = deriveEncoder
-  implicit val voiceStatusDataDecoder: Decoder[VoiceStatusData] = deriveDecoder
+  implicit val voiceStatusDataEncoder: Encoder[VoiceStateData] = deriveEncoder
+  implicit val voiceStatusDataDecoder: Decoder[VoiceStateData] = deriveDecoder
 
   implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
   implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
@@ -124,6 +121,21 @@ object WsProtocol extends DiscordProtocol {
 
   implicit val rawGuildMemberWithGuildEncoder: Encoder[WsEvent.RawGuildMemberWithGuild] = deriveEncoder
   implicit val rawGuildMemberWithGuildDecoder: Decoder[WsEvent.RawGuildMemberWithGuild] = deriveDecoder
+
+  implicit val channelPinsUpdateDataEncoder: Encoder[WsEvent.ChannelPinsUpdateData] = deriveEncoder
+  implicit val channelPinsUpdateDataDecoder: Decoder[WsEvent.ChannelPinsUpdateData] = deriveDecoder
+
+  implicit val messageEmojiEncoder: Encoder[MessageEmoji] = deriveEncoder
+  implicit val messageEmojiDecoder: Decoder[MessageEmoji] = deriveDecoder
+
+  implicit val messageReactionDataEncoder: Encoder[WsEvent.MessageReactionData] = deriveEncoder
+  implicit val messageReactionDataDecoder: Decoder[WsEvent.MessageReactionData] = deriveDecoder
+
+  implicit val messageReactionRemoveAllDataEncoder: Encoder[WsEvent.MessageReactionRemoveAllData] = deriveEncoder
+  implicit val messageReactionRemoveAllDataDecoder: Decoder[WsEvent.MessageReactionRemoveAllData] = deriveDecoder
+
+  implicit val webhookUpdateDataEncoder: Encoder[WsEvent.WebhookUpdateData] = deriveEncoder
+  implicit val webhookUpdateDataDecoder: Decoder[WsEvent.WebhookUpdateData] = deriveDecoder
 
   implicit def wsMessageEncoder[Data: Encoder]: Encoder[WsMessage[Data]] =
     (a: WsMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
@@ -207,14 +219,14 @@ object WsProtocol extends DiscordProtocol {
         case OpCode.Heartbeat           => dC.as[Option[Int]].map(Heartbeat.apply)
         case OpCode.Identify            => dC.as[IdentifyObject].map(Identify.apply)
         case OpCode.StatusUpdate        => dC.as[StatusData].map(StatusUpdate.apply)
-        case OpCode.VoiceStateUpdate    => dC.as[VoiceStatusData].map(VoiceStateUpdate.apply)
+        case OpCode.VoiceStateUpdate    => dC.as[VoiceStateData].map(VoiceStateUpdate.apply)
         case OpCode.VoiceServerPing     => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)
         case OpCode.Resume              => dC.as[ResumeData].map(Resume.apply)
-        case OpCode.Reconnect           => Right(Reconnect(NotUsed))
+        case OpCode.Reconnect           => Right(Reconnect)
         case OpCode.RequestGuildMembers => dC.as[RequestGuildMembersData].map(RequestGuildMembers.apply)
-        case OpCode.InvalidSession      => Right(InvalidSession(NotUsed))
+        case OpCode.InvalidSession      => dC.as[Boolean].map(InvalidSession.apply)
         case OpCode.Hello               => dC.as[HelloData].map(Hello.apply)
-        case OpCode.HeartbeatACK        => Right(HeartbeatACK(NotUsed))
+        case OpCode.HeartbeatACK        => Right(HeartbeatACK)
       }
     }
   }
@@ -230,34 +242,39 @@ object WsProtocol extends DiscordProtocol {
         c.downField("t")
           .as[WsEvent[_]]
           .flatMap {
-            case event @ WsEvent.Ready                   => dC.as[WsEvent.ReadyData].map(createDispatch(seq, event))
-            case event @ WsEvent.Resumed                 => dC.as[WsEvent.ResumedData].map(createDispatch(seq, event))
-            case event @ WsEvent.ChannelCreate           => dC.as[RawChannel].map(createDispatch(seq, event))
-            case event @ WsEvent.ChannelUpdate           => dC.as[RawGuildChannel].map(createDispatch(seq, event))
-            case event @ WsEvent.ChannelDelete           => dC.as[RawChannel].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildCreate             => dC.as[RawGuild].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildUpdate             => dC.as[RawGuild].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildDelete             => dC.as[WsEvent.GuildDeleteData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildBanAdd             => dC.as[WsEvent.GuildUser].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildBanRemove          => dC.as[WsEvent.GuildUser].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildEmojisUpdate       => dC.as[WsEvent.GuildEmojisUpdateData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildIntegrationsUpdate => dC.as[WsEvent.GuildIntegrationsUpdateData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildMemberAdd          => dC.as[WsEvent.RawGuildMemberWithGuild].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildMemberRemove       => dC.as[WsEvent.GuildMemberRemoveData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildMemberUpdate       => dC.as[WsEvent.GuildMemberUpdateData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildMemberChunk        => dC.as[WsEvent.GuildMemberChunkData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildRoleCreate         => dC.as[WsEvent.GuildRoleModifyData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildRoleUpdate         => dC.as[WsEvent.GuildRoleModifyData].map(createDispatch(seq, event))
-            case event @ WsEvent.GuildRoleDelete         => dC.as[WsEvent.GuildRoleDeleteData].map(createDispatch(seq, event))
-            case event @ WsEvent.MessageCreate           => dC.as[RawMessage].map(createDispatch(seq, event))
-            case event @ WsEvent.MessageUpdate           => dC.as[WsEvent.RawPartialMessage].map(createDispatch(seq, event))
-            case event @ WsEvent.MessageDelete           => dC.as[WsEvent.MessageDeleteData].map(createDispatch(seq, event))
-            case event @ WsEvent.MessageDeleteBulk       => dC.as[WsEvent.MessageDeleteBulkData].map(createDispatch(seq, event))
-            case event @ WsEvent.PresenceUpdate          => dC.as[WsEvent.PresenceUpdateData].map(createDispatch(seq, event))
-            case event @ WsEvent.TypingStart             => dC.as[WsEvent.TypingStartData].map(createDispatch(seq, event))
-            case event @ WsEvent.UserUpdate              => dC.as[User].map(createDispatch(seq, event))
-            case event @ WsEvent.VoiceStateUpdate        => dC.as[VoiceState].map(createDispatch(seq, event))
-            case event @ WsEvent.VoiceServerUpdate       => dC.as[VoiceServerUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.Ready                    => dC.as[WsEvent.ReadyData].map(createDispatch(seq, event))
+            case event @ WsEvent.Resumed                  => dC.as[WsEvent.ResumedData].map(createDispatch(seq, event))
+            case event @ WsEvent.ChannelCreate            => dC.as[RawChannel].map(createDispatch(seq, event))
+            case event @ WsEvent.ChannelUpdate            => dC.as[RawChannel].map(createDispatch(seq, event))
+            case event @ WsEvent.ChannelDelete            => dC.as[RawChannel].map(createDispatch(seq, event))
+            case event @ WsEvent.ChannelPinsUpdate        => dC.as[WsEvent.ChannelPinsUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildCreate              => dC.as[RawGuild].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildUpdate              => dC.as[RawGuild].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildDelete              => dC.as[UnavailableGuild].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildBanAdd              => dC.as[WsEvent.GuildUser].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildBanRemove           => dC.as[WsEvent.GuildUser].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildEmojisUpdate        => dC.as[WsEvent.GuildEmojisUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildIntegrationsUpdate  => dC.as[WsEvent.GuildIntegrationsUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildMemberAdd           => dC.as[WsEvent.RawGuildMemberWithGuild].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildMemberRemove        => dC.as[WsEvent.GuildMemberRemoveData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildMemberUpdate        => dC.as[WsEvent.GuildMemberUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildMemberChunk         => dC.as[WsEvent.GuildMemberChunkData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildRoleCreate          => dC.as[WsEvent.GuildRoleModifyData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildRoleUpdate          => dC.as[WsEvent.GuildRoleModifyData].map(createDispatch(seq, event))
+            case event @ WsEvent.GuildRoleDelete          => dC.as[WsEvent.GuildRoleDeleteData].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageCreate            => dC.as[RawMessage].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageUpdate            => dC.as[WsEvent.RawPartialMessage].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageDelete            => dC.as[WsEvent.MessageDeleteData].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageDeleteBulk        => dC.as[WsEvent.MessageDeleteBulkData].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageReactionAdd       => dC.as[WsEvent.MessageReactionData].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageReactionRemove    => dC.as[WsEvent.MessageReactionData].map(createDispatch(seq, event))
+            case event @ WsEvent.MessageReactionRemoveAll => dC.as[WsEvent.MessageReactionRemoveAllData].map(createDispatch(seq, event))
+            case event @ WsEvent.PresenceUpdate           => dC.as[WsEvent.PresenceUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.TypingStart              => dC.as[WsEvent.TypingStartData].map(createDispatch(seq, event))
+            case event @ WsEvent.UserUpdate               => dC.as[User].map(createDispatch(seq, event))
+            case event @ WsEvent.VoiceStateUpdate         => dC.as[VoiceState].map(createDispatch(seq, event))
+            case event @ WsEvent.VoiceServerUpdate        => dC.as[VoiceServerUpdateData].map(createDispatch(seq, event))
+            case event @ WsEvent.WebhookUpdate            => dC.as[WsEvent.WebhookUpdateData].map(createDispatch(seq, event))
           }
       }
   }

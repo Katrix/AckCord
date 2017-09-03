@@ -32,95 +32,74 @@ import net.katsstuff.akkacord.http.websocket.WsEvent.PresenceUpdateData
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
-    val PresenceUpdateData(partialUser, roles, game, optGuildId, status) = obj
+    val PresenceUpdateData(partialUser, roles, game, guildId, status) = obj
+    if (builder.guilds.contains(guildId)) {
+      //Add the user
+      builder.getUser(partialUser.id) match {
+        case Some(existingUser) =>
+          val newUser = existingUser.copy(
+            username = partialUser.username.getOrElse(existingUser.username),
+            discriminator = partialUser.discriminator.getOrElse(existingUser.discriminator),
+            avatar = partialUser.avatar.orElse(existingUser.avatar),
+            bot = partialUser.bot.orElse(existingUser.bot),
+            mfaEnabled = partialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
+            verified = partialUser.verified.orElse(existingUser.verified),
+            email = partialUser.email.orElse(existingUser.email)
+          )
+          builder.users.put(existingUser.id, newUser)
 
-    optGuildId match {
-      case Some(guildId) if builder.guilds.contains(guildId) =>
-
-        //Add the user
-        builder.getUser(partialUser.id) match {
-          case Some(existingUser) =>
-            val newUser = existingUser.copy(
-              username = partialUser.username.getOrElse(existingUser.username),
-              discriminator = partialUser.discriminator.getOrElse(existingUser.discriminator),
-              avatar = partialUser.avatar.orElse(existingUser.avatar),
-              bot = partialUser.bot.orElse(existingUser.bot),
-              mfaEnabled = partialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
-              verified = partialUser.verified.orElse(existingUser.verified),
-              email = partialUser.email.orElse(existingUser.email)
+        case None =>
+          //Let's try to create a user
+          for {
+            username      <- partialUser.username
+            discriminator <- partialUser.discriminator
+          } {
+            val newUser = User(
+              partialUser.id,
+              username,
+              discriminator,
+              partialUser.avatar,
+              partialUser.bot,
+              partialUser.mfaEnabled,
+              partialUser.verified,
+              partialUser.email
             )
-            builder.users.put(existingUser.id, newUser)
 
-          case None =>
-            //Let's try to create a user
-            for {
-              username      <- partialUser.username
-              discriminator <- partialUser.discriminator
-            } {
-              val newUser = User(
-                partialUser.id,
-                username,
-                discriminator,
-                partialUser.avatar,
-                partialUser.bot,
-                partialUser.mfaEnabled,
-                partialUser.verified,
-                partialUser.email
-              )
+            builder.users.put(partialUser.id, newUser)
+          }
+      }
 
-              builder.users.put(partialUser.id, newUser)
-            }
-        }
-
-        //Add the presence
-        builder.getPresence(guildId, partialUser.id) match {
-          case Some(presence) =>
-            val newPresence = game
-              .map {
-                case RawPresenceGame(name, gameType, url) =>
-                  val newName = name.orElse(presence.game.map(_.name))
-                  val content = newName.flatMap { name =>
-                    gameType.flatMap {
-                      case 0 => Some(PresenceGame(name))
-                      case 1 => url.map(PresenceStreaming(name, _))
-                    }
-                  }
-
-                  val newStatus = status.getOrElse(presence.status)
-                  Presence(partialUser.id, content, newStatus)
-              }
-              .getOrElse(presence)
-
-            builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
-          case None =>
-            game.foreach {
-              case RawPresenceGame(name, gameType, url) =>
-                val content = name.flatMap { name =>
-                  gameType.flatMap {
-                    case 0 => Some(PresenceGame(name))
-                    case 1 => url.map(PresenceStreaming(name, _))
-                  }
-                }
-
-                status.foreach { status =>
-                  builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, Presence(partialUser.id, content, status))
-                }
-            }
-        }
-
-        val guild = builder.guilds(guildId)
-
-        //Update roles
-        guild.members
-          .get(partialUser.id)
-          .map(m => guild.members + ((partialUser.id, m.copy(roles = roles))))
-          .foreach { newMembers =>
-            val newGuild = guild.copy(members = newMembers)
-            builder.guilds.put(guildId, newGuild)
+      val optNewPresence = game.map {
+        case RawPresenceGame(name, gameType, url) =>
+          val content = gameType match {
+            case 0 => Some(PresenceGame(name))
+            case 1 => url.map(PresenceStreaming(name, _))
           }
 
-      case _ =>
-      //TODO: What to do if no guild id?
+          Presence(partialUser.id, content, status)
+      }
+
+      //Add the presence
+      builder.getPresence(guildId, partialUser.id) match {
+        case Some(presence) =>
+          val newPresence = optNewPresence.getOrElse(presence)
+          builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
+        case None =>
+          optNewPresence.foreach { newPresence =>
+            builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
+          }
+      }
+
+      val guild = builder.guilds(guildId)
+
+      //Update roles
+      guild.members
+        .get(partialUser.id)
+        .map(m => guild.members + ((partialUser.id, m.copy(roles = roles))))
+        .foreach { newMembers =>
+          val newGuild = guild.copy(members = newMembers)
+          builder.guilds.put(guildId, newGuild)
+        }
     }
   }
 }

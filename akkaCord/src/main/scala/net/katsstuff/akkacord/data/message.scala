@@ -36,6 +36,41 @@ object AvatarData {
   }
 }
 
+trait MessageType
+object MessageType {
+  object Default              extends MessageType
+  object RecipientAdd         extends MessageType
+  object RecipientRemove      extends MessageType
+  object Call                 extends MessageType
+  object ChannelNameChange    extends MessageType
+  object ChannelIconChange    extends MessageType
+  object ChannelPinnedMessage extends MessageType
+  object GuildMemberJoin      extends MessageType
+
+  def forId(id: Int): Option[MessageType] = id match {
+    case 0 => Some(Default)
+    case 1 => Some(RecipientAdd)
+    case 2 => Some(RecipientRemove)
+    case 3 => Some(Call)
+    case 4 => Some(ChannelNameChange)
+    case 5 => Some(ChannelIconChange)
+    case 6 => Some(ChannelPinnedMessage)
+    case 7 => Some(GuildMemberJoin)
+    case _ => None
+  }
+
+  def idFor(tpe: MessageType): Int = tpe match {
+    case Default              => 0
+    case RecipientAdd         => 1
+    case RecipientRemove      => 2
+    case Call                 => 3
+    case ChannelNameChange    => 4
+    case ChannelIconChange    => 5
+    case ChannelPinnedMessage => 6
+    case GuildMemberJoin      => 7
+  }
+}
+
 sealed trait Author
 case class WebhookAuthor(id: Snowflake, name: String, avatar: AvatarData) extends Author
 //Remember to edit PartialUser when editing this
@@ -66,12 +101,14 @@ case class Message(
     reactions: Seq[Reaction],
     nonce: Option[Snowflake],
     pinned: Boolean,
-    webhookId: Option[String]
+    webhookId: Option[String],
+    messageType: MessageType
 ) extends GetChannel
 
 case class Reaction(count: Int, me: Boolean, emoji: MessageEmoji)
-case class MessageEmoji(id: Option[EmojiId], name: String)
+case class MessageEmoji(id: Option[EmojiId], name: String) //TODO: Change to partial GuildEmoji
 
+//TODO: Why all options here?
 case class ReceivedEmbed(
     title: Option[String],
     `type`: Option[String],
@@ -122,6 +159,7 @@ case class EmbedField(name: String, value: String, inline: Option[Boolean] = Non
 
 case class Attachment(id: Snowflake, filename: String, size: Int, url: String, proxyUrl: String, height: Option[Int], width: Option[Int])
 
+//TODO: Why all options here?
 case class OutgoingEmbed(
     title: Option[String] = None,
     description: Option[String] = None,

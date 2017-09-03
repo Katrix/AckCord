@@ -33,6 +33,7 @@ import shapeless.tag._
 case class CacheSnapshot(
     botUser: User @@ BotUser,
     dmChannels: Map[ChannelId, DMChannel],
+    groupDmChannels: Map[ChannelId, GroupDMChannel],
     unavailableGuilds: Map[GuildId, UnavailableGuild],
     guilds: Map[GuildId, Guild],
     messages: Map[ChannelId, Map[MessageId, Message]],

@@ -51,27 +51,33 @@ case class Heartbeat(d: Option[Int]) extends WsMessage[Option[Int]] {
   override def op: OpCode = OpCode.Heartbeat
 }
 
-case class IdentifyObject(token: String, properties: Map[String, String], compress: Boolean, largeThreshold: Int, shard: Seq[Int])
+case class IdentifyObject(
+    token: String,
+    properties: Map[String, String],
+    compress: Boolean,
+    largeThreshold: Int,
+    shard: Seq[Int],
+    presence: StatusData
+)
 object IdentifyObject {
   def createProperties: Map[String, String] =
-    Map("$os" -> "linux", "$browser" -> "AkkaCord", "$device" -> "AkkaCord", "$referrer" -> "", "$referring_domain" -> "")
+    Map("$os" -> System.getProperty("os.name"), "$browser" -> "AkkaCord", "$device" -> "AkkaCord")
 }
 case class Identify(d: IdentifyObject) extends WsMessage[IdentifyObject] {
-  override def op = OpCode.Identify
+  override def op: OpCode = OpCode.Identify
 }
 
-case class Game(name: String)
-case class StatusData(idleSince: Option[Int], game: Option[Game])
+case class StatusData(since: Option[Instant], game: Option[RawPresenceGame], status: PresenceStatus, afk: Boolean)
 case class StatusUpdate(d: StatusData) extends WsMessage[StatusData] {
   override def op: OpCode = OpCode.StatusUpdate
 }
 
-case class VoiceStatusData(guildId: GuildId, channelId: ChannelId, selfMute: Boolean, selfDeaf: Boolean)
-case class VoiceStateUpdate(d: VoiceStatusData) extends WsMessage[VoiceStatusData] {
+case class VoiceStateData(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean)
+case class VoiceStateUpdate(d: VoiceStateData) extends WsMessage[VoiceStateData] {
   override def op: OpCode = OpCode.VoiceStateUpdate
 }
 
-//Is it serverUpdate or ping?
+//TODO: Is this still used?
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
 case class VoiceServerUpdate(d: VoiceServerUpdateData) extends WsMessage[VoiceServerUpdateData] {
   override def op: OpCode = OpCode.VoiceServerPing
@@ -82,8 +88,9 @@ case class Resume(d: ResumeData) extends WsMessage[ResumeData] {
   override def op: OpCode = OpCode.Resume
 }
 
-case class Reconnect(d: NotUsed) extends WsMessage[NotUsed] {
-  override def op: OpCode = OpCode.Reconnect
+case object Reconnect extends WsMessage[NotUsed] {
+  override def op: OpCode  = OpCode.Reconnect
+  override def d:  NotUsed = NotUsed
 }
 
 case class RequestGuildMembersData(guildId: GuildId, query: String, limit: Int)
@@ -91,8 +98,9 @@ case class RequestGuildMembers(d: RequestGuildMembersData) extends WsMessage[Req
   override def op: OpCode = OpCode.RequestGuildMembers
 }
 
-case class InvalidSession(d: NotUsed) extends WsMessage[NotUsed] {
-  override def op: OpCode = OpCode.InvalidSession
+case class InvalidSession(resumable: Boolean) extends WsMessage[Boolean] {
+  override def op: OpCode  = OpCode.InvalidSession
+  override def d:  Boolean = resumable
 }
 
 case class HelloData(heartbeatInterval: Int, _trace: Seq[String])
@@ -100,8 +108,9 @@ case class Hello(d: HelloData) extends WsMessage[HelloData] {
   override def op: OpCode = OpCode.Hello
 }
 
-case class HeartbeatACK(d: NotUsed) extends WsMessage[NotUsed] {
-  override def op: OpCode = OpCode.HeartbeatACK
+case object HeartbeatACK extends WsMessage[NotUsed] {
+  override def op: OpCode  = OpCode.HeartbeatACK
+  override def d:  NotUsed = NotUsed
 }
 
 sealed abstract case class OpCode(code: Int)
@@ -142,23 +151,22 @@ sealed abstract case class WsEvent[Data](
     createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
 )
 object WsEvent {
+  private def notImplementedHandler[A] = new CacheHandler[A] {
+    override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
+      log.warning(s"Not implemented handler for $obj")
+  }
+
   case class ReadyData(
       v: Int,
       user: User,
-      privateChannels: Seq[RawDMChannel],
-      guilds: Seq[RawUnavailableGuild],
+      privateChannels: Seq[RawChannel],
+      guilds: Seq[UnavailableGuild],
       sessionId: String,
       _trace: Seq[String]
   )
   object Ready extends WsEvent[ReadyData]("READY", ReadyHandler, _ => (n, o) => Some(APIMessage.Ready(n, o)))
 
   case class ResumedData(_trace: Seq[String])
-
-  private def notImplementedHandler[A] = new CacheHandler[A] {
-    override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
-      log.warning(s"Not implemented handler for $obj")
-  }
-
   object Resumed extends WsEvent[ResumedData]("RESUMED", new NOOPHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
 
   object ChannelCreate
@@ -169,9 +177,9 @@ object WsEvent {
       )
 
   object ChannelUpdate
-      extends WsEvent[RawGuildChannel](
+      extends WsEvent[RawChannel](
         "CHANNEL_UPDATE",
-        RawHandlers.rawGuildChannelUpdateHandler,
+        RawHandlers.rawChannelUpdateHandler,
         data => (current, prev) => current.getGuildChannel(data.id).map(c => APIMessage.ChannelUpdate(c, current, prev))
       )
 
@@ -180,6 +188,14 @@ object WsEvent {
         "CHANNEL_DELETE",
         RawHandlers.rawChannelDeleteHandler,
         data => (current, prev) => prev.getGuildChannel(data.id).map(c => APIMessage.ChannelDelete(c, current, prev))
+      )
+
+  case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: Option[OffsetDateTime])
+  object ChannelPinsUpdate
+      extends WsEvent[ChannelPinsUpdateData](
+        "CHANNEL_PINS_UPDATE",
+        notImplementedHandler,
+        data => (current, prev) => current.getChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
       )
 
   object GuildCreate
@@ -195,9 +211,8 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, current, prev))
       )
 
-  case class GuildDeleteData(id: GuildId, unavailable: Boolean)
   object GuildDelete
-      extends WsEvent[GuildDeleteData](
+      extends WsEvent[UnavailableGuild](
         "GUILD_DELETE",
         RawHandlers.deleteGuildDataHandler,
         data => (current, prev) => prev.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, current, prev))
@@ -251,9 +266,17 @@ object WsEvent {
               mem <- g.members.get(guildMemberGen.from(data.tail).user.id)
             } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
       )
-  */
+   */
   //Remember to edit RawGuildMember when editing this
-  case class RawGuildMemberWithGuild(guildId: GuildId, user: User, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean) {
+  case class RawGuildMemberWithGuild(
+      guildId: GuildId,
+      user: User,
+      nick: Option[String],
+      roles: Seq[RoleId],
+      joinedAt: OffsetDateTime,
+      deaf: Boolean,
+      mute: Boolean
+  ) {
     def toRawGuildMember: RawGuildMember = RawGuildMember(user, nick, roles, joinedAt, deaf, mute)
   }
   object RawGuildMemberWithGuild {
@@ -262,16 +285,16 @@ object WsEvent {
   }
 
   object GuildMemberAdd
-    extends WsEvent[RawGuildMemberWithGuild](
-      "GUILD_MEMBER_ADD",
-      RawHandlers.rawGuildMemberWithGuildUpdateHandler,
-      data =>
-        (current, prev) =>
-          for {
-            g   <- current.getGuild(data.guildId)
-            mem <- g.members.get(data.user.id)
-          } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
-    )
+      extends WsEvent[RawGuildMemberWithGuild](
+        "GUILD_MEMBER_ADD",
+        RawHandlers.rawGuildMemberWithGuildUpdateHandler,
+        data =>
+          (current, prev) =>
+            for {
+              g   <- current.getGuild(data.guildId)
+              mem <- g.members.get(data.user.id)
+            } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
+      )
 
   case class GuildMemberRemoveData(guildId: GuildId, user: User)
   object GuildMemberRemove
@@ -281,7 +304,7 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
       )
 
-  case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //Nick can probably be null here
+  case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //TODO: Nick can probably be null here
   object GuildMemberUpdate
       extends WsEvent[GuildMemberUpdateData](
         "GUILD_MEMBER_UPDATE",
@@ -391,57 +414,58 @@ object WsEvent {
       )
 
   case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: MessageEmoji)
-  object MessageReactionAdd extends WsEvent[MessageReactionData](
-    "MESSAGE_REACTION_ADD",
-    RawHandlers.rawMessageReactionUpdateHandler,
-    data => (current, prev) => for {
-      user <- current.getUser(data.userId)
-      channel <- current.getChannel(data.channelId)
-      tChannel <- Typeable[TChannel].cast(channel)
-      message <- current.getMessage(data.channelId, data.messageId)
-    } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, current, prev)
-  )
+  object MessageReactionAdd
+      extends WsEvent[MessageReactionData](
+        "MESSAGE_REACTION_ADD",
+        RawHandlers.rawMessageReactionUpdateHandler,
+        data =>
+          (current, prev) =>
+            for {
+              user     <- current.getUser(data.userId)
+              channel  <- current.getChannel(data.channelId)
+              tChannel <- Typeable[TChannel].cast(channel)
+              message  <- current.getMessage(data.channelId, data.messageId)
+            } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, current, prev)
+      )
 
-  object MessageReactionRemove extends WsEvent[MessageReactionData](
-    "MESSAGE_REACTION_REMOVE",
-    RawHandlers.rawMessageReactionRemoveHandler,
-    data => (current, prev) => for {
-      user <- current.getUser(data.userId)
-      channel <- current.getChannel(data.channelId)
-      tChannel <- Typeable[TChannel].cast(channel)
-      message <- current.getMessage(data.channelId, data.messageId)
-    } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, current, prev)
-  )
+  object MessageReactionRemove
+      extends WsEvent[MessageReactionData](
+        "MESSAGE_REACTION_REMOVE",
+        RawHandlers.rawMessageReactionRemoveHandler,
+        data =>
+          (current, prev) =>
+            for {
+              user     <- current.getUser(data.userId)
+              channel  <- current.getChannel(data.channelId)
+              tChannel <- Typeable[TChannel].cast(channel)
+              message  <- current.getMessage(data.channelId, data.messageId)
+            } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, current, prev)
+      )
 
   case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId)
-  object MessageReactionRemoveAll extends WsEvent[MessageReactionRemoveAllData](
-    "MESSAGE_REACTION_REMOVE_ALL",
-    RawHandlers.rawMessageReactionRemoveAllHandler,
-    data => (current, prev) => for {
-      channel <- current.getChannel(data.channelId)
-      tChannel <- Typeable[TChannel].cast(channel)
-      message <- current.getMessage(data.channelId, data.messageId)
-    } yield APIMessage.MessageReactionRemoveAll(tChannel, message, current, prev)
-  )
+  object MessageReactionRemoveAll
+      extends WsEvent[MessageReactionRemoveAllData](
+        "MESSAGE_REACTION_REMOVE_ALL",
+        RawHandlers.rawMessageReactionRemoveAllHandler,
+        data =>
+          (current, prev) =>
+            for {
+              channel  <- current.getChannel(data.channelId)
+              tChannel <- Typeable[TChannel].cast(channel)
+              message  <- current.getMessage(data.channelId, data.messageId)
+            } yield APIMessage.MessageReactionRemoveAll(tChannel, message, current, prev)
+      )
 
-  case class PresenceUpdateData(
-      user: PartialUser,
-      roles: Seq[RoleId],
-      game: Option[RawPresenceGame],
-      guildId: Option[GuildId],
-      status: Option[PresenceStatus]
-  )
+  case class PresenceUpdateData(user: PartialUser, roles: Seq[RoleId], game: Option[RawPresenceGame], guildId: GuildId, status: PresenceStatus)
   object PresenceUpdate
       extends WsEvent[PresenceUpdateData](
         "PRESENCE_UPDATE",
         PresenceUpdateHandler,
         data =>
           (current, prev) =>
-            data.guildId.flatMap { guildId =>
-              current
-                .getPresence(guildId, data.user.id)
-                .map(presence => APIMessage.PresenceUpdate(presence, current, prev))
-        }
+            current
+              .getPresence(data.guildId, data.user.id)
+              .map(presence => APIMessage.PresenceUpdate(presence, current, prev))
       )
 
   case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)
@@ -482,12 +506,26 @@ object WsEvent {
         data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, current, prev))
       )
 
+  case class WebhookUpdateData(guildId: GuildId, channelId: ChannelId)
+  object WebhookUpdate
+      extends WsEvent[WebhookUpdateData](
+        "WEBHOOK_UPDATE",
+        notImplementedHandler,
+        data =>
+          (current, prev) =>
+            for {
+              guild   <- current.getGuild(data.guildId)
+              channel <- guild.channels.get(data.channelId)
+            } yield APIMessage.WebhookUpdate(guild, channel, current, prev)
+      )
+
   def forName(name: String): Option[WsEvent[_]] = name match {
     case "READY"                       => Some(Ready)
     case "RESUMED"                     => Some(Resumed)
     case "CHANNEL_CREATE"              => Some(ChannelCreate)
     case "CHANNEL_UPDATE"              => Some(ChannelUpdate)
     case "CHANNEL_DELETE"              => Some(ChannelDelete)
+    case "CHANNEL_PINS_UPDATE"         => Some(ChannelPinsUpdate)
     case "GUILD_CREATE"                => Some(GuildCreate)
     case "GUILD_UPDATE"                => Some(GuildUpdate)
     case "GUILD_DELETE"                => Some(GuildDelete)
@@ -514,6 +552,7 @@ object WsEvent {
     case "USER_UPDATE"                 => Some(UserUpdate)
     case "VOICE_STATE_UPDATE"          => Some(VoiceStateUpdate)
     case "VOICE_SERVER_UPDATE"         => Some(VoiceServerUpdate)
+    case "WEBHOOK_UPDATE"              => Some(WebhookUpdate)
     case _                             => None
   }
 }

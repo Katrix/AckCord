@@ -25,12 +25,13 @@ package net.katsstuff.akkacord.http
 
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.Uri
+import net.katsstuff.akkacord.AkkaCord
 import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.http.rest.RestRoute
 
 object Routes {
 
-  val base: Uri = "https://discordapp.com/api"
+  val base: Uri = s"https://discordapp.com/api/v${AkkaCord.DiscordApiVersion}"
 
   //WS
   val gateway: Uri = s"$base/gateway"

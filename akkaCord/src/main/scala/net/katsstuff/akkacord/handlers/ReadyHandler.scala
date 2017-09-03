@@ -25,27 +25,41 @@ package net.katsstuff.akkacord.handlers
 
 import akka.event.LoggingAdapter
 import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
-import net.katsstuff.akkacord.data.{DMChannel, UnavailableGuild}
+import net.katsstuff.akkacord.data.{ChannelType, DMChannel, GroupDMChannel}
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
-import net.katsstuff.akkacord.http.{RawDMChannel, RawUnavailableGuild}
 import shapeless._
 
 //We handle this one seperately is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
-    val ReadyData(_, user, rawPrivateChannels, rawGuilds, _, _) = obj
+    val ReadyData(_, botUser, rawChannels, unavailableGuilds, _, _) = obj
 
-    val (dmChannels, users) = rawPrivateChannels.map {
-      case RawDMChannel(id, _, recipient, lastMessageId) => (id -> DMChannel(id, lastMessageId, recipient.id), recipient.id -> recipient)
-    }.unzip
+    val (dmChannels, users1) = rawChannels.collect {
+      case rawChannel if rawChannel.`type` == ChannelType.DM =>
+        val optUser = rawChannel.recipients.flatMap(_.headOption)
+        optUser.map { user =>
+          (rawChannel.id -> DMChannel(rawChannel.id, rawChannel.lastMessageId, user.id), user.id -> user)
+        }
+    }.flatten.unzip
 
-    val guilds = rawGuilds.map {
-      case RawUnavailableGuild(id, _) => id -> UnavailableGuild(id)
-    }
+    val (groupDmChannels, users2) = rawChannels.collect {
+      case rawChannel if rawChannel.`type` == ChannelType.GroupDm =>
+        val users = rawChannel.recipients.toSeq.flatMap(_.map(user => user.id -> user)).toSeq
+        val userIds = users.map(_._1)
 
-    builder.botUser = tag[BotUser](user)
+        for {
+          name <- rawChannel.name
+          ownerId <- rawChannel.ownerId
+          if userIds.nonEmpty
+        } yield GroupDMChannel(rawChannel.id, name, userIds, rawChannel.lastMessageId, ownerId, rawChannel.applicationId) -> users
+    }.flatten.unzip
+
+    val guilds = unavailableGuilds.map(g => g.id -> g)
+
+    builder.botUser = tag[BotUser](botUser)
     builder.dmChannels ++= dmChannels.toMap
-    builder.unavailableGuilds ++= guilds.toMap
-    builder.users ++= users.toMap
+    builder.unavailableGuilds ++= guilds
+    builder.users ++= users1
+    builder.users ++= users2.flatten
   }
 }

@@ -23,18 +23,23 @@
  */
 package net.katsstuff.akkacord
 
+import java.time.Instant
+
 import akka.AkkaException
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
 import akka.event.EventStream
+import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.headers.GenericHttpCredentials
+import net.katsstuff.akkacord.data.PresenceStatus
+import net.katsstuff.akkacord.http.RawPresenceGame
 import net.katsstuff.akkacord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 
-class DiscordClient(token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
+class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings) extends Actor with ActorLogging {
   private implicit val system = context.system
 
   private val cache       = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val wsHandler   = system.actorOf(WsHandler.props(token, cache, settings), "WsHandler")
+  private val wsHandler   = system.actorOf(WsHandler.props(wsUri, token, cache, settings), "WsHandler")
   private val restHandler = system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
   private var shutdownCount = 0
@@ -58,7 +63,7 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       restHandler.forward(DiscordClient.ShutdownClient)
-      wsHandler.forward(DiscordClient.ShutdownClient)
+      wsHandler.forward(WsHandler.Logout)
     case request @ Request(_: WsMessage[_], _)                => wsHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _) => restHandler.forward(request)
     case Terminated(_) =>
@@ -69,8 +74,8 @@ class DiscordClient(token: String, eventStream: EventStream, settings: DiscordCl
   }
 }
 object DiscordClient {
-  def props(token: String, eventStream: EventStream, settings: DiscordClientSettings): Props =
-    Props(classOf[DiscordClient], token, eventStream, settings)
+  def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings): Props =
+    Props(new DiscordClient(wsUri, token, eventStream, settings))
   case object ShutdownClient
 }
 
@@ -78,10 +83,13 @@ case class DiscordClientSettings(
     token: String,
     system: ActorSystem,
     eventStream: EventStream,
-    maxReconnectAttempts: Int = 5,
     largeThreshold: Int = 100,
     shardNum: Int = 0,
-    shardTotal: Int = 1
+    shardTotal: Int = 1,
+    idleSince: Option[Instant],
+    gameStatus: Option[RawPresenceGame],
+    status: PresenceStatus,
+    afk: Boolean
 ) {
-  def connect: ActorRef = system.actorOf(DiscordClient.props(token, eventStream, this), "DiscordClient")
+  def connect(wsUri: Uri): ActorRef = system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient")
 }

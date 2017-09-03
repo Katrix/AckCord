@@ -36,6 +36,7 @@ import shapeless.tag._
 class CacheSnapshotBuilder(
     var botUser: User @@ BotUser,
     var dmChannels: mutable.Map[ChannelId, DMChannel],
+    var groupDmChannels: mutable.Map[ChannelId, GroupDMChannel],
     var unavailableGuilds: mutable.Map[GuildId, UnavailableGuild],
     var guilds: mutable.Map[GuildId, Guild],
     var messages: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
@@ -49,6 +50,7 @@ class CacheSnapshotBuilder(
   def toImmutable: CacheSnapshot = CacheSnapshot(
     botUser = botUser,
     dmChannels = dmChannels.toMap,
+    groupDmChannels = groupDmChannels.toMap,
     unavailableGuilds = unavailableGuilds.toMap,
     guilds = guilds.toMap,
     messages = messages.map { case (k, v)   => k -> v.toMap }.toMap,
@@ -64,6 +66,7 @@ object CacheSnapshotBuilder {
   def apply(snapshot: CacheSnapshot): CacheSnapshotBuilder = new CacheSnapshotBuilder(
     botUser = snapshot.botUser,
     dmChannels = toMutableMap(snapshot.dmChannels),
+    groupDmChannels = toMutableMap(snapshot.groupDmChannels),
     unavailableGuilds = toMutableMap(snapshot.unavailableGuilds),
     guilds = toMutableMap(snapshot.guilds),
     messages = toMutableMap(snapshot.messages.map { case (k, v) => k -> toMutableMap(v) }),

@@ -49,7 +49,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
     case readyHandler: CacheHandlerEvent[_]
         if readyHandler.data.isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
       val builder = new CacheSnapshotBuilder(
-        null, //The event will populate this
+        null, //The event will populate this,
+        mutable.Map.empty,
         mutable.Map.empty,
         mutable.Map.empty,
         mutable.Map.empty,

@@ -25,18 +25,27 @@ package net.katsstuff.akkacord.data
 
 sealed trait ChannelType
 object ChannelType {
-  case object Text  extends ChannelType
-  case object Voice extends ChannelType
+  case object GuildText     extends ChannelType
+  case object DM            extends ChannelType
+  case object GuildVoice    extends ChannelType
+  case object GroupDm       extends ChannelType
+  case object GuildCategory extends ChannelType
 
-  def forName(name: String): Option[ChannelType] = name match {
-    case "text"  => Some(Text)
-    case "voice" => Some(Voice)
-    case _       => None
+  def forId(id: Int): Option[ChannelType] = id match {
+    case 0 => Some(GuildText)
+    case 1 => Some(DM)
+    case 2 => Some(GuildVoice)
+    case 3 => Some(GroupDm)
+    case 4 => Some(GuildCategory)
+    case _ => None
   }
 
-  def nameFor(channelType: ChannelType): String = channelType match {
-    case Text  => "text"
-    case Voice => "voice"
+  def idFor(channelType: ChannelType): Int = channelType match {
+    case GuildText     => 0
+    case DM            => 1
+    case GuildVoice    => 2
+    case GroupDm       => 3
+    case GuildCategory => 4
   }
 }
 
@@ -60,8 +69,8 @@ object PermissionValueType {
 case class PermissionValue(id: UserOrRoleId, `type`: PermissionValueType, allow: Permission, deny: Permission)
 
 sealed trait Channel {
-  def id:        ChannelId
-  def isPrivate: Boolean
+  def id:          ChannelId
+  def channelType: ChannelType
 }
 
 sealed trait TChannel extends Channel {
@@ -74,12 +83,9 @@ sealed trait TChannel extends Channel {
 }
 
 sealed trait GuildChannel extends Channel with GetGuild {
-  def isPrivate: Boolean = false
-
   def guildId:              GuildId
-  def name:                 String
-  def channelType:          ChannelType
   def position:             Int
+  def name:                 String
   def permissionOverwrites: Seq[PermissionValue]
 }
 
@@ -93,7 +99,7 @@ case class TGuildChannel(
     lastMessageId: Option[MessageId]
 ) extends GuildChannel
     with TChannel {
-  override def channelType: ChannelType = ChannelType.Text
+  override def channelType: ChannelType = ChannelType.GuildText
 }
 
 case class VGuildChannel(
@@ -105,9 +111,20 @@ case class VGuildChannel(
     bitrate: Int,
     userLimit: Int
 ) extends GuildChannel {
-  override def channelType: ChannelType = ChannelType.Voice
+  override def channelType: ChannelType = ChannelType.GuildVoice
 }
 
 case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId) extends Channel with TChannel with GetUser {
-  override def isPrivate: Boolean = true
+  override def channelType: ChannelType = ChannelType.DM
+}
+
+case class GroupDMChannel(
+    id: ChannelId,
+    name: String,
+    users: Seq[UserId],
+    lastMessageId: Option[MessageId],
+    ownerId: UserId,
+    applicationId: Option[Snowflake]
+) extends Channel with TChannel {
+  override def channelType: ChannelType = ChannelType.GroupDm
 }
