@@ -116,8 +116,10 @@ trait DiscordProtocol {
   implicit val webhookAuthorEncoder: Encoder[WebhookAuthor] = deriveEncoder
   implicit val webhookAuthorDecoder: Decoder[WebhookAuthor] = deriveDecoder
 
-  implicit val roleEncoder: Encoder[Role] = deriveEncoder
-  implicit val roleDecoder: Decoder[Role] = deriveDecoder
+  implicit val roleEncoder: Encoder[Role] = deriveEncoder //Encoding roles is fine, decoding them is not
+
+  implicit val rawRoleEncoder: Encoder[RawRole] = deriveEncoder
+  implicit val rawRoleDecoder: Decoder[RawRole] = deriveDecoder
 
   implicit val rawGuildMemberEncoder: Encoder[RawGuildMember] = deriveEncoder
   implicit val rawGuildMemberDecoder: Decoder[RawGuildMember] = deriveDecoder

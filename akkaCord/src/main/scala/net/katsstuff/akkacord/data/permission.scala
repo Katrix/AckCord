@@ -71,6 +71,7 @@ object Permission {
 
 case class Role(
     id: RoleId,
+    guildId: GuildId,
     name: String,
     color: Int,
     hoist: Boolean,
@@ -78,4 +79,4 @@ case class Role(
     permissions: Permission,
     managed: Boolean,
     mentionable: Boolean
-)
+) extends GetGuild

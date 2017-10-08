@@ -158,7 +158,7 @@ object RawHandlers extends Handlers {
       verificationLevel = obj.verificationLevel,
       defaultMessageNotifications = obj.defaultMessageNotifications,
       explicitContentFilter = obj.explicitContentFilter,
-      roles = obj.roles.map(r => r.id   -> r).toMap,
+      roles = obj.roles.map(r => r.id   -> r.makeRole(obj.id)).toMap,
       emojis = obj.emojis.map(e => e.id -> e).toMap,
       features = obj.features,
       mfaLevel = obj.mfaLevel,
@@ -240,8 +240,9 @@ object RawHandlers extends Handlers {
   implicit val roleUpdateHandler: CacheUpdateHandler[GuildRoleModifyData] = updateHandler {
     case (builder, obj @ GuildRoleModifyData(guildId, role), log) =>
       builder.getGuild(guildId) match {
-        case Some(guild) => builder.guilds.put(guildId, guild.copy(roles = guild.roles + ((role.id, role))))
-        case None        => log.warning(s"No guild found for role update $obj")
+        case Some(guild) =>
+          builder.guilds.put(guildId, guild.copy(roles = guild.roles + ((role.id, role.makeRole(guildId)))))
+        case None => log.warning(s"No guild found for role update $obj")
       }
   }
 

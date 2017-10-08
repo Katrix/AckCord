@@ -437,7 +437,6 @@ package object syntax {
   implicit class RoleSyntax(val role: Role) extends AnyVal {
     def mention: String = s"<@&${role.id}>"
     def modify[Context](
-        guildId: GuildId,
         name: Option[String],
         permissions: Option[Permission],
         color: Option[Int],
@@ -446,12 +445,12 @@ package object syntax {
         context: Context = NotUsed
     ) =
       Request(
-        ModifyGuildRole(guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable)),
+        ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable)),
         context
       )
 
-    def delete[Context](guildId: GuildId, context: Context = NotUsed) =
-      Request(DeleteGuildRole(guildId, role.id), context)
+    def delete[Context](context: Context = NotUsed) =
+      Request(DeleteGuildRole(role.guildId, role.id), context)
   }
 
   implicit class MessageSyntax(val message: Message) extends AnyVal {

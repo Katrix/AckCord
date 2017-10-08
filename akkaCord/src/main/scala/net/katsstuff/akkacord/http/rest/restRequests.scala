@@ -42,7 +42,7 @@ import net.katsstuff.akkacord.handlers.{
 }
 import net.katsstuff.akkacord.http.websocket.WsEvent
 import net.katsstuff.akkacord.http.websocket.WsEvent.GuildEmojisUpdateData
-import net.katsstuff.akkacord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, Routes}
+import net.katsstuff.akkacord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
 
 trait ComplexRESTRequest[Params, Response, HandlerType] {
   def route: RestRoute
@@ -494,15 +494,15 @@ object Requests {
   }
 
   case class GetGuildRoles(guildId: GuildId)
-      extends ComplexRESTRequest[NotUsed, Seq[Role], Seq[WsEvent.GuildRoleModifyData]] {
+      extends ComplexRESTRequest[NotUsed, Seq[RawRole], Seq[WsEvent.GuildRoleModifyData]] {
     override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
     override def params:        NotUsed          = NotUsed
 
-    override def route:           RestRoute          = Routes.getGuildRole(guildId)
-    override def responseDecoder: Decoder[Seq[Role]] = Decoder[Seq[Role]]
+    override def route:           RestRoute             = Routes.getGuildRole(guildId)
+    override def responseDecoder: Decoder[Seq[RawRole]] = Decoder[Seq[RawRole]]
     override def handleResponse: CacheHandler[Seq[WsEvent.GuildRoleModifyData]] =
       CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData] =
+    override def processResponse(response: Seq[RawRole]): Seq[WsEvent.GuildRoleModifyData] =
       response.map(WsEvent.GuildRoleModifyData(guildId, _))
   }
 
@@ -514,27 +514,27 @@ object Requests {
       mentionable: Option[Boolean]
   )
   case class CreateGuildRole(guildId: GuildId, params: CreateGuildRoleData)
-      extends ComplexRESTRequest[CreateGuildRoleData, Role, WsEvent.GuildRoleModifyData] {
+      extends ComplexRESTRequest[CreateGuildRoleData, RawRole, WsEvent.GuildRoleModifyData] {
     override def route:           RestRoute                                 = Routes.createGuildRole(guildId)
     override def paramsEncoder:   Encoder[CreateGuildRoleData]              = deriveEncoder[CreateGuildRoleData]
-    override def responseDecoder: Decoder[Role]                             = Decoder[Role]
+    override def responseDecoder: Decoder[RawRole]                          = Decoder[RawRole]
     override def handleResponse:  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: Role): WsEvent.GuildRoleModifyData =
+    override def processResponse(response: RawRole): WsEvent.GuildRoleModifyData =
       WsEvent.GuildRoleModifyData(guildId, response)
   }
 
   case class ModifyGuildRolePositionsData(id: RoleId, position: Int)
   case class ModifyGuildRolePositions(guildId: GuildId, params: Seq[ModifyGuildRolePositionsData])
-      extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[Role], Seq[WsEvent.GuildRoleModifyData]] {
+      extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[WsEvent.GuildRoleModifyData]] {
     override def route: RestRoute = Routes.modifyGuildRolePositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
       implicit val enc = deriveEncoder[ModifyGuildRolePositionsData]
       Encoder[Seq[ModifyGuildRolePositionsData]]
     }
-    override def responseDecoder: Decoder[Seq[Role]] = Decoder[Seq[Role]]
+    override def responseDecoder: Decoder[Seq[RawRole]] = Decoder[Seq[RawRole]]
     override def handleResponse: CacheHandler[Seq[WsEvent.GuildRoleModifyData]] =
       CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData] =
+    override def processResponse(response: Seq[RawRole]): Seq[WsEvent.GuildRoleModifyData] =
       response.map(WsEvent.GuildRoleModifyData(guildId, _))
   }
 
@@ -546,12 +546,12 @@ object Requests {
       mentionable: Option[Boolean]
   )
   case class ModifyGuildRole(guildId: GuildId, roleId: RoleId, params: ModifyGuildRoleData)
-      extends ComplexRESTRequest[ModifyGuildRoleData, Role, WsEvent.GuildRoleModifyData] {
+      extends ComplexRESTRequest[ModifyGuildRoleData, RawRole, WsEvent.GuildRoleModifyData] {
     override def route:           RestRoute                                 = Routes.modifyGuildRole(roleId, guildId)
     override def paramsEncoder:   Encoder[ModifyGuildRoleData]              = deriveEncoder[ModifyGuildRoleData]
-    override def responseDecoder: Decoder[Role]                             = Decoder[Role]
+    override def responseDecoder: Decoder[RawRole]                          = Decoder[RawRole]
     override def handleResponse:  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: Role): WsEvent.GuildRoleModifyData =
+    override def processResponse(response: RawRole): WsEvent.GuildRoleModifyData =
       WsEvent.GuildRoleModifyData(guildId, response)
   }
 

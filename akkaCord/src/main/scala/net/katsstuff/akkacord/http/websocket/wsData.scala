@@ -351,14 +351,16 @@ object WsEvent {
           )
       )
 
-  case class GuildRoleModifyData(guildId: GuildId, role: Role)
+  case class GuildRoleModifyData(guildId: GuildId, role: RawRole)
   object GuildRoleCreate
       extends WsEvent[GuildRoleModifyData](
         "GUILD_ROLE_CREATE",
         RawHandlers.roleUpdateHandler,
         data =>
           (current, prev) =>
-            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleCreate(g, data.role, current, prev))
+            current
+              .getGuild(data.guildId)
+              .map(g => APIMessage.GuildRoleCreate(g, data.role.makeRole(data.guildId), current, prev))
       )
   object GuildRoleUpdate
       extends WsEvent[GuildRoleModifyData](
@@ -366,7 +368,9 @@ object WsEvent {
         RawHandlers.roleUpdateHandler,
         data =>
           (current, prev) =>
-            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleUpdate(g, data.role, current, prev))
+            current
+              .getGuild(data.guildId)
+              .map(g => APIMessage.GuildRoleUpdate(g, data.role.makeRole(data.guildId), current, prev))
       )
 
   case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)

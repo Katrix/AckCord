@@ -90,7 +90,7 @@ case class RawGuild(
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
-    roles: Seq[Role],
+    roles: Seq[RawRole],
     emojis: Seq[GuildEmoji],
     features: Seq[String],
     mfaLevel: MFALevel,
@@ -106,6 +106,20 @@ case class RawGuild(
     channels: Option[Seq[RawChannel]],
     presences: Option[Seq[RawPresence]]
 )
+
+case class RawRole(
+    id: RoleId,
+    name: String,
+    color: Int,
+    hoist: Boolean,
+    position: Int,
+    permissions: Permission,
+    managed: Boolean,
+    mentionable: Boolean
+) {
+  def makeRole(guildId: GuildId): Role =
+    Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable)
+}
 
 case class RawPresenceGame(name: String, `type`: Int, url: Option[String])
 case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus])
