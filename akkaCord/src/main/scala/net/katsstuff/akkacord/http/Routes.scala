@@ -201,4 +201,21 @@ object Routes {
   val getInvite:    InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, GET))
   val deleteInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, DELETE))
   val acceptInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, POST))
+
+  //Users
+  val users:          Uri       = s"$base/users"
+  val currentUser:    Uri       = s"$users/@me"
+  val getCurrentUser: RestRoute = RestRoute(currentUser, GET)
+
+  val getUser             :               UserId => RestRoute = userId => RestRoute(s"$users/$userId", GET)
+  val modifyCurrentUser   :     RestRoute                     = RestRoute(currentUser, PATCH)
+  val currentUserGuilds   :     Uri                           = s"$currentUser/guilds"
+  val getCurrentUserGuilds:  RestRoute                        = RestRoute(currentUserGuilds, GET)
+  val leaveGuild          : GuildId => RestRoute              = guildId => RestRoute(s"$currentUserGuilds/$guildId", DELETE)
+
+  val userDMs   :             Uri = s"$currentUser/channels"
+  val getUserDMs:   RestRoute     = RestRoute(userDMs, GET)
+  val createDM  : RestRoute       = RestRoute(userDMs, POST)
+
+  val getUserConnections: RestRoute = RestRoute(s"$currentUser/connections", GET)
 }

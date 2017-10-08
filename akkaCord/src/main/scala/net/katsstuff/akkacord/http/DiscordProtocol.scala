@@ -228,5 +228,8 @@ trait DiscordProtocol {
 
   implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
   implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
+
+  implicit val connectionEncoder: Encoder[Connection] = deriveEncoder
+  implicit val connectionDecoder: Decoder[Connection] = deriveDecoder
 }
 object DiscordProtocol extends DiscordProtocol

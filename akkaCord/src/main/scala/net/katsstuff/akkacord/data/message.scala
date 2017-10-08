@@ -85,6 +85,14 @@ case class User(
     email: Option[String] //Email can be null
 ) extends Author
 
+case class Connection(
+    id: String,
+    name: String,
+    `type`: String,
+    revoked: Boolean,
+    integrations: Seq[Integration] //TODO: Partial
+)
+
 case class Message(
     id: MessageId,
     channelId: ChannelId,

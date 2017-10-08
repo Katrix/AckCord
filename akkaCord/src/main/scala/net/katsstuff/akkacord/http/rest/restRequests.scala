@@ -638,4 +638,58 @@ object Requests {
     override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
     override def handleResponse:  CacheHandler[Invite] = new NOOPHandler[Invite]
   }
+
+  case object GetCurrentUser extends NoParamsRequest[User] {
+    override def route:           RestRoute          = Routes.getCurrentUser
+    override def responseDecoder: Decoder[User]      = Decoder[User]
+    override def handleResponse:  CacheHandler[User] = Handlers.botUserUpdateHandler
+  }
+
+  case class GetUser(userId: UserId) extends NoParamsRequest[User] {
+    override def route:           RestRoute          = Routes.getUser(userId)
+    override def responseDecoder: Decoder[User]      = Decoder[User]
+    override def handleResponse:  CacheHandler[User] = Handlers.userUpdateHandler
+  }
+
+  case class GetCurrentUserGuildsData(before: Option[GuildId], after: Option[GuildId], limit: Int = 100)
+  case class GetCurrentUserGuilds(params: GetCurrentUserGuildsData)
+      extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[RawGuild]] {
+    override def route:           RestRoute                         = Routes.getCurrentUserGuilds
+    override def paramsEncoder:   Encoder[GetCurrentUserGuildsData] = deriveEncoder[GetCurrentUserGuildsData]
+    override def responseDecoder: Decoder[Seq[RawGuild]]            = Decoder[Seq[RawGuild]]
+    override def handleResponse: CacheHandler[Seq[RawGuild]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawGuildUpdateHandler)
+  }
+
+  case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {
+    override def route: RestRoute = Routes.leaveGuild(guildId)
+  }
+
+  case object GetUserDMs extends NoParamsRequest[Seq[RawChannel]] {
+    override def route: RestRoute = Routes.getUserDMs
+    override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
+    override def handleResponse: CacheHandler[Seq[RawChannel]] = CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+  }
+
+  case class CreateDMData(recipentId: UserId)
+  case class CreateDm(params: CreateDMData) extends SimpleRESTRequest[CreateDMData, RawChannel] {
+    override def route: RestRoute = Routes.createDM
+    override def paramsEncoder: Encoder[CreateDMData] = deriveEncoder[CreateDMData]
+    override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+    override def handleResponse: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+  }
+
+  case class CreateGroupDMData(accessTokens: Seq[String], nicks: Map[UserId, String])
+  case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
+    override def route: RestRoute = Routes.createDM
+    override def paramsEncoder: Encoder[CreateGroupDMData] = deriveEncoder[CreateGroupDMData]
+    override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+    override def handleResponse: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+  }
+
+  case object GetUserConnections extends NoParamsRequest[Seq[Connection]] {
+    override def route: RestRoute = Routes.getUserConnections
+    override def responseDecoder: Decoder[Seq[Connection]] = Decoder[Seq[Connection]]
+    override def handleResponse: CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
+  }
 }

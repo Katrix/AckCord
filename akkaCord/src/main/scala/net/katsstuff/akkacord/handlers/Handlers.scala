@@ -23,7 +23,9 @@
  */
 package net.katsstuff.akkacord.handlers
 
+import net.katsstuff.akkacord.CacheSnapshotLike.BotUser
 import net.katsstuff.akkacord.data._
+import shapeless.tag
 
 trait Handlers {
   import CacheDeleteHandler._
@@ -68,6 +70,10 @@ trait Handlers {
         case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj))))
         case None        => log.warning(s"No guild for emoji $obj")
       }
+  }
+
+  val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, log) =>
+    builder.botUser = tag[BotUser](obj)
   }
 
   //Delete
