@@ -427,7 +427,7 @@ package object syntax {
 
   implicit class GuildEmojiSyntax(val emoji: GuildEmoji) extends AnyVal {
     def asString: String =
-      if (emoji.managed) ??? else s"${emoji.name}:${emoji.id}"
+      if (!emoji.managed) s"${emoji.name}:${emoji.id}" else ???
     def modify[Context](name: String, guildId: GuildId, context: Context = NotUsed) =
       Request(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context)
     def delete[Context](guildId: GuildId, context: Context = NotUsed) =
