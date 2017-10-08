@@ -26,7 +26,10 @@ package net.katsstuff.akkacord.data
 import java.time.OffsetDateTime
 
 case class Invite(code: String, guild: InviteGuild, channel: InviteChannel)
-case class InviteMetadata(
+case class InviteWithMetadata(
+    code: String,
+    guild: InviteGuild,
+    channel: InviteChannel,
     inviter: User,
     uses: Int,
     maxUses: Int,

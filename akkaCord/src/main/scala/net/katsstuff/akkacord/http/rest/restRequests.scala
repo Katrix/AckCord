@@ -209,18 +209,25 @@ object Requests {
     override def route: RestRoute = Routes.deleteChannelPermissions(overwriteId, channelId)
   }
 
-  /*
-  TODO
-  case class GetChannelInvites(channelId: Snowflake) extends NoParamsRequest[Seq[Invite]] {
-    override def route: RestRoute = Routes.getChannelInvites(channelId)
+  case class GetChannelInvites(channelId: ChannelId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
+    override def route:           RestRoute                             = Routes.getChannelInvites(channelId)
+    override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
+    override def handleResponse:  CacheHandler[Seq[InviteWithMetadata]] = new NOOPHandler[Seq[InviteWithMetadata]]
   }
 
-  case class CreateChannelInviteData(maxAge: Int = 86400, maxUses: Int = 0, temporary: Boolean = false, unique: Boolean = false)
-  case class CreateChannelInvite(channelId:  Snowflake, params:    CreateChannelInviteData) extends RESTRequest[CreateChannelInviteData, Invite] {
-    override def route:         RestRoute                        = Routes.getChannelInvites(channelId)
-    override def paramsEncoder: Encoder[CreateChannelInviteData] = implicitly[Encoder[CreateChannelInviteData]]
+  case class CreateChannelInviteData(
+      maxAge: Int = 86400,
+      maxUses: Int = 0,
+      temporary: Boolean = false,
+      unique: Boolean = false
+  )
+  case class CreateChannelInvite(channelId: ChannelId, params: CreateChannelInviteData)
+      extends SimpleRESTRequest[CreateChannelInviteData, Invite] {
+    override def route:           RestRoute                        = Routes.getChannelInvites(channelId)
+    override def paramsEncoder:   Encoder[CreateChannelInviteData] = implicitly[Encoder[CreateChannelInviteData]]
+    override def responseDecoder: Decoder[Invite]                  = Decoder[Invite]
+    override def handleResponse:  CacheHandler[Invite]             = new NOOPHandler[Invite]
   }
-   */
 
   case class TriggerTypingIndicator(channelId: ChannelId) extends NoParamsResponseRequest {
     override def route: RestRoute = Routes.triggerTyping(channelId)

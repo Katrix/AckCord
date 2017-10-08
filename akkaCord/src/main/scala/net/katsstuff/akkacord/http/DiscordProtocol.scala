@@ -208,6 +208,9 @@ trait DiscordProtocol {
   implicit val inviteEncoder: Encoder[Invite] = deriveEncoder
   implicit val inviteDecoder: Decoder[Invite] = deriveDecoder
 
+  implicit val inviteWithMetadataEncoder: Encoder[InviteWithMetadata] = deriveEncoder
+  implicit val inviteWithMetadataDecoder: Decoder[InviteWithMetadata] = deriveDecoder
+
   implicit val guildEmbedEncoder: Encoder[GuildEmbed] = deriveEncoder
   implicit val guildEmbedDecoder: Decoder[GuildEmbed] = deriveDecoder
 
