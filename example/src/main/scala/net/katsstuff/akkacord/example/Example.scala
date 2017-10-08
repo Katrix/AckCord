@@ -25,11 +25,14 @@ package net.katsstuff.akkacord.example
 
 import akka.actor.ActorSystem
 import akka.event.EventStream
-import net.katsstuff.akkacord.{APIMessage, DiscordClientSettings}
+import akka.stream.{ActorMaterializer, Materializer}
+import net.katsstuff.akkacord.{APIMessage, DiscordClient, DiscordClientSettings}
 
 object Example {
 
   implicit val system: ActorSystem = ActorSystem("AkkaCord")
+  implicit val mat: Materializer = ActorMaterializer()
+  import system.dispatcher
 
   def main(args: Array[String]): Unit = {
     if (args.isEmpty) {
@@ -40,8 +43,10 @@ object Example {
     val eventStream = new EventStream(system)
     val token       = args.head
 
-    val client = DiscordClientSettings(token = token, system = system, eventStream = eventStream).connect
-
-    eventStream.subscribe(system.actorOf(Commands.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
+    val settings = DiscordClientSettings(token = token, system = system, eventStream = eventStream)
+    DiscordClient.fetchWsGateway.map(settings.connect).foreach { client =>
+      eventStream.subscribe(system.actorOf(Commands.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
+      client ! DiscordClient.StartClient
+    }
   }
 }

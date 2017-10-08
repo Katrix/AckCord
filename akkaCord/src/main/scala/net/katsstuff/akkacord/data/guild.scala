@@ -129,8 +129,8 @@ case class Guild(
     features: Seq[String], //TODO: What is a feature?
     mfaLevel: MFALevel,
     applicationId: Option[Snowflake],
-    widgetEnabled: Boolean,
-    widgetChannelId: ChannelId,
+    widgetEnabled: Option[Boolean], //Can me missing
+    widgetChannelId: Option[ChannelId], //Can be missing
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,

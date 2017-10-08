@@ -88,8 +88,8 @@ case class RawGuild(
     features: Seq[String],
     mfaLevel: MFALevel,
     applicationId: Option[Snowflake],
-    widgetEnabled: Boolean,
-    widgetChannelId: ChannelId,
+    widgetEnabled: Option[Boolean], //Can be missing
+    widgetChannelId: Option[ChannelId], //Can be missing
     joinedAt: Option[OffsetDateTime],
     large: Option[Boolean],
     unavailable: Option[Boolean],
