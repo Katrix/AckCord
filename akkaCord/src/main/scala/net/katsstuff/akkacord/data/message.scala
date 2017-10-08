@@ -72,7 +72,7 @@ object MessageType {
 }
 
 sealed trait Author
-case class WebhookAuthor(id: Snowflake, name: String, avatar: ImageData) extends Author
+case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
 //Remember to edit PartialUser when editing this
 case class User(
     id: UserId,

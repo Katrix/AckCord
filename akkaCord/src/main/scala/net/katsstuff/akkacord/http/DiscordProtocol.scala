@@ -215,5 +215,11 @@ trait DiscordProtocol {
 
   implicit val voiceRegionEncoder: Encoder[VoiceRegion] = deriveEncoder
   implicit val voiceRegionDecoder: Decoder[VoiceRegion] = deriveDecoder
+
+  implicit val guildEmojiEncoder: Encoder[GuildEmoji] = deriveEncoder
+  implicit val guildEmojiDecoder: Decoder[GuildEmoji] = deriveDecoder
+
+  implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
+  implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
 }
 object DiscordProtocol extends DiscordProtocol
