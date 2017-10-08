@@ -95,7 +95,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
       //Update roles
       guild.members
         .get(partialUser.id)
-        .map(m => guild.members + ((partialUser.id, m.copy(roles = roles))))
+        .map(m => guild.members + ((partialUser.id, m.copy(roleIds = roles))))
         .foreach { newMembers =>
           val newGuild = guild.copy(members = newMembers)
           builder.guilds.put(guildId, newGuild)

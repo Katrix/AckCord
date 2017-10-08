@@ -148,7 +148,7 @@ case class GuildMember(
     userId: UserId,
     guildId: GuildId,
     nick: Option[String],
-    roles: Seq[RoleId],
+    roleIds: Seq[RoleId],
     joinedAt: OffsetDateTime,
     deaf: Boolean,
     mute: Boolean

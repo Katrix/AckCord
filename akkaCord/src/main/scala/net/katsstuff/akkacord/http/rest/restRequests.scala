@@ -89,8 +89,11 @@ object Requests {
       name: String,
       position: Int,
       topic: Option[String],
+      nsfw: Option[Boolean],
       bitrate: Option[Int],
-      userLimit: Option[Int]
+      userLimit: Option[Int],
+      permissionOverwrites: Seq[PermissionValue],
+      parentId: Option[ChannelId]
   )
   case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData)
       extends SimpleRESTRequest[ModifyChannelData, RawChannel] {
@@ -312,7 +315,7 @@ object Requests {
       verificationLevel: VerificationLevel,
       defaultMessageNotifications: NotificationLevel,
       roles: Seq[Role],
-      channels: CreateGuildChannelData
+      channels: Seq[CreateGuildChannelData] //Techically this should be partial channels, but I think this works too
   )
   case class CreateGuild(params: CreateGuildData) extends SimpleRESTRequest[CreateGuildData, RawGuild] {
     override def route: RestRoute = Routes.createGuild
@@ -365,7 +368,9 @@ object Requests {
       `type`: Option[ChannelType],
       bitrate: Option[Int],
       userLimit: Option[Int],
-      permissionOverwrites: Option[Seq[PermissionValue]]
+      permissionOverwrites: Option[Seq[PermissionValue]],
+      parentId: Option[ChannelId],
+      nsfw: Option[Boolean]
   )
   case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData)
       extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
@@ -416,7 +421,7 @@ object Requests {
   case class AddGuildMemberData(
       accessToken: String,
       nick: Option[String],
-      roles: Option[Seq[Role]],
+      roles: Option[Seq[RoleId]],
       mute: Option[Boolean],
       deaf: Option[Boolean]
   )
@@ -673,30 +678,31 @@ object Requests {
   }
 
   case object GetUserDMs extends NoParamsRequest[Seq[RawChannel]] {
-    override def route: RestRoute = Routes.getUserDMs
+    override def route:           RestRoute                = Routes.getUserDMs
     override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
-    override def handleResponse: CacheHandler[Seq[RawChannel]] = CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
   }
 
   case class CreateDMData(recipentId: UserId)
   case class CreateDm(params: CreateDMData) extends SimpleRESTRequest[CreateDMData, RawChannel] {
-    override def route: RestRoute = Routes.createDM
-    override def paramsEncoder: Encoder[CreateDMData] = deriveEncoder[CreateDMData]
-    override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
-    override def handleResponse: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+    override def route:           RestRoute                = Routes.createDM
+    override def paramsEncoder:   Encoder[CreateDMData]    = deriveEncoder[CreateDMData]
+    override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
+    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
   }
 
   case class CreateGroupDMData(accessTokens: Seq[String], nicks: Map[UserId, String])
   case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
-    override def route: RestRoute = Routes.createDM
-    override def paramsEncoder: Encoder[CreateGroupDMData] = deriveEncoder[CreateGroupDMData]
-    override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
-    override def handleResponse: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+    override def route:           RestRoute                  = Routes.createDM
+    override def paramsEncoder:   Encoder[CreateGroupDMData] = deriveEncoder[CreateGroupDMData]
+    override def responseDecoder: Decoder[RawChannel]        = Decoder[RawChannel]
+    override def handleResponse:  CacheHandler[RawChannel]   = RawHandlers.rawChannelUpdateHandler
   }
 
   case object GetUserConnections extends NoParamsRequest[Seq[Connection]] {
-    override def route: RestRoute = Routes.getUserConnections
-    override def responseDecoder: Decoder[Seq[Connection]] = Decoder[Seq[Connection]]
-    override def handleResponse: CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
+    override def route:           RestRoute                     = Routes.getUserConnections
+    override def responseDecoder: Decoder[Seq[Connection]]      = Decoder[Seq[Connection]]
+    override def handleResponse:  CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
   }
 }

@@ -226,7 +226,7 @@ object RawHandlers extends Handlers {
             case Some(guildMember) =>
               builder.guilds.put(
                 guildId,
-                guild.copy(members = guild.members + ((user.id, guildMember.copy(nick = nick, roles = roles))))
+                guild.copy(members = guild.members + ((user.id, guildMember.copy(nick = nick, roleIds = roles))))
               )
             case None =>
               log.warning(s"Can't find user for user update $obj")
