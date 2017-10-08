@@ -67,9 +67,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       snapshot = prevSnapshot
 
       readyHandler match {
-        case APIMessageHandlerEvent(data, event)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case RequestHandlerEvent(data, sendTo, contextual) => sendTo ! RequestResponse(data, contextual)
-        case _                                             =>
+        case APIMessageHandlerEvent(data, event) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case _                                   =>
       }
     case handlerEvent: CacheHandlerEvent[_] if isReady =>
       val builder = CacheSnapshotBuilder(snapshot)
@@ -78,7 +77,7 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
         case APIMessageHandlerEvent(data, event)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case RequestHandlerEvent(data, sendTo, contextual) => sendTo ! RequestResponse(data, contextual)
+        case RequestHandlerEvent(data, sendTo, contextual) => sendTo.foreach(_ ! RequestResponse(data, contextual))
         case _                                             =>
       }
     case _ if !isReady => log.error("Received event before ready")
@@ -99,7 +98,7 @@ case class APIMessageHandlerEvent[Data](
     sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
 )(implicit val handler: CacheHandler[Data])
     extends CacheHandlerEvent[Data]
-case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context)(
+case class RequestHandlerEvent[Data, Context](data: Data, sendTo: Option[ActorRef], context: Context)(
     implicit val handler: CacheHandler[Data]
 ) extends CacheHandlerEvent[Data]
 case class MiscHandlerEvent[Data](data: Data)(implicit val handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]

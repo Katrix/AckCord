@@ -66,8 +66,8 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
       wsHandler.forward(WsHandler.Logout)
     case DiscordClient.StartClient =>
       wsHandler.forward(WsHandler.Login)
-    case request @ Request(_: WsMessage[_], _)                => wsHandler.forward(request)
-    case request @ Request(_: ComplexRESTRequest[_, _, _], _) => restHandler.forward(request)
+    case request @ Request(_: WsMessage[_], _, _)                => wsHandler.forward(request)
+    case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1
       if (shutdownCount == 2) {

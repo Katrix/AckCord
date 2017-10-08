@@ -25,23 +25,31 @@ package net.katsstuff.akkacord.example
 
 import java.nio.file.Paths
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.NotUsed
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import net.katsstuff.akkacord.DiscordClient.ShutdownClient
 import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.example.Commands.GetChannelInfo
 import net.katsstuff.akkacord.http.rest.Requests
 import net.katsstuff.akkacord.http.rest.Requests.CreateMessageData
-import net.katsstuff.akkacord.{APIMessage, Request, RequestResponse}
 import net.katsstuff.akkacord.syntax._
+import net.katsstuff.akkacord.{APIMessage, Request, RequestResponse}
 
 class Commands(client: ActorRef) extends Actor with ActorLogging {
+  implicit val system: ActorSystem = context.system
+
+  val infoResponseHandler: ActorRef = system.actorOf(InfoCommandHandler.props(client))
+
   override def receive: Receive = {
     case APIMessage.MessageCreate(message, c, _) =>
-      implicit val cache = c
+      implicit val cache: CacheSnapshot = c
       message.content match {
         case "!ping" =>
+          //Construct request manually
           client ! Request(
-            Requests.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None))
+            Requests.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None)),
+            NotUsed,
+            None
           )
         case "!sendFile" =>
           val embed = OutgoingEmbed(
@@ -51,6 +59,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           )
 
           message.tChannel.foreach { tChannel =>
+            //Use channel to construct request
             client ! tChannel.sendMessage(
               "Here is the file",
               file = Some(Paths.get("theFile.txt")),
@@ -69,7 +78,8 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           channel.foreach { gChannel =>
             client ! Request(
               Requests.GetChannel(gChannel.id),
-              GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c)
+              GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c),
+              Some(infoResponseHandler)
             )
           }
         case "!kill" =>
@@ -77,14 +87,28 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           client ! ShutdownClient
         case _ =>
       }
+  }
+}
+object Commands {
+  def props(client: ActorRef): Props = Props(new Commands(client))
+  case class GetChannelInfo(
+      guildId: GuildId,
+      requestedChannelId: ChannelId,
+      senderChannelId: ChannelId,
+      c: CacheSnapshot
+  )
+}
+
+class InfoCommandHandler(client: ActorRef) extends Actor with ActorLogging {
+  override def receive: Receive = {
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
-      implicit val cache = c
-      val optName        = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
+      implicit val cache: CacheSnapshot = c
+      val optName = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
       optName match {
         case Some(name) =>
           cache.getGuildChannel(guildId, senderChannelId) match {
             case Some(channel: TGuildChannel) => client ! channel.sendMessage(s"Info for $name:\n$res")
-            case Some(channel: VGuildChannel) => log.warning("{} is not a valid text channel", channel.name)
+            case Some(channel: GuildChannel)  => log.warning("{} is not a valid text channel", channel.name)
             case None                         => log.warning("No channel found for {}", requestedChannelId)
           }
         case None => log.warning("No channel found for {}", requestedChannelId)
@@ -93,12 +117,6 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
       log.info(res.toString)
   }
 }
-object Commands {
-  def props(client: ActorRef): Props = Props(classOf[Commands], client)
-  case class GetChannelInfo(
-      guildId: GuildId,
-      requestedChannelId: ChannelId,
-      senderChannelId: ChannelId,
-      c: CacheSnapshot
-  )
+object InfoCommandHandler {
+  def props(client: ActorRef): Props = Props(new InfoCommandHandler(client))
 }

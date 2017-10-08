@@ -23,7 +23,7 @@
  */
 package net.katsstuff.akkacord
 
-import akka.NotUsed
+import akka.actor.ActorRef
 
 case class RequestResponse[Data, Context](data: Data, context: Context)
-case class Request[Request, Context](request: Request, context: Context = NotUsed)
+case class Request[Request, Context](request: Request, context: Context, sendResponseTo: Option[ActorRef])

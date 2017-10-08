@@ -110,6 +110,9 @@ trait DiscordProtocol {
   implicit val permissionEncoder: Encoder[Permission] = Encoder[Int].contramap(_.int)
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Int].emap(i => Right(Permission.fromInt(i)))
 
+  implicit val permissionValueEncoder: Encoder[PermissionValue] = deriveEncoder
+  implicit val permissionValueDecoder: Decoder[PermissionValue] = deriveDecoder
+
   implicit val userEncoder: Encoder[User] = deriveEncoder
   implicit val userDecoder: Decoder[User] = deriveDecoder
 

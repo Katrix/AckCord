@@ -227,7 +227,7 @@ object Requests {
   case class CreateChannelInvite(channelId: ChannelId, params: CreateChannelInviteData)
       extends SimpleRESTRequest[CreateChannelInviteData, Invite] {
     override def route:           RestRoute                        = Routes.getChannelInvites(channelId)
-    override def paramsEncoder:   Encoder[CreateChannelInviteData] = implicitly[Encoder[CreateChannelInviteData]]
+    override def paramsEncoder:   Encoder[CreateChannelInviteData] = deriveEncoder[CreateChannelInviteData]
     override def responseDecoder: Decoder[Invite]                  = Decoder[Invite]
     override def handleResponse:  CacheHandler[Invite]             = new NOOPHandler[Invite]
   }
@@ -694,10 +694,12 @@ object Requests {
 
   case class CreateGroupDMData(accessTokens: Seq[String], nicks: Map[UserId, String])
   case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
-    override def route:           RestRoute                  = Routes.createDM
-    override def paramsEncoder:   Encoder[CreateGroupDMData] = deriveEncoder[CreateGroupDMData]
-    override def responseDecoder: Decoder[RawChannel]        = Decoder[RawChannel]
-    override def handleResponse:  CacheHandler[RawChannel]   = RawHandlers.rawChannelUpdateHandler
+    override def route: RestRoute = Routes.createDM
+    override def paramsEncoder: Encoder[CreateGroupDMData] = (data: CreateGroupDMData) => {
+      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.content -> t._2).asJson)
+    }
+    override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
+    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
   }
 
   case object GetUserConnections extends NoParamsRequest[Seq[Connection]] {

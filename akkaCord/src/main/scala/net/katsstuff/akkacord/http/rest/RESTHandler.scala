@@ -80,7 +80,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
       }
       requestQueue.complete()
     case RemoveRateLimit(uri) => rateLimits.remove(uri)
-    case fullRequest @ Request(request: ComplexRESTRequest[_, d, h], contextual) //The d and h here makes IntelliJ happy. They serves no other purpose
+    case fullRequest @ Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo) //The d and h here makes IntelliJ happy. They serves no other purpose
         if !rateLimits.contains(request.route.uri) =>
       val body = request match {
         case CreateMessage(_, data) if data.file.isDefined =>
@@ -102,7 +102,6 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
       }
 
       val route = request.route
-      val from  = sender()
 
       val httpRequest = HttpRequest(method = route.method, uri = route.uri, immutable.Seq(auth, userAgent), body)
 
@@ -126,7 +125,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
                 log.debug(s"Received response: ${json.noSpaces}")
                 Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
               }
-              .map(data => RequestHandlerEvent(data, from, contextual)(request.handleResponse))
+              .map(data => RequestHandlerEvent(data, sendResponseTo, contextual)(request.handleResponse))
               .pipeTo(snowflakeCache)
           } else {
             log.warning(s"Unexpected response code ${response.intValue()} for $request")
@@ -144,7 +143,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
         case Failure(e) => e.printStackTrace()
       }
     //If we get here then the request is rate limited
-    case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _) =>
+    case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
       val duration = rateLimits.getOrElse(request.route.uri, 0)
       context.system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
   }
