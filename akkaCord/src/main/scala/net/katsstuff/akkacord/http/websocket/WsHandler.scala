@@ -34,7 +34,13 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, TextMessage, ValidUpgrade, WebSocketUpgradeResponse}
+import akka.http.scaladsl.model.ws.{
+  InvalidUpgradeResponse,
+  Message,
+  TextMessage,
+  ValidUpgrade,
+  WebSocketUpgradeResponse
+}
 import akka.stream.scaladsl._
 import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
 import io.circe
@@ -43,11 +49,12 @@ import io.circe.{parser, _}
 import net.katsstuff.akkacord.http.websocket.WsEvent.ReadyData
 import net.katsstuff.akkacord.{APIMessageHandlerEvent, AkkaCord, DiscordClientSettings}
 
-class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer) extends FSM[WsHandler.State, WsHandler.Data] {
+class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer)
+    extends FSM[WsHandler.State, WsHandler.Data] {
   import WsHandler._
   import WsProtocol._
 
-  private implicit val system: ActorSystem = context.system
+  private implicit val system:  ActorSystem      = context.system
   private var sendFirstSinkAck: Option[ActorRef] = None
 
   import system.dispatcher
@@ -99,12 +106,12 @@ class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordCli
     case Event(Status.Failure(e), _) =>
       log.error(e, "Connection interrupted")
       throw e
-    case Event(Left(NonFatal(e)), _)              => throw e
+    case Event(Left(NonFatal(e)), _) => throw e
     case event @ Event(Right(msg: WsMessage[_]), _) =>
       val res = handleWsMessages(event)
       sender() ! AckSink
       res
-    case event @ Event(_: WsMessage[_], _)        => handleExternalMessage(event)
+    case event @ Event(_: WsMessage[_], _) => handleExternalMessage(event)
     case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, source, resume)) =>
       if (receivedAck) {
         val seq = resume.map(_.seq)
@@ -192,7 +199,9 @@ class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordCli
 object WsHandler {
   import WsProtocol._
 
-  def props(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer): Props =
+  def props(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(
+      implicit mat: Materializer
+  ): Props =
     Props(new WsHandler(wsUri, token, cache, settings))
 
   class NoAckException(msg: String) extends Exception(msg)
@@ -235,7 +244,11 @@ object WsHandler {
     override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 
-  def matRunFlow[Mat1, Mat2, Mat3, Mat4](uri: Uri, src: Source[Message, Mat1], sink: Sink[Either[circe.Error, WsMessage[_]], Mat3])(
+  def matRunFlow[Mat1, Mat2, Mat3, Mat4](
+      uri: Uri,
+      src: Source[Message, Mat1],
+      sink: Sink[Either[circe.Error, WsMessage[_]], Mat3]
+  )(
       combine1: (Mat1, Future[WebSocketUpgradeResponse]) => Mat2
   )(combine2: (Mat2, Mat3) => Mat4)(implicit system: ActorSystem, mat: Materializer, log: LoggingAdapter): Mat4 =
     src.viaMat(wsFlow(uri).via(parseMessage))(combine1).toMat(sink)(combine2).run()

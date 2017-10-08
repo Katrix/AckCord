@@ -32,7 +32,14 @@ import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
 import net.katsstuff.akkacord.data._
-import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, CacheUpdateHandler, Handlers, NOOPHandler, RawHandlers}
+import net.katsstuff.akkacord.handlers.{
+  CacheHandler,
+  CacheSnapshotBuilder,
+  CacheUpdateHandler,
+  Handlers,
+  NOOPHandler,
+  RawHandlers
+}
 import net.katsstuff.akkacord.http.websocket.WsEvent
 import net.katsstuff.akkacord.http.websocket.WsEvent.GuildEmojisUpdateData
 import net.katsstuff.akkacord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, Routes}
@@ -64,7 +71,7 @@ object Requests {
 
   trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed] {
     override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
-    override val handleResponse       = new NOOPHandler[NotUsed]
+    override val handleResponse = new NOOPHandler[NotUsed]
     override def expectedResponseCode: StatusCode = StatusCodes.NoContent
   }
 
@@ -78,8 +85,15 @@ object Requests {
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
   }
 
-  case class ModifyChannelData(name: String, position: Int, topic: Option[String], bitrate: Option[Int], userLimit: Option[Int])
-  case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData) extends SimpleRESTRequest[ModifyChannelData, RawChannel] {
+  case class ModifyChannelData(
+      name: String,
+      position: Int,
+      topic: Option[String],
+      bitrate: Option[Int],
+      userLimit: Option[Int]
+  )
+  case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData)
+      extends SimpleRESTRequest[ModifyChannelData, RawChannel] {
     override def route:           RestRoute                  = Routes.modifyChannelPut(channelId)
     override def paramsEncoder:   Encoder[ModifyChannelData] = deriveEncoder[ModifyChannelData]
     override def responseDecoder: Decoder[RawChannel]        = Decoder[RawChannel]
@@ -92,7 +106,12 @@ object Requests {
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
   }
 
-  case class GetChannelMessagesData(around: Option[MessageId], before: Option[MessageId], after: Option[MessageId], limit: Option[Int]) {
+  case class GetChannelMessagesData(
+      around: Option[MessageId],
+      before: Option[MessageId],
+      after: Option[MessageId],
+      limit: Option[Int]
+  ) {
     require(Seq(around, before, after).count(_.isDefined) <= 1)
   }
   case class GetChannelMessages(channelId: ChannelId, params: GetChannelMessagesData)
@@ -100,7 +119,8 @@ object Requests {
     override def route:           RestRoute                       = Routes.getChannelMessages(channelId)
     override def paramsEncoder:   Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
     override def responseDecoder: Decoder[Seq[RawMessage]]        = Decoder[Seq[RawMessage]]
-    override def handleResponse:  CacheHandler[Seq[RawMessage]]   = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
+    override def handleResponse: CacheHandler[Seq[RawMessage]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
 
   case class GetChannelMessage(channelId: ChannelId, messageId: MessageId) extends NoParamsRequest[RawMessage] {
@@ -109,7 +129,13 @@ object Requests {
     override def handleResponse:  CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
   }
 
-  case class CreateMessageData(content: String, nonce: Option[Snowflake], tts: Boolean, file: Option[Path], embed: Option[OutgoingEmbed]) {
+  case class CreateMessageData(
+      content: String,
+      nonce: Option[Snowflake],
+      tts: Boolean,
+      file: Option[Path],
+      embed: Option[OutgoingEmbed]
+  ) {
     file.foreach(path => require(Files.isRegularFile(path)))
   }
 
@@ -117,7 +143,8 @@ object Requests {
   implicit private val createMessageDataEncoder: Encoder[CreateMessageData] = (a: CreateMessageData) =>
     Json
       .obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
-  case class CreateMessage(channelId: ChannelId, params: CreateMessageData) extends SimpleRESTRequest[CreateMessageData, RawMessage] {
+  case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
+      extends SimpleRESTRequest[CreateMessageData, RawMessage] {
     override def route:           RestRoute                  = Routes.createMessage(channelId)
     override def paramsEncoder:   Encoder[CreateMessageData] = createMessageDataEncoder
     override def responseDecoder: Decoder[RawMessage]        = Decoder[RawMessage]
@@ -128,15 +155,18 @@ object Requests {
     override def route: RestRoute = Routes.createReaction(emoji, messageId, channelId)
   }
 
-  case class DeleteOwnReaction(channelId: ChannelId, messageId: MessageId, emoji: String) extends NoParamsResponseRequest {
+  case class DeleteOwnReaction(channelId: ChannelId, messageId: MessageId, emoji: String)
+      extends NoParamsResponseRequest {
     override def route: RestRoute = Routes.deleteOwnReaction(emoji, messageId, channelId)
   }
 
-  case class DeleteUserReaction(channelId: ChannelId, messageId: MessageId, emoji: String, userId: UserId) extends NoParamsResponseRequest {
+  case class DeleteUserReaction(channelId: ChannelId, messageId: MessageId, emoji: String, userId: UserId)
+      extends NoParamsResponseRequest {
     override def route: RestRoute = Routes.deleteUserReaction(userId, emoji, messageId, channelId)
   }
 
-  case class GetReactions(channelId: ChannelId, messageId: MessageId, emoji: String) extends NoParamsRequest[Seq[User]] {
+  case class GetReactions(channelId: ChannelId, messageId: MessageId, emoji: String)
+      extends NoParamsRequest[Seq[User]] {
     override def route:           RestRoute               = Routes.getReactions(emoji, messageId, channelId)
     override def responseDecoder: Decoder[Seq[User]]      = Decoder[Seq[User]]
     override def handleResponse:  CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
@@ -149,7 +179,8 @@ object Requests {
   case class EditMessageData(content: Option[String], embed: Option[OutgoingEmbed]) {
     require(content.forall(_.length < 2000))
   }
-  case class EditMessage(channelId: ChannelId, messageId: MessageId, params: EditMessageData) extends SimpleRESTRequest[EditMessageData, RawMessage] {
+  case class EditMessage(channelId: ChannelId, messageId: MessageId, params: EditMessageData)
+      extends SimpleRESTRequest[EditMessageData, RawMessage] {
     override def route:           RestRoute                = Routes.editMessage(messageId, channelId)
     override def paramsEncoder:   Encoder[EditMessageData] = deriveEncoder[EditMessageData]
     override def responseDecoder: Decoder[RawMessage]      = Decoder[RawMessage]
@@ -161,7 +192,8 @@ object Requests {
   }
 
   case class BulkDeleteMessagesData(messages: Seq[MessageId])
-  case class BulkDeleteMessages(channelId: ChannelId, params: BulkDeleteMessagesData) extends NoResponseRequest[BulkDeleteMessagesData] {
+  case class BulkDeleteMessages(channelId: ChannelId, params: BulkDeleteMessagesData)
+      extends NoResponseRequest[BulkDeleteMessagesData] {
     override def route:         RestRoute                       = Routes.bulkDeleteMessages(channelId)
     override def paramsEncoder: Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
   }
@@ -195,9 +227,10 @@ object Requests {
   }
 
   case class GetPinnedMessages(channelId: ChannelId) extends NoParamsRequest[Seq[RawMessage]] {
-    override def route:           RestRoute                     = Routes.getPinnedMessage(channelId)
-    override def responseDecoder: Decoder[Seq[RawMessage]]      = Decoder[Seq[RawMessage]]
-    override def handleResponse:  CacheHandler[Seq[RawMessage]] = CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
+    override def route:           RestRoute                = Routes.getPinnedMessage(channelId)
+    override def responseDecoder: Decoder[Seq[RawMessage]] = Decoder[Seq[RawMessage]]
+    override def handleResponse: CacheHandler[Seq[RawMessage]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
   }
 
   case class AddPinnedChannelMessages(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
@@ -221,19 +254,22 @@ object Requests {
   }
    */
 
-  case class ListGuildEmojis(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[GuildEmoji], GuildEmojisUpdateData] {
-    override def route:                                      RestRoute                           = Routes.listGuildEmojis(guildId)
-    override def paramsEncoder:                              Encoder[NotUsed]                    = (_: NotUsed) => Json.obj()
-    override def params:                                     NotUsed                             = NotUsed
-    override def responseDecoder:                            Decoder[Seq[GuildEmoji]]            = Decoder[Seq[GuildEmoji]]
-    override def handleResponse:                             CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
-    override def processResponse(response: Seq[GuildEmoji]): GuildEmojisUpdateData               = GuildEmojisUpdateData(guildId, response)
+  case class ListGuildEmojis(guildId: GuildId)
+      extends ComplexRESTRequest[NotUsed, Seq[GuildEmoji], GuildEmojisUpdateData] {
+    override def route:           RestRoute                           = Routes.listGuildEmojis(guildId)
+    override def paramsEncoder:   Encoder[NotUsed]                    = (_: NotUsed) => Json.obj()
+    override def params:          NotUsed                             = NotUsed
+    override def responseDecoder: Decoder[Seq[GuildEmoji]]            = Decoder[Seq[GuildEmoji]]
+    override def handleResponse:  CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
+    override def processResponse(response: Seq[GuildEmoji]): GuildEmojisUpdateData =
+      GuildEmojisUpdateData(guildId, response)
   }
 
   //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
   case class CreateGuildEmojiData(name: String, image: ImageData)
 
-  case class CreateGuildEmoji(guildId: GuildId, params: CreateGuildEmojiData) extends SimpleRESTRequest[CreateGuildEmojiData, GuildEmoji] {
+  case class CreateGuildEmoji(guildId: GuildId, params: CreateGuildEmojiData)
+      extends SimpleRESTRequest[CreateGuildEmojiData, GuildEmoji] {
     override def route:           RestRoute                     = Routes.createGuildEmoji(guildId)
     override def paramsEncoder:   Encoder[CreateGuildEmojiData] = deriveEncoder[CreateGuildEmojiData]
     override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
@@ -250,7 +286,7 @@ object Requests {
   case class ModifyGuildEmojiData(name: String)
 
   case class ModifyGuildEmoji(emojiId: EmojiId, guildId: GuildId, params: ModifyGuildEmojiData)
-    extends SimpleRESTRequest[ModifyGuildEmojiData, GuildEmoji] {
+      extends SimpleRESTRequest[ModifyGuildEmojiData, GuildEmoji] {
     override def route:           RestRoute                     = Routes.modifyGuildEmoji(emojiId, guildId)
     override def paramsEncoder:   Encoder[ModifyGuildEmojiData] = deriveEncoder[ModifyGuildEmojiData]
     override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
@@ -298,7 +334,8 @@ object Requests {
       ownerId: Option[UserId],
       splash: Option[String]
   )
-  case class ModifyGuild(guildId: GuildId, params: ModifyGuildData) extends SimpleRESTRequest[ModifyGuildData, RawGuild] {
+  case class ModifyGuild(guildId: GuildId, params: ModifyGuildData)
+      extends SimpleRESTRequest[ModifyGuildData, RawGuild] {
     override def route:           RestRoute                = Routes.modifyGuild(guildId)
     override def paramsEncoder:   Encoder[ModifyGuildData] = deriveEncoder[ModifyGuildData]
     override def responseDecoder: Decoder[RawGuild]        = Decoder[RawGuild]
@@ -310,9 +347,10 @@ object Requests {
   }
 
   case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawChannel]] {
-    override def route:           RestRoute                     = Routes.getGuildChannels(guildId)
-    override def responseDecoder: Decoder[Seq[RawChannel]]      = Decoder[Seq[RawChannel]]
-    override def handleResponse:  CacheHandler[Seq[RawChannel]] = CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+    override def route:           RestRoute                = Routes.getGuildChannels(guildId)
+    override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
+    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
   }
 
   case class CreateGuildChannelData(
@@ -322,7 +360,8 @@ object Requests {
       userLimit: Option[Int],
       permissionOverwrites: Option[Seq[PermissionValue]]
   )
-  case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData) extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
+  case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData)
+      extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
     override def route: RestRoute = Routes.createGuildChannel(guildId)
     override def paramsEncoder: Encoder[CreateGuildChannelData] = {
       import io.circe.generic.extras.auto._
@@ -340,15 +379,18 @@ object Requests {
       implicit val enc = deriveEncoder[ModifyGuildChannelPositionsData]
       Encoder[Seq[ModifyGuildChannelPositionsData]]
     }
-    override def responseDecoder: Decoder[Seq[RawChannel]]      = Decoder[Seq[RawChannel]]
-    override def handleResponse:  CacheHandler[Seq[RawChannel]] = CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+    override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
+    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
   }
 
   trait GuildMemberRequest[Params] extends ComplexRESTRequest[Params, RawGuildMember, WsEvent.RawGuildMemberWithGuild] {
     def guildId: GuildId
-    override def responseDecoder:                           Decoder[RawGuildMember]                       = Decoder[RawGuildMember]
-    override def handleResponse:                            CacheHandler[WsEvent.RawGuildMemberWithGuild] = RawHandlers.rawGuildMemberWithGuildUpdateHandler
-    override def processResponse(response: RawGuildMember): WsEvent.RawGuildMemberWithGuild               = WsEvent.RawGuildMemberWithGuild(guildId, response)
+    override def responseDecoder: Decoder[RawGuildMember] = Decoder[RawGuildMember]
+    override def handleResponse: CacheHandler[WsEvent.RawGuildMemberWithGuild] =
+      RawHandlers.rawGuildMemberWithGuildUpdateHandler
+    override def processResponse(response: RawGuildMember): WsEvent.RawGuildMemberWithGuild =
+      WsEvent.RawGuildMemberWithGuild(guildId, response)
   }
 
   case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberRequest[NotUsed] {
@@ -358,13 +400,21 @@ object Requests {
   }
 
   case class ListGuildMembersData(limit: Option[Int], after: Option[UserId])
-  case class ListGuildMembers(guildId: GuildId, params: ListGuildMembersData) extends GuildMemberRequest[ListGuildMembersData] {
+  case class ListGuildMembers(guildId: GuildId, params: ListGuildMembersData)
+      extends GuildMemberRequest[ListGuildMembersData] {
     override def route:         RestRoute                     = Routes.listGuildMembers(guildId)
     override def paramsEncoder: Encoder[ListGuildMembersData] = deriveEncoder[ListGuildMembersData]
   }
 
-  case class AddGuildMemberData(accessToken: String, nick: Option[String], roles: Option[Seq[Role]], mute: Option[Boolean], deaf: Option[Boolean])
-  case class AddGuildMember(guildId: GuildId, userId: UserId, params: AddGuildMemberData) extends GuildMemberRequest[AddGuildMemberData] {
+  case class AddGuildMemberData(
+      accessToken: String,
+      nick: Option[String],
+      roles: Option[Seq[Role]],
+      mute: Option[Boolean],
+      deaf: Option[Boolean]
+  )
+  case class AddGuildMember(guildId: GuildId, userId: UserId, params: AddGuildMemberData)
+      extends GuildMemberRequest[AddGuildMemberData] {
     override def route:                RestRoute                   = Routes.addGuildMember(userId, guildId)
     override def paramsEncoder:        Encoder[AddGuildMemberData] = deriveEncoder[AddGuildMemberData]
     override def expectedResponseCode: StatusCode                  = StatusCodes.Created
@@ -377,13 +427,15 @@ object Requests {
       deaf: Option[Boolean],
       channelId: Option[ChannelId]
   )
-  case class ModifyGuildMember(guildId: GuildId, userId: UserId, params: ModifyGuildMemberData) extends NoResponseRequest[ModifyGuildMemberData] {
+  case class ModifyGuildMember(guildId: GuildId, userId: UserId, params: ModifyGuildMemberData)
+      extends NoResponseRequest[ModifyGuildMemberData] {
     override def route:         RestRoute                      = Routes.modifyGuildMember(userId, guildId)
     override def paramsEncoder: Encoder[ModifyGuildMemberData] = deriveEncoder[ModifyGuildMemberData]
   }
 
   case class ModifyBotUsersNickData(nick: String)
-  case class ModifyBotUsersNick(guildId: GuildId, params: ModifyBotUsersNickData) extends SimpleRESTRequest[ModifyBotUsersNickData, String] {
+  case class ModifyBotUsersNick(guildId: GuildId, params: ModifyBotUsersNickData)
+      extends SimpleRESTRequest[ModifyBotUsersNickData, String] {
     override def route:           RestRoute                       = Routes.modifyCurrentNick(guildId)
     override def paramsEncoder:   Encoder[ModifyBotUsersNickData] = deriveEncoder[ModifyBotUsersNickData]
     override def responseDecoder: Decoder[String]                 = Decoder[String]
@@ -419,7 +471,8 @@ object Requests {
   }
 
   case class CreateGuildBanData(`delete-message-days`: Int)
-  case class CreateGuildBan(guildId: GuildId, userId: UserId, params: CreateGuildBanData) extends NoResponseRequest[CreateGuildBanData] {
+  case class CreateGuildBan(guildId: GuildId, userId: UserId, params: CreateGuildBanData)
+      extends NoResponseRequest[CreateGuildBanData] {
     override def route:         RestRoute                   = Routes.createGuildMemberBan(userId, guildId)
     override def paramsEncoder: Encoder[CreateGuildBanData] = deriveEncoder[CreateGuildBanData]
   }
@@ -428,14 +481,17 @@ object Requests {
     override def route: RestRoute = Routes.removeGuildMemberBan(userId, guildId)
   }
 
-  case class GetGuildRoles(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[Role], Seq[WsEvent.GuildRoleModifyData]] {
+  case class GetGuildRoles(guildId: GuildId)
+      extends ComplexRESTRequest[NotUsed, Seq[Role], Seq[WsEvent.GuildRoleModifyData]] {
     override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
     override def params:        NotUsed          = NotUsed
 
-    override def route:                                RestRoute                                      = Routes.getGuildRole(guildId)
-    override def responseDecoder:                      Decoder[Seq[Role]]                             = Decoder[Seq[Role]]
-    override def handleResponse:                       CacheHandler[Seq[WsEvent.GuildRoleModifyData]] = CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData]               = response.map(WsEvent.GuildRoleModifyData(guildId, _))
+    override def route:           RestRoute          = Routes.getGuildRole(guildId)
+    override def responseDecoder: Decoder[Seq[Role]] = Decoder[Seq[Role]]
+    override def handleResponse: CacheHandler[Seq[WsEvent.GuildRoleModifyData]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
+    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData] =
+      response.map(WsEvent.GuildRoleModifyData(guildId, _))
   }
 
   case class CreateGuildRoleData(
@@ -447,11 +503,12 @@ object Requests {
   )
   case class CreateGuildRole(guildId: GuildId, params: CreateGuildRoleData)
       extends ComplexRESTRequest[CreateGuildRoleData, Role, WsEvent.GuildRoleModifyData] {
-    override def route:                           RestRoute                                 = Routes.createGuildRole(guildId)
-    override def paramsEncoder:                   Encoder[CreateGuildRoleData]              = deriveEncoder[CreateGuildRoleData]
-    override def responseDecoder:                 Decoder[Role]                             = Decoder[Role]
-    override def handleResponse:                  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: Role): WsEvent.GuildRoleModifyData               = WsEvent.GuildRoleModifyData(guildId, response)
+    override def route:           RestRoute                                 = Routes.createGuildRole(guildId)
+    override def paramsEncoder:   Encoder[CreateGuildRoleData]              = deriveEncoder[CreateGuildRoleData]
+    override def responseDecoder: Decoder[Role]                             = Decoder[Role]
+    override def handleResponse:  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
+    override def processResponse(response: Role): WsEvent.GuildRoleModifyData =
+      WsEvent.GuildRoleModifyData(guildId, response)
   }
 
   case class ModifyGuildRolePositionsData(id: RoleId, position: Int)
@@ -462,9 +519,11 @@ object Requests {
       implicit val enc = deriveEncoder[ModifyGuildRolePositionsData]
       Encoder[Seq[ModifyGuildRolePositionsData]]
     }
-    override def responseDecoder:                      Decoder[Seq[Role]]                             = Decoder[Seq[Role]]
-    override def handleResponse:                       CacheHandler[Seq[WsEvent.GuildRoleModifyData]] = CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData]               = response.map(WsEvent.GuildRoleModifyData(guildId, _))
+    override def responseDecoder: Decoder[Seq[Role]] = Decoder[Seq[Role]]
+    override def handleResponse: CacheHandler[Seq[WsEvent.GuildRoleModifyData]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
+    override def processResponse(response: Seq[Role]): Seq[WsEvent.GuildRoleModifyData] =
+      response.map(WsEvent.GuildRoleModifyData(guildId, _))
   }
 
   case class ModifyGuildRoleData(
@@ -476,11 +535,12 @@ object Requests {
   )
   case class ModifyGuildRole(guildId: GuildId, roleId: RoleId, params: ModifyGuildRoleData)
       extends ComplexRESTRequest[ModifyGuildRoleData, Role, WsEvent.GuildRoleModifyData] {
-    override def route:                           RestRoute                                 = Routes.modifyGuildRole(roleId, guildId)
-    override def paramsEncoder:                   Encoder[ModifyGuildRoleData]              = deriveEncoder[ModifyGuildRoleData]
-    override def responseDecoder:                 Decoder[Role]                             = Decoder[Role]
-    override def handleResponse:                  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: Role): WsEvent.GuildRoleModifyData               = WsEvent.GuildRoleModifyData(guildId, response)
+    override def route:           RestRoute                                 = Routes.modifyGuildRole(roleId, guildId)
+    override def paramsEncoder:   Encoder[ModifyGuildRoleData]              = deriveEncoder[ModifyGuildRoleData]
+    override def responseDecoder: Decoder[Role]                             = Decoder[Role]
+    override def handleResponse:  CacheHandler[WsEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
+    override def processResponse(response: Role): WsEvent.GuildRoleModifyData =
+      WsEvent.GuildRoleModifyData(guildId, response)
   }
 
   case class DeleteGuildRole(guildId: GuildId, roleId: RoleId) extends NoParamsResponseRequest {
@@ -523,12 +583,17 @@ object Requests {
   }
 
   case class CreateGuildIntegrationData(`type`: String /*TODO: Enum here*/, id: IntegrationId)
-  case class CreateGuildIntegration(guildId: GuildId, params: CreateGuildIntegrationData) extends NoResponseRequest[CreateGuildIntegrationData] {
+  case class CreateGuildIntegration(guildId: GuildId, params: CreateGuildIntegrationData)
+      extends NoResponseRequest[CreateGuildIntegrationData] {
     override def route:         RestRoute                           = Routes.createGuildIntegrations(guildId)
     override def paramsEncoder: Encoder[CreateGuildIntegrationData] = deriveEncoder[CreateGuildIntegrationData]
   }
 
-  case class ModifyGuildIntegrationData(expireBehavior: Int /*TODO: Better than Int here*/, expireGracePeriod: Int, enableEmoticons: Boolean)
+  case class ModifyGuildIntegrationData(
+      expireBehavior: Int /*TODO: Better than Int here*/,
+      expireGracePeriod: Int,
+      enableEmoticons: Boolean
+  )
   case class ModifyGuildIntegration(guildId: GuildId, integrationId: IntegrationId, params: ModifyGuildIntegrationData)
       extends NoResponseRequest[ModifyGuildIntegrationData] {
     override def route:         RestRoute                           = Routes.modifyGuildIntegration(integrationId, guildId)

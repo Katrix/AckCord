@@ -44,7 +44,9 @@ case class CacheSnapshot(
 
   override type MapType[A, B] = Map[A, B]
 
-  override def getChannelMessages(channelId: ChannelId): Map[MessageId, Message] = messages.getOrElse(channelId, Map.empty)
+  override def getChannelMessages(channelId: ChannelId): Map[MessageId, Message] =
+    messages.getOrElse(channelId, Map.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): Map[UserId, Instant] = lastTyped.getOrElse(channelId, Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): Map[UserId, Instant] =
+    lastTyped.getOrElse(channelId, Map.empty)
 }

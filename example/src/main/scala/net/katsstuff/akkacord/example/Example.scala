@@ -30,8 +30,8 @@ import net.katsstuff.akkacord.{APIMessage, DiscordClient, DiscordClientSettings}
 
 object Example {
 
-  implicit val system: ActorSystem = ActorSystem("AkkaCord")
-  implicit val mat: Materializer = ActorMaterializer()
+  implicit val system: ActorSystem  = ActorSystem("AkkaCord")
+  implicit val mat:    Materializer = ActorMaterializer()
   import system.dispatcher
 
   def main(args: Array[String]): Unit = {

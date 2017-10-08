@@ -47,7 +47,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case readyHandler: CacheHandlerEvent[_]
-        if readyHandler.data.isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
+        if readyHandler.data
+          .isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
       val builder = new CacheSnapshotBuilder(
         null, //The event will populate this,
         mutable.Map.empty,
@@ -84,7 +85,7 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
   }
 }
 object SnowflakeCache {
-  def props(eventStream: EventStream): Props = Props(classOf[SnowflakeCache], eventStream)
+  def props(eventStream: EventStream): Props = Props(new SnowflakeCache(eventStream))
 }
 
 sealed trait CacheHandlerEvent[Data] {
@@ -93,9 +94,12 @@ sealed trait CacheHandlerEvent[Data] {
 
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit = handler.handle(builder, data)
 }
-case class APIMessageHandlerEvent[Data](data: Data, sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage])(
+case class APIMessageHandlerEvent[Data](
+    data: Data,
+    sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
+)(implicit val handler: CacheHandler[Data])
+    extends CacheHandlerEvent[Data]
+case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context)(
     implicit val handler: CacheHandler[Data]
 ) extends CacheHandlerEvent[Data]
-case class RequestHandlerEvent[Data, Context](data: Data, sendTo: ActorRef, context: Context)(implicit val handler: CacheHandler[Data])
-    extends CacheHandlerEvent[Data]
 case class MiscHandlerEvent[Data](data: Data)(implicit val handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]

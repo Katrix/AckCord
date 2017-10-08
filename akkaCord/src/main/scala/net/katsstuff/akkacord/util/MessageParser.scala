@@ -26,7 +26,17 @@ package net.katsstuff.akkacord.util
 import scala.util.Try
 import scala.util.matching.Regex
 
-import net.katsstuff.akkacord.data.{CacheSnapshot, Channel, GuildChannel, GuildEmoji, Role, Snowflake, TChannel, TGuildChannel, User}
+import net.katsstuff.akkacord.data.{
+  CacheSnapshot,
+  Channel,
+  GuildChannel,
+  GuildEmoji,
+  Role,
+  Snowflake,
+  TChannel,
+  TGuildChannel,
+  User
+}
 import net.katsstuff.akkacord.util.MessageParser.RemainingAsString
 import shapeless._
 import shapeless.tag._
@@ -72,7 +82,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 trait MessageParserInstances {
 
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = Right((strings.tail, f(strings.head)))
+    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+      Right((strings.tail, f(strings.head)))
   }
 
   def withTry[A](f: String => A): MessageParser[A] = fromTry(s => Try(f(s)))
@@ -87,12 +98,15 @@ trait MessageParserInstances {
   }
 
   implicit val stringParser: MessageParser[String] = fromString(identity)
-  implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] = new MessageParser[RemainingAsString] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], RemainingAsString)] = {
-      val tagged = tag[String](strings.mkString(" "))
-      Right((Nil, tagged))
+  implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
+    new MessageParser[RemainingAsString] {
+      override def parse(
+          strings: List[String]
+      )(implicit c: CacheSnapshot): Either[String, (List[String], RemainingAsString)] = {
+        val tagged = tag[String](strings.mkString(" "))
+        Right((Nil, tagged))
+      }
     }
-  }
   implicit val byteParser:   MessageParser[Byte]   = withTry(_.toByte)
   implicit val shortParser:  MessageParser[Short]  = withTry(_.toShort)
   implicit val intParser:    MessageParser[Int]    = withTry(_.toInt)
@@ -105,7 +119,11 @@ trait MessageParserInstances {
   val roleRegex:    Regex = """<@&\d+>""".r
   val emojiRegex:   Regex = """<:\w+:\d+>""".r
 
-  def regexParser[A](name: String, regex: Regex, getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]): MessageParser[A] = new MessageParser[A] {
+  def regexParser[A](
+      name: String,
+      regex: Regex,
+      getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]
+  ): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
       val head = strings.head
 
@@ -122,17 +140,20 @@ trait MessageParserInstances {
   implicit val roleParser:    MessageParser[Role]       = regexParser("user", userRegex, _.getRole(_))
   implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("user", userRegex, _.getEmoji(_))
 
-  implicit val tChannelParser: MessageParser[TChannel] = channelParser.collectWithError("Passed in channel is not a text channel") {
-    case channel: TChannel => channel
-  }
+  implicit val tChannelParser: MessageParser[TChannel] =
+    channelParser.collectWithError("Passed in channel is not a text channel") {
+      case channel: TChannel => channel
+    }
 
-  implicit val guildChannelParser: MessageParser[GuildChannel] = channelParser.collectWithError("Passed in channel is not a guild channel") {
-    case channel: GuildChannel => channel
-  }
+  implicit val guildChannelParser: MessageParser[GuildChannel] =
+    channelParser.collectWithError("Passed in channel is not a guild channel") {
+      case channel: GuildChannel => channel
+    }
 
-  implicit val tGuildChannelParser: MessageParser[TGuildChannel] = channelParser.collectWithError("Passed in channel is not a guild text channel") {
-    case channel: TGuildChannel => channel
-  }
+  implicit val tGuildChannelParser: MessageParser[TGuildChannel] =
+    channelParser.collectWithError("Passed in channel is not a guild text channel") {
+      case channel: TGuildChannel => channel
+    }
 }
 
 trait DeriveMessageParser {
@@ -147,11 +168,15 @@ trait DeriveMessageParser {
   ): MessageParser[Head :: Tail] = new MessageParser[Head :: Tail] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], Head :: Tail)] =
       headParser.value.parse(strings).flatMap {
-        case (remaining, head) => tailParser.value.parse(remaining).map { case (lastRemaining, tail) => lastRemaining -> (head :: tail) }
+        case (remaining, head) =>
+          tailParser.value.parse(remaining).map { case (lastRemaining, tail) => lastRemaining -> (head :: tail) }
       }
   }
 
-  implicit def caseSerializer[A, Repr](implicit gen: LabelledGeneric.Aux[A, Repr], ser: Lazy[MessageParser[Repr]]): MessageParser[A] =
+  implicit def caseSerializer[A, Repr](
+      implicit gen: LabelledGeneric.Aux[A, Repr],
+      ser: Lazy[MessageParser[Repr]]
+  ): MessageParser[A] =
     new MessageParser[A] {
       override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
         ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }

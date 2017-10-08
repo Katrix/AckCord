@@ -44,9 +44,15 @@ trait GetChannel {
   def dmChannel(implicit snapshot: CacheSnapshot):    Option[DMChannel]    = snapshot.getDmChannel(channelId)
   def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = snapshot.getGuildChannel(channelId)
 
-  def tChannel(implicit snapshot: CacheSnapshot):      Option[TChannel]      = channel.collect { case tChannel: TChannel           => tChannel }
-  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = guildChannel.collect { case tChannel: TGuildChannel => tChannel }
-  def vGuildChannel(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = guildChannel.collect { case vChannel: VGuildChannel => vChannel }
+  def tChannel(implicit snapshot: CacheSnapshot): Option[TChannel] = channel.collect {
+    case tChannel: TChannel => tChannel
+  }
+  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = guildChannel.collect {
+    case tChannel: TGuildChannel => tChannel
+  }
+  def vGuildChannel(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = guildChannel.collect {
+    case vChannel: VGuildChannel => vChannel
+  }
 
   def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildChannel.flatMap(_.guild)
 }

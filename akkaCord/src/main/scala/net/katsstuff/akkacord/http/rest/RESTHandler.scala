@@ -33,7 +33,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
-import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
+import akka.http.scaladsl.model.headers.{`User-Agent`, Authorization, HttpCredentials}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.pipe
@@ -46,7 +46,10 @@ import net.katsstuff.akkacord.http.rest.Requests.CreateMessage
 import net.katsstuff.akkacord.{AkkaCord, DiscordClient, Request, RequestHandlerEvent}
 
 //Designed after http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html#examples
-class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Actor with ActorLogging with FailFastCirceSupport {
+class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
+    extends Actor
+    with ActorLogging
+    with FailFastCirceSupport {
 
   import context.dispatcher
   implicit val mat = ActorMaterializer()
@@ -81,9 +84,13 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
         if !rateLimits.contains(request.route.uri) =>
       val body = request match {
         case CreateMessage(_, data) if data.file.isDefined =>
-          val file     = data.file.get
-          val filePart = FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
-          val jsonPart = FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces))
+          val file = data.file.get
+          val filePart =
+            FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
+          val jsonPart = FormData.BodyPart(
+            "payload_json",
+            HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces)
+          )
 
           FormData(filePart, jsonPart).toEntity()
         case _ =>
@@ -106,7 +113,8 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
           updateRateLimit(route.uri, headers)
           handleRatelimit(headers, fullRequest)
           entity.discardBytes()
-        case Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)) if request.expectedResponseCode == StatusCodes.NoContent =>
+        case Success(HttpResponse(StatusCodes.NoContent, headers, entity, _))
+            if request.expectedResponseCode == StatusCodes.NoContent =>
           updateRateLimit(route.uri, headers)
           entity.discardBytes()
         case Success(HttpResponse(response, headers, entity, _)) =>
@@ -182,7 +190,9 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
         case None => log.error("No retry time for global rate limit")
       }
     } else {
-      headers.find(_.is("Retry-After")).foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, request))
+      headers
+        .find(_.is("Retry-After"))
+        .foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, request))
     }
   }
 
@@ -198,7 +208,8 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef) extends Acto
   }
 }
 object RESTHandler {
-  def props(token: HttpCredentials, snowflakeCache: ActorRef): Props = Props(classOf[RESTHandler], token, snowflakeCache)
+  def props(token: HttpCredentials, snowflakeCache: ActorRef): Props =
+    Props(classOf[RESTHandler], token, snowflakeCache)
   case object RateLimitStop
   case class RemoveRateLimit(uri: Uri)
 }

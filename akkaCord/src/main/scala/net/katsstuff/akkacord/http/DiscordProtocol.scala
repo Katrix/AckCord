@@ -41,7 +41,8 @@ trait DiscordProtocol {
   implicit val config: Configuration = Configuration.default.withSnakeCaseKeys.withDefaults
 
   implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[Int].contramap(ChannelType.idFor)
-  implicit val channelTypeDecoder: Decoder[ChannelType] = Decoder[Int].emap(ChannelType.forId(_).toRight("Not a valid channel type"))
+  implicit val channelTypeDecoder: Decoder[ChannelType] =
+    Decoder[Int].emap(ChannelType.forId(_).toRight("Not a valid channel type"))
 
   implicit val verificationLevelEncoder: Encoder[VerificationLevel] = Encoder[Int].contramap(VerificationLevel.idFor)
   implicit val verificationLevelDecoder: Decoder[VerificationLevel] =
@@ -52,20 +53,25 @@ trait DiscordProtocol {
     Decoder[Int].emap(NotificationLevel.forId(_).toRight("Not a valid notification level"))
 
   implicit val filterLevelEncoder: Encoder[FilterLevel] = Encoder[Int].contramap(FilterLevel.idFor)
-  implicit val filterLevelDecoder: Decoder[FilterLevel] = Decoder[Int].emap(FilterLevel.forId(_).toRight("Not a valid filter level"))
+  implicit val filterLevelDecoder: Decoder[FilterLevel] =
+    Decoder[Int].emap(FilterLevel.forId(_).toRight("Not a valid filter level"))
 
   implicit val mfaLevelEncoder: Encoder[MFALevel] = Encoder[Int].contramap(MFALevel.idFor)
-  implicit val mfaLevelDecoder: Decoder[MFALevel] = Decoder[Int].emap(MFALevel.forId(_).toRight("Not a valid MFA level"))
+  implicit val mfaLevelDecoder: Decoder[MFALevel] =
+    Decoder[Int].emap(MFALevel.forId(_).toRight("Not a valid MFA level"))
 
   implicit val messageTypeEncoder: Encoder[MessageType] = Encoder[Int].contramap(MessageType.idFor)
-  implicit val messageTypeDecoder: Decoder[MessageType] = Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
+  implicit val messageTypeDecoder: Decoder[MessageType] =
+    Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
 
-  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] = Encoder[String].contramap(PermissionValueType.nameOf)
+  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] =
+    Encoder[String].contramap(PermissionValueType.nameOf)
   implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
     Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
 
   implicit val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[String].contramap(PresenceStatus.nameOf)
-  implicit val presenceStatusDecoder: Decoder[PresenceStatus] = Decoder[String].emap(PresenceStatus.forName(_).toRight("Not a presence status"))
+  implicit val presenceStatusDecoder: Decoder[PresenceStatus] =
+    Decoder[String].emap(PresenceStatus.forName(_).toRight("Not a presence status"))
 
   implicit val snowflakeEncoder: Encoder[Snowflake] = Encoder[String].contramap(_.content)
   implicit val snowflakeDecoder: Decoder[Snowflake] = Decoder[String].emap(s => Right(Snowflake(s)))
@@ -193,7 +199,8 @@ trait DiscordProtocol {
   }
 
   implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
-  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] = Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
+  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] =
+    Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
 
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder

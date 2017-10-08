@@ -148,16 +148,30 @@ case class ReceivedEmbedImage(url: String, proxyUrl: Option[String], height: Opt
   def toOutgoing: OutgoingEmbedImage = OutgoingEmbedImage(url)
 }
 case class EmbedProvider(name: Option[String], url: Option[String])
-case class ReceivedEmbedAuthor(name: String, url: Option[String], iconUrl: Option[String], proxyIconUrl: Option[String]) {
+case class ReceivedEmbedAuthor(
+    name: String,
+    url: Option[String],
+    iconUrl: Option[String],
+    proxyIconUrl: Option[String]
+) {
 
   def toOutgoing: OutgoingEmbedAuthor = OutgoingEmbedAuthor(name, url, iconUrl)
 }
 case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String]) {
   def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
 }
+
 case class EmbedField(name: String, value: String, inline: Option[Boolean] = None)
 
-case class Attachment(id: Snowflake, filename: String, size: Int, url: String, proxyUrl: String, height: Option[Int], width: Option[Int])
+case class Attachment(
+    id: Snowflake,
+    filename: String,
+    size: Int,
+    url: String,
+    proxyUrl: String,
+    height: Option[Int],
+    width: Option[Int]
+)
 
 //TODO: Why all options here?
 case class OutgoingEmbed(

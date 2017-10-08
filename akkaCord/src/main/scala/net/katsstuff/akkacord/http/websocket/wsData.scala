@@ -167,7 +167,12 @@ object WsEvent {
   object Ready extends WsEvent[ReadyData]("READY", ReadyHandler, _ => (n, o) => Some(APIMessage.Ready(n, o)))
 
   case class ResumedData(_trace: Seq[String])
-  object Resumed extends WsEvent[ResumedData]("RESUMED", new NOOPHandler, _ => (current, prev) => Some(APIMessage.Resumed(current, prev)))
+  object Resumed
+      extends WsEvent[ResumedData](
+        "RESUMED",
+        new NOOPHandler,
+        _ => (current, prev) => Some(APIMessage.Resumed(current, prev))
+      )
 
   object ChannelCreate
       extends WsEvent[RawChannel](
@@ -195,7 +200,8 @@ object WsEvent {
       extends WsEvent[ChannelPinsUpdateData](
         "CHANNEL_PINS_UPDATE",
         notImplementedHandler,
-        data => (current, prev) => current.getChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
+        data =>
+          (current, prev) => current.getChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
       )
 
   object GuildCreate
@@ -215,7 +221,8 @@ object WsEvent {
       extends WsEvent[UnavailableGuild](
         "GUILD_DELETE",
         RawHandlers.deleteGuildDataHandler,
-        data => (current, prev) => prev.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, current, prev))
+        data =>
+          (current, prev) => prev.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, current, prev))
       )
 
   val userGen = LabelledGeneric[User]
@@ -225,14 +232,18 @@ object WsEvent {
       extends WsEvent[GuildUser](
         "GUILD_BAN_ADD",
         notImplementedHandler,
-        data => (current, prev) => current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), current, prev))
       )
 
   object GuildBanRemove
       extends WsEvent[GuildUser](
         "GUILD_BAN_REMOVE",
         notImplementedHandler,
-        data => (current, prev) => current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
       )
 
   case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[GuildEmoji])
@@ -240,7 +251,9 @@ object WsEvent {
       extends WsEvent[GuildEmojisUpdateData](
         "GUILD_EMOJIS_UPDATE",
         RawHandlers.guildEmojisUpdateDataHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, current, prev))
       )
 
   case class GuildIntegrationsUpdateData(guildId: GuildId)
@@ -248,7 +261,9 @@ object WsEvent {
       extends WsEvent[GuildIntegrationsUpdateData](
         "GUILD_INTEGRATIONS_UPDATE",
         notImplementedHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
       )
 
   /*
@@ -301,7 +316,9 @@ object WsEvent {
       extends WsEvent[GuildMemberRemoveData](
         "GUILD_MEMBER_REMOVE",
         RawHandlers.rawGuildMemberDeleteHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
       )
 
   case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //TODO: Nick can probably be null here
@@ -313,7 +330,11 @@ object WsEvent {
           (current, prev) =>
             current
               .getGuild(data.guildId)
-              .map(g => APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole), data.user, data.nick, current, prev))
+              .map(
+                g =>
+                  APIMessage
+                    .GuildMemberUpdate(g, data.roles.flatMap(current.getRole), data.user, data.nick, current, prev)
+          )
       )
 
   case class GuildMemberChunkData(guildId: GuildId, members: Seq[RawGuildMember])
@@ -325,7 +346,9 @@ object WsEvent {
           (current, prev) =>
             current
               .getGuild(data.guildId)
-              .map(g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), current, prev))
+              .map(
+                g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), current, prev)
+          )
       )
 
   case class GuildRoleModifyData(guildId: GuildId, role: Role)
@@ -333,13 +356,17 @@ object WsEvent {
       extends WsEvent[GuildRoleModifyData](
         "GUILD_ROLE_CREATE",
         RawHandlers.roleUpdateHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleCreate(g, data.role, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleCreate(g, data.role, current, prev))
       )
   object GuildRoleUpdate
       extends WsEvent[GuildRoleModifyData](
         "GUILD_ROLE_UPDATE",
         RawHandlers.roleUpdateHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleUpdate(g, data.role, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleUpdate(g, data.role, current, prev))
       )
 
   case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)
@@ -347,14 +374,18 @@ object WsEvent {
       extends WsEvent[GuildRoleDeleteData](
         "GUILD_ROLE_DELETE",
         RawHandlers.roleDeleteHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.GuildRoleDelete(g, data.roleId, current, prev))
+        data =>
+          (current, prev) =>
+            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleDelete(g, data.roleId, current, prev))
       )
 
   object MessageCreate
       extends WsEvent[RawMessage](
         "MESSAGE_CREATE",
         RawHandlers.rawMessageUpdateHandler,
-        data => (current, prev) => current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+        data =>
+          (current, prev) =>
+            current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
       )
 
   //RawPartialMessage is defined explicitly because we need to handle the author
@@ -380,7 +411,9 @@ object WsEvent {
       extends WsEvent[RawPartialMessage](
         "MESSAGE_UPDATE",
         RawHandlers.rawPartialMessageUpdateHandler,
-        data => (current, prev) => current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+        data =>
+          (current, prev) =>
+            current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
       )
 
   case class MessageDeleteData(id: MessageId, channelId: ChannelId)
@@ -410,7 +443,10 @@ object WsEvent {
           (current, prev) =>
             current
               .getChannel(data.channelId)
-              .collect { case channel: TChannel => APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev) }
+              .collect {
+                case channel: TChannel =>
+                  APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev)
+          }
       )
 
   case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: MessageEmoji)
@@ -456,7 +492,13 @@ object WsEvent {
             } yield APIMessage.MessageReactionRemoveAll(tChannel, message, current, prev)
       )
 
-  case class PresenceUpdateData(user: PartialUser, roles: Seq[RoleId], game: Option[RawPresenceGame], guildId: GuildId, status: PresenceStatus)
+  case class PresenceUpdateData(
+      user: PartialUser,
+      roles: Seq[RoleId],
+      game: Option[RawPresenceGame],
+      guildId: GuildId,
+      status: PresenceStatus
+  )
   object PresenceUpdate
       extends WsEvent[PresenceUpdateData](
         "PRESENCE_UPDATE",
@@ -503,7 +545,11 @@ object WsEvent {
       extends WsEvent[VoiceServerUpdateData](
         "VOICE_SERVER_UPDATE",
         notImplementedHandler,
-        data => (current, prev) => current.getGuild(data.guildId).map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, current, prev))
+        data =>
+          (current, prev) =>
+            current
+              .getGuild(data.guildId)
+              .map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, current, prev))
       )
 
   case class WebhookUpdateData(guildId: GuildId, channelId: ChannelId)

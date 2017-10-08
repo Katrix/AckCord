@@ -45,13 +45,15 @@ trait CacheSnapshotLike {
   def users:             MapType[UserId, User]
   def presences:         MapType[GuildId, MapType[UserId, Presence]]
 
-  def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannels.get(id)
+  def getDmChannel(id: ChannelId):      Option[DMChannel]      = dmChannels.get(id)
   def getGroupDmChannel(id: ChannelId): Option[GroupDMChannel] = groupDmChannels.get(id)
 
-  def getGuild(id: GuildId):                Option[Guild]              = guilds.get(id)
-  def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] = guilds.get(id).orElse(unavailableGuilds.get(id))
+  def getGuild(id: GuildId): Option[Guild] = guilds.get(id)
+  def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] =
+    guilds.get(id).orElse(unavailableGuilds.get(id))
 
-  def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] = guilds.get(guildId).flatMap(_.channels.get(id))
+  def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] =
+    guilds.get(guildId).flatMap(_.channels.get(id))
   def getGuildChannel(id: ChannelId): Option[GuildChannel] = guilds.values.collectFirst {
     case guild if guild.channels.contains(id) => guild.channels(id)
   }
@@ -72,14 +74,16 @@ trait CacheSnapshotLike {
 
   def getChannelMessages(channelId: ChannelId): MapType[MessageId, Message]
 
-  def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message] = messages.get(channelId).flatMap(_.get(messageId))
+  def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message] =
+    messages.get(channelId).flatMap(_.get(messageId))
   def getMessage(messageId: MessageId): Option[Message] = messages.values.collectFirst {
     case channelMap if channelMap.contains(messageId) => channelMap(messageId)
   }
 
   def getChannelLastTyped(channelId: ChannelId): MapType[UserId, Instant]
 
-  def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant] = lastTyped.get(channelId).flatMap(_.get(userId))
+  def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant] =
+    lastTyped.get(channelId).flatMap(_.get(userId))
 
   def getUser(id: UserId): Option[User] = users.get(id)
 

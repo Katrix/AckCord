@@ -44,7 +44,17 @@ object RawHandlers extends Handlers {
             position             <- rawChannel.position
             permissionOverwrites <- rawChannel.permissionOverwrites
           } {
-            val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+            val c: GuildChannel = TGuildChannel(
+              rawChannel.id,
+              guildId,
+              name,
+              position,
+              permissionOverwrites,
+              rawChannel.topic,
+              rawChannel.lastMessageId,
+              rawChannel.nsfw.getOrElse(false),
+              rawChannel.parentId
+            )
             handleUpdateLog(builder, c, log)
           }
         case ChannelType.GuildVoice =>
@@ -56,7 +66,17 @@ object RawHandlers extends Handlers {
             bitRate              <- rawChannel.bitrate
             userLimit            <- rawChannel.userLimit
           } {
-            val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+            val c: GuildChannel = VGuildChannel(
+              rawChannel.id,
+              guildId,
+              name,
+              position,
+              permissionOverwrites,
+              bitRate,
+              userLimit,
+              rawChannel.nsfw.getOrElse(false),
+              rawChannel.parentId
+            )
             handleUpdateLog(builder, c, log)
           }
         case ChannelType.GuildCategory =>
@@ -66,7 +86,16 @@ object RawHandlers extends Handlers {
             position             <- rawChannel.position
             permissionOverwrites <- rawChannel.permissionOverwrites
           } {
-            val c: GuildChannel = GuildCategory(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+            val c: GuildChannel =
+              GuildCategory(
+                rawChannel.id,
+                guildId,
+                name,
+                position,
+                permissionOverwrites,
+                rawChannel.nsfw.getOrElse(false),
+                rawChannel.parentId
+              )
             handleUpdateLog(builder, c, log)
           }
         case ChannelType.DM =>
@@ -79,7 +108,15 @@ object RawHandlers extends Handlers {
             ownerId <- rawChannel.ownerId
             users   <- rawChannel.recipients
           } {
-            val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon)
+            val c = GroupDMChannel(
+              rawChannel.id,
+              name,
+              users.map(_.id),
+              rawChannel.lastMessageId,
+              ownerId,
+              rawChannel.applicationId,
+              rawChannel.icon
+            )
             handleUpdateLog(builder, c, log)
           }
       }
@@ -151,22 +188,24 @@ object RawHandlers extends Handlers {
       }
   }
 
-  implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler { (builder, obj, log) =>
-    val RawGuildMemberWithGuild(guildId, user, nick, roles, joinedAt, deaf, mute) = obj
-    val member                                                                    = GuildMember(user.id, obj.guildId, nick, roles, joinedAt, deaf, mute)
+  implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler {
+    (builder, obj, log) =>
+      val RawGuildMemberWithGuild(guildId, user, nick, roles, joinedAt, deaf, mute) = obj
+      val member                                                                    = GuildMember(user.id, obj.guildId, nick, roles, joinedAt, deaf, mute)
 
-    builder.getGuild(guildId) match {
-      case Some(guild) => builder.guilds.put(guildId, guild.copy(members = guild.members + ((user.id, member))))
-      case None        => log.warning(s"Can't find guild for guildMember update $obj")
-    }
+      builder.getGuild(guildId) match {
+        case Some(guild) => builder.guilds.put(guildId, guild.copy(members = guild.members + ((user.id, member))))
+        case None        => log.warning(s"Can't find guild for guildMember update $obj")
+      }
 
-    handleUpdateLog(builder, user, log)
+      handleUpdateLog(builder, user, log)
   }
 
   implicit val rawGuildMemberChunkHandler: CacheUpdateHandler[GuildMemberChunkData] = updateHandler {
     case (builder, obj @ GuildMemberChunkData(guildId, newRawMembers), log) =>
       val (newUsers, newMembers) = newRawMembers.map {
-        case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) => user -> GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
+        case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) =>
+          user -> GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
       }.unzip
 
       builder.getGuild(guildId) match {
@@ -185,7 +224,10 @@ object RawHandlers extends Handlers {
         case Some(guild) =>
           guild.members.get(user.id) match {
             case Some(guildMember) =>
-              builder.guilds.put(guildId, guild.copy(members = guild.members + ((user.id, guildMember.copy(nick = nick, roles = roles)))))
+              builder.guilds.put(
+                guildId,
+                guild.copy(members = guild.members + ((user.id, guildMember.copy(nick = nick, roles = roles))))
+              )
             case None =>
               log.warning(s"Can't find user for user update $obj")
           }
@@ -229,48 +271,50 @@ object RawHandlers extends Handlers {
     handleUpdateLog(builder, users, log)
   }
 
-  implicit val rawPartialMessageUpdateHandler: CacheUpdateHandler[RawPartialMessage] = updateHandler { (builder, obj, log) =>
-    val newUsers = obj.mentions.getOrElse(Seq.empty)
+  implicit val rawPartialMessageUpdateHandler: CacheUpdateHandler[RawPartialMessage] = updateHandler {
+    (builder, obj, log) =>
+      val newUsers = obj.mentions.getOrElse(Seq.empty)
 
-    builder.getMessage(obj.channelId, obj.id).map { message =>
-      val newMessage = message.copy(
-        author = obj.author.getOrElse(message.author),
-        content = obj.content.getOrElse(message.content),
-        timestamp = obj.timestamp.getOrElse(message.timestamp),
-        editedTimestamp = obj.editedTimestamp.orElse(message.editedTimestamp),
-        tts = obj.tts.getOrElse(message.tts),
-        mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
-        mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
-        mentionRoles = obj.mentionRoles.getOrElse(message.mentionRoles),
-        attachment = obj.attachment.getOrElse(message.attachment),
-        embeds = obj.embeds.getOrElse(message.embeds),
-        reactions = obj.reactions.getOrElse(message.reactions),
-        nonce = obj.nonce.orElse(message.nonce),
-        pinned = obj.pinned.getOrElse(message.pinned),
-        webhookId = obj.webhookId.orElse(message.webhookId)
-      )
+      builder.getMessage(obj.channelId, obj.id).map { message =>
+        val newMessage = message.copy(
+          author = obj.author.getOrElse(message.author),
+          content = obj.content.getOrElse(message.content),
+          timestamp = obj.timestamp.getOrElse(message.timestamp),
+          editedTimestamp = obj.editedTimestamp.orElse(message.editedTimestamp),
+          tts = obj.tts.getOrElse(message.tts),
+          mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
+          mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
+          mentionRoles = obj.mentionRoles.getOrElse(message.mentionRoles),
+          attachment = obj.attachment.getOrElse(message.attachment),
+          embeds = obj.embeds.getOrElse(message.embeds),
+          reactions = obj.reactions.getOrElse(message.reactions),
+          nonce = obj.nonce.orElse(message.nonce),
+          pinned = obj.pinned.getOrElse(message.pinned),
+          webhookId = obj.webhookId.orElse(message.webhookId)
+        )
 
-      builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, newMessage)
-    }
+        builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, newMessage)
+      }
 
-    handleUpdateLog(builder, newUsers, log)
+      handleUpdateLog(builder, newUsers, log)
   }
 
   implicit val lastTypedHandler: CacheUpdateHandler[TypingStartData] = updateHandler { (builder, obj, log) =>
     builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
   }
 
-  implicit val rawMessageReactionUpdateHandler: CacheUpdateHandler[MessageReactionData] = updateHandler { (builder, obj, _) =>
-    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
-      val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
-      val changed = toChange.map { e =>
-        e.copy(count = e.count + 1, me = if (builder.botUser.id == obj.userId) true else e.me)
+  implicit val rawMessageReactionUpdateHandler: CacheUpdateHandler[MessageReactionData] = updateHandler {
+    (builder, obj, _) =>
+      builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+        val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
+        val changed = toChange.map { e =>
+          e.copy(count = e.count + 1, me = if (builder.botUser.id == obj.userId) true else e.me)
+        }
+
+        val newMessage = message.copy(reactions = toNotChange ++ changed)
+
+        builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
       }
-
-      val newMessage = message.copy(reactions = toNotChange ++ changed)
-
-      builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
-    }
   }
 
   //Delete
@@ -283,7 +327,17 @@ object RawHandlers extends Handlers {
           position             <- rawChannel.position
           permissionOverwrites <- rawChannel.permissionOverwrites
         } {
-          val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+          val c: GuildChannel = TGuildChannel(
+            rawChannel.id,
+            guildId,
+            name,
+            position,
+            permissionOverwrites,
+            rawChannel.topic,
+            rawChannel.lastMessageId,
+            rawChannel.nsfw.getOrElse(false),
+            rawChannel.parentId
+          )
           handleDeleteLog(builder, c, log)
         }
       case ChannelType.GuildVoice =>
@@ -295,7 +349,17 @@ object RawHandlers extends Handlers {
           bitRate              <- rawChannel.bitrate
           userLimit            <- rawChannel.userLimit
         } {
-          val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+          val c: GuildChannel = VGuildChannel(
+            rawChannel.id,
+            guildId,
+            name,
+            position,
+            permissionOverwrites,
+            bitRate,
+            userLimit,
+            rawChannel.nsfw.getOrElse(false),
+            rawChannel.parentId
+          )
           handleDeleteLog(builder, c, log)
         }
       case ChannelType.GuildCategory =>
@@ -305,7 +369,16 @@ object RawHandlers extends Handlers {
           position             <- rawChannel.position
           permissionOverwrites <- rawChannel.permissionOverwrites
         } {
-          val c: GuildChannel = GuildCategory(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+          val c: GuildChannel =
+            GuildCategory(
+              rawChannel.id,
+              guildId,
+              name,
+              position,
+              permissionOverwrites,
+              rawChannel.nsfw.getOrElse(false),
+              rawChannel.parentId
+            )
           handleDeleteLog(builder, c, log)
         }
       case ChannelType.DM =>
@@ -318,7 +391,15 @@ object RawHandlers extends Handlers {
           ownerId <- rawChannel.ownerId
           users   <- rawChannel.recipients
         } {
-          val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon)
+          val c = GroupDMChannel(
+            rawChannel.id,
+            name,
+            users.map(_.id),
+            rawChannel.lastMessageId,
+            ownerId,
+            rawChannel.applicationId,
+            rawChannel.icon
+          )
           handleDeleteLog(builder, c, log)
         }
     }
@@ -359,22 +440,24 @@ object RawHandlers extends Handlers {
       builder.messages.get(channelId).foreach(_ --= ids)
   }
 
-  implicit val rawMessageReactionRemoveHandler: CacheDeleteHandler[MessageReactionData] = deleteHandler { (builder, obj, _) =>
-    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
-      val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
-      val changed = toChange.map { e =>
-        e.copy(count = e.count - 1, me = if (builder.botUser.id == obj.userId) false else e.me)
+  implicit val rawMessageReactionRemoveHandler: CacheDeleteHandler[MessageReactionData] = deleteHandler {
+    (builder, obj, _) =>
+      builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+        val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
+        val changed = toChange.map { e =>
+          e.copy(count = e.count - 1, me = if (builder.botUser.id == obj.userId) false else e.me)
+        }
+
+        val newMessage = message.copy(reactions = toNotChange ++ changed)
+
+        builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
       }
-
-      val newMessage = message.copy(reactions = toNotChange ++ changed)
-
-      builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
-    }
   }
 
-  implicit val rawMessageReactionRemoveAllHandler: CacheDeleteHandler[MessageReactionRemoveAllData] = deleteHandler { (builder, obj, _) =>
-    builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
-      builder.messages(obj.channelId).put(obj.messageId, message.copy(reactions = Nil))
-    }
+  implicit val rawMessageReactionRemoveAllHandler: CacheDeleteHandler[MessageReactionRemoveAllData] = deleteHandler {
+    (builder, obj, _) =>
+      builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
+        builder.messages(obj.channelId).put(obj.messageId, message.copy(reactions = Nil))
+      }
   }
 }

@@ -53,7 +53,8 @@ package object syntax {
     def fetchMessages[Context](limit: Option[Int] = Some(50), context: Context = NotUsed) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context)
 
-    def fetchMessage[Context](id: MessageId, context: Context = NotUsed) = Request(GetChannelMessage(tChannel.id, id), context)
+    def fetchMessage[Context](id: MessageId, context: Context = NotUsed) =
+      Request(GetChannelMessage(tChannel.id, id), context)
 
     def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed) =
       Request(BulkDeleteMessages(tChannel.id, BulkDeleteMessagesData(ids)), context)
@@ -61,7 +62,8 @@ package object syntax {
     def editChannelPermissions[Context](role: Role, allow: Permission, deny: Permission, context: Context = NotUsed) =
       Request(EditChannelPermissions(tChannel.id, role.id, EditChannelPermissionsData(allow, deny, "role")), context)
 
-    def deleteChannelPermissions[Context](user: User, context: Context = NotUsed) = Request(DeleteChannelPermission(tChannel.id, user.id), context)
+    def deleteChannelPermissions[Context](user: User, context: Context = NotUsed) =
+      Request(DeleteChannelPermission(tChannel.id, user.id), context)
 
     def triggerTyping[Context](context: Context = NotUsed) = Request(TriggerTypingIndicator(tChannel.id), context)
 
@@ -84,11 +86,16 @@ package object syntax {
         bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
         context: Context = NotUsed
-    ) = Request(ModifyChannel(channel.id, ModifyChannelData(name, position, None, Some(bitrate), Some(userLimit))), context)
+    ) =
+      Request(
+        ModifyChannel(channel.id, ModifyChannelData(name, position, None, Some(bitrate), Some(userLimit))),
+        context
+      )
   }
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
-    def rolesForUser(userId: UserId): Seq[Role] = guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
+    def rolesForUser(userId: UserId): Seq[Role] =
+      guild.members.get(userId).map(_.roles.flatMap(guild.roles.get)).toSeq.flatten
 
     def tChannels: Seq[TGuildChannel] =
       guild.channels.values.collect {
@@ -100,9 +107,13 @@ package object syntax {
         case tChannel: VGuildChannel => tChannel
       }.toSeq
 
-    def channelById(id: ChannelId):  Option[GuildChannel]  = guild.channels.get(id)
-    def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).collect { case tChannel: TGuildChannel => tChannel }
-    def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).collect { case vChannel: VGuildChannel => vChannel }
+    def channelById(id: ChannelId): Option[GuildChannel] = guild.channels.get(id)
+    def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).collect {
+      case tChannel: TGuildChannel => tChannel
+    }
+    def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).collect {
+      case vChannel: VGuildChannel => vChannel
+    }
 
     def channelsByName(name: String):  Seq[GuildChannel]  = guild.channels.values.filter(_.name == name).toSeq
     def tChannelsByName(name: String): Seq[TGuildChannel] = tChannels.filter(_.name == name)
@@ -122,8 +133,9 @@ package object syntax {
     def presenceById(id: UserId):    Option[Presence] = guild.presences.get(id)
     def presenceForUser(user: User): Option[Presence] = presenceById(user.id)
 
-    def fetchEmojis[Context](context: Context = NotUsed)                        = Request(ListGuildEmojis(guild.id), context)
-    def fetchSingleEmoji[Context](emojiId: EmojiId, context: Context = NotUsed) = Request(GetGuildEmoji(emojiId, guild.id), context)
+    def fetchEmojis[Context](context: Context = NotUsed) = Request(ListGuildEmojis(guild.id), context)
+    def fetchSingleEmoji[Context](emojiId: EmojiId, context: Context = NotUsed) =
+      Request(GetGuildEmoji(emojiId, guild.id), context)
     def createEmoji[Context](name: String, image: ImageData, context: Context = NotUsed) =
       Request(CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image)), context)
 
@@ -134,7 +146,8 @@ package object syntax {
       if (emoji.managed) ??? else s"${emoji.name}:${emoji.id}"
     def modify[Context](name: String, guildId: GuildId, context: Context = NotUsed) =
       Request(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context)
-    def delete[Context](guildId: GuildId, context: Context = NotUsed) = Request(DeleteGuildEmoji(emoji.id, guildId), context)
+    def delete[Context](guildId: GuildId, context: Context = NotUsed) =
+      Request(DeleteGuildEmoji(emoji.id, guildId), context)
   }
 
   implicit class MessageSyntax(val message: Message) extends AnyVal {
@@ -161,7 +174,9 @@ package object syntax {
 
     def delete[Context](context: Context = NotUsed) = Request(DeleteMessage(message.channelId, message.id), context)
 
-    def addPinnedMessages[Context](context: Context = NotUsed)    = Request(AddPinnedChannelMessages(message.channelId, message.id), context)
-    def removePinnedMessages[Context](context: Context = NotUsed) = Request(DeletePinnedChannelMessages(message.channelId, message.id), context)
+    def addPinnedMessages[Context](context: Context = NotUsed) =
+      Request(AddPinnedChannelMessages(message.channelId, message.id), context)
+    def removePinnedMessages[Context](context: Context = NotUsed) =
+      Request(DeletePinnedChannelMessages(message.channelId, message.id), context)
   }
 }

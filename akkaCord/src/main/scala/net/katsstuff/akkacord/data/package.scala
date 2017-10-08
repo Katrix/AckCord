@@ -44,7 +44,6 @@ package object data {
     }
   }
 
-
   type MessageId = Snowflake @@ Message
   object MessageId {
     def apply(s: Snowflake): MessageId = {

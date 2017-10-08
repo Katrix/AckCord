@@ -42,12 +42,16 @@ import net.katsstuff.akkacord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.akkacord.http.websocket.{WsHandler, WsMessage}
 import net.katsstuff.akkacord.http.{RawPresenceGame, Routes}
 
-class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(implicit mat: Materializer) extends Actor with ActorLogging {
+class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
+    implicit mat: Materializer
+) extends Actor
+    with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
-  private val cache       = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val wsHandler   = system.actorOf(WsHandler.props(wsUri, token, cache, settings), "WsHandler")
-  private val restHandler = system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
+  private val cache     = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val wsHandler = system.actorOf(WsHandler.props(wsUri, token, cache, settings), "WsHandler")
+  private val restHandler =
+    system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
   private var shutdownCount = 0
 
@@ -72,7 +76,9 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(implicit mat: Materializer): Props =
+  def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
+      implicit mat: Materializer
+  ): Props =
     Props(new DiscordClient(wsUri, token, eventStream, settings))
   case object ShutdownClient
   case object StartClient
@@ -85,14 +91,18 @@ object DiscordClient extends FailFastCirceSupport {
         case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
         case HttpResponse(code, headers, entity, _) =>
           entity.discardBytes()
-          Future.failed(new IllegalStateException(s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"))
+          Future.failed(
+            new IllegalStateException(
+              s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"
+            )
+          )
       }
       .flatMap { json =>
         json.hcursor.get[String]("url") match {
           case Right(gateway) =>
             http.system.log.info(s"Got WS gateway: $gateway")
             Future.successful(gateway)
-          case Left(e)        => Future.failed(e)
+          case Left(e) => Future.failed(e)
         }
       }
   }
@@ -110,5 +120,6 @@ case class DiscordClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false
 ) {
-  def connect(wsUri: Uri)(implicit mat: Materializer): ActorRef = system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient")
+  def connect(wsUri: Uri)(implicit mat: Materializer): ActorRef =
+    system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient")
 }

@@ -25,7 +25,7 @@ package net.katsstuff.akkacord
 
 object AkkaCord {
 
-  val Version = "0.1"
+  val Version           = "0.1"
   val DiscordApiVersion = "6"
 
 }

@@ -132,7 +132,10 @@ case class GuildCategory(
   override def channelType: ChannelType = ChannelType.GuildCategory
 }
 
-case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId) extends Channel with TChannel with GetUser {
+case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId)
+    extends Channel
+    with TChannel
+    with GetUser {
   override def channelType: ChannelType = ChannelType.DM
 }
 

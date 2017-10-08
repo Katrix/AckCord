@@ -28,26 +28,33 @@ import java.time.OffsetDateTime
 import net.katsstuff.akkacord.data._
 
 case class RawChannel(
-  id: ChannelId,
-  `type`: ChannelType,
-  guildId: Option[GuildId],
-  position: Option[Int],
-  permissionOverwrites: Option[Seq[PermissionValue]],
-  name: Option[String],
-  topic: Option[String],
-  nsfw: Option[Boolean],
-  lastMessageId: Option[MessageId],
-  bitrate: Option[Int],
-  userLimit: Option[Int],
-  recipients: Option[Seq[User]],
-  icon: Option[String],
-  ownerId: Option[UserId],
-  applicationId: Option[Snowflake],
-  parentId: Option[ChannelId]
+    id: ChannelId,
+    `type`: ChannelType,
+    guildId: Option[GuildId],
+    position: Option[Int],
+    permissionOverwrites: Option[Seq[PermissionValue]],
+    name: Option[String],
+    topic: Option[String],
+    nsfw: Option[Boolean],
+    lastMessageId: Option[MessageId],
+    bitrate: Option[Int],
+    userLimit: Option[Int],
+    recipients: Option[Seq[User]],
+    icon: Option[String],
+    ownerId: Option[UserId],
+    applicationId: Option[Snowflake],
+    parentId: Option[ChannelId]
 )
 
 //Remember to edit RawGuildMemberWithGuild when editing this
-case class RawGuildMember(user: User, nick: Option[String], roles: Seq[RoleId], joinedAt: OffsetDateTime, deaf: Boolean, mute: Boolean)
+case class RawGuildMember(
+    user: User,
+    nick: Option[String],
+    roles: Seq[RoleId],
+    joinedAt: OffsetDateTime,
+    deaf: Boolean,
+    mute: Boolean
+)
 
 case class RawMessage(
     id: MessageId,

@@ -58,8 +58,10 @@ class CacheSnapshotBuilder(
     users = users.toMap,
     presences = presences.map { case (k, v) => k -> v.toMap }.toMap
   )
-  override def getChannelMessages(channelId: ChannelId):  mutable.Map[MessageId, Message] = messages.getOrElse(channelId, mutable.Map.empty)
-  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[UserId, Instant]    = lastTyped.getOrElse(channelId, mutable.Map.empty)
+  override def getChannelMessages(channelId: ChannelId): mutable.Map[MessageId, Message] =
+    messages.getOrElse(channelId, mutable.Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[UserId, Instant] =
+    lastTyped.getOrElse(channelId, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
   import scala.collection.breakOut

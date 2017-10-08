@@ -43,5 +43,5 @@ package object http {
   val userGen           = LabelledGeneric[User]
   val partialUserMapper = Mapper[mapPartialUserId.type, userGen.Repr]
   type PartialUser = partialUserMapper.Out
-  */
+ */
 }

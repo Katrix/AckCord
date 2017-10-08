@@ -34,25 +34,40 @@ object ReadyHandler extends CacheHandler[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
     val ReadyData(_, botUser, rawChannels, unavailableGuilds, _, _) = obj
 
-    val (dmChannels, users1) = rawChannels.collect {
-      case rawChannel if rawChannel.`type` == ChannelType.DM =>
-        val optUser = rawChannel.recipients.flatMap(_.headOption)
-        optUser.map { user =>
-          (rawChannel.id -> DMChannel(rawChannel.id, rawChannel.lastMessageId, user.id), user.id -> user)
-        }
-    }.flatten.unzip
+    val (dmChannels, users1) = rawChannels
+      .collect {
+        case rawChannel if rawChannel.`type` == ChannelType.DM =>
+          val optUser = rawChannel.recipients.flatMap(_.headOption)
+          optUser.map { user =>
+            (rawChannel.id -> DMChannel(rawChannel.id, rawChannel.lastMessageId, user.id), user.id -> user)
+          }
+      }
+      .flatten
+      .unzip
 
-    val (groupDmChannels, users2) = rawChannels.collect {
-      case rawChannel if rawChannel.`type` == ChannelType.GroupDm =>
-        val users = rawChannel.recipients.toSeq.flatMap(_.map(user => user.id -> user)).toSeq
-        val userIds = users.map(_._1)
+    val (groupDmChannels, users2) = rawChannels
+      .collect {
+        case rawChannel if rawChannel.`type` == ChannelType.GroupDm =>
+          val users   = rawChannel.recipients.toSeq.flatMap(_.map(user => user.id -> user)).toSeq
+          val userIds = users.map(_._1)
 
-        for {
-          name <- rawChannel.name
-          ownerId <- rawChannel.ownerId
-          if userIds.nonEmpty
-        } yield GroupDMChannel(rawChannel.id, name, userIds, rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon) -> users
-    }.flatten.unzip
+          for {
+            name    <- rawChannel.name
+            ownerId <- rawChannel.ownerId
+            if userIds.nonEmpty
+          } yield
+            GroupDMChannel(
+              rawChannel.id,
+              name,
+              userIds,
+              rawChannel.lastMessageId,
+              ownerId,
+              rawChannel.applicationId,
+              rawChannel.icon
+            ) -> users
+      }
+      .flatten
+      .unzip
 
     val guilds = unavailableGuilds.map(g => g.id -> g)
 

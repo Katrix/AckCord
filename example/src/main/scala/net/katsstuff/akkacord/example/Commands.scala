@@ -40,7 +40,9 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
       implicit val cache = c
       message.content match {
         case "!ping" =>
-          client ! Request(Requests.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None)))
+          client ! Request(
+            Requests.CreateMessage(message.channelId, CreateMessageData("Pong", None, tts = false, None, None))
+          )
         case "!sendFile" =>
           val embed = OutgoingEmbed(
             title = Some("This is an embed"),
@@ -49,15 +51,26 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
           )
 
           message.tChannel.foreach { tChannel =>
-            client ! tChannel.sendMessage("Here is the file", file = Some(Paths.get("theFile.txt")), embed = Some(embed))
+            client ! tChannel.sendMessage(
+              "Here is the file",
+              file = Some(Paths.get("theFile.txt")),
+              embed = Some(embed)
+            )
           }
         case s if s.startsWith("!infoChannel") =>
           val withChannel = message.content.substring("!infoChannel".length)
           val r           = """<#(\d+)>""".r
 
-          val channel = r.findFirstMatchIn(withChannel).map(_.group(1)).map((ChannelId.apply _).compose(Snowflake.apply)).flatMap(id => message.guild.flatMap(_.channelById(id)))
+          val channel = r
+            .findFirstMatchIn(withChannel)
+            .map(_.group(1))
+            .map((ChannelId.apply _).compose(Snowflake.apply))
+            .flatMap(id => message.guild.flatMap(_.channelById(id)))
           channel.foreach { gChannel =>
-            client ! Request(Requests.GetChannel(gChannel.id), GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c))
+            client ! Request(
+              Requests.GetChannel(gChannel.id),
+              GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c)
+            )
           }
         case "!kill" =>
           log.info("Received shutdown command")
@@ -82,5 +95,10 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
 }
 object Commands {
   def props(client: ActorRef): Props = Props(classOf[Commands], client)
-  case class GetChannelInfo(guildId: GuildId, requestedChannelId: ChannelId, senderChannelId: ChannelId, c: CacheSnapshot)
+  case class GetChannelInfo(
+      guildId: GuildId,
+      requestedChannelId: ChannelId,
+      senderChannelId: ChannelId,
+      c: CacheSnapshot
+  )
 }
