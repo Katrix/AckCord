@@ -51,7 +51,7 @@ object ReadyHandler extends CacheHandler[ReadyData] {
           name <- rawChannel.name
           ownerId <- rawChannel.ownerId
           if userIds.nonEmpty
-        } yield GroupDMChannel(rawChannel.id, name, userIds, rawChannel.lastMessageId, ownerId, rawChannel.applicationId) -> users
+        } yield GroupDMChannel(rawChannel.id, name, userIds, rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon) -> users
     }.flatten.unzip
 
     val guilds = unavailableGuilds.map(g => g.id -> g)

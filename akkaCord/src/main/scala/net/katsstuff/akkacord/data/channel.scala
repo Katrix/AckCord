@@ -87,6 +87,8 @@ sealed trait GuildChannel extends Channel with GetGuild {
   def position:             Int
   def name:                 String
   def permissionOverwrites: Seq[PermissionValue]
+  def nsfw:                 Boolean
+  def parentId:             Option[ChannelId]
 }
 
 case class TGuildChannel(
@@ -96,7 +98,9 @@ case class TGuildChannel(
     position: Int,
     permissionOverwrites: Seq[PermissionValue],
     topic: Option[String],
-    lastMessageId: Option[MessageId]
+    lastMessageId: Option[MessageId],
+    nsfw: Boolean,
+    parentId: Option[ChannelId]
 ) extends GuildChannel
     with TChannel {
   override def channelType: ChannelType = ChannelType.GuildText
@@ -109,9 +113,23 @@ case class VGuildChannel(
     position: Int,
     permissionOverwrites: Seq[PermissionValue],
     bitrate: Int,
-    userLimit: Int
+    userLimit: Int,
+    nsfw: Boolean,
+    parentId: Option[ChannelId]
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
+}
+
+case class GuildCategory(
+    id: ChannelId,
+    guildId: GuildId,
+    name: String,
+    position: Int,
+    permissionOverwrites: Seq[PermissionValue],
+    nsfw: Boolean,
+    parentId: Option[ChannelId]
+) extends GuildChannel {
+  override def channelType: ChannelType = ChannelType.GuildCategory
 }
 
 case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId) extends Channel with TChannel with GetUser {
@@ -124,7 +142,9 @@ case class GroupDMChannel(
     users: Seq[UserId],
     lastMessageId: Option[MessageId],
     ownerId: UserId,
-    applicationId: Option[Snowflake]
-) extends Channel with TChannel {
+    applicationId: Option[Snowflake],
+    icon: Option[String]
+) extends Channel
+    with TChannel {
   override def channelType: ChannelType = ChannelType.GroupDm
 }

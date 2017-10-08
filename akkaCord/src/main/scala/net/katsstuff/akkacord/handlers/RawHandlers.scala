@@ -44,7 +44,7 @@ object RawHandlers extends Handlers {
             position             <- rawChannel.position
             permissionOverwrites <- rawChannel.permissionOverwrites
           } {
-            val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId)
+            val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
             handleUpdateLog(builder, c, log)
           }
         case ChannelType.GuildVoice =>
@@ -56,10 +56,19 @@ object RawHandlers extends Handlers {
             bitRate              <- rawChannel.bitrate
             userLimit            <- rawChannel.userLimit
           } {
-            val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit)
+            val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
             handleUpdateLog(builder, c, log)
           }
-        case ChannelType.GuildCategory => log.error("Guild category channel type has not yet been implemented")
+        case ChannelType.GuildCategory =>
+          for {
+            guildId              <- rawChannel.guildId
+            name                 <- rawChannel.name
+            position             <- rawChannel.position
+            permissionOverwrites <- rawChannel.permissionOverwrites
+          } {
+            val c: GuildChannel = GuildCategory(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+            handleUpdateLog(builder, c, log)
+          }
         case ChannelType.DM =>
           rawChannel.recipients
             .flatMap(_.headOption)
@@ -70,7 +79,7 @@ object RawHandlers extends Handlers {
             ownerId <- rawChannel.ownerId
             users   <- rawChannel.recipients
           } {
-            val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId)
+            val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon)
             handleUpdateLog(builder, c, log)
           }
       }
@@ -274,7 +283,7 @@ object RawHandlers extends Handlers {
           position             <- rawChannel.position
           permissionOverwrites <- rawChannel.permissionOverwrites
         } {
-          val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId)
+          val c: GuildChannel = TGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.topic, rawChannel.lastMessageId, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
           handleDeleteLog(builder, c, log)
         }
       case ChannelType.GuildVoice =>
@@ -286,10 +295,19 @@ object RawHandlers extends Handlers {
           bitRate              <- rawChannel.bitrate
           userLimit            <- rawChannel.userLimit
         } {
-          val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit)
+          val c: GuildChannel = VGuildChannel(rawChannel.id, guildId, name, position, permissionOverwrites, bitRate, userLimit, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
           handleDeleteLog(builder, c, log)
         }
-      case ChannelType.GuildCategory => log.error("Guild category channel type has not yet been implemented")
+      case ChannelType.GuildCategory =>
+        for {
+          guildId              <- rawChannel.guildId
+          name                 <- rawChannel.name
+          position             <- rawChannel.position
+          permissionOverwrites <- rawChannel.permissionOverwrites
+        } {
+          val c: GuildChannel = GuildCategory(rawChannel.id, guildId, name, position, permissionOverwrites, rawChannel.nsfw.getOrElse(false), rawChannel.parentId)
+          handleDeleteLog(builder, c, log)
+        }
       case ChannelType.DM =>
         rawChannel.recipients
           .flatMap(_.headOption)
@@ -300,7 +318,7 @@ object RawHandlers extends Handlers {
           ownerId <- rawChannel.ownerId
           users   <- rawChannel.recipients
         } {
-          val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId)
+          val c = GroupDMChannel(rawChannel.id, name, users.map(_.id), rawChannel.lastMessageId, ownerId, rawChannel.applicationId, rawChannel.icon)
           handleDeleteLog(builder, c, log)
         }
     }

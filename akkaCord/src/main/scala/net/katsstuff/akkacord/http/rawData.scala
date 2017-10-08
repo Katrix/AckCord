@@ -35,13 +35,15 @@ case class RawChannel(
   permissionOverwrites: Option[Seq[PermissionValue]],
   name: Option[String],
   topic: Option[String],
+  nsfw: Option[Boolean],
   lastMessageId: Option[MessageId],
   bitrate: Option[Int],
   userLimit: Option[Int],
   recipients: Option[Seq[User]],
   icon: Option[String],
   ownerId: Option[UserId],
-  applicationId: Option[Snowflake]
+  applicationId: Option[Snowflake],
+  parentId: Option[ChannelId]
 )
 
 //Remember to edit RawGuildMemberWithGuild when editing this
