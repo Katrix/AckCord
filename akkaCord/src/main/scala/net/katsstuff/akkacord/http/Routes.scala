@@ -108,11 +108,21 @@ object Routes {
   val groupDmAddRecipient:    (UserId, ChannelId) => RestRoute = groupDmRecipient.andThen(RestRoute(_, PUT))
   val groupDmRemoveRecipient: (UserId, ChannelId) => RestRoute = groupDmRecipient.andThen(RestRoute(_, DELETE))
 
-  //Guild routes
+  //Emoji routes
   val guilds: Uri = s"$base/guilds"
-  val createGuild = RestRoute(guilds, POST)
+  val guild:       GuildId => Uri       = guildId => s"$guilds/$guildId"
 
-  val guild:       GuildId => Uri       = guildId => s"$guilds.$guildId"
+  val guildEmojis:      GuildId => Uri       = guild.andThen(uri => s"$uri/emojis")
+  val listGuildEmojis:  GuildId => RestRoute = guildEmojis.andThen(RestRoute(_, GET))
+  val createGuildEmoji: GuildId => RestRoute = guildEmojis.andThen(RestRoute(_, POST))
+
+  val guildEmoji:       (EmojiId, GuildId) => Uri       = Function.uncurried(emojiId => guildEmojis.andThen(uri => s"$uri/$emojiId"))
+  val getGuildEmoji:    (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, GET))
+  val modifyGuildEmoji: (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, PATCH))
+  val deleteGuildEmoji: (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, DELETE))
+
+  //Guild routes
+  val createGuild = RestRoute(guilds, POST)
   val getGuild:    GuildId => RestRoute = guild.andThen(RestRoute(_, GET))
   val modifyGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, PATCH))
   val deleteGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, DELETE))

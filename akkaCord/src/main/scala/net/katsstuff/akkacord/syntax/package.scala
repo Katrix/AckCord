@@ -121,11 +121,20 @@ package object syntax {
 
     def presenceById(id: UserId):    Option[Presence] = guild.presences.get(id)
     def presenceForUser(user: User): Option[Presence] = presenceById(user.id)
+
+    def fetchEmojis[Context](context: Context = NotUsed)                        = Request(ListGuildEmojis(guild.id), context)
+    def fetchSingleEmoji[Context](emojiId: EmojiId, context: Context = NotUsed) = Request(GetGuildEmoji(emojiId, guild.id), context)
+    def createEmoji[Context](name: String, image: ImageData, context: Context = NotUsed) =
+      Request(CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image)), context)
+
   }
 
   implicit class GuildEmojiSyntax(val emoji: GuildEmoji) extends AnyVal {
     def asString: String =
       if (emoji.managed) ??? else s"${emoji.name}:${emoji.id}"
+    def modify[Context](name: String, guildId: GuildId, context: Context = NotUsed) =
+      Request(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context)
+    def delete[Context](guildId: GuildId, context: Context = NotUsed) = Request(DeleteGuildEmoji(emoji.id, guildId), context)
   }
 
   implicit class MessageSyntax(val message: Message) extends AnyVal {

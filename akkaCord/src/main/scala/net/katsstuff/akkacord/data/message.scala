@@ -27,12 +27,12 @@ import java.time.OffsetDateTime
 import java.util.Base64
 
 //TODO
-class AvatarData(val rawData: String) extends AnyVal
-object AvatarData {
+class ImageData(val rawData: String) extends AnyVal
+object ImageData {
 
-  def forData(imageType: String, data: Array[Byte]): AvatarData = {
+  def forData(imageType: String, data: Array[Byte]): ImageData = {
     val base64Data = Base64.getEncoder.encodeToString(data)
-    new AvatarData(s"data:image/$imageType;base64,$base64Data")
+    new ImageData(s"data:image/$imageType;base64,$base64Data")
   }
 }
 
@@ -72,7 +72,7 @@ object MessageType {
 }
 
 sealed trait Author
-case class WebhookAuthor(id: Snowflake, name: String, avatar: AvatarData) extends Author
+case class WebhookAuthor(id: Snowflake, name: String, avatar: ImageData) extends Author
 //Remember to edit PartialUser when editing this
 case class User(
     id: UserId,

@@ -58,6 +58,13 @@ trait Handlers {
     builder.users.put(obj.id, obj)
   }
 
+  implicit val guildEmojiUpdateHandler: GuildId => CacheUpdateHandler[GuildEmoji] = guildId => updateHandler { (builder, obj, log) =>
+    builder.guilds.get(guildId) match {
+      case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj))))
+      case None => log.warning(s"No guild for emoji $obj")
+    }
+  }
+
   //Delete
   implicit val dmChannelDeleteHandler: CacheDeleteHandler[DMChannel] = deleteHandler((builder, obj, _) => builder.dmChannels.remove(obj.id))
   implicit val groupDmChannelDeleteHandler: CacheDeleteHandler[GroupDMChannel] = deleteHandler((builder, obj, _) => builder.groupDmChannels.remove(obj.id))

@@ -34,6 +34,7 @@ import io.circe.syntax._
 import net.katsstuff.akkacord.data._
 import net.katsstuff.akkacord.handlers.{CacheHandler, CacheSnapshotBuilder, CacheUpdateHandler, Handlers, NOOPHandler, RawHandlers}
 import net.katsstuff.akkacord.http.websocket.WsEvent
+import net.katsstuff.akkacord.http.websocket.WsEvent.GuildEmojisUpdateData
 import net.katsstuff.akkacord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, Routes}
 
 trait ComplexRESTRequest[Params, Response, HandlerType] {
@@ -64,7 +65,7 @@ object Requests {
   trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed] {
     override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
     override val handleResponse       = new NOOPHandler[NotUsed]
-    override def expectedResponseCode = StatusCodes.NoContent
+    override def expectedResponseCode: StatusCode = StatusCodes.NoContent
   }
 
   trait NoParamsResponseRequest extends NoParamsRequest[NotUsed] with NoResponseRequest[NotUsed]
@@ -219,6 +220,46 @@ object Requests {
     override def route: RestRoute = Routes.groupDmRemoveRecipient(userId, channelId)
   }
    */
+
+  case class ListGuildEmojis(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[GuildEmoji], GuildEmojisUpdateData] {
+    override def route:                                      RestRoute                           = Routes.listGuildEmojis(guildId)
+    override def paramsEncoder:                              Encoder[NotUsed]                    = (_: NotUsed) => Json.obj()
+    override def params:                                     NotUsed                             = NotUsed
+    override def responseDecoder:                            Decoder[Seq[GuildEmoji]]            = Decoder[Seq[GuildEmoji]]
+    override def handleResponse:                             CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
+    override def processResponse(response: Seq[GuildEmoji]): GuildEmojisUpdateData               = GuildEmojisUpdateData(guildId, response)
+  }
+
+  //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
+  case class CreateGuildEmojiData(name: String, image: ImageData)
+
+  case class CreateGuildEmoji(guildId: GuildId, params: CreateGuildEmojiData) extends SimpleRESTRequest[CreateGuildEmojiData, GuildEmoji] {
+    override def route:           RestRoute                     = Routes.createGuildEmoji(guildId)
+    override def paramsEncoder:   Encoder[CreateGuildEmojiData] = deriveEncoder[CreateGuildEmojiData]
+    override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
+    override def handleResponse:  CacheHandler[GuildEmoji]      = Handlers.guildEmojiUpdateHandler(guildId)
+  }
+
+  case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[GuildEmoji] {
+    override def route:           RestRoute                = Routes.getGuildEmoji(emojiId, guildId)
+    override def responseDecoder: Decoder[GuildEmoji]      = Decoder[GuildEmoji]
+    override def handleResponse:  CacheHandler[GuildEmoji] = Handlers.guildEmojiUpdateHandler(guildId)
+  }
+
+  //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
+  case class ModifyGuildEmojiData(name: String)
+
+  case class ModifyGuildEmoji(emojiId: EmojiId, guildId: GuildId, params: ModifyGuildEmojiData)
+    extends SimpleRESTRequest[ModifyGuildEmojiData, GuildEmoji] {
+    override def route:           RestRoute                     = Routes.modifyGuildEmoji(emojiId, guildId)
+    override def paramsEncoder:   Encoder[ModifyGuildEmojiData] = deriveEncoder[ModifyGuildEmojiData]
+    override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
+    override def handleResponse:  CacheHandler[GuildEmoji]      = Handlers.guildEmojiUpdateHandler(guildId)
+  }
+
+  case class DeleteGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsResponseRequest {
+    override def route: RestRoute = Routes.deleteGuildEmoji(emojiId, guildId)
+  }
 
   //Guild
   case class CreateGuildData(
