@@ -4,10 +4,10 @@ val circeVersion         = "0.8.0"
 
 lazy val commonSettings = Seq(scalaVersion := "2.12.2")
 
-lazy val akkaCord = project
+lazy val ackCord = project
   .settings(
     commonSettings,
-    name := "AkkaCord",
+    name := "AckCord",
     version := "0.1",
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
@@ -26,7 +26,7 @@ lazy val akkaCord = project
   )
 
 lazy val example = project
-  .settings(commonSettings, name := "AkkaCord-example", version := "1.0")
-  .dependsOn(akkaCord)
+  .settings(commonSettings, name := "AckCord-example", version := "1.0")
+  .dependsOn(ackCord)
 
-lazy val akkaCordRoot = project.in(file(".")).aggregate(akkaCord, example)
+lazy val ackCordRoot = project.in(file(".")).aggregate(ackCord, example)
