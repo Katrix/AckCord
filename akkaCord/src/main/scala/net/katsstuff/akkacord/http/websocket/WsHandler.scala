@@ -34,15 +34,9 @@ import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{
-  InvalidUpgradeResponse,
-  Message,
-  TextMessage,
-  ValidUpgrade,
-  WebSocketUpgradeResponse
-}
+import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, TextMessage, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.stream.scaladsl._
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.stream.{Materializer, OverflowStrategy}
 import io.circe
 import io.circe.syntax._
 import io.circe.{parser, _}
@@ -106,13 +100,10 @@ class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordCli
       log.error(e, "Connection interrupted")
       throw e
     case Event(Left(NonFatal(e)), _) => throw e
-    case event @ Event(Right(msg: WsMessage[_]), _) =>
+    case event @ Event(Right(_: WsMessage[_]), _) =>
       val res = handleWsMessages(event)
       sender() ! AckSink
       res
-    case Event(Left(e: Error), _) =>
-      log.error(e, "Received error in WS handler")
-      stay()
     case event @ Event(_: WsMessage[_], _) => handleExternalMessage(event)
     case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, source, resume)) =>
       if (receivedAck) {
