@@ -27,7 +27,6 @@ import java.time.{Instant, OffsetDateTime}
 
 import scala.util.Try
 
-import io.circe.Decoder.Result
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
 import io.circe.generic.extras.auto._

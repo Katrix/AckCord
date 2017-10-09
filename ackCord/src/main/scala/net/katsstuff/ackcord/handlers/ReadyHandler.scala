@@ -26,7 +26,7 @@ package net.katsstuff.ackcord.handlers
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data.{ChannelType, DMChannel, GroupDMChannel}
-import net.katsstuff.ackcord.http.websocket.WsEvent.ReadyData
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 import shapeless._
 
 //We handle this one seperately is it's kind of special

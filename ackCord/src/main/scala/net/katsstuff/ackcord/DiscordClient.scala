@@ -27,8 +27,7 @@ import java.time.Instant
 
 import scala.concurrent.{ExecutionContext, Future}
 
-import akka.AkkaException
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, OneForOneStrategy, Props, SupervisorStrategy, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.event.EventStream
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.GenericHttpCredentials
@@ -39,7 +38,8 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.rest.{ComplexRESTRequest, RESTHandler}
-import net.katsstuff.ackcord.http.websocket.{WsHandler, WsMessage}
+import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
+import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
 
 class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
@@ -49,24 +49,24 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
   private implicit val system: ActorSystem = context.system
 
   private val cache     = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val wsHandler = system.actorOf(WsHandler.props(wsUri, token, cache, settings), "WsHandler")
+  private val gatewayHandler = system.actorOf(GatewayHandler.props(wsUri, token, cache, settings), "WsHandler")
   private val restHandler =
     system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
   private var shutdownCount = 0
 
   override def preStart(): Unit = {
-    context.watch(wsHandler)
+    context.watch(gatewayHandler)
     context.watch(restHandler)
   }
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       restHandler.forward(DiscordClient.ShutdownClient)
-      wsHandler.forward(WsHandler.Logout)
+      gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
-      wsHandler.forward(WsHandler.Login)
-    case request @ Request(_: WsMessage[_], _, _)                => wsHandler.forward(request)
+      gatewayHandler.forward(AbstractWsHandler.Login)
+    case request @ Request(_: GatewayMessage[_], _, _)                => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1

@@ -21,12 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord
+package net.katsstuff.ackcord.http.websocket
 
-object AckCord {
+import scala.language.higherKinds
 
-  val Version             = "0.1"
-  val DiscordApiVersion   = "6"
-  val DiscordVoiceVersion = "3"
-
+private[websocket] trait WsMessage[D, OpCode] {
+  def op: OpCode
+  def d:  D
+  def s: Option[Int] = None
 }
+
+

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.http.websocket
+package net.katsstuff.ackcord.http.websocket.gateway
 
 import java.time.{Instant, OffsetDateTime}
 
@@ -31,24 +31,22 @@ import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http._
+import net.katsstuff.ackcord.http.websocket.WsMessage
 import shapeless._
 import shapeless.labelled.FieldType
 
-sealed trait WsMessage[D] {
-  def op: OpCode
-  def d:  D
-  def s: Option[Int]        = None
-  def t: Option[WsEvent[D]] = None
+sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
+  def t: Option[GatewayEvent[D]] = None
 }
 
-case class Dispatch[Data](sequence: Int, event: WsEvent[Data], d: Data) extends WsMessage[Data] {
-  override val s:  Some[Int]           = Some(sequence)
-  override val t:  Some[WsEvent[Data]] = Some(event)
-  override def op: OpCode              = OpCode.Dispatch
+case class Dispatch[Data](sequence: Int, event: GatewayEvent[Data], d: Data) extends GatewayMessage[Data] {
+  override val s:  Some[Int]                = Some(sequence)
+  override val t:  Some[GatewayEvent[Data]] = Some(event)
+  override def op: GatewayOpCode            = GatewayOpCode.Dispatch
 }
 
-case class Heartbeat(d: Option[Int]) extends WsMessage[Option[Int]] {
-  override def op: OpCode = OpCode.Heartbeat
+case class Heartbeat(d: Option[Int]) extends GatewayMessage[Option[Int]] {
+  override def op: GatewayOpCode = GatewayOpCode.Heartbeat
 }
 
 case class IdentifyObject(
@@ -63,72 +61,70 @@ object IdentifyObject {
   def createProperties: Map[String, String] =
     Map("$os" -> System.getProperty("os.name"), "$browser" -> "AckCord", "$device" -> "AckCord")
 }
-case class Identify(d: IdentifyObject) extends WsMessage[IdentifyObject] {
-  override def op: OpCode = OpCode.Identify
+case class Identify(d: IdentifyObject) extends GatewayMessage[IdentifyObject] {
+  override def op: GatewayOpCode = GatewayOpCode.Identify
 }
 
 case class StatusData(since: Option[Instant], game: Option[RawPresenceGame], status: PresenceStatus, afk: Boolean)
-case class StatusUpdate(d: StatusData) extends WsMessage[StatusData] {
-  override def op: OpCode = OpCode.StatusUpdate
+case class StatusUpdate(d: StatusData) extends GatewayMessage[StatusData] {
+  override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
 
-case class VoiceStateData(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean)
-case class VoiceStateUpdate(d: VoiceStateData) extends WsMessage[VoiceStateData] {
-  override def op: OpCode = OpCode.VoiceStateUpdate
+case class VoiceStateUpdate(d: VoiceState) extends GatewayMessage[VoiceState] {
+  override def op: GatewayOpCode = GatewayOpCode.VoiceStateUpdate
 }
 
-//TODO: Is this still used?
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
-case class VoiceServerUpdate(d: VoiceServerUpdateData) extends WsMessage[VoiceServerUpdateData] {
-  override def op: OpCode = OpCode.VoiceServerPing
+case class VoiceServerUpdate(d: VoiceServerUpdateData) extends GatewayMessage[VoiceServerUpdateData] {
+  override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
 }
 
 case class ResumeData(token: String, sessionId: String, seq: Int)
-case class Resume(d: ResumeData) extends WsMessage[ResumeData] {
-  override def op: OpCode = OpCode.Resume
+case class Resume(d: ResumeData) extends GatewayMessage[ResumeData] {
+  override def op: GatewayOpCode = GatewayOpCode.Resume
 }
 
-case object Reconnect extends WsMessage[NotUsed] {
-  override def op: OpCode  = OpCode.Reconnect
-  override def d:  NotUsed = NotUsed
+case object Reconnect extends GatewayMessage[NotUsed] {
+  override def op: GatewayOpCode = GatewayOpCode.Reconnect
+  override def d:  NotUsed       = NotUsed
 }
 
 case class RequestGuildMembersData(guildId: GuildId, query: String, limit: Int)
-case class RequestGuildMembers(d: RequestGuildMembersData) extends WsMessage[RequestGuildMembersData] {
-  override def op: OpCode = OpCode.RequestGuildMembers
+case class RequestGuildMembers(d: RequestGuildMembersData) extends GatewayMessage[RequestGuildMembersData] {
+  override def op: GatewayOpCode = GatewayOpCode.RequestGuildMembers
 }
 
-case class InvalidSession(resumable: Boolean) extends WsMessage[Boolean] {
-  override def op: OpCode  = OpCode.InvalidSession
-  override def d:  Boolean = resumable
+case class InvalidSession(resumable: Boolean) extends GatewayMessage[Boolean] {
+  override def op: GatewayOpCode = GatewayOpCode.InvalidSession
+  override def d:  Boolean       = resumable
 }
 
 case class HelloData(heartbeatInterval: Int, _trace: Seq[String])
-case class Hello(d: HelloData) extends WsMessage[HelloData] {
-  override def op: OpCode = OpCode.Hello
+case class Hello(d: HelloData) extends GatewayMessage[HelloData] {
+  override def op: GatewayOpCode = GatewayOpCode.Hello
 }
 
-case object HeartbeatACK extends WsMessage[NotUsed] {
-  override def op: OpCode  = OpCode.HeartbeatACK
-  override def d:  NotUsed = NotUsed
+case object HeartbeatACK extends GatewayMessage[NotUsed] {
+  override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
+  override def d:  NotUsed       = NotUsed
 }
 
-sealed abstract case class OpCode(code: Int)
-object OpCode {
-  object Dispatch            extends OpCode(0)
-  object Heartbeat           extends OpCode(1)
-  object Identify            extends OpCode(2)
-  object StatusUpdate        extends OpCode(3)
-  object VoiceStateUpdate    extends OpCode(4)
-  object VoiceServerPing     extends OpCode(5)
-  object Resume              extends OpCode(6)
-  object Reconnect           extends OpCode(7)
-  object RequestGuildMembers extends OpCode(8)
-  object InvalidSession      extends OpCode(9)
-  object Hello               extends OpCode(10)
-  object HeartbeatACK        extends OpCode(11)
+sealed abstract case class GatewayOpCode(code: Int)
+object GatewayOpCode {
+  object Dispatch            extends GatewayOpCode(0)
+  object Heartbeat           extends GatewayOpCode(1)
+  object Identify            extends GatewayOpCode(2)
+  object StatusUpdate        extends GatewayOpCode(3)
+  object VoiceStateUpdate    extends GatewayOpCode(4)
+  object VoiceServerPing     extends GatewayOpCode(5)
+  object Resume              extends GatewayOpCode(6)
+  object Reconnect           extends GatewayOpCode(7)
+  object RequestGuildMembers extends GatewayOpCode(8)
+  object InvalidSession      extends GatewayOpCode(9)
+  object Hello               extends GatewayOpCode(10)
+  object HeartbeatACK        extends GatewayOpCode(11)
 
-  def forCode(code: Int): Option[OpCode] = code match {
+  def forCode(code: Int): Option[GatewayOpCode] = code match {
     case 0  => Some(Dispatch)
     case 1  => Some(Heartbeat)
     case 2  => Some(Identify)
@@ -145,12 +141,12 @@ object OpCode {
   }
 }
 
-sealed abstract case class WsEvent[Data](
+sealed abstract case class GatewayEvent[Data](
     name: String,
     handler: CacheHandler[Data],
     createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
 )
-object WsEvent {
+object GatewayEvent {
   private def notImplementedHandler[A] = new CacheHandler[A] {
     override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
       log.warning(s"Not implemented handler for $obj")
@@ -164,32 +160,32 @@ object WsEvent {
       sessionId: String,
       _trace: Seq[String]
   )
-  object Ready extends WsEvent[ReadyData]("READY", ReadyHandler, _ => (n, o) => Some(APIMessage.Ready(n, o)))
+  object Ready extends GatewayEvent[ReadyData]("READY", ReadyHandler, _ => (n, o) => Some(APIMessage.Ready(n, o)))
 
   case class ResumedData(_trace: Seq[String])
   object Resumed
-      extends WsEvent[ResumedData](
+      extends GatewayEvent[ResumedData](
         "RESUMED",
         new NOOPHandler,
         _ => (current, prev) => Some(APIMessage.Resumed(current, prev))
       )
 
   object ChannelCreate
-      extends WsEvent[RawChannel](
+      extends GatewayEvent[RawChannel](
         "CHANNEL_CREATE",
         RawHandlers.rawChannelUpdateHandler,
         data => (current, prev) => current.getChannel(data.id).map(c => APIMessage.ChannelCreate(c, current, prev))
       )
 
   object ChannelUpdate
-      extends WsEvent[RawChannel](
+      extends GatewayEvent[RawChannel](
         "CHANNEL_UPDATE",
         RawHandlers.rawChannelUpdateHandler,
         data => (current, prev) => current.getGuildChannel(data.id).map(c => APIMessage.ChannelUpdate(c, current, prev))
       )
 
   object ChannelDelete
-      extends WsEvent[RawChannel](
+      extends GatewayEvent[RawChannel](
         "CHANNEL_DELETE",
         RawHandlers.rawChannelDeleteHandler,
         data => (current, prev) => prev.getGuildChannel(data.id).map(c => APIMessage.ChannelDelete(c, current, prev))
@@ -197,7 +193,7 @@ object WsEvent {
 
   case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: Option[OffsetDateTime])
   object ChannelPinsUpdate
-      extends WsEvent[ChannelPinsUpdateData](
+      extends GatewayEvent[ChannelPinsUpdateData](
         "CHANNEL_PINS_UPDATE",
         notImplementedHandler,
         data =>
@@ -205,20 +201,20 @@ object WsEvent {
       )
 
   object GuildCreate
-      extends WsEvent[RawGuild](
+      extends GatewayEvent[RawGuild](
         "GUILD_CREATE",
         RawHandlers.rawGuildUpdateHandler,
         data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildCreate(g, current, prev))
       )
   object GuildUpdate
-      extends WsEvent[RawGuild](
+      extends GatewayEvent[RawGuild](
         "GUILD_UPDATE",
         RawHandlers.rawGuildUpdateHandler,
         data => (current, prev) => current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, current, prev))
       )
 
   object GuildDelete
-      extends WsEvent[UnavailableGuild](
+      extends GatewayEvent[UnavailableGuild](
         "GUILD_DELETE",
         RawHandlers.deleteGuildDataHandler,
         data =>
@@ -229,7 +225,7 @@ object WsEvent {
   type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
 
   object GuildBanAdd
-      extends WsEvent[GuildUser](
+      extends GatewayEvent[GuildUser](
         "GUILD_BAN_ADD",
         notImplementedHandler,
         data =>
@@ -238,7 +234,7 @@ object WsEvent {
       )
 
   object GuildBanRemove
-      extends WsEvent[GuildUser](
+      extends GatewayEvent[GuildUser](
         "GUILD_BAN_REMOVE",
         notImplementedHandler,
         data =>
@@ -248,7 +244,7 @@ object WsEvent {
 
   case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[GuildEmoji])
   object GuildEmojisUpdate
-      extends WsEvent[GuildEmojisUpdateData](
+      extends GatewayEvent[GuildEmojisUpdateData](
         "GUILD_EMOJIS_UPDATE",
         RawHandlers.guildEmojisUpdateDataHandler,
         data =>
@@ -258,7 +254,7 @@ object WsEvent {
 
   case class GuildIntegrationsUpdateData(guildId: GuildId)
   object GuildIntegrationsUpdate
-      extends WsEvent[GuildIntegrationsUpdateData](
+      extends GatewayEvent[GuildIntegrationsUpdateData](
         "GUILD_INTEGRATIONS_UPDATE",
         notImplementedHandler,
         data =>
@@ -300,7 +296,7 @@ object WsEvent {
   }
 
   object GuildMemberAdd
-      extends WsEvent[RawGuildMemberWithGuild](
+      extends GatewayEvent[RawGuildMemberWithGuild](
         "GUILD_MEMBER_ADD",
         RawHandlers.rawGuildMemberWithGuildUpdateHandler,
         data =>
@@ -313,7 +309,7 @@ object WsEvent {
 
   case class GuildMemberRemoveData(guildId: GuildId, user: User)
   object GuildMemberRemove
-      extends WsEvent[GuildMemberRemoveData](
+      extends GatewayEvent[GuildMemberRemoveData](
         "GUILD_MEMBER_REMOVE",
         RawHandlers.rawGuildMemberDeleteHandler,
         data =>
@@ -323,7 +319,7 @@ object WsEvent {
 
   case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //TODO: Nick can probably be null here
   object GuildMemberUpdate
-      extends WsEvent[GuildMemberUpdateData](
+      extends GatewayEvent[GuildMemberUpdateData](
         "GUILD_MEMBER_UPDATE",
         RawHandlers.rawGuildMemberUpdateHandler,
         data =>
@@ -339,7 +335,7 @@ object WsEvent {
 
   case class GuildMemberChunkData(guildId: GuildId, members: Seq[RawGuildMember])
   object GuildMemberChunk
-      extends WsEvent[GuildMemberChunkData](
+      extends GatewayEvent[GuildMemberChunkData](
         "GUILD_MEMBER_CHUNK",
         RawHandlers.rawGuildMemberChunkHandler,
         data =>
@@ -353,7 +349,7 @@ object WsEvent {
 
   case class GuildRoleModifyData(guildId: GuildId, role: RawRole)
   object GuildRoleCreate
-      extends WsEvent[GuildRoleModifyData](
+      extends GatewayEvent[GuildRoleModifyData](
         "GUILD_ROLE_CREATE",
         RawHandlers.roleUpdateHandler,
         data =>
@@ -363,7 +359,7 @@ object WsEvent {
               .map(g => APIMessage.GuildRoleCreate(g, data.role.makeRole(data.guildId), current, prev))
       )
   object GuildRoleUpdate
-      extends WsEvent[GuildRoleModifyData](
+      extends GatewayEvent[GuildRoleModifyData](
         "GUILD_ROLE_UPDATE",
         RawHandlers.roleUpdateHandler,
         data =>
@@ -375,7 +371,7 @@ object WsEvent {
 
   case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)
   object GuildRoleDelete
-      extends WsEvent[GuildRoleDeleteData](
+      extends GatewayEvent[GuildRoleDeleteData](
         "GUILD_ROLE_DELETE",
         RawHandlers.roleDeleteHandler,
         data =>
@@ -384,7 +380,7 @@ object WsEvent {
       )
 
   object MessageCreate
-      extends WsEvent[RawMessage](
+      extends GatewayEvent[RawMessage](
         "MESSAGE_CREATE",
         RawHandlers.rawMessageUpdateHandler,
         data =>
@@ -412,7 +408,7 @@ object WsEvent {
       webhookId: Option[String]
   )
   object MessageUpdate
-      extends WsEvent[RawPartialMessage](
+      extends GatewayEvent[RawPartialMessage](
         "MESSAGE_UPDATE",
         RawHandlers.rawPartialMessageUpdateHandler,
         data =>
@@ -422,7 +418,7 @@ object WsEvent {
 
   case class MessageDeleteData(id: MessageId, channelId: ChannelId)
   object MessageDelete
-      extends WsEvent[MessageDeleteData](
+      extends GatewayEvent[MessageDeleteData](
         "MESSAGE_DELETE",
         RawHandlers.rawMessageDeleteHandler,
         data =>
@@ -440,7 +436,7 @@ object WsEvent {
 
   case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId)
   object MessageDeleteBulk
-      extends WsEvent[MessageDeleteBulkData](
+      extends GatewayEvent[MessageDeleteBulkData](
         "MESSAGE_DELETE_BULK",
         RawHandlers.rawMessageDeleteBulkHandler,
         data =>
@@ -455,7 +451,7 @@ object WsEvent {
 
   case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: MessageEmoji)
   object MessageReactionAdd
-      extends WsEvent[MessageReactionData](
+      extends GatewayEvent[MessageReactionData](
         "MESSAGE_REACTION_ADD",
         RawHandlers.rawMessageReactionUpdateHandler,
         data =>
@@ -469,7 +465,7 @@ object WsEvent {
       )
 
   object MessageReactionRemove
-      extends WsEvent[MessageReactionData](
+      extends GatewayEvent[MessageReactionData](
         "MESSAGE_REACTION_REMOVE",
         RawHandlers.rawMessageReactionRemoveHandler,
         data =>
@@ -484,7 +480,7 @@ object WsEvent {
 
   case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId)
   object MessageReactionRemoveAll
-      extends WsEvent[MessageReactionRemoveAllData](
+      extends GatewayEvent[MessageReactionRemoveAllData](
         "MESSAGE_REACTION_REMOVE_ALL",
         RawHandlers.rawMessageReactionRemoveAllHandler,
         data =>
@@ -504,7 +500,7 @@ object WsEvent {
       status: PresenceStatus
   )
   object PresenceUpdate
-      extends WsEvent[PresenceUpdateData](
+      extends GatewayEvent[PresenceUpdateData](
         "PRESENCE_UPDATE",
         PresenceUpdateHandler,
         data =>
@@ -516,7 +512,7 @@ object WsEvent {
 
   case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)
   object TypingStart
-      extends WsEvent[TypingStartData](
+      extends GatewayEvent[TypingStartData](
         "TYPING_START",
         RawHandlers.lastTypedHandler,
         data =>
@@ -532,21 +528,21 @@ object WsEvent {
       )
 
   object UserUpdate
-      extends WsEvent[User](
+      extends GatewayEvent[User](
         "USER_UPDATE",
         RawHandlers.userUpdateHandler,
         (data) => (current, prev) => Some(APIMessage.UserUpdate(data, current, prev))
       )
 
   object VoiceStateUpdate
-      extends WsEvent[VoiceState](
+      extends GatewayEvent[VoiceState](
         "VOICE_STATUS_UPDATE",
         notImplementedHandler,
         data => (current, prev) => Some(APIMessage.VoiceStateUpdate(data, current, prev))
       )
 
   object VoiceServerUpdate
-      extends WsEvent[VoiceServerUpdateData](
+      extends GatewayEvent[VoiceServerUpdateData](
         "VOICE_SERVER_UPDATE",
         notImplementedHandler,
         data =>
@@ -558,7 +554,7 @@ object WsEvent {
 
   case class WebhookUpdateData(guildId: GuildId, channelId: ChannelId)
   object WebhookUpdate
-      extends WsEvent[WebhookUpdateData](
+      extends GatewayEvent[WebhookUpdateData](
         "WEBHOOK_UPDATE",
         notImplementedHandler,
         data =>
@@ -569,7 +565,7 @@ object WsEvent {
             } yield APIMessage.WebhookUpdate(guild, channel, current, prev)
       )
 
-  def forName(name: String): Option[WsEvent[_]] = name match {
+  def forName(name: String): Option[GatewayEvent[_]] = name match {
     case "READY"                       => Some(Ready)
     case "RESUMED"                     => Some(Resumed)
     case "CHANNEL_CREATE"              => Some(ChannelCreate)

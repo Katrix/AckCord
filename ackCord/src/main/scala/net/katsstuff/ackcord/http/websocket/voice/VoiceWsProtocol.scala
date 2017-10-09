@@ -1,0 +1,95 @@
+/*
+ * This file is part of AckCord, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) 2017 Katrix
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package net.katsstuff.ackcord.http.websocket.voice
+
+import akka.util.ByteString
+import io.circe.Decoder.Result
+import io.circe._
+import io.circe.generic.extras.semiauto._
+import io.circe.syntax._
+import net.katsstuff.ackcord.http.DiscordProtocol
+
+object VoiceWsProtocol extends DiscordProtocol {
+
+  implicit val opCodeEncoder: Encoder[VoiceOpCode] = Encoder[Int].contramap(_.code)
+  implicit val opCodeDecoder: Decoder[VoiceOpCode] =
+    Decoder[Int].emap(VoiceOpCode.forCode(_).toRight("Not an opCode"))
+
+  implicit val identifyDataEncoder: Encoder[IdentifyData] = deriveEncoder
+  implicit val identifyDataDecoder: Decoder[IdentifyData] = deriveDecoder
+
+  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] = deriveEncoder
+  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] = deriveDecoder
+
+  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] = deriveEncoder
+  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] = deriveDecoder
+
+  implicit val readyDataEncoder: Encoder[ReadyObject] = deriveEncoder
+  implicit val readyDataDecoder: Decoder[ReadyObject] = deriveDecoder
+
+  implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
+    Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
+  }
+  implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] = (c: HCursor) => {
+    for {
+      mode      <- c.get[String]("mode")
+      secretKey <- c.get[Seq[Byte]]("secret_key")
+    } yield SessionDescriptionData(mode, ByteString.apply(secretKey: _*))
+  }
+
+  implicit val speakingDataEncoder: Encoder[SpeakingData] = deriveEncoder
+  implicit val speakingDataDecoder: Decoder[SpeakingData] = deriveDecoder
+
+  implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
+  implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
+
+  implicit def wsMessageEncoder[Data: Encoder]: Encoder[VoiceMessage[Data]] =
+    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson)
+
+  implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
+    c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>
+      val opC = c.downField("op")
+      val dC  = c.downField("d")
+
+      val op = opC.as[VoiceOpCode]
+
+      def mkMsg[Data: Decoder, B](create: Data => B): Either[DecodingFailure, B] =
+        dC.as[Data].map(create)
+
+      op.flatMap {
+        case VoiceOpCode.Identify           => mkMsg(Identify)
+        case VoiceOpCode.SelectProtocol     => mkMsg(SelectProtocol)
+        case VoiceOpCode.Ready              => mkMsg(Ready)
+        case VoiceOpCode.Heartbeat          => mkMsg(Heartbeat)
+        case VoiceOpCode.SessionDescription => mkMsg(SessionDescription)
+        case VoiceOpCode.Speaking           => mkMsg(Speaking)
+        case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
+        case VoiceOpCode.Resume             => mkMsg(Resume)
+        case VoiceOpCode.Resumed            => Right(Resumed)
+        case VoiceOpCode.ClientDisconnect   => ??? //We don't know what to do with this
+        case VoiceOpCode.Hello              => Left(DecodingFailure("Received hellp opcode in unexpected form", opC.history))
+      }
+    }
+  }
+}

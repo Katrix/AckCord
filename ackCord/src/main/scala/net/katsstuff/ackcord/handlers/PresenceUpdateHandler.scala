@@ -28,7 +28,7 @@ import scala.collection.mutable
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.data.{Presence, PresenceGame, PresenceStreaming, User}
 import net.katsstuff.ackcord.http.RawPresenceGame
-import net.katsstuff.ackcord.http.websocket.WsEvent.PresenceUpdateData
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.PresenceUpdateData
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
