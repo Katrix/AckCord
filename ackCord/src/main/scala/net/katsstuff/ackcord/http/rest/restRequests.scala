@@ -388,7 +388,7 @@ object Requests {
       extends SimpleRESTRequest[Seq[ModifyGuildChannelPositionsData], Seq[RawChannel]] {
     override def route: RestRoute = Routes.modifyGuildChannelsPositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
-      implicit val enc = deriveEncoder[ModifyGuildChannelPositionsData]
+      implicit val enc: Encoder[ModifyGuildChannelPositionsData] = deriveEncoder[ModifyGuildChannelPositionsData]
       Encoder[Seq[ModifyGuildChannelPositionsData]]
     }
     override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
@@ -528,7 +528,7 @@ object Requests {
       extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[WsEvent.GuildRoleModifyData]] {
     override def route: RestRoute = Routes.modifyGuildRolePositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
-      implicit val enc = deriveEncoder[ModifyGuildRolePositionsData]
+      implicit val enc: Encoder[ModifyGuildRolePositionsData] = deriveEncoder[ModifyGuildRolePositionsData]
       Encoder[Seq[ModifyGuildRolePositionsData]]
     }
     override def responseDecoder: Decoder[Seq[RawRole]] = Decoder[Seq[RawRole]]
@@ -581,11 +581,10 @@ object Requests {
     override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
   }
 
-  //TODO: This is supposed to have InviteMetadata too
-  case class GetGuildInvites(guildId: GuildId) extends NoParamsRequest[Seq[Invite]] {
+  case class GetGuildInvites(guildId: GuildId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
     override def route:           RestRoute                 = Routes.getGuildInvites(guildId)
-    override def responseDecoder: Decoder[Seq[Invite]]      = Decoder[Seq[Invite]]
-    override def handleResponse:  CacheHandler[Seq[Invite]] = new NOOPHandler[Seq[Invite]]
+    override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
+    override def handleResponse:  CacheHandler[Seq[InviteWithMetadata]] = new NOOPHandler[Seq[InviteWithMetadata]]
   }
 
   case class GetGuildIntegrations(guildId: GuildId) extends NoParamsRequest[Seq[Integration]] {
@@ -707,4 +706,69 @@ object Requests {
     override def responseDecoder: Decoder[Seq[Connection]]      = Decoder[Seq[Connection]]
     override def handleResponse:  CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
   }
+
+  case class CreateWebhookData(name: String, avatar: ImageData)
+  case class CreateWebhook(channelId: ChannelId, params: CreateWebhookData)
+      extends SimpleRESTRequest[CreateWebhookData, Webhook] {
+    override def route:           RestRoute                  = Routes.createWebhook(channelId)
+    override def paramsEncoder:   Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
+    override def responseDecoder: Decoder[Webhook]           = Decoder[Webhook]
+    override def handleResponse:  CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+  }
+
+  case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsRequest[Seq[Webhook]] {
+    override def route:           RestRoute                  = Routes.getChannelWebhooks(channelId)
+    override def responseDecoder: Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
+    override def handleResponse:  CacheHandler[Seq[Webhook]] = new NOOPHandler[Seq[Webhook]]
+  }
+
+  case class GetGuildWebhooks(guildId: GuildId) extends NoParamsRequest[Seq[Webhook]] {
+    override def route:           RestRoute                  = Routes.getGuildWebhooks(guildId)
+    override def responseDecoder: Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
+    override def handleResponse:  CacheHandler[Seq[Webhook]] = new NOOPHandler[Seq[Webhook]]
+  }
+
+  case class GetWebhook(id: Snowflake) extends NoParamsRequest[Webhook] {
+    override def route:           RestRoute             = Routes.getWebhook(id)
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def handleResponse:  CacheHandler[Webhook] = new NOOPHandler[Webhook]
+  }
+
+  case class GetWebhookWithToken(id: Snowflake, token: String) extends NoParamsRequest[Webhook] {
+    override def route:           RestRoute             = Routes.getWebhookWithToken(token, id)
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def handleResponse:  CacheHandler[Webhook] = new NOOPHandler[Webhook]
+  }
+
+  case class ModifyWebhookData(name: Option[String], avatar: Option[ImageData])
+  case class ModifyWebhook(id: Snowflake, params: ModifyWebhookData)
+      extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
+    override def route:           RestRoute                  = Routes.getWebhook(id)
+    override def responseDecoder: Decoder[Webhook]           = Decoder[Webhook]
+    override def paramsEncoder:   Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+    override def handleResponse:  CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+  }
+
+  case class ModifyWebhookWithToken(id: Snowflake, token: String, params: ModifyWebhookData)
+      extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
+    override def route:           RestRoute                  = Routes.getWebhookWithToken(token, id)
+    override def responseDecoder: Decoder[Webhook]           = Decoder[Webhook]
+    override def paramsEncoder:   Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+    override def handleResponse:  CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+  }
+
+  case class DeleteWebhook(id: Snowflake) extends NoParamsResponseRequest {
+    override def route: RestRoute = Routes.deleteWebhook(id)
+  }
+
+  case class DeleteWebhookWithToken(id: Snowflake, token: String) extends NoParamsResponseRequest {
+    override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
+  }
+
+  /*
+  TODO
+  case class ExecuteWebhook(id: Snowflake, token: String, params: Nothing) extends SimpleRESTRequest[Nothing, Nothing] {
+    override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
+  }
+  */
 }

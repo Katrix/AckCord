@@ -207,15 +207,35 @@ object Routes {
   val currentUser:    Uri       = s"$users/@me"
   val getCurrentUser: RestRoute = RestRoute(currentUser, GET)
 
-  val getUser             :               UserId => RestRoute = userId => RestRoute(s"$users/$userId", GET)
-  val modifyCurrentUser   :     RestRoute                     = RestRoute(currentUser, PATCH)
-  val currentUserGuilds   :     Uri                           = s"$currentUser/guilds"
-  val getCurrentUserGuilds:  RestRoute                        = RestRoute(currentUserGuilds, GET)
-  val leaveGuild          : GuildId => RestRoute              = guildId => RestRoute(s"$currentUserGuilds/$guildId", DELETE)
+  val getUser:              UserId => RestRoute  = userId => RestRoute(s"$users/$userId", GET)
+  val modifyCurrentUser:    RestRoute            = RestRoute(currentUser, PATCH)
+  val currentUserGuilds:    Uri                  = s"$currentUser/guilds"
+  val getCurrentUserGuilds: RestRoute            = RestRoute(currentUserGuilds, GET)
+  val leaveGuild:           GuildId => RestRoute = guildId => RestRoute(s"$currentUserGuilds/$guildId", DELETE)
 
-  val userDMs   :             Uri = s"$currentUser/channels"
-  val getUserDMs:   RestRoute     = RestRoute(userDMs, GET)
-  val createDM  : RestRoute       = RestRoute(userDMs, POST)
+  val userDMs:    Uri       = s"$currentUser/channels"
+  val getUserDMs: RestRoute = RestRoute(userDMs, GET)
+  val createDM:   RestRoute = RestRoute(userDMs, POST)
 
   val getUserConnections: RestRoute = RestRoute(s"$currentUser/connections", GET)
+
+  //WebHook
+  val webhook:          Snowflake => Uri           = id => s"$base/webhooks/$id"
+  val webhookWithToken: (String, Snowflake) => Uri = Function.uncurried(token => webhook.andThen(uri => s"$uri/$token"))
+  val channelWebhooks:  ChannelId => String        = channel.andThen(uri => s"$uri/webhooks")
+
+  val createWebhook:          ChannelId => RestRoute           = channelWebhooks.andThen(RestRoute(_, POST))
+  val getChannelWebhooks:     ChannelId => RestRoute           = channelWebhooks.andThen(RestRoute(_, GET))
+  val getGuildWebhooks:       GuildId => RestRoute             = guild.andThen(uri => RestRoute(s"$uri/webhooks", GET))
+  val getWebhook:             Snowflake => RestRoute           = webhook.andThen(RestRoute(_, GET))
+  val getWebhookWithToken:    (String, Snowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, GET))
+  val modifyWebhook:          Snowflake => RestRoute           = webhook.andThen(RestRoute(_, PATCH))
+  val modifyWebhookWithToken: (String, Snowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, PATCH))
+  val deleteWebhook:          Snowflake => RestRoute           = webhook.andThen(RestRoute(_, DELETE))
+  val deleteWebhookWithToken: (String, Snowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, DELETE))
+  val executeWebhook:         (String, Snowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, POST))
+  val executeSlackWebhook: (String, Snowflake) => RestRoute =
+    webhookWithToken.andThen(uri => RestRoute(s"$uri/slack", POST))
+  val executeGithubWebhook: (String, Snowflake) => RestRoute =
+    webhookWithToken.andThen(uri => RestRoute(s"$uri/github", POST))
 }

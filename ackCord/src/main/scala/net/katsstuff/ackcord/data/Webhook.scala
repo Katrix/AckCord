@@ -27,7 +27,7 @@ case class Webhook(
     id: Snowflake,
     guildId: Option[GuildId],
     channelId: ChannelId,
-    user: Option[UserId],
+    user: Option[User],
     name: Option[String],
     avatar: Option[String],
     token: String
