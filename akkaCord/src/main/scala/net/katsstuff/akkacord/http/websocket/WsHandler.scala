@@ -68,8 +68,7 @@ class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordCli
         ref = self,
         onInitMessage = InitSink,
         ackMessage = AckSink,
-        onCompleteMessage = CompletedSink,
-        onFailureMessage = Status.Failure.apply
+        onCompleteMessage = CompletedSink
       )
       implicit val logger: LoggingAdapter = log
       val (queue, future) = WsHandler.matRunFlow(wsUri, src, sink)(Keep.both)(Keep.left)
@@ -111,6 +110,9 @@ class WsHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordCli
       val res = handleWsMessages(event)
       sender() ! AckSink
       res
+    case Event(Left(e: Error), _) =>
+      log.error(e, "Received error in WS handler")
+      stay()
     case event @ Event(_: WsMessage[_], _) => handleExternalMessage(event)
     case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, source, resume)) =>
       if (receivedAck) {

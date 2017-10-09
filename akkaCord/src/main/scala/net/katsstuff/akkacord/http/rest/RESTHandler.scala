@@ -24,45 +24,48 @@
 package net.katsstuff.akkacord.http.rest
 
 import scala.collection.{immutable, mutable}
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
-import akka.http.scaladsl.model.headers.{`User-Agent`, Authorization, HttpCredentials}
+import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.pipe
 import akka.stream.scaladsl.{Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, OverflowStrategy, QueueOfferResult}
+import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.akkacord.http.rest.RESTHandler.{RateLimitStop, RemoveRateLimit}
-import net.katsstuff.akkacord.http.rest.Requests.CreateMessage
+import net.katsstuff.akkacord.http.rest.RESTHandler.{ProcessedRequest, RateLimitStop, RemoveRateLimit}
+import net.katsstuff.akkacord.http.rest.Requests.{CreateMessage, CreateMessageData}
 import net.katsstuff.akkacord.{AkkaCord, DiscordClient, Request, RequestHandlerEvent}
 
 //Designed after http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html#examples
-class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
+class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat: Materializer)
     extends Actor
     with ActorLogging
     with FailFastCirceSupport {
 
   import context.dispatcher
-  implicit val mat = ActorMaterializer()
 
   private val requestQueue = {
-    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[Promise[HttpResponse]]("discordapp.com")
+    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]]("discordapp.com")
+    val selfSink = Sink.actorRefWithAck[(Try[HttpResponse], ProcessedRequest[_, _, _])](
+      ref = self,
+      onInitMessage = RESTHandler.InitSink,
+      ackMessage = RESTHandler.AckSink,
+      onCompleteMessage = RESTHandler.CompletedSink,
+    )
+
     Source
-      .queue[(HttpRequest, Promise[HttpResponse])](64, OverflowStrategy.fail)
+      .queue[(HttpRequest, ProcessedRequest[_, _, _])](64, OverflowStrategy.fail)
       .via(poolClientFlow)
-      .toMat(Sink.foreach {
-        case (Success(resp), p) => p.success(resp)
-        case (Failure(e), p)    => p.failure(e)
-      })(Keep.left)
+      .toMat(selfSink)(Keep.left)
       .run()
   }
 
@@ -75,16 +78,17 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       requestQueue.watchCompletion().foreach { _ =>
-        mat.shutdown()
         context.stop(self)
       }
       requestQueue.complete()
+    case RESTHandler.InitSink =>
+      sender() ! RESTHandler.AckSink
     case RemoveRateLimit(uri) => rateLimits.remove(uri)
-    case fullRequest @ Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo) //The d and h here makes IntelliJ happy. They serves no other purpose
+    //The d and h here makes IntelliJ happy. They serves no other purpose
+    case Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo)
         if !rateLimits.contains(request.route.uri) =>
       val body = request match {
-        case CreateMessage(_, data) if data.file.isDefined =>
-          val file = data.file.get
+        case CreateMessage(_, CreateMessageData(_, _, _, Some(file), _)) =>
           val filePart =
             FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
           val jsonPart = FormData.BodyPart(
@@ -94,54 +98,56 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
 
           FormData(filePart, jsonPart).toEntity()
         case _ =>
-          val params =
-            if (request.params == NotUsed) None
-            else Some(request.toJsonParams)
-
-          params.fold(HttpEntity.Empty)(json => HttpEntity(ContentTypes.`application/json`, json.noSpaces))
+          if (request.params == NotUsed) HttpEntity.Empty
+          else HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces)
       }
 
-      val route = request.route
+      val route       = request.route
+      val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), body)
 
-      val httpRequest = HttpRequest(method = route.method, uri = route.uri, immutable.Seq(auth, userAgent), body)
+      log.debug(s"Sending request $httpRequest to ${route.uri} with method ${route.method}")
 
-      log.debug(s"Sending request $httpRequest")
-
-      queueRequest(httpRequest).onComplete {
-        case Success(HttpResponse(StatusCodes.TooManyRequests, headers, entity, _)) =>
-          updateRateLimit(route.uri, headers)
-          handleRatelimit(headers, fullRequest)
-          entity.discardBytes()
-        case Success(HttpResponse(StatusCodes.NoContent, headers, entity, _))
-            if request.expectedResponseCode == StatusCodes.NoContent =>
-          updateRateLimit(route.uri, headers)
-          entity.discardBytes()
-        case Success(HttpResponse(response, headers, entity, _)) =>
-          updateRateLimit(route.uri, headers)
-          if (request.expectedResponseCode == response) {
-            Unmarshal(entity)
-              .to[Json]
-              .flatMap { json =>
-                log.debug(s"Received response: ${json.noSpaces}")
-                Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
-              }
-              .map(data => RequestHandlerEvent(data, sendResponseTo, contextual)(request.handleResponse))
-              .pipeTo(snowflakeCache)
-          } else {
-            log.warning(s"Unexpected response code ${response.intValue()} for $request")
-            entity.discardBytes()
+      queueRequest(httpRequest, request, contextual, sendResponseTo)
+    case Success((HttpResponse(StatusCodes.TooManyRequests, headers, entity, _), req: ProcessedRequest[_, _, _])) =>
+      updateRateLimit(req.restRequest.route.uri, headers)
+      handleRatelimit(headers, req)
+      entity.discardBytes()
+      sender() ! RESTHandler.AckSink
+    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, _, _))
+        if request.expectedResponseCode == StatusCodes.NoContent =>
+      updateRateLimit(request.route.uri, headers)
+      entity.discardBytes()
+      sender() ! RESTHandler.AckSink
+    case (Success(HttpResponse(response, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
+      updateRateLimit(request.route.uri, headers)
+      if (request.expectedResponseCode == response) {
+        Unmarshal(entity)
+          .to[Json]
+          .flatMap { json =>
+            log.debug(s"Received response: ${json.noSpaces}")
+            Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
           }
-        case Success(HttpResponse(e @ ServerError(intValue), _, entity, _)) =>
-          log.error(s"Server error $intValue ${e.reason}")
-          entity.toStrict(1.seconds).onComplete {
-            case Success(ent) => log.error(ent.toString())
-            case Failure(_)   => entity.discardBytes()
-          }
-        case Success(HttpResponse(e @ ClientError(intValue), _, entity, _)) =>
-          log.error(s"Client error $intValue: ${e.reason}")
-          entity.discardBytes()
-        case Failure(e) => e.printStackTrace()
+          .map(data => RequestHandlerEvent(data, sendTo, ctx)(request.handleResponse))
+          .pipeTo(snowflakeCache)
+      } else {
+        log.warning(s"Unexpected response code ${response.intValue()} for $request")
+        entity.discardBytes()
       }
+      sender() ! RESTHandler.AckSink
+    case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), _) =>
+      log.error(s"Server error $intValue ${e.reason}")
+      entity.toStrict(1.seconds).onComplete {
+        case Success(ent) => log.error(ent.toString())
+        case Failure(_)   => entity.discardBytes()
+      }
+      sender() ! RESTHandler.AckSink
+    case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), _) =>
+      log.error(s"Client error $intValue: ${e.reason}")
+      entity.discardBytes()
+    case Status.Failure(e) =>
+      e.printStackTrace()
+      sender() ! RESTHandler.AckSink
+    case Failure(e) => e.printStackTrace()
     //If we get here then the request is rate limited
     case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
       val duration = rateLimits.getOrElse(request.route.uri, 0)
@@ -152,7 +158,6 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
     case DiscordClient.ShutdownClient =>
       requestQueue.watchCompletion().foreach { _ =>
         context.stop(self)
-        mat.shutdown()
       }
       requestQueue.complete()
     case RateLimitStop =>
@@ -176,7 +181,7 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
     }
   }
 
-  def handleRatelimit(headers: Seq[HttpHeader], request: Request[_, _]): Unit = {
+  def handleRatelimit[A](headers: Seq[HttpHeader], retryMsg: A): Unit = {
     if (headers.exists(header => header.is("X-RateLimit-Global") && header.value == "true")) {
       log.error("Hit global rate limit")
       headers
@@ -191,24 +196,40 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)
     } else {
       headers
         .find(_.is("Retry-After"))
-        .foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, request))
+        .foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, retryMsg))
     }
   }
 
-  def queueRequest(request: HttpRequest): Future[HttpResponse] = {
-    val responsePromise = Promise[HttpResponse]()
-    requestQueue.offer(request -> responsePromise).flatMap {
-      case QueueOfferResult.Enqueued    => responsePromise.future
-      case QueueOfferResult.Dropped     => Future.failed(new RuntimeException("Queue overflowed."))
-      case QueueOfferResult.Failure(ex) => Future.failed(ex)
-      case QueueOfferResult.QueueClosed =>
-        Future.failed(new RuntimeException("Queue was closed (pool shut down) while running the request."))
-    }
+  def queueRequest(
+      httpRequest: HttpRequest,
+      restRequest: ComplexRESTRequest[_, _, _],
+      context: _,
+      sendTo: Option[ActorRef]
+  ): Unit = {
+    requestQueue
+      .offer(httpRequest -> ProcessedRequest(restRequest, context, sendTo))
+      .foreach {
+        case QueueOfferResult.Enqueued    => //All is fine
+        case QueueOfferResult.Dropped     => self ! Failure(new RuntimeException("Queue overflowed."))
+        case QueueOfferResult.Failure(ex) => self ! Failure(ex)
+        case QueueOfferResult.QueueClosed =>
+          self ! Failure(new RuntimeException("Queue was closed (pool shut down) while running the request."))
+      }
   }
 }
 object RESTHandler {
   def props(token: HttpCredentials, snowflakeCache: ActorRef): Props =
-    Props(classOf[RESTHandler], token, snowflakeCache)
+    Props(new RESTHandler(token, snowflakeCache))
   case object RateLimitStop
   case class RemoveRateLimit(uri: Uri)
+
+  private case class ProcessedRequest[Response, HandlerType, Context](
+      restRequest: ComplexRESTRequest[_, Response, HandlerType],
+      context: Context,
+      sendTo: Option[ActorRef]
+  )
+
+  private case object InitSink
+  private case object AckSink
+  private case object CompletedSink
 }
