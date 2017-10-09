@@ -681,6 +681,9 @@ package object syntax {
       Request(DeleteInvite(inviteCode), context, sendResponseTo)
     def acceptInvite[Context](inviteCode: String, context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
       Request(AcceptInvite(inviteCode), context, sendResponseTo)
+
+    def fetchVoiceRegions[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
+      Request(ListVoiceRegions, context, sendResponseTo)
   }
 
   implicit class BotUserSyntax(val botUser: User @@ BotUser) extends AnyVal {

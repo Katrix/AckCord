@@ -707,6 +707,14 @@ object Requests {
     override def handleResponse:  CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
   }
 
+  //Voice
+  case object ListVoiceRegions extends NoParamsRequest[Seq[VoiceRegion]] {
+    override def route: RestRoute = Routes.listVoiceRegions
+    override def responseDecoder: Decoder[Seq[VoiceRegion]] = Decoder[Seq[VoiceRegion]]
+    override def handleResponse: CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
+  }
+
+  //Webhook
   case class CreateWebhookData(name: String, avatar: ImageData)
   case class CreateWebhook(channelId: ChannelId, params: CreateWebhookData)
       extends SimpleRESTRequest[CreateWebhookData, Webhook] {

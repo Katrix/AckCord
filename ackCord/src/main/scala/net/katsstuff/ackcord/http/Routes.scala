@@ -219,6 +219,9 @@ object Routes {
 
   val getUserConnections: RestRoute = RestRoute(s"$currentUser/connections", GET)
 
+  //Voice
+  val listVoiceRegions = RestRoute(s"$base/voice/regions", GET)
+
   //WebHook
   val webhook:          Snowflake => Uri           = id => s"$base/webhooks/$id"
   val webhookWithToken: (String, Snowflake) => Uri = Function.uncurried(token => webhook.andThen(uri => s"$uri/$token"))
