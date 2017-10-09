@@ -496,6 +496,9 @@ package object syntax {
       sendResponseTo
     )
 
+    def fetchAuditLog[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
+      Request(GetGuildAuditLog(guild.id), context, sendResponseTo)
+
     def leaveGuild[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
       Request(LeaveGuild(guild.id), context, sendResponseTo)
     def delete[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =

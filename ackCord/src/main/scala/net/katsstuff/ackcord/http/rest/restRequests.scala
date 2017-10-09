@@ -77,6 +77,14 @@ object Requests {
 
   trait NoParamsResponseRequest extends NoParamsRequest[NotUsed] with NoResponseRequest[NotUsed]
 
+  //Audit logs
+
+  case class GetGuildAuditLog(guildId: GuildId) extends NoParamsRequest[AuditLog] {
+    override def route: RestRoute = Routes.getGuildAuditLogs(guildId)
+    override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
+    override def handleResponse: CacheHandler[AuditLog] = new NOOPHandler[AuditLog]
+  }
+
   //Channels
 
   case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel] {

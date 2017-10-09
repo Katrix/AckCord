@@ -54,6 +54,13 @@ object Routes {
     def andThen[A](g: R => A): (T1, T2, T3) => A = (t1, t2, t3) => g(f(t1, t2, t3))
   }
 
+  //Audit log
+
+  val guilds: Uri            = s"$base/guilds"
+  val guild:  GuildId => Uri = guildId => s"$guilds/$guildId"
+
+  val getGuildAuditLogs: GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/audit-logs", GET))
+
   //Channel routes
 
   val channel: ChannelId => Uri = channelId => s"$base/channels/$channelId"
@@ -117,8 +124,6 @@ object Routes {
   val groupDmRemoveRecipient: (UserId, ChannelId) => RestRoute = groupDmRecipient.andThen(RestRoute(_, DELETE))
 
   //Emoji routes
-  val guilds: Uri            = s"$base/guilds"
-  val guild:  GuildId => Uri = guildId => s"$guilds/$guildId"
 
   val guildEmojis:      GuildId => Uri       = guild.andThen(uri => s"$uri/emojis")
   val listGuildEmojis:  GuildId => RestRoute = guildEmojis.andThen(RestRoute(_, GET))
