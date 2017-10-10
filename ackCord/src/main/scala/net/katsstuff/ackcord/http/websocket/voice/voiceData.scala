@@ -55,7 +55,7 @@ case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[Se
   override def op: VoiceOpCode = VoiceOpCode.SessionDescription
 }
 
-case class SpeakingData(speaking: Boolean, delay: Int, ssrc: Int, userId: Option[UserId])
+case class SpeakingData(speaking: Boolean, delay: Option[Int], ssrc: Int, userId: Option[UserId])
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode = VoiceOpCode.Speaking
 }

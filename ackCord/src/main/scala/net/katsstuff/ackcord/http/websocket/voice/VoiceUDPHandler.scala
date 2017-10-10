@@ -31,15 +31,18 @@ import scala.concurrent.duration._
 
 import akka.actor.{ActorRef, FSM, Props, Status}
 import akka.io.{IO, UdpConnected}
-import akka.stream.ThrottleMode
+import akka.stream.{Materializer, ThrottleMode}
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.ByteString
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetDataSource
 
-class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef)
+class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef)(implicit mat: Materializer)
     extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] {
   import VoiceUDPHandler._
-  import context.system
+
+  implicit val system = context.system
+  import system.dispatcher
+
   IO(UdpConnected) ! UdpConnected.Connect(self, new InetSocketAddress(address, port))
 
   startWith(Inactive, NoSocket)
@@ -49,10 +52,15 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef
 
   when(Inactive) {
     case Event(UdpConnected.Connected, NoSocket) => stay using WithSocket(sender())
-    case Event(DoIPDiscovery, WithSocket(socket)) =>
-      val payload = ByteString(ssrc).padTo(70, 0)
+    case Event(ip: DoIPDiscovery, NoSocket) =>
+      //We received the request a bit early, resend it
+      system.scheduler.scheduleOnce(100.millis, self, ip)
+      log.info("Resending DoIPDiscovery request")
+      stay()
+    case Event(ip: DoIPDiscovery, WithSocket(socket)) =>
+      val payload = ByteString(ssrc).padTo(70, 0.toByte)
       socket ! UdpConnected.Send(payload)
-      stay using ExpectingResponse(socket, IPDiscovery(sender()))
+      stay using ExpectingResponse(socket, IPDiscovery(ip.replyTo))
     case Event(UdpConnected.Received(data), ExpectingResponse(socket, IPDiscovery(replyTo))) =>
       val (addressBytes, portBytes) = data.splitAt(68)
 
@@ -83,8 +91,9 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef
       sender() ! SinkAck
       stay()
     case Event(SendData(data), WithSecret(socket, secret)) =>
+      log.info("Send data")
       val header = RTPHeader(sequence, timestamp, ssrc)
-      sequence += 1
+      sequence = (sequence + 1).toShort
       timestamp += FrameSize
       val encrypted = secret.box(data.toArray, header.asNonce.toArray)
       socket ! UdpConnected.Send(header.byteString ++ ByteString(encrypted))
@@ -98,6 +107,7 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef
       stay()
     case Event(Status.Failure(e), _) => throw e
     case Event(SetDataSource(source), _) =>
+      log.info("Got source")
       source
         .via(Flow[ByteString].throttle(1, 20.millis, 1, ThrottleMode.Shaping))
         .via(Flow.fromFunction(SendData))
@@ -124,7 +134,7 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, wsHandler: ActorRef
   initialize()
 }
 object VoiceUDPHandler {
-  def props(address: String, ssrc: Int, port: Int, wsHandler: ActorRef): Props =
+  def props(address: String, ssrc: Int, port: Int, wsHandler: ActorRef)(implicit mat: Materializer): Props =
     Props(new VoiceUDPHandler(address, ssrc, port, wsHandler))
 
   sealed trait State
@@ -145,13 +155,13 @@ object VoiceUDPHandler {
   case object SinkAck
   case object SinkComplete
 
-  case object DoIPDiscovery
+  case class DoIPDiscovery(replyTo: ActorRef)
   case class FoundIP(address: String, port: Int)
   case class StartConnection(secretKey: ByteString)
   case object Disconnect
   case class SendData(data: ByteString)
 
-  private val nonceLastPart = ByteString(new Array(12))
+  private val nonceLastPart = ByteString.fromArray(new Array(12))
   val silence               = ByteString(0xF8, 0xFF, 0xFE)
 
   val SampleRate = 48000

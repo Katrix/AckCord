@@ -54,8 +54,8 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] = (c: HCursor) => {
     for {
       mode      <- c.get[String]("mode")
-      secretKey <- c.get[Seq[Byte]]("secret_key")
-    } yield SessionDescriptionData(mode, ByteString.apply(secretKey: _*))
+      secretKey <- c.get[Seq[Int]]("secret_key")
+    } yield SessionDescriptionData(mode, ByteString(secretKey.map(_.toByte): _*))
   }
 
   implicit val speakingDataEncoder: Encoder[SpeakingData] = deriveEncoder
@@ -88,7 +88,7 @@ object VoiceWsProtocol extends DiscordProtocol {
         case VoiceOpCode.Resume             => mkMsg(Resume)
         case VoiceOpCode.Resumed            => Right(Resumed)
         case VoiceOpCode.ClientDisconnect   => ??? //We don't know what to do with this
-        case VoiceOpCode.Hello              => Left(DecodingFailure("Received hellp opcode in unexpected form", opC.history))
+        case VoiceOpCode.Hello              => dC.downField("heartbeat_interval").as[Int].map(Hello) //Documentation is lying, the data is on the d field
       }
     }
   }

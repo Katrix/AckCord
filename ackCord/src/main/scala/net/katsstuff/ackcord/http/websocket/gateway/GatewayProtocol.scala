@@ -118,6 +118,9 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val helloDataEncoder: Encoder[HelloData] = deriveEncoder
   implicit val helloDataDecoder: Decoder[HelloData] = deriveDecoder
 
+  implicit val voiceStateUpdateDataEncoder: Encoder[VoiceStateUpdateData] = deriveEncoder
+  implicit val voiceStateUpdateDataDecoder: Decoder[VoiceStateUpdateData] = deriveDecoder
+
   implicit val rawGuildMemberWithGuildEncoder: Encoder[GatewayEvent.RawGuildMemberWithGuild] = deriveEncoder
   implicit val rawGuildMemberWithGuildDecoder: Decoder[GatewayEvent.RawGuildMemberWithGuild] = deriveDecoder
 
@@ -219,7 +222,7 @@ object GatewayProtocol extends DiscordProtocol {
       case GatewayOpCode.Heartbeat => dC.as[Option[Int]].map(Heartbeat.apply)
       case GatewayOpCode.Identify => dC.as[IdentifyObject].map(Identify.apply)
       case GatewayOpCode.StatusUpdate => dC.as[StatusData].map(StatusUpdate.apply)
-      case GatewayOpCode.VoiceStateUpdate => dC.as[VoiceState].map(VoiceStateUpdate.apply)
+      case GatewayOpCode.VoiceStateUpdate => dC.as[VoiceStateUpdateData].map(VoiceStateUpdate.apply)
       case GatewayOpCode.VoiceServerPing => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)
       case GatewayOpCode.Resume => dC.as[ResumeData].map(Resume.apply)
       case GatewayOpCode.Reconnect => Right(Reconnect)

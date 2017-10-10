@@ -45,7 +45,7 @@ trait AudioAPIMessage {
   def userId: UserId
 }
 object AudioAPIMessage {
-  case class UserSpeaking(speakingUserId: UserId, isSpeaking: Boolean, delay: Int, serverId: Snowflake, userId: UserId)
+  case class UserSpeaking(speakingUserId: UserId, isSpeaking: Boolean, delay: Option[Int], serverId: Snowflake, userId: UserId)
       extends AudioAPIMessage
 
   case class ReceivedData(

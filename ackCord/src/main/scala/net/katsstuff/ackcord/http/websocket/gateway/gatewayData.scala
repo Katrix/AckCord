@@ -70,7 +70,8 @@ case class StatusUpdate(d: StatusData) extends GatewayMessage[StatusData] {
   override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
 
-case class VoiceStateUpdate(d: VoiceState) extends GatewayMessage[VoiceState] {
+case class VoiceStateUpdateData(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean)
+case class VoiceStateUpdate(d: VoiceStateUpdateData) extends GatewayMessage[VoiceStateUpdateData] {
   override def op: GatewayOpCode = GatewayOpCode.VoiceStateUpdate
 }
 
@@ -197,7 +198,8 @@ object GatewayEvent {
         "CHANNEL_PINS_UPDATE",
         notImplementedHandler,
         data =>
-          (current, prev) => current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
+          (current, prev) =>
+            current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, current, prev))
       )
 
   object GuildCreate
@@ -376,9 +378,10 @@ object GatewayEvent {
         RawHandlers.roleDeleteHandler,
         data =>
           (current, prev) =>
-            prev.getGuild(data.guildId).flatMap(g => g.roles.get(data.roleId).map(g -> _)).map { case (g, r) =>
-              APIMessage.GuildRoleDelete(g, r, current, prev)
-            }
+            prev.getGuild(data.guildId).flatMap(g => g.roles.get(data.roleId).map(g -> _)).map {
+              case (g, r) =>
+                APIMessage.GuildRoleDelete(g, r, current, prev)
+        }
       )
 
   object MessageCreate
@@ -508,8 +511,8 @@ object GatewayEvent {
         data =>
           (current, prev) =>
             for {
-              guild <- current.getGuild(data.guildId)
-              user <- current.getUser(data.user.id)
+              guild    <- current.getGuild(data.guildId)
+              user     <- current.getUser(data.user.id)
               presence <- guild.presences.get(user.id)
             } yield APIMessage.PresenceUpdate(guild, user, data.roles, presence, current, prev)
       )

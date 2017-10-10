@@ -29,6 +29,7 @@ import scala.util.control.NonFatal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.Materializer
@@ -39,7 +40,7 @@ import io.circe.syntax._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
-import net.katsstuff.ackcord.{APIMessageHandlerEvent, DiscordClientSettings}
+import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSettings}
 
 class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer)
     extends AbstractWsHandler[GatewayMessage, ResumeData](wsUri) {
@@ -60,6 +61,8 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       .log("Received payload")
       .map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
+
+  def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
   when(Active) {
     case Event(InitSink, _) =>
@@ -156,6 +159,12 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       log.debug(s"Sending payload: $payload")
       queue.offer(TextMessage(payload))
       log.debug("Requested guild data for {}", request.d.guildId)
+
+      stay
+    case Event(request: VoiceStateUpdate, WithHeartbeat(_, _, queue, _)) =>
+      val payload = (request: GatewayMessage[VoiceStateUpdateData]).asJson.noSpaces
+      log.debug(s"Sending payload: $payload")
+      queue.offer(TextMessage(payload))
 
       stay
   }

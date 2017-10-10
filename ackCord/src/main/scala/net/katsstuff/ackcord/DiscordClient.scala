@@ -48,7 +48,7 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
     with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
-  private val cache     = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val cache          = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
   private val gatewayHandler = system.actorOf(GatewayHandler.props(wsUri, token, cache, settings), "WsHandler")
   private val restHandler =
     system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
@@ -66,7 +66,7 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
-    case request @ Request(_: GatewayMessage[_], _, _)                => gatewayHandler.forward(request)
+    case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
     case Terminated(_) =>
       shutdownCount += 1

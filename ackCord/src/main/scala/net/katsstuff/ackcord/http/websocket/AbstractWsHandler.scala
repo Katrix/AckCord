@@ -31,13 +31,11 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
-import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import io.circe
 import io.circe.Error
-import net.katsstuff.ackcord.AckCord
 
 abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat: Materializer)
     extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
@@ -52,8 +50,11 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
 
   def parseMessage: Flow[Message, Either[circe.Error, WsMessage[_]], NotUsed]
 
+  def wsParams(uri: Uri): Uri
+
   when(Inactive) {
     case Event(Login, data) =>
+      log.info("Logging in")
       val src = Source.queue[Message](64, OverflowStrategy.backpressure)
       val sink = Sink.actorRefWithAck[Either[Error, WsMessage[_]]](
         ref = self,
@@ -62,7 +63,8 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
         onCompleteMessage = CompletedSink
       )
 
-      val (queue, future) = src.viaMat(wsFlow(wsUri))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
+      log.info(s"WS uri: ${wsParams(wsUri)}")
+      val (queue, future) = src.viaMat(wsFlow(wsParams(wsUri)))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
 
       future.foreach {
         case InvalidUpgradeResponse(response, cause) =>
@@ -70,12 +72,14 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
           queue.complete()
           throw new IllegalStateException(s"Could not connect to gateway: $cause")
         case ValidUpgrade(response, _) =>
+          log.info(s"Valid login: ${response.entity.toString}")
           response.discardEntityBytes()
           self ! ValidWsUpgrade
       }
 
       stay using WithQueue(queue, data.resumeOpt)
     case Event(ValidWsUpgrade, _) =>
+      log.info("Logged in, going to Active")
       sendFirstSinkAck.foreach { act =>
         act ! AckSink
       }
@@ -103,10 +107,8 @@ object AbstractWsHandler {
 
   class AckException(msg: String) extends Exception(msg)
 
-  private def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
-
   def wsFlow(uri: Uri)(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
-    Http().webSocketClientFlow(wsParams(uri))
+    Http().webSocketClientFlow(uri)
 
   private[websocket] trait Data[Resume] {
     def resumeOpt:              Option[Resume]
