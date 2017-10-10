@@ -78,7 +78,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       sender() ! AckSink
       res
     case event @ Event(_: GatewayMessage[_], _) => handleExternalMessage(event)
-    case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, source, resume)) =>
+    case Event(SendHeartbeat, data @ WithHeartbeat(_, receivedAck, source, resume)) =>
       if (receivedAck) {
         val seq = resume.map(_.seq)
 
@@ -120,7 +120,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       log.debug(s"Sending payload: $payload")
       queue.offer(TextMessage(payload))
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
-      stay using WithHeartbeat(data.heartbeatInterval, cancellable, receivedAck = true, queue, resume)
+      stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
     case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
       val seq   = dispatch.sequence
       val event = dispatch.event
@@ -145,13 +145,13 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       self ! Restart(fresh = false, 500.millis)
       stay()
     case Event(Right(InvalidSession), _) =>
-      log.error("Invalid session. Trying to establish new session") //TODO
-
-      goto(Inactive) using WithResumeData(None)
+      log.error("Invalid session. Trying to establish new session in 5 seconds")
+      self ! Restart(fresh = true, 5.seconds)
+      stay()
   }
 
   def handleExternalMessage: StateFunction = {
-    case Event(request: RequestGuildMembers, WithHeartbeat(_, _, _, queue, _)) =>
+    case Event(request: RequestGuildMembers, WithHeartbeat(_, _, queue, _)) =>
       val payload = (request: GatewayMessage[RequestGuildMembersData]).asJson.noSpaces
       log.debug(s"Sending payload: $payload")
       queue.offer(TextMessage(payload))
@@ -170,7 +170,6 @@ object GatewayHandler {
     Props(new GatewayHandler(wsUri, token, cache, settings))
 
   case class WithHeartbeat[Resume](
-      heartbeatInterval: Int,
       heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       queue: SourceQueueWithComplete[Message],

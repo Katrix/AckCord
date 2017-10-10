@@ -23,26 +23,34 @@
  */
 package net.katsstuff.ackcord.http.websocket.voice
 
+import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Cancellable, Status}
-import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
+import akka.stream.scaladsl.{Flow, Source, SourceQueueWithComplete}
 import akka.util.ByteString
 import io.circe
 import io.circe.parser
 import io.circe.syntax._
+import net.katsstuff.ackcord.AudioAPIMessage
 import net.katsstuff.ackcord.data.{Snowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, RTPHeader, StartConnection}
 
-class VoiceWsHandler(address: String, serverId: Snowflake, userId: UserId, sessionId: String, token: String)(
-    implicit mat: Materializer
-) extends AbstractWsHandler[VoiceMessage, ResumeData](s"wss://$address") {
+class VoiceWsHandler(
+    address: String,
+    serverId: Snowflake,
+    userId: UserId,
+    sessionId: String,
+    token: String,
+    sendTo: Option[ActorRef]
+)(implicit mat: Materializer)
+    extends AbstractWsHandler[VoiceMessage, ResumeData](s"wss://$address?v=3") {
   import AbstractWsHandler._
   import VoiceWsHandler._
   import VoiceWsProtocol._
@@ -59,6 +67,8 @@ class VoiceWsHandler(address: String, serverId: Snowflake, userId: UserId, sessi
       .log("Received payload")
       .map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
+
+  val speakingMap = mutable.HashMap.empty[Int, UserId]
 
   onTransition {
     case Inactive -> Active => self ! SendIdentify
@@ -88,27 +98,50 @@ class VoiceWsHandler(address: String, serverId: Snowflake, userId: UserId, sessi
       queue.offer(TextMessage(payload))
 
       stay()
-    case Event(SendSelectProtocol, WithHeartbeat(_, _, _, _, source, _, _)) =>
-      val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(???, ???, "xsalsa20_poly1305"))
+    case Event(SendSelectProtocol, WithHeartbeat(Some(IPData(localAddress, port)), _, _, _, queue, _, _, _)) =>
+      val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
       val payload     = (SelectProtocol(protocolObj): VoiceMessage[SelectProtocolData]).asJson.noSpaces
       log.debug(s"Sending payload: $payload")
-      source.offer(TextMessage(payload))
+      queue.offer(TextMessage(payload))
       stay()
-    case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, _, source, _, _)) =>
+    case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, _, queue, _, _, _)) =>
       if (receivedAck) {
         val nonce = System.currentTimeMillis().toInt
 
         val payload = (Heartbeat(nonce): VoiceMessage[Int]).asJson.noSpaces
         log.debug(s"Sending payload: $payload")
-        source.offer(TextMessage(payload))
+        queue.offer(TextMessage(payload))
         log.debug("Sent Heartbeat")
 
         stay using data.copy(receivedAck = false, previousNonce = Some(nonce))
       } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
-    case event @ Event(_: VoiceMessage[_], _) => handleExternalMessage(event)
-    case Event(Logout, data) =>
+    case Event(FoundIP(localAddress, port), data: WithHeartbeat) =>
+      self ! SendSelectProtocol
+      stay using data.copy(ipData = Some(IPData(localAddress, port)))
+    case Event(SetSpeaking(speaking), data: WithHeartbeat) =>
+      val message = SpeakingData(speaking, 0, data.ssrc, None)
+      val payload = (Speaking(message): VoiceMessage[SpeakingData]).asJson.noSpaces
+
+      log.debug(s"Sending payload: $payload")
+      data.queue.offer(TextMessage(payload))
+      stay()
+    case Event(ReceivedData(data, header), _) =>
+      sendTo.foreach(_ ! AudioAPIMessage.ReceivedData(data, speakingMap.get(header.ssrc), header, serverId, userId))
+      stay()
+    case Event(setSource: SetDataSource, data: WithHeartbeat) =>
+      self ! SetSpeaking(true)
+      data.connectionActor.forward(setSource)
+      stay()
+    case Event(FinishedSource, _) =>
+      self ! SetSpeaking(false)
+      sendTo.foreach(_ ! AudioAPIMessage.FinishedSource(serverId, userId))
+      stay()
+    case Event(ConnectionDied, _) =>
+      throw new IllegalStateException("Voice connection died") //TODO: Guard this behind condition
+    case Event(Logout, data: WithHeartbeat) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
+      data.connectionActor ! Disconnect
       goto(Inactive) using WithResumeData(None)
     case Event(Restart(fresh, waitDur), data) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
@@ -118,19 +151,21 @@ class VoiceWsHandler(address: String, serverId: Snowflake, userId: UserId, sessi
   }
 
   def handleWsMessages: StateFunction = {
-    case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), WithQueue(queue, resume)) =>
-      val connectionActor = context.actorOf(VoiceUDPHandler.props(address, ssrc, port))
-      stay using WithUDPActor(queue, connectionActor, resume.getOrElse(ResumeData(serverId, sessionId, token)))
-    case Event(Right(Hello(heartbeatInterval)), WithUDPActor(queue, connection, resume)) =>
+    case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), WithQueue(queue, _)) =>
+      val connectionActor = context.actorOf(VoiceUDPHandler.props(address, ssrc, port, self))
+      connectionActor ! DoIPDiscovery
+      context.watchWith(connectionActor, ConnectionDied)
+      stay using WithUDPActor(ssrc, connectionActor, queue, ResumeData(serverId, sessionId, token))
+    case Event(Right(Hello(heartbeatInterval)), WithUDPActor(ssrc, connection, queue, resume)) =>
       val cancellable =
         system.scheduler.schedule(0.seconds, (heartbeatInterval * 0.75).toInt.millis, self, SendHeartbeat)
-      self ! SendSelectProtocol
       stay using WithHeartbeat(
-        heartbeatInterval = heartbeatInterval,
+        ipData = None,
         heartbeatCancelable = cancellable,
         receivedAck = true,
         previousNonce = None,
         queue = queue,
+        ssrc = ssrc,
         connectionActor = connection,
         resume = resume
       )
@@ -139,9 +174,14 @@ class VoiceWsHandler(address: String, serverId: Snowflake, userId: UserId, sessi
       if (data.previousNonce.contains(nonce)) {
         stay using data.copy(receivedAck = true)
       } else throw new AckException(s"Received unknown nonce $nonce for HeartbeatACK")
+    case Event(Right(SessionDescription(SessionDescriptionData(_, secretKey))), data: WithHeartbeat) =>
+      data.connectionActor ! StartConnection(secretKey)
+      stay()
+    case Event(Right(Speaking(SpeakingData(isSpeaking, delay, ssrc, Some(speakingUserId)))), _) =>
+      speakingMap.put(ssrc, speakingUserId)
+      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, isSpeaking, delay, serverId, userId))
+      stay()
   }
-
-  def handleExternalMessage: StateFunction = ???
 
   initialize()
 }
@@ -149,34 +189,32 @@ object VoiceWsHandler {
   case object SendIdentify
   case object SendSelectProtocol
 
-  case class WithUDPActor(queue: SourceQueueWithComplete[Message], connectionActor: ActorRef, resume: ResumeData)
-      extends Data[ResumeData] {
+  private case object ConnectionDied
+
+  case class SetSpeaking(speaking: Boolean)
+  case class ReceivedData(data: ByteString, rtpHeader: RTPHeader)
+  case class SetDataSource(source: Source[ByteString, NotUsed])
+  case object FinishedSource
+
+  case class WithUDPActor(
+      ssrc: Int,
+      connectionActor: ActorRef,
+      queue: SourceQueueWithComplete[Message],
+      resume: ResumeData
+  ) extends Data[ResumeData] {
     def resumeOpt:                       Option[ResumeData]                       = Some(resume)
     override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
     override def heartbeatCancelableOpt: Option[Cancellable]                      = None
   }
 
+  case class IPData(address: String, port: Int)
   case class WithHeartbeat(
-      heartbeatInterval: Int,
+      ipData: Option[IPData],
       heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       previousNonce: Option[Int],
       queue: SourceQueueWithComplete[Message],
-      connectionActor: ActorRef,
-      resume: ResumeData
-  ) extends Data[ResumeData] {
-    def resumeOpt:                       Option[ResumeData]                       = Some(resume)
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = Some(heartbeatCancelable)
-  }
-
-  case class WithDescription(
-      secretKey: ByteString,
-      heartbeatInterval: Int,
-      heartbeatCancelable: Cancellable,
-      receivedAck: Boolean,
-      previousNonce: Option[Int],
-      queue: SourceQueueWithComplete[Message],
+      ssrc: Int,
       connectionActor: ActorRef,
       resume: ResumeData
   ) extends Data[ResumeData] {
