@@ -197,7 +197,7 @@ object GatewayEvent {
         "CHANNEL_PINS_UPDATE",
         notImplementedHandler,
         data =>
-          (current, prev) => current.getChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
+          (current, prev) => current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, current, prev))
       )
 
   object GuildCreate
@@ -376,7 +376,9 @@ object GatewayEvent {
         RawHandlers.roleDeleteHandler,
         data =>
           (current, prev) =>
-            current.getGuild(data.guildId).map(g => APIMessage.GuildRoleDelete(g, data.roleId, current, prev))
+            prev.getGuild(data.guildId).flatMap(g => g.roles.get(data.roleId).map(g -> _)).map { case (g, r) =>
+              APIMessage.GuildRoleDelete(g, r, current, prev)
+            }
       )
 
   object MessageCreate
@@ -505,9 +507,11 @@ object GatewayEvent {
         PresenceUpdateHandler,
         data =>
           (current, prev) =>
-            current
-              .getPresence(data.guildId, data.user.id)
-              .map(presence => APIMessage.PresenceUpdate(presence, current, prev))
+            for {
+              guild <- current.getGuild(data.guildId)
+              user <- current.getUser(data.user.id)
+              presence <- guild.presences.get(user.id)
+            } yield APIMessage.PresenceUpdate(guild, user, data.roles, presence, current, prev)
       )
 
   case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)

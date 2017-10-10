@@ -25,8 +25,19 @@ package net.katsstuff.ackcord
 
 object AckCord {
 
+  /**
+    * Current version of AckCord
+    */
   val Version             = "0.1"
+
+  /**
+    * Current Discord API version in use
+    */
   val DiscordApiVersion   = "6"
+
+  /**
+    * Current Discord Voice API version in use
+    */
   val DiscordVoiceVersion = "3"
 
 }

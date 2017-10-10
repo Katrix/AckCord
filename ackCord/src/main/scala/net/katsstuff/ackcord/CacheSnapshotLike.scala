@@ -59,6 +59,7 @@ trait CacheSnapshotLike {
   }
 
   def getChannel(id: ChannelId): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
+  def getTChannel(id: ChannelId): Option[TChannel] = getChannel(id).collect {case tc: TChannel => tc}
 
   def getRole(id: RoleId): Option[Role] = guilds.values.collectFirst {
     case guild if guild.roles.contains(id) => guild.roles(id)
