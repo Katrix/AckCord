@@ -28,21 +28,21 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM, Props, Status}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Source, SourceQueueWithComplete}
+import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
 import akka.util.ByteString
 import io.circe
 import io.circe.parser
 import io.circe.syntax._
-import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
 import net.katsstuff.ackcord.data.{Snowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, RTPHeader, StartConnection}
+import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
 
 class VoiceWsHandler(
     address: String,
@@ -50,7 +50,8 @@ class VoiceWsHandler(
     userId: UserId,
     sessionId: String,
     token: String,
-    sendTo: Option[ActorRef]
+    sendTo: Option[ActorRef],
+    sendSoundTo: Option[ActorRef]
 )(implicit mat: Materializer)
     extends AbstractWsHandler[VoiceMessage, ResumeData](s"wss://$address") {
   import AbstractWsHandler._
@@ -77,6 +78,10 @@ class VoiceWsHandler(
     case Inactive -> Active => self ! SendIdentify
   }
 
+  override def whenInactive: StateFunction = whenInactiveBase.orElse {
+    case Event(ConnectionDied, _) => stay()
+  }
+
   when(Active) {
     case Event(InitSink, _) =>
       sender() ! AckSink
@@ -101,12 +106,12 @@ class VoiceWsHandler(
       queue.offer(TextMessage(payload))
 
       stay()
-    case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, _, queue, _)) =>
+    case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, connection, queue, _)) =>
       val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
       val payload     = (SelectProtocol(protocolObj): VoiceMessage[SelectProtocolData]).asJson.noSpaces
       log.debug(s"Sending payload: $payload")
       queue.offer(TextMessage(payload))
-      sendTo.foreach(_ ! VoiceReady)
+      sendTo.foreach(_ ! VoiceReady(connection))
       stay()
     case Event(SendHeartbeat, data @ WithUDPActor(_, _, receivedAck, _, _, _, queue, _)) =>
       if (receivedAck) {
@@ -143,14 +148,6 @@ class VoiceWsHandler(
     case Event(ReceivedData(data, header), _) =>
       sendTo.foreach(_ ! AudioAPIMessage.ReceivedData(data, speakingMap.get(header.ssrc), header, serverId, userId))
       stay()
-    case Event(setSource: SetDataSource, data: WithUDPActor) =>
-      self ! SetSpeaking(true)
-      data.connectionActor.forward(setSource)
-      stay()
-    case Event(FinishedSource, _) =>
-      self ! SetSpeaking(false)
-      sendTo.foreach(_ ! AudioAPIMessage.FinishedSource(serverId, userId))
-      stay()
     case Event(ConnectionDied, _) =>
       throw new IllegalStateException("Voice connection died") //TODO: Guard this behind condition
     case Event(Logout, data: WithUDPActor) =>
@@ -169,7 +166,8 @@ class VoiceWsHandler(
 
   def handleWsMessages: StateFunction = {
     case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), data: WithHeartbeat) =>
-      val connectionActor = context.actorOf(VoiceUDPHandler.props(address, ssrc, port, self), "VoiceUDPHandler")
+      val connectionActor =
+        context.actorOf(VoiceUDPHandler.props(address, ssrc, port, sendSoundTo), "VoiceUDPHandler")
       connectionActor ! DoIPDiscovery(self)
       context.watchWith(connectionActor, ConnectionDied)
       val newData = WithUDPActor(
@@ -200,6 +198,11 @@ class VoiceWsHandler(
       if (data.previousNonce.contains(nonce)) {
         stay using data.copy(receivedAck = true)
       } else throw new AckException(s"Received unknown nonce $nonce for HeartbeatACK")
+    case Event(Right(HeartbeatACK(nonce)), data: WithHeartbeat) =>
+      log.debug("Received HeartbeatACK")
+      if (data.previousNonce.contains(nonce)) {
+        stay using data.copy(receivedAck = true)
+      } else throw new AckException(s"Received unknown nonce $nonce for HeartbeatACK")
     case Event(Right(SessionDescription(SessionDescriptionData(_, secretKey))), data: WithUDPActor) =>
       data.connectionActor ! StartConnection(secretKey)
       stay()
@@ -218,19 +221,19 @@ object VoiceWsHandler {
       userId: UserId,
       sessionId: String,
       token: String,
-      sendTo: Option[ActorRef]
-  )(implicit mat: Materializer): Props = Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo))
+      sendTo: Option[ActorRef],
+      sendSoundTo: Option[ActorRef]
+  )(implicit mat: Materializer): Props =
+    Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, sendSoundTo))
 
   case object SendIdentify
   case object SendSelectProtocol
 
   private case object ConnectionDied
 
-  case object VoiceReady
+  case class VoiceReady(udpHandler: ActorRef)
   case class SetSpeaking(speaking: Boolean)
   case class ReceivedData(data: ByteString, rtpHeader: RTPHeader)
-  case class SetDataSource(source: Source[ByteString, _])
-  case object FinishedSource
 
   case class WithUDPActor(
       ipData: Option[IPData],

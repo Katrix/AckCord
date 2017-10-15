@@ -32,7 +32,7 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.RTPHeader
   * have any connections to [[SnowflakeCache]] or any [[net.katsstuff.ackcord.data.CacheSnapshot]].
   * As such you have to find the objects for the IDs yourself.
   */
-trait AudioAPIMessage {
+sealed trait AudioAPIMessage {
 
   /**
     * The server id for the voice channel. For guilds this is the guild id.
