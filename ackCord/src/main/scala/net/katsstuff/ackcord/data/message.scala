@@ -130,7 +130,7 @@ case class ReceivedEmbed(
     video: Option[EmbedVideo],
     provider: Option[EmbedProvider],
     author: Option[ReceivedEmbedAuthor],
-    fields: Seq[EmbedField]
+    fields: Option[Seq[EmbedField]]
 ) {
 
   def toOutgoing: OutgoingEmbed = OutgoingEmbed(
@@ -143,7 +143,7 @@ case class ReceivedEmbed(
     image = image.map(_.toOutgoing),
     thumbnail = thumbnail.map(_.toOutgoing),
     author = author.map(_.toOutgoing),
-    fields = fields
+    fields = fields.getOrElse(Seq.empty)
   )
 }
 
