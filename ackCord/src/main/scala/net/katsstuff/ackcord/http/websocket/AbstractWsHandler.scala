@@ -48,11 +48,19 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
 
   startWith(Inactive, WithResumeData(None))
 
+  onTermination {
+    case StopEvent(reason, _, data) =>
+      if(reason == FSM.Shutdown) {
+        data.heartbeatCancelableOpt.foreach(_.cancel())
+        data.queueOpt.foreach(_.complete())
+      }
+  }
+
   def parseMessage: Flow[Message, Either[circe.Error, WsMessage[_]], NotUsed]
 
   def wsParams(uri: Uri): Uri
 
-  when(Inactive) {
+  val whenInactiveBase: StateFunction = {
     case Event(Login, data) =>
       log.info("Logging in")
       val src = Source.queue[Message](64, OverflowStrategy.backpressure)
@@ -88,6 +96,10 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
       sendFirstSinkAck = Some(sender())
       stay()
   }
+
+  def whenInactive: StateFunction = whenInactiveBase
+
+  when(Inactive)(whenInactive)
 }
 object AbstractWsHandler {
   sealed trait State

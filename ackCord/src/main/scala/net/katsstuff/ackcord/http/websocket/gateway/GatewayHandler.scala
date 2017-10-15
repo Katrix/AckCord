@@ -28,7 +28,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM, Props, Status}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
@@ -95,7 +95,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
     case Event(Logout, data) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
-      goto(Inactive) using WithResumeData(None)
+      stop()
     case Event(Restart(fresh, waitDur), data) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())

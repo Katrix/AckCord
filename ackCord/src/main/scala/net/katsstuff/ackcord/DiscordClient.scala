@@ -68,8 +68,10 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
-    case Terminated(_) =>
+    case Terminated(act) =>
       shutdownCount += 1
+      log.info(s"Actor shut down: ${act.path}")
+      log.info(s"Shutdown count: $shutdownCount")
       if (shutdownCount == 2) {
         system.terminate()
       }
