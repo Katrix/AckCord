@@ -155,7 +155,8 @@ trait DiscordProtocol {
       "reactions"        -> a.reactions.asJson,
       "nonce"            -> a.nonce.asJson,
       "pinned"           -> a.pinned.asJson,
-      "webhook_id"       -> a.webhookId.asJson
+      "webhook_id"       -> a.webhookId.asJson,
+      "type"             -> a.`type`.asJson
     )
 
     a.author match {
