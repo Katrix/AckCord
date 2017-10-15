@@ -45,6 +45,10 @@ object Example {
 
     val settings = DiscordClientSettings(token = token, system = system, eventStream = eventStream)
     DiscordClient.fetchWsGateway.map(settings.connect).foreach { client =>
+      val musicHandler = system.actorOf(MusicHandler.props(client), "MusicHandler")
+      eventStream.subscribe(musicHandler, classOf[APIMessage.MessageCreate])
+      eventStream.subscribe(musicHandler, classOf[APIMessage.VoiceServerUpdate])
+      eventStream.subscribe(musicHandler, classOf[APIMessage.VoiceStateUpdate])
       eventStream.subscribe(system.actorOf(Commands.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
       client ! DiscordClient.StartClient
     }

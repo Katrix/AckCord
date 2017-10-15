@@ -26,7 +26,12 @@ lazy val ackCord = project
   )
 
 lazy val example = project
-  .settings(commonSettings, name := "AckCord-example", version := "1.0")
+  .settings(
+    commonSettings,
+    name := "AckCord-example",
+    version := "1.0",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.42"
+  )
   .dependsOn(ackCord)
 
 lazy val ackCordRoot = project.in(file(".")).aggregate(ackCord, example)
