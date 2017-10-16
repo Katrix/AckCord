@@ -28,35 +28,50 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
-import akka.http.scaladsl.model.headers.{Authorization, HttpCredentials, `User-Agent`}
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
+import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.{HttpHeader, HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.pattern.pipe
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.ackcord.http.rest.RESTHandler.{HandleRateLimit, ProcessedRequest, RateLimitStop, RemoveRateLimit, UpdateRateLimit}
-import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
-import net.katsstuff.ackcord.{AckCord, DiscordClient, Request, RequestHandlerEvent}
+import net.katsstuff.ackcord.http.Routes
+import net.katsstuff.ackcord.http.rest.RESTHandler.{
+  HandleRateLimitAndRetry,
+  ProcessedRequest,
+  RateLimitStop,
+  RemoveRateLimit,
+  UpdateRateLimit
+}
+import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request, RequestFailed, RequestResponse}
 
-//Designed after http://doc.akka.io/docs/akka-http/current/scala/http/client-side/host-level.html#examples
-class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat: Materializer)
+/**
+  * An actor responsible for sending REST requests to Discord. You are free to
+  * (and in some cases should) create additional instances of this actor
+  * @param token The credentials to use for authentication.
+  *              See utility methods for normal cases of creating one.
+  * @param responseProcessor An actor which receive all responses sent through this actor
+  * @param responseFunc A function to apply to all responses before sending them to the [[responseProcessor]]
+  * @param mat The materializer to use
+  */
+class RESTHandler(
+    token: HttpCredentials,
+    responseProcessor: Option[ActorRef],
+    responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+)(implicit mat: Materializer)
     extends Actor
     with ActorLogging {
 
   import context.dispatcher
 
-  val responder: ActorRef = context.actorOf(RESTResponder.props(self, snowflakeCache))
+  val responder: ActorRef = context.actorOf(RESTResponder.props(self, responseProcessor, responseFunc), "RESTResponder")
 
   private val requestQueue = {
-    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]]("discordapp.com")
-    val selfSink = Sink.actorRefWithAck[(Try[HttpResponse], ProcessedRequest[_, _, _])](
+    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]](Routes.discord)
+    val responderSink = Sink.actorRefWithAck[(Try[HttpResponse], ProcessedRequest[_, _, _])](
       ref = responder,
       onInitMessage = RESTResponder.InitSink,
       ackMessage = RESTResponder.AckSink,
@@ -66,12 +81,12 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat
     Source
       .queue[(HttpRequest, ProcessedRequest[_, _, _])](64, OverflowStrategy.fail)
       .via(poolClientFlow)
-      .toMat(selfSink)(Keep.left)
+      .toMat(responderSink)(Keep.left)
       .run()
   }
 
-  private val rateLimits           = new mutable.HashMap[Uri, Int]
   private val globalRateLimitQueue = new mutable.Queue[Any]
+  private val rateLimits           = new mutable.HashMap[Uri, (Int, mutable.Queue[Any])]
 
   private val auth      = Authorization(token)
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AckCord, ${AckCord.Version})")
@@ -82,37 +97,27 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat
         context.stop(self)
       }
       requestQueue.complete()
-    case RemoveRateLimit(uri)               => rateLimits.remove(uri)
-    case UpdateRateLimit(uri, headers)      => updateRateLimit(uri, headers)
-    case HandleRateLimit(headers, retryObj) => handleRatelimit(headers, retryObj)
+    case RemoveRateLimit(uri) =>
+      rateLimits.get(uri).foreach {
+        case (_, queue) =>
+          queue.dequeueAll(_ => true).foreach(self ! _)
+      }
+      rateLimits.remove(uri)
+    case UpdateRateLimit(uri, headers)              => updateRateLimit(uri, headers)
+    case HandleRateLimitAndRetry(headers, retryObj) => handleRatelimitAndRetry(headers, retryObj)
     //The d and h here makes IntelliJ happy. They serves no other purpose
     case Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo)
         if !rateLimits.contains(request.route.uri) =>
-      val body = request match {
-        case CreateMessage(_, CreateMessageData(_, _, _, Some(file), _)) =>
-          val filePart =
-            FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
-          val jsonPart = FormData.BodyPart(
-            "payload_json",
-            HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces)
-          )
-
-          FormData(filePart, jsonPart).toEntity()
-        case _ =>
-          if (request.params == NotUsed) HttpEntity.Empty
-          else HttpEntity(ContentTypes.`application/json`, request.toJsonParams.noSpaces)
-      }
-
       val route       = request.route
-      val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), body)
+      val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.createBody)
 
       log.debug(s"Sending request $httpRequest to ${route.uri} with method ${route.method}")
 
       queueRequest(httpRequest, request, contextual, sendResponseTo)
-    case Failure(e) => e.printStackTrace()
+    case Status.Failure(e) => throw e
     //If we get here then the request is rate limited
     case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
-      val duration = rateLimits.getOrElse(request.route.uri, 0)
+      val duration = rateLimits.get(request.route.uri).map(_._1).getOrElse(0)
       context.system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
   }
 
@@ -124,10 +129,9 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat
       requestQueue.complete()
     case RateLimitStop =>
       context.unbecome()
-      globalRateLimitQueue.foreach(self ! _)
-      globalRateLimitQueue.clear()
-    case others =>
-      globalRateLimitQueue.enqueue(others)
+      globalRateLimitQueue.dequeueAll(_ => true).foreach(self ! _)
+    case other =>
+      globalRateLimitQueue.enqueue(other)
   }
 
   def updateRateLimit(uri: Uri, headers: Seq[HttpHeader]): Unit = {
@@ -138,12 +142,12 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat
       retry <- headers.find(_.is("Retry-After"))
     } {
       val retryInt = retry.value().toInt
-      rateLimits.put(uri, retryInt)
+      rateLimits.update(uri, (retryInt, rateLimits.get(uri).map(_._2).getOrElse(mutable.Queue.empty)))
       context.system.scheduler.scheduleOnce(retryInt.millis, self, RemoveRateLimit(uri))
     }
   }
 
-  def handleRatelimit[A](headers: Seq[HttpHeader], retryMsg: A): Unit = {
+  def handleRatelimitAndRetry[A](headers: Seq[HttpHeader], retryMsg: A): Unit = {
     if (headers.exists(header => header.is("X-RateLimit-Global") && header.value == "true")) {
       log.error("Hit global rate limit")
       headers
@@ -171,19 +175,34 @@ class RESTHandler(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat
     requestQueue
       .offer(httpRequest -> ProcessedRequest(restRequest, context, sendTo))
       .foreach {
-        case QueueOfferResult.Enqueued    => //All is fine
-        case QueueOfferResult.Dropped     => self ! Failure(new RuntimeException("Queue overflowed."))
-        case QueueOfferResult.Failure(ex) => self ! Failure(ex)
+        case QueueOfferResult.Enqueued => //All is fine
+        case QueueOfferResult.Dropped =>
+          val e = new RuntimeException("Queue overflowed.")
+          sendTo.foreach(_ ! RequestFailed(e, context))
+          throw e
+        case QueueOfferResult.Failure(e) =>
+          sendTo.foreach(_ ! RequestFailed(e, context))
+          throw e
         case QueueOfferResult.QueueClosed =>
-          self ! Failure(new RuntimeException("Queue was closed (pool shut down) while running the request."))
+          val e = new RuntimeException("Queue was closed (pool shut down) while running the request.")
+          sendTo.foreach(_ ! RequestFailed(e, context))
+          throw e
       }
   }
 }
 object RESTHandler {
-  def props(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat: Materializer): Props =
-    Props(new RESTHandler(token, snowflakeCache))
-  case object RateLimitStop
-  case class RemoveRateLimit(uri: Uri)
+  def props(
+      token: HttpCredentials,
+      responseProcessor: Option[ActorRef],
+      responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+  )(implicit mat: Materializer): Props =
+    Props(new RESTHandler(token, responseProcessor, responseFunc))
+
+  def cacheProps(token: HttpCredentials, snowflakeCache: ActorRef): Props =
+    props(token, Some(snowflakeCache), (req, data) => MiscHandlerEvent(data, req.handleResponse))
+
+  private case object RateLimitStop
+  private case class RemoveRateLimit(uri: Uri)
 
   private[rest] case class ProcessedRequest[Response, HandlerType, Context](
       restRequest: ComplexRESTRequest[_, Response, HandlerType],
@@ -191,11 +210,28 @@ object RESTHandler {
       sendTo: Option[ActorRef]
   )
 
-  case class UpdateRateLimit(uri: Uri, headers: Seq[HttpHeader])
-  case class HandleRateLimit[A](headers: Seq[HttpHeader], retryObj: A)
+  private[rest] case class UpdateRateLimit(uri: Uri, headers: Seq[HttpHeader])
+  private[rest] case class HandleRateLimitAndRetry[A](headers: Seq[HttpHeader], retryObj: A)
+
+  /**
+    * Create credentials used by bots
+    */
+  def botCredentials(token: String): HttpCredentials = GenericHttpCredentials("Bot", token)
+
+  /**
+    * Create OAuth2 credentials
+    */
+  def oAuth2Credentials(token: String): HttpCredentials = OAuth2BearerToken(token)
 }
 
-class RESTResponder(parent: ActorRef, snowflakeCache: ActorRef)(implicit mat: Materializer)
+/**
+  * Actor responsible for responding the http responses
+  */
+class RESTResponder(
+    parent: ActorRef,
+    responseProcessor: Option[ActorRef],
+    responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+)(implicit mat: Materializer)
     extends Actor
     with ActorLogging
     with FailFastCirceSupport {
@@ -207,16 +243,18 @@ class RESTResponder(parent: ActorRef, snowflakeCache: ActorRef)(implicit mat: Ma
       sender() ! AckSink
     case CompletedSink =>
       log.info("RESTHandler sink completed")
+      context.stop(self)
     case Success((HttpResponse(StatusCodes.TooManyRequests, headers, entity, _), req: ProcessedRequest[_, _, _])) =>
       parent ! UpdateRateLimit(req.restRequest.route.uri, headers)
-      parent ! HandleRateLimit(headers, Request(req.restRequest, req.context, req.sendTo))
+      parent ! HandleRateLimitAndRetry(headers, Request(req.restRequest, req.context, req.sendTo))
       entity.discardBytes()
       sender() ! AckSink
-    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, _, _))
+    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, ctx, sendTo))
         if request.expectedResponseCode == StatusCodes.NoContent =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       entity.discardBytes()
       sender() ! AckSink
+      sendTo.foreach(_ ! RequestResponse((), ctx))
     case (Success(HttpResponse(response, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       if (request.expectedResponseCode == response) {
@@ -226,30 +264,46 @@ class RESTResponder(parent: ActorRef, snowflakeCache: ActorRef)(implicit mat: Ma
             log.debug(s"Received response: ${json.noSpaces}")
             Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
           }
-          .map(data => RequestHandlerEvent(data, sendTo, ctx, request.handleResponse))
-          .pipeTo(snowflakeCache)
+          .onComplete {
+            case Success(data) =>
+              responseProcessor.foreach(_ ! responseFunc(request, data))
+              sendTo.foreach(_ ! RequestResponse(data, ctx))
+            case Failure(e) =>
+              parent ! Status.Failure(e)
+              sendTo.foreach(_ ! RequestFailed(e, ctx))
+          }
       } else {
         log.warning(s"Unexpected response code ${response.intValue()} for $request")
         entity.discardBytes()
+        sendTo.foreach(
+          _ ! RequestFailed(new IllegalStateException(s"Unexpected response code ${response.intValue()}"), ctx)
+        )
       }
       sender() ! AckSink
-    case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), _) =>
+    case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
       log.error(s"Server error $intValue ${e.reason}")
       entity.toStrict(1.seconds).onComplete {
         case Success(ent) => log.error(ent.toString())
         case Failure(_)   => entity.discardBytes()
       }
       sender() ! AckSink
-    case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), _) =>
+      sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Server error: $intValue"), ctx))
+    case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
       log.error(s"Client error $intValue: ${e.reason}")
       entity.discardBytes()
-    case (Failure(e), _) => throw e
-    case Status.Failure(e) => throw e
+      sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Client error: $intValue"), ctx))
+    case (Failure(e), ProcessedRequest(_, ctx, sendTo)) =>
+      sendTo.foreach(_ ! RequestFailed(e, ctx))
+      throw e
   }
 }
 object RESTResponder {
-  def props(parent: ActorRef, snowflakeCache: ActorRef)(implicit mat: Materializer): Props =
-    Props(new RESTResponder(parent, snowflakeCache))
+  def props(
+      parent: ActorRef,
+      responseProcessor: Option[ActorRef],
+      responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+  )(implicit mat: Materializer): Props =
+    Props(new RESTResponder(parent, responseProcessor, responseFunc))
 
   private[rest] case object InitSink
   private[rest] case object AckSink

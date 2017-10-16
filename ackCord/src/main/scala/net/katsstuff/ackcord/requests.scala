@@ -27,18 +27,39 @@ import akka.actor.ActorRef
 
 /**
   * Sent as a response from a [[Request]]
+  * @tparam Context The context type
+  */
+trait RequestAnswer[Context] {
+
+  /**
+    * The context sent with the request
+    */
+  def context: Context
+}
+
+/**
+  * Sent when a [[Request]] succeeds
   * @param data The received data
   * @param context The context sent with the request
   * @tparam Data The received data type
   * @tparam Context The context type
   */
-case class RequestResponse[Data, Context](data: Data, context: Context)
+case class RequestResponse[Data, Context](data: Data, context: Context) extends RequestAnswer[Context]
+
+/**
+  * Sent when a [[Request]] fails
+  * @param e The error that failed this request
+  * @param context The context sent with the request
+  * @tparam E The error type
+  * @tparam Context The context type
+  */
+case class RequestFailed[E <: Throwable, Context](e: E, context: Context) extends RequestAnswer[Context]
 
 /**
   * Used to wrap a request in such a way that the handler know who to respond to
   * @param request The request object
   * @param context The data to send with the request
-  * @param sendResponseTo The actor to send the reply to in the form of [[RequestResponse]]
+  * @param sendResponseTo The actor to send the reply to in the form of [[RequestAnswer]]
   * @tparam Request The request type
   * @tparam Context The context type
   */

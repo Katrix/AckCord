@@ -27,12 +27,13 @@ import java.nio.file.{Files, Path}
 
 import akka.NotUsed
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.model.{StatusCode, StatusCodes}
+import akka.http.scaladsl.model.Multipart.FormData
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, StatusCode, StatusCodes}
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder, CacheUpdateHandler, Handlers, NOOPHandler, RawHandlers}
+import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEmojisUpdateData
 import net.katsstuff.ackcord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
@@ -43,6 +44,9 @@ trait ComplexRESTRequest[Params, Response, HandlerType] {
   def params:        Params
   def paramsEncoder: Encoder[Params]
   def toJsonParams: Json = paramsEncoder(params)
+  def createBody: RequestEntity =
+    if (params == NotUsed) HttpEntity.Empty
+    else HttpEntity(ContentTypes.`application/json`, toJsonParams.noSpaces)
 
   def responseDecoder:                     Decoder[Response]
   def handleResponse:                      CacheHandler[HandlerType]
@@ -73,9 +77,9 @@ object Requests {
   //Audit logs
 
   case class GetGuildAuditLog(guildId: GuildId) extends NoParamsRequest[AuditLog] {
-    override def route: RestRoute = Routes.getGuildAuditLogs(guildId)
-    override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
-    override def handleResponse: CacheHandler[AuditLog] = new NOOPHandler[AuditLog]
+    override def route:           RestRoute              = Routes.getGuildAuditLogs(guildId)
+    override def responseDecoder: Decoder[AuditLog]      = Decoder[AuditLog]
+    override def handleResponse:  CacheHandler[AuditLog] = new NOOPHandler[AuditLog]
   }
 
   //Channels
@@ -145,14 +149,26 @@ object Requests {
 
   //We handle this here as the file argument needs special treatment
   implicit private val createMessageDataEncoder: Encoder[CreateMessageData] = (a: CreateMessageData) =>
-    Json
-      .obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
+    Json.obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
   case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
       extends SimpleRESTRequest[CreateMessageData, RawMessage] {
     override def route:           RestRoute                  = Routes.createMessage(channelId)
     override def paramsEncoder:   Encoder[CreateMessageData] = createMessageDataEncoder
     override def responseDecoder: Decoder[RawMessage]        = Decoder[RawMessage]
     override def handleResponse:  CacheHandler[RawMessage]   = RawHandlers.rawMessageUpdateHandler
+
+    override def createBody: RequestEntity = {
+      this match {
+        case CreateMessage(_, CreateMessageData(_, _, _, Some(file), _)) =>
+          val filePart =
+            FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
+          val jsonPart =
+            FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, toJsonParams.noSpaces))
+
+          FormData(filePart, jsonPart).toEntity()
+        case _ => super.createBody
+      }
+    }
   }
 
   case class CreateReaction(channelId: ChannelId, messageId: MessageId, emoji: String) extends NoParamsResponseRequest {
@@ -397,7 +413,8 @@ object Requests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
   }
 
-  trait GuildMemberRequest[Params] extends ComplexRESTRequest[Params, RawGuildMember, GatewayEvent.RawGuildMemberWithGuild] {
+  trait GuildMemberRequest[Params]
+      extends ComplexRESTRequest[Params, RawGuildMember, GatewayEvent.RawGuildMemberWithGuild] {
     def guildId: GuildId
     override def responseDecoder: Decoder[RawGuildMember] = Decoder[RawGuildMember]
     override def handleResponse: CacheHandler[GatewayEvent.RawGuildMemberWithGuild] =
@@ -516,9 +533,9 @@ object Requests {
   )
   case class CreateGuildRole(guildId: GuildId, params: CreateGuildRoleData)
       extends ComplexRESTRequest[CreateGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
-    override def route:           RestRoute                                 = Routes.createGuildRole(guildId)
-    override def paramsEncoder:   Encoder[CreateGuildRoleData]              = deriveEncoder[CreateGuildRoleData]
-    override def responseDecoder: Decoder[RawRole]                          = Decoder[RawRole]
+    override def route:           RestRoute                                      = Routes.createGuildRole(guildId)
+    override def paramsEncoder:   Encoder[CreateGuildRoleData]                   = deriveEncoder[CreateGuildRoleData]
+    override def responseDecoder: Decoder[RawRole]                               = Decoder[RawRole]
     override def handleResponse:  CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
     override def processResponse(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
@@ -548,9 +565,9 @@ object Requests {
   )
   case class ModifyGuildRole(guildId: GuildId, roleId: RoleId, params: ModifyGuildRoleData)
       extends ComplexRESTRequest[ModifyGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
-    override def route:           RestRoute                                 = Routes.modifyGuildRole(roleId, guildId)
-    override def paramsEncoder:   Encoder[ModifyGuildRoleData]              = deriveEncoder[ModifyGuildRoleData]
-    override def responseDecoder: Decoder[RawRole]                          = Decoder[RawRole]
+    override def route:           RestRoute                                      = Routes.modifyGuildRole(roleId, guildId)
+    override def paramsEncoder:   Encoder[ModifyGuildRoleData]                   = deriveEncoder[ModifyGuildRoleData]
+    override def responseDecoder: Decoder[RawRole]                               = Decoder[RawRole]
     override def handleResponse:  CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
     override def processResponse(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
@@ -583,7 +600,7 @@ object Requests {
   }
 
   case class GetGuildInvites(guildId: GuildId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
-    override def route:           RestRoute                 = Routes.getGuildInvites(guildId)
+    override def route:           RestRoute                             = Routes.getGuildInvites(guildId)
     override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
     override def handleResponse:  CacheHandler[Seq[InviteWithMetadata]] = new NOOPHandler[Seq[InviteWithMetadata]]
   }
@@ -710,9 +727,9 @@ object Requests {
 
   //Voice
   case object ListVoiceRegions extends NoParamsRequest[Seq[VoiceRegion]] {
-    override def route: RestRoute = Routes.listVoiceRegions
-    override def responseDecoder: Decoder[Seq[VoiceRegion]] = Decoder[Seq[VoiceRegion]]
-    override def handleResponse: CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
+    override def route:           RestRoute                      = Routes.listVoiceRegions
+    override def responseDecoder: Decoder[Seq[VoiceRegion]]      = Decoder[Seq[VoiceRegion]]
+    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
   }
 
   //Webhook
@@ -779,5 +796,5 @@ object Requests {
   case class ExecuteWebhook(id: Snowflake, token: String, params: Nothing) extends SimpleRESTRequest[Nothing, Nothing] {
     override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
   }
-  */
+ */
 }

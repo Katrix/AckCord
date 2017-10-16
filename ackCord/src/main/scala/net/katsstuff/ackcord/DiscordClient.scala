@@ -56,10 +56,10 @@ class DiscordClient(gatewayWsUri: Uri, token: String, eventStream: EventStream, 
     with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
-  private val cache          = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val gatewayHandler = system.actorOf(GatewayHandler.props(gatewayWsUri, token, cache, settings), "WsHandler")
+  private val cache          = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val gatewayHandler = context.actorOf(GatewayHandler.props(gatewayWsUri, token, cache, settings), "WsHandler")
   private val restHandler =
-    system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
+    context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(token), cache), "RestHandler")
 
   private var shutdownCount = 0
 

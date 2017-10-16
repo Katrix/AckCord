@@ -34,7 +34,9 @@ import net.katsstuff.ackcord.http.rest.RestRoute
   */
 object Routes {
 
-  val base: Uri = s"https://discordapp.com/api/v${AckCord.DiscordApiVersion}"
+  val discord = "discordapp.com"
+
+  val base: Uri = s"https://$discord/api/v${AckCord.DiscordApiVersion}"
 
   //WS
   val gateway: Uri = s"$base/gateway"

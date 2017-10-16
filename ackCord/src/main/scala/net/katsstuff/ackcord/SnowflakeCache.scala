@@ -87,7 +87,6 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
         case APIMessageHandlerEvent(data, event, _)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case RequestHandlerEvent(data, sendTo, contextual, _) => sendTo.foreach(_ ! RequestResponse(data, contextual))
         case _                                                =>
       }
     case _ if !isReady => log.error("Received event before ready")
@@ -124,24 +123,7 @@ case class APIMessageHandlerEvent[Data](
 ) extends CacheHandlerEvent[Data]
 
 /**
-  * An event created by a request by the client. Updates the cache with it's
-  * data, and sends a response back.
-  * @param data The data
-  * @param sendTo The actor to send a response to
-  * @param context The data to also send with the response
-  * @param handler The handler to process the data of this event with
-  * @tparam Data The data it contains
-  * @tparam Context The context type
-  */
-case class RequestHandlerEvent[Data, Context](
-    data: Data,
-    sendTo: Option[ActorRef],
-    context: Context,
-    handler: CacheHandler[Data]
-) extends CacheHandlerEvent[Data]
-
-/**
-  * Any other event
+  * Any other event that updates the cache with it's data.
   * @param data The data
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains

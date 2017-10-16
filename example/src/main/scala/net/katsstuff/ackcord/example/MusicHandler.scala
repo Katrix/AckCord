@@ -115,7 +115,7 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
         player = manager.createPlayer()
         player.addListener(new AudioEventSender(self))
       }
-      dataSender = system.actorOf(DataSender.props(player, udpHandler, voiceWs), "DataSender")
+      dataSender = context.actorOf(DataSender.props(player, udpHandler, voiceWs), "DataSender")
     case e: AudioAPIMessage => log.info(e.toString)
     case APIMessage.VoiceStateUpdate(state, c, _) if state.userId == c.botUser.id =>
       sessionId = state.sessionId
