@@ -29,15 +29,17 @@ class Permission private (val int: Int) extends AnyVal {
   def removePermissions(other: Permission):    Permission = Permission(this.int & ~other.int)
   def togglePermissions(other: Permission):    Permission = Permission(this.int ^ other.int)
   def hasPermissions(permissions: Permission): Boolean    = (this.int & permissions.int) != 0
+
+  override def toString: String = int.toString
 }
 object Permission {
 
   private def apply(int: Int):         Permission = new Permission(int)
-  def apply(permissions: Permission*): Permission = permissions.fold(NoPermissions)((a1, a2) => a1.addPermissions(a2))
+  def apply(permissions: Permission*): Permission = permissions.fold(None)((a1, a2) => a1.addPermissions(a2))
 
   def fromInt(int: Int): Permission = apply(int)
 
-  val NoPermissions = Permission(0x00000000)
+  val None = Permission(0x00000000)
 
   val CreateInstantInvite = Permission(0x00000001)
   val KickMembers         = Permission(0x00000002)
@@ -67,6 +69,37 @@ object Permission {
   val ManageRoles         = Permission(0x10000000)
   val ManageWebhooks      = Permission(0x20000000)
   val ManageEmojis        = Permission(0x40000000)
+
+  val All = Permission(
+    CreateInstantInvite,
+    KickMembers,
+    BanMembers,
+    Administrator,
+    ManageChannels,
+    ManageGuild,
+    AddReactions,
+    ViewAuditLog,
+    ReadMessages,
+    SendMessages,
+    SendTtsMessages,
+    ManageMessages,
+    EmbedLinks,
+    AttachFiles,
+    ReadMessageHistory,
+    MentionEveryone,
+    UseExternalEmojis,
+    Connect,
+    Speak,
+    MuteMembers,
+    DeafenMembers,
+    MoveMembers,
+    UseVad,
+    ChangeNickname,
+    ManageNicknames,
+    ManageRoles,
+    ManageWebhooks,
+    ManageEmojis,
+  )
 }
 
 case class Role(

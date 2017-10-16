@@ -135,14 +135,14 @@ package object syntax {
         position: Int = channel.position,
         topic: Option[String] = channel.topic,
         nsfw: Boolean = channel.nsfw,
-        permissionOverwrites: Seq[PermissionValue] = channel.permissionOverwrites,
+        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId],
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(
       ModifyChannel(
         channel.id,
-        ModifyChannelData(name, position, topic, Some(nsfw), None, None, permissionOverwrites, category)
+        ModifyChannelData(name, position, topic, Some(nsfw), None, None, permissionOverwrites.values.toSeq, category)
       ),
       context,
       sendResponseTo
@@ -171,7 +171,7 @@ package object syntax {
         position: Int = channel.position,
         bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
-        permissionOverwrites: Seq[PermissionValue] = channel.permissionOverwrites,
+        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId],
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
@@ -185,7 +185,7 @@ package object syntax {
           nsfw = Some(channel.nsfw),
           bitrate = Some(bitrate),
           userLimit = Some(userLimit),
-          permissionOverwrites = permissionOverwrites,
+          permissionOverwrites = permissionOverwrites.values.toSeq,
           parentId = category
         )
       ),
@@ -228,7 +228,7 @@ package object syntax {
     def modify[Context](
         name: String = category.name,
         position: Int = category.position,
-        permissionOverwrites: Seq[PermissionValue] = category.permissionOverwrites,
+        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = category.permissionOverwrites,
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(
@@ -241,7 +241,7 @@ package object syntax {
           nsfw = Some(category.nsfw),
           bitrate = None,
           userLimit = None,
-          permissionOverwrites = permissionOverwrites,
+          permissionOverwrites = permissionOverwrites.values.toSeq,
           parentId = category.parentId
         )
       ),
@@ -252,6 +252,8 @@ package object syntax {
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
     def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
+    def everyoneRole(implicit snapshot: CacheSnapshot): Role = guild.roles(guild.id) //The everyone role should always be present
+    def mentionEveryone: String = "@everyone"
 
     def modify[Context](
         name: Option[String] = None,
@@ -295,7 +297,7 @@ package object syntax {
         `type`: Option[ChannelType],
         bitrate: Option[Int],
         userLimit: Option[Int],
-        permissionOverwrites: Option[Seq[PermissionValue]],
+        permissionOverwrites: Option[Seq[PermissionOverwrite]],
         category: Option[ChannelId],
         nsfw: Option[Boolean],
         context: Context = NotUsed,

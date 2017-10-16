@@ -49,24 +49,24 @@ object ChannelType {
   }
 }
 
-sealed trait PermissionValueType
-object PermissionValueType {
-  case object Role   extends PermissionValueType
-  case object Member extends PermissionValueType
+sealed trait PermissionOverwriteType
+object PermissionOverwriteType {
+  case object Role   extends PermissionOverwriteType
+  case object Member extends PermissionOverwriteType
 
-  def forName(name: String): Option[PermissionValueType] = name match {
+  def forName(name: String): Option[PermissionOverwriteType] = name match {
     case "role"   => Some(Role)
     case "member" => Some(Member)
     case _        => None
   }
 
-  def nameOf(tpe: PermissionValueType): String = tpe match {
+  def nameOf(tpe: PermissionOverwriteType): String = tpe match {
     case Role   => "role"
     case Member => "member"
   }
 }
 
-case class PermissionValue(id: UserOrRoleId, `type`: PermissionValueType, allow: Permission, deny: Permission)
+case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission)
 
 sealed trait Channel {
   def id:          ChannelId
@@ -86,7 +86,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   def guildId:              GuildId
   def position:             Int
   def name:                 String
-  def permissionOverwrites: Seq[PermissionValue]
+  def permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite]
   def nsfw:                 Boolean
   def parentId:             Option[ChannelId]
 }
@@ -96,7 +96,7 @@ case class TGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Seq[PermissionValue],
+    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
     nsfw: Boolean,
@@ -111,7 +111,7 @@ case class VGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Seq[PermissionValue],
+    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
     bitrate: Int,
     userLimit: Int,
     nsfw: Boolean,
@@ -125,7 +125,7 @@ case class GuildCategory(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Seq[PermissionValue],
+    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
     nsfw: Boolean,
     parentId: Option[ChannelId]
 ) extends GuildChannel {

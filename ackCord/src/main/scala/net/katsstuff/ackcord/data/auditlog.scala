@@ -133,7 +133,7 @@ case class OptionalAuditLogInfo(
     channelId: Option[ChannelId], //Present for MessageDelete
     count: Option[String], //Present for MessageDelete
     id: Option[UserOrRoleId], //Present for overwrite events
-    `type`: Option[PermissionValueType], //Present for overwrite events
+    `type`: Option[PermissionOverwriteType], //Present for overwrite events
     roleName: Option[String] //Present for overwrite events if type == "role"
 )
 
@@ -166,8 +166,8 @@ object AuditLogChange {
   case class Position(oldValue: Int, newValue: Int)                    extends AuditLogChange[Int]
   case class Topic(oldValue: String, newValue: String)                 extends AuditLogChange[String]
   case class Bitrate(oldValue: Int, newValue: Int)                     extends AuditLogChange[Int]
-  case class PermissionOverwrites(oldValue: Seq[PermissionValue], newValue: Seq[PermissionValue])
-      extends AuditLogChange[Seq[PermissionValue]]
+  case class PermissionOverwrites(oldValue: Seq[PermissionOverwrite], newValue: Seq[PermissionOverwrite])
+      extends AuditLogChange[Seq[PermissionOverwrite]]
   case class NSFW(oldValue: Boolean, newValue: Boolean)              extends AuditLogChange[Boolean]
   case class ApplicationId(oldValue: Snowflake, newValue: Snowflake) extends AuditLogChange[Snowflake]
   case class Permissions(oldValue: Permission, newValue: Permission) extends AuditLogChange[Permission]

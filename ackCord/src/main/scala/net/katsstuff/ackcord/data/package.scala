@@ -35,6 +35,9 @@ package object data {
       t
     }
   }
+  implicit class GuildIdSyntax(private val guildId: GuildId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot): Option[Guild] = c.getGuild(guildId)
+  }
 
   type ChannelId = Snowflake @@ Channel
   object ChannelId {
@@ -42,6 +45,17 @@ package object data {
       val t = tag[Channel](s)
       t
     }
+  }
+  implicit class ChannelIdSyntax(private val channelId: ChannelId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot):      Option[Channel]      = c.getChannel(channelId)
+    def guildResolve(implicit c: CacheSnapshot): Option[GuildChannel] = c.getGuildChannel(channelId)
+    def guildResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
+      c.getGuildChannel(guildId, channelId)
+    def tResolve(implicit c: CacheSnapshot): Option[TChannel] = c.getTChannel(channelId)
+    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
+    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
   type MessageId = Snowflake @@ Message
@@ -51,6 +65,10 @@ package object data {
       t
     }
   }
+  implicit class MessageIdSyntax(private val messageId: MessageId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot):                       Option[Message] = c.getMessage(messageId)
+    def resolve(channelId: ChannelId)(implicit c: CacheSnapshot): Option[Message] = c.getMessage(channelId, messageId)
+  }
 
   type UserId = Snowflake @@ User
   object UserId {
@@ -59,6 +77,11 @@ package object data {
       t
     }
   }
+  implicit class UserIdSyntax(private val userId: UserId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
+    def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
+      c.getGuild(guildId).flatMap(_.members.get(userId))
+  }
 
   type RoleId = Snowflake @@ Role
   object RoleId {
@@ -66,6 +89,11 @@ package object data {
       val t = tag[Role](s)
       t
     }
+  }
+  implicit class RoleIdSyntax(private val roleId: RoleId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot): Option[Role] = c.getRole(roleId)
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
+      c.getGuild(guildId).flatMap(_.roles.get(roleId))
   }
 
   type UserOrRoleId = Snowflake
@@ -79,6 +107,11 @@ package object data {
       val t = tag[GuildEmoji](s)
       t
     }
+  }
+  implicit class EmojiIdSyntax(private val emojiId: EmojiId) extends AnyVal {
+    def resolve(implicit c: CacheSnapshot): Option[GuildEmoji] = c.getEmoji(emojiId)
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildEmoji] =
+      c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
 
   type IntegrationId = Snowflake @@ Integration

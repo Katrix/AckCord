@@ -32,7 +32,7 @@ case class RawChannel(
     `type`: ChannelType,
     guildId: Option[GuildId],
     position: Option[Int],
-    permissionOverwrites: Option[Seq[PermissionValue]],
+    permissionOverwrites: Option[Seq[PermissionOverwrite]],
     name: Option[String],
     topic: Option[String],
     nsfw: Option[Boolean],

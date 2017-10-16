@@ -64,10 +64,10 @@ trait DiscordProtocol {
   implicit val messageTypeDecoder: Decoder[MessageType] =
     Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
 
-  implicit val permissionValueTypeEncoder: Encoder[PermissionValueType] =
-    Encoder[String].contramap(PermissionValueType.nameOf)
-  implicit val permissionValueTypeDecoder: Decoder[PermissionValueType] =
-    Decoder[String].emap(PermissionValueType.forName(_).toRight("Not a permission value type"))
+  implicit val permissionValueTypeEncoder: Encoder[PermissionOverwriteType] =
+    Encoder[String].contramap(PermissionOverwriteType.nameOf)
+  implicit val permissionValueTypeDecoder: Decoder[PermissionOverwriteType] =
+    Decoder[String].emap(PermissionOverwriteType.forName(_).toRight("Not a permission value type"))
 
   implicit val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[String].contramap(PresenceStatus.nameOf)
   implicit val presenceStatusDecoder: Decoder[PresenceStatus] =
@@ -113,8 +113,8 @@ trait DiscordProtocol {
   implicit val permissionEncoder: Encoder[Permission] = Encoder[Int].contramap(_.int)
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Int].emap(i => Right(Permission.fromInt(i)))
 
-  implicit val permissionValueEncoder: Encoder[PermissionValue] = deriveEncoder
-  implicit val permissionValueDecoder: Decoder[PermissionValue] = deriveDecoder
+  implicit val permissionValueEncoder: Encoder[PermissionOverwrite] = deriveEncoder
+  implicit val permissionValueDecoder: Decoder[PermissionOverwrite] = deriveDecoder
 
   implicit val userEncoder: Encoder[User] = deriveEncoder
   implicit val userDecoder: Decoder[User] = deriveDecoder

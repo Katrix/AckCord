@@ -97,7 +97,7 @@ object Requests {
       nsfw: Option[Boolean],
       bitrate: Option[Int],
       userLimit: Option[Int],
-      permissionOverwrites: Seq[PermissionValue],
+      permissionOverwrites: Seq[PermissionOverwrite],
       parentId: Option[ChannelId]
   )
   case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData)
@@ -385,7 +385,7 @@ object Requests {
       `type`: Option[ChannelType],
       bitrate: Option[Int],
       userLimit: Option[Int],
-      permissionOverwrites: Option[Seq[PermissionValue]],
+      permissionOverwrites: Option[Seq[PermissionOverwrite]],
       parentId: Option[ChannelId],
       nsfw: Option[Boolean]
   )

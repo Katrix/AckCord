@@ -49,7 +49,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites,
+              permissionOverwrites.map(v => v.id -> v).toMap,
               rawChannel.topic,
               rawChannel.lastMessageId,
               rawChannel.nsfw.getOrElse(false),
@@ -71,7 +71,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites,
+              permissionOverwrites.map(v => v.id -> v).toMap,
               bitRate,
               userLimit,
               rawChannel.nsfw.getOrElse(false),
@@ -92,7 +92,7 @@ object RawHandlers extends Handlers {
                 guildId,
                 name,
                 position,
-                permissionOverwrites,
+                permissionOverwrites.map(v => v.id -> v).toMap,
                 rawChannel.nsfw.getOrElse(false),
                 rawChannel.parentId
               )
@@ -333,7 +333,7 @@ object RawHandlers extends Handlers {
             guildId,
             name,
             position,
-            permissionOverwrites,
+            permissionOverwrites.map(v => v.id -> v).toMap,
             rawChannel.topic,
             rawChannel.lastMessageId,
             rawChannel.nsfw.getOrElse(false),
@@ -355,7 +355,7 @@ object RawHandlers extends Handlers {
             guildId,
             name,
             position,
-            permissionOverwrites,
+            permissionOverwrites.map(v => v.id -> v).toMap,
             bitRate,
             userLimit,
             rawChannel.nsfw.getOrElse(false),
@@ -376,7 +376,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites,
+              permissionOverwrites.map(v => v.id -> v).toMap,
               rawChannel.nsfw.getOrElse(false),
               rawChannel.parentId
             )

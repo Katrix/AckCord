@@ -83,7 +83,78 @@ case class User(
     mfaEnabled: Option[Boolean], //mfaEnabled can be missing
     verified: Option[Boolean], //verified can be missing
     email: Option[String] //Email can be null
-) extends Author
+) extends Author {
+
+  def guildPermissions(guildId: GuildId)(implicit c: CacheSnapshot): Permission = {
+    import net.katsstuff.ackcord.syntax._
+
+    val res = for {
+      guild <- guildId.resolve
+      member <- guild.memberFromUser(this)
+    } yield {
+      if(guild.ownerId == id) Permission.All
+      else {
+        val userPermissions = member.rolesForUser.map(_.permissions)
+        val everyonePerms = guild.everyoneRole.permissions
+
+        val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
+
+        if(guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+        else guildPermissions
+      }
+    }
+
+    res.getOrElse(Permission.None)
+  }
+
+  def permissionsWithOverrides(guildPermissions: Permission, guildId: GuildId, channelId: ChannelId)(implicit c: CacheSnapshot): Permission = {
+    import net.katsstuff.ackcord.syntax._
+
+    if(guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+    else {
+      val res = for {
+        guild <- guildId.resolve
+        channel <- guild.channelById(channelId)
+        member <- guild.memberFromUser(this)
+      } yield {
+        if(guild.ownerId == id) Permission.All
+        else {
+          val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
+          val everyoneAllow = everyoneOverwrite.map(_.allow)
+          val everyoneDeny = everyoneOverwrite.map(_.deny)
+
+          val roleOverwrites = member.rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+          val roleAllow = Permission(roleOverwrites.map(_.allow): _*)
+          val roleDeny = Permission(roleOverwrites.map(_.deny): _*)
+
+          val userOverwrite = channel.permissionOverwrites.get(id)
+          val userAllow = userOverwrite.map(_.allow)
+          val userDeny = userOverwrite.map(_.deny)
+
+          def mapOrElse(permission: Permission, opt: Option[Permission], f: (Permission, Permission) => Permission): Permission = {
+            opt.map(f(permission, _)).getOrElse(permission)
+          }
+
+          def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.addPermissions(_))
+          def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.removePermissions(_))
+
+          val withEveryone = addOrElse(everyoneAllow).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
+          val withRole = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
+          val withUser = addOrElse(userAllow).andThen(removeOrElse(userDeny)).apply(withRole)
+
+          withUser
+        }
+      }
+
+      res.getOrElse(guildPermissions)
+    }
+  }
+
+  def channelPermissions(guildId: GuildId, channelId: ChannelId)(implicit c: CacheSnapshot): Permission =
+    permissionsWithOverrides(guildPermissions(guildId), guildId, channelId)
+}
 
 case class Connection(
     id: String,
