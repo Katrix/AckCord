@@ -27,7 +27,7 @@ import java.nio.file.Paths
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import net.katsstuff.ackcord.DiscordClient.ShutdownClient
+import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.data._
 import Commands.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
@@ -35,7 +35,7 @@ import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, Request, RequestResponse}
 
-class Commands(client: ActorRef) extends Actor with ActorLogging {
+class Commands(client: ClientActor) extends Actor with ActorLogging {
   implicit val system: ActorSystem = context.system
 
   val infoResponseHandler: ActorRef = system.actorOf(InfoCommandHandler.props(client))
@@ -66,8 +66,8 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
               embed = Some(embed)
             )
           }
-        case s if s.startsWith("!infoChannel") =>
-          val withChannel = message.content.substring("!infoChannel".length)
+        case s if s.startsWith("!infoChannel ") =>
+          val withChannel = s.substring("!infoChannel ".length)
           val r           = """<#(\d+)>""".r
 
           val channel = r
@@ -75,12 +75,15 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
             .map(_.group(1))
             .map((ChannelId.apply _).compose(Snowflake.apply))
             .flatMap(id => message.guild.flatMap(_.channelById(id)))
-          channel.foreach { gChannel =>
-            client ! Request(
-              Requests.GetChannel(gChannel.id),
-              GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c),
-              Some(infoResponseHandler)
-            )
+
+          channel match {
+            case Some(gChannel) =>
+              client ! client.fetchChannel(
+                gChannel.id,
+                GetChannelInfo(gChannel.guildId, gChannel.id, message.channelId, c),
+                Some(infoResponseHandler)
+              )
+            case None => message.tChannel.foreach(client ! _.sendMessage("Channel not found"))
           }
         case "!kill" =>
           log.info("Received shutdown command")
@@ -90,7 +93,7 @@ class Commands(client: ActorRef) extends Actor with ActorLogging {
   }
 }
 object Commands {
-  def props(client: ActorRef): Props = Props(new Commands(client))
+  def props(client: ClientActor): Props = Props(new Commands(client))
   case class GetChannelInfo(
       guildId: GuildId,
       requestedChannelId: ChannelId,
@@ -99,7 +102,7 @@ object Commands {
   )
 }
 
-class InfoCommandHandler(client: ActorRef) extends Actor with ActorLogging {
+class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
   override def receive: Receive = {
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
       implicit val cache: CacheSnapshot = c
@@ -118,5 +121,5 @@ class InfoCommandHandler(client: ActorRef) extends Actor with ActorLogging {
   }
 }
 object InfoCommandHandler {
-  def props(client: ActorRef): Props = Props(new InfoCommandHandler(client))
+  def props(client: ClientActor): Props = Props(new InfoCommandHandler(client))
 }

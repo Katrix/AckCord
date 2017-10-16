@@ -105,9 +105,9 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
               val url = s.substring(3)
               log.info("Received queue item")
               loadItem(url).pipeTo(self)
-            case _ => client ! message.tChannel.foreach(_.sendMessage("Unknown command"))
+            case _ =>
           }
-        case None => client ! message.tChannel.foreach(_.sendMessage("Not in guild"))
+        case None =>
       }
     case VoiceReady(udpHandler) =>
       log.info("Audio ready")
