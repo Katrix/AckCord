@@ -60,7 +60,7 @@ import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request,
 class RESTHandler(
     token: HttpCredentials,
     responseProcessor: Option[ActorRef],
-    responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+    responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
 )(implicit mat: Materializer)
     extends Actor
     with ActorLogging {
@@ -194,11 +194,11 @@ object RESTHandler {
   def props(
       token: HttpCredentials,
       responseProcessor: Option[ActorRef],
-      responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+      responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
   )(implicit mat: Materializer): Props =
     Props(new RESTHandler(token, responseProcessor, responseFunc))
 
-  def cacheProps(token: HttpCredentials, snowflakeCache: ActorRef): Props =
+  def cacheProps(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat: Materializer): Props =
     props(token, Some(snowflakeCache), (req, data) => MiscHandlerEvent(data, req.handleResponse))
 
   private case object RateLimitStop
@@ -230,7 +230,7 @@ object RESTHandler {
 class RESTResponder(
     parent: ActorRef,
     responseProcessor: Option[ActorRef],
-    responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+    responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
 )(implicit mat: Materializer)
     extends Actor
     with ActorLogging
@@ -301,7 +301,7 @@ object RESTResponder {
   def props(
       parent: ActorRef,
       responseProcessor: Option[ActorRef],
-      responseFunc: ((ComplexRESTRequest[_, _, _], _) => _)
+      responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
   )(implicit mat: Materializer): Props =
     Props(new RESTResponder(parent, responseProcessor, responseFunc))
 
