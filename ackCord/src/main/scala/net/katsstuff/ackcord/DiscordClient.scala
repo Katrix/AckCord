@@ -41,6 +41,7 @@ import net.katsstuff.ackcord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
+import shapeless.tag.@@
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -89,6 +90,9 @@ object DiscordClient extends FailFastCirceSupport {
   def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
       implicit mat: Materializer
   ): Props = Props(new DiscordClient(wsUri, token, eventStream, settings))
+
+  def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
+  type ClientActor = ActorRef @@ DiscordClient
 
   /**
     * Send this to the client to log out
@@ -157,6 +161,6 @@ case class DiscordClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false
 ) {
-  def connect(wsUri: Uri)(implicit mat: Materializer): ActorRef =
-    system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient")
+  def connect(wsUri: Uri)(implicit mat: Materializer): ActorRef @@ DiscordClient =
+    DiscordClient.tagClient(system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient"))
 }

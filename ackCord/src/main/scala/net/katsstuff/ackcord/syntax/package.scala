@@ -632,7 +632,7 @@ package object syntax {
     def mentionNick: String = s"<@!${user.id}>"
   }
 
-  implicit class DiscordClientSyntax(val client: DiscordClient) extends AnyVal {
+  implicit class DiscordClientSyntax(val client: ActorRef @@ DiscordClient) extends AnyVal {
     def fetchChannel[Context](
         channelId: ChannelId,
         context: Context = NotUsed,
