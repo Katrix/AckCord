@@ -45,16 +45,26 @@ sealed trait AudioAPIMessage {
   def userId: UserId
 }
 object AudioAPIMessage {
-  case class UserSpeaking(speakingUserId: UserId, isSpeaking: Boolean, delay: Option[Int], serverId: Snowflake, userId: UserId)
+
+  /**
+    * Sent to the receiver when a user is speaking
+    * @param speakingUserId The userId of the speaker
+    * @param ssrc The ssrc of the speaker
+    * @param isSpeaking If the user is speaking, or stopped speaking
+    */
+  case class UserSpeaking(speakingUserId: UserId, ssrc: Int, isSpeaking: Boolean, delay: Option[Int], serverId: Snowflake, userId: UserId)
       extends AudioAPIMessage
 
+  /**
+    * Sent to the data receiver when a user speaks.
+    * @param data The raw data
+    * @param header The RTP header. This contains the ssrc of the speaker.
+    *               To get the userId of the speaker, use [[UserSpeaking]].
+    */
   case class ReceivedData(
       data: ByteString,
-      fromUserId: Option[UserId],
       header: RTPHeader,
       serverId: Snowflake,
       userId: UserId
   ) extends AudioAPIMessage
-
-  case class FinishedSource(serverId: Snowflake, userId: UserId) extends AudioAPIMessage
 }

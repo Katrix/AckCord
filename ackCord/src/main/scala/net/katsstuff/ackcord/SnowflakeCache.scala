@@ -31,18 +31,28 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 
+/**
+  * Handles managing the cache and converting the raw objects received into
+  * more friendlier objects to work with.
+  * @param eventStream And eventStream to push events to
+  */
 class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
   private var prevSnapshot: CacheSnapshot = _
   private var snapshot:     CacheSnapshot = _
 
   private def updateSnapshot(newSnapshot: CacheSnapshot): Unit = {
+    //If there is no change we don't need to update. We don't do a value comparision because of how complex the cache is
     if (newSnapshot ne snapshot) {
       prevSnapshot = snapshot
       snapshot = newSnapshot
     }
   }
 
+  /**
+    * We only handle events when we are ready to, and we have received
+    * the ready event.
+    */
   private def isReady: Boolean = prevSnapshot != null && snapshot != null
 
   override def receive: Receive = {
@@ -67,8 +77,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       snapshot = prevSnapshot
 
       readyHandler match {
-        case APIMessageHandlerEvent(data, event) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case _                                   =>
+        case APIMessageHandlerEvent(data, event, _) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case _                                      =>
       }
     case handlerEvent: CacheHandlerEvent[_] if isReady =>
       val builder = CacheSnapshotBuilder(snapshot)
@@ -76,9 +86,9 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
-        case APIMessageHandlerEvent(data, event)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case RequestHandlerEvent(data, sendTo, contextual) => sendTo.foreach(_ ! RequestResponse(data, contextual))
-        case _                                             =>
+        case APIMessageHandlerEvent(data, event, _)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case RequestHandlerEvent(data, sendTo, contextual, _) => sendTo.foreach(_ ! RequestResponse(data, contextual))
+        case _                                                =>
       }
     case _ if !isReady => log.error("Received event before ready")
   }
@@ -87,18 +97,53 @@ object SnowflakeCache {
   def props(eventStream: EventStream): Props = Props(new SnowflakeCache(eventStream))
 }
 
+/**
+  * Represents some sort of event handled by the cache
+  * @tparam Data The data it contains
+  */
 sealed trait CacheHandlerEvent[Data] {
   def data:    Data
   def handler: CacheHandler[Data]
 
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit = handler.handle(builder, data)
 }
+
+/**
+  * An event that should publish an [[APIMessage]]
+  * @param data The data
+  * @param sendEvent A function to gather the needed variables to send the
+  *                  event. The [[CacheSnapshot]]s passed is the current, and
+  *                  previous snapshot, in that order.
+  * @param handler The handler to process the data of this event with
+  * @tparam Data The data it contains
+  */
 case class APIMessageHandlerEvent[Data](
     data: Data,
-    sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
-)(implicit val handler: CacheHandler[Data])
-    extends CacheHandlerEvent[Data]
-case class RequestHandlerEvent[Data, Context](data: Data, sendTo: Option[ActorRef], context: Context)(
-    implicit val handler: CacheHandler[Data]
+    sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage],
+    handler: CacheHandler[Data]
 ) extends CacheHandlerEvent[Data]
-case class MiscHandlerEvent[Data](data: Data)(implicit val handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
+
+/**
+  * An event created by a request by the client. Updates the cache with it's
+  * data, and sends a response back.
+  * @param data The data
+  * @param sendTo The actor to send a response to
+  * @param context The data to also send with the response
+  * @param handler The handler to process the data of this event with
+  * @tparam Data The data it contains
+  * @tparam Context The context type
+  */
+case class RequestHandlerEvent[Data, Context](
+    data: Data,
+    sendTo: Option[ActorRef],
+    context: Context,
+    handler: CacheHandler[Data]
+) extends CacheHandlerEvent[Data]
+
+/**
+  * Any other event
+  * @param data The data
+  * @param handler The handler to process the data of this event with
+  * @tparam Data The data it contains
+  */
+case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]

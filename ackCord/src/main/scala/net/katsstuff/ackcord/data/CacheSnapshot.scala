@@ -30,6 +30,9 @@ import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 
 import shapeless.tag._
 
+/**
+  * Represents the cache at some point in time
+  */
 case class CacheSnapshot(
     botUser: User @@ BotUser,
     dmChannels: Map[ChannelId, DMChannel],

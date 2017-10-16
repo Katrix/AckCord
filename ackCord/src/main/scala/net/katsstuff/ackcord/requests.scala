@@ -25,5 +25,21 @@ package net.katsstuff.ackcord
 
 import akka.actor.ActorRef
 
+/**
+  * Sent as a response from a [[Request]]
+  * @param data The received data
+  * @param context The context sent with the request
+  * @tparam Data The received data type
+  * @tparam Context The context type
+  */
 case class RequestResponse[Data, Context](data: Data, context: Context)
+
+/**
+  * Used to wrap a request in such a way that the handler know who to respond to
+  * @param request The request object
+  * @param context The data to send with the request
+  * @param sendResponseTo The actor to send the reply to in the form of [[RequestResponse]]
+  * @tparam Request The request type
+  * @tparam Context The context type
+  */
 case class Request[Request, Context](request: Request, context: Context, sendResponseTo: Option[ActorRef])

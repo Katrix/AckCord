@@ -33,11 +33,27 @@ import com.iwebpp.crypto.TweetNaclFast
 
 import akka.actor.{ActorRef, ActorSystem, FSM, Props}
 import akka.io.{IO, UdpConnected}
-import akka.stream.Materializer
 import akka.util.ByteString
+import net.katsstuff.ackcord.AudioAPIMessage
+import net.katsstuff.ackcord.data.{Snowflake, UserId}
 
-class VoiceUDPHandler(address: String, ssrc: Int, port: Int, sendSoundTo: Option[ActorRef])(implicit mat: Materializer)
-    extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] {
+/**
+  * Handles the UDP part of voice connection
+  * @param address The address to connect to
+  * @param ssrc Pur ssrc
+  * @param port The port to use for connection
+  * @param sendSoundTo The actor to send [[AudioAPIMessage.ReceivedData]] to
+  * @param serverId The server id
+  * @param userId Our user Id
+  */
+class VoiceUDPHandler(
+    address: String,
+    ssrc: Int,
+    port: Int,
+    sendSoundTo: Option[ActorRef],
+    serverId: Snowflake,
+    userId: UserId
+) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] {
   import VoiceUDPHandler._
 
   implicit val system: ActorSystem = context.system
@@ -47,9 +63,14 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, sendSoundTo: Option
 
   startWith(Inactive, NoSocket)
 
-  var sequence: Short                     = 0
-  var timestamp                           = 0
-  val queue   : mutable.Queue[ByteString] = mutable.Queue.empty[ByteString]
+  var sequence: Short = 0
+  var timestamp = 0
+
+  /**
+    * Sometimes we send messages too quickly, in that case we put
+    * the remaining in here.
+    */
+  val queue: mutable.Queue[ByteString] = mutable.Queue.empty[ByteString]
 
   when(Inactive) {
     case Event(UdpConnected.Connected, NoSocket) => stay using WithSocket(sender())
@@ -88,7 +109,7 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, sendSoundTo: Option
         val (header, voice) = data.splitAt(12)
         val rtpHeader       = RTPHeader(header)
         val decryptedData   = secret.open(voice.toArray, rtpHeader.asNonce.toArray)
-        receiver ! VoiceWsHandler.ReceivedData(ByteString(decryptedData), rtpHeader)
+        receiver ! AudioAPIMessage.ReceivedData(ByteString(decryptedData), rtpHeader, serverId, userId)
       }
       stay()
     case Event(SendData(data), WithSecret(socket, secret)) =>
@@ -96,22 +117,19 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, sendSoundTo: Option
       sequence = (sequence + 1).toShort
       timestamp += FrameSize
       val encrypted = secret.box(data.toArray, header.asNonce.toArray)
-      val payload = header.byteString ++ ByteString(encrypted)
-      queue.enqueue(payload)
-      if(queue.size != 1) {
-        log.info(s"Queue size: ${queue.size}")
-      }
-      if(queue.size == 1) {
+      val payload   = header.byteString ++ ByteString(encrypted)
+      queue.enqueue(payload) //This is removed as soon as we receive the ack if it's the only thing in the queue
+
+      if (queue.size == 1) {
         socket ! UdpConnected.Send(payload, UDPAck)
-      }
-      else if(queue.size > 32) {
+      } else if (queue.size > 32) {
         log.warning("Behind on audio send")
       }
       stay()
     case Event(UDPAck, WithSecret(socket, _)) =>
-      queue.dequeue()
+      queue.dequeue() //Remove the one we received an ack for
 
-      if(queue.nonEmpty) {
+      if (queue.nonEmpty) {
         socket ! UdpConnected.Send(queue.head, UDPAck)
       }
       stay()
@@ -128,8 +146,14 @@ class VoiceUDPHandler(address: String, ssrc: Int, port: Int, sendSoundTo: Option
   initialize()
 }
 object VoiceUDPHandler {
-  def props(address: String, ssrc: Int, port: Int, sendSoundTo: Option[ActorRef])(implicit mat: Materializer): Props =
-    Props(new VoiceUDPHandler(address, ssrc, port, sendSoundTo))
+  def props(
+      address: String,
+      ssrc: Int,
+      port: Int,
+      sendSoundTo: Option[ActorRef],
+      serverId: Snowflake,
+      userId: UserId
+  ): Props = Props(new VoiceUDPHandler(address, ssrc, port, sendSoundTo, serverId, userId))
 
   sealed trait State
   case object Inactive extends State
@@ -140,6 +164,12 @@ object VoiceUDPHandler {
   case class WithSocket(socket: ActorRef)                                  extends Data
   case class WithSecret(socket: ActorRef, secret: TweetNaclFast.SecretBox) extends Data
 
+  /**
+    * Used if we're expecting some response from another actor. Currently
+    * only used for IP discovery
+    * @param socket The socket actor
+    * @param expectedTpe The type of response we're expecting
+    */
   case class ExpectingResponse(socket: ActorRef, expectedTpe: ExpectedResponseType) extends Data
 
   case class UDPAck(sequence: Short)
@@ -147,10 +177,35 @@ object VoiceUDPHandler {
   sealed trait ExpectedResponseType
   case class IPDiscovery(replyTo: ActorRef) extends ExpectedResponseType
 
+  /**
+    * Send this when this is in [[Inactive]] to do IP discovery.
+    * @param replyTo [[FoundIP]] is sent to this actor when the ip is found
+    */
   case class DoIPDiscovery(replyTo: ActorRef)
+
+  /**
+    * Sent to an actor after [[DoIPDiscovery]]
+    * @param address Our address or ip address
+    * @param port Our port
+    */
   case class FoundIP(address: String, port: Int)
+
+  /**
+    * Send to this to start a connection, and go from [[Inactive]] to [[Active]]
+    * @param secretKey The secret key to use for encrypting
+    *                  and decrypting voice data.
+    */
   case class StartConnection(secretKey: ByteString)
+
+  /**
+    * Send to this to start disconnecting.
+    */
   case object Disconnect
+
+  /**
+    * Send to this to send some data
+    * @param data The data to send
+    */
   case class SendData(data: ByteString)
 
   private val nonceLastPart = ByteString.fromArray(new Array(12))
@@ -160,6 +215,14 @@ object VoiceUDPHandler {
   val FrameSize  = 960
   val FrameTime  = 20
 
+  /**
+    * Represents the RTP header used for sending and receiving voice data
+    * @param tpe The type to use. Should be `0x80`
+    * @param version The version to use. Should be `0x78`
+    * @param sequence The sequence
+    * @param timestamp Timestamp
+    * @param ssrc SSRC of sender
+    */
   case class RTPHeader(tpe: Byte, version: Byte, sequence: Short, timestamp: Int, ssrc: Int) {
     lazy val byteString: ByteString = {
       val builder = ByteString.newBuilder
@@ -176,6 +239,10 @@ object VoiceUDPHandler {
     def asNonce: ByteString = byteString ++ nonceLastPart
   }
   object RTPHeader {
+
+    /**
+      * Deserialize an [[RTPHeader]]
+      */
     def apply(bytes: ByteString): RTPHeader = {
       require(bytes.length >= 12)
 

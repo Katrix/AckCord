@@ -23,27 +23,35 @@
  */
 package net.katsstuff.ackcord.http.websocket.voice
 
-import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
-import akka.util.ByteString
 import io.circe
 import io.circe.parser
-import io.circe.syntax._
 import net.katsstuff.ackcord.data.{Snowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, RTPHeader, StartConnection}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}
 import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
 
+/**
+  * Responsible for handling the websocket connection part of voice data.
+  * @param address The address to connect to, not including the websocket protocol.
+  * @param serverId The serverId
+  * @param userId The client userId
+  * @param sessionId The session id received in [[net.katsstuff.ackcord.APIMessage.VoiceStateUpdate]]
+  * @param token The token received in [[net.katsstuff.ackcord.APIMessage.VoiceServerUpdate]]
+  * @param sendTo The actor to send all [[AudioAPIMessage]]s to unless noted otherwise
+  * @param sendSoundTo The actor to send [[AudioAPIMessage.ReceivedData]] to.
+  * @param mat The [[Materializer]] to use
+  */
 class VoiceWsHandler(
     address: String,
     serverId: Snowflake,
@@ -72,10 +80,8 @@ class VoiceWsHandler(
   }
   override def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
-  val speakingMap = mutable.HashMap.empty[Int, UserId]
-
   onTransition {
-    case Inactive -> Active => self ! SendIdentify
+    case Inactive -> Active => self ! SendIdentify //We act first here
   }
 
   override def whenInactive: StateFunction = whenInactiveBase.orElse {
@@ -101,15 +107,13 @@ class VoiceWsHandler(
     case Event(SendIdentify, WithQueue(queue, _)) =>
       val identifyObject = IdentifyData(serverId, userId, sessionId, token)
 
-      val payload = (Identify(identifyObject): VoiceMessage[IdentifyData]).asJson.noSpaces
-      log.debug(s"Sending payload: $payload")
+      val payload = createPayload(Identify(identifyObject))
       queue.offer(TextMessage(payload))
 
       stay()
     case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, connection, queue, _)) =>
       val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
-      val payload     = (SelectProtocol(protocolObj): VoiceMessage[SelectProtocolData]).asJson.noSpaces
-      log.debug(s"Sending payload: $payload")
+      val payload     = createPayload(SelectProtocol(protocolObj))
       queue.offer(TextMessage(payload))
       sendTo.foreach(_ ! VoiceReady(connection))
       stay()
@@ -117,8 +121,7 @@ class VoiceWsHandler(
       if (receivedAck) {
         val nonce = System.currentTimeMillis().toInt
 
-        val payload = (Heartbeat(nonce): VoiceMessage[Int]).asJson.noSpaces
-        log.debug(s"Sending payload: $payload")
+        val payload = createPayload(Heartbeat(nonce))
         queue.offer(TextMessage(payload))
         log.debug("Sent Heartbeat")
 
@@ -128,8 +131,7 @@ class VoiceWsHandler(
       if (receivedAck) {
         val nonce = System.currentTimeMillis().toInt
 
-        val payload = (Heartbeat(nonce): VoiceMessage[Int]).asJson.noSpaces
-        log.debug(s"Sending payload: $payload")
+        val payload = createPayload(Heartbeat(nonce))
         queue.offer(TextMessage(payload))
         log.debug("Sent Heartbeat")
 
@@ -140,22 +142,18 @@ class VoiceWsHandler(
       stay using data.copy(ipData = Some(IPData(localAddress, port)))
     case Event(SetSpeaking(speaking), data: WithUDPActor) =>
       val message = SpeakingData(speaking, None, data.ssrc, None)
-      val payload = (Speaking(message): VoiceMessage[SpeakingData]).asJson.noSpaces
+      val payload = createPayload(Speaking(message))
 
-      log.debug(s"Sending payload: $payload")
       data.queue.offer(TextMessage(payload))
       stay()
-    case Event(ReceivedData(data, header), _) =>
-      sendTo.foreach(_ ! AudioAPIMessage.ReceivedData(data, speakingMap.get(header.ssrc), header, serverId, userId))
-      stay()
     case Event(ConnectionDied, _) =>
-      throw new IllegalStateException("Voice connection died") //TODO: Guard this behind condition
+      throw new IllegalStateException("Voice connection died") //This should never happen as long as we're in the active state
     case Event(Logout, data: WithUDPActor) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
       data.connectionActor ! Disconnect
-      log.info("Logging out, going to Inactive")
-      goto(Inactive) using WithResumeData(None)
+      log.info("Logging out, Stopping")
+      stop()
     case Event(Restart(fresh, waitDur), data) =>
       data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
@@ -164,10 +162,13 @@ class VoiceWsHandler(
       goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
   }
 
+  /**
+    * Handles all websocket messages received
+    */
   def handleWsMessages: StateFunction = {
     case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), data: WithHeartbeat) =>
       val connectionActor =
-        context.actorOf(VoiceUDPHandler.props(address, ssrc, port, sendSoundTo), "VoiceUDPHandler")
+        context.actorOf(VoiceUDPHandler.props(address, ssrc, port, sendSoundTo, serverId, userId), "VoiceUDPHandler")
       connectionActor ! DoIPDiscovery(self)
       context.watchWith(connectionActor, ConnectionDied)
       val newData = WithUDPActor(
@@ -193,7 +194,7 @@ class VoiceWsHandler(
         queue = queue,
         resume = ResumeData(serverId, sessionId, token)
       )
-    case Event(Right(HeartbeatACK(nonce)), data: WithUDPActor) =>
+    case Event(Right(HeartbeatACK(nonce)), data: WithUDPActor) => //TODO: Redesign data system to prevent this
       log.debug("Received HeartbeatACK")
       if (data.previousNonce.contains(nonce)) {
         stay using data.copy(receivedAck = true)
@@ -207,8 +208,7 @@ class VoiceWsHandler(
       data.connectionActor ! StartConnection(secretKey)
       stay()
     case Event(Right(Speaking(SpeakingData(isSpeaking, delay, ssrc, Some(speakingUserId)))), _) =>
-      speakingMap.put(ssrc, speakingUserId)
-      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, isSpeaking, delay, serverId, userId))
+      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, ssrc, isSpeaking, delay, serverId, userId))
       stay()
   }
 
@@ -226,16 +226,22 @@ object VoiceWsHandler {
   )(implicit mat: Materializer): Props =
     Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, sendSoundTo))
 
-  case object SendIdentify
-  case object SendSelectProtocol
-
+  private case object SendIdentify
+  private case object SendSelectProtocol
   private case object ConnectionDied
 
+  /**
+    * Sent to the listener when everything is ready to send voice data.
+    * @param udpHandler The udp handler. Used for sending data.
+    */
   case class VoiceReady(udpHandler: ActorRef)
-  case class SetSpeaking(speaking: Boolean)
-  case class ReceivedData(data: ByteString, rtpHeader: RTPHeader)
 
-  case class WithUDPActor(
+  /**
+    * Sent to [[VoiceWsHandler]]. Used to set the client as speaking or not.
+    */
+  case class SetSpeaking(speaking: Boolean)
+
+  private case class WithUDPActor(
       ipData: Option[IPData],
       heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
@@ -250,8 +256,8 @@ object VoiceWsHandler {
     override def heartbeatCancelableOpt: Option[Cancellable]                      = None
   }
 
-  case class IPData(address: String, port: Int)
-  case class WithHeartbeat(
+  private case class IPData(address: String, port: Int)
+  private case class WithHeartbeat(
       ipData: Option[IPData],
       heartbeatCancelable: Cancellable,
       receivedAck: Boolean,

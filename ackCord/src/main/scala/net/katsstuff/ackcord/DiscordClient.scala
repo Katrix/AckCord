@@ -42,14 +42,22 @@ import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
 
-class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
+/**
+  * The core actor that controls all the other used actors of AckCord
+  * @param gatewayWsUri The gateway websocket uri
+  * @param token The token for the bot
+  * @param eventStream The eventStream to publish events to
+  * @param settings The settings to use
+  * @param mat The materializer to use
+  */
+class DiscordClient(gatewayWsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
     implicit mat: Materializer
 ) extends Actor
     with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
   private val cache          = system.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val gatewayHandler = system.actorOf(GatewayHandler.props(wsUri, token, cache, settings), "WsHandler")
+  private val gatewayHandler = system.actorOf(GatewayHandler.props(gatewayWsUri, token, cache, settings), "WsHandler")
   private val restHandler =
     system.actorOf(RESTHandler.props(GenericHttpCredentials("Bot", token), cache), "RestHandler")
 
@@ -80,11 +88,25 @@ class DiscordClient(wsUri: Uri, token: String, eventStream: EventStream, setting
 object DiscordClient extends FailFastCirceSupport {
   def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
       implicit mat: Materializer
-  ): Props =
-    Props(new DiscordClient(wsUri, token, eventStream, settings))
+  ): Props = Props(new DiscordClient(wsUri, token, eventStream, settings))
+
+  /**
+    * Send this to the client to log out
+    */
   case object ShutdownClient
+
+  /**
+    * Send this to the client to log in
+    */
   case object StartClient
 
+  /**
+    * Fetch the websocket gateway
+    * @param system The actor system to use
+    * @param mat The materializer to use
+    * @param ec The execution context to use
+    * @return An URI with the websocket gateway uri
+    */
   def fetchWsGateway(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Uri] = {
     val http = Http()
     http
@@ -110,6 +132,19 @@ object DiscordClient extends FailFastCirceSupport {
   }
 }
 
+/**
+  * All the settings used by AckCord when connecting and similar
+  * @param token The token for the bot
+  * @param system The actor system to use
+  * @param eventStream The eventStream to publish events to
+  * @param largeThreshold The large threshold
+  * @param shardNum The shard index of this
+  * @param shardTotal The amount of shards
+  * @param idleSince If the bot has been idle, set the time since
+  * @param gameStatus Send some presence when connecting
+  * @param status The status to use when connecting
+  * @param afk If the bot should be afk when connecting
+  */
 case class DiscordClientSettings(
     token: String,
     system: ActorSystem,

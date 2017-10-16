@@ -28,57 +28,148 @@ import akka.util.ByteString
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.WsMessage
 
+/**
+  * Messages sent to the voice websocket.
+  */
 sealed trait VoiceMessage[D] extends WsMessage[D, VoiceOpCode]
 
+/**
+  * Data used by [[Identify]]
+  * @param serverId The server id we want to connect to
+  * @param userId Our user id
+  * @param sessionId The session id received in [[net.katsstuff.ackcord.APIMessage.VoiceStateUpdate]]
+  * @param token The token received in [[net.katsstuff.ackcord.APIMessage.VoiceServerUpdate]]
+  */
 case class IdentifyData(serverId: Snowflake, userId: UserId, sessionId: String, token: String)
+
+/**
+  * Sent by the client to inform Discord that we want to send voice data.
+  * Discord responds with [[Ready]]
+  */
 case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
   override def op: VoiceOpCode = VoiceOpCode.Identify
 }
 
+/**
+  * Connection data used by [[SelectProtocol]]
+  * @param address Our IP address discovered using ip discovery
+  * @param port Our port discovered using ip discovery
+  * @param mode The encryption mode, currently supports only xsalsa20_poly1305
+  */
 case class SelectProtocolConnectionData(address: String, port: Int, mode: String)
+
+/**
+  * Data used by [[SelectProtocol]]
+  * @param protocol The protocol to use, currently only supports udp
+  * @param data  The connection data
+  */
 case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionData)
+/**
+  * Sent by the client when everything else is done.
+  * Discord responds with [[SessionDescription]]
+  */
 case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
   override def op: VoiceOpCode = VoiceOpCode.SelectProtocol
 }
 
+/**
+  * Data of [[Ready]]
+  * @param ssrc Our ssrc
+  * @param port The port to connect to
+  * @param modes The supported modes
+  * @param heartbeatInterval Faulty heartbeat interval, should be ignored
+  */
 case class ReadyObject(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval: Int)
+/**
+  * Sent by Discord following [[Identify]]
+  */
 case class Ready(d: ReadyObject) extends VoiceMessage[ReadyObject] {
   override def op: VoiceOpCode = VoiceOpCode.Ready
 }
 
+/**
+  * Sent by the client at some interval specified by [[Hello]]
+  * @param d Nonce
+  */
 case class Heartbeat(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode = VoiceOpCode.Heartbeat
 }
 
+/**
+  * Data of [[SessionDescription]]
+  * @param mode The mode used
+  * @param secretKey The secret key used for encryption
+  */
 case class SessionDescriptionData(mode: String, secretKey: ByteString)
+
+/**
+  * Sent by Discord in response to [[SelectProtocol]]
+  */
 case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
   override def op: VoiceOpCode = VoiceOpCode.SessionDescription
 }
 
+/**
+  * Data of [[Speaking]]
+  * @param speaking If the user is speaking
+  * @param delay Delay
+  * @param ssrc The ssrc of the speaking user
+  * @param userId Optional user id
+  */
 case class SpeakingData(speaking: Boolean, delay: Option[Int], ssrc: Int, userId: Option[UserId])
+
+/**
+  * Sent by Discord when a user is speaking, anc client when we want to
+  * set the bot as speaking. This is required before sending voice data.
+  */
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode = VoiceOpCode.Speaking
 }
 
+/**
+  * Sent by Discord as acknowledgement of our heartbeat
+  * @param d The nonce we sent
+  */
 case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode = VoiceOpCode.HeartbeatACK
 }
 
+/**
+  * Data of [[Resume]]
+  * @param serverId The server id to resume for
+  * @param sessionId The session id
+  * @param token The token
+  */
 case class ResumeData(serverId: Snowflake, sessionId: String, token: String)
+
+/**
+  * Sent by the client when we want to resume a connection after getting
+  * disconnected.
+  */
 case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
   override def op: VoiceOpCode = VoiceOpCode.Resume
 }
 
+/**
+  * Sent by Discord to tell us what heartbeat interval we should use.
+  */
 case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.Hello
   override def d:  NotUsed     = NotUsed
 }
 
+/**
+  * Send by Discord when we successfully resume a connection
+  */
 case object Resumed extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.Resumed
   override def d:  NotUsed     = NotUsed
 }
 
+/**
+  * Voice opcode used by voice websocket
+  * @param code The int value of the code
+  */
 sealed abstract case class VoiceOpCode(code: Int)
 object VoiceOpCode {
   object Identify           extends VoiceOpCode(0)

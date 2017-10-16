@@ -25,4 +25,10 @@ package net.katsstuff.ackcord.http.rest
 
 import akka.http.scaladsl.model.{HttpMethod, Uri}
 
+/**
+  * Used by requests for specifying an uri to send to,
+  * together with a method to use.
+  * @param uri The uri to send to
+  * @param method The method to use
+  */
 case class RestRoute(uri: Uri, method: HttpMethod)

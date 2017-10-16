@@ -29,6 +29,9 @@ import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.rest.RestRoute
 
+/**
+  * All the routes used by AckCord
+  */
 object Routes {
 
   val base: Uri = s"https://discordapp.com/api/v${AckCord.DiscordApiVersion}"

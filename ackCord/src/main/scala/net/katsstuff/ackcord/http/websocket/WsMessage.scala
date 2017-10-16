@@ -25,6 +25,11 @@ package net.katsstuff.ackcord.http.websocket
 
 import scala.language.higherKinds
 
+/**
+  * Represents a message sent by websocket handlers
+  * @tparam D The data in this message
+  * @tparam OpCode The opcode used by this websocket
+  */
 private[websocket] trait WsMessage[D, OpCode] {
   def op: OpCode
   def d:  D

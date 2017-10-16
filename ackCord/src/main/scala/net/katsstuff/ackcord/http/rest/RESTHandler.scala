@@ -226,7 +226,7 @@ class RESTResponder(parent: ActorRef, snowflakeCache: ActorRef)(implicit mat: Ma
             log.debug(s"Received response: ${json.noSpaces}")
             Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
           }
-          .map(data => RequestHandlerEvent(data, sendTo, ctx)(request.handleResponse))
+          .map(data => RequestHandlerEvent(data, sendTo, ctx, request.handleResponse))
           .pipeTo(snowflakeCache)
       } else {
         log.warning(s"Unexpected response code ${response.intValue()} for $request")

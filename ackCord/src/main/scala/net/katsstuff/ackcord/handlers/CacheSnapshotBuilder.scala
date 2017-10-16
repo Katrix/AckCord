@@ -33,6 +33,9 @@ import net.katsstuff.ackcord.data._
 
 import shapeless.tag._
 
+/**
+  * A mutable builder for creating a new snapshot
+  */
 class CacheSnapshotBuilder(
     var botUser: User @@ BotUser,
     var dmChannels: mutable.Map[ChannelId, DMChannel],

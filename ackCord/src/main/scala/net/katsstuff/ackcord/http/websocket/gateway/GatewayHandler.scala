@@ -28,7 +28,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
@@ -36,12 +36,20 @@ import akka.stream.Materializer
 import akka.stream.scaladsl._
 import io.circe
 import io.circe.parser
-import io.circe.syntax._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSettings}
 
+/**
+  * Responsible for normal websocket communication with Discord.
+  * Some REST messages can't be sent until this has authenticated.
+  * @param wsUri The uri to connect to
+  * @param token The secret token
+  * @param cache The cache to send events to
+  * @param settings The settings to use
+  * @param mat The [[Materializer]] to use
+  */
 class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer)
     extends AbstractWsHandler[GatewayMessage, ResumeData](wsUri) {
   import AbstractWsHandler._
@@ -85,8 +93,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       if (receivedAck) {
         val seq = resume.map(_.seq)
 
-        val payload = (Heartbeat(seq): GatewayMessage[Option[Int]]).asJson.noSpaces
-        log.debug(s"Sending payload: $payload")
+        val payload = createPayload(Heartbeat(seq))
         source.offer(TextMessage(payload))
         log.debug("Sent Heartbeat")
 
@@ -103,10 +110,13 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
   }
 
+  /**
+    * Handles all websocket messages received
+    */
   def handleWsMessages: StateFunction = {
     case Event(Right(Hello(data)), WithQueue(queue, resume)) =>
       val payload = resume match {
-        case Some(resumeData) => (Resume(resumeData): GatewayMessage[ResumeData]).asJson.noSpaces
+        case Some(resumeData) => createPayload(Resume(resumeData))
         case None =>
           val identifyObject = IdentifyObject(
             token = token,
@@ -117,10 +127,9 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
             presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
           )
 
-          (Identify(identifyObject): GatewayMessage[IdentifyObject]).asJson.noSpaces
+          createPayload(Identify(identifyObject))
       }
 
-      log.debug(s"Sending payload: $payload")
       queue.offer(TextMessage(payload))
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
       stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
@@ -138,7 +147,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
           data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = seq)))
       }
 
-      cache ! APIMessageHandlerEvent(d, event.createEvent)(event.handler)
+      cache ! APIMessageHandlerEvent(d, event.createEvent, event.handler)
       stay using stayData
     case Event(Right(HeartbeatACK), data: WithHeartbeat[ResumeData @unchecked]) =>
       log.debug("Received HeartbeatACK")
@@ -153,17 +162,18 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       stay()
   }
 
+  /**
+    * Handle external messages sent from neither this nor Discord
+    */
   def handleExternalMessage: StateFunction = {
     case Event(request: RequestGuildMembers, WithHeartbeat(_, _, queue, _)) =>
-      val payload = (request: GatewayMessage[RequestGuildMembersData]).asJson.noSpaces
-      log.debug(s"Sending payload: $payload")
+      val payload = createPayload(request)
       queue.offer(TextMessage(payload))
       log.debug("Requested guild data for {}", request.d.guildId)
 
       stay
     case Event(request: VoiceStateUpdate, WithHeartbeat(_, _, queue, _)) =>
-      val payload = (request: GatewayMessage[VoiceStateUpdateData]).asJson.noSpaces
-      log.debug(s"Sending payload: $payload")
+      val payload = createPayload(request)
       queue.offer(TextMessage(payload))
 
       stay
@@ -178,7 +188,7 @@ object GatewayHandler {
   ): Props =
     Props(new GatewayHandler(wsUri, token, cache, settings))
 
-  case class WithHeartbeat[Resume](
+  private case class WithHeartbeat[Resume](
       heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       queue: SourceQueueWithComplete[Message],

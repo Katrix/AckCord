@@ -35,8 +35,16 @@ import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, ValidUpgrad
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import io.circe
-import io.circe.Error
+import io.circe.syntax._
+import io.circe.{Encoder, Error}
 
+/**
+  * An abstract websocket handler. Handles going from inactive to active, and termination
+  * @param wsUri The uri to connect to
+  * @param mat The [[Materializer]] to use
+  * @tparam WsMessage The type of the websocket messages
+  * @tparam Resume The resume data type
+  */
 abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat: Materializer)
     extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
   import AbstractWsHandler._
@@ -58,8 +66,23 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
 
   def parseMessage: Flow[Message, Either[circe.Error, WsMessage[_]], NotUsed]
 
+  /**
+    * Add extra params to the ws uri
+    */
   def wsParams(uri: Uri): Uri
 
+  /**
+    * Utility method to create a payload from a message
+    */
+  def createPayload[A](msg: WsMessage[A])(implicit encoder: Encoder[WsMessage[A]]): String = {
+    val payload = msg.asJson.noSpaces
+    log.debug(s"Sending payload: $payload")
+    payload
+  }
+
+  /**
+    * The base handler when inactive
+    */
   val whenInactiveBase: StateFunction = {
     case Event(Login, data) =>
       log.info("Logging in")
@@ -97,6 +120,10 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
       stay()
   }
 
+  /**
+    * What to do when inactive. If you override this, remember to call
+    * [[whenInactiveBase.andThen()]].
+    */
   def whenInactive: StateFunction = whenInactiveBase
 
   when(Inactive)(whenInactive)
@@ -113,10 +140,27 @@ object AbstractWsHandler {
   case object SendHeartbeat
   case object ValidWsUpgrade
 
+  /**
+    * Send this to an [[AbstractWsHandler]] to make it go from inactive to active
+    */
   case object Login
+
+  /**
+    * Send this to an [[AbstractWsHandler]] to stop it gracefully.
+    */
   case object Logout
+
+  /**
+    * Send this to an [[AbstractWsHandler]] to restart the connection
+    * @param fresh If it should start fresh. If this is false, it will try to continue the connection.
+    * @param waitDur The amount of time to wait until connecting again
+    */
   case class Restart(fresh: Boolean, waitDur: FiniteDuration)
 
+  /**
+    * And exception throw when something is wrong with the ack received
+    * (or if no ack was received) from Discord.
+    */
   class AckException(msg: String) extends Exception(msg)
 
   def wsFlow(uri: Uri)(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
