@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.commands
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.util.MessageParser
@@ -35,19 +35,24 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param needMention If all commands handled by this dispatcher need a
   *                    mention before the command
   * @param initialCommands The initial commands this dispatcher should start with
-  * @param errorHandler The actor to send all invalid commands to
+  * @param errorHandlerProps Props for the actor to send all invalid commands to
   */
 class CommandDispatcher(
     needMention: Boolean,
-    initialCommands: Map[String, Map[String, ActorRef]],
-    errorHandler: ActorRef
+    initialCommands: Map[String, Map[String, Props]],
+    errorHandlerProps: Props
 ) extends Actor {
   import net.katsstuff.ackcord.commands.CommandDispatcher._
+
+  val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
 
   val commands = mutable.HashMap.empty[String, collection.mutable.HashMap[String, ActorRef]]
   initialCommands.foreach {
     case (prefix, innerMap) =>
-      commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap
+      commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap.map {
+        case (name, props) =>
+          name -> context.actorOf(props, name)
+      }
   }
 
   override def receive: Receive = {
@@ -94,6 +99,8 @@ class CommandDispatcher(
   }
 }
 object CommandDispatcher {
+  def props(needMention: Boolean, initialCommands: Map[String, Map[String, Props]], errorHandler: Props): Props =
+    Props(new CommandDispatcher(needMention, initialCommands, errorHandler))
 
   /**
     * Sent to the error handler if no command is specified when mentioning

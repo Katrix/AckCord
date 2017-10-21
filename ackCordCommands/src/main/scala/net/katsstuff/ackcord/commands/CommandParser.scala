@@ -23,13 +23,22 @@
  */
 package net.katsstuff.ackcord.commands
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 import net.katsstuff.ackcord.commands.CommandDispatcher.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
 import net.katsstuff.ackcord.util.MessageParser
 
-class CommandParser[A](parser: MessageParser[A], handler: ActorRef) extends Actor {
+/**
+  * A command handler that will parse a command, and send the parsed command
+  * to some other actor
+  * @param parser The parser to use
+  * @param handlerProps The props of the actor that will handle the command
+  * @tparam A The parser type
+  */
+class CommandParser[A](parser: MessageParser[A], handlerProps: Props) extends Actor {
+  val handler: ActorRef = context.actorOf(handlerProps, "Handler")
+
   override def receive: Receive = {
     case Command(msg, args, c) =>
       implicit val cache: CacheSnapshot = c
@@ -37,6 +46,7 @@ class CommandParser[A](parser: MessageParser[A], handler: ActorRef) extends Acto
   }
 }
 object CommandParser {
+  def props[A](parser: MessageParser[A], handler: Props): Props = Props(new CommandParser(parser, handler))
 
   /**
     * Sent to the handler if the parser couldn't parse the message

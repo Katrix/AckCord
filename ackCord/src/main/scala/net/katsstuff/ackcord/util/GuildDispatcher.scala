@@ -65,7 +65,7 @@ class GuildDispatcher(props: Props, notGuildHandler: Option[ActorRef]) extends A
         case None          => sendToNotGuild(msg)
       }
     case GetGuildActor(guildId) => sender() ! ResponseGetGuild(getGuild(guildId))
-    case Broadcast(msg) => handlers.values.foreach(_ ! msg)
+    case Broadcast(msg)         => handlers.values.foreach(_ ! msg)
   }
 
   def sendToGuild(guildId: GuildId, msg: Any): Unit = getGuild(guildId) ! msg
@@ -76,6 +76,7 @@ class GuildDispatcher(props: Props, notGuildHandler: Option[ActorRef]) extends A
     handlers.getOrElseUpdate(guildId, context.actorOf(props, s"${self.path.name}$guildId"))
 }
 object GuildDispatcher {
+  def props(props: Props, notGuildHandler: Option[ActorRef]): Props = Props(new GuildDispatcher(props, notGuildHandler))
 
   /**
     * Send to the guild dispatcher to get the actor for that guild
