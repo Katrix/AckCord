@@ -26,6 +26,9 @@ package net.katsstuff.ackcord.example
 import akka.actor.ActorSystem
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
+import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandParser}
+import net.katsstuff.ackcord.data.GuildChannel
+import net.katsstuff.ackcord.util.{GuildDispatcher, MessageParser}
 import net.katsstuff.ackcord.{APIMessage, DiscordClient, DiscordClientSettings}
 
 object Example {
@@ -45,11 +48,30 @@ object Example {
 
     val settings = DiscordClientSettings(token = token, system = system, eventStream = eventStream)
     DiscordClient.fetchWsGateway.map(settings.connect).foreach { client =>
-      val musicHandler = system.actorOf(MusicHandler.props(client), "MusicHandler")
-      eventStream.subscribe(musicHandler, classOf[APIMessage.MessageCreate])
-      eventStream.subscribe(musicHandler, classOf[APIMessage.VoiceServerUpdate])
-      eventStream.subscribe(musicHandler, classOf[APIMessage.VoiceStateUpdate])
-      eventStream.subscribe(system.actorOf(Commands.props(client), "KillCommand"), classOf[APIMessage.MessageCreate])
+
+      //We set up a command dispatcher, that sends the correct command to the corresponding actor
+      val commandDispatcher = CommandDispatcher.props(
+        needMention = true,
+        Map(
+          "!" -> Map(
+            "ping"        -> PingCommand.props(client),
+            "sendFile"    -> SendFileCommand.props(client),
+            "infoChannel" -> CommandParser.props(MessageParser[GuildChannel], InfoChannelCommand.props(client)),
+            "kill"        -> KillCommand.props(client)
+          )
+        ),
+        CommandErrorHandler.props(client)
+      )
+
+      //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher
+      val guildDispatcherCommands = system.actorOf(GuildDispatcher.props(commandDispatcher, None), "BaseCommands")
+
+      val guildDispatcherMusic = system.actorOf(GuildDispatcher.props(MusicHandler.props(client) _, None), "MusicHandler")
+
+      eventStream.subscribe(guildDispatcherCommands, classOf[APIMessage.MessageCreate])
+      eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.MessageCreate])
+      eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.VoiceServerUpdate])
+      eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.VoiceStateUpdate])
       client ! DiscordClient.StartClient
     }
   }

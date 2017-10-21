@@ -24,8 +24,8 @@
 package net.katsstuff.ackcord.example
 
 import scala.collection.JavaConverters._
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 
 import com.sedmelluq.discord.lavaplayer.player._
 import com.sedmelluq.discord.lavaplayer.player.event._
@@ -37,17 +37,21 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, Prop
 import akka.pattern.pipe
 import akka.stream.Materializer
 import akka.util.ByteString
+import net.katsstuff.ackcord.DiscordClient.ClientActor
+import net.katsstuff.ackcord.commands.CommandDispatcher
+import net.katsstuff.ackcord.commands.CommandDispatcher.Command
+import net.katsstuff.ackcord.commands.CommandParser.ParsedCommand
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId, Snowflake}
 import net.katsstuff.ackcord.example.DataSender.{SendMusic, StartSendMusic, StopSendMusic}
+import net.katsstuff.ackcord.example.MusicHandler.{QueueUrl, StopMusic}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{SendData, silence}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.{SetSpeaking, VoiceReady}
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage}
 
-class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor with ActorLogging {
+class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer) extends Actor with ActorLogging {
 
   implicit val system: ActorSystem = context.system
   import system.dispatcher
@@ -61,54 +65,45 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
     man
   }
 
-  var player:          AudioPlayer = _
-  var sessionId:       String      = _
-  var connectingGuild: GuildId     = _
-  var token:           String      = _
-  var endPoint:        String      = _
-  var voiceWs:         ActorRef    = _
-  var dataSender:      ActorRef    = _
+  val commandDispatcher: ActorRef = context.actorOf(CommandDispatcher.props(
+    needMention = true,
+    Map(
+      "&" -> Map(
+        "j" -> JoinCommand.props(client, guildId),
+        "s" -> StopCommand.props(self),
+        "q" -> QueueCommand.props(self)
+      )
+    ),
+    CommandErrorHandler.props(client)
+  ), "MusicHandlerCommands")
+
+  var player:     AudioPlayer = _
+  var sessionId:  String      = _
+  var token:      String      = _
+  var endPoint:   String      = _
+  var voiceWs:    ActorRef    = _
+  var dataSender: ActorRef    = _
 
   override def receive: Receive = {
-    case APIMessage.MessageCreate(message, c, _) =>
-      implicit val cache: CacheSnapshot = c
-      message.guild match {
-        case Some(guild) =>
-          message.content match {
-            case s if s.startsWith("&j ") =>
-              client ! VoiceStateUpdate(
-                VoiceStateUpdateData(
-                  guild.id,
-                  Some(ChannelId(Snowflake(s.substring(3)))),
-                  selfMute = false,
-                  selfDeaf = false
-                )
-              )
-              connectingGuild = guild.id
-              log.info("Joined")
-            case "&s" =>
-              player.stopTrack()
-              voiceWs ! Logout
-              system.stop(dataSender)
-              log.info("Disconnected")
+    case msg: APIMessage.MessageCreate => commandDispatcher.forward(msg)
+    case StopMusic =>
+      player.stopTrack()
+      voiceWs ! Logout
+      context.stop(dataSender)
 
-              client ! VoiceStateUpdate(VoiceStateUpdateData(guild.id, None, selfMute = false, selfDeaf = false))
-              player = null
-              sessionId = null
-              connectingGuild = GuildId(Snowflake(""))
-              token = null
-              endPoint = null
-              voiceWs = null
-              dataSender = null
-              log.info("Left")
-            case s if s.startsWith("&q ") =>
-              val url = s.substring(3)
-              log.info("Received queue item")
-              loadItem(url).pipeTo(self)
-            case _ =>
-          }
-        case None =>
-      }
+      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      player = null
+      sessionId = null
+      token = null
+      endPoint = null
+      voiceWs = null
+      dataSender = null
+      log.info("Left")
+    case QueueUrl(url) =>
+      log.info("Received queue item")
+      loadItem(url).pipeTo(self)
+    case e: FriendlyException =>
+      e.printStackTrace() //TODO: Handle better
     case VoiceReady(udpHandler) =>
       log.info("Audio ready")
       if (player == null) {
@@ -119,14 +114,14 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
     case e: AudioAPIMessage => log.info(e.toString)
     case APIMessage.VoiceStateUpdate(state, c, _) if state.userId == c.botUser.id =>
       sessionId = state.sessionId
-      if(token != null && endPoint != null) {
+      if (token != null && endPoint != null) {
         connect(c)
       }
       log.info("Received session id")
-    case APIMessage.VoiceServerUpdate(receivedToken, guild, receivedEndpoint, c, _) if guild.id == connectingGuild =>
+    case APIMessage.VoiceServerUpdate(receivedToken, guild, receivedEndpoint, c, _) if guild.id == guildId =>
       token = receivedToken
       endPoint = if (receivedEndpoint.endsWith(":80")) receivedEndpoint.dropRight(3) else receivedEndpoint
-      if(sessionId != null) {
+      if (sessionId != null) {
         connect(c)
       }
       log.info("Got token and endpoint")
@@ -161,7 +156,7 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
 
   def connect(c: CacheSnapshot): Unit = {
     voiceWs = context.actorOf(
-      VoiceWsHandler.props(endPoint, connectingGuild, c.botUser.id, sessionId, token, Some(self), None),
+      VoiceWsHandler.props(endPoint, guildId, c.botUser.id, sessionId, token, Some(self), None),
       "VoiceWS"
     )
     voiceWs ! Login
@@ -185,7 +180,43 @@ class MusicHandler(client: ActorRef)(implicit mat: Materializer) extends Actor w
   }
 }
 object MusicHandler {
-  def props(client: ActorRef)(implicit mat: Materializer): Props = Props(new MusicHandler(client))
+  def props(client: ClientActor)(guildId: GuildId)(implicit mat: Materializer): Props =
+    Props(new MusicHandler(client, guildId))
+  case object StopMusic
+  case class QueueUrl(url: String)
+}
+
+class JoinCommand(client: ClientActor, guildId: GuildId) extends Actor with ActorLogging {
+  override def receive: Receive = {
+    case ParsedCommand(_, rawChannel: String, _, _) =>
+      client ! VoiceStateUpdate(
+        VoiceStateUpdateData(guildId, Some(ChannelId(Snowflake(rawChannel))), selfMute = false, selfDeaf = false)
+      )
+      log.info("Joined")
+  }
+}
+object JoinCommand {
+  def props(client: ClientActor, guildId: GuildId): Props =
+    Props(new JoinCommand(client, guildId))
+}
+
+class StopCommand(musicHandler: ActorRef) extends Actor {
+  override def receive: Receive = {
+    case Command(_, _, _) => musicHandler ! StopMusic
+  }
+}
+object StopCommand {
+  def props(musicHandler: ActorRef): Props = Props(new StopCommand(musicHandler))
+}
+
+class QueueCommand(musicHandler: ActorRef) extends Actor {
+  override def receive: Receive = {
+    case ParsedCommand(_, url: String, _, _) =>
+      musicHandler ! QueueUrl(url)
+  }
+}
+object QueueCommand {
+  def props(musicHandler: ActorRef): Props = Props(new QueueCommand(musicHandler))
 }
 
 class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor with ActorLogging {
@@ -195,11 +226,10 @@ class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
 
   var cancelable: Cancellable = _
 
-  override def postStop(): Unit = {
-    if(cancelable != null) {
+  override def postStop(): Unit =
+    if (cancelable != null) {
       cancelable.cancel()
     }
-  }
 
   override def receive: Receive = {
     case SendMusic =>
@@ -227,7 +257,8 @@ class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
   }
 }
 object DataSender {
-  def props(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef): Props = Props(new DataSender(player, udpHandler, wsHandler))
+  def props(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef): Props =
+    Props(new DataSender(player, udpHandler, wsHandler))
   case object SendMusic
   case object StartSendMusic
   case object StopSendMusic

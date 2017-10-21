@@ -32,7 +32,7 @@ lazy val example = project
     version := "1.0",
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.42"
   )
-  .dependsOn(ackCord)
+  .dependsOn(ackCord, ackCordCommands)
 
 lazy val ackCordCommands = project
     .settings(
