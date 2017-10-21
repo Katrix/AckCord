@@ -114,10 +114,10 @@ trait MessageParserInstances {
   implicit val floatParser:  MessageParser[Float]  = withTry(_.toFloat)
   implicit val doubleParser: MessageParser[Double] = withTry(_.toDouble)
 
-  val userRegex:    Regex = """<@!?\d+>""".r
-  val channelRegex: Regex = """<#\d+>""".r
-  val roleRegex:    Regex = """<@&\d+>""".r
-  val emojiRegex:   Regex = """<:\w+:\d+>""".r
+  val userRegex:    Regex = """<@!?(\d+)>""".r
+  val channelRegex: Regex = """<#(\d+)>""".r
+  val roleRegex:    Regex = """<@&(\d+)>""".r
+  val emojiRegex:   Regex = """<:\w+:(\d+)>""".r
 
   def regexParser[A](
       name: String,
@@ -128,17 +128,17 @@ trait MessageParserInstances {
       val head = strings.head
 
       for {
-        m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified").right
+        m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
         _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-        obj <- getObj(c, tag[A](Snowflake(m.matched))).toRight(s"${name.capitalize} not found")
+        obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
       } yield strings.tail -> obj
     }
   }
 
   implicit val userParser:    MessageParser[User]       = regexParser("user", userRegex, _.getUser(_))
-  implicit val channelParser: MessageParser[Channel]    = regexParser("user", userRegex, _.getChannel(_))
-  implicit val roleParser:    MessageParser[Role]       = regexParser("user", userRegex, _.getRole(_))
-  implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("user", userRegex, _.getEmoji(_))
+  implicit val channelParser: MessageParser[Channel]    = regexParser("user", channelRegex, _.getChannel(_))
+  implicit val roleParser:    MessageParser[Role]       = regexParser("user", roleRegex, _.getRole(_))
+  implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("user", emojiRegex, _.getEmoji(_))
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {
