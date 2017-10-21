@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.commands
 
+import java.util.Locale
+
 import scala.collection.mutable
 
 import akka.actor.{Actor, ActorRef, Props}
@@ -51,7 +53,8 @@ class CommandDispatcher(
     case (prefix, innerMap) =>
       commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap.map {
         case (name, props) =>
-          name -> context.actorOf(props, name)
+          val lowercaseName = name.toLowerCase(Locale.ROOT)
+          lowercaseName -> context.actorOf(props, lowercaseName)
       }
   }
 
@@ -61,11 +64,12 @@ class CommandDispatcher(
       isValidCommand(msg).foreach { args =>
         if (args == Nil) errorHandler ! NoCommand(msg, c)
         else {
+          val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
           for {
-            prefix     <- commands.keys.find(prefix => args.head.startsWith(prefix))
+            prefix     <- commands.keys.find(prefix => lowercaseCommand.startsWith(prefix))
             handlerMap <- commands.get(prefix)
           } {
-            val newArgs = args.head.substring(prefix.length) :: args.tail
+            val newArgs = lowercaseCommand.substring(prefix.length) :: args.tail
             handlerMap.get(newArgs.head) match {
               case Some(handler) => handler ! Command(msg, newArgs, c)
               case None          => errorHandler ! UnknownCommand(msg, args.tail, c)
@@ -74,9 +78,11 @@ class CommandDispatcher(
         }
       }
     case RegisterCommand(prefix, name, handler) =>
-      commands.getOrElseUpdate(prefix, mutable.HashMap.empty).put(name, handler)
+      commands
+        .getOrElseUpdate(prefix.toLowerCase(Locale.ROOT), mutable.HashMap.empty)
+        .put(name.toLowerCase(Locale.ROOT), handler)
     case UnregisterCommand(prefix, name) =>
-      commands.get(prefix).foreach(_.remove(name))
+      commands.get(prefix.toLowerCase(Locale.ROOT)).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
 
   }
 
