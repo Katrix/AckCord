@@ -39,12 +39,12 @@ import net.katsstuff.ackcord.util.GuildDispatcher.{GetGuildActor, ResponseGetGui
   * - GuildMessage
   * - MessageMessage
   * - VoiceStateUpdate
-  * @param props The props used for constructing handlers
+  * @param props The function to obtain a props used for constructing handlers
   * @param notGuildHandler For some messages that could be directed to a guild
   *                        but not always, if the message is not directed
   *                        towards a guild, it will me sent here instead.
   */
-class GuildDispatcher(props: Props, notGuildHandler: Option[ActorRef]) extends Actor {
+class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor {
   val handlers = mutable.HashMap.empty[GuildId, ActorRef]
 
   override def receive: Receive = {
@@ -73,10 +73,13 @@ class GuildDispatcher(props: Props, notGuildHandler: Option[ActorRef]) extends A
   def sendToNotGuild(msg: Any): Unit = notGuildHandler.foreach(_ ! msg)
 
   def getGuild(guildId: GuildId): ActorRef =
-    handlers.getOrElseUpdate(guildId, context.actorOf(props, s"${self.path.name}$guildId"))
+    handlers.getOrElseUpdate(guildId, context.actorOf(props(guildId), s"${self.path.name}$guildId"))
 }
 object GuildDispatcher {
-  def props(props: Props, notGuildHandler: Option[ActorRef]): Props = Props(new GuildDispatcher(props, notGuildHandler))
+  def props(props: GuildId => Props, notGuildHandler: Option[ActorRef]): Props =
+    Props(new GuildDispatcher(props, notGuildHandler))
+  def props(props: Props, notGuildHandler: Option[ActorRef]): Props =
+    Props(new GuildDispatcher(_ => props, notGuildHandler))
 
   /**
     * Send to the guild dispatcher to get the actor for that guild
