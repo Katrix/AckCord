@@ -140,9 +140,9 @@ case class User(
           def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
             mapOrElse(permission, opt, _.removePermissions(_))
 
-          val withEveryone = addOrElse(everyoneAllow).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
+          val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
           val withRole = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
-          val withUser = addOrElse(userAllow).andThen(removeOrElse(userDeny)).apply(withRole)
+          val withUser = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
 
           withUser
         }

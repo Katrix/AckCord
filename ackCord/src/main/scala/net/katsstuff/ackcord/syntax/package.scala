@@ -252,7 +252,7 @@ package object syntax {
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
     def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
-    def everyoneRole(implicit snapshot: CacheSnapshot): Role = guild.roles(guild.id) //The everyone role should always be present
+    def everyoneRole(implicit snapshot: CacheSnapshot): Role = guild.roles(RoleId(guild.id)) //The everyone role should always be present
     def mentionEveryone: String = "@everyone"
 
     def modify[Context](
