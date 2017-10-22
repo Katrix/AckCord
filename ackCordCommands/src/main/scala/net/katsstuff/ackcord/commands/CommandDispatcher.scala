@@ -36,7 +36,9 @@ import net.katsstuff.ackcord.util.MessageParser
   * Used to parse valid commands and send them to some handler
   * @param needMention If all commands handled by this dispatcher need a
   *                    mention before the command
-  * @param initialCommands The initial commands this dispatcher should start with
+  * @param initialCommands The initial commands this dispatcher should start with.
+  *                        The first map is a map for the prefix. The second
+  *                        map is for the command name itself, without the prefix.
   * @param errorHandlerProps Props for the actor to send all invalid commands to
   */
 class CommandDispatcher(
@@ -48,7 +50,7 @@ class CommandDispatcher(
 
   val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
 
-  val commands = mutable.HashMap.empty[String, collection.mutable.HashMap[String, ActorRef]]
+  val commands = mutable.HashMap.empty[String, mutable.HashMap[String, ActorRef]]
   initialCommands.foreach {
     case (prefix, innerMap) =>
       commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap.map {
