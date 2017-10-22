@@ -74,18 +74,21 @@ trait MessageParserInstances {
 
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      Right((strings.tail, f(strings.head)))
+      if(strings.nonEmpty) Right((strings.tail, f(strings.head)))
+      else Left("No more arguments left")
   }
 
   def withTry[A](f: String => A): MessageParser[A] = fromTry(s => Try(f(s)))
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      f(strings.head).toEither.fold(e => Left(e.getMessage), a => Right(strings.tail -> a))
+      if(strings.nonEmpty) f(strings.head).toEither.fold(e => Left(e.getMessage), a => Right(strings.tail -> a))
+      else Left("No more arguments left")
   }
 
   def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      f(strings.head).toEither.fold(_ => Left(errorMessage), a => Right(strings.tail -> a))
+      if(strings.nonEmpty) f(strings.head).toEither.fold(_ => Left(errorMessage), a => Right(strings.tail -> a))
+      else Left("No more arguments left")
   }
 
   implicit val stringParser: MessageParser[String] = fromString(identity)
@@ -116,20 +119,23 @@ trait MessageParserInstances {
       getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]
   ): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
-      val head = strings.head
+      if(strings.nonEmpty) {
+        val head = strings.head
 
-      for {
-        m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
-        _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-        obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
-      } yield strings.tail -> obj
+        for {
+          m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
+          _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
+          obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
+        } yield strings.tail -> obj
+      }
+      else Left("No more arguments left")
     }
   }
 
   implicit val userParser:    MessageParser[User]       = regexParser("user", userRegex, _.getUser(_))
-  implicit val channelParser: MessageParser[Channel]    = regexParser("user", channelRegex, _.getChannel(_))
-  implicit val roleParser:    MessageParser[Role]       = regexParser("user", roleRegex, _.getRole(_))
-  implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("user", emojiRegex, _.getEmoji(_))
+  implicit val channelParser: MessageParser[Channel]    = regexParser("channel", channelRegex, _.getChannel(_))
+  implicit val roleParser:    MessageParser[Role]       = regexParser("role", roleRegex, _.getRole(_))
+  implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("emoji", emojiRegex, _.getEmoji(_))
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {
@@ -164,7 +170,7 @@ trait MessageParserInstances {
         implicit
         c: CacheSnapshot
     ): Either[String, (List[String], NotUsed)] =
-      if (strings.isEmpty) Right((Nil, NotUsed)) else Left("Found dangling arguments")
+      if (strings.isEmpty) Right((Nil, NotUsed)) else Left(s"Found dangling arguments: ${strings.mkString(", ")}")
   }
 }
 
