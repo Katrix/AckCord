@@ -37,23 +37,23 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param needMention If all commands handled by this dispatcher need a
   *                    mention before the command
   * @param initialCommands The initial commands this dispatcher should start with.
-  *                        The first map is a map for the prefix. The second
-  *                        map is for the command name itself, without the prefix.
+  *                        The first map is a map for the category. The second
+  *                        map is for the command name itself.
   * @param errorHandlerProps Props for the actor to send all invalid commands to
   */
 class CommandDispatcher(
     needMention: Boolean,
-    initialCommands: Map[String, Map[String, Props]],
+    initialCommands: Map[CmdCategory, Map[String, Props]],
     errorHandlerProps: Props
 ) extends Actor {
   import net.katsstuff.ackcord.commands.CommandDispatcher._
 
   val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
 
-  val commands = mutable.HashMap.empty[String, mutable.HashMap[String, ActorRef]]
+  val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, ActorRef]]
   initialCommands.foreach {
-    case (prefix, innerMap) =>
-      commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap.map {
+    case (cat, innerMap) =>
+      commands.getOrElseUpdate(cat, mutable.HashMap.empty) ++= innerMap.map {
         case (name, props) =>
           val lowercaseName = name.toLowerCase(Locale.ROOT)
           lowercaseName -> context.actorOf(props, lowercaseName)
@@ -68,10 +68,10 @@ class CommandDispatcher(
         else {
           val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
           for {
-            prefix     <- commands.keys.find(prefix => lowercaseCommand.startsWith(prefix))
-            handlerMap <- commands.get(prefix)
+            cat        <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+            handlerMap <- commands.get(cat)
           } {
-            val newArgs = lowercaseCommand.substring(prefix.length) :: args.tail
+            val newArgs = lowercaseCommand.substring(cat.prefix.length) :: args.tail
             handlerMap.get(newArgs.head) match {
               case Some(handler) => handler ! Command(msg, newArgs, c)
               case None          => errorHandler ! UnknownCommand(msg, newArgs, c)
@@ -79,12 +79,12 @@ class CommandDispatcher(
           }
         }
       }
-    case RegisterCommand(prefix, name, handler) =>
+    case RegisterCommand(cat, name, handler) =>
       commands
-        .getOrElseUpdate(prefix.toLowerCase(Locale.ROOT), mutable.HashMap.empty)
+        .getOrElseUpdate(cat, mutable.HashMap.empty)
         .put(name.toLowerCase(Locale.ROOT), handler)
-    case UnregisterCommand(prefix, name) =>
-      commands.get(prefix.toLowerCase(Locale.ROOT)).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
+    case UnregisterCommand(cat, name) =>
+      commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
 
   }
 
@@ -107,7 +107,7 @@ class CommandDispatcher(
   }
 }
 object CommandDispatcher {
-  def props(needMention: Boolean, initialCommands: Map[String, Map[String, Props]], errorHandler: Props): Props =
+  def props(needMention: Boolean, initialCommands: Map[CmdCategory, Map[String, Props]], errorHandler: Props): Props =
     Props(new CommandDispatcher(needMention, initialCommands, errorHandler))
 
   /**
@@ -119,11 +119,11 @@ object CommandDispatcher {
   case class NoCommand(msg: Message, c: CacheSnapshot)
 
   /**
-    * Sent to the error handler if a correct prefix is supplied,
+    * Sent to the error handler if a correct category is supplied,
     * but no handler for the command is found.
     * @param msg The message that triggered this.
     * @param args The already parsed args. These will not include stuff like
-    *             the prefix and mention.
+    *             the category and mention.
     * @param c The cache snapshot.
     */
   case class UnknownCommand(msg: Message, args: List[String], c: CacheSnapshot)
@@ -132,23 +132,23 @@ object CommandDispatcher {
     * Sent to a handler when a valid command was used.
     * @param msg The message that triggered this
     * @param args The already parsed args. These will not include stuff like
-    *             the prefix, mention and command name.
+    *             the category, mention and command name.
     * @param c The cache snapshot
     */
   case class Command(msg: Message, args: List[String], c: CacheSnapshot)
 
   /**
     * Send to the command handler to register a new command
-    * @param prefix The prefix for this command, for example `!`
+    * @param category The category for this command, for example `!`
     * @param name The name of this command, for example `ping`
     * @param handler The actor that will handle this command
     */
-  case class RegisterCommand(prefix: String, name: String, handler: ActorRef)
+  case class RegisterCommand(category: CmdCategory, name: String, handler: ActorRef)
 
   /**
     * Send to the command handler to unregister a command
-    * @param prefix The prefix for this command, for example `!`
+    * @param category The category for this command, for example `!`
     * @param name The name of this command, for example `ping`
     */
-  case class UnregisterCommand(prefix: String, name: String)
+  case class UnregisterCommand(category: CmdCategory, name: String)
 }

@@ -46,12 +46,12 @@ import net.katsstuff.ackcord.syntax._
   *                        The first map is a map for the prefix. The second
   *                        map is for the command name itself, without the prefix.
   */
-abstract class HelpCommand(client: ClientActor, initialCommands: Map[String, Map[String, CommandDescription]]) extends Actor {
+abstract class HelpCommand(client: ClientActor, initialCommands: Map[CmdCategory, Map[String, CommandDescription]]) extends Actor {
 
-  val commands = mutable.HashMap.empty[String, mutable.HashMap[String, CommandDescription]]
+  val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CommandDescription]]
   initialCommands.foreach {
-    case (prefix, innerMap) =>
-      commands.getOrElseUpdate(prefix, mutable.HashMap.empty) ++= innerMap.map {
+    case (cat, innerMap) =>
+      commands.getOrElseUpdate(cat, mutable.HashMap.empty) ++= innerMap.map {
         case (name, desc) =>
           val lowercaseName = name.toLowerCase(Locale.ROOT)
           lowercaseName -> desc
@@ -64,14 +64,14 @@ abstract class HelpCommand(client: ClientActor, initialCommands: Map[String, Map
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
       for {
         channel <- msg.tChannel
-        prefix  <- commands.keys.find(prefix => lowercaseCommand.startsWith(prefix))
-        descMap <- commands.get(prefix)
+        cat  <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+        descMap <- commands.get(cat)
       } {
-        val command = lowercaseCommand.substring(prefix.length)
+        val command = lowercaseCommand.substring(cat.prefix.length)
         descMap.get(command) match {
           case Some(desc) =>
             client ! Request(
-              CreateMessage(msg.channelId, createSingleReply(prefix, command, desc)),
+              CreateMessage(msg.channelId, createSingleReply(cat, command, desc)),
               NotUsed,
               None
             )
@@ -96,22 +96,22 @@ abstract class HelpCommand(client: ClientActor, initialCommands: Map[String, Map
       msg.tChannel.foreach { channel =>
         client ! channel.sendMessage(e)
       }
-    case RegisterCommand(prefix, name, desc) =>
+    case RegisterCommand(cat, name, desc) =>
       commands
-        .getOrElseUpdate(prefix.toLowerCase(Locale.ROOT), mutable.HashMap.empty)
+        .getOrElseUpdate(cat, mutable.HashMap.empty)
         .put(name.toLowerCase(Locale.ROOT), desc)
-    case UnregisterCommand(prefix, name) =>
-      commands.get(prefix.toLowerCase(Locale.ROOT)).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
+    case UnregisterCommand(cat, name) =>
+      commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
   }
 
   /**
     * Create a reply for a single command
-    * @param prefix The prefix of the command
+    * @param category The category of the command
     * @param name The command name
     * @param desc The description for the command
     * @return Data to create a message describing the command
     */
-  def createSingleReply(prefix: String, name: String, desc: CommandDescription): CreateMessageData
+  def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription): CreateMessageData
 
   /**
     * Create a reply for all the commands tracked by this help command.
@@ -125,16 +125,16 @@ object HelpCommand {
 
   /**
     * Send to the help command to register a new command
-    * @param prefix The prefix for this command, for example `!`
+    * @param category The category for this command, for example `!`
     * @param name The name of this command, for example `ping`
     * @param description The description for this command
     */
-  case class RegisterCommand(prefix: String, name: String, description: CommandDescription)
+  case class RegisterCommand(category: CmdCategory, name: String, description: CommandDescription)
 
   /**
     * Send to the help command to unregister a command
-    * @param prefix The prefix for this command, for example `!`
+    * @param category The category for this command, for example `!`
     * @param name The name of this command, for example `ping`
     */
-  case class UnregisterCommand(prefix: String, name: String)
+  case class UnregisterCommand(category: CmdCategory, name: String)
 }

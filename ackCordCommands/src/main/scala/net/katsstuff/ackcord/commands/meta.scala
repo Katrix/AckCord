@@ -23,43 +23,70 @@
  */
 package net.katsstuff.ackcord.commands
 
+import java.util.Locale
+
 import akka.actor.Props
+import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.util.MessageParser
+
+/**
+  * Represents some group of commands.
+  * The description has not effect on equality between to categories.
+  * @param prefix The prefix for this category. This must be lowercase.
+  * @param description The description for this category.
+  */
+case class CmdCategory(prefix: String, description: String) {
+  require(prefix.toLowerCase(Locale.ROOT) == prefix, "The prefix of a command category must be lowercase")
+  override def equals(obj: scala.Any): Boolean = {
+    obj match {
+      case null             => false
+      case cat: CmdCategory => prefix == cat.prefix
+      case _                => false
+    }
+  }
+}
 
 /**
   * Represents non essential information about a command intended to be
   * displayed to an end user.
   * @param name The display name of a command.
   * @param description The description of what a command does.
-  * @param usage How to use the command.
+  * @param usage How to use the command. Does not include the name or prefix.
   */
-case class CommandDescription(name: String, description: String, usage: String)
+case class CommandDescription(name: String, description: String, usage: String = "")
 
 /**
   * Represents a parsed command, and information about it. Useful for grouping
   * commands together and registering them at the same time.
-  * @param prefix The prefix for this command.
+  * @param category The category for this command.
   * @param alias All the aliases of this command.
   * @param description Optional information to shot to users about the command.
   * @param handler The handler for the command. Should accept [[net.katsstuff.ackcord.commands.CommandParser.ParsedCommand]].
   * @param parser The parser to use for the command.
   * @tparam A The type of the parsed args.
   */
-case class CommandMeta[A](prefix: String, alias: Seq[String], description: Option[CommandDescription], handler: Props)(
-    implicit val parser: MessageParser[A]
-)
+case class CommandMeta[A](
+    category: CmdCategory,
+    alias: Seq[String],
+    handler: Props,
+    filters: Seq[CommandFilter] = Seq.empty,
+    description: Option[CommandDescription] = None,
+)(implicit val parser: MessageParser[A])
 object CommandMeta {
 
   /**
     * Create a map that can be passed to a [[CommandDispatcher]] as the initial commands.
-    * @param commands The commands to use
+    * @param client The client actor. Used for sending error messages
+    *               from the filters.
+    * @param commands The commands to use.
     */
-  def createDispatcherInitialCommands(commands: Seq[CommandMeta[_]]): Map[String, Map[String, Props]] = {
-    commands.groupBy(_.prefix).mapValues { seq =>
+  def dispatcherMap(client: ClientActor, commands: Seq[CommandMeta[_]]): Map[CmdCategory, Map[String, Props]] = {
+    commands.groupBy(_.category).mapValues { seq =>
       val res = for {
         meta  <- seq
         alias <- meta.alias
-      } yield alias -> CommandParser.props(meta.parser, meta.handler)
+      } yield
+        alias -> CommandFilter.createActorFilter(client, meta.filters, CommandParser.props(meta.parser, meta.handler))
 
       res.toMap
     }
@@ -69,12 +96,12 @@ object CommandMeta {
     * Create a map that can be passed to a [[HelpCommand]] as the initial commands.
     * @param commands The commands to use
     */
-  def createHelpInitialCommands(commands: Seq[CommandMeta[_]]): Map[String, Map[String, CommandDescription]] = {
-    commands.groupBy(_.prefix).mapValues { seq =>
+  def helpCmdMap(commands: Seq[CommandMeta[_]]): Map[CmdCategory, Map[String, CommandDescription]] = {
+    commands.groupBy(_.category).mapValues { seq =>
       val res = for {
         meta  <- seq
         alias <- meta.alias
-        desc <- meta.description
+        desc  <- meta.description
       } yield alias -> desc
 
       res.toMap
