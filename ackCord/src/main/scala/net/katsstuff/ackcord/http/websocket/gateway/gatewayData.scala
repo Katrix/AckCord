@@ -258,7 +258,7 @@ object GatewayEvent {
   object GuildIntegrationsUpdate
       extends GatewayEvent[GuildIntegrationsUpdateData](
         "GUILD_INTEGRATIONS_UPDATE",
-        notImplementedHandler,
+        new NOOPHandler[GuildIntegrationsUpdateData],
         data =>
           (current, prev) =>
             current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
@@ -563,7 +563,7 @@ object GatewayEvent {
   object WebhookUpdate
       extends GatewayEvent[WebhookUpdateData](
         "WEBHOOK_UPDATE",
-        notImplementedHandler,
+        new NOOPHandler[WebhookUpdateData],
         data =>
           (current, prev) =>
             for {
