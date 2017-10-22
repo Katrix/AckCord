@@ -53,12 +53,13 @@ trait CommandActor extends Actor {
 /**
   * An actor that handles a parsed command. Use for clarity, error handling,
   * and implicit snapshot.
-  * @param client The client actor. Used for sending error messages.
   * @param typeable A typeable of the expected arg type. Used to make sure
   *                 that a the correct type is received.
   * @tparam A The arg type
   */
-abstract class ParsedCommandActor[A](val client: ClientActor)(implicit typeable: Typeable[A]) extends Actor {
+abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Actor {
+
+  def client: ClientActor
 
   val IsA: TypeCase[A] = TypeCase[A]
 

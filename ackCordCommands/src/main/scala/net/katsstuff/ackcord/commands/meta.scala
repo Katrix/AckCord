@@ -80,13 +80,13 @@ object CommandMeta {
     *               from the filters.
     * @param commands The commands to use.
     */
-  def dispatcherMap(client: ClientActor, commands: Seq[CommandMeta[_]]): Map[CmdCategory, Map[String, Props]] = {
+  def dispatcherMap(commands: Seq[CommandMeta[_]])(implicit client: ClientActor): Map[CmdCategory, Map[String, Props]] = {
     commands.groupBy(_.category).mapValues { seq =>
       val res = for {
         meta  <- seq
         alias <- meta.alias
       } yield
-        alias -> CommandFilter.createActorFilter(client, meta.filters, CommandParser.props(meta.parser, meta.handler))
+        alias -> CommandFilter.createActorFilter(meta.filters, CommandParser.props(meta.parser, meta.handler))
 
       res.toMap
     }
