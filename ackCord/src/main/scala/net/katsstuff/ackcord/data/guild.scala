@@ -153,7 +153,75 @@ case class GuildMember(
     deaf: Boolean,
     mute: Boolean
 ) extends GetUser
-    with GetGuild
+    with GetGuild {
+  def permissions(implicit c: CacheSnapshot): Permission = {
+    import net.katsstuff.ackcord.syntax._
+
+    val res = for {
+      guild <- guildId.resolve
+    } yield {
+      if(guild.ownerId == userId) Permission.All
+      else {
+        val userPermissions = this.rolesForUser.map(_.permissions)
+        val everyonePerms = guild.everyoneRole.permissions
+
+        val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
+
+        if(guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+        else guildPermissions
+      }
+    }
+
+    res.getOrElse(Permission.None)
+  }
+
+  def permissionsWithOverrides(guildPermissions: Permission, channelId: ChannelId)(implicit c: CacheSnapshot): Permission = {
+    import net.katsstuff.ackcord.syntax._
+
+    if(guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+    else {
+      val res = for {
+        guild <- guildId.resolve
+        channel <- guild.channelById(channelId)
+      } yield {
+        if(guild.ownerId == userId) Permission.All
+        else {
+          val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
+          val everyoneAllow = everyoneOverwrite.map(_.allow)
+          val everyoneDeny = everyoneOverwrite.map(_.deny)
+
+          val roleOverwrites = this.rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+          val roleAllow = Permission(roleOverwrites.map(_.allow): _*)
+          val roleDeny = Permission(roleOverwrites.map(_.deny): _*)
+
+          val userOverwrite = channel.permissionOverwrites.get(userId)
+          val userAllow = userOverwrite.map(_.allow)
+          val userDeny = userOverwrite.map(_.deny)
+
+          def mapOrElse(permission: Permission, opt: Option[Permission], f: (Permission, Permission) => Permission): Permission = {
+            opt.map(f(permission, _)).getOrElse(permission)
+          }
+
+          def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.addPermissions(_))
+          def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.removePermissions(_))
+
+          val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
+          val withRole = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
+          val withUser = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
+
+          withUser
+        }
+      }
+
+      res.getOrElse(guildPermissions)
+    }
+  }
+
+  def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshot): Permission =
+    permissionsWithOverrides(permissions, channelId)
+}
 case class GuildEmoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
 
 sealed trait PresenceContent {
