@@ -26,17 +26,8 @@ package net.katsstuff.ackcord.util
 import scala.util.Try
 import scala.util.matching.Regex
 
-import net.katsstuff.ackcord.data.{
-  CacheSnapshot,
-  Channel,
-  GuildChannel,
-  GuildEmoji,
-  Role,
-  Snowflake,
-  TChannel,
-  TGuildChannel,
-  User
-}
+import akka.NotUsed
+import net.katsstuff.ackcord.data.{CacheSnapshot, Channel, GuildChannel, GuildEmoji, Role, Snowflake, TChannel, TGuildChannel, User}
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
 import shapeless.tag._
@@ -154,6 +145,27 @@ trait MessageParserInstances {
     channelParser.collectWithError("Passed in channel is not a guild text channel") {
       case channel: TGuildChannel => channel
     }
+
+  /**
+    * A parser that will return all the strings passed to it.
+    */
+  val allStringsParser: MessageParser[List[String]] = new MessageParser[List[String]] {
+    override def parse(strings: List[String])(
+        implicit
+        c: CacheSnapshot
+    ): Either[String, (List[String], List[String])] = Right((Nil, strings))
+  }
+
+  /**
+    * A parser that will only succeed if there are no strings left.
+    */
+  implicit val notUsedParser: MessageParser[NotUsed] = new MessageParser[NotUsed] {
+    override def parse(strings: List[String])(
+        implicit
+        c: CacheSnapshot
+    ): Either[String, (List[String], NotUsed)] =
+      if (strings.isEmpty) Right((Nil, NotUsed)) else Left("Found dangling arguments")
+  }
 }
 
 trait DeriveMessageParser {
