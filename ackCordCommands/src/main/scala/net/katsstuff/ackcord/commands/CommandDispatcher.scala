@@ -73,7 +73,7 @@ class CommandDispatcher(
           } {
             val newArgs = lowercaseCommand.substring(cat.prefix.length) :: args.tail
             handlerMap.get(newArgs.head) match {
-              case Some(handler) => handler ! Command(msg, newArgs, c)
+              case Some(handler) => handler ! Command(msg, newArgs.tail, c)
               case None          => errorHandler ! UnknownCommand(msg, newArgs, c)
             }
           }
