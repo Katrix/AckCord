@@ -49,6 +49,20 @@ object CommandParser {
   def props[A](parser: MessageParser[A], handler: Props): Props = Props(new CommandParser(parser, handler))
 
   /**
+    * Props for a parser that will spit out the command the list of arguments
+    * untouched.
+    * @param handler The command handler
+    */
+  def allStrings(handler: Props): Props = props(MessageParser.allStringsParser, handler)
+
+  /**
+    * Props for a parser that will only succeed if no arguments are passed to
+    * it. Good for commands that don't take arguments.
+    * @param handler The command handler
+    */
+  def noArgs(handler: Props): Props = props(MessageParser.notUsedParser, handler)
+
+  /**
     * Sent to the handler if the parser couldn't parse the message
     * @param msg The base message
     * @param error The error message
