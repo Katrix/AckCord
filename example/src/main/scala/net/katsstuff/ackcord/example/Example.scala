@@ -26,9 +26,8 @@ package net.katsstuff.ackcord.example
 import akka.actor.ActorSystem
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
-import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandParser}
-import net.katsstuff.ackcord.data.GuildChannel
-import net.katsstuff.ackcord.util.{GuildDispatcher, MessageParser}
+import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandMeta}
+import net.katsstuff.ackcord.util.GuildDispatcher
 import net.katsstuff.ackcord.{APIMessage, DiscordClient, DiscordClientSettings}
 
 object Example {
@@ -47,26 +46,27 @@ object Example {
     val token       = args.head
 
     val settings = DiscordClientSettings(token = token, system = system, eventStream = eventStream)
-    DiscordClient.fetchWsGateway.map(settings.connect).foreach { client =>
+    DiscordClient.fetchWsGateway.map(settings.connect).foreach { implicit client =>
+
+      val commands = Seq(
+        PingCommand.cmdMeta,
+        SendFileCommand.cmdMeta,
+        InfoChannelCommand.cmdMeta,
+        KillCommand.cmdMeta
+      )
 
       //We set up a command dispatcher, that sends the correct command to the corresponding actor
       val commandDispatcher = CommandDispatcher.props(
         needMention = true,
-        Map(
-          "!" -> Map(
-            "ping"        -> PingCommand.props(client),
-            "sendFile"    -> SendFileCommand.props(client),
-            "infoChannel" -> CommandParser.props(MessageParser[GuildChannel], InfoChannelCommand.props(client)),
-            "kill"        -> KillCommand.props(client)
-          )
-        ),
-        CommandErrorHandler.props(client)
+        CommandMeta.dispatcherMap(commands), //This method on CommandMeta wires up our command handling for us
+        CommandErrorHandler.props
       )
 
       //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher
       val guildDispatcherCommands = system.actorOf(GuildDispatcher.props(commandDispatcher, None), "BaseCommands")
 
-      val guildDispatcherMusic = system.actorOf(GuildDispatcher.props(MusicHandler.props(client) _, None), "MusicHandler")
+      val guildDispatcherMusic =
+        system.actorOf(GuildDispatcher.props(MusicHandler.props(client) _, None), "MusicHandler")
 
       eventStream.subscribe(guildDispatcherCommands, classOf[APIMessage.MessageCreate])
       eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.MessageCreate])

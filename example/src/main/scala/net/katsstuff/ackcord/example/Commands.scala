@@ -28,8 +28,8 @@ import java.nio.file.Paths
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
-import net.katsstuff.ackcord.commands.CommandDispatcher.{Command, NoCommand, UnknownCommand}
-import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
+import net.katsstuff.ackcord.commands.CommandDispatcher.{NoCommand, UnknownCommand}
+import net.katsstuff.ackcord.commands.{CommandDescription, CommandMeta, ParsedCommandActor}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
@@ -37,65 +37,83 @@ import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{Request, RequestResponse}
 
-class PingCommand(client: ClientActor) extends Actor {
-  override def receive: Receive = {
-    case Command(msg, _, c) =>
-      implicit val cache: CacheSnapshot = c
-      //Construct request manually
-      client ! Request(
-        Requests.CreateMessage(msg.channelId, CreateMessageData("Pong", None, tts = false, None, None)),
-        NotUsed,
-        None
-      )
+class PingCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+    client ! Request(
+      Requests.CreateMessage(msg.channelId, CreateMessageData("Pong", None, tts = false, None, None)),
+      NotUsed,
+      None
+    )
   }
 }
 object PingCommand {
-  def props(client: ClientActor): Props = Props(new PingCommand(client))
+  def props(implicit client: ClientActor): Props = Props(new PingCommand)
+  def cmdMeta(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
+      category = ExampleCmdCategories.!,
+      alias = Seq("ping"),
+      handler = props,
+      description =
+        Some(CommandDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing")),
+    )
 }
 
-class SendFileCommand(client: ClientActor) extends Actor {
-  override def receive: Receive = {
-    case Command(msg, _, c) =>
-      implicit val cache: CacheSnapshot = c
-      val embed = OutgoingEmbed(
-        title = Some("This is an embed"),
-        description = Some("This embed is sent together with a file"),
-        fields = Seq(EmbedField("FileName", "theFile.txt"))
-      )
+class SendFileCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+    val embed = OutgoingEmbed(
+      title = Some("This is an embed"),
+      description = Some("This embed is sent together with a file"),
+      fields = Seq(EmbedField("FileName", "theFile.txt"))
+    )
 
-      msg.tChannel.foreach { tChannel =>
-        //Use channel to construct request
-        client ! tChannel.sendMessage(
-          "Here is the file",
-          file = Some(Paths.get("theFile.txt")),
-          embed = Some(embed)
-        )
-      }
+    msg.tChannel.foreach { tChannel =>
+      //Use channel to construct request
+      client ! tChannel.sendMessage("Here is the file", file = Some(Paths.get("theFile.txt")), embed = Some(embed))
+    }
   }
 }
 object SendFileCommand {
-  def props(client: ClientActor): Props = Props(new SendFileCommand(client))
+  def props(implicit client: ClientActor): Props = Props(new SendFileCommand)
+  def cmdMeta(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
+      category = ExampleCmdCategories.!,
+      alias = Seq("sendFile"),
+      handler = props,
+      description = Some(
+        CommandDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing")
+      ),
+    )
 }
 
-class InfoChannelCommand(client: ClientActor) extends Actor {
+class InfoChannelCommand(implicit val client: ClientActor) extends ParsedCommandActor[GuildChannel] {
 
   val infoResponseHandler: ActorRef = context.actorOf(InfoCommandHandler.props(client))
 
-  override def receive: Receive = {
-    case ParsedCommand(msg, channel: GuildChannel, _, c) =>
-      implicit val cache: CacheSnapshot = c
-      client ! client.fetchChannel(
-        channel.id,
-        GetChannelInfo(channel.guildId, channel.id, msg.channelId, c),
-        Some(infoResponseHandler)
-      )
-    case ParseError(msg, error, c) =>
-      implicit val cache: CacheSnapshot = c
-      msg.tChannel.foreach(client ! _.sendMessage(error))
+  override def handleCommand(msg: Message, channel: GuildChannel, remaining: List[String])(
+      implicit c: CacheSnapshot
+  ): Unit = {
+    client ! client.fetchChannel(
+      channel.id,
+      GetChannelInfo(channel.guildId, channel.id, msg.channelId, c),
+      Some(infoResponseHandler)
+    )
   }
 }
 object InfoChannelCommand {
-  def props(client: ClientActor): Props = Props(new InfoChannelCommand(client))
+  def props(implicit client: ClientActor): Props = Props(new InfoChannelCommand)
+  def cmdMeta(implicit client: ClientActor): CommandMeta[GuildChannel] =
+    CommandMeta[GuildChannel](
+      category = ExampleCmdCategories.!,
+      alias = Seq("infoChannel"),
+      handler = props,
+      description = Some(
+        CommandDescription(
+          name = "Channel info",
+          description = "Make the bot fetch information about a text channel from Discord. Used for testing"
+        )
+      ),
+    )
+
   case class GetChannelInfo(
       guildId: GuildId,
       requestedChannelId: ChannelId,
@@ -104,7 +122,7 @@ object InfoChannelCommand {
   )
 }
 
-class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
+class InfoCommandHandler(implicit client: ClientActor) extends Actor with ActorLogging {
   override def receive: Receive = {
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
       implicit val cache: CacheSnapshot = c
@@ -123,21 +141,27 @@ class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
   }
 }
 object InfoCommandHandler {
-  def props(client: ClientActor): Props = Props(new InfoCommandHandler(client))
+  def props(implicit client: ClientActor): Props = Props(new InfoCommandHandler)
 }
 
-class KillCommand(client: ClientActor) extends Actor with ActorLogging {
-  override def receive: Receive = {
-    case Command(_, _, _) =>
-      log.info("Received shutdown command")
-      client ! ShutdownClient
+class KillCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] with ActorLogging {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+    log.info("Received shutdown command")
+    client ! ShutdownClient
   }
 }
 object KillCommand {
-  def props(client: ClientActor): Props = Props(new KillCommand(client))
+  def props(implicit client: ClientActor): Props = Props(new KillCommand)
+  def cmdMeta(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
+      category = ExampleCmdCategories.!,
+      alias = Seq("kill", "die"),
+      handler = props,
+      description = Some(CommandDescription(name = "Kill bot", description = "Shut down this bot")),
+    )
 }
 
-class CommandErrorHandler(client: ClientActor) extends Actor {
+class CommandErrorHandler(implicit client: ClientActor) extends Actor {
   override def receive: Receive = {
     case NoCommand(msg, c) =>
       implicit val cache: CacheSnapshot = c
@@ -148,5 +172,5 @@ class CommandErrorHandler(client: ClientActor) extends Actor {
   }
 }
 object CommandErrorHandler {
-  def props(client: ClientActor): Props = Props(new CommandErrorHandler(client))
+  def props(implicit client: ClientActor): Props = Props(new CommandErrorHandler)
 }

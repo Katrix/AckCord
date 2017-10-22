@@ -33,25 +33,31 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
 
+import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, Props}
 import akka.pattern.pipe
 import akka.stream.Materializer
 import akka.util.ByteString
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandDispatcher
-import net.katsstuff.ackcord.commands.CommandDispatcher.Command
-import net.katsstuff.ackcord.commands.CommandParser.ParsedCommand
-import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId, Snowflake}
+import net.katsstuff.ackcord.commands.{
+  CommandDescription,
+  CommandDispatcher,
+  CommandFilter,
+  CommandMeta,
+  ParsedCommandActor
+}
+import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId, Message, Snowflake}
 import net.katsstuff.ackcord.example.DataSender.{SendMusic, StartSendMusic, StopSendMusic}
 import net.katsstuff.ackcord.example.MusicHandler.{QueueUrl, StopMusic}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{SendData, silence}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{silence, SendData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.{SetSpeaking, VoiceReady}
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage}
 
 class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer) extends Actor with ActorLogging {
+  implicit val impClient: ClientActor = client
 
   implicit val system: ActorSystem = context.system
   import system.dispatcher
@@ -65,17 +71,14 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     man
   }
 
-  val commandDispatcher: ActorRef = context.actorOf(CommandDispatcher.props(
-    needMention = true,
-    Map(
-      "&" -> Map(
-        "j" -> JoinCommand.props(client, guildId),
-        "s" -> StopCommand.props(self),
-        "q" -> QueueCommand.props(self)
-      )
-    ),
-    CommandErrorHandler.props(client)
-  ), "MusicHandlerCommands")
+  val commands =
+    Seq(JoinCommand.cmdMeta(guildId), StopCommand.cmdMeta(self), QueueCommand.cmdMeta(self))
+
+  val commandDispatcher: ActorRef = context.actorOf(
+    CommandDispatcher
+      .props(needMention = true, CommandMeta.dispatcherMap(commands), CommandErrorHandler.props),
+    "MusicHandlerCommands"
+  )
 
   var player:     AudioPlayer = _
   var sessionId:  String      = _
@@ -186,37 +189,62 @@ object MusicHandler {
   case class QueueUrl(url: String)
 }
 
-class JoinCommand(client: ClientActor, guildId: GuildId) extends Actor with ActorLogging {
-  override def receive: Receive = {
-    case ParsedCommand(_, rawChannel: String, _, _) =>
-      client ! VoiceStateUpdate(
-        VoiceStateUpdateData(guildId, Some(ChannelId(Snowflake(rawChannel))), selfMute = false, selfDeaf = false)
-      )
-      log.info("Joined")
+class JoinCommand(guildId: GuildId)(implicit val client: ClientActor) extends ParsedCommandActor[String] with ActorLogging {
+  override def handleCommand(msg: Message, rawChannel: String, remaining: List[String])(
+      implicit c: CacheSnapshot
+  ): Unit = {
+    client ! VoiceStateUpdate(
+      VoiceStateUpdateData(guildId, Some(ChannelId(Snowflake(rawChannel))), selfMute = false, selfDeaf = false)
+    )
+    log.info("Joined")
   }
 }
 object JoinCommand {
-  def props(client: ClientActor, guildId: GuildId): Props =
-    Props(new JoinCommand(client, guildId))
+  def props(guildId: GuildId)(implicit client: ClientActor): Props =
+    Props(new JoinCommand(guildId))
+  def cmdMeta(guildId: GuildId)(implicit client: ClientActor): CommandMeta[String] =
+    CommandMeta[String](
+      category = ExampleCmdCategories.&,
+      alias = Seq("j", "join"),
+      handler = props(guildId),
+      filters = Seq(CommandFilter.InGuild),
+      description = Some(
+        CommandDescription(name = "Join channel", description = "Makes the bot join a channel", usage = "<channelId>")
+      ),
+    )
 }
 
-class StopCommand(musicHandler: ActorRef) extends Actor {
-  override def receive: Receive = {
-    case Command(_, _, _) => musicHandler ! StopMusic
-  }
+class StopCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
+    musicHandler ! StopMusic
 }
 object StopCommand {
-  def props(musicHandler: ActorRef): Props = Props(new StopCommand(musicHandler))
+  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new StopCommand(musicHandler))
+  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
+      category = ExampleCmdCategories.&,
+      alias = Seq("s", "stop"),
+      handler = props(musicHandler),
+      filters = Seq(CommandFilter.InGuild),
+      description =
+        Some(CommandDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
+    )
 }
 
-class QueueCommand(musicHandler: ActorRef) extends Actor {
-  override def receive: Receive = {
-    case ParsedCommand(_, url: String, _, _) =>
-      musicHandler ! QueueUrl(url)
-  }
+class QueueCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[String] {
+  override def handleCommand(msg: Message, url: String, remaining: List[String])(implicit c: CacheSnapshot): Unit =
+    musicHandler ! QueueUrl(url)
 }
 object QueueCommand {
-  def props(musicHandler: ActorRef): Props = Props(new QueueCommand(musicHandler))
+  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new QueueCommand(musicHandler))
+  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
+      category = ExampleCmdCategories.&,
+      alias = Seq("q", "queue"),
+      handler = props(musicHandler),
+      filters = Seq(CommandFilter.InGuild),
+      description = Some(CommandDescription(name = "Queue music", description = "Set an url as the url to play")),
+    )
 }
 
 class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor with ActorLogging {
