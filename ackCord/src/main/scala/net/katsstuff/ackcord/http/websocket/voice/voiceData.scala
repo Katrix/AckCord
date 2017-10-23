@@ -64,6 +64,7 @@ case class SelectProtocolConnectionData(address: String, port: Int, mode: String
   * @param data  The connection data
   */
 case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionData)
+
 /**
   * Sent by the client when everything else is done.
   * Discord responds with [[SessionDescription]]
@@ -80,6 +81,7 @@ case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProt
   * @param heartbeatInterval Faulty heartbeat interval, should be ignored
   */
 case class ReadyObject(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval: Int)
+
 /**
   * Sent by Discord following [[Identify]]
   */
@@ -167,6 +169,22 @@ case object Resumed extends VoiceMessage[NotUsed] {
 }
 
 /**
+  * Message for OpCode 12, should be ignored
+  */
+case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
+  override def op: VoiceOpCode = VoiceOpCode.Op12Ignore
+  override def d:  NotUsed     = NotUsed
+}
+
+/**
+  * Message for OpCode 13, should be ignored
+  */
+case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
+  override def op: VoiceOpCode = VoiceOpCode.ClientDisconnect
+  override def d:  NotUsed     = NotUsed
+}
+
+/**
   * Voice opcode used by voice websocket
   * @param code The int value of the code
   */
@@ -182,6 +200,7 @@ object VoiceOpCode {
   object Resume             extends VoiceOpCode(7)
   object Hello              extends VoiceOpCode(8)
   object Resumed            extends VoiceOpCode(9)
+  object Op12Ignore         extends VoiceOpCode(12) //This should be ignored
   object ClientDisconnect   extends VoiceOpCode(13)
 
   def forCode(code: Int): Option[VoiceOpCode] = code match {
@@ -195,6 +214,7 @@ object VoiceOpCode {
     case 7  => Some(Resume)
     case 8  => Some(Hello)
     case 9  => Some(Resumed)
+    case 12 => Some(Op12Ignore)
     case 13 => Some(ClientDisconnect)
     case _  => None
   }

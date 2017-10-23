@@ -87,7 +87,8 @@ object VoiceWsProtocol extends DiscordProtocol {
         case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
         case VoiceOpCode.Resume             => mkMsg(Resume)
         case VoiceOpCode.Resumed            => Right(Resumed)
-        case VoiceOpCode.ClientDisconnect   => ??? //We don't know what to do with this
+        case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
+        case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
         case VoiceOpCode.Hello              => dC.downField("heartbeat_interval").as[Int].map(Hello) //Documentation is lying, the data is on the d field
       }
     }

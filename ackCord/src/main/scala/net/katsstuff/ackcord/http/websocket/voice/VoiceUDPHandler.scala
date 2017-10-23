@@ -106,10 +106,14 @@ class VoiceUDPHandler(
   when(Active) {
     case Event(UdpConnected.Received(data), WithSecret(_, secret)) =>
       sendSoundTo.foreach { receiver =>
-        val (header, voice) = data.splitAt(12)
-        val rtpHeader       = RTPHeader(header)
-        val decryptedData   = secret.open(voice.toArray, rtpHeader.asNonce.toArray)
-        receiver ! AudioAPIMessage.ReceivedData(ByteString(decryptedData), rtpHeader, serverId, userId)
+        val (rtpHeader, voice) = RTPHeader.fromBytes(data)
+        if (voice.length >= 16 && rtpHeader.version != -55 && rtpHeader.version != -56) { //FIXME: These break stuff
+          val decryptedData = secret.open(voice.toArray, rtpHeader.asNonce.toArray)
+          if (decryptedData != null) {
+            log.info(s"Received header: $rtpHeader Decrypted voice: ${ByteString(decryptedData)}")
+            receiver ! AudioAPIMessage.ReceivedData(ByteString(decryptedData), rtpHeader, serverId, userId)
+          } else log.info(s"Failed to decrypt voice data Header: $rtpHeader Received voice: $voice")
+        }
       }
       stay()
     case Event(SendData(data), WithSecret(socket, secret)) =>
@@ -243,17 +247,34 @@ object VoiceUDPHandler {
     /**
       * Deserialize an [[RTPHeader]]
       */
-    def apply(bytes: ByteString): RTPHeader = {
-      require(bytes.length >= 12)
+    def fromBytes(bytes: ByteString): (RTPHeader, ByteString) = {
+      val (header, extra) = bytes.splitAt(12)
 
-      val buffer    = bytes.asByteBuffer.order(ByteOrder.BIG_ENDIAN)
+      val buffer    = header.asByteBuffer.order(ByteOrder.BIG_ENDIAN)
       val tpe       = buffer.get()
       val version   = buffer.get()
       val sequence  = buffer.getShort()
       val timestamp = buffer.getInt()
       val ssrc      = buffer.getInt()
-      RTPHeader(tpe, version, sequence, timestamp, ssrc)
+
+      //https://tools.ietf.org/html/rfc5285#section-4.2
+      //I have no idea what this does
+      if (tpe == 0x90 && extra(0) == 0xBE && extra(1) == 0xDE) {
+        val hlen = extra(2) << 8 | extra(3)
+        var i    = 4
+
+        while (i < hlen + 4) {
+          val b   = extra(i)
+          val len = (b & 0x0F) + 1
+          i += (len + 1)
+        }
+        while (extra(i) == 0) i += 1
+
+        val newAudio = extra.drop(i)
+        (RTPHeader(tpe, version, sequence, timestamp, ssrc), newAudio)
+      } else (RTPHeader(tpe, version, sequence, timestamp, ssrc), extra)
     }
+
     def apply(sequence: Short, timestamp: Int, ssrc: Int): RTPHeader =
       RTPHeader(0x80.toByte, 0x78, sequence, timestamp, ssrc)
   }

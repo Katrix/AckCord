@@ -141,7 +141,7 @@ class VoiceWsHandler(
       self ! SendSelectProtocol
       stay using data.copy(ipData = Some(IPData(localAddress, port)))
     case Event(SetSpeaking(speaking), data: WithUDPActor) =>
-      val message = SpeakingData(speaking, None, data.ssrc, None)
+      val message = SpeakingData(speaking, None, data.ssrc, Some(userId))
       val payload = createPayload(Speaking(message))
 
       data.queue.offer(TextMessage(payload))
@@ -210,6 +210,8 @@ class VoiceWsHandler(
     case Event(Right(Speaking(SpeakingData(isSpeaking, delay, ssrc, Some(speakingUserId)))), _) =>
       sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, ssrc, isSpeaking, delay, serverId, userId))
       stay()
+    case Event(Right(IgnoreMessage12), _)        => stay()
+    case Event(Right(IgnoreClientDisconnect), _) => stay()
   }
 
   initialize()
