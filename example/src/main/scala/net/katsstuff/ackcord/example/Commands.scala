@@ -35,14 +35,15 @@ import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
 import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{Request, RequestResponse}
+import net.katsstuff.ackcord.util.RequestFailedResponder
+import net.katsstuff.ackcord.{Request, RequestFailed, RequestResponse}
 
 class PingCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     client ! Request(
       Requests.CreateMessage(msg.channelId, CreateMessageData("Pong", None, tts = false, None, None)),
       NotUsed,
-      None
+      Some(errorResponder)
     )
   }
 }
@@ -68,7 +69,12 @@ class SendFileCommand(implicit val client: ClientActor) extends ParsedCommandAct
 
     msg.tChannel.foreach { tChannel =>
       //Use channel to construct request
-      client ! tChannel.sendMessage("Here is the file", file = Some(Paths.get("theFile.txt")), embed = Some(embed))
+      client ! tChannel.sendMessage(
+        "Here is the file",
+        file = Some(Paths.get("theFile.txt")),
+        embed = Some(embed),
+        sendResponseTo = Some(errorResponder)
+      )
     }
   }
 }
@@ -138,6 +144,7 @@ class InfoCommandHandler(implicit client: ClientActor) extends Actor with ActorL
       }
 
       log.info(res.toString)
+    case RequestFailed(e, _) => throw e
   }
 }
 object InfoCommandHandler {

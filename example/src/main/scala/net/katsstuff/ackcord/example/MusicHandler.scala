@@ -46,7 +46,7 @@ import net.katsstuff.ackcord.commands.{
   CommandMeta,
   ParsedCommandActor
 }
-import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId, Message, Snowflake}
+import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId, Message, Snowflake, UserId, VoiceState}
 import net.katsstuff.ackcord.example.DataSender.{SendMusic, StartSendMusic, StopSendMusic}
 import net.katsstuff.ackcord.example.MusicHandler.{QueueUrl, StopMusic}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
@@ -55,6 +55,8 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{silence, Send
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.{SetSpeaking, VoiceReady}
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage}
+import net.katsstuff.ackcord.syntax._
+import sun.plugin.dom.exception.InvalidStateException
 
 class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer) extends Actor with ActorLogging {
   implicit val impClient: ClientActor = client
@@ -189,21 +191,36 @@ object MusicHandler {
   case class QueueUrl(url: String)
 }
 
-class JoinCommand(guildId: GuildId)(implicit val client: ClientActor) extends ParsedCommandActor[String] with ActorLogging {
-  override def handleCommand(msg: Message, rawChannel: String, remaining: List[String])(
-      implicit c: CacheSnapshot
-  ): Unit = {
-    client ! VoiceStateUpdate(
-      VoiceStateUpdateData(guildId, Some(ChannelId(Snowflake(rawChannel))), selfMute = false, selfDeaf = false)
-    )
-    log.info("Joined")
+class JoinCommand(guildId: GuildId)(implicit val client: ClientActor)
+    extends ParsedCommandActor[NotUsed]
+    with ActorLogging {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+
+    val gOpt = for {
+      guildChannel <- msg.tGuildChannel
+      guild        <- guildChannel.guild
+    } yield (guildChannel, guild)
+
+    gOpt match {
+      case Some((guildChannel, guild)) =>
+        guild.voiceStateFor(UserId(msg.author.id)) match {
+          case Some(VoiceState(_, Some(channelId), _, _, _, _, _, _, _)) =>
+            client ! VoiceStateUpdate(
+              VoiceStateUpdateData(guildId, Some(channelId), selfMute = false, selfDeaf = false)
+            )
+            log.info("Joined")
+          case _ => client ! guildChannel.sendMessage("Not in a voice channel")
+        }
+
+      case None => throw new InvalidStateException("No guild for guild command")
+    }
   }
 }
 object JoinCommand {
   def props(guildId: GuildId)(implicit client: ClientActor): Props =
     Props(new JoinCommand(guildId))
-  def cmdMeta(guildId: GuildId)(implicit client: ClientActor): CommandMeta[String] =
-    CommandMeta[String](
+  def cmdMeta(guildId: GuildId)(implicit client: ClientActor): CommandMeta[NotUsed] =
+    CommandMeta[NotUsed](
       category = ExampleCmdCategories.&,
       alias = Seq("j", "join"),
       handler = props(guildId),
