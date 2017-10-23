@@ -544,7 +544,7 @@ object GatewayEvent {
   object VoiceStateUpdate
       extends GatewayEvent[VoiceState](
         "VOICE_STATUS_UPDATE",
-        notImplementedHandler,
+        Handlers.voiceStateUpdateHandler,
         data => (current, prev) => Some(APIMessage.VoiceStateUpdate(data, current, prev))
       )
 

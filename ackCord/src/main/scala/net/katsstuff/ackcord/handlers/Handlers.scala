@@ -76,6 +76,20 @@ trait Handlers {
     builder.botUser = tag[BotUser](obj)
   }
 
+  implicit val voiceStateUpdateHandler: CacheUpdateHandler[VoiceState] = updateHandler { (builder, obj, log) =>
+    val optGuild = obj.guildId
+      .toRight("Can't handle VoiceState update with missing guild")
+      .flatMap(builder.getGuild(_).toRight(s"No guild found for voice state $obj"))
+
+    optGuild match {
+      case Right(guild) =>
+        val newVoiceStates =
+          obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates + ((obj.userId, obj)))
+        builder.guilds.put(guild.id, guild.copy(voiceStates = newVoiceStates))
+      case Left(e) => log.warning(e)
+    }
+  }
+
   //Delete
   implicit val dmChannelDeleteHandler: CacheDeleteHandler[DMChannel] = deleteHandler(
     (builder, obj, _) => builder.dmChannels.remove(obj.id)

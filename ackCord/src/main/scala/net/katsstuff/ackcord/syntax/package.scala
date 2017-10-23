@@ -498,6 +498,8 @@ package object syntax {
       sendResponseTo
     )
 
+    def voiceStateFor(userId: UserId): Option[VoiceState] = guild.voiceStates.get(userId)
+
     def fetchAuditLog[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
       Request(GetGuildAuditLog(guild.id), context, sendResponseTo)
 

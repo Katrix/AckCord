@@ -168,7 +168,7 @@ object RawHandlers extends Handlers {
       joinedAt = obj.joinedAt.orElse(oldGuild.map(_.joinedAt)).get,
       large = obj.large.orElse(oldGuild.map(_.large)).get,
       memberCount = obj.memberCount.orElse(oldGuild.map(_.memberCount)).get,
-      voiceStates = obj.voiceStates.orElse(oldGuild.map(_.voiceStates)).get,
+      voiceStates = obj.voiceStates.map(_.map(v => v.userId -> v).toMap).orElse(oldGuild.map(_.voiceStates)).get,
       members = members.toMap,
       channels = Map.empty,
       presences = presences.map(p => p.userId -> p).toMap

@@ -134,7 +134,7 @@ case class Guild(
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
-    voiceStates: Seq[VoiceState], //guildId is always absent in these
+    voiceStates: Map[UserId, VoiceState], //guildId is absent in those received in GuildCreate
     members: Map[UserId, GuildMember],
     channels: Map[ChannelId, GuildChannel],
     presences: Map[UserId, Presence]
