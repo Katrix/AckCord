@@ -56,9 +56,8 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
   import GatewayHandler._
   import GatewayProtocol._
 
-  private implicit val system:  ActorSystem      = context.system
-
-  import system.dispatcher
+  private implicit val system:  ActorSystem = context.system
+  import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     Flow[Message]

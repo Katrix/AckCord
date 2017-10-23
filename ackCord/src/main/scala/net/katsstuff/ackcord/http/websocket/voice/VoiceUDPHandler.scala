@@ -57,7 +57,7 @@ class VoiceUDPHandler(
   import VoiceUDPHandler._
 
   implicit val system: ActorSystem = context.system
-  import system.dispatcher
+  import context.dispatcher
 
   IO(UdpConnected) ! UdpConnected.Connect(self, new InetSocketAddress(address, port))
 

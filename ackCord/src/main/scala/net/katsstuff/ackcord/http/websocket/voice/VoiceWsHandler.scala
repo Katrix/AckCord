@@ -67,7 +67,7 @@ class VoiceWsHandler(
   import VoiceWsProtocol._
 
   private implicit val system: ActorSystem = context.system
-  import system.dispatcher
+  import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
     Flow[Message]

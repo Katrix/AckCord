@@ -49,10 +49,10 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
     extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
   import AbstractWsHandler._
 
-  private implicit val system:  ActorSystem      = context.system
+  private implicit val system: ActorSystem = context.system
   private var sendFirstSinkAck: Option[ActorRef] = None
 
-  import system.dispatcher
+  import context.dispatcher
 
   startWith(Inactive, WithResumeData(None))
 
