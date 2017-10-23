@@ -23,21 +23,39 @@
  */
 package net.katsstuff.ackcord.commands
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef, Status}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CommandDispatcher.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.syntax._
+import net.katsstuff.ackcord.util.RequestFailedResponder
 import shapeless.{TypeCase, Typeable}
 
-import net.katsstuff.ackcord.syntax._
+/**
+  * Base trait common to all command actors.
+  */
+trait BaseCommandActor extends Actor {
+
+  /**
+    * Create a new [[RequestFailedResponder]]. Useful for detecting errors.
+    */
+  def errorResponder: ActorRef = context.actorOf(RequestFailedResponder.props(self))
+
+  /**
+    * Handle a potential error comming from for example using [[errorResponder]].
+    * @param e The exception
+    */
+  def handleFailure(e: Throwable): Unit = throw e
+}
 
 /**
-  * An actor that handles a command. Use for clarity, and implicit snapshot.
+  * An actor that handles a command and potential errors. Use for clarity, and implicit snapshot.
   */
-trait CommandActor extends Actor {
+trait CommandActor extends BaseCommandActor {
   override def receive: Receive = {
     case Command(msg, args, c) => handleCommand(msg, args)(c)
+    case Status.Failure(e)     => handleFailure(e)
   }
 
   /**
@@ -51,13 +69,13 @@ trait CommandActor extends Actor {
 }
 
 /**
-  * An actor that handles a parsed command. Use for clarity, error handling,
-  * and implicit snapshot.
+  * An actor that handles a parsed command and potential errors. Use for clarity,
+  * error handling, and implicit snapshot.
   * @param typeable A typeable of the expected arg type. Used to make sure
   *                 that a the correct type is received.
   * @tparam A The arg type
   */
-abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Actor {
+abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends BaseCommandActor {
 
   def client: ClientActor
 
@@ -78,4 +96,13 @@ abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Act
     * @param c The current cache
     */
   def handleCommand(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot): Unit
+
+  /**
+    * Handle a parse error during a command. Default behavior is to send the error back to the user.
+    * @param msg The message
+    * @param e The error message from the parser
+    * @param c The current cache
+    */
+  def handleParseError(msg: Message, e: String)(implicit c: CacheSnapshot): Unit =
+    msg.tChannel.foreach(client ! _.sendMessage(e))
 }
