@@ -236,6 +236,8 @@ class RESTResponder(
   import RESTResponder._
   import context.dispatcher
 
+  implicit val system: ActorSystem = context.system
+
   override def receive: Receive = {
     case InitSink =>
       sender() ! AckSink
