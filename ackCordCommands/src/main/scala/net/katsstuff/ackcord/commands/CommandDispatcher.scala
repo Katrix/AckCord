@@ -39,7 +39,9 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param initialCommands The initial commands this dispatcher should start with.
   *                        The first map is a map for the category. The second
   *                        map is for the command name itself.
-  * @param errorHandlerProps Props for the actor to send all invalid commands to
+  * @param errorHandlerProps Props for the actor to send all invalid commands to.
+  *                          Here you can roll your own, or you can base it of
+  *                          [[CommandErrorHandler]].
   */
 class CommandDispatcher(
     needMention: Boolean,
