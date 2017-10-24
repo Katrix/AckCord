@@ -79,8 +79,7 @@ class DiscordClient(gatewayWsUri: Uri, token: String, eventStream: EventStream, 
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
     case Terminated(act) =>
       shutdownCount += 1
-      log.info(s"Actor shut down: ${act.path}")
-      log.info(s"Shutdown count: $shutdownCount")
+      log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
       if (shutdownCount == 2) {
         system.terminate()
       }
@@ -128,7 +127,7 @@ object DiscordClient extends FailFastCirceSupport {
       .flatMap { json =>
         json.hcursor.get[String]("url") match {
           case Right(gateway) =>
-            http.system.log.info(s"Got WS gateway: $gateway")
+            http.system.log.info("Got WS gateway: {}", gateway)
             Future.successful(gateway)
           case Left(e) => Future.failed(e)
         }

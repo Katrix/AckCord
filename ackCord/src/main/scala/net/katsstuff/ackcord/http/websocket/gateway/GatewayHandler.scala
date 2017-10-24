@@ -39,6 +39,7 @@ import io.circe.parser
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
+import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSettings}
 
 /**
@@ -50,23 +51,28 @@ import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSett
   * @param settings The settings to use
   * @param mat The [[Materializer]] to use
   */
-class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(implicit mat: Materializer)
-    extends AbstractWsHandler[GatewayMessage, ResumeData](wsUri) {
+class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(
+    implicit mat: Materializer
+) extends AbstractWsHandler[GatewayMessage, ResumeData](wsUri) {
   import AbstractWsHandler._
   import GatewayHandler._
   import GatewayProtocol._
 
-  private implicit val system:  ActorSystem = context.system
+  private implicit val system: ActorSystem = context.system
   import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
-    Flow[Message]
+    val jsonFlow = Flow[Message]
       .collect {
         case t: TextMessage => t.textStream.fold("")(_ + _)
       }
       .flatMapConcat(identity)
-      .log("Received payload")
-      .map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
+
+    val withLogging = if (AckCordSettings().LogReceivedWs) {
+      jsonFlow.log("Received payload")
+    } else jsonFlow
+
+    withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 
   def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))

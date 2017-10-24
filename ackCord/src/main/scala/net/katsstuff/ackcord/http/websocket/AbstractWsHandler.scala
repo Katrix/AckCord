@@ -37,6 +37,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import io.circe
 import io.circe.syntax._
 import io.circe.{Encoder, Error}
+import net.katsstuff.ackcord.util.AckCordSettings
 
 /**
   * An abstract websocket handler. Handles going from inactive to active, and termination
@@ -76,7 +77,9 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
     */
   def createPayload[A](msg: WsMessage[A])(implicit encoder: Encoder[WsMessage[A]]): String = {
     val payload = msg.asJson.noSpaces
-    log.debug(s"Sending payload: $payload")
+    if(AckCordSettings().LogSentWs) {
+      log.debug("Sending payload: {}", payload)
+    }
     payload
   }
 
@@ -94,7 +97,7 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
         onCompleteMessage = CompletedSink
       )
 
-      log.info(s"WS uri: ${wsParams(wsUri)}")
+      log.debug("WS uri: {}", wsParams(wsUri))
       val (queue, future) = src.viaMat(wsFlow(wsParams(wsUri)))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
 
       future.foreach {
@@ -103,7 +106,7 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
           queue.complete()
           throw new IllegalStateException(s"Could not connect to gateway: $cause")
         case ValidUpgrade(response, _) =>
-          log.info(s"Valid login: ${response.entity.toString}")
+          log.debug("Valid login: {}", response.entity.toString)
           response.discardEntityBytes()
           self ! ValidWsUpgrade
       }

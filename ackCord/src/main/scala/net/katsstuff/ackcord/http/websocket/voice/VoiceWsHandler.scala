@@ -39,6 +39,7 @@ import net.katsstuff.ackcord.data.{Snowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}
+import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
 
 /**
@@ -70,14 +71,19 @@ class VoiceWsHandler(
   import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
-    Flow[Message]
+    val jsonFlow = Flow[Message]
       .collect {
         case t: TextMessage => t.textStream.fold("")(_ + _)
       }
       .flatMapConcat(identity)
-      .log("Received payload")
-      .map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
+
+    val withLogging = if (AckCordSettings().LogReceivedWs) {
+      jsonFlow.log("Received payload")
+    } else jsonFlow
+
+    withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
+
   override def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
   onTransition {

@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
@@ -39,13 +39,8 @@ import akka.stream.{Materializer, OverflowStrategy, QueueOfferResult}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.http.Routes
-import net.katsstuff.ackcord.http.rest.RESTHandler.{
-  HandleRateLimitAndRetry,
-  ProcessedRequest,
-  RateLimitStop,
-  RemoveRateLimit,
-  UpdateRateLimit
-}
+import net.katsstuff.ackcord.http.rest.RESTHandler.{HandleRateLimitAndRetry, ProcessedRequest, RateLimitStop, RemoveRateLimit, UpdateRateLimit}
+import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request, RequestFailed, RequestResponse}
 
 /**
@@ -65,12 +60,13 @@ class RESTHandler(
     extends Actor
     with ActorLogging {
 
+  implicit val system: ActorSystem = context.system
   import context.dispatcher
 
   val responder: ActorRef = context.actorOf(RESTResponder.props(self, responseProcessor, responseFunc), "RESTResponder")
 
   private val requestQueue = {
-    val poolClientFlow = Http(context.system).cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]](Routes.discord)
+    val poolClientFlow = Http().cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]](Routes.discord)
     val responderSink = Sink.actorRefWithAck[(Try[HttpResponse], ProcessedRequest[_, _, _])](
       ref = responder,
       onInitMessage = RESTResponder.InitSink,
@@ -111,14 +107,16 @@ class RESTHandler(
       val route       = request.route
       val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.createBody)
 
-      log.debug(s"Sending request $httpRequest to ${route.uri} with method ${route.method}")
+      if(AckCordSettings().LogSentREST) {
+        log.debug("Sending request {} to {} with method {}", request.toJsonParams.noSpaces, route.uri, route.method)
+      }
 
       queueRequest(httpRequest, request, contextual, sendResponseTo)
     case Status.Failure(e) => throw e
     //If we get here then the request is rate limited
     case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
       val duration = rateLimits.get(request.route.uri).map(_._1).getOrElse(0)
-      context.system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
+      system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
   }
 
   def onGlobalRateLimit: Receive = {
@@ -143,7 +141,7 @@ class RESTHandler(
     } {
       val retryInt = retry.value().toInt
       rateLimits.update(uri, (retryInt, rateLimits.get(uri).map(_._2).getOrElse(mutable.Queue.empty)))
-      context.system.scheduler.scheduleOnce(retryInt.millis, self, RemoveRateLimit(uri))
+      system.scheduler.scheduleOnce(retryInt.millis, self, RemoveRateLimit(uri))
     }
   }
 
@@ -156,13 +154,13 @@ class RESTHandler(
         .orElse(headers.find(_.is("X-RateLimit-Reset")).map(_.value().toLong - System.currentTimeMillis())) match {
         case Some(duration) =>
           context.become(onGlobalRateLimit, discardOld = false)
-          context.system.scheduler.scheduleOnce(duration.millis, self, RateLimitStop)
+          system.scheduler.scheduleOnce(duration.millis, self, RateLimitStop)
         case None => log.error("No retry time for global rate limit")
       }
     } else {
       headers
         .find(_.is("Retry-After"))
-        .foreach(time => context.system.scheduler.scheduleOnce(time.value.toLong.millis, self, retryMsg))
+        .foreach(time => system.scheduler.scheduleOnce(time.value.toLong.millis, self, retryMsg))
     }
   }
 
@@ -261,7 +259,9 @@ class RESTResponder(
         Unmarshal(entity)
           .to[Json]
           .flatMap { json =>
-            log.debug(s"Received response: ${json.noSpaces}")
+            if(AckCordSettings().LogReceivedREST) {
+              log.debug("Received response: {}", json.noSpaces)
+            }
             Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)
           }
           .onComplete {
@@ -273,7 +273,7 @@ class RESTResponder(
               sendTo.foreach(_ ! RequestFailed(e, ctx))
           }
       } else {
-        log.warning(s"Unexpected response code ${response.intValue()} for $request")
+        log.warning("Unexpected response code {} for {}", response.intValue, request)
         entity.discardBytes()
         sendTo.foreach(
           _ ! RequestFailed(new IllegalStateException(s"Unexpected response code ${response.intValue()}"), ctx)
@@ -281,7 +281,7 @@ class RESTResponder(
       }
       sender() ! AckSink
     case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
-      log.error(s"Server error $intValue ${e.reason}")
+      log.error("Server error {} {}", intValue, e.reason)
       entity.toStrict(1.seconds).onComplete {
         case Success(ent) => log.error(ent.toString())
         case Failure(_)   => entity.discardBytes()
@@ -289,7 +289,7 @@ class RESTResponder(
       sender() ! AckSink
       sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Server error: $intValue"), ctx))
     case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
-      log.error(s"Client error $intValue: ${e.reason}")
+      log.error("Client error {}: {}", intValue, e.reason)
       entity.discardBytes()
       sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Client error: $intValue"), ctx))
     case (Failure(e), ProcessedRequest(_, ctx, sendTo)) =>

@@ -77,7 +77,7 @@ class VoiceUDPHandler(
     case Event(ip: DoIPDiscovery, NoSocket)      =>
       //We received the request a bit early, resend it
       system.scheduler.scheduleOnce(100.millis, self, ip)
-      log.info("Resending DoIPDiscovery request")
+      log.debug("Resending DoIPDiscovery request")
       stay()
     case Event(ip: DoIPDiscovery, WithSocket(socket)) =>
       val payload = ByteString(ssrc).padTo(70, 0.toByte)
@@ -110,9 +110,9 @@ class VoiceUDPHandler(
         if (voice.length >= 16 && rtpHeader.version != -55 && rtpHeader.version != -56) { //FIXME: These break stuff
           val decryptedData = secret.open(voice.toArray, rtpHeader.asNonce.toArray)
           if (decryptedData != null) {
-            log.info(s"Received header: $rtpHeader Decrypted voice: ${ByteString(decryptedData)}")
-            receiver ! AudioAPIMessage.ReceivedData(ByteString(decryptedData), rtpHeader, serverId, userId)
-          } else log.info(s"Failed to decrypt voice data Header: $rtpHeader Received voice: $voice")
+            val byteStringDecrypted = ByteString(decryptedData)
+            receiver ! AudioAPIMessage.ReceivedData(byteStringDecrypted, rtpHeader, serverId, userId)
+          } else log.error("Failed to decrypt voice data Header: {} Received voice: {}", rtpHeader, voice)
         }
       }
       stay()
