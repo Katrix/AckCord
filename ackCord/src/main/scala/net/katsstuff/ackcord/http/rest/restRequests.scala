@@ -93,12 +93,12 @@ object Requests {
   case class ModifyChannelData(
       name: String,
       position: Int,
-      topic: Option[String],
-      nsfw: Option[Boolean],
-      bitrate: Option[Int],
-      userLimit: Option[Int],
-      permissionOverwrites: Seq[PermissionOverwrite],
-      parentId: Option[ChannelId]
+      topic: Option[String] = None,
+      nsfw: Option[Boolean] = None,
+      bitrate: Option[Int] = None,
+      userLimit: Option[Int] = None,
+      permissionOverwrites: Seq[PermissionOverwrite] = Seq.empty,
+      parentId: Option[ChannelId] = None
   )
   case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData)
       extends SimpleRESTRequest[ModifyChannelData, RawChannel] {
@@ -115,10 +115,10 @@ object Requests {
   }
 
   case class GetChannelMessagesData(
-      around: Option[MessageId],
-      before: Option[MessageId],
-      after: Option[MessageId],
-      limit: Option[Int]
+      around: Option[MessageId] = None,
+      before: Option[MessageId] = None,
+      after: Option[MessageId] = None,
+      limit: Option[Int] = None
   ) {
     require(Seq(around, before, after).count(_.isDefined) <= 1)
   }
@@ -139,10 +139,10 @@ object Requests {
 
   case class CreateMessageData(
       content: String,
-      nonce: Option[Snowflake],
-      tts: Boolean,
-      file: Option[Path],
-      embed: Option[OutgoingEmbed]
+      nonce: Option[Snowflake] = None,
+      tts: Boolean = false,
+      file: Option[Path] = None,
+      embed: Option[OutgoingEmbed] = None
   ) {
     file.foreach(path => require(Files.isRegularFile(path)))
   }
@@ -196,7 +196,7 @@ object Requests {
     override def route: RestRoute = Routes.deleteAllReactions(messageId, channelId)
   }
 
-  case class EditMessageData(content: Option[String], embed: Option[OutgoingEmbed]) {
+  case class EditMessageData(content: Option[String] = None, embed: Option[OutgoingEmbed] = None) {
     require(content.forall(_.length < 2000))
   }
   case class EditMessage(channelId: ChannelId, messageId: MessageId, params: EditMessageData)
@@ -351,15 +351,15 @@ object Requests {
   }
 
   case class ModifyGuildData(
-      name: Option[String],
-      region: Option[String],
-      verificationLevel: Option[VerificationLevel],
-      defaultMessageNotification: Option[NotificationLevel],
-      afkChannelId: Option[ChannelId],
-      afkTimeout: Option[Int],
-      icon: Option[String],
-      ownerId: Option[UserId],
-      splash: Option[String]
+      name: Option[String] = None,
+      region: Option[String] = None,
+      verificationLevel: Option[VerificationLevel] = None,
+      defaultMessageNotification: Option[NotificationLevel] = None,
+      afkChannelId: Option[ChannelId] = None,
+      afkTimeout: Option[Int] = None,
+      icon: Option[String] = None,
+      ownerId: Option[UserId] = None,
+      splash: Option[String] = None
   )
   case class ModifyGuild(guildId: GuildId, params: ModifyGuildData)
       extends SimpleRESTRequest[ModifyGuildData, RawGuild] {
@@ -382,12 +382,12 @@ object Requests {
 
   case class CreateGuildChannelData(
       name: String,
-      `type`: Option[ChannelType],
-      bitrate: Option[Int],
-      userLimit: Option[Int],
-      permissionOverwrites: Option[Seq[PermissionOverwrite]],
-      parentId: Option[ChannelId],
-      nsfw: Option[Boolean]
+      `type`: Option[ChannelType] = None,
+      bitrate: Option[Int] = None,
+      userLimit: Option[Int] = None,
+      permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
+      parentId: Option[ChannelId] = None,
+      nsfw: Option[Boolean] = None
   )
   case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData)
       extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
@@ -429,7 +429,7 @@ object Requests {
     override def route:         RestRoute        = Routes.getGuildMember(userId, guildId)
   }
 
-  case class ListGuildMembersData(limit: Option[Int], after: Option[UserId])
+  case class ListGuildMembersData(limit: Option[Int] = None, after: Option[UserId] = None)
   case class ListGuildMembers(guildId: GuildId, params: ListGuildMembersData)
       extends GuildMemberRequest[ListGuildMembersData] {
     override def route:         RestRoute                     = Routes.listGuildMembers(guildId)
@@ -438,10 +438,10 @@ object Requests {
 
   case class AddGuildMemberData(
       accessToken: String,
-      nick: Option[String],
-      roles: Option[Seq[RoleId]],
-      mute: Option[Boolean],
-      deaf: Option[Boolean]
+      nick: Option[String] = None,
+      roles: Option[Seq[RoleId]] = None,
+      mute: Option[Boolean] = None,
+      deaf: Option[Boolean] = None
   )
   case class AddGuildMember(guildId: GuildId, userId: UserId, params: AddGuildMemberData)
       extends GuildMemberRequest[AddGuildMemberData] {
@@ -451,11 +451,11 @@ object Requests {
   }
 
   case class ModifyGuildMemberData(
-      nick: Option[String],
-      roles: Option[Seq[RoleId]],
-      mute: Option[Boolean],
-      deaf: Option[Boolean],
-      channelId: Option[ChannelId]
+      nick: Option[String] = None,
+      roles: Option[Seq[RoleId]] = None,
+      mute: Option[Boolean] = None,
+      deaf: Option[Boolean] = None,
+      channelId: Option[ChannelId] = None
   )
   case class ModifyGuildMember(guildId: GuildId, userId: UserId, params: ModifyGuildMemberData)
       extends NoResponseRequest[ModifyGuildMemberData] {
@@ -525,11 +525,11 @@ object Requests {
   }
 
   case class CreateGuildRoleData(
-      name: Option[String],
-      permissions: Option[Permission],
-      color: Option[Int],
-      hoist: Option[Boolean],
-      mentionable: Option[Boolean]
+      name: Option[String] = None,
+      permissions: Option[Permission] = None,
+      color: Option[Int] = None,
+      hoist: Option[Boolean] = None,
+      mentionable: Option[Boolean] = None
   )
   case class CreateGuildRole(guildId: GuildId, params: CreateGuildRoleData)
       extends ComplexRESTRequest[CreateGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
@@ -557,11 +557,11 @@ object Requests {
   }
 
   case class ModifyGuildRoleData(
-      name: Option[String],
-      permissions: Option[Permission],
-      color: Option[Int],
-      hoist: Option[Boolean],
-      mentionable: Option[Boolean]
+      name: Option[String] = None,
+      permissions: Option[Permission] = None,
+      color: Option[Int] = None,
+      hoist: Option[Boolean] = None,
+      mentionable: Option[Boolean] = None
   )
   case class ModifyGuildRole(guildId: GuildId, roleId: RoleId, params: ModifyGuildRoleData)
       extends ComplexRESTRequest[ModifyGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
@@ -680,7 +680,7 @@ object Requests {
     override def handleResponse:  CacheHandler[User] = Handlers.userUpdateHandler
   }
 
-  case class GetCurrentUserGuildsData(before: Option[GuildId], after: Option[GuildId], limit: Int = 100)
+  case class GetCurrentUserGuildsData(before: Option[GuildId] = None, after: Option[GuildId] = None, limit: Int = 100)
   case class GetCurrentUserGuilds(params: GetCurrentUserGuildsData)
       extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[RawGuild]] {
     override def route:           RestRoute                         = Routes.getCurrentUserGuilds
@@ -766,7 +766,7 @@ object Requests {
     override def handleResponse:  CacheHandler[Webhook] = new NOOPHandler[Webhook]
   }
 
-  case class ModifyWebhookData(name: Option[String], avatar: Option[ImageData])
+  case class ModifyWebhookData(name: Option[String] = None, avatar: Option[ImageData] = None)
   case class ModifyWebhook(id: Snowflake, params: ModifyWebhookData)
       extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
     override def route:           RestRoute                  = Routes.getWebhook(id)
