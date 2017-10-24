@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord
 
+import akka.actor.ActorRef
 import akka.util.ByteString
 import net.katsstuff.ackcord.data.{Snowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.RTPHeader
@@ -54,6 +55,12 @@ object AudioAPIMessage {
     */
   case class UserSpeaking(speakingUserId: UserId, ssrc: Int, isSpeaking: Boolean, delay: Option[Int], serverId: Snowflake, userId: UserId)
       extends AudioAPIMessage
+
+  /**
+    * Sent to the listener when everything is ready to send voice data.
+    * @param udpHandler The udp handler. Used for sending data.
+    */
+  case class Ready(udpHandler: ActorRef, serverId: Snowflake, userId: UserId) extends AudioAPIMessage
 
   /**
     * Sent to the data receiver when a user speaks.

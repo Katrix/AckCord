@@ -121,7 +121,7 @@ class VoiceWsHandler(
       val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
       val payload     = createPayload(SelectProtocol(protocolObj))
       queue.offer(TextMessage(payload))
-      sendTo.foreach(_ ! VoiceReady(connection))
+      sendTo.foreach(_ ! AudioAPIMessage.Ready(connection, serverId, userId))
       stay()
     case Event(SendHeartbeat, data @ WithUDPActor(_, _, receivedAck, _, _, _, queue, _)) =>
       if (receivedAck) {
@@ -237,12 +237,6 @@ object VoiceWsHandler {
   private case object SendIdentify
   private case object SendSelectProtocol
   private case object ConnectionDied
-
-  /**
-    * Sent to the listener when everything is ready to send voice data.
-    * @param udpHandler The udp handler. Used for sending data.
-    */
-  case class VoiceReady(udpHandler: ActorRef)
 
   /**
     * Sent to [[VoiceWsHandler]]. Used to set the client as speaking or not.
