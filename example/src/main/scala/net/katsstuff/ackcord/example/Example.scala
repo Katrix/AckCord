@@ -27,6 +27,7 @@ import akka.actor.ActorSystem
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandMeta}
+import net.katsstuff.ackcord.example.music.MusicHandler
 import net.katsstuff.ackcord.util.GuildDispatcher
 import net.katsstuff.ackcord.{APIMessage, DiscordClient, DiscordClientSettings}
 
@@ -59,7 +60,7 @@ object Example {
       val commandDispatcher = CommandDispatcher.props(
         needMention = true,
         CommandMeta.dispatcherMap(commands), //This method on CommandMeta wires up our command handling for us
-        CommandErrorHandler.props
+        ExampleErrorHandler.props
       )
 
       //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher

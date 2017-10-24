@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.commands.CommandDispatcher.{NoCommand, UnknownCommand}
-import net.katsstuff.ackcord.commands.{CommandDescription, CommandMeta, ParsedCommandActor}
+import net.katsstuff.ackcord.commands.{CommandDescription, CommandErrorHandler, CommandMeta, ParsedCommandActor}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
@@ -168,16 +168,11 @@ object KillCommand {
     )
 }
 
-class CommandErrorHandler(implicit client: ClientActor) extends Actor {
-  override def receive: Receive = {
-    case NoCommand(msg, c) =>
-      implicit val cache: CacheSnapshot = c
-      msg.tChannel.foreach(client ! _.sendMessage(s"No command specified."))
-    case UnknownCommand(msg, args, c) =>
-      implicit val cache: CacheSnapshot = c
-      msg.tChannel.foreach(client ! _.sendMessage(s"No command named ${args.head} known"))
-  }
+class ExampleErrorHandler(implicit val client: ClientActor) extends CommandErrorHandler {
+  override def noCommandReply(msg: Message)(implicit c: CacheSnapshot) = CreateMessageData("No command specified")
+  override def unknownCommandReply(msg: Message, args: List[String])(implicit c: CacheSnapshot) =
+    CreateMessageData(s"No command named ${args.head} known")
 }
-object CommandErrorHandler {
-  def props(implicit client: ClientActor): Props = Props(new CommandErrorHandler)
+object ExampleErrorHandler {
+  def props(implicit client: ClientActor): Props = Props(new ExampleErrorHandler)
 }
