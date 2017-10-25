@@ -25,20 +25,17 @@ package net.katsstuff.ackcord.example.music
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 
-import scala.concurrent.duration._
-
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{silence, SendData}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{SendData, SendDataBurst, silence}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor with ActorLogging {
   import DataSender._
 
   implicit val system: ActorSystem = context.system
-  import context.dispatcher
 
   var future: ScheduledFuture[_] = _
   var isSpeaking = false
@@ -72,9 +69,7 @@ class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
       if (future != null) {
         setSpeaking(false)
         log.info("Stopping to send audio")
-        for (i <- 1 to 5) {
-          system.scheduler.scheduleOnce(i * 20.millis, udpHandler, SendData(silence))
-        }
+        udpHandler ! SendDataBurst(Seq.fill(5)(silence))
 
         future.cancel(false)
         future = null

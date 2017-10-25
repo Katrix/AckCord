@@ -108,7 +108,10 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(AudioAPIMessage.Ready(udpHandler, _, _), HasVoiceWs(voiceWs, vChannelId)) =>
       log.info("Audio ready")
       voiceWs ! SetSpeaking(true)
-      val dataSender = context.actorOf(DataSender.props(player, udpHandler, voiceWs), "DataSender")
+      val dataSender =
+        if (MusicHandler.UseBurstingSender)
+          context.actorOf(BurstingDataSender.props(player, udpHandler, voiceWs), "BurstingDataSender")
+        else context.actorOf(DataSender.props(player, udpHandler, voiceWs), "DataSender")
       nextTrack(dataSender)
       goto(Active) using CanSendAudio(voiceWs, dataSender, vChannelId)
     case Event(QueueUrl(url, tChannel, vChannelId), con @ Connecting(_, _, _, None)) =>
@@ -118,12 +121,12 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       MusicHandler.loadItem(url).pipeTo(self)
       stay using con.copy(vChannelId = Some(vChannelId))
     case Event(QueueUrl(url, tChannel, vChannelId), Connecting(_, _, _, Some(inVChannelId))) =>
-      if(vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
+      if (vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
       else tChannel.sendMessage("Currently joining different channel")
       stay()
       stay()
     case Event(QueueUrl(url, tChannel, vChannelId), HasVoiceWs(_, inVChannelId)) =>
-      if(vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
+      if (vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
       else tChannel.sendMessage("Currently joining different channel")
       stay()
     case Event(e: MusicHandlerEvents, _) =>
@@ -165,12 +168,11 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       goto(Inactive) using Connecting(None, None, None, None)
     case Event(QueueUrl(url, tChannel, vChannelId), CanSendAudio(_, _, inVChannelId)) =>
       log.info("Received queue item")
-      if(vChannelId == inVChannelId) {
+      if (vChannelId == inVChannelId) {
         lastTChannel = tChannel
         MusicHandler.loadItem(url).pipeTo(self)
         stay()
-      }
-      else {
+      } else {
         tChannel.sendMessage("Currently playing music for different channel")
         stay()
       }
@@ -195,13 +197,11 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
           .foreach(queueTrack(Some(dataSender), _))
       } else queueTracks(Some(dataSender), playlist.getTracks.asScala: _*)
       stay()
-    case Event(_: PlayerPauseEvent, CanSendAudio(_, dataSender, _)) =>
+    case Event(_: PlayerPauseEvent, _) =>
       log.info("Paused")
-      dataSender ! StopSendAudio
       stay()
-    case Event(_: PlayerResumeEvent, CanSendAudio(_, dataSender, _)) =>
+    case Event(_: PlayerResumeEvent, _) =>
       log.info("Resumed")
-      dataSender ! StartSendAudio
       stay()
     case Event(e: TrackStartEvent, _) =>
       client ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}", sendResponseTo = Some(errorResponder))
@@ -289,6 +289,8 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
 object MusicHandler {
   def props(client: ClientActor)(guildId: GuildId)(implicit mat: Materializer): Props =
     Props(new MusicHandler(client, guildId))
+
+  final val UseBurstingSender = true
 
   sealed trait MusicState
   case object Inactive extends MusicState
