@@ -50,7 +50,7 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
     extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
   import AbstractWsHandler._
 
-  private implicit val system: ActorSystem = context.system
+  private implicit val system:  ActorSystem      = context.system
   private var sendFirstSinkAck: Option[ActorRef] = None
 
   import context.dispatcher
@@ -59,7 +59,7 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
 
   onTermination {
     case StopEvent(reason, _, data) =>
-      if(reason == FSM.Shutdown) {
+      if (reason == FSM.Shutdown) {
         data.heartbeatCancelableOpt.foreach(_.cancel())
         data.queueOpt.foreach(_.complete())
       }
@@ -77,7 +77,7 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
     */
   def createPayload[A](msg: WsMessage[A])(implicit encoder: Encoder[WsMessage[A]]): String = {
     val payload = msg.asJson.noSpaces
-    if(AckCordSettings().LogSentWs) {
+    if (AckCordSettings().LogSentWs) {
       log.debug("Sending payload: {}", payload)
     }
     payload
@@ -98,7 +98,8 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
       )
 
       log.debug("WS uri: {}", wsParams(wsUri))
-      val (queue, future) = src.viaMat(wsFlow(wsParams(wsUri)))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
+      val (queue, future) =
+        src.viaMat(wsFlow(wsParams(wsUri)))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
 
       future.foreach {
         case InvalidUpgradeResponse(response, cause) =>

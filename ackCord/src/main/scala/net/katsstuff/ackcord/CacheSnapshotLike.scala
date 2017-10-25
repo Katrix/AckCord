@@ -179,10 +179,9 @@ trait CacheSnapshotLike {
   /**
     * Get a user by id
     */
-  def getUser(id: UserId): Option[User] = {
-    if(id == botUser.id) Some(botUser)
+  def getUser(id: UserId): Option[User] =
+    if (id == botUser.id) Some(botUser)
     else users.get(id)
-  }
 
   /**
     * Get the presence of a user for a specific guild
@@ -191,6 +190,7 @@ trait CacheSnapshotLike {
 }
 
 object CacheSnapshotLike {
+
   /**
     * Phantom type for the bot (client) user. Used for syntax.
     */

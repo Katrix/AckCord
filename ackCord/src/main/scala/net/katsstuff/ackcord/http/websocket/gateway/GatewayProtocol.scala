@@ -213,23 +213,23 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
     val opC = c.downField("op")
-    val dC = c.downField("d")
+    val dC  = c.downField("d")
 
     val op = opC.as[GatewayOpCode]
 
     op.flatMap {
-      case GatewayOpCode.Dispatch => decodeDispatch(c)
-      case GatewayOpCode.Heartbeat => dC.as[Option[Int]].map(Heartbeat.apply)
-      case GatewayOpCode.Identify => dC.as[IdentifyObject].map(Identify.apply)
-      case GatewayOpCode.StatusUpdate => dC.as[StatusData].map(StatusUpdate.apply)
-      case GatewayOpCode.VoiceStateUpdate => dC.as[VoiceStateUpdateData].map(VoiceStateUpdate.apply)
-      case GatewayOpCode.VoiceServerPing => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)
-      case GatewayOpCode.Resume => dC.as[ResumeData].map(Resume.apply)
-      case GatewayOpCode.Reconnect => Right(Reconnect)
+      case GatewayOpCode.Dispatch            => decodeDispatch(c)
+      case GatewayOpCode.Heartbeat           => dC.as[Option[Int]].map(Heartbeat.apply)
+      case GatewayOpCode.Identify            => dC.as[IdentifyObject].map(Identify.apply)
+      case GatewayOpCode.StatusUpdate        => dC.as[StatusData].map(StatusUpdate.apply)
+      case GatewayOpCode.VoiceStateUpdate    => dC.as[VoiceStateUpdateData].map(VoiceStateUpdate.apply)
+      case GatewayOpCode.VoiceServerPing     => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)
+      case GatewayOpCode.Resume              => dC.as[ResumeData].map(Resume.apply)
+      case GatewayOpCode.Reconnect           => Right(Reconnect)
       case GatewayOpCode.RequestGuildMembers => dC.as[RequestGuildMembersData].map(RequestGuildMembers.apply)
-      case GatewayOpCode.InvalidSession => dC.as[Boolean].map(InvalidSession.apply)
-      case GatewayOpCode.Hello => dC.as[HelloData].map(Hello.apply)
-      case GatewayOpCode.HeartbeatACK => Right(HeartbeatACK)
+      case GatewayOpCode.InvalidSession      => dC.as[Boolean].map(InvalidSession.apply)
+      case GatewayOpCode.Hello               => dC.as[HelloData].map(Hello.apply)
+      case GatewayOpCode.HeartbeatACK        => Right(HeartbeatACK)
     }
   }
 

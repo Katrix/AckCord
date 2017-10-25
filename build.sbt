@@ -35,10 +35,7 @@ lazy val example = project
   .dependsOn(ackCord, ackCordCommands)
 
 lazy val ackCordCommands = project
-    .settings(
-      commonSettings,
-      name := "AckCord-commands",
-      version := "0.1"
-    ).dependsOn(ackCord)
+  .settings(commonSettings, name := "AckCord-commands", version := "0.1")
+  .dependsOn(ackCord)
 
 lazy val ackCordRoot = project.in(file(".")).aggregate(ackCord, example, ackCordCommands)

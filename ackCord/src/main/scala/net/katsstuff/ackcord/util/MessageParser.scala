@@ -74,20 +74,20 @@ trait MessageParserInstances {
 
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      if(strings.nonEmpty) Right((strings.tail, f(strings.head)))
+      if (strings.nonEmpty) Right((strings.tail, f(strings.head)))
       else Left("No more arguments left")
   }
 
   def withTry[A](f: String => A): MessageParser[A] = fromTry(s => Try(f(s)))
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      if(strings.nonEmpty) f(strings.head).toEither.fold(e => Left(e.getMessage), a => Right(strings.tail -> a))
+      if (strings.nonEmpty) f(strings.head).toEither.fold(e => Left(e.getMessage), a => Right(strings.tail -> a))
       else Left("No more arguments left")
   }
 
   def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
-      if(strings.nonEmpty) f(strings.head).toEither.fold(_ => Left(errorMessage), a => Right(strings.tail -> a))
+      if (strings.nonEmpty) f(strings.head).toEither.fold(_ => Left(errorMessage), a => Right(strings.tail -> a))
       else Left("No more arguments left")
   }
 
@@ -119,7 +119,7 @@ trait MessageParserInstances {
       getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]
   ): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
-      if(strings.nonEmpty) {
+      if (strings.nonEmpty) {
         val head = strings.head
 
         for {
@@ -127,8 +127,7 @@ trait MessageParserInstances {
           _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
           obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
         } yield strings.tail -> obj
-      }
-      else Left("No more arguments left")
+      } else Left("No more arguments left")
     }
   }
 

@@ -53,8 +53,14 @@ object AudioAPIMessage {
     * @param ssrc The ssrc of the speaker
     * @param isSpeaking If the user is speaking, or stopped speaking
     */
-  case class UserSpeaking(speakingUserId: UserId, ssrc: Int, isSpeaking: Boolean, delay: Option[Int], serverId: Snowflake, userId: UserId)
-      extends AudioAPIMessage
+  case class UserSpeaking(
+      speakingUserId: UserId,
+      ssrc: Int,
+      isSpeaking: Boolean,
+      delay: Option[Int],
+      serverId: Snowflake,
+      userId: UserId
+  ) extends AudioAPIMessage
 
   /**
     * Sent to the listener when everything is ready to send voice data.
@@ -68,10 +74,6 @@ object AudioAPIMessage {
     * @param header The RTP header. This contains the ssrc of the speaker.
     *               To get the userId of the speaker, use [[UserSpeaking]].
     */
-  case class ReceivedData(
-      data: ByteString,
-      header: RTPHeader,
-      serverId: Snowflake,
-      userId: UserId
-  ) extends AudioAPIMessage
+  case class ReceivedData(data: ByteString, header: RTPHeader, serverId: Snowflake, userId: UserId)
+      extends AudioAPIMessage
 }

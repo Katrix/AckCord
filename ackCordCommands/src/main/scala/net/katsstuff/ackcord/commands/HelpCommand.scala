@@ -46,7 +46,9 @@ import net.katsstuff.ackcord.syntax._
   *                        The first map is a map for the prefix. The second
   *                        map is for the command name itself, without the prefix.
   */
-abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]])(implicit client: ClientActor) extends Actor {
+abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]])(
+    implicit client: ClientActor
+) extends Actor {
 
   val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CommandDescription]]
   initialCommands.foreach {
@@ -64,17 +66,13 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
       for {
         channel <- msg.tChannel
-        cat  <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+        cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
         descMap <- commands.get(cat)
       } {
         val command = lowercaseCommand.substring(cat.prefix.length)
         descMap.get(command) match {
           case Some(desc) =>
-            client ! Request(
-              CreateMessage(msg.channelId, createSingleReply(cat, command, desc)),
-              NotUsed,
-              None
-            )
+            client ! Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, None)
           case None => client ! channel.sendMessage("Unknown command")
         }
       }
@@ -83,10 +81,9 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
       client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, None)
     case ParsedCommand(msg, Some(page: Int), _, c) =>
       implicit val cache: CacheSnapshot = c
-      if(page > 0) {
+      if (page > 0) {
         client ! Request(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, None)
-      }
-      else {
+      } else {
         msg.tChannel.foreach { channel =>
           client ! channel.sendMessage(s"Invalid page $page")
         }

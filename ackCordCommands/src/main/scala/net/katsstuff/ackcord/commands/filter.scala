@@ -99,7 +99,8 @@ object Context {
   case object DM    extends Context
 }
 
-class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props)(implicit client: ClientActor) extends Actor {
+class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props)(implicit client: ClientActor)
+    extends Actor {
   val forwardTo: ActorRef = context.actorOf(forwardToProps, s"${self.path.name}AfterFilter")
 
   override def receive: Receive = {

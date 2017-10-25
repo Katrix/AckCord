@@ -48,13 +48,7 @@ object Example {
 
     val settings = DiscordClientSettings(token = token, system = system, eventStream = eventStream)
     DiscordClient.fetchWsGateway.map(settings.connect).foreach { implicit client =>
-
-      val commands = Seq(
-        PingCommand.cmdMeta,
-        SendFileCommand.cmdMeta,
-        InfoChannelCommand.cmdMeta,
-        KillCommand.cmdMeta
-      )
+      val commands = Seq(PingCommand.cmdMeta, SendFileCommand.cmdMeta, InfoChannelCommand.cmdMeta, KillCommand.cmdMeta)
 
       //We set up a command dispatcher, that sends the correct command to the corresponding actor
       val commandDispatcher = CommandDispatcher.props(

@@ -107,7 +107,7 @@ class RESTHandler(
       val route       = request.route
       val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.createBody)
 
-      if(AckCordSettings().LogSentREST) {
+      if (AckCordSettings().LogSentREST) {
         log.debug("Sending request {} to {} with method {}", request.toJsonParams.noSpaces, route.uri, route.method)
       }
 
@@ -261,7 +261,7 @@ class RESTResponder(
         Unmarshal(entity)
           .to[Json]
           .flatMap { json =>
-            if(AckCordSettings().LogReceivedREST) {
+            if (AckCordSettings().LogReceivedREST) {
               log.debug("Received response: {}", json.noSpaces)
             }
             Future.fromTry(json.as(request.responseDecoder).map(request.processResponse).toTry)

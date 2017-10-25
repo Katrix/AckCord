@@ -35,5 +35,3 @@ private[websocket] trait WsMessage[D, OpCode] {
   def d:  D
   def s: Option[Int] = None
 }
-
-

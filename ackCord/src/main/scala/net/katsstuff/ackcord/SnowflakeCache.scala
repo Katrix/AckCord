@@ -86,8 +86,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
-        case APIMessageHandlerEvent(data, event, _)           => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case _                                                =>
+        case APIMessageHandlerEvent(data, event, _) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case _                                      =>
       }
     case _ if !isReady => log.error("Received event before ready")
   }

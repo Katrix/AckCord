@@ -42,7 +42,7 @@ class CommandParser[A](parser: MessageParser[A], handlerProps: Props) extends Ac
   override def receive: Receive = {
     case Command(msg, args, c) =>
       implicit val cache: CacheSnapshot = c
-      handler ! parser.parse(args).fold(s => ParseError(msg, s, c), t  => ParsedCommand(msg, t._2, t._1, c))
+      handler ! parser.parse(args).fold(s => ParseError(msg, s, c), t => ParsedCommand(msg, t._2, t._1, c))
   }
 }
 object CommandParser {

@@ -78,7 +78,8 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends ChannelMessage
+  case class ChannelCreate(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+      extends ChannelMessage
 
   /**
     * Sent to the client when a channel is edited or updated.
@@ -93,7 +94,8 @@ object APIMessage {
     * not contain the channel.
     * @param channel The channel that was deleted.
     */
-  case class ChannelDelete(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends ChannelMessage
+  case class ChannelDelete(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+      extends ChannelMessage
 
   /**
     * Sent to the client when a message is pinned or unpinned in a text
@@ -267,14 +269,16 @@ object APIMessage {
     * Sent to the client when a message is created (posted).
     * @param message The sent message
     */
-  case class MessageCreate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends MessageMessage
+  case class MessageCreate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+      extends MessageMessage
 
   /**
     * Sent to the client when a message is updated.
     * @param message The new message. The check changes, the old message can
     *                be found in [[prevSnapshot]].
     */
-  case class MessageUpdate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends MessageMessage
+  case class MessageUpdate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+      extends MessageMessage
 
   /**
     * Sent to the client when a message is deleted.
@@ -282,7 +286,8 @@ object APIMessage {
     * @param channel The channel of the message.
     */
   case class MessageDelete(message: Message, channel: TChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends MessageMessage with ChannelMessage
+      extends MessageMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when multiple messages are deleted at the same time.
@@ -311,7 +316,8 @@ object APIMessage {
       emoji: MessageEmoji,
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
-  ) extends MessageMessage with ChannelMessage
+  ) extends MessageMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when a user removes a reaction from a message.
@@ -327,7 +333,8 @@ object APIMessage {
       emoji: MessageEmoji,
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
-  ) extends MessageMessage with ChannelMessage
+  ) extends MessageMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when a user removes all reactions from a message.
@@ -340,7 +347,8 @@ object APIMessage {
       message: Message,
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
-  ) extends MessageMessage with ChannelMessage
+  ) extends MessageMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when the presence of a user updates.
@@ -405,6 +413,7 @@ object APIMessage {
     * @param channel The channel for the webhook
     */
   case class WebhookUpdate(guild: Guild, channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage with ChannelMessage
+      extends GuildMessage
+      with ChannelMessage
 
 }

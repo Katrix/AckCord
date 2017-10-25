@@ -83,7 +83,7 @@ abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Bas
 
   override def receive: Receive = {
     case ParsedCommand(msg, IsA(args), remaining, c) => handleCommand(msg, args, remaining)(c)
-    case ParseError(msg, e, c) => handleParseError(msg, e)(c)
+    case ParseError(msg, e, c)                       => handleParseError(msg, e)(c)
   }
 
   /**

@@ -84,9 +84,8 @@ object StopCommand {
     )
 }
 class NextCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
-  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! NextTrack(_))
-  }
 }
 object NextCommand {
   def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new NextCommand(musicHandler))

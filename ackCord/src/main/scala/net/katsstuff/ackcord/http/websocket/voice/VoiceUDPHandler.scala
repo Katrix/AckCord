@@ -135,7 +135,7 @@ class VoiceUDPHandler(
       stay()
     case Event(SendDataBurst(data), WithSecret(socket, secret)) =>
       hasSentRequest = false
-      if(data.nonEmpty) {
+      if (data.nonEmpty) {
         queuePackets(data, secret, socket)
       }
       stay()
@@ -175,7 +175,7 @@ class VoiceUDPHandler(
       socket ! UdpConnected.Send(payload, UDPAck)
     } else if (queue.size > maxSize) {
       val toDrop = queue.size - maxSize
-      for(_ <- 0 until toDrop) queue.dequeue()
+      for (_ <- 0 until toDrop) queue.dequeue()
 
       log.warning("Droped {} packets", toDrop)
     }
@@ -187,7 +187,7 @@ class VoiceUDPHandler(
   }
 
   def sendDataRequest(): Unit = {
-    if(burstSender != null && !hasSentRequest && queue.size <= AckCordSettings().UDPSendRequestAmount) {
+    if (burstSender != null && !hasSentRequest && queue.size <= AckCordSettings().UDPSendRequestAmount) {
       burstSender ! DataRequest(AckCordSettings().UDPMaxBurstAmount - queue.size)
       hasSentRequest = true
     }
