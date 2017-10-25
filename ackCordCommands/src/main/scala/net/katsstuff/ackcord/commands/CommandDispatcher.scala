@@ -97,7 +97,7 @@ class CommandDispatcher(
 
       quickCheck.flatMap { args =>
         MessageParser[User]
-          .parse(msg.content.split(" ").toList)
+          .parse(args)
           .toOption
           .flatMap {
             case (remaining, user) =>
