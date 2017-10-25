@@ -34,7 +34,9 @@ import net.katsstuff.ackcord.{RequestFailed, RequestResponse}
 class RequestFailedResponder(respondTo: ActorRef) extends Actor {
   override def receive: Receive = {
     case RequestResponse(_, _) => context.stop(self)
-    case RequestFailed(e, _) => respondTo ! Status.Failure(e)
+    case RequestFailed(e, _) =>
+      respondTo ! Status.Failure(e)
+      context.stop(self)
   }
 }
 object RequestFailedResponder {
