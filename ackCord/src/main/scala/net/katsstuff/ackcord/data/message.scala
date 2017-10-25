@@ -98,7 +98,7 @@ case class Connection(
 case class Message(
     id: MessageId,
     channelId: ChannelId,
-    author: Author, //TODO: Factor webhook messages and normal messages into separate classes, to remove a reference to a user
+    author: Author,
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -118,7 +118,6 @@ case class Message(
 case class Reaction(count: Int, me: Boolean, emoji: MessageEmoji)
 case class MessageEmoji(id: Option[EmojiId], name: String) //TODO: Change to partial GuildEmoji
 
-//TODO: Why all options here?
 case class ReceivedEmbed(
     title: Option[String],
     `type`: Option[String],
@@ -183,7 +182,6 @@ case class Attachment(
     width: Option[Int]
 )
 
-//TODO: Why all options here?
 case class OutgoingEmbed(
     title: Option[String] = None,
     description: Option[String] = None,

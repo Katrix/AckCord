@@ -125,7 +125,6 @@ case class RawPresenceGame(name: String, `type`: Int, url: Option[String])
 case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus])
 
 //Remember to edit User when editing this
-//TODO: Remove once shapeless PartialUser works again
 case class PartialUser(
     id: UserId,
     username: Option[String],
