@@ -36,6 +36,7 @@ import akka.io.{IO, UdpConnected}
 import akka.util.ByteString
 import net.katsstuff.ackcord.AudioAPIMessage
 import net.katsstuff.ackcord.data.{Snowflake, UserId}
+import net.katsstuff.ackcord.util.AckCordSettings
 
 /**
   * Handles the UDP part of voice connection
@@ -50,6 +51,7 @@ class VoiceUDPHandler(
     address: String,
     ssrc: Int,
     port: Int,
+    sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef],
     serverId: Snowflake,
     userId: UserId
@@ -65,6 +67,9 @@ class VoiceUDPHandler(
 
   var sequence: Short = 0
   var timestamp = 0
+
+  var burstSender: ActorRef = _
+  var hasSentRequest = false
 
   /**
     * Sometimes we send messages too quickly, in that case we put
@@ -92,6 +97,7 @@ class VoiceUDPHandler(
       replyTo ! FoundIP(address, port)
       stay using WithSocket(socket)
     case Event(StartConnection(secretKey), WithSocket(socket)) =>
+      sendTo.foreach(_ ! AudioAPIMessage.Ready(self, serverId, userId))
       goto(Active) using WithSecret(socket, new TweetNaclFast.SecretBox(secretKey.toArray))
     case Event(Disconnect, WithSocket(socket)) =>
       socket ! UdpConnected.Disconnect
@@ -117,17 +123,20 @@ class VoiceUDPHandler(
       }
       stay()
     case Event(SendData(data), WithSecret(socket, secret)) =>
-      val header = RTPHeader(sequence, timestamp, ssrc)
-      sequence = (sequence + 1).toShort
-      timestamp += FrameSize
-      val encrypted = secret.box(data.toArray, header.asNonce.toArray)
-      val payload   = header.byteString ++ ByteString(encrypted)
-      queue.enqueue(payload) //This is removed as soon as we receive the ack if it's the only thing in the queue
-
-      if (queue.size == 1) {
-        socket ! UdpConnected.Send(payload, UDPAck)
-      } else if (queue.size > 32) {
-        log.warning("Behind on audio send")
+      queuePacket(data, secret, socket)
+      stay()
+    case Event(BeginBurstMode, _) =>
+      log.info("Beginning bursting mode")
+      burstSender = sender()
+      sendDataRequest()
+      stay()
+    case Event(StopBurstMode, _) =>
+      burstSender = null
+      stay()
+    case Event(SendDataBurst(data), WithSecret(socket, secret)) =>
+      hasSentRequest = false
+      if(data.nonEmpty) {
+        queuePackets(data, secret, socket)
       }
       stay()
     case Event(UDPAck, WithSecret(socket, _)) =>
@@ -135,6 +144,7 @@ class VoiceUDPHandler(
 
       if (queue.nonEmpty) {
         socket ! UdpConnected.Send(queue.head, UDPAck)
+        sendDataRequest()
       }
       stay()
     case Event(Disconnect, WithSecret(socket, _)) =>
@@ -147,6 +157,42 @@ class VoiceUDPHandler(
       stop()
   }
 
+  def createPayload(data: ByteString, secret: TweetNaclFast.SecretBox): ByteString = {
+    val header = RTPHeader(sequence, timestamp, ssrc)
+    sequence = (sequence + 1).toShort
+    timestamp += FrameSize
+    val encrypted = secret.box(data.toArray, header.asNonce.toArray)
+    header.byteString ++ ByteString(encrypted)
+  }
+
+  def queuePacket(data: ByteString, secret: TweetNaclFast.SecretBox, socket: ActorRef): Unit = {
+    val payload = createPayload(data, secret)
+    queue.enqueue(payload) //This is removed as soon as we receive the ack if it's the only thing in the queue
+
+    val maxSize = AckCordSettings().UDPMaxPacketsBeforeDrop
+
+    if (queue.size == 1) {
+      socket ! UdpConnected.Send(payload, UDPAck)
+    } else if (queue.size > maxSize) {
+      val toDrop = queue.size - maxSize
+      for(_ <- 0 until toDrop) queue.dequeue()
+
+      log.warning("Droped {} packets", toDrop)
+    }
+  }
+
+  def queuePackets(data: Seq[ByteString], secret: TweetNaclFast.SecretBox, socket: ActorRef): Unit = {
+    queuePacket(data.head, secret, socket)
+    data.tail.foreach(data => queue.enqueue(createPayload(data, secret)))
+  }
+
+  def sendDataRequest(): Unit = {
+    if(burstSender != null && !hasSentRequest && queue.size <= AckCordSettings().UDPSendRequestAmount) {
+      burstSender ! DataRequest(AckCordSettings().UDPMaxBurstAmount - queue.size)
+      hasSentRequest = true
+    }
+  }
+
   initialize()
 }
 object VoiceUDPHandler {
@@ -154,10 +200,11 @@ object VoiceUDPHandler {
       address: String,
       ssrc: Int,
       port: Int,
+      sendTo: Option[ActorRef],
       sendSoundTo: Option[ActorRef],
       serverId: Snowflake,
       userId: UserId
-  ): Props = Props(new VoiceUDPHandler(address, ssrc, port, sendSoundTo, serverId, userId))
+  ): Props = Props(new VoiceUDPHandler(address, ssrc, port, sendTo, sendSoundTo, serverId, userId))
 
   sealed trait State
   case object Inactive extends State
@@ -174,12 +221,12 @@ object VoiceUDPHandler {
     * @param socket The socket actor
     * @param expectedTpe The type of response we're expecting
     */
-  case class ExpectingResponse(socket: ActorRef, expectedTpe: ExpectedResponseType) extends Data
+  private case class ExpectingResponse(socket: ActorRef, expectedTpe: ExpectedResponseType) extends Data
 
-  case class UDPAck(sequence: Short)
+  private case class UDPAck(sequence: Short)
 
-  sealed trait ExpectedResponseType
-  case class IPDiscovery(replyTo: ActorRef) extends ExpectedResponseType
+  private sealed trait ExpectedResponseType
+  private case class IPDiscovery(replyTo: ActorRef) extends ExpectedResponseType
 
   /**
     * Send this when this is in [[Inactive]] to do IP discovery.
@@ -211,6 +258,34 @@ object VoiceUDPHandler {
     * @param data The data to send
     */
   case class SendData(data: ByteString)
+
+  /**
+    * Begins bursting mode. After sending this to the [[VoiceUDPHandler]], you
+    * should receive a [[DataRequest]] once there is room for more packets to
+    * be sent.
+    */
+  case object BeginBurstMode
+
+  /**
+    * Stop bursting mode. All this does is top sending [[DataRequest]]s.
+    */
+  case object StopBurstMode
+
+  /**
+    * Send a burst of to the [[VoiceUDPHandler]] at the same time.
+    * While this can be used just like [[SendData]], it's best used
+    * as a response to [[DataRequest]].
+    * @param data The data to send. The size should be equal to
+    *             [[DataRequest.numOfPackets]].
+    */
+  case class SendDataBurst(data: Seq[ByteString])
+
+  /**
+    * Sent to the sender of [[BeginBurstMode]] once there is room for more
+    * packets.
+    * @param numOfPackets The amount of packets to send.
+    */
+  case class DataRequest(numOfPackets: Int)
 
   private val nonceLastPart = ByteString.fromArray(new Array(12))
   val silence               = ByteString(0xF8, 0xFF, 0xFE)

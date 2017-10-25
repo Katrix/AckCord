@@ -27,6 +27,9 @@ import com.typesafe.config.Config
 
 import akka.actor.ActorSystem
 
+/**
+  * Settings that AckCord used. See the reference config for more info.
+  */
 class AckCordSettings(config: Config) {
   import config._
 
@@ -34,6 +37,10 @@ class AckCordSettings(config: Config) {
   val LogSentWs: Boolean = getBoolean("ackcord.logging.payloads.log-sent-ws")
   val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
   val LogSentREST: Boolean = getBoolean("ackcord.logging.payloads.log-sent-rest")
+
+  val UDPMaxPacketsBeforeDrop: Int = getInt("ackcord.voice.max-packets-before-drop")
+  val UDPMaxBurstAmount: Int = getInt("ackcord.voice.max-burst-amount")
+  val UDPSendRequestAmount: Int = getInt("ackcord.voice.send-request-amount")
 }
 object AckCordSettings {
 

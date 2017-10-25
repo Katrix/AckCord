@@ -121,7 +121,6 @@ class VoiceWsHandler(
       val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
       val payload     = createPayload(SelectProtocol(protocolObj))
       queue.offer(TextMessage(payload))
-      sendTo.foreach(_ ! AudioAPIMessage.Ready(connection, serverId, userId))
       stay()
     case Event(SendHeartbeat, data @ WithUDPActor(_, _, receivedAck, _, _, _, queue, _)) =>
       if (receivedAck) {
@@ -174,7 +173,7 @@ class VoiceWsHandler(
   def handleWsMessages: StateFunction = {
     case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), data: WithHeartbeat) =>
       val connectionActor =
-        context.actorOf(VoiceUDPHandler.props(address, ssrc, port, sendSoundTo, serverId, userId), "VoiceUDPHandler")
+        context.actorOf(VoiceUDPHandler.props(address, ssrc, port, sendTo, sendSoundTo, serverId, userId), "VoiceUDPHandler")
       connectionActor ! DoIPDiscovery(self)
       context.watchWith(connectionActor, ConnectionDied)
       val newData = WithUDPActor(
