@@ -25,41 +25,91 @@ package net.katsstuff.ackcord.data
 
 trait GetGuild {
   def guildId: GuildId
+
+  /**
+    * The guild for this object
+    */
   def guild(implicit snapshot: CacheSnapshot): Option[Guild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
   def guildId: Option[GuildId]
+
+  /**
+    * The guild for this object
+    */
   def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildId.flatMap(snapshot.getGuild)
 }
 
 trait GetUser {
   def userId: UserId
+
+  /**
+    * The user for this object
+    */
   def user(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(userId)
 }
 
 trait GetChannel {
   def channelId: ChannelId
-  def channel(implicit snapshot: CacheSnapshot):      Option[Channel]      = snapshot.getChannel(channelId)
-  def dmChannel(implicit snapshot: CacheSnapshot):    Option[DMChannel]    = snapshot.getDmChannel(channelId)
-  def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = snapshot.getGuildChannel(channelId)
 
+  /**
+    * Resolve the channelId of this object as a channel
+    */
+  def channel(implicit snapshot: CacheSnapshot):      Option[Channel]      = snapshot.getChannel(channelId)
+
+  /**
+    * Resolve the channelId of this object as a dm channel
+    */
+  def dmChannel(implicit snapshot: CacheSnapshot):    Option[DMChannel]    = snapshot.getDmChannel(channelId)
+
+  /**
+    * Resolve the channelId of this object as a text channel
+    */
   def tChannel(implicit snapshot: CacheSnapshot): Option[TChannel] = channel.collect {
     case tChannel: TChannel => tChannel
   }
+}
+
+trait GetGuildChannel extends GetChannel {
+  def guildId: GuildId
+
+  /**
+    * Resolve the channelId of this object as a guild channel
+    */
+  def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = snapshot.getGuildChannel(guildId, channelId)
+
+  /**
+    * Resolve the channelId of this object as a guild text channel
+    */
   def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = guildChannel.collect {
     case tChannel: TGuildChannel => tChannel
   }
+
+  /**
+    * Resolve the channelId of this object as a guild voice channel
+    */
   def vGuildChannel(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = guildChannel.collect {
     case vChannel: VGuildChannel => vChannel
   }
-
-  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildChannel.flatMap(_.guild)
 }
 
 trait GetChannelOpt {
   def channelId: Option[ChannelId]
+
+  /**
+    * Resolve the channelId of this object as a channel
+    */
   def channel(implicit snapshot: CacheSnapshot):      Option[Channel]      = channelId.flatMap(snapshot.getChannel)
   def dmChannel(implicit snapshot: CacheSnapshot):    Option[DMChannel]    = channelId.flatMap(snapshot.getDmChannel)
-  def guildChannel(implicit snapshot: CacheSnapshot): Option[GuildChannel] = channelId.flatMap(snapshot.getGuildChannel)
+
+  
+  def dmChannel(implicit snapshot: CacheSnapshot):    Option[DMChannel]    = snapshot.getDmChannel(channelId)
+
+  /**
+    * Resolve the channelId of this object as a text channel
+    */
+  def tChannel(implicit snapshot: CacheSnapshot): Option[TChannel] = channel.collect {
+    case tChannel: TChannel => tChannel
+  }
 }

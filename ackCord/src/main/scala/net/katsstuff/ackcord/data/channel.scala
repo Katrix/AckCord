@@ -23,6 +23,9 @@
  */
 package net.katsstuff.ackcord.data
 
+/**
+  * Different type of channels
+  */
 sealed trait ChannelType
 object ChannelType {
   case object GuildText     extends ChannelType
@@ -31,6 +34,9 @@ object ChannelType {
   case object GroupDm       extends ChannelType
   case object GuildCategory extends ChannelType
 
+  /**
+    * Get a channel type from an id
+    */
   def forId(id: Int): Option[ChannelType] = id match {
     case 0 => Some(GuildText)
     case 1 => Some(DM)
@@ -40,6 +46,9 @@ object ChannelType {
     case _ => None
   }
 
+  /**
+    * Get id for a channel type
+    */
   def idFor(channelType: ChannelType): Int = channelType match {
     case GuildText     => 0
     case DM            => 1
@@ -49,30 +58,62 @@ object ChannelType {
   }
 }
 
+/**
+  * Permission overwrites can apply to both users and role. This tells you what's
+  * being overwritten for a specific overwrite.
+  */
 sealed trait PermissionOverwriteType
 object PermissionOverwriteType {
   case object Role   extends PermissionOverwriteType
   case object Member extends PermissionOverwriteType
 
+  /**
+    * Get a overwrite type from a name.
+    */
   def forName(name: String): Option[PermissionOverwriteType] = name match {
     case "role"   => Some(Role)
     case "member" => Some(Member)
     case _        => None
   }
 
+  /**
+    * Get the name of an overwrite type
+    */
   def nameOf(tpe: PermissionOverwriteType): String = tpe match {
     case Role   => "role"
     case Member => "member"
   }
 }
 
+/**
+  * Represents a permission overwrite in a channel for a user or a guild.
+  * @param id The id that this overwrite applies to. Can be both a user or a
+  *           role. Check [[`type`]] to see what is valid for this overwrite.
+  * @param `type` The type of object this applies to.
+  * @param allow The permissions granted by this overwrite.
+  * @param deny The permissions denied by this overwrite.
+  */
 case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission)
 
+/**
+  * Base channel type
+  */
 sealed trait Channel {
-  def id:          ChannelId
+
+  /**
+    * The id of the channel
+    */
+  def id: ChannelId
+
+  /**
+    * The channel type of this channel
+    */
   def channelType: ChannelType
 }
 
+/**
+  * A text channel that has text messages
+  */
 sealed trait TChannel extends Channel {
 
   /**
@@ -82,15 +123,45 @@ sealed trait TChannel extends Channel {
   def lastMessageId: Option[MessageId]
 }
 
+/**
+  * A channel within a guild
+  */
 sealed trait GuildChannel extends Channel with GetGuild {
-  def guildId:              GuildId
-  def position:             Int
-  def name:                 String
+
+  /**
+    * The id of the containing guild
+    */
+  def guildId: GuildId
+
+  /**
+    * The position of this channel
+    */
+  def position: Int
+
+  /**
+    * The name of this channel
+    */
+  def name: String
+
+  /**
+    * The permission overwrites for this channel
+    */
   def permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite]
-  def nsfw:                 Boolean
-  def parentId:             Option[ChannelId]
+
+  /**
+    * If this channel is marked as NSFW.
+    */
+  def nsfw: Boolean
+
+  /**
+    * The id of the category this channel is in.
+    */
+  def parentId: Option[ChannelId]
 }
 
+/**
+  * A text channel in a guild
+  */
 case class TGuildChannel(
     id: ChannelId,
     guildId: GuildId,
@@ -106,6 +177,11 @@ case class TGuildChannel(
   override def channelType: ChannelType = ChannelType.GuildText
 }
 
+/**
+  * A voice channel in a guild
+  * @param bitrate The bitrate of this channel in bits
+  * @param userLimit The max amount of users that can join this channel
+  */
 case class VGuildChannel(
     id: ChannelId,
     guildId: GuildId,
@@ -120,6 +196,9 @@ case class VGuildChannel(
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
 
+/**
+  * A category in a guild
+  */
 case class GuildCategory(
     id: ChannelId,
     guildId: GuildId,
@@ -132,6 +211,9 @@ case class GuildCategory(
   override def channelType: ChannelType = ChannelType.GuildCategory
 }
 
+/**
+  * A DM text channel
+  */
 case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId)
     extends Channel
     with TChannel
@@ -139,6 +221,14 @@ case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: Us
   override def channelType: ChannelType = ChannelType.DM
 }
 
+/**
+  * A group DM text channel
+  * @param users The users in this group DM
+  * @param ownerId The creator of this channel
+  * @param applicationId The applicationId of the application that created
+  *                      this channel, if the channel wasn't created by a user
+  * @param icon The icon hash for this group dm
+  */
 case class GroupDMChannel(
     id: ChannelId,
     name: String,

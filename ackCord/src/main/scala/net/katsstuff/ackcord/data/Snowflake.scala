@@ -25,6 +25,11 @@ package net.katsstuff.ackcord.data
 
 import java.time.LocalDateTime
 
+/**
+  * Discord stores unique IDs as what's called Snowflakes. These are 64 bit
+  * unsigned integers. Many of the Snowflakes in AckCord have been tagged with
+  * the type they represent. Prefer those in most cases.
+  */
 class Snowflake(val content: String) extends AnyVal {
   def creationDate:      LocalDateTime = ???
   override def toString: String        = content

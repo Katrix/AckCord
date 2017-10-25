@@ -36,6 +36,10 @@ package object data {
     }
   }
   implicit class GuildIdSyntax(private val guildId: GuildId) extends AnyVal {
+
+    /**
+      * Resolve the guild represented by this id.
+      */
     def resolve(implicit c: CacheSnapshot): Option[Guild] = c.getGuild(guildId)
   }
 
@@ -47,14 +51,43 @@ package object data {
     }
   }
   implicit class ChannelIdSyntax(private val channelId: ChannelId) extends AnyVal {
-    def resolve(implicit c: CacheSnapshot):      Option[Channel]      = c.getChannel(channelId)
+
+    /**
+      * Resolve the channel represented by this id. If a guild id is know,
+      * prefer one of the guildResolve methods instead.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[Channel] = c.getChannel(channelId)
+
+    /**
+      * Resolve the channel represented by this id as a guild channel. If a
+      * guild id is know, prefer one of the other guildResolve methods instead.
+      */
     def guildResolve(implicit c: CacheSnapshot): Option[GuildChannel] = c.getGuildChannel(channelId)
+
+    /**
+      * Resolve the channel represented by this id relative to a guild id.
+      */
     def guildResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
       c.getGuildChannel(guildId, channelId)
+
+    /**
+      * Resolve the channel represented by this id as a text channel. If a
+      * guild id is know, prefer the other tResolve method instead.
+      */
     def tResolve(implicit c: CacheSnapshot): Option[TChannel] = c.getTChannel(channelId)
+
+    /**
+      * Resolve the channel represented by this id as a text channel relative
+      * to a guild id.
+      */
     def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
-    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
+
+    /**
+      * Resolve the channel represented by this id as a voice channel relative
+      * to a guild id.
+      */
+    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[VGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
@@ -66,7 +99,16 @@ package object data {
     }
   }
   implicit class MessageIdSyntax(private val messageId: MessageId) extends AnyVal {
-    def resolve(implicit c: CacheSnapshot):                       Option[Message] = c.getMessage(messageId)
+
+    /**
+      * Resolve the message represented by this id. If a channel id is known,
+      * prefer the method that takes a channel id.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[Message] = c.getMessage(messageId)
+
+    /**
+      * Resolves the message represented by this id relative to a channel id.
+      */
     def resolve(channelId: ChannelId)(implicit c: CacheSnapshot): Option[Message] = c.getMessage(channelId, messageId)
   }
 
@@ -78,7 +120,16 @@ package object data {
     }
   }
   implicit class UserIdSyntax(private val userId: UserId) extends AnyVal {
+
+    /**
+      * Resolve the user represented by this id.
+      */
     def resolve(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
+
+    /**
+      * Resolve the guild member represented by this id.
+      * @param guildId The guild to find the guild member in
+      */
     def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
       c.getGuild(guildId).flatMap(_.members.get(userId))
   }
@@ -91,7 +142,16 @@ package object data {
     }
   }
   implicit class RoleIdSyntax(private val roleId: RoleId) extends AnyVal {
+
+    /**
+      * Resolve the role this id represents. If a guild id is known, prefer
+      * the method that takes a guild id.
+      */
     def resolve(implicit c: CacheSnapshot): Option[Role] = c.getRole(roleId)
+
+    /**
+      * Resolve the role this id represents relative to a guild id.
+      */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
       c.getGuild(guildId).flatMap(_.roles.get(roleId))
   }
@@ -109,7 +169,16 @@ package object data {
     }
   }
   implicit class EmojiIdSyntax(private val emojiId: EmojiId) extends AnyVal {
+
+    /**
+      * Resolve the emoji this id represents. If a guild id is known, prefer
+      * the method that takes a guild id.
+      */
     def resolve(implicit c: CacheSnapshot): Option[GuildEmoji] = c.getEmoji(emojiId)
+
+    /**
+      * Resolve the emoji this id represents relative to a guild id.
+      */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildEmoji] =
       c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
