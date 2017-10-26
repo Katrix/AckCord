@@ -71,8 +71,33 @@ object MessageType {
   }
 }
 
+/**
+  * A author of a message. While a message is normally sent by a [[User]],
+  * it can also be sent by a [[WebhookAuthor]].
+  */
 sealed trait Author {
+  /**
+    * The id for this author.
+    */
   def id: Snowflake
+
+  /**
+    * Returns the user if this author is a user.
+    */
+  def user: Option[User] = this match {
+    case u: User => Some(u)
+    case _ => None
+  }
+
+  /**
+    * The name of this author,
+    */
+  def name: String
+
+  /**
+    * Returns the userId if this author is a user.
+    */
+  def userId: Option[UserId] = user.map(_.id)
 }
 case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
 //Remember to edit PartialUser when editing this
@@ -85,7 +110,10 @@ case class User(
     mfaEnabled: Option[Boolean], //mfaEnabled can be missing
     verified: Option[Boolean], //verified can be missing
     email: Option[String] //Email can be null
-) extends Author
+) extends Author {
+
+  override def name: String = username
+}
 
 case class Connection(
     id: String,
