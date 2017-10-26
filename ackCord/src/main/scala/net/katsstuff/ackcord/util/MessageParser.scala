@@ -27,7 +27,7 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 import akka.NotUsed
-import net.katsstuff.ackcord.data.{CacheSnapshot, Channel, GuildChannel, GuildEmoji, Role, Snowflake, TChannel, TGuildChannel, User}
+import net.katsstuff.ackcord.data.{CacheSnapshot, Channel, GuildChannel, Emoji, Role, Snowflake, TChannel, TGuildChannel, User}
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
 import shapeless.tag._
@@ -131,10 +131,10 @@ trait MessageParserInstances {
     }
   }
 
-  implicit val userParser:    MessageParser[User]       = regexParser("user", userRegex, _.getUser(_))
-  implicit val channelParser: MessageParser[Channel]    = regexParser("channel", channelRegex, _.getChannel(_))
-  implicit val roleParser:    MessageParser[Role]       = regexParser("role", roleRegex, _.getRole(_))
-  implicit val emojiParser:   MessageParser[GuildEmoji] = regexParser("emoji", emojiRegex, _.getEmoji(_))
+  implicit val userParser:    MessageParser[User]    = regexParser("user", userRegex, _.getUser(_))
+  implicit val channelParser: MessageParser[Channel] = regexParser("channel", channelRegex, _.getChannel(_))
+  implicit val roleParser:    MessageParser[Role]    = regexParser("role", roleRegex, _.getRole(_))
+  implicit val emojiParser:   MessageParser[Emoji]   = regexParser("emoji", emojiRegex, _.getEmoji(_))
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {

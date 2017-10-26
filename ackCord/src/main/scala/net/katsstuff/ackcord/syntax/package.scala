@@ -456,8 +456,8 @@ package object syntax {
     def roleById(id: RoleId):      Option[Role] = guild.roles.get(id)
     def rolesByName(name: String): Seq[Role]    = guild.roles.values.filter(_.name == name).toSeq
 
-    def emojiById(id: EmojiId):     Option[GuildEmoji] = guild.emojis.get(id)
-    def emojisByName(name: String): Seq[GuildEmoji]    = guild.emojis.values.filter(_.name == name).toSeq
+    def emojiById(id: EmojiId):     Option[Emoji] = guild.emojis.get(id)
+    def emojisByName(name: String): Seq[Emoji]    = guild.emojis.values.filter(_.name == name).toSeq
 
     def memberById(id: UserId):     Option[GuildMember] = guild.members.get(id)
     def memberFromUser(user: User): Option[GuildMember] = memberById(user.id)
@@ -547,7 +547,7 @@ package object syntax {
       Request(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
   }
 
-  implicit class GuildEmojiSyntax(val emoji: GuildEmoji) extends AnyVal {
+  implicit class GuildEmojiSyntax(val emoji: Emoji) extends AnyVal {
     def asString: String =
       if (!emoji.managed) s"${emoji.name}:${emoji.id}" else ???
     def modify[Context](
@@ -582,26 +582,26 @@ package object syntax {
 
   implicit class MessageSyntax(val message: Message) extends AnyVal {
     def createReaction[Context](
-        guildEmoji: GuildEmoji,
+        guildEmoji: Emoji,
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(CreateReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
 
     def deleteOwnReaction[Context](
-        guildEmoji: GuildEmoji,
+        guildEmoji: Emoji,
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
 
     def deleteUserReaction[Context](
-        guildEmoji: GuildEmoji,
+        guildEmoji: Emoji,
         userId: UserId,
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId), context, sendResponseTo)
 
     def fetchReactions[Context](
-        guildEmoji: GuildEmoji,
+        guildEmoji: Emoji,
         context: Context = NotUsed,
         sendResponseTo: Option[ActorRef] = None
     ) = Request(GetReactions(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)

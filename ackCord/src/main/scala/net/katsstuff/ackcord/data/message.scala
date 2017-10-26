@@ -115,8 +115,8 @@ case class Message(
     messageType: MessageType
 ) extends GetChannel
 
-case class Reaction(count: Int, me: Boolean, emoji: MessageEmoji)
-case class MessageEmoji(id: Option[EmojiId], name: String) //TODO: Change to partial GuildEmoji
+case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
+case class PartialEmoji(id: Option[EmojiId], name: String)
 
 case class ReceivedEmbed(
     title: Option[String],

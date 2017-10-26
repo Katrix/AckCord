@@ -143,7 +143,7 @@ trait CacheSnapshotLike {
   /**
     * Get an emoji by id without knowing the guild it belongs to
     */
-  def getEmoji(id: EmojiId): Option[GuildEmoji] = guilds.values.collectFirst {
+  def getEmoji(id: EmojiId): Option[Emoji] = guilds.values.collectFirst {
     case guild if guild.emojis.contains(id) => guild.emojis(id)
   }
 

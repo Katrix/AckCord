@@ -125,7 +125,7 @@ case class Guild(
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
     roles: Map[RoleId, Role],
-    emojis: Map[EmojiId, GuildEmoji],
+    emojis: Map[EmojiId, Emoji],
     features: Seq[String], //TODO: What is a feature?
     mfaLevel: MFALevel,
     applicationId: Option[Snowflake],
@@ -227,7 +227,7 @@ case class GuildMember(
   def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshot): Permission =
     permissionsWithOverrides(permissions, channelId)
 }
-case class GuildEmoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
+case class Emoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
 
 sealed trait PresenceContent {
   def name: String

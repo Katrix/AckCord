@@ -64,7 +64,7 @@ trait Handlers {
     builder.users.put(obj.id, obj)
   }
 
-  implicit val guildEmojiUpdateHandler: GuildId => CacheUpdateHandler[GuildEmoji] = guildId =>
+  implicit val guildEmojiUpdateHandler: GuildId => CacheUpdateHandler[Emoji] = guildId =>
     updateHandler { (builder, obj, log) =>
       builder.guilds.get(guildId) match {
         case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj))))

@@ -281,14 +281,13 @@ object Requests {
   }
    */
 
-  case class ListGuildEmojis(guildId: GuildId)
-      extends ComplexRESTRequest[NotUsed, Seq[GuildEmoji], GuildEmojisUpdateData] {
+  case class ListGuildEmojis(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[Emoji], GuildEmojisUpdateData] {
     override def route:           RestRoute                           = Routes.listGuildEmojis(guildId)
     override def paramsEncoder:   Encoder[NotUsed]                    = (_: NotUsed) => Json.obj()
     override def params:          NotUsed                             = NotUsed
-    override def responseDecoder: Decoder[Seq[GuildEmoji]]            = Decoder[Seq[GuildEmoji]]
+    override def responseDecoder: Decoder[Seq[Emoji]]                 = Decoder[Seq[Emoji]]
     override def handleResponse:  CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
-    override def processResponse(response: Seq[GuildEmoji]): GuildEmojisUpdateData =
+    override def processResponse(response: Seq[Emoji]): GuildEmojisUpdateData =
       GuildEmojisUpdateData(guildId, response)
   }
 
@@ -296,28 +295,28 @@ object Requests {
   case class CreateGuildEmojiData(name: String, image: ImageData)
 
   case class CreateGuildEmoji(guildId: GuildId, params: CreateGuildEmojiData)
-      extends SimpleRESTRequest[CreateGuildEmojiData, GuildEmoji] {
+      extends SimpleRESTRequest[CreateGuildEmojiData, Emoji] {
     override def route:           RestRoute                     = Routes.createGuildEmoji(guildId)
     override def paramsEncoder:   Encoder[CreateGuildEmojiData] = deriveEncoder[CreateGuildEmojiData]
-    override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
-    override def handleResponse:  CacheHandler[GuildEmoji]      = Handlers.guildEmojiUpdateHandler(guildId)
+    override def responseDecoder: Decoder[Emoji]                = Decoder[Emoji]
+    override def handleResponse:  CacheHandler[Emoji]           = Handlers.guildEmojiUpdateHandler(guildId)
   }
 
-  case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[GuildEmoji] {
-    override def route:           RestRoute                = Routes.getGuildEmoji(emojiId, guildId)
-    override def responseDecoder: Decoder[GuildEmoji]      = Decoder[GuildEmoji]
-    override def handleResponse:  CacheHandler[GuildEmoji] = Handlers.guildEmojiUpdateHandler(guildId)
+  case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[Emoji] {
+    override def route:           RestRoute           = Routes.getGuildEmoji(emojiId, guildId)
+    override def responseDecoder: Decoder[Emoji]      = Decoder[Emoji]
+    override def handleResponse:  CacheHandler[Emoji] = Handlers.guildEmojiUpdateHandler(guildId)
   }
 
   //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
   case class ModifyGuildEmojiData(name: String)
 
   case class ModifyGuildEmoji(emojiId: EmojiId, guildId: GuildId, params: ModifyGuildEmojiData)
-      extends SimpleRESTRequest[ModifyGuildEmojiData, GuildEmoji] {
+      extends SimpleRESTRequest[ModifyGuildEmojiData, Emoji] {
     override def route:           RestRoute                     = Routes.modifyGuildEmoji(emojiId, guildId)
     override def paramsEncoder:   Encoder[ModifyGuildEmojiData] = deriveEncoder[ModifyGuildEmojiData]
-    override def responseDecoder: Decoder[GuildEmoji]           = Decoder[GuildEmoji]
-    override def handleResponse:  CacheHandler[GuildEmoji]      = Handlers.guildEmojiUpdateHandler(guildId)
+    override def responseDecoder: Decoder[Emoji]                = Decoder[Emoji]
+    override def handleResponse:  CacheHandler[Emoji]           = Handlers.guildEmojiUpdateHandler(guildId)
   }
 
   case class DeleteGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsResponseRequest {

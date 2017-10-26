@@ -127,8 +127,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] = deriveEncoder
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] = deriveDecoder
 
-  implicit val messageEmojiEncoder: Encoder[MessageEmoji] = deriveEncoder
-  implicit val messageEmojiDecoder: Decoder[MessageEmoji] = deriveDecoder
+  implicit val messageEmojiEncoder: Encoder[PartialEmoji] = deriveEncoder
+  implicit val messageEmojiDecoder: Decoder[PartialEmoji] = deriveDecoder
 
   implicit val messageReactionDataEncoder: Encoder[GatewayEvent.MessageReactionData] = deriveEncoder
   implicit val messageReactionDataDecoder: Decoder[GatewayEvent.MessageReactionData] = deriveDecoder

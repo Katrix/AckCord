@@ -244,7 +244,7 @@ object GatewayEvent {
             current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
       )
 
-  case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[GuildEmoji])
+  case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[Emoji])
   object GuildEmojisUpdate
       extends GatewayEvent[GuildEmojisUpdateData](
         "GUILD_EMOJIS_UPDATE",
@@ -454,7 +454,7 @@ object GatewayEvent {
           }
       )
 
-  case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: MessageEmoji)
+  case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: PartialEmoji)
   object MessageReactionAdd
       extends GatewayEvent[MessageReactionData](
         "MESSAGE_REACTION_ADD",

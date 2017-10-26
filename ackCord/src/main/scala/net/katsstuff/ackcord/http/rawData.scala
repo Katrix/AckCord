@@ -91,7 +91,7 @@ case class RawGuild(
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
     roles: Seq[RawRole],
-    emojis: Seq[GuildEmoji],
+    emojis: Seq[Emoji],
     features: Seq[String],
     mfaLevel: MFALevel,
     applicationId: Option[Snowflake],

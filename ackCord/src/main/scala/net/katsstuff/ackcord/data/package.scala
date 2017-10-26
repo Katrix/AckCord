@@ -161,10 +161,10 @@ package object data {
     def apply(s: Snowflake): UserOrRoleId = s
   }
 
-  type EmojiId = Snowflake @@ GuildEmoji
+  type EmojiId = Snowflake @@ Emoji
   object EmojiId {
     def apply(s: Snowflake): EmojiId = {
-      val t = tag[GuildEmoji](s)
+      val t = tag[Emoji](s)
       t
     }
   }
@@ -174,12 +174,12 @@ package object data {
       * Resolve the emoji this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve(implicit c: CacheSnapshot): Option[GuildEmoji] = c.getEmoji(emojiId)
+    def resolve(implicit c: CacheSnapshot): Option[Emoji] = c.getEmoji(emojiId)
 
     /**
       * Resolve the emoji this id represents relative to a guild id.
       */
-    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildEmoji] =
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Emoji] =
       c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
 

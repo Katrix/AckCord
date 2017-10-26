@@ -169,7 +169,7 @@ object APIMessage {
     */
   case class GuildEmojiUpdate(
       guild: Guild,
-      emojis: Seq[GuildEmoji],
+      emojis: Seq[Emoji],
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
   ) extends GuildMessage
@@ -313,7 +313,7 @@ object APIMessage {
       user: User,
       channel: TChannel,
       message: Message,
-      emoji: MessageEmoji,
+      emoji: PartialEmoji,
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
   ) extends MessageMessage
@@ -330,7 +330,7 @@ object APIMessage {
       user: User,
       channel: TChannel,
       message: Message,
-      emoji: MessageEmoji,
+      emoji: PartialEmoji,
       snapshot: CacheSnapshot,
       prevSnapshot: CacheSnapshot
   ) extends MessageMessage
