@@ -29,11 +29,13 @@ import scala.util.control.NonFatal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.Materializer
 import akka.stream.scaladsl._
+import akka.util.ByteString
 import io.circe
 import io.circe.parser
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
@@ -64,7 +66,8 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
-        case t: TextMessage => t.textStream.fold("")(_ + _)
+        case t: TextMessage   => t.textStream.fold("")(_ + _)
+        case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).via(Deflate.decoderFlow).map(_.utf8String)
       }
       .flatMapConcat(identity)
 
@@ -126,7 +129,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
           val identifyObject = IdentifyObject(
             token = token,
             properties = IdentifyObject.createProperties,
-            compress = false,
+            compress = true,
             largeThreshold = settings.largeThreshold,
             shard = Seq(settings.shardNum, settings.shardTotal),
             presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
