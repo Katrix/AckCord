@@ -12,6 +12,7 @@ lazy val ackCord = project
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-testkit"   % akkaVersion % Test,
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
@@ -22,7 +23,8 @@ lazy val ackCord = project
       "io.circe" %% "circe-generic-extras",
       "io.circe" %% "circe-shapes",
       "io.circe" %% "circe-parser"
-    ).map(_ % circeVersion)
+    ).map(_ % circeVersion),
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test
   )
 
 lazy val example = project
