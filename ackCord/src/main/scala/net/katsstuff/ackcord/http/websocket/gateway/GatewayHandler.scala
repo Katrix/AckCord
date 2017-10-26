@@ -47,15 +47,20 @@ import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSett
 /**
   * Responsible for normal websocket communication with Discord.
   * Some REST messages can't be sent until this has authenticated.
-  * @param wsUri The uri to connect to
-  * @param token The secret token
-  * @param cache The cache to send events to
+  * @param rawWsUri The raw uri to connect to without params
   * @param settings The settings to use
+  * @param responseProcessor An actor which receive all responses sent through this actor
+  * @param responseFunc A function to apply to all responses before sending
+  *                     them to the [[responseProcessor]].
   * @param mat The [[Materializer]] to use
   */
-class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(
-    implicit mat: Materializer
-) extends AbstractWsHandler[GatewayMessage, ResumeData](wsUri) {
+class GatewayHandler(
+    rawWsUri: Uri,
+    settings: DiscordClientSettings,
+    responseProcessor: Option[ActorRef],
+    responseFunc: Dispatch[_] => Any
+)(implicit mat: Materializer)
+    extends AbstractWsHandler[GatewayMessage, ResumeData] {
   import AbstractWsHandler._
   import GatewayHandler._
   import GatewayProtocol._
@@ -78,7 +83,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 
-  def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
+  def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
   when(Active) {
     case Event(InitSink, _) =>
@@ -88,9 +93,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       log.info("Websocket connection completed")
       self ! Logout
       stay()
-    case Event(Status.Failure(e), _) =>
-      log.error(e, "Connection interrupted")
-      throw e
+    case Event(Status.Failure(e), _) => throw e
     case Event(Left(NonFatal(e)), _) => throw e
     case event @ Event(Right(_: GatewayMessage[_]), _) =>
       val res = handleWsMessages(event)
@@ -126,9 +129,9 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       val payload = resume match {
         case Some(resumeData) => createPayload(Resume(resumeData))
         case None =>
-          val identifyObject = IdentifyObject(
-            token = token,
-            properties = IdentifyObject.createProperties,
+          val identifyObject = IdentifyData(
+            token = settings.token,
+            properties = IdentifyData.createProperties,
             compress = true,
             largeThreshold = settings.largeThreshold,
             shard = Seq(settings.shardNum, settings.shardTotal),
@@ -142,31 +145,30 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
       stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
     case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
-      val seq = dispatch.sequence
-      val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
-      val d = dispatch.d
+      val seq   = dispatch.sequence
+      val d     = dispatch.d
 
       val stayData = dispatch.event match {
         case GatewayEvent.Ready =>
           val readyData  = d.asInstanceOf[ReadyData]
-          val resumeData = ResumeData(token, readyData.sessionId, seq)
+          val resumeData = ResumeData(settings.token, readyData.sessionId, seq)
           data.copy(resumeOpt = Some(resumeData))
         case _ =>
           data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = seq)))
       }
 
-      cache ! APIMessageHandlerEvent(d, event.transformData, event.createEvent, event.handler)
+      responseProcessor.foreach(_ ! responseFunc(dispatch))
       stay using stayData
     case Event(Right(HeartbeatACK), data: WithHeartbeat[ResumeData @unchecked]) =>
       log.debug("Received HeartbeatACK")
       stay using data.copy(receivedAck = true)
     case Event(Right(Reconnect), _) =>
       log.info("Was told to reconnect by gateway")
-      self ! Restart(fresh = false, 500.millis)
+      self ! Restart(fresh = false, 100.millis)
       stay()
-    case Event(Right(InvalidSession), _) =>
+    case Event(Right(InvalidSession(resumable)), _) =>
       log.error("Invalid session. Trying to establish new session in 5 seconds")
-      self ! Restart(fresh = true, 5.seconds)
+      self ! Restart(fresh = !resumable, 5.seconds)
       stay()
   }
 
@@ -191,10 +193,26 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
 }
 object GatewayHandler {
 
-  def props(wsUri: Uri, token: String, cache: ActorRef, settings: DiscordClientSettings)(
+  def props(
+      wsUri: Uri,
+      settings: DiscordClientSettings,
+      responseProcessor: Option[ActorRef],
+      responseFunc: Dispatch[_] => Any
+  )(implicit mat: Materializer): Props =
+    Props(new GatewayHandler(wsUri, settings, responseProcessor, responseFunc))
+
+  def cacheProps(wsUri: Uri, settings: DiscordClientSettings, snowflakeCache: ActorRef)(
       implicit mat: Materializer
-  ): Props =
-    Props(new GatewayHandler(wsUri, token, cache, settings))
+  ): Props = {
+    val f = (dispatch: Dispatch[_]) => {
+      val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
+      val d     = dispatch.d
+
+      APIMessageHandlerEvent(d, event.transformData, event.createEvent, event.handler)
+    }
+
+    Props(new GatewayHandler(wsUri, settings, Some(snowflakeCache), f))
+  }
 
   private case class WithHeartbeat[Resume](
       heartbeatCancelable: Cancellable,

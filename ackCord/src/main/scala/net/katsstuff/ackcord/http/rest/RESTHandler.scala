@@ -49,7 +49,10 @@ import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request,
   * @param token The credentials to use for authentication.
   *              See utility methods for normal cases of creating one.
   * @param responseProcessor An actor which receive all responses sent through this actor
-  * @param responseFunc A function to apply to all responses before sending them to the [[responseProcessor]]
+  * @param responseFunc A function to apply to all responses before sending
+  *                     them to the [[responseProcessor]]. The first value in
+  *                     the function is the request, the second is the received
+  *                     object (the second type parameter on the request).
   * @param mat The materializer to use
   */
 class RESTHandler(

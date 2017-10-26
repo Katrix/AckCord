@@ -36,6 +36,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
+import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
@@ -46,21 +47,21 @@ import shapeless.tag.@@
 /**
   * The core actor that controls all the other used actors of AckCord
   * @param gatewayWsUri The gateway websocket uri
-  * @param token The token for the bot
   * @param eventStream The eventStream to publish events to
   * @param settings The settings to use
   * @param mat The materializer to use
   */
-class DiscordClient(gatewayWsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
+class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(
     implicit mat: Materializer
 ) extends Actor
     with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
-  private val cache          = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val gatewayHandler = context.actorOf(GatewayHandler.props(gatewayWsUri, token, cache, settings), "WsHandler")
+  private val cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val gatewayHandler =
+    context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "WsHandler")
   private val restHandler =
-    context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(token), cache), "RestHandler")
+    context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
 
   private var shutdownCount = 0
 
@@ -86,9 +87,9 @@ class DiscordClient(gatewayWsUri: Uri, token: String, eventStream: EventStream, 
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, token: String, eventStream: EventStream, settings: DiscordClientSettings)(
+  def props(wsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(
       implicit mat: Materializer
-  ): Props = Props(new DiscordClient(wsUri, token, eventStream, settings))
+  ): Props = Props(new DiscordClient(wsUri, eventStream, settings))
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
@@ -138,8 +139,6 @@ object DiscordClient extends FailFastCirceSupport {
 /**
   * All the settings used by AckCord when connecting and similar
   * @param token The token for the bot
-  * @param system The actor system to use
-  * @param eventStream The eventStream to publish events to
   * @param largeThreshold The large threshold
   * @param shardNum The shard index of this
   * @param shardTotal The amount of shards
@@ -150,8 +149,6 @@ object DiscordClient extends FailFastCirceSupport {
   */
 case class DiscordClientSettings(
     token: String,
-    system: ActorSystem,
-    eventStream: EventStream,
     largeThreshold: Int = 100,
     shardNum: Int = 0,
     shardTotal: Int = 1,
@@ -160,6 +157,15 @@ case class DiscordClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false
 ) {
-  def connect(wsUri: Uri)(implicit mat: Materializer): ActorRef @@ DiscordClient =
-    DiscordClient.tagClient(system.actorOf(DiscordClient.props(wsUri, token, eventStream, this), "DiscordClient"))
+
+  /**
+    * Connect to discord using these settings
+    * @param eventStream The eventStream to publish events to
+    * @param wsUri The websocket uri to use
+    * @param system The actor system to use
+    * @param mat The materializer to use
+    * @return The discord client actor
+    */
+  def connect(eventStream: EventStream, wsUri: Uri)(implicit system: ActorSystem, mat: Materializer): ClientActor =
+    DiscordClient.tagClient(system.actorOf(DiscordClient.props(wsUri, eventStream, this), "DiscordClient"))
 }

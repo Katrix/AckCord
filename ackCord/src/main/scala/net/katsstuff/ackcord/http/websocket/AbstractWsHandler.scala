@@ -41,12 +41,11 @@ import net.katsstuff.ackcord.util.AckCordSettings
 
 /**
   * An abstract websocket handler. Handles going from inactive to active, and termination
-  * @param wsUri The uri to connect to
   * @param mat The [[Materializer]] to use
   * @tparam WsMessage The type of the websocket messages
   * @tparam Resume The resume data type
   */
-abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat: Materializer)
+abstract class AbstractWsHandler[WsMessage[_], Resume](implicit mat: Materializer)
     extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
   import AbstractWsHandler._
 
@@ -58,19 +57,23 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
   startWith(Inactive, WithResumeData(None))
 
   onTermination {
-    case StopEvent(reason, _, data) =>
-      if (reason == FSM.Shutdown) {
-        data.heartbeatCancelableOpt.foreach(_.cancel())
-        data.queueOpt.foreach(_.complete())
-      }
+    case StopEvent(_, _, data) =>
+      data.heartbeatCancelableOpt.foreach(_.cancel())
+      data.queueOpt.foreach(_.complete())
   }
 
   def parseMessage: Flow[Message, Either[circe.Error, WsMessage[_]], NotUsed]
 
   /**
-    * Add extra params to the ws uri
+    * The full uri to connect to
     */
-  def wsParams(uri: Uri): Uri
+  def wsUri: Uri
+
+  /**
+    * The flow to use to send and receive messages with
+    */
+  def wsFlow: Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
+    Http().webSocketClientFlow(wsUri)
 
   /**
     * Utility method to create a payload from a message
@@ -97,9 +100,8 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](wsUri: Uri)(implicit mat:
         onCompleteMessage = CompletedSink
       )
 
-      log.debug("WS uri: {}", wsParams(wsUri))
-      val (queue, future) =
-        src.viaMat(wsFlow(wsParams(wsUri)))(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
+      log.debug("WS uri: {}", wsUri)
+      val (queue, future) = src.viaMat(wsFlow)(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
 
       future.foreach {
         case InvalidUpgradeResponse(response, cause) =>
@@ -166,9 +168,6 @@ object AbstractWsHandler {
     * (or if no ack was received) from Discord.
     */
   class AckException(msg: String) extends Exception(msg)
-
-  def wsFlow(uri: Uri)(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
-    Http().webSocketClientFlow(uri)
 
   private[websocket] trait Data[Resume] {
     def resumeOpt:              Option[Resume]

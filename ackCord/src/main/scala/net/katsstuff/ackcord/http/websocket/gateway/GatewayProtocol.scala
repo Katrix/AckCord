@@ -97,8 +97,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val voiceServerUpdateDataEncoder: Encoder[VoiceServerUpdateData] = deriveEncoder
   implicit val voiceServerUpdateDataDecoder: Decoder[VoiceServerUpdateData] = deriveDecoder
 
-  implicit val identifyObjectEncoder: Encoder[IdentifyObject] = deriveEncoder
-  implicit val identifyObjectDecoder: Decoder[IdentifyObject] = deriveDecoder
+  implicit val identifyObjectEncoder: Encoder[IdentifyData] = deriveEncoder
+  implicit val identifyObjectDecoder: Decoder[IdentifyData] = deriveDecoder
 
   implicit val statusDataEncoder: Encoder[StatusData] = {
     import io.circe.generic.extras.auto._
@@ -220,7 +220,7 @@ object GatewayProtocol extends DiscordProtocol {
     op.flatMap {
       case GatewayOpCode.Dispatch            => decodeDispatch(c)
       case GatewayOpCode.Heartbeat           => dC.as[Option[Int]].map(Heartbeat.apply)
-      case GatewayOpCode.Identify            => dC.as[IdentifyObject].map(Identify.apply)
+      case GatewayOpCode.Identify            => dC.as[IdentifyData].map(Identify.apply)
       case GatewayOpCode.StatusUpdate        => dC.as[StatusData].map(StatusUpdate.apply)
       case GatewayOpCode.VoiceStateUpdate    => dC.as[VoiceStateUpdateData].map(VoiceStateUpdate.apply)
       case GatewayOpCode.VoiceServerPing     => dC.as[VoiceServerUpdateData].map(VoiceServerUpdate.apply)

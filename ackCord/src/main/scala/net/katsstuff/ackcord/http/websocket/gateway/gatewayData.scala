@@ -49,7 +49,7 @@ case class Heartbeat(d: Option[Int]) extends GatewayMessage[Option[Int]] {
   override def op: GatewayOpCode = GatewayOpCode.Heartbeat
 }
 
-case class IdentifyObject(
+case class IdentifyData(
     token: String,
     properties: Map[String, String],
     compress: Boolean,
@@ -57,11 +57,11 @@ case class IdentifyObject(
     shard: Seq[Int],
     presence: StatusData
 )
-object IdentifyObject {
+object IdentifyData {
   def createProperties: Map[String, String] =
     Map("$os" -> System.getProperty("os.name"), "$browser" -> "AckCord", "$device" -> "AckCord")
 }
-case class Identify(d: IdentifyObject) extends GatewayMessage[IdentifyObject] {
+case class Identify(d: IdentifyData) extends GatewayMessage[IdentifyData] {
   override def op: GatewayOpCode = GatewayOpCode.Identify
 }
 
@@ -560,7 +560,7 @@ object GatewayEvent {
   object VoiceServerUpdate
       extends GatewayEvent[VoiceServerUpdateData](
         "VOICE_SERVER_UPDATE",
-        notImplementedHandler,
+        new NOOPHandler[VoiceServerUpdateData],
         data =>
           (current, prev) =>
             current

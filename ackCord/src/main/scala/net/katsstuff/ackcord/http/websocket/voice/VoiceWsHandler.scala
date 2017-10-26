@@ -62,7 +62,7 @@ class VoiceWsHandler(
     sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef]
 )(implicit mat: Materializer)
-    extends AbstractWsHandler[VoiceMessage, ResumeData](s"wss://$address") {
+    extends AbstractWsHandler[VoiceMessage, ResumeData] {
   import AbstractWsHandler._
   import VoiceWsHandler._
   import VoiceWsProtocol._
@@ -84,7 +84,7 @@ class VoiceWsHandler(
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
 
-  override def wsParams(uri: Uri): Uri = uri.withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
+  override def wsUri: Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
   onTransition {
     case Inactive -> Active => self ! SendIdentify //We act first here
