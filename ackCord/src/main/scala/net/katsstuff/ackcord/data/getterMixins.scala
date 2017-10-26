@@ -93,18 +93,25 @@ trait GetGuildChannel extends GetChannel {
   def vGuildChannel(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = guildChannel.collect {
     case vChannel: VGuildChannel => vChannel
   }
+
+  /**
+    * Get the guild through getting the guild channel.
+    */
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = guildChannel.flatMap(_.guild)
 }
 
 trait GetChannelOpt {
   def channelId: Option[ChannelId]
 
   /**
-    * Resolve the channelId of this object as a channel
+    * Resolve the channelId of this object as a channel.
     */
   def channel(implicit snapshot: CacheSnapshot):   Option[Channel]   = channelId.flatMap(snapshot.getChannel)
-  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = channelId.flatMap(snapshot.getDmChannel)
 
-  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.getDmChannel(channelId)
+  /**
+    * Resolve the channelId of this object as a dm channel.
+    */
+  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = channelId.flatMap(snapshot.getDmChannel)
 
   /**
     * Resolve the channelId of this object as a text channel

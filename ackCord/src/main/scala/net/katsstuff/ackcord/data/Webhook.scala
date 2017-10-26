@@ -34,5 +34,5 @@ case class Webhook(
 ) extends GetGuildOpt
     with GetChannel {
 
-  override def guild(implicit snapshot: CacheSnapshot): Option[Guild] = super[GetChannel].guild
+  override def guild(implicit snapshot: CacheSnapshot): Option[Guild] = super[GetGuildOpt].guild
 }
