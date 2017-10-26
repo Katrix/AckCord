@@ -88,6 +88,13 @@ trait CacheSnapshotLike {
   def presences: MapType[GuildId, MapType[UserId, Presence]]
 
   /**
+    * The bans received this session. NOTE: This is not all the bans that exists,
+    * only the ones received during this session. If you want all the bans,
+    * use [[net.katsstuff.ackcord.http.rest.Requests.GetGuildBans]].
+    */
+  def bans: MapType[GuildId, MapType[UserId, Ban]]
+
+  /**
     * Get a dm channel by id
     */
   def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannels.get(id)

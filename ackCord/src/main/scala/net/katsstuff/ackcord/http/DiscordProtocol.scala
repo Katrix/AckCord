@@ -301,5 +301,8 @@ trait DiscordProtocol {
       case "type"                          => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
     }
   }
+
+  implicit val rawBanEncoder: Encoder[RawBan] = deriveEncoder
+  implicit val rawBanDecoder: Decoder[RawBan] = deriveDecoder
 }
 object DiscordProtocol extends DiscordProtocol

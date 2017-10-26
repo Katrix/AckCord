@@ -25,7 +25,7 @@ package net.katsstuff.ackcord
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, Props}
 import akka.event.{EventStream, LoggingAdapter}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
@@ -56,11 +56,12 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
   private def isReady: Boolean = prevSnapshot != null && snapshot != null
 
   override def receive: Receive = {
-    case readyHandler: CacheHandlerEvent[_]
+    case readyHandler: CacheHandlerEvent[_, _]
         if readyHandler.data
           .isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
       val builder = new CacheSnapshotBuilder(
         null, //The event will populate this,
+        mutable.Map.empty,
         mutable.Map.empty,
         mutable.Map.empty,
         mutable.Map.empty,
@@ -77,17 +78,19 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       snapshot = prevSnapshot
 
       readyHandler match {
-        case APIMessageHandlerEvent(data, event, _) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case _                                      =>
+        case event: APIMessageHandlerEvent[_, _] =>
+          event.sendEvent(event.data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case _ =>
       }
-    case handlerEvent: CacheHandlerEvent[_] if isReady =>
+    case handlerEvent: CacheHandlerEvent[_, _] if isReady =>
       val builder = CacheSnapshotBuilder(snapshot)
       handlerEvent.handle(builder)(log)
 
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
-        case APIMessageHandlerEvent(data, event, _) => event(data)(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case _                                      =>
+        case event: APIMessageHandlerEvent[_, _] =>
+          event.sendEvent(event.data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case _ =>
       }
     case _ if !isReady => log.error("Received event before ready")
   }
@@ -100,11 +103,28 @@ object SnowflakeCache {
   * Represents some sort of event handled by the cache
   * @tparam Data The data it contains
   */
-sealed trait CacheHandlerEvent[Data] {
-  def data:    Data
-  def handler: CacheHandler[Data]
+sealed trait CacheHandlerEvent[Data, HandlerData] {
 
-  def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit = handler.handle(builder, data)
+  /**
+    * The data to update
+    */
+  def data: Data
+
+  /**
+    * A function to transform the data before it's handled
+    */
+  def transformData: Data => HandlerData
+
+  /**
+    * A handler for the data
+    */
+  def handler: CacheHandler[HandlerData]
+
+  /**
+    * Updates a [[CacheSnapshotBuilder]] with the data in this object.
+    */
+  def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
+    handler.handle(builder, transformData(data))
 }
 
 /**
@@ -116,11 +136,12 @@ sealed trait CacheHandlerEvent[Data] {
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains
   */
-case class APIMessageHandlerEvent[Data](
+case class APIMessageHandlerEvent[Data, HandlerData](
     data: Data,
+    transformData: Data => HandlerData,
     sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage],
-    handler: CacheHandler[Data]
-) extends CacheHandlerEvent[Data]
+    handler: CacheHandler[HandlerData]
+) extends CacheHandlerEvent[Data, HandlerData]
 
 /**
   * Any other event that updates the cache with it's data.
@@ -128,4 +149,6 @@ case class APIMessageHandlerEvent[Data](
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains
   */
-case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
+case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data, Data] {
+  override def transformData: Data => Data = identity
+}

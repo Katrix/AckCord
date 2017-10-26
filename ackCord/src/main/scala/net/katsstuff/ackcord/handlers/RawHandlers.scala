@@ -27,7 +27,7 @@ import scala.collection.mutable
 
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent._
-import net.katsstuff.ackcord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
 
 object RawHandlers extends Handlers {
 
@@ -318,6 +318,11 @@ object RawHandlers extends Handlers {
       }
   }
 
+  implicit val rawBanUpdateHandler: CacheUpdateHandler[(GuildId, RawBan)] = updateHandler { case (builder, (guildId, obj), log) =>
+    builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, Ban(obj.reason, obj.user.id))
+    handleUpdateLog(builder, obj.user, log)
+  }
+
   //Delete
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, log) =>
     rawChannel.`type` match {
@@ -460,5 +465,10 @@ object RawHandlers extends Handlers {
       builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
         builder.messages(obj.channelId).put(obj.messageId, message.copy(reactions = Nil))
       }
+  }
+
+  implicit val rawBanDeleteHandler: CacheDeleteHandler[(GuildId, User)] = deleteHandler { case (builder, (guildId, obj), log) =>
+      builder.bans.get(guildId).foreach(_.remove(obj.id))
+      handleUpdateLog(builder, obj, log)
   }
 }

@@ -55,9 +55,9 @@ class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]
         case _                => sendToNotGuild(msg)
       }
     case msg: APIMessage.MessageMessage =>
-      msg.message.guild(msg.snapshot) match {
-        case Some(guild) => sendToGuild(guild.id, msg)
-        case None        => sendToNotGuild(msg)
+      msg.message.channel(msg.snapshot) match {
+        case Some(gchannel: GuildChannel) => sendToGuild(gchannel.guildId, msg)
+        case _                            => sendToNotGuild(msg)
       }
     case msg @ APIMessage.VoiceStateUpdate(state, _, _) =>
       state.guildId match {

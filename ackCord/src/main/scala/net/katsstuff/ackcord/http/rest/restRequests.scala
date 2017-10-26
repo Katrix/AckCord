@@ -36,7 +36,7 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEmojisUpdateData
-import net.katsstuff.ackcord.http.{RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
 
 trait ComplexRESTRequest[Params, Response, HandlerType] {
   def route: RestRoute
@@ -493,10 +493,14 @@ object Requests {
     override def route: RestRoute = Routes.removeGuildMember(userId, guildId)
   }
 
-  case class GetGuildBans(guildId: GuildId) extends NoParamsRequest[Seq[User]] {
-    override def route:           RestRoute               = Routes.getGuildBans(guildId)
-    override def responseDecoder: Decoder[Seq[User]]      = Decoder[Seq[User]]
-    override def handleResponse:  CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(RawHandlers.userUpdateHandler)
+  case class GetGuildBans(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[RawBan], Seq[(GuildId, RawBan)]] {
+    override def route:           RestRoute            = Routes.getGuildBans(guildId)
+    override def responseDecoder: Decoder[Seq[RawBan]] = Decoder[Seq[RawBan]]
+    override def handleResponse: CacheHandler[Seq[(GuildId, RawBan)]] =
+      CacheUpdateHandler.seqHandler(RawHandlers.rawBanUpdateHandler)
+    override def params:                                 NotUsed                = NotUsed
+    override def paramsEncoder:                          Encoder[NotUsed]       = (_: NotUsed) => Json.obj()
+    override def processResponse(response: Seq[RawBan]): Seq[(GuildId, RawBan)] = response.map(guildId -> _)
   }
 
   case class CreateGuildBanData(`delete-message-days`: Int)

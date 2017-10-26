@@ -278,3 +278,8 @@ case class Integration(
 case class IntegrationAccount(id: String, name: String)
 
 case class GuildEmbed(enabled: Boolean, channelId: ChannelId)
+
+case class Ban(
+    reason: Option[String],
+    user: UserId
+)

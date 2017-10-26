@@ -42,7 +42,8 @@ case class CacheSnapshot(
     messages: Map[ChannelId, Map[MessageId, Message]],
     lastTyped: Map[ChannelId, Map[UserId, Instant]],
     users: Map[UserId, User],
-    presences: Map[GuildId, Map[UserId, Presence]]
+    presences: Map[GuildId, Map[UserId, Presence]],
+    bans: Map[GuildId, Map[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
   override type MapType[A, B] = Map[A, B]

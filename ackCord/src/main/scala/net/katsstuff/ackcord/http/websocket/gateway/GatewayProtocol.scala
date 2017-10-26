@@ -39,8 +39,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val opCodeDecoder: Decoder[GatewayOpCode] =
     Decoder[Int].emap(GatewayOpCode.forCode(_).toRight("Not an opCode"))
 
-  implicit def wsEventEncoder[A]: Encoder[GatewayEvent[A]] = Encoder[String].contramap(_.name)
-  implicit val wsEventDecoder: Decoder[GatewayEvent[_]] =
+  implicit def wsEventEncoder[A]: Encoder[ComplexGatewayEvent[A, _]] = Encoder[String].contramap(_.name)
+  implicit val wsEventDecoder: Decoder[ComplexGatewayEvent[_, _]] =
     Decoder[String].emap(GatewayEvent.forName(_).toRight("Not an event"))
 
   implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] = deriveEncoder
@@ -236,13 +236,13 @@ object GatewayProtocol extends DiscordProtocol {
   private def decodeDispatch(c: HCursor): Decoder.Result[Dispatch[_]] = {
     val dC = c.downField("d")
 
-    def createDispatch[Data: Decoder](seq: Int, event: GatewayEvent[Data]): Either[DecodingFailure, Dispatch[Data]] =
+    def createDispatch[Data: Decoder](seq: Int, event: ComplexGatewayEvent[Data, _]): Either[DecodingFailure, Dispatch[Data]] =
       dC.as[Data].map(Dispatch(seq, event, _))
 
     c.downField("s")
       .as[Int]
       .flatMap { seq =>
-        c.get[GatewayEvent[_]]("t")
+        c.get[ComplexGatewayEvent[_, _]]("t")
           .flatMap {
             case event @ GatewayEvent.Ready                    => createDispatch(seq, event)
             case event @ GatewayEvent.Resumed                  => createDispatch(seq, event)

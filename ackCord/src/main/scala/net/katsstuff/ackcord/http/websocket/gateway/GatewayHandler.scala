@@ -139,11 +139,11 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
       stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
     case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
-      val seq   = dispatch.sequence
-      val event = dispatch.event
-      val d     = dispatch.d
+      val seq = dispatch.sequence
+      val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
+      val d = dispatch.d
 
-      val stayData = event match {
+      val stayData = dispatch.event match {
         case GatewayEvent.Ready =>
           val readyData  = d.asInstanceOf[ReadyData]
           val resumeData = ResumeData(token, readyData.sessionId, seq)
@@ -152,7 +152,7 @@ class GatewayHandler(wsUri: Uri, token: String, cache: ActorRef, settings: Disco
           data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = seq)))
       }
 
-      cache ! APIMessageHandlerEvent(d, event.createEvent, event.handler)
+      cache ! APIMessageHandlerEvent(d, event.transformData, event.createEvent, event.handler)
       stay using stayData
     case Event(Right(HeartbeatACK), data: WithHeartbeat[ResumeData @unchecked]) =>
       log.debug("Received HeartbeatACK")

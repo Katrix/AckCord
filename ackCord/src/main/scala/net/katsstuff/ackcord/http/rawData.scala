@@ -135,3 +135,8 @@ case class PartialUser(
     verified: Option[Boolean], //verified can be missing
     email: Option[String] //Email can be null
 )
+
+case class RawBan(
+    reason: Option[String],
+    user: User
+)

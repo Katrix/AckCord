@@ -36,13 +36,13 @@ import shapeless._
 import shapeless.labelled.FieldType
 
 sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
-  def t: Option[GatewayEvent[D]] = None
+  def t: Option[ComplexGatewayEvent[D, _]] = None
 }
 
-case class Dispatch[Data](sequence: Int, event: GatewayEvent[Data], d: Data) extends GatewayMessage[Data] {
-  override val s:  Some[Int]                = Some(sequence)
-  override val t:  Some[GatewayEvent[Data]] = Some(event)
-  override def op: GatewayOpCode            = GatewayOpCode.Dispatch
+case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _], d: Data) extends GatewayMessage[Data] {
+  override val s:  Some[Int]                          = Some(sequence)
+  override val t:  Some[ComplexGatewayEvent[Data, _]] = Some(event)
+  override def op: GatewayOpCode                      = GatewayOpCode.Dispatch
 }
 
 case class Heartbeat(d: Option[Int]) extends GatewayMessage[Option[Int]] {
@@ -142,11 +142,18 @@ object GatewayOpCode {
   }
 }
 
-sealed abstract case class GatewayEvent[Data](
+sealed abstract case class ComplexGatewayEvent[Data, DataHandler](
+    name: String,
+    transformData: Data => DataHandler,
+    handler: CacheHandler[DataHandler],
+    createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
+)
+sealed abstract class GatewayEvent[Data](
     name: String,
     handler: CacheHandler[Data],
     createEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage]
-)
+) extends ComplexGatewayEvent[Data, Data](name, identity, handler, createEvent)
+
 object GatewayEvent {
   private def notImplementedHandler[A] = new CacheHandler[A] {
     override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
@@ -227,18 +234,20 @@ object GatewayEvent {
   type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
 
   object GuildBanAdd
-      extends GatewayEvent[GuildUser](
+      extends ComplexGatewayEvent[GuildUser, (GuildId, RawBan)](
         "GUILD_BAN_ADD",
-        notImplementedHandler,
+        guildUser => (guildUser.head, RawBan(None, userGen.from(guildUser.tail))),
+        RawHandlers.rawBanUpdateHandler,
         data =>
           (current, prev) =>
             current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), current, prev))
       )
 
   object GuildBanRemove
-      extends GatewayEvent[GuildUser](
+      extends ComplexGatewayEvent[GuildUser, (GuildId, User)](
         "GUILD_BAN_REMOVE",
-        notImplementedHandler,
+        guildUser => (guildUser.head, userGen.from(guildUser.tail)),
+        RawHandlers.rawBanDeleteHandler,
         data =>
           (current, prev) =>
             current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
@@ -572,7 +581,7 @@ object GatewayEvent {
             } yield APIMessage.WebhookUpdate(guild, channel, current, prev)
       )
 
-  def forName(name: String): Option[GatewayEvent[_]] = name match {
+  def forName(name: String): Option[ComplexGatewayEvent[_, _]] = name match {
     case "READY"                       => Some(Ready)
     case "RESUMED"                     => Some(Resumed)
     case "CHANNEL_CREATE"              => Some(ChannelCreate)
