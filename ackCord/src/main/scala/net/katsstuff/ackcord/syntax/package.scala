@@ -38,6 +38,31 @@ package object syntax {
     def delete[Context](context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
       Request(DeleteCloseChannel(channel.id), context, sendResponseTo)
     def mention: String = s"<#${channel.id}>"
+
+    def asTChannel: Option[TChannel] = channel match {
+      case gChannel: TChannel => Some(gChannel)
+      case _                  => None
+    }
+
+    def asDMChannel: Option[DMChannel] = channel match {
+      case gChannel: DMChannel => Some(gChannel)
+      case _                   => None
+    }
+
+    def asGuildChannel: Option[GuildChannel] = channel match {
+      case gChannel: GuildChannel => Some(gChannel)
+      case _                      => None
+    }
+
+    def asTGuildChannel: Option[TGuildChannel] = channel match {
+      case gChannel: TGuildChannel => Some(gChannel)
+      case _                       => None
+    }
+
+    def asVGuildChannel: Option[VGuildChannel] = channel match {
+      case gChannel: VGuildChannel => Some(gChannel)
+      case _                       => None
+    }
   }
 
   implicit class TChannelSyntax(val tChannel: TChannel) extends AnyVal {
@@ -252,7 +277,8 @@ package object syntax {
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
     def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
-    def everyoneRole(implicit snapshot: CacheSnapshot): Role = guild.roles(RoleId(guild.id)) //The everyone role should always be present
+    def everyoneRole(implicit snapshot: CacheSnapshot): Role =
+      guild.roles(RoleId(guild.id)) //The everyone role should always be present
     def mentionEveryone: String = "@everyone"
 
     def modify[Context](

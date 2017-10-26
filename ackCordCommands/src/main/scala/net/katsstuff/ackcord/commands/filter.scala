@@ -71,7 +71,8 @@ object CommandFilter {
   case class NeedPermission(neededPermission: Permission) extends CommandFilter {
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val res = for {
-        guildChannel <- msg.guildChannel
+        channel      <- msg.channel
+        guildChannel <- channel.asGuildChannel
         guild        <- guildChannel.guild
         member       <- guild.members.get(UserId(msg.author.id))
         if member.channelPermissions(msg.channelId).hasPermissions(neededPermission)

@@ -37,7 +37,8 @@ class QueueCommand(musicHandler: ActorRef)(implicit val client: ClientActor)
     with ActorLogging {
   override def handleCommand(msg: Message, url: String, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     val gOpt = for {
-      guildChannel <- msg.tGuildChannel
+      channel      <- msg.channel
+      guildChannel <- channel.asTGuildChannel
       guild        <- guildChannel.guild
     } yield (guildChannel, guild)
     log.info("Dummy")
