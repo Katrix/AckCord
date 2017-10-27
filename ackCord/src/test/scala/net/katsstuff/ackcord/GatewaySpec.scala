@@ -80,29 +80,36 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   def readyDispatch(seq: Int, sessionId: String): Dispatch[GatewayEvent.ReadyData] = {
     Dispatch(
       seq,
-      GatewayEvent.Ready,
-      GatewayEvent.ReadyData(
-        v = 6,
-        user = User(
-          id = UserId(Snowflake("12345")),
-          username = "TestBot",
-          discriminator = "1234",
-          avatar = None,
-          bot = Some(true),
-          mfaEnabled = None,
-          verified = None,
-          email = None
-        ),
-        privateChannels = Seq.empty,
-        guilds = Seq.empty,
-        sessionId = sessionId,
-        _trace = Seq.empty
-      )
+      GatewayEvent.Ready(
+        GatewayEvent.ReadyData(
+          v = 6,
+          user = User(
+            id = UserId(Snowflake("12345")),
+            username = "TestBot",
+            discriminator = "1234",
+            avatar = None,
+            bot = Some(true),
+            mfaEnabled = None,
+            verified = None,
+            email = None
+          ),
+          privateChannels = Seq.empty,
+          guilds = Seq.empty,
+          sessionId = sessionId,
+          _trace = Seq.empty
+        )
+      ),
     )
   }
 
-  def defaultLogin(gateway: ActorRef, handler: ActorRef, sessionId: String, readySeq: Int, login: Boolean = true): Unit = {
-    if(login) {
+  def defaultLogin(
+      gateway: ActorRef,
+      handler: ActorRef,
+      sessionId: String,
+      readySeq: Int,
+      login: Boolean = true
+  ): Unit = {
+    if (login) {
       handler ! Login
     }
     expectMsg(HasSetClient)

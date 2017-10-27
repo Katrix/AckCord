@@ -40,7 +40,6 @@ import io.circe
 import io.circe.parser
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSettings}
 
@@ -145,16 +144,12 @@ class GatewayHandler(
       val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
       stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
     case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
-      val seq   = dispatch.sequence
-      val d     = dispatch.d
-
       val stayData = dispatch.event match {
-        case GatewayEvent.Ready =>
-          val readyData  = d.asInstanceOf[ReadyData]
-          val resumeData = ResumeData(settings.token, readyData.sessionId, seq)
+        case GatewayEvent.Ready(readyData) =>
+          val resumeData = ResumeData(settings.token, readyData.sessionId, dispatch.sequence)
           data.copy(resumeOpt = Some(resumeData))
         case _ =>
-          data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = seq)))
+          data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = dispatch.sequence)))
       }
 
       responseProcessor.foreach(_ ! responseFunc(dispatch))
@@ -206,9 +201,8 @@ object GatewayHandler {
   ): Props = {
     val f = (dispatch: Dispatch[_]) => {
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
-      val d     = dispatch.d
 
-      APIMessageHandlerEvent(d, event.transformData, event.createEvent, event.handler)
+      APIMessageHandlerEvent(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
     Props(new GatewayHandler(wsUri, settings, Some(snowflakeCache), f))

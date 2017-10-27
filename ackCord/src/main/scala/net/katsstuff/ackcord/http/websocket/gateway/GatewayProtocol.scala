@@ -25,7 +25,6 @@ package net.katsstuff.ackcord.http.websocket.gateway
 
 import java.time.OffsetDateTime
 
-import io.circe.Decoder.Result
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.shapes._
@@ -38,10 +37,6 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val opCodeEncoder: Encoder[GatewayOpCode] = Encoder[Int].contramap(_.code)
   implicit val opCodeDecoder: Decoder[GatewayOpCode] =
     Decoder[Int].emap(GatewayOpCode.forCode(_).toRight("Not an opCode"))
-
-  implicit def wsEventEncoder[A]: Encoder[ComplexGatewayEvent[A, _]] = Encoder[String].contramap(_.name)
-  implicit val wsEventDecoder: Decoder[ComplexGatewayEvent[_, _]] =
-    Decoder[String].emap(GatewayEvent.forName(_).toRight("Not an event"))
 
   implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] = deriveEncoder
   implicit val readyDataDecoder: Decoder[GatewayEvent.ReadyData] = deriveDecoder
@@ -140,7 +135,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val webhookUpdateDataDecoder: Decoder[GatewayEvent.WebhookUpdateData] = deriveDecoder
 
   implicit def wsMessageEncoder[Data: Encoder]: Encoder[GatewayMessage[Data]] =
-    (a: GatewayMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.asJson)
+    (a: GatewayMessage[Data]) =>
+      Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.map(_.name).asJson)
 
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
@@ -236,47 +232,50 @@ object GatewayProtocol extends DiscordProtocol {
   private def decodeDispatch(c: HCursor): Decoder.Result[Dispatch[_]] = {
     val dC = c.downField("d")
 
-    def createDispatch[Data: Decoder](seq: Int, event: ComplexGatewayEvent[Data, _]): Either[DecodingFailure, Dispatch[Data]] =
-      dC.as[Data].map(Dispatch(seq, event, _))
+    def createDispatch[Data: Decoder](
+        seq: Int,
+        create: Data => ComplexGatewayEvent[Data, _]
+    ): Either[DecodingFailure, Dispatch[Data]] =
+      dC.as[Data].map(data => Dispatch(seq, create(data)))
 
-    c.downField("s")
-      .as[Int]
+    c.get[Int]("s")
       .flatMap { seq =>
-        c.get[ComplexGatewayEvent[_, _]]("t")
+        c.get[String]("t")
           .flatMap {
-            case event @ GatewayEvent.Ready                    => createDispatch(seq, event)
-            case event @ GatewayEvent.Resumed                  => createDispatch(seq, event)
-            case event @ GatewayEvent.ChannelCreate            => createDispatch(seq, event)
-            case event @ GatewayEvent.ChannelUpdate            => createDispatch(seq, event)
-            case event @ GatewayEvent.ChannelDelete            => createDispatch(seq, event)
-            case event @ GatewayEvent.ChannelPinsUpdate        => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildCreate              => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildUpdate              => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildDelete              => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildBanAdd              => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildBanRemove           => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildEmojisUpdate        => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildIntegrationsUpdate  => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildMemberAdd           => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildMemberRemove        => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildMemberUpdate        => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildMemberChunk         => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildRoleCreate          => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildRoleUpdate          => createDispatch(seq, event)
-            case event @ GatewayEvent.GuildRoleDelete          => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageCreate            => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageUpdate            => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageDelete            => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageDeleteBulk        => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageReactionAdd       => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageReactionRemove    => createDispatch(seq, event)
-            case event @ GatewayEvent.MessageReactionRemoveAll => createDispatch(seq, event)
-            case event @ GatewayEvent.PresenceUpdate           => createDispatch(seq, event)
-            case event @ GatewayEvent.TypingStart              => createDispatch(seq, event)
-            case event @ GatewayEvent.UserUpdate               => createDispatch(seq, event)
-            case event @ GatewayEvent.VoiceStateUpdate         => createDispatch(seq, event)
-            case event @ GatewayEvent.VoiceServerUpdate        => createDispatch(seq, event)
-            case event @ GatewayEvent.WebhookUpdate            => createDispatch(seq, event)
+            case "READY"                       => createDispatch(seq, GatewayEvent.Ready)
+            case "RESUMED"                     => createDispatch(seq, GatewayEvent.Resumed.apply)
+            case "CHANNEL_CREATE"              => createDispatch(seq, GatewayEvent.ChannelCreate)
+            case "CHANNEL_UPDATE"              => createDispatch(seq, GatewayEvent.ChannelUpdate)
+            case "CHANNEL_DELETE"              => createDispatch(seq, GatewayEvent.ChannelDelete)
+            case "CHANNEL_PINS_UPDATE"         => createDispatch(seq, GatewayEvent.ChannelPinsUpdate)
+            case "GUILD_CREATE"                => createDispatch(seq, GatewayEvent.GuildCreate)
+            case "GUILD_UPDATE"                => createDispatch(seq, GatewayEvent.GuildUpdate)
+            case "GUILD_DELETE"                => createDispatch(seq, GatewayEvent.GuildDelete)
+            case "GUILD_BAN_ADD"               => createDispatch(seq, GatewayEvent.GuildBanAdd)
+            case "GUILD_BAN_REMOVE"            => createDispatch(seq, GatewayEvent.GuildBanRemove)
+            case "GUILD_EMOJIS_UPDATE"         => createDispatch(seq, GatewayEvent.GuildEmojisUpdate)
+            case "GUILD_INTEGRATIONS_UPDATE"   => createDispatch(seq, GatewayEvent.GuildIntegrationsUpdate)
+            case "GUILD_MEMBER_ADD"            => createDispatch(seq, GatewayEvent.GuildMemberAdd)
+            case "GUILD_MEMBER_REMOVE"         => createDispatch(seq, GatewayEvent.GuildMemberRemove)
+            case "GUILD_MEMBER_UPDATE"         => createDispatch(seq, GatewayEvent.GuildMemberUpdate)
+            case "GUILD_MEMBER_CHUNK"          => createDispatch(seq, GatewayEvent.GuildMemberChunk)
+            case "GUILD_ROLE_CREATE"           => createDispatch(seq, GatewayEvent.GuildRoleCreate)
+            case "GUILD_ROLE_UPDATE"           => createDispatch(seq, GatewayEvent.GuildRoleUpdate)
+            case "GUILD_ROLE_DELETE"           => createDispatch(seq, GatewayEvent.GuildRoleDelete)
+            case "MESSAGE_CREATE"              => createDispatch(seq, GatewayEvent.MessageCreate)
+            case "MESSAGE_UPDATE"              => createDispatch(seq, GatewayEvent.MessageUpdate)
+            case "MESSAGE_DELETE"              => createDispatch(seq, GatewayEvent.MessageDelete)
+            case "MESSAGE_DELETE_BULK"         => createDispatch(seq, GatewayEvent.MessageDeleteBulk)
+            case "MESSAGE_REACTION_ADD"        => createDispatch(seq, GatewayEvent.MessageReactionAdd)
+            case "MESSAGE_REACTION_REMOVE"     => createDispatch(seq, GatewayEvent.MessageReactionRemove)
+            case "MESSAGE_REACTION_REMOVE_ALL" => createDispatch(seq, GatewayEvent.MessageReactionRemoveAll)
+            case "PRESENCE_UPDATE"             => createDispatch(seq, GatewayEvent.PresenceUpdate)
+            case "TYPING_START"                => createDispatch(seq, GatewayEvent.TypingStart)
+            case "USER_UPDATE"                 => createDispatch(seq, GatewayEvent.UserUpdate)
+            case "VOICE_STATE_UPDATE"          => createDispatch(seq, GatewayEvent.VoiceStateUpdate)
+            case "VOICE_SERVER_UPDATE"         => createDispatch(seq, GatewayEvent.VoiceServerUpdate)
+            case "WEBHOOK_UPDATE"              => createDispatch(seq, GatewayEvent.WebhookUpdate)
+            case _                             => Left(DecodingFailure("Invalid message type", c.downField("t").history))
           }
       }
   }

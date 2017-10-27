@@ -56,7 +56,7 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
   private def isReady: Boolean = prevSnapshot != null && snapshot != null
 
   override def receive: Receive = {
-    case readyHandler: CacheHandlerEvent[_, _]
+    case readyHandler: CacheHandlerEvent[_]
         if readyHandler.data
           .isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
       val builder = new CacheSnapshotBuilder(
@@ -78,18 +78,18 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       snapshot = prevSnapshot
 
       readyHandler match {
-        case event: APIMessageHandlerEvent[_, _] =>
-          event.sendEvent(event.data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case event: APIMessageHandlerEvent[_] =>
+          event.sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
         case _ =>
       }
-    case handlerEvent: CacheHandlerEvent[_, _] if isReady =>
+    case handlerEvent: CacheHandlerEvent[_] if isReady =>
       val builder = CacheSnapshotBuilder(snapshot)
       handlerEvent.handle(builder)(log)
 
       updateSnapshot(builder.toImmutable)
       handlerEvent match {
-        case event: APIMessageHandlerEvent[_, _] =>
-          event.sendEvent(event.data)(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case event: APIMessageHandlerEvent[_] =>
+          event.sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
         case _ =>
       }
     case _ if !isReady => log.error("Received event before ready")
@@ -103,7 +103,7 @@ object SnowflakeCache {
   * Represents some sort of event handled by the cache
   * @tparam Data The data it contains
   */
-sealed trait CacheHandlerEvent[Data, HandlerData] {
+sealed trait CacheHandlerEvent[Data] {
 
   /**
     * The data to update
@@ -111,20 +111,15 @@ sealed trait CacheHandlerEvent[Data, HandlerData] {
   def data: Data
 
   /**
-    * A function to transform the data before it's handled
-    */
-  def transformData: Data => HandlerData
-
-  /**
     * A handler for the data
     */
-  def handler: CacheHandler[HandlerData]
+  def handler: CacheHandler[Data]
 
   /**
     * Updates a [[CacheSnapshotBuilder]] with the data in this object.
     */
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
-    handler.handle(builder, transformData(data))
+    handler.handle(builder, data)
 }
 
 /**
@@ -136,12 +131,11 @@ sealed trait CacheHandlerEvent[Data, HandlerData] {
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains
   */
-case class APIMessageHandlerEvent[Data, HandlerData](
+case class APIMessageHandlerEvent[Data](
     data: Data,
-    transformData: Data => HandlerData,
-    sendEvent: Data => (CacheSnapshot, CacheSnapshot) => Option[APIMessage],
-    handler: CacheHandler[HandlerData]
-) extends CacheHandlerEvent[Data, HandlerData]
+    sendEvent: (CacheSnapshot, CacheSnapshot) => Option[APIMessage],
+    handler: CacheHandler[Data]
+) extends CacheHandlerEvent[Data]
 
 /**
   * Any other event that updates the cache with it's data.
@@ -149,6 +143,4 @@ case class APIMessageHandlerEvent[Data, HandlerData](
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains
   */
-case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data, Data] {
-  override def transformData: Data => Data = identity
-}
+case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
