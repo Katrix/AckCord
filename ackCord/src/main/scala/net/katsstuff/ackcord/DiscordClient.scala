@@ -30,7 +30,6 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.event.EventStream
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.headers.GenericHttpCredentials
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
@@ -58,12 +57,13 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Disco
   private implicit val system: ActorSystem = context.system
 
   private val cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
-  private val gatewayHandler =
-    context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "WsHandler")
-  private val restHandler =
+  private var gatewayHandler =
+    context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
+  private var restHandler =
     context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
 
-  private var shutdownCount = 0
+  private var shutdownCount  = 0
+  private var isShuttingDown = false
 
   override def preStart(): Unit = {
     context.watch(gatewayHandler)
@@ -72,24 +72,36 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Disco
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
+      isShuttingDown = true
       restHandler.forward(DiscordClient.ShutdownClient)
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
-    case Terminated(act) =>
+    case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
       if (shutdownCount == 2) {
         system.terminate()
       }
+    case Terminated(ref) if ref == gatewayHandler =>
+      gatewayHandler = context.actorOf(
+        GatewayHandler.cacheProps(gatewayWsUri, settings, cache),
+        if (ref.path.name.endsWith("New")) "GatewayHandler" else "GatewayHandlerNew" //We try to avoid name conflicts
+      )
+      log.info("Gateway handler shut down. Restarting")
+    case Terminated(ref) if ref == restHandler =>
+      restHandler = context.actorOf(
+        RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache),
+        if (ref.path.name.endsWith("New")) "RestHandler" else "RestHandlerNew" //We try to avoid name conflicts
+      )
+      log.info("Gateway handler shut down. Restarting")
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(
-      implicit mat: Materializer
-  ): Props = Props(new DiscordClient(wsUri, eventStream, settings))
+  def props(wsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(implicit mat: Materializer): Props =
+    Props(new DiscordClient(wsUri, eventStream, settings))
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
