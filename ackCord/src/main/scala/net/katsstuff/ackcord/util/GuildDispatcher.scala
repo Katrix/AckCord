@@ -25,11 +25,15 @@ package net.katsstuff.ackcord.util
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.event.Logging
+import akka.event.Logging.LogLevel
 import akka.routing.Broadcast
-import net.katsstuff.ackcord.APIMessage
+import akka.stream.Attributes.LogLevels
+import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{GuildChannel, GuildId}
-import net.katsstuff.ackcord.util.GuildDispatcher.{GetGuildActor, ResponseGetGuild}
+import net.katsstuff.ackcord.util.GuildDispatcher.{GetGuildActor, ResponseGetGuild, TerminatedGuild}
+import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 
 /**
   * Will send all [[APIMessage]]s with the same guild
@@ -39,13 +43,18 @@ import net.katsstuff.ackcord.util.GuildDispatcher.{GetGuildActor, ResponseGetGui
   * - GuildMessage
   * - MessageMessage
   * - VoiceStateUpdate
+  * It also respects [[DiscordClient.ShutdownClient]].
+  * It sends the shutdown to all it's children, and when all the children have
+  * stopped, it stops itself. The child actors will not receive any further
+  * events once a shutdown has been started.
   * @param props The function to obtain a props used for constructing handlers
   * @param notGuildHandler For some messages that could be directed to a guild
   *                        but not always, if the message is not directed
   *                        towards a guild, it will me sent here instead.
   */
-class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor {
-  val handlers = mutable.HashMap.empty[GuildId, ActorRef]
+class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor with ActorLogging {
+  val handlers       = mutable.HashMap.empty[GuildId, ActorRef]
+  var isShuttingDown = false
 
   override def receive: Receive = {
     case msg: APIMessage.GuildMessage => sendToGuild(msg.guild.id, msg)
@@ -64,16 +73,32 @@ class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]
         case Some(guildId) => sendToGuild(guildId, msg)
         case None          => sendToNotGuild(msg)
       }
-    case GetGuildActor(guildId) => sender() ! ResponseGetGuild(getGuild(guildId))
+    case GetGuildActor(guildId) => if (!isShuttingDown) sender() ! ResponseGetGuild(getGuild(guildId))
     case Broadcast(msg)         => handlers.values.foreach(_ ! msg)
+    case DiscordClient.ShutdownClient =>
+      isShuttingDown = true
+      handlers.values.foreach(_ ! ShutdownClient)
+    case TerminatedGuild(guildId) =>
+      handlers.remove(guildId)
+      val level = if(isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
+      log.log(level, "Actor for guild {} shut down", guildId)
+
+      if (isShuttingDown && handlers.isEmpty) {
+        context.stop(self)
+      }
   }
 
-  def sendToGuild(guildId: GuildId, msg: Any): Unit = getGuild(guildId) ! msg
+  def sendToGuild(guildId: GuildId, msg: Any): Unit = if (!isShuttingDown) getGuild(guildId) ! msg
 
-  def sendToNotGuild(msg: Any): Unit = notGuildHandler.foreach(_ ! msg)
+  def sendToNotGuild(msg: Any): Unit = if (!isShuttingDown) notGuildHandler.foreach(_ ! msg)
 
-  def getGuild(guildId: GuildId): ActorRef =
-    handlers.getOrElseUpdate(guildId, context.actorOf(props(guildId), s"${self.path.name}$guildId"))
+  def getGuild(guildId: GuildId): ActorRef = {
+    lazy val newActor = {
+      log.debug("Creating new actor for guild {}", guildId)
+      context.watchWith(context.actorOf(props(guildId), guildId.toString), TerminatedGuild(guildId))
+    }
+    handlers.getOrElseUpdate(guildId, newActor)
+  }
 }
 object GuildDispatcher {
   def props(props: GuildId => Props, notGuildHandler: Option[ActorRef]): Props =
@@ -92,4 +117,6 @@ object GuildDispatcher {
     * @param guildActor The actor for the specified guild
     */
   case class ResponseGetGuild(guildActor: ActorRef)
+
+  private case class TerminatedGuild(guildId: GuildId)
 }

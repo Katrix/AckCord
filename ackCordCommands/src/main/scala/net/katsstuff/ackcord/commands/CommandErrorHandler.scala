@@ -28,7 +28,7 @@ import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.Request
 import net.katsstuff.ackcord.commands.CommandDispatcher.{NoCommand, UnknownCommand}
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, Message}
 import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
 
 /**
@@ -38,17 +38,21 @@ trait CommandErrorHandler extends Actor {
   def client: ClientActor
 
   override def receive: Receive = {
-    case NoCommand(msg, c) => client ! Request(CreateMessage(msg.channelId, noCommandReply(msg)(c)), NotUsed, None)
+    case NoCommand(msg, c) =>
+      noCommandReply(msg)(c).foreach(sendMsg(msg.channelId, _))
     case UnknownCommand(msg, args, c) =>
-      client ! Request(CreateMessage(msg.channelId, unknownCommandReply(msg, args)(c)), NotUsed, None)
+      unknownCommandReply(msg, args)(c).foreach(sendMsg(msg.channelId, _))
   }
+
+  private def sendMsg(channelId: ChannelId, data: CreateMessageData): Unit =
+    client ! Request(CreateMessage(channelId, data), NotUsed, None)
 
   /**
     * Create a reply for errors where no command was specified.
     * @param msg The base message.
     * @param c The current cache.
     */
-  def noCommandReply(msg: Message)(implicit c: CacheSnapshot): CreateMessageData
+  def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData]
 
   /**
     * Create a reply for errors where no command by that name is known.
@@ -56,5 +60,5 @@ trait CommandErrorHandler extends Actor {
     * @param args The args passed in. The head is the unknown command name.
     * @param c The current cache.
     */
-  def unknownCommandReply(msg: Message, args: List[String])(implicit c: CacheSnapshot): CreateMessageData
+  def unknownCommandReply(msg: Message, args: List[String])(implicit c: CacheSnapshot): Option[CreateMessageData]
 }

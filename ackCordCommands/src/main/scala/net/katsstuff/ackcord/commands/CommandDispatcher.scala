@@ -27,13 +27,17 @@ import java.util.Locale
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorRef, Props}
-import net.katsstuff.ackcord.APIMessage
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
-  * Used to parse valid commands and send them to some handler
+  * Used to parse valid commands and send them to some handler.
+  * It also respects [[DiscordClient.ShutdownClient]].
+  * It sends the shutdown to all it's children, and when all the children have
+  * stopped, it stops itself. The child actors will not receive any further
+  * events once a shutdown has been started.
   * @param needMention If all commands handled by this dispatcher need a
   *                    mention before the command
   * @param initialCommands The initial commands this dispatcher should start with.
@@ -47,7 +51,8 @@ class CommandDispatcher(
     needMention: Boolean,
     initialCommands: Map[CmdCategory, Map[String, Props]],
     errorHandlerProps: Props
-) extends Actor {
+) extends Actor
+    with ActorLogging {
   import net.katsstuff.ackcord.commands.CommandDispatcher._
 
   val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
@@ -58,36 +63,63 @@ class CommandDispatcher(
       commands.getOrElseUpdate(cat, mutable.HashMap.empty) ++= innerMap.map {
         case (name, props) =>
           val lowercaseName = name.toLowerCase(Locale.ROOT)
-          lowercaseName -> context.actorOf(props, lowercaseName)
+          val actor         = context.actorOf(props, lowercaseName)
+          context.watchWith(actor, TerminatedCommand(cat, lowercaseName, props))
+          lowercaseName -> actor
       }
   }
+
+  var isShuttingDown = false
 
   override def receive: Receive = {
     case APIMessage.MessageCreate(msg, c, _) =>
       implicit val cache: CacheSnapshot = c
-      isValidCommand(msg).foreach { args =>
-        if (args == Nil) errorHandler ! NoCommand(msg, c)
-        else {
-          val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
-          for {
-            cat        <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
-            handlerMap <- commands.get(cat)
-          } {
-            val newArgs = lowercaseCommand.substring(cat.prefix.length) :: args.tail
-            handlerMap.get(newArgs.head) match {
-              case Some(handler) => handler ! Command(msg, newArgs.tail, c)
-              case None          => errorHandler ! UnknownCommand(msg, newArgs, c)
+      if (!isShuttingDown) {
+        isValidCommand(msg).foreach { args =>
+          if (args == Nil) errorHandler ! NoCommand(msg, c)
+          else {
+            val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
+            for {
+              cat        <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+              handlerMap <- commands.get(cat)
+            } {
+              val newArgs = lowercaseCommand.substring(cat.prefix.length) :: args.tail
+              handlerMap.get(newArgs.head) match {
+                case Some(handler) => handler ! Command(msg, newArgs.tail, c)
+                case None          => errorHandler ! UnknownCommand(msg, newArgs, c)
+              }
             }
           }
         }
       }
     case RegisterCommand(cat, name, handler) =>
-      commands
-        .getOrElseUpdate(cat, mutable.HashMap.empty)
-        .put(name.toLowerCase(Locale.ROOT), handler)
+      if (!isShuttingDown) {
+        commands
+          .getOrElseUpdate(cat, mutable.HashMap.empty)
+          .put(name.toLowerCase(Locale.ROOT), handler)
+      }
     case UnregisterCommand(cat, name) =>
       commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
+    case DiscordClient.ShutdownClient =>
+      isShuttingDown = true
+      commands.foreach(_._2.foreach(_._2 ! DiscordClient.ShutdownClient))
+    case TerminatedCommand(category, name, props) =>
+      if (isShuttingDown) {
+        log.debug("Command {} in category {} shut down")
+        commands.get(category).foreach { map =>
+          map.remove(name)
+          if(map.isEmpty) commands.remove(category)
+        }
 
+        if(commands.isEmpty) {
+          context.stop(self)
+        }
+      } else {
+        log.warning("Command {} in category {} shut down. Restarting")
+        val newActor = context.actorOf(props)
+        context.watchWith(newActor, TerminatedCommand(category, name, props))
+        commands.getOrElseUpdate(category, mutable.HashMap.empty).put(name, newActor)
+      }
   }
 
   def isValidCommand(msg: Message)(implicit c: CacheSnapshot): Option[List[String]] = {
@@ -153,4 +185,6 @@ object CommandDispatcher {
     * @param name The name of this command, for example `ping`
     */
   case class UnregisterCommand(category: CmdCategory, name: String)
+
+  private case class TerminatedCommand(category: CmdCategory, name: String, props: Props)
 }

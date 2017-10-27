@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Status}
+import net.katsstuff.ackcord.DiscordClient
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CommandDispatcher.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
@@ -50,12 +51,15 @@ trait BaseCommandActor extends Actor {
 }
 
 /**
-  * An actor that handles a command and potential errors. Use for clarity, and implicit snapshot.
+  * An actor that handles a command and potential errors. Use for clarity, and
+  * implicit snapshot. If it receives [[DiscordClient.ShutdownClient]], it will
+  * stop itself.
   */
 trait CommandActor extends BaseCommandActor {
   override def receive: Receive = {
-    case Command(msg, args, c) => handleCommand(msg, args)(c)
-    case Status.Failure(e)     => handleFailure(e)
+    case Command(msg, args, c)        => handleCommand(msg, args)(c)
+    case Status.Failure(e)            => handleFailure(e)
+    case DiscordClient.ShutdownClient => context.stop(self)
   }
 
   /**
@@ -70,7 +74,8 @@ trait CommandActor extends BaseCommandActor {
 
 /**
   * An actor that handles a parsed command and potential errors. Use for clarity,
-  * error handling, and implicit snapshot.
+  * error handling, and implicit snapshot. If it receives [[DiscordClient.ShutdownClient]],
+  * it will stop itself.
   * @param typeable A typeable of the expected arg type. Used to make sure
   *                 that a the correct type is received.
   * @tparam A The arg type
@@ -82,8 +87,11 @@ abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Bas
   val IsA: TypeCase[A] = TypeCase[A]
 
   override def receive: Receive = {
-    case ParsedCommand(msg, IsA(args), remaining, c) => handleCommand(msg, args, remaining)(c)
+    case ParsedCommand(msg, IsA(args), remaining, c) =>
+      handleCommand(msg, args, remaining)(c)
     case ParseError(msg, e, c)                       => handleParseError(msg, e)(c)
+    case Status.Failure(e)                           => handleFailure(e)
+    case DiscordClient.ShutdownClient                => context.stop(self)
   }
 
   /**

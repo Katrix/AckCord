@@ -47,7 +47,7 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.RequestFailedResponder
-import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage}
+import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
 
 class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer)
     extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
@@ -82,6 +82,11 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   startWith(Inactive, Connecting(None, None, None, None))
 
   when(Inactive) {
+    case Event(DiscordClient.ShutdownClient, HasVoiceWs(voiceWs, _)) =>
+      voiceWs ! Logout
+      stop()
+    case Event(DiscordClient.ShutdownClient, _) =>
+      stop()
     case Event(msg: APIMessage.MessageCreate, _) =>
       commandDispatcher.forward(msg)
       stay()
@@ -150,6 +155,10 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   }
 
   when(Active) {
+    case Event(DiscordClient.ShutdownClient, CanSendAudio(voiceWs, dataSender, _)) =>
+      voiceWs ! Logout
+      dataSender ! StopSendAudio
+      stop()
     case Event(msg: APIMessage.MessageCreate, _) =>
       commandDispatcher.forward(msg)
       stay()

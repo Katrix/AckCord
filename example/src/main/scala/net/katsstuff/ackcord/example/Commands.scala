@@ -26,17 +26,15 @@ package net.katsstuff.ackcord.example
 import java.nio.file.Paths
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
-import net.katsstuff.ackcord.commands.CommandDispatcher.{NoCommand, UnknownCommand}
 import net.katsstuff.ackcord.commands.{CommandDescription, CommandErrorHandler, CommandMeta, ParsedCommandActor}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
 import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.RequestFailedResponder
-import net.katsstuff.ackcord.{Request, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.{DiscordClient, Request, RequestFailed, RequestResponse}
 
 class PingCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
@@ -151,28 +149,55 @@ object InfoCommandHandler {
   def props(implicit client: ClientActor): Props = Props(new InfoCommandHandler)
 }
 
-class KillCommand(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] with ActorLogging {
+class KillCommand(main: ActorRef)(implicit val client: ClientActor)
+    extends ParsedCommandActor[NotUsed]
+    with ActorLogging {
+  context.watch(main)
+
+  override def receive: Receive = {
+    case DiscordClient.ShutdownClient => //We make sure to ignore this to be able to run code after the shutdown is complete
+    case Terminated(`main`) =>
+      log.info("Everything shut down")
+      context.system.terminate()
+    case x if super.receive.isDefinedAt(x) => super.receive(x)
+  }
+
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     log.info("Received shutdown command")
-    client ! ShutdownClient
+    main ! ShutdownClient
   }
 }
 object KillCommand {
-  def props(implicit client: ClientActor): Props = Props(new KillCommand)
-  def cmdMeta(implicit client: ClientActor): CommandMeta[NotUsed] =
+  def props(mainActor: ActorRef)(implicit client: ClientActor): Props = Props(new KillCommand(mainActor))
+  def cmdMeta(mainActor: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
     CommandMeta[NotUsed](
       category = ExampleCmdCategories.!,
       alias = Seq("kill", "die"),
-      handler = props,
+      handler = props(mainActor),
       description = Some(CommandDescription(name = "Kill bot", description = "Shut down this bot")),
     )
 }
 
 class ExampleErrorHandler(implicit val client: ClientActor) extends CommandErrorHandler {
-  override def noCommandReply(msg: Message)(implicit c: CacheSnapshot) = CreateMessageData("No command specified")
-  override def unknownCommandReply(msg: Message, args: List[String])(implicit c: CacheSnapshot) =
-    CreateMessageData(s"No command named ${args.head} known")
+  override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] =
+    Some(CreateMessageData("No command specified"))
+  override def unknownCommandReply(msg: Message, args: List[String])(
+      implicit c: CacheSnapshot
+  ): Option[CreateMessageData] = {
+    println("Sending no command" + self)
+    Some(CreateMessageData(s"No command named ${args.head} known"))
+  }
 }
 object ExampleErrorHandler {
   def props(implicit client: ClientActor): Props = Props(new ExampleErrorHandler)
+}
+
+class IgnoreUnknownErrorHandler(implicit val client: ClientActor) extends CommandErrorHandler {
+  override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] = None
+  override def unknownCommandReply(msg: Message, args: List[String])(
+      implicit c: CacheSnapshot
+  ): Option[CreateMessageData] = None
+}
+object IgnoreUnknownErrorHandler {
+  def props(implicit client: ClientActor): Props = Props(new IgnoreUnknownErrorHandler)
 }

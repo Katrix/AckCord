@@ -62,8 +62,8 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Disco
   private var restHandler =
     context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
 
-  private var shutdownCount  = 0
-  private var isShuttingDown = false
+  private var shutdownCount = 0
+  private var shutdownInitiator: ActorRef = _
 
   override def preStart(): Unit = {
     context.watch(gatewayHandler)
@@ -72,31 +72,27 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Disco
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
-      isShuttingDown = true
+      shutdownInitiator = sender()
+      context.stop(cache)
       restHandler.forward(DiscordClient.ShutdownClient)
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
-    case Terminated(act) if isShuttingDown =>
+    case Terminated(act) if shutdownInitiator != null =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
       if (shutdownCount == 2) {
-        system.terminate()
+        context.stop(self)
       }
     case Terminated(ref) if ref == gatewayHandler =>
-      gatewayHandler = context.actorOf(
-        GatewayHandler.cacheProps(gatewayWsUri, settings, cache),
-        if (ref.path.name.endsWith("New")) "GatewayHandler" else "GatewayHandlerNew" //We try to avoid name conflicts
-      )
       log.info("Gateway handler shut down. Restarting")
+      gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
     case Terminated(ref) if ref == restHandler =>
-      restHandler = context.actorOf(
-        RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache),
-        if (ref.path.name.endsWith("New")) "RestHandler" else "RestHandlerNew" //We try to avoid name conflicts
-      )
       log.info("Gateway handler shut down. Restarting")
+      restHandler =
+        context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
   }
 }
 object DiscordClient extends FailFastCirceSupport {
