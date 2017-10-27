@@ -59,7 +59,6 @@ class VoiceUDPHandler(
   import VoiceUDPHandler._
 
   implicit val system: ActorSystem = context.system
-  import context.dispatcher
 
   IO(UdpConnected) ! UdpConnected.Connect(self, new InetSocketAddress(address, port))
 
@@ -81,7 +80,7 @@ class VoiceUDPHandler(
     case Event(UdpConnected.Connected, NoSocket) => stay using WithSocket(sender())
     case Event(ip: DoIPDiscovery, NoSocket)      =>
       //We received the request a bit early, resend it
-      system.scheduler.scheduleOnce(100.millis, self, ip)
+      setTimer("ResendIPDiscovery", ip, 100.millis)
       log.debug("Resending DoIPDiscovery request")
       stay()
     case Event(ip: DoIPDiscovery, WithSocket(socket)) =>

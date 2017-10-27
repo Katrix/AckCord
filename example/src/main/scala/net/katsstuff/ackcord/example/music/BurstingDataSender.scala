@@ -26,20 +26,14 @@ package net.katsstuff.ackcord.example.music
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{
-  silence,
-  BeginBurstMode,
-  DataRequest,
-  SendDataBurst,
-  StopBurstMode
-}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{BeginBurstMode, DataRequest, SendDataBurst, StopBurstMode, silence}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
     extends Actor
-    with ActorLogging {
+    with ActorLogging with Timers {
   import DataSender._
 
   final val BehindLimit = -40
@@ -102,7 +96,7 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
       sendPackets(num + extra)
     } else {
       awaitingPackets = num
-      system.scheduler.scheduleOnce(expectedDiff.millis, self, SendAudio)
+      timers.startSingleTimer("EarlyRequest", SendAudio, expectedDiff.millis)
     }
   }
 
@@ -126,11 +120,11 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
         20
       } else {
         val notSentTime = notSent * 20
+        log.info("Did not manage to send all packets, will retry in {} millis", notSentTime)
         expectedTime += notSentTime
         notSentTime
       }
-      log.info("Did not manage to send all packets, will retry in {} millis", untilRetry)
-      system.scheduler.scheduleOnce(untilRetry.millis, self, SendAudio)
+      timers.startSingleTimer("RetryRequest", SendAudio, untilRetry.millis)
     } else {
       expectedTime += sentNum * 20
     }

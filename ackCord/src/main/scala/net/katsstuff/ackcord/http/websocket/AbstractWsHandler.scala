@@ -28,12 +28,12 @@ import scala.concurrent.duration.FiniteDuration
 import scala.language.higherKinds
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, FSM}
+import akka.actor.{ActorRef, ActorSystem, FSM}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, ValidUpgrade, WebSocketUpgradeResponse}
-import akka.stream.{Materializer, OverflowStrategy}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
+import akka.stream.{Materializer, OverflowStrategy}
 import io.circe
 import io.circe.syntax._
 import io.circe.{Encoder, Error}
@@ -58,7 +58,6 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](implicit mat: Materialize
 
   onTermination {
     case StopEvent(_, _, data) =>
-      data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
   }
 
@@ -170,17 +169,14 @@ object AbstractWsHandler {
   class AckException(msg: String) extends Exception(msg)
 
   private[websocket] trait Data[Resume] {
-    def resumeOpt:              Option[Resume]
-    def queueOpt:               Option[SourceQueueWithComplete[Message]]
-    def heartbeatCancelableOpt: Option[Cancellable]
+    def resumeOpt: Option[Resume]
+    def queueOpt:  Option[SourceQueueWithComplete[Message]]
   }
   case class WithResumeData[Resume](resumeOpt: Option[Resume]) extends Data[Resume] {
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = None
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = None
+    override def queueOpt: Option[SourceQueueWithComplete[Message]] = None
   }
   case class WithQueue[Resume](queue: SourceQueueWithComplete[Message], resumeOpt: Option[Resume])
       extends Data[Resume] {
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = None
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
+    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 }

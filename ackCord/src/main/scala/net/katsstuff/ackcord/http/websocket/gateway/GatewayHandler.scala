@@ -28,7 +28,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
@@ -65,7 +65,6 @@ class GatewayHandler(
   import GatewayProtocol._
 
   private implicit val system: ActorSystem = context.system
-  import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
@@ -99,7 +98,7 @@ class GatewayHandler(
       sender() ! AckSink
       res
     case event @ Event(_: GatewayMessage[_], _) => handleExternalMessage(event)
-    case Event(SendHeartbeat, data @ WithHeartbeat(_, receivedAck, source, resume)) =>
+    case Event(SendHeartbeat, data @ WithHeartbeat(receivedAck, source, resume)) =>
       if (receivedAck) {
         val seq = resume.map(_.seq)
 
@@ -110,13 +109,11 @@ class GatewayHandler(
         stay using data.copy(receivedAck = false)
       } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
     case Event(Logout, data) =>
-      data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
       stop()
     case Event(Restart(fresh, waitDur), data) =>
-      data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
-      system.scheduler.scheduleOnce(waitDur, self, Login)
+      setTimer("RestartLogin", Login, waitDur)
       goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
   }
 
@@ -141,8 +138,9 @@ class GatewayHandler(
       }
 
       queue.offer(TextMessage(payload))
-      val cancellable = system.scheduler.schedule(0.seconds, data.heartbeatInterval.millis, self, SendHeartbeat)
-      stay using WithHeartbeat(cancellable, receivedAck = true, queue, resume)
+      self ! SendHeartbeat
+      setTimer("SendHeartbeats", SendHeartbeat, data.heartbeatInterval.millis, repeat = true)
+      stay using WithHeartbeat(receivedAck = true, queue, resume)
     case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
       val stayData = dispatch.event match {
         case GatewayEvent.Ready(readyData) =>
@@ -171,13 +169,13 @@ class GatewayHandler(
     * Handle external messages sent from neither this nor Discord
     */
   def handleExternalMessage: StateFunction = {
-    case Event(request: RequestGuildMembers, WithHeartbeat(_, _, queue, _)) =>
+    case Event(request: RequestGuildMembers, WithHeartbeat(_, queue, _)) =>
       val payload = createPayload(request)
       queue.offer(TextMessage(payload))
       log.debug("Requested guild data for {}", request.d.guildId)
 
       stay
-    case Event(request: VoiceStateUpdate, WithHeartbeat(_, _, queue, _)) =>
+    case Event(request: VoiceStateUpdate, WithHeartbeat(_, queue, _)) =>
       val payload = createPayload(request)
       queue.offer(TextMessage(payload))
 
@@ -209,12 +207,10 @@ object GatewayHandler {
   }
 
   private case class WithHeartbeat[Resume](
-      heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       queue: SourceQueueWithComplete[Message],
       resumeOpt: Option[Resume]
   ) extends Data[Resume] {
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = Some(heartbeatCancelable)
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
+    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 }

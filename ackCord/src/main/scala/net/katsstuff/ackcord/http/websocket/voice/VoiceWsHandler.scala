@@ -27,7 +27,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Cancellable, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
@@ -68,7 +68,6 @@ class VoiceWsHandler(
   import VoiceWsProtocol._
 
   private implicit val system: ActorSystem = context.system
-  import context.dispatcher
 
   def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
@@ -117,12 +116,12 @@ class VoiceWsHandler(
       queue.offer(TextMessage(payload))
 
       stay()
-    case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, connection, queue, _)) =>
+    case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, queue, _)) =>
       val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
       val payload     = createPayload(SelectProtocol(protocolObj))
       queue.offer(TextMessage(payload))
       stay()
-    case Event(SendHeartbeat, data @ WithUDPActor(_, _, receivedAck, _, _, _, queue, _)) =>
+    case Event(SendHeartbeat, data @ WithUDPActor(_, receivedAck, _, _, _, queue, _)) =>
       if (receivedAck) {
         val nonce = System.currentTimeMillis().toInt
 
@@ -132,7 +131,7 @@ class VoiceWsHandler(
 
         stay using data.copy(receivedAck = false, previousNonce = Some(nonce))
       } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
-    case Event(SendHeartbeat, data @ WithHeartbeat(_, _, receivedAck, _, queue, _)) =>
+    case Event(SendHeartbeat, data @ WithHeartbeat(_, receivedAck, _, queue, _)) =>
       if (receivedAck) {
         val nonce = System.currentTimeMillis().toInt
 
@@ -154,15 +153,13 @@ class VoiceWsHandler(
     case Event(ConnectionDied, _) =>
       throw new IllegalStateException("Voice connection died") //This should never happen as long as we're in the active state
     case Event(Logout, data: WithUDPActor) =>
-      data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
       data.connectionActor ! Disconnect
       log.info("Logging out, Stopping")
       stop()
     case Event(Restart(fresh, waitDur), data) =>
-      data.heartbeatCancelableOpt.foreach(_.cancel())
       data.queueOpt.foreach(_.complete())
-      system.scheduler.scheduleOnce(waitDur, self, Login)
+      setTimer("RestartLogin", Login, waitDur)
       log.info("Restarting, going to Inactive")
       goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
   }
@@ -181,7 +178,6 @@ class VoiceWsHandler(
       context.watchWith(connectionActor, ConnectionDied)
       val newData = WithUDPActor(
         ipData = None,
-        heartbeatCancelable = data.heartbeatCancelable,
         receivedAck = data.receivedAck,
         previousNonce = data.previousNonce,
         ssrc = ssrc,
@@ -192,11 +188,10 @@ class VoiceWsHandler(
 
       stay using newData
     case Event(Right(Hello(heartbeatInterval)), WithQueue(queue, _)) =>
-      val cancellable =
-        system.scheduler.schedule(0.seconds, (heartbeatInterval * 0.75).toInt.millis, self, SendHeartbeat)
+      self ! SendHeartbeat
+      setTimer("SendHeartbeats", SendHeartbeat, (heartbeatInterval * 0.75).toInt.millis, repeat = true)
       stay using WithHeartbeat(
         ipData = None,
-        heartbeatCancelable = cancellable,
         receivedAck = true,
         previousNonce = None,
         queue = queue,
@@ -247,7 +242,6 @@ object VoiceWsHandler {
 
   private case class WithUDPActor(
       ipData: Option[IPData],
-      heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       previousNonce: Option[Int],
       ssrc: Int,
@@ -255,22 +249,19 @@ object VoiceWsHandler {
       queue: SourceQueueWithComplete[Message],
       resume: ResumeData
   ) extends Data[ResumeData] {
-    def resumeOpt:                       Option[ResumeData]                       = Some(resume)
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = None
+    def resumeOpt:         Option[ResumeData]                       = Some(resume)
+    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 
   private case class IPData(address: String, port: Int)
   private case class WithHeartbeat(
       ipData: Option[IPData],
-      heartbeatCancelable: Cancellable,
       receivedAck: Boolean,
       previousNonce: Option[Int],
       queue: SourceQueueWithComplete[Message],
       resume: ResumeData
   ) extends Data[ResumeData] {
-    def resumeOpt:                       Option[ResumeData]                       = Some(resume)
-    override def queueOpt:               Option[SourceQueueWithComplete[Message]] = Some(queue)
-    override def heartbeatCancelableOpt: Option[Cancellable]                      = Some(heartbeatCancelable)
+    def resumeOpt:         Option[ResumeData]                       = Some(resume)
+    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 }

@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
@@ -60,7 +60,7 @@ class RESTHandler(
     responseProcessor: Option[ActorRef],
     responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
 )(implicit mat: Materializer)
-    extends Actor
+    extends Actor with Timers
     with ActorLogging {
 
   implicit val system: ActorSystem = context.system
@@ -119,7 +119,7 @@ class RESTHandler(
     //If we get here then the request is rate limited
     case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
       val duration = rateLimits.get(request.route.uri).map(_._1).getOrElse(0)
-      system.scheduler.scheduleOnce(duration.millis, self, fullRequest)
+      timers.startSingleTimer(fullRequest, fullRequest, duration.millis)
   }
 
   def onGlobalRateLimit: Receive = {
@@ -144,7 +144,7 @@ class RESTHandler(
     } {
       val retryInt = retry.value().toInt
       rateLimits.update(uri, (retryInt, rateLimits.get(uri).map(_._2).getOrElse(mutable.Queue.empty)))
-      system.scheduler.scheduleOnce(retryInt.millis, self, RemoveRateLimit(uri))
+      timers.startSingleTimer(s"RemoveRateLimit$uri", RemoveRateLimit(uri), retryInt.millis)
     }
   }
 
@@ -157,13 +157,13 @@ class RESTHandler(
         .orElse(headers.find(_.is("X-RateLimit-Reset")).map(_.value().toLong - System.currentTimeMillis())) match {
         case Some(duration) =>
           context.become(onGlobalRateLimit, discardOld = false)
-          system.scheduler.scheduleOnce(duration.millis, self, RateLimitStop)
+          timers.startSingleTimer("RemoveGlobalRateLimit", RateLimitStop, duration.millis)
         case None => log.error("No retry time for global rate limit")
       }
     } else {
       headers
         .find(_.is("Retry-After"))
-        .foreach(time => system.scheduler.scheduleOnce(time.value.toLong.millis, self, retryMsg))
+        .foreach(time => timers.startSingleTimer(retryMsg, retryMsg, time.value.toLong.millis))
     }
   }
 
