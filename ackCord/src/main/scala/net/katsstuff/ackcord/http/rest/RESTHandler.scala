@@ -200,7 +200,7 @@ object RESTHandler {
     Props(new RESTHandler(token, responseProcessor, responseFunc))
 
   def cacheProps(token: HttpCredentials, snowflakeCache: ActorRef)(implicit mat: Materializer): Props =
-    props(token, Some(snowflakeCache), (req, data) => MiscHandlerEvent(data, req.handleResponse))
+    props(token, Some(snowflakeCache), (req, data) => MiscHandlerEvent(req.processResponse(data), req.handleResponse))
 
   private case object RateLimitStop
   private case class RemoveRateLimit(uri: Uri)
