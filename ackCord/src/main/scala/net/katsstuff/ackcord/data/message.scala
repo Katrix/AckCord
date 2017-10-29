@@ -76,6 +76,7 @@ object MessageType {
   * it can also be sent by a [[WebhookAuthor]].
   */
 sealed trait Author {
+
   /**
     * The id for this author.
     */
@@ -86,7 +87,7 @@ sealed trait Author {
     */
   def user: Option[User] = this match {
     case u: User => Some(u)
-    case _ => None
+    case _       => None
   }
 
   /**
@@ -198,7 +199,10 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
   def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
 }
 
-case class EmbedField(name: String, value: String, inline: Option[Boolean] = None)
+case class EmbedField(name: String, value: String, inline: Option[Boolean] = None) {
+  require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
+  require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
+}
 
 case class Attachment(
     id: Snowflake,
@@ -221,9 +225,26 @@ case class OutgoingEmbed(
     thumbnail: Option[OutgoingEmbedThumbnail] = None,
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
-)
+) {
+  require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
+  require(description.forall(_.length <= 2048), "The description of an embed can't be longer than 2048 characters")
+  require(fields.length <= 25, "An embed can't have more than 25 fields")
+  require({
+    val fromTitle = title.fold(0)(_.length)
+    val fromDescription = description.fold(0)(_.length)
+    val fromFooter = footer.fold(0)(_.text.length)
+    val fromAuthor = author.fold(0)(_.name.length)
+    val fromFields = fields.map(f => f.name.length + f.value.length).sum
+
+    fromTitle + fromDescription + fromFooter + fromAuthor + fromFields <= 6000
+  }, "An embed can't have more than 6000 characters in total")
+}
 
 case class OutgoingEmbedThumbnail(url: String)
 case class OutgoingEmbedImage(url: String)
-case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None)
-case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None)
+case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None) {
+  require(name.length <= 256, "The author name of an embed can't have more than 256 characters")
+}
+case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
+  require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
+}

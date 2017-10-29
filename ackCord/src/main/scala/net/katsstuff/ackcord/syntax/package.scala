@@ -115,9 +115,6 @@ package object syntax {
     def fetchMessage[Context](id: MessageId, context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
       Request(GetChannelMessage(tChannel.id, id), context, sendResponseTo)
 
-    def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
-      Request(BulkDeleteMessages(tChannel.id, BulkDeleteMessagesData(ids)), context, sendResponseTo)
-
     def editChannelPermissions[Context](
         role: Role,
         allow: Permission,
@@ -188,6 +185,9 @@ package object syntax {
       context,
       sendResponseTo
     )
+
+    def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed, sendResponseTo: Option[ActorRef] = None) =
+      Request(BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids)), context, sendResponseTo)
   }
 
   implicit class VGuildChannelSyntax(val channel: VGuildChannel) extends AnyVal {
