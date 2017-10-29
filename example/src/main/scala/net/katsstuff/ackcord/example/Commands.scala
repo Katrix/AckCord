@@ -129,11 +129,9 @@ object InfoChannelCommand {
 class InfoCommandHandler(implicit client: ClientActor) extends Actor with ActorLogging {
   override def receive: Receive = {
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
-      implicit val cache: CacheSnapshot = c
-      val optName = cache.getGuildChannel(guildId, requestedChannelId).map(_.name)
-      optName match {
+      requestedChannelId.guildResolve(guildId).map(_.name) match {
         case Some(name) =>
-          cache.getGuildChannel(guildId, senderChannelId) match {
+          senderChannelId.guildResolve(guildId) match {
             case Some(channel: TGuildChannel) => client ! channel.sendMessage(s"Info for $name:\n$res")
             case Some(channel: GuildChannel)  => log.warning("{} is not a valid text channel", channel.name)
             case None                         => log.warning("No channel found for {}", requestedChannelId)

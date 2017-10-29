@@ -108,7 +108,7 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     * @param desc The description for the command
     * @return Data to create a message describing the command
     */
-  def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription): CreateMessageData
+  def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription)(implicit c: CacheSnapshot): CreateMessageData
 
   /**
     * Create a reply for all the commands tracked by this help command.
@@ -116,7 +116,7 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(page: Int): CreateMessageData
+  def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
 }
 object HelpCommand {
 

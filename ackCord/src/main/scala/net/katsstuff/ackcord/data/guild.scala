@@ -154,25 +154,20 @@ case class GuildMember(
     mute: Boolean
 ) extends GetUser
     with GetGuild {
-  def permissions(implicit c: CacheSnapshot): Permission = {
+
+  def permissions(implicit c: CacheSnapshot): Permission = guildId.resolve.map(permissions).getOrElse(Permission.None)
+  def permissions(guild: Guild): Permission = {
     import net.katsstuff.ackcord.syntax._
 
-    val res = for {
-      guild <- guildId.resolve
-    } yield {
-      if (guild.ownerId == userId) Permission.All
-      else {
-        val userPermissions = this.rolesForUser.map(_.permissions)
-        val everyonePerms   = guild.everyoneRole.permissions
+    if (guild.ownerId == userId) Permission.All
+    else {
+      val userPermissions = this.rolesForUser(guild).map(_.permissions)
+      val everyonePerms   = guild.everyoneRole.permissions
 
-        val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
+      val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
 
-        if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
-        else guildPermissions
-      }
+      if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All else guildPermissions
     }
-
-    res.getOrElse(Permission.None)
   }
 
   def permissionsWithOverrides(guildPermissions: Permission, channelId: ChannelId)(
@@ -279,7 +274,4 @@ case class IntegrationAccount(id: String, name: String)
 
 case class GuildEmbed(enabled: Boolean, channelId: ChannelId)
 
-case class Ban(
-    reason: Option[String],
-    user: UserId
-)
+case class Ban(reason: Option[String], user: UserId)

@@ -149,6 +149,14 @@ package object syntax {
           case (_, ch: GuildCategory) if ch.id == catId => ch
         }
       } yield cat
+
+    def category(guild: Guild): Option[GuildCategory] =
+      for {
+        catId <- channel.parentId
+        cat <- guild.channels.collectFirst {
+          case (_, ch: GuildCategory) if ch.id == catId => ch
+        }
+      } yield cat
   }
 
   implicit class TGuildChannelSyntax(val channel: TGuildChannel) extends AnyVal {
@@ -229,26 +237,48 @@ package object syntax {
         }
         .getOrElse(Seq.empty)
 
+    def channels(guild: Guild): Seq[GuildChannel] =
+      guild.channels.collect { case (_, ch) if ch.parentId.contains(category.id) => ch }.toSeq
+
     def tChannels(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
       channels.collect { case tChannel: TGuildChannel => tChannel }
+
+    def tChannels(guild: Guild): Seq[TGuildChannel] =
+      channels(guild).collect { case tChannel: TGuildChannel => tChannel }
 
     def vChannels(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
       channels.collect { case tChannel: VGuildChannel => tChannel }
 
+    def vChannels(guild: Guild): Seq[VGuildChannel] =
+      channels(guild).collect { case tChannel: VGuildChannel => tChannel }
+
     def channelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] = channels.find(_.id == id)
+    def channelById(id: ChannelId, guild: Guild):                     Option[GuildChannel] = channels(guild).find(_.id == id)
     def tChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = channelById(id).collect {
+      case tChannel: TGuildChannel => tChannel
+    }
+    def tChannelById(id: ChannelId, guild: Guild): Option[TGuildChannel] = channelById(id, guild).collect {
       case tChannel: TGuildChannel => tChannel
     }
     def vChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = channelById(id).collect {
       case vChannel: VGuildChannel => vChannel
     }
+    def vChannelById(id: ChannelId, guild: Guild): Option[VGuildChannel] = channelById(id, guild).collect {
+      case vChannel: VGuildChannel => vChannel
+    }
 
     def channelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
       channels.filter(_.name == name)
+    def channelsByName(name: String, guild: Guild): Seq[GuildChannel] =
+      channels(guild).filter(_.name == name)
     def tChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
       tChannels.filter(_.name == name)
+    def tChannelsByName(name: String, guild: Guild): Seq[TGuildChannel] =
+      tChannels(guild).filter(_.name == name)
     def vChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
       vChannels.filter(_.name == name)
+    def vChannelsByName(name: String, guild: Guild): Seq[VGuildChannel] =
+      vChannels(guild).filter(_.name == name)
 
     def modify[Context](
         name: String = category.name,
@@ -277,8 +307,7 @@ package object syntax {
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
     def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
-    def everyoneRole(implicit snapshot: CacheSnapshot): Role =
-      guild.roles(RoleId(guild.id)) //The everyone role should always be present
+    def everyoneRole: Role = guild.roles(RoleId(guild.id)) //The everyone role should always be present
     def mentionEveryone: String = "@everyone"
 
     def modify[Context](
@@ -538,6 +567,9 @@ package object syntax {
   implicit class GuildMemberSyntax(val guildMember: GuildMember) extends AnyVal {
     def rolesForUser(implicit snapshot: CacheSnapshot): Seq[Role] =
       guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).toSeq.flatten
+
+    def rolesForUser(guild: Guild): Seq[Role] =
+      guildMember.roleIds.flatMap(guild.roles.get)
 
     def modify[Context](
         nick: Option[String],
