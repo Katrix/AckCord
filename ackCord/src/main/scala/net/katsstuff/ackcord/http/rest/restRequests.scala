@@ -141,10 +141,14 @@ object Requests {
       content: String,
       nonce: Option[Snowflake] = None,
       tts: Boolean = false,
-      file: Option[Path] = None,
+      files: Seq[Path] = Seq.empty,
       embed: Option[OutgoingEmbed] = None
   ) {
-    file.foreach(path => require(Files.isRegularFile(path)))
+    files.foreach(path => require(Files.isRegularFile(path)))
+    require(
+      files.map(_.getFileName.toString).distinct.length == files.length,
+      "Please use unique filenames for all files"
+    )
   }
 
   //We handle this here as the file argument needs special treatment
@@ -159,13 +163,15 @@ object Requests {
 
     override def createBody: RequestEntity = {
       this match {
-        case CreateMessage(_, CreateMessageData(_, _, _, Some(file), _)) =>
-          val filePart =
-            FormData.BodyPart.fromPath(file.getFileName.toString, ContentTypes.`application/octet-stream`, file)
+        case CreateMessage(_, CreateMessageData(_, _, _, files, _)) if files.nonEmpty =>
+          val fileParts = files.map { f =>
+            FormData.BodyPart.fromPath(f.getFileName.toString, ContentTypes.`application/octet-stream`, f)
+          }
+
           val jsonPart =
             FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, toJsonParams.noSpaces))
 
-          FormData(filePart, jsonPart).toEntity()
+          FormData(fileParts: _*, jsonPart).toEntity()
         case _ => super.createBody
       }
     }
