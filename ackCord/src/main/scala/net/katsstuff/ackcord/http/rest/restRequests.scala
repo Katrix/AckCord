@@ -475,9 +475,9 @@ object Requests {
       nsfw: Option[Boolean] = None
   )
   case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData)
-      extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
+      extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] with GuildRequest {
     override def route: RestRoute = Routes.createGuildChannel(guildId)
-    override def paramsEncoder: Encoder[CreateGuildChannelData] with GuildRequest = {
+    override def paramsEncoder: Encoder[CreateGuildChannelData] = {
       import io.circe.generic.extras.auto._
       deriveEncoder[CreateGuildChannelData]
     }
