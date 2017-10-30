@@ -50,9 +50,8 @@ import shapeless.tag.@@
   * @param settings The settings to use
   * @param mat The materializer to use
   */
-class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: ClientSettings)(
-    implicit mat: Materializer
-) extends Actor
+class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: ClientSettings)(implicit mat: Materializer)
+    extends Actor
     with ActorLogging {
   private implicit val system: ActorSystem = context.system
 
@@ -104,10 +103,31 @@ object DiscordClient extends FailFastCirceSupport {
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
 
+  /**
+    * Create a client actor given the needed arguments
+    * @param wsUri The websocket gateway uri
+    * @param eventStream The event stream to use for the cache
+    * @param token The bot token to use for authentication
+    * @param system The actor system to use for creating the client actor
+    * @param mat The materializer to use
+    */
   def connect(wsUri: Uri, eventStream: EventStream, token: String)(
       implicit system: ActorSystem,
       mat: Materializer
-  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, token)))
+  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, token), "DiscordClient"))
+
+  /**
+    * Create a client actor given the needed arguments
+    * @param wsUri The websocket gateway uri
+    * @param eventStream The event stream to use for the cache
+    * @param settings The settings to use
+    * @param system The actor system to use for creating the client actor
+    * @param mat The materializer to use
+    */
+  def connect(wsUri: Uri, eventStream: EventStream, settings: ClientSettings)(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, settings), "DiscordClient"))
 
   /**
     * Send this to the client to log out
@@ -182,5 +202,5 @@ case class ClientSettings(
     * @return The discord client actor
     */
   def connect(eventStream: EventStream, wsUri: Uri)(implicit system: ActorSystem, mat: Materializer): ClientActor =
-    DiscordClient.tagClient(system.actorOf(DiscordClient.props(wsUri, eventStream, this), "DiscordClient"))
+    DiscordClient.connect(wsUri, eventStream, this)
 }
