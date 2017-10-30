@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Props}
-import net.katsstuff.ackcord.commands.CommandDispatcher.Command
+import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
 import net.katsstuff.ackcord.util.MessageParser

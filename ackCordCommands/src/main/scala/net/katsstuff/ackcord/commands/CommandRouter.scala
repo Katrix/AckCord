@@ -47,13 +47,13 @@ import net.katsstuff.ackcord.util.MessageParser
   *                          Here you can roll your own, or you can base it of
   *                          [[CommandErrorHandler]].
   */
-class CommandDispatcher(
+class CommandRouter(
     needMention: Boolean,
     initialCommands: Map[CmdCategory, Map[String, Props]],
     errorHandlerProps: Props
 ) extends Actor
     with ActorLogging {
-  import net.katsstuff.ackcord.commands.CommandDispatcher._
+  import net.katsstuff.ackcord.commands.CommandRouter._
 
   val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
 
@@ -140,9 +140,9 @@ class CommandDispatcher(
     } else Some(msg.content.split(" ").toList)
   }
 }
-object CommandDispatcher {
+object CommandRouter {
   def props(needMention: Boolean, initialCommands: Map[CmdCategory, Map[String, Props]], errorHandler: Props): Props =
-    Props(new CommandDispatcher(needMention, initialCommands, errorHandler))
+    Props(new CommandRouter(needMention, initialCommands, errorHandler))
 
   /**
     * Sent to the error handler if no command is specified when mentioning

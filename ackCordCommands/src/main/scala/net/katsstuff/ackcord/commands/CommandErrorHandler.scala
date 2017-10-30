@@ -27,7 +27,7 @@ import akka.NotUsed
 import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.Request
-import net.katsstuff.ackcord.commands.CommandDispatcher.{NoCommand, UnknownCommand}
+import net.katsstuff.ackcord.commands.CommandRouter.{NoCommand, UnknownCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, Message}
 import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
 

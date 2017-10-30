@@ -32,7 +32,7 @@ import akka.routing.Broadcast
 import akka.stream.Attributes.LogLevels
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{GuildChannel, GuildId}
-import net.katsstuff.ackcord.util.GuildDispatcher.{GetGuildActor, ResponseGetGuild, TerminatedGuild}
+import net.katsstuff.ackcord.util.GuildRouter.{GetGuildActor, ResponseGetGuild, TerminatedGuild}
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 
 /**
@@ -52,7 +52,7 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   *                        but not always, if the message is not directed
   *                        towards a guild, it will me sent here instead.
   */
-class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor with ActorLogging {
+class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor with ActorLogging {
   val handlers       = mutable.HashMap.empty[GuildId, ActorRef]
   var isShuttingDown = false
 
@@ -100,11 +100,11 @@ class GuildDispatcher(props: GuildId => Props, notGuildHandler: Option[ActorRef]
     handlers.getOrElseUpdate(guildId, newActor)
   }
 }
-object GuildDispatcher {
+object GuildRouter {
   def props(props: GuildId => Props, notGuildHandler: Option[ActorRef]): Props =
-    Props(new GuildDispatcher(props, notGuildHandler))
+    Props(new GuildRouter(props, notGuildHandler))
   def props(props: Props, notGuildHandler: Option[ActorRef]): Props =
-    Props(new GuildDispatcher(_ => props, notGuildHandler))
+    Props(new GuildRouter(_ => props, notGuildHandler))
 
   /**
     * Send to the guild dispatcher to get the actor for that guild

@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandDispatcher.Command
+import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.commands.CommandParser.ParsedCommand
 import net.katsstuff.ackcord.data.{CacheSnapshot, DMChannel, GroupDMChannel, GuildChannel, Message, Permission, UserId}
 import net.katsstuff.ackcord.syntax._

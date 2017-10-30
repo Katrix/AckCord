@@ -75,12 +75,12 @@ case class CommandMeta[A](
 object CommandMeta {
 
   /**
-    * Create a map that can be passed to a [[CommandDispatcher]] as the initial commands.
+    * Create a map that can be passed to a [[CommandRouter]] as the initial commands.
     * @param client The client actor. Used for sending error messages
     *               from the filters.
     * @param commands The commands to use.
     */
-  def dispatcherMap(commands: Seq[CommandMeta[_]], client: ClientActor): Map[CmdCategory, Map[String, Props]] = {
+  def routerMap(commands: Seq[CommandMeta[_]], client: ClientActor): Map[CmdCategory, Map[String, Props]] = {
     commands.groupBy(_.category).mapValues { seq =>
       val res = for {
         meta  <- seq

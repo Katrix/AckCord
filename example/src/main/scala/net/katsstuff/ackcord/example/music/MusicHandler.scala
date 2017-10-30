@@ -37,7 +37,7 @@ import akka.actor.{ActorLogging, ActorRef, FSM, Props}
 import akka.pattern.pipe
 import akka.stream.Materializer
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandMeta}
+import net.katsstuff.ackcord.commands.{CommandRouter, CommandMeta}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel, UserId}
 import net.katsstuff.ackcord.example.ExampleErrorHandler
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
@@ -65,8 +65,8 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     )
 
   val commandDispatcher: ActorRef = context.actorOf(
-    CommandDispatcher
-      .props(needMention = true, CommandMeta.dispatcherMap(commands, client), ExampleErrorHandler.props(client)),
+    CommandRouter
+      .props(needMention = true, CommandMeta.routerMap(commands, client), ExampleErrorHandler.props(client)),
     "MusicHandlerCommands"
   )
 

@@ -29,9 +29,9 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandDispatcher, CommandMeta}
+import net.katsstuff.ackcord.commands.{CommandRouter, CommandMeta}
 import net.katsstuff.ackcord.example.music.MusicHandler
-import net.katsstuff.ackcord.util.GuildDispatcher
+import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, DiscordClient, DiscordClientSettings}
 
 object Example {
@@ -70,18 +70,18 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var
   implicit val system: ActorSystem = context.system
 
   //We set up a command dispatcher, that sends the correct command to the corresponding actor
-  val commandDispatcher: Props = CommandDispatcher.props(
+  val commandDispatcher: Props = CommandRouter.props(
     needMention = true,
-    CommandMeta.dispatcherMap(commands, client), //This method on CommandMeta wires up our command handling for us
+    CommandMeta.routerMap(commands, client), //This method on CommandMeta wires up our command handling for us
     ExampleErrorHandler.props(client)
   )
 
   //This command need to be handled for itself to avoid a deadlock
   val killCommandDispatcher: ActorRef = system.actorOf(
-    CommandDispatcher
+    CommandRouter
       .props(
         needMention = true,
-        CommandMeta.dispatcherMap(Seq(KillCommand.cmdMeta(self, client)), client),
+        CommandMeta.routerMap(Seq(KillCommand.cmdMeta(self, client)), client),
         IgnoreUnknownErrorHandler.props(client)
       ),
     "KillCommand"
@@ -89,10 +89,10 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var
 
   //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher
   var guildDispatcherCommands: ActorRef =
-    context.actorOf(GuildDispatcher.props(commandDispatcher, None), "BaseCommands")
+    context.actorOf(GuildRouter.props(commandDispatcher, None), "BaseCommands")
 
   var guildDispatcherMusic: ActorRef =
-    context.actorOf(GuildDispatcher.props(MusicHandler.props(client) _, None), "MusicHandler")
+    context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
 
   eventStream.subscribe(guildDispatcherCommands, classOf[APIMessage.MessageCreate])
   eventStream.subscribe(killCommandDispatcher, classOf[APIMessage.MessageCreate])
@@ -124,10 +124,10 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var
       }
     case Terminated(ref) if ref == guildDispatcherCommands =>
       log.warning("Guild command dispatcher went down. Restarting")
-      guildDispatcherCommands = context.actorOf(GuildDispatcher.props(commandDispatcher, None), "BaseCommands")
+      guildDispatcherCommands = context.actorOf(GuildRouter.props(commandDispatcher, None), "BaseCommands")
     case Terminated(ref) if ref == guildDispatcherMusic =>
       log.warning("Guild music dispatcher went down. Restarting")
-      guildDispatcherMusic = context.actorOf(GuildDispatcher.props(MusicHandler.props(client) _, None), "MusicHandler")
+      guildDispatcherMusic = context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
     case Terminated(ref) if ref == client =>
       log.warning("Discord client actor went down. Trying to restart")
       DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
