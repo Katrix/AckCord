@@ -30,7 +30,7 @@ import net.katsstuff.ackcord.data._
 /**
   * Base trait for all messages sent from [[SnowflakeCache]]. All descendants
   * of this trait are published to the event stream passed in with
-  * [[DiscordClientSettings]].
+  * [[ClientSettings]].
   */
 sealed trait APIMessage {
 

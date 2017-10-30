@@ -41,7 +41,7 @@ import io.circe.parser
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.util.AckCordSettings
-import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSettings}
+import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, ClientSettings}
 
 /**
   * Responsible for normal websocket communication with Discord.
@@ -55,7 +55,7 @@ import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, DiscordClientSett
   */
 class GatewayHandler(
     rawWsUri: Uri,
-    settings: DiscordClientSettings,
+    settings: ClientSettings,
     responseProcessor: Option[ActorRef],
     responseFunc: Dispatch[_] => Any
 )(implicit mat: Materializer)
@@ -188,13 +188,13 @@ object GatewayHandler {
 
   def props(
       wsUri: Uri,
-      settings: DiscordClientSettings,
+      settings: ClientSettings,
       responseProcessor: Option[ActorRef],
       responseFunc: Dispatch[_] => Any
   )(implicit mat: Materializer): Props =
     Props(new GatewayHandler(wsUri, settings, responseProcessor, responseFunc))
 
-  def cacheProps(wsUri: Uri, settings: DiscordClientSettings, snowflakeCache: ActorRef)(
+  def cacheProps(wsUri: Uri, settings: ClientSettings, snowflakeCache: ActorRef)(
       implicit mat: Materializer
   ): Props = {
     val f = (dispatch: Dispatch[_]) => {

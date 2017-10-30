@@ -58,7 +58,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   var gatewayNameNum = 0
   var handlerNameNum = 0
 
-  val settings = DiscordClientSettings(token = "token123Abc")
+  val settings = ClientSettings(token = "token123Abc")
   def mkGateway: ActorRef = {
     val a = system.actorOf(MockedGateway.props(testActor), s"Gateway$gatewayNameNum")
     gatewayNameNum += 1
@@ -228,7 +228,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   }
 }
 
-class MockedGatewayHandler(settings: DiscordClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
+class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
     implicit mat: Materializer
 ) extends GatewayHandler(Uri./, settings, cache, identity) {
 
@@ -245,7 +245,7 @@ class MockedGatewayHandler(settings: DiscordClientSettings, gateway: ActorRef, c
   }
 }
 object MockedGatewayHandler {
-  def props(settings: DiscordClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
+  def props(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
       implicit mat: Materializer
   ): Props =
     Props(new MockedGatewayHandler(settings, gateway, cache))

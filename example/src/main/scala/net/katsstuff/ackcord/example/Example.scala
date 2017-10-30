@@ -32,7 +32,7 @@ import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{CommandRouter, CommandMeta}
 import net.katsstuff.ackcord.example.music.MusicHandler
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, DiscordClient, DiscordClientSettings}
+import net.katsstuff.ackcord.{APIMessage, DiscordClient, ClientSettings}
 
 object Example {
 
@@ -49,7 +49,7 @@ object Example {
     val eventStream = new EventStream(system)
     val token       = args.head
 
-    val settings = DiscordClientSettings(token = token)
+    val settings = ClientSettings(token = token)
     DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
       case Success(clientActor) =>
         system.actorOf(ExampleMain.props(settings, eventStream, clientActor), "Main")
@@ -60,7 +60,7 @@ object Example {
   }
 }
 
-class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var client: ClientActor)(
+class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client: ClientActor)(
     implicit materializer: Materializer
 ) extends Actor
     with ActorLogging {
@@ -139,7 +139,7 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var
   }
 }
 object ExampleMain {
-  def props(settings: DiscordClientSettings, eventStream: EventStream, client: ClientActor)(
+  def props(settings: ClientSettings, eventStream: EventStream, client: ClientActor)(
       implicit materializer: Materializer
   ): Props =
     Props(new ExampleMain(settings, eventStream, client))

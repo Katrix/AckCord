@@ -50,7 +50,7 @@ import shapeless.tag.@@
   * @param settings The settings to use
   * @param mat The materializer to use
   */
-class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(
+class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: ClientSettings)(
     implicit mat: Materializer
 ) extends Actor
     with ActorLogging {
@@ -96,11 +96,18 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Disco
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, eventStream: EventStream, settings: DiscordClientSettings)(implicit mat: Materializer): Props =
+  def props(wsUri: Uri, eventStream: EventStream, settings: ClientSettings)(implicit mat: Materializer): Props =
     Props(new DiscordClient(wsUri, eventStream, settings))
+  def props(wsUri: Uri, eventStream: EventStream, token: String)(implicit mat: Materializer): Props =
+    props(wsUri, eventStream, ClientSettings(token))
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
+
+  def connect(wsUri: Uri, eventStream: EventStream, token: String)(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, token)))
 
   /**
     * Send this to the client to log out
@@ -155,7 +162,7 @@ object DiscordClient extends FailFastCirceSupport {
   * @param status The status to use when connecting
   * @param afk If the bot should be afk when connecting
   */
-case class DiscordClientSettings(
+case class ClientSettings(
     token: String,
     largeThreshold: Int = 100,
     shardNum: Int = 0,
