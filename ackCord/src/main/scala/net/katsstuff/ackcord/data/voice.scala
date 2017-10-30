@@ -34,7 +34,7 @@ case class VoiceState(
     selfMute: Boolean,
     suppress: Boolean
 ) extends GetGuildOpt
-    with GetChannelOpt
+    with GetVChannelOpt
     with GetUser
 
 case class VoiceRegion(
