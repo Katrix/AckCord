@@ -87,8 +87,8 @@ object CommandFilter {
   /**
     * Create an actor that will stop commands according to a set of filters.
     */
-  def createActorFilter(filters: Seq[CommandFilter], forwardTo: Props)(implicit client: ClientActor): Props =
-    Props(new CommandFilterActor(filters, forwardTo))
+  def createActorFilter(filters: Seq[CommandFilter], forwardTo: Props, client: ClientActor): Props =
+    Props(new CommandFilterActor(filters, forwardTo, client))
 }
 
 /**
@@ -100,7 +100,7 @@ object Context {
   case object DM    extends Context
 }
 
-class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props)(implicit client: ClientActor)
+class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props, client: ClientActor)
     extends Actor {
   val forwardTo: ActorRef = context.actorOf(forwardToProps, s"${self.path.name}AfterFilter")
 

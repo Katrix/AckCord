@@ -46,9 +46,8 @@ import net.katsstuff.ackcord.syntax._
   *                        The first map is a map for the prefix. The second
   *                        map is for the command name itself, without the prefix.
   */
-abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]])(
-    implicit client: ClientActor
-) extends Actor {
+abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]], client: ClientActor)
+    extends Actor {
 
   val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CommandDescription]]
   initialCommands.foreach {
