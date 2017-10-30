@@ -52,7 +52,7 @@ object Example {
     val settings = DiscordClientSettings(token = token)
     DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
       case Success(clientActor) =>
-        system.actorOf(ExampleMain.props(settings, eventStream)(clientActor, mat), "Main")
+        system.actorOf(ExampleMain.props(settings, eventStream, clientActor), "Main")
       case Failure(e) =>
         println("Could not connect to Discord")
         throw e
@@ -60,12 +60,11 @@ object Example {
   }
 }
 
-class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream)(
-    implicit var client: ClientActor,
-    materializer: Materializer
+class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream, var client: ClientActor)(
+    implicit materializer: Materializer
 ) extends Actor
     with ActorLogging {
-  val commands = Seq(PingCommand.cmdMeta, SendFileCommand.cmdMeta, InfoChannelCommand.cmdMeta)
+  val commands = Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
 
   import context.dispatcher
   implicit val system: ActorSystem = context.system
@@ -73,14 +72,18 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream)(
   //We set up a command dispatcher, that sends the correct command to the corresponding actor
   val commandDispatcher: Props = CommandDispatcher.props(
     needMention = true,
-    CommandMeta.dispatcherMap(commands), //This method on CommandMeta wires up our command handling for us
-    ExampleErrorHandler.props
+    CommandMeta.dispatcherMap(commands, client), //This method on CommandMeta wires up our command handling for us
+    ExampleErrorHandler.props(client)
   )
 
   //This command need to be handled for itself to avoid a deadlock
   val killCommandDispatcher: ActorRef = system.actorOf(
     CommandDispatcher
-      .props(needMention = true, CommandMeta.dispatcherMap(Seq(KillCommand.cmdMeta(self))), IgnoreUnknownErrorHandler.props),
+      .props(
+        needMention = true,
+        CommandMeta.dispatcherMap(Seq(KillCommand.cmdMeta(self, client)), client),
+        IgnoreUnknownErrorHandler.props(client)
+      ),
     "KillCommand"
   )
 
@@ -136,9 +139,8 @@ class ExampleMain(settings: DiscordClientSettings, eventStream: EventStream)(
   }
 }
 object ExampleMain {
-  def props(
-      settings: DiscordClientSettings,
-      eventStream: EventStream
-  )(implicit client: ClientActor, materializer: Materializer): Props =
-    Props(new ExampleMain(settings, eventStream))
+  def props(settings: DiscordClientSettings, eventStream: EventStream, client: ClientActor)(
+      implicit materializer: Materializer
+  ): Props =
+    Props(new ExampleMain(settings, eventStream, client))
 }

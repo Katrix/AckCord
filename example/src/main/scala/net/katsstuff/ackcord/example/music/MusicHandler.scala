@@ -54,15 +54,19 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     with ActorLogging {
   import MusicHandler._
 
-  implicit val impClient: ClientActor = client
   import context.dispatcher
 
   val commands =
-    Seq(QueueCommand.cmdMeta(self), StopCommand.cmdMeta(self), NextCommand.cmdMeta(self), PauseCommand.cmdMeta(self))
+    Seq(
+      QueueCommand.cmdMeta(self, client),
+      StopCommand.cmdMeta(self, client),
+      NextCommand.cmdMeta(self, client),
+      PauseCommand.cmdMeta(self, client)
+    )
 
   val commandDispatcher: ActorRef = context.actorOf(
     CommandDispatcher
-      .props(needMention = true, CommandMeta.dispatcherMap(commands), ExampleErrorHandler.props),
+      .props(needMention = true, CommandMeta.dispatcherMap(commands, client), ExampleErrorHandler.props(client)),
     "MusicHandlerCommands"
   )
 
@@ -213,24 +217,18 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       log.info("Resumed")
       stay()
     case Event(e: TrackStartEvent, _) =>
-      client ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}", sendResponseTo = Some(errorResponder))
+      client ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}")
       stay()
     case Event(e: TrackEndEvent, CanSendAudio(_, dataSender, _)) =>
-      e.endReason match {
-        case AudioTrackEndReason.FINISHED =>
-          client ! lastTChannel.sendMessage(s"Finished: ${trackName(e.track)}", sendResponseTo = Some(errorResponder))
-        case AudioTrackEndReason.LOAD_FAILED =>
-          client ! lastTChannel.sendMessage(
-            s"Failed to load: ${trackName(e.track)}",
-            sendResponseTo = Some(errorResponder)
-          )
-        case AudioTrackEndReason.STOPPED =>
-          client ! lastTChannel.sendMessage("Stop requested", sendResponseTo = Some(errorResponder))
-        case AudioTrackEndReason.REPLACED =>
-          client ! lastTChannel.sendMessage("Requested next track", sendResponseTo = Some(errorResponder))
-        case AudioTrackEndReason.CLEANUP =>
-          client ! lastTChannel.sendMessage("Leaking audio player", sendResponseTo = Some(errorResponder))
+      val msg = e.endReason match {
+        case AudioTrackEndReason.FINISHED    => s"Finished: ${trackName(e.track)}"
+        case AudioTrackEndReason.LOAD_FAILED => s"Failed to load: ${trackName(e.track)}"
+        case AudioTrackEndReason.STOPPED     => "Stop requested"
+        case AudioTrackEndReason.REPLACED    => "Requested next track"
+        case AudioTrackEndReason.CLEANUP     => "Leaking audio player"
       }
+
+      client ! lastTChannel.sendMessage(msg)
 
       if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack(dataSender)
       else if (e.endReason != AudioTrackEndReason.REPLACED) self ! StopMusic(lastTChannel)
@@ -239,10 +237,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(e: TrackExceptionEvent, _) =>
       handleFriendlyException(e.exception, Some(e.track))
     case Event(e: TrackStuckEvent, CanSendAudio(_, dataSender, _)) =>
-      client ! lastTChannel.sendMessage(
-        s"Track stuck: ${trackName(e.track)}. Will play next track",
-        sendResponseTo = Some(errorResponder)
-      )
+      client ! lastTChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track")
       nextTrack(dataSender)
       stay()
     case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
@@ -263,16 +258,13 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   def handleFriendlyException(e: FriendlyException, track: Option[AudioTrack]): State = {
     e.severity match {
       case FriendlyException.Severity.COMMON =>
-        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}", sendResponseTo = Some(errorResponder))
+        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
         stay()
       case FriendlyException.Severity.SUSPICIOUS =>
-        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}", sendResponseTo = Some(errorResponder))
+        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
         stay()
       case FriendlyException.Severity.FAULT =>
-        client ! lastTChannel.sendMessage(
-          s"Encountered internal error: ${e.getMessage}",
-          sendResponseTo = Some(errorResponder)
-        )
+        client ! lastTChannel.sendMessage(s"Encountered internal error: ${e.getMessage}")
         throw e
     }
   }

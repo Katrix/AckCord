@@ -32,7 +32,7 @@ import net.katsstuff.ackcord.example.ExampleCmdCategories
 import net.katsstuff.ackcord.example.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import net.katsstuff.ackcord.syntax._
 
-class QueueCommand(musicHandler: ActorRef)(implicit val client: ClientActor)
+class QueueCommand(musicHandler: ActorRef, val client: ClientActor)
     extends ParsedCommandActor[String]
     with ActorLogging {
   override def handleCommand(msg: Message, url: String, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
@@ -49,7 +49,7 @@ class QueueCommand(musicHandler: ActorRef)(implicit val client: ClientActor)
           case Some(VoiceState(_, Some(channelId), _, _, _, _, _, _, _)) =>
             musicHandler ! QueueUrl(url, guildChannel, channelId)
             log.info("Queued")
-          case _ => client ! guildChannel.sendMessage("Not in a voice channel", sendResponseTo = Some(errorResponder))
+          case _ => client ! guildChannel.sendMessage("Not in a voice channel")
         }
 
       case None => throw new IllegalStateException("No guild for guild command")
@@ -57,59 +57,59 @@ class QueueCommand(musicHandler: ActorRef)(implicit val client: ClientActor)
   }
 }
 object QueueCommand {
-  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new QueueCommand(musicHandler))
-  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[String] =
+  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new QueueCommand(musicHandler, client))
+  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[String] =
     CommandMeta[String](
       category = ExampleCmdCategories.&,
       alias = Seq("q", "queue"),
-      handler = props(musicHandler),
+      handler = props(musicHandler, client),
       filters = Seq(CommandFilter.InGuild),
       description = Some(CommandDescription(name = "Queue music", description = "Set an url as the url to play")),
     )
 }
 
-class StopCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class StopCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! StopMusic(_))
 }
 object StopCommand {
-  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new StopCommand(musicHandler))
-  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
+  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new StopCommand(musicHandler, client))
+  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
     CommandMeta[NotUsed](
       category = ExampleCmdCategories.&,
       alias = Seq("s", "stop"),
-      handler = props(musicHandler),
+      handler = props(musicHandler, client),
       filters = Seq(CommandFilter.InGuild),
       description =
         Some(CommandDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
     )
 }
-class NextCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class NextCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! NextTrack(_))
 }
 object NextCommand {
-  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new NextCommand(musicHandler))
-  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
+  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new NextCommand(musicHandler, client))
+  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
     CommandMeta[NotUsed](
       category = ExampleCmdCategories.&,
       alias = Seq("n", "next"),
-      handler = props(musicHandler),
+      handler = props(musicHandler, client),
       filters = Seq(CommandFilter.InGuild),
       description = Some(CommandDescription(name = "Next track", description = "Skip to the next track")),
     )
 }
-class PauseCommand(musicHandler: ActorRef)(implicit val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class PauseCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! TogglePause(_))
 }
 object PauseCommand {
-  def props(musicHandler: ActorRef)(implicit client: ClientActor): Props = Props(new PauseCommand(musicHandler))
-  def cmdMeta(musicHandler: ActorRef)(implicit client: ClientActor): CommandMeta[NotUsed] =
+  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new PauseCommand(musicHandler, client))
+  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
     CommandMeta[NotUsed](
       category = ExampleCmdCategories.&,
       alias = Seq("p", "pause"),
-      handler = props(musicHandler),
+      handler = props(musicHandler, client),
       filters = Seq(CommandFilter.InGuild),
       description = Some(CommandDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
     )
