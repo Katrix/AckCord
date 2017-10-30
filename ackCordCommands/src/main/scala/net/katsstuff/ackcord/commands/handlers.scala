@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Status}
-import net.katsstuff.ackcord.DiscordClient
+import net.katsstuff.ackcord.{DiscordClient, RequestFailed, RequestResponse}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CommandDispatcher.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
@@ -34,7 +34,8 @@ import net.katsstuff.ackcord.util.RequestFailedResponder
 import shapeless.{TypeCase, Typeable}
 
 /**
-  * Base trait common to all command actors.
+  * Base trait common to all command actors. This can also be used as a
+  * destination for request responses.
   */
 trait BaseCommandActor extends Actor {
 
@@ -48,6 +49,20 @@ trait BaseCommandActor extends Actor {
     * @param e The exception
     */
   def handleFailure(e: Throwable): Unit = throw e
+
+  /**
+    * If this actor receives a valid response, handle it here
+    * @param data The data that was sent back
+    * @param ctx The context object that was sent with the request
+    */
+  def handleResponse(data: Any, ctx: Any): Unit = ()
+
+  /**
+    * If this actor receives a failed response, handle it here
+    * @param e The error that failed the request
+    * @param ctx The context object that was sent with the request
+    */
+  def handleFailedResponse(e: Throwable, ctx: Any): Unit = handleFailure(e)
 }
 
 /**
@@ -59,6 +74,8 @@ trait CommandActor extends BaseCommandActor {
   override def receive: Receive = {
     case Command(msg, args, c)        => handleCommand(msg, args)(c)
     case Status.Failure(e)            => handleFailure(e)
+    case RequestResponse(data, ctx)   => handleResponse(data, ctx)
+    case RequestFailed(e, ctx)        => handleFailedResponse(e, ctx)
     case DiscordClient.ShutdownClient => context.stop(self)
   }
 
@@ -89,9 +106,11 @@ abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Bas
   override def receive: Receive = {
     case ParsedCommand(msg, IsA(args), remaining, c) =>
       handleCommand(msg, args, remaining)(c)
-    case ParseError(msg, e, c)                       => handleParseError(msg, e)(c)
-    case Status.Failure(e)                           => handleFailure(e)
-    case DiscordClient.ShutdownClient                => context.stop(self)
+    case ParseError(msg, e, c)        => handleParseError(msg, e)(c)
+    case Status.Failure(e)            => handleFailure(e)
+    case RequestResponse(data, ctx)   => handleResponse(data, ctx)
+    case RequestFailed(e, ctx)        => handleFailedResponse(e, ctx)
+    case DiscordClient.ShutdownClient => context.stop(self)
   }
 
   /**
