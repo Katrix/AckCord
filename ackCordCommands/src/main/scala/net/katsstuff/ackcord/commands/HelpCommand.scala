@@ -30,7 +30,7 @@ import scala.collection.mutable
 import akka.NotUsed
 import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.Request
+import net.katsstuff.ackcord.{Request, RequestFailed, RequestResponse}
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.commands.HelpCommand.{RegisterCommand, UnregisterCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
@@ -71,17 +71,18 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
         val command = lowercaseCommand.substring(cat.prefix.length)
         descMap.get(command) match {
           case Some(desc) =>
-            client ! Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, None)
+            client ! Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
           case None => client ! channel.sendMessage("Unknown command")
         }
       }
 
-    case ParsedCommand(msg, None, _, _) =>
-      client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, None)
+    case ParsedCommand(msg, None, _, c) =>
+      implicit val cache: CacheSnapshot = c
+      client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
     case ParsedCommand(msg, Some(page: Int), _, c) =>
       implicit val cache: CacheSnapshot = c
       if (page > 0) {
-        client ! Request(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, None)
+        client ! Request(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
       } else {
         msg.tChannel.foreach { channel =>
           client ! channel.sendMessage(s"Invalid page $page")
@@ -98,6 +99,8 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
         .put(name.toLowerCase(Locale.ROOT), desc)
     case UnregisterCommand(cat, name) =>
       commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
+    case RequestResponse(data, _)   => handleResponse(data)
+    case RequestFailed(e, _)        => handleFailedResponse(e)
   }
 
   /**
@@ -107,7 +110,9 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     * @param desc The description for the command
     * @return Data to create a message describing the command
     */
-  def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription)(implicit c: CacheSnapshot): CreateMessageData
+  def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription)(
+      implicit c: CacheSnapshot
+  ): CreateMessageData
 
   /**
     * Create a reply for all the commands tracked by this help command.
@@ -116,6 +121,18 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     *         by this help command.
     */
   def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
+
+  /**
+    * If this actor receives a valid response, handle it here
+    * @param data The data that was sent back
+    */
+  def handleResponse(data: Any): Unit = ()
+
+  /**
+    * If this actor receives a failed response, handle it here
+    * @param e The error that failed the request
+    */
+  def handleFailedResponse(e: Throwable): Unit = throw e
 }
 object HelpCommand {
 

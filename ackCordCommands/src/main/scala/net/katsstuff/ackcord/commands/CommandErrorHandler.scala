@@ -45,7 +45,7 @@ trait CommandErrorHandler extends Actor {
   }
 
   private def sendMsg(channelId: ChannelId, data: CreateMessageData): Unit =
-    client ! Request(CreateMessage(channelId, data), NotUsed, None)
+    client ! Request(CreateMessage(channelId, data), NotUsed, self)
 
   /**
     * Create a reply for errors where no command was specified.

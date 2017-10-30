@@ -60,7 +60,8 @@ class RESTHandler(
     responseProcessor: Option[ActorRef],
     responseFunc: ((ComplexRESTRequest[_, Any, Any], Any) => Any)
 )(implicit mat: Materializer)
-    extends Actor with Timers
+    extends Actor
+    with Timers
     with ActorLogging {
 
   implicit val system: ActorSystem = context.system
@@ -171,7 +172,7 @@ class RESTHandler(
       httpRequest: HttpRequest,
       restRequest: ComplexRESTRequest[_, _, _],
       context: Any,
-      sendTo: Option[ActorRef]
+      sendTo: ActorRef
   ): Unit = {
     requestQueue
       .offer(httpRequest -> ProcessedRequest(restRequest, context, sendTo))
@@ -179,14 +180,14 @@ class RESTHandler(
         case QueueOfferResult.Enqueued => //All is fine
         case QueueOfferResult.Dropped =>
           val e = new RuntimeException("Queue overflowed.")
-          sendTo.foreach(_ ! RequestFailed(e, context))
+          sendTo ! RequestFailed(e, context)
           throw e
         case QueueOfferResult.Failure(e) =>
-          sendTo.foreach(_ ! RequestFailed(e, context))
+          sendTo ! RequestFailed(e, context)
           throw e
         case QueueOfferResult.QueueClosed =>
           val e = new RuntimeException("Queue was closed (pool shut down) while running the request.")
-          sendTo.foreach(_ ! RequestFailed(e, context))
+          sendTo ! RequestFailed(e, context)
           throw e
       }
   }
@@ -208,7 +209,7 @@ object RESTHandler {
   private[rest] case class ProcessedRequest[Response, HandlerType, Context](
       restRequest: ComplexRESTRequest[_, Response, HandlerType],
       context: Context,
-      sendTo: Option[ActorRef]
+      sendTo: ActorRef
   )
 
   private[rest] case class UpdateRateLimit(uri: Uri, headers: Seq[HttpHeader])
@@ -257,7 +258,7 @@ class RESTResponder(
       parent ! UpdateRateLimit(request.route.uri, headers)
       entity.discardBytes()
       sender() ! AckSink
-      sendTo.foreach(_ ! RequestResponse((), ctx))
+      sendTo ! RequestResponse((), ctx)
     case (Success(HttpResponse(response, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       if (request.expectedResponseCode == response) {
@@ -272,17 +273,15 @@ class RESTResponder(
           .onComplete {
             case Success(data) =>
               responseProcessor.foreach(_ ! responseFunc(request, data))
-              sendTo.foreach(_ ! RequestResponse(data, ctx))
+              sendTo ! RequestResponse(data, ctx)
             case Failure(e) =>
               parent ! Status.Failure(e)
-              sendTo.foreach(_ ! RequestFailed(e, ctx))
+              sendTo ! RequestFailed(e, ctx)
           }
       } else {
         log.warning("Unexpected response code {} for {}", response.intValue, request)
         entity.discardBytes()
-        sendTo.foreach(
-          _ ! RequestFailed(new IllegalStateException(s"Unexpected response code ${response.intValue()}"), ctx)
-        )
+        sendTo ! RequestFailed(new IllegalStateException(s"Unexpected response code ${response.intValue()}"), ctx)
       }
       sender() ! AckSink
     case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
@@ -292,13 +291,13 @@ class RESTResponder(
         case Failure(_)   => entity.discardBytes()
       }
       sender() ! AckSink
-      sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Server error: $intValue"), ctx))
+      sendTo ! RequestFailed(new IllegalStateException(s"Server error: $intValue"), ctx)
     case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
       log.error("Client error {}: {}", intValue, e.reason)
       entity.discardBytes()
-      sendTo.foreach(_ ! RequestFailed(new IllegalStateException(s"Client error: $intValue"), ctx))
+      sendTo ! RequestFailed(new IllegalStateException(s"Client error: $intValue"), ctx)
     case (Failure(e), ProcessedRequest(_, ctx, sendTo)) =>
-      sendTo.foreach(_ ! RequestFailed(e, ctx))
+      sendTo ! RequestFailed(e, ctx)
       throw e
   }
 }

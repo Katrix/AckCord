@@ -63,4 +63,4 @@ case class RequestFailed[E <: Throwable, Context](e: E, context: Context) extend
   * @tparam Request The request type
   * @tparam Context The context type
   */
-case class Request[Request, Context](request: Request, context: Context, sendResponseTo: Option[ActorRef])
+case class Request[Request, Context](request: Request, context: Context, sendResponseTo: ActorRef)
