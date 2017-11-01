@@ -27,26 +27,36 @@ import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.Logging
-import akka.event.Logging.LogLevel
 import akka.routing.Broadcast
-import akka.stream.Attributes.LogLevels
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
-import net.katsstuff.ackcord.data.{GuildChannel, GuildId}
+import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.util.GuildRouter.{GetGuildActor, ResponseGetGuild, TerminatedGuild}
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 
 /**
   * Will send all [[APIMessage]]s with the same guild
-  * to the same actor. Also obeys [[Broadcast]]
+  * to the same actor. Also obeys [[Broadcast]].
+  *
   * Handles
-  * - ChannelMessage
-  * - GuildMessage
-  * - MessageMessage
-  * - VoiceStateUpdate
+  * - [[APIMessage.ChannelMessage]]
+  * - [[APIMessage.GuildMessage]]
+  * - [[APIMessage.MessageMessage]]
+  * - [[APIMessage.VoiceStateUpdate]]
+  * - [[GatewayEvent.GuildEvent]]
+  * - [[GatewayEvent.OptGuildEvent]]
+  *
+  * This actor has a small cache for figuring out what actor to send messages
+  * to for the gateway channel events.
+  *
+  * Global events like [[APIMessage.Ready]], [[APIMessage.Resumed]] and
+  * [[APIMessage.UserUpdate]] are send to all actors.
+  *
   * It also respects [[DiscordClient.ShutdownClient]].
   * It sends the shutdown to all it's children, and when all the children have
   * stopped, it stops itself. The child actors will not receive any further
   * events once a shutdown has been started.
+  *
   * @param props The function to obtain a props used for constructing handlers
   * @param notGuildHandler For some messages that could be directed to a guild
   *                        but not always, if the message is not directed
@@ -54,10 +64,12 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   */
 class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor with ActorLogging {
   val handlers       = mutable.HashMap.empty[GuildId, ActorRef]
+  var channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
   var isShuttingDown = false
 
   override def receive: Receive = {
-    case msg: APIMessage.GuildMessage => sendToGuild(msg.guild.id, msg)
+    case msg @ (_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg)
+    case msg: APIMessage.GuildMessage                                                   => sendToGuild(msg.guild.id, msg)
     case msg: APIMessage.ChannelMessage =>
       msg.channel match {
         case ch: GuildChannel => sendToGuild(ch.guildId, msg)
@@ -73,14 +85,29 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
         case Some(guildId) => sendToGuild(guildId, msg)
         case None          => sendToNotGuild(msg)
       }
+    case msg: GatewayEvent.GuildCreate =>
+      sendToGuild(msg.guildId, msg)
+      msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
+    case msg: GatewayEvent.ChannelCreate =>
+      msg.guildId.foreach { guildId =>
+        sendToGuild(guildId, msg)
+        channelToGuild.put(msg.data.id, guildId)
+      }
+    case msg: GatewayEvent.ChannelDelete =>
+      msg.guildId.foreach(sendToGuild(_, msg))
+      channelToGuild.remove(msg.data.id)
+    case msg: GatewayEvent.GuildEvent[_]    => sendToGuild(msg.guildId, msg)
+    case msg: GatewayEvent.OptGuildEvent[_] => msg.guildId.fold(sendToNotGuild(msg))(sendToGuild(_, msg))
+    case msg: GatewayEvent.ChannelEvent[_] =>
+      channelToGuild.get(msg.channelId).fold(sendToNotGuild(msg))(sendToGuild(_, msg))
     case GetGuildActor(guildId) => if (!isShuttingDown) sender() ! ResponseGetGuild(getGuild(guildId))
-    case Broadcast(msg)         => handlers.values.foreach(_ ! msg)
+    case Broadcast(msg)         => sendToAll(msg)
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
-      handlers.values.foreach(_ ! ShutdownClient)
+      sendToAll(ShutdownClient)
     case TerminatedGuild(guildId) =>
       handlers.remove(guildId)
-      val level = if(isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
+      val level = if (isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
       log.log(level, "Actor for guild {} shut down", guildId)
 
       if (isShuttingDown && handlers.isEmpty) {
@@ -91,6 +118,8 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   def sendToGuild(guildId: GuildId, msg: Any): Unit = if (!isShuttingDown) getGuild(guildId) ! msg
 
   def sendToNotGuild(msg: Any): Unit = if (!isShuttingDown) notGuildHandler.foreach(_ ! msg)
+
+  def sendToAll(msg: Any): Unit = handlers.values.foreach(_ ! msg)
 
   def getGuild(guildId: GuildId): ActorRef = {
     lazy val newActor = {
