@@ -26,8 +26,9 @@ package net.katsstuff.ackcord
 import java.time.Instant
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
+import akka.actor._
 import akka.event.EventStream
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
@@ -35,7 +36,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.ackcord.DiscordClient.ClientActor
+import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.rest.{ComplexRESTRequest, RESTHandler}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
@@ -52,26 +53,30 @@ import shapeless.tag.@@
   */
 class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: ClientSettings)(implicit mat: Materializer)
     extends Actor
-    with ActorLogging {
+    with ActorLogging
+    with Timers {
   private implicit val system: ActorSystem = context.system
 
-  private val cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private var cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
   private var restHandler =
     context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
 
-  private var shutdownCount = 0
-  private var shutdownInitiator: ActorRef = _
+  private var shutdownCount  = 0
+  private var isShuttingDown = false
 
-  override def preStart(): Unit = {
-    context.watch(gatewayHandler)
-    context.watch(restHandler)
-  }
+  context.watch(gatewayHandler)
+  context.watch(restHandler)
+  context.watch(cache)
+
+  //If we fail more than 5 time in 3 minutes we want to wait to restart the gateway handler
+  override def supervisorStrategy: SupervisorStrategy =
+    OneForOneStrategy(5, 3.minutes)(SupervisorStrategy.defaultDecider)
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
-      shutdownInitiator = sender()
+      isShuttingDown = true
       context.stop(cache)
       restHandler.forward(DiscordClient.ShutdownClient)
       gatewayHandler.forward(AbstractWsHandler.Logout)
@@ -79,19 +84,26 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
     case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
-    case Terminated(act) if shutdownInitiator != null =>
+    case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
       if (shutdownCount == 2) {
         context.stop(self)
       }
-    case Terminated(ref) if ref == gatewayHandler =>
-      log.info("Gateway handler shut down. Restarting")
+    case Terminated(ref) =>
+      if (ref == gatewayHandler) {
+        log.info("Gateway handler shut down. Restarting in 5 minutes")
+        timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
+      } else if (ref == restHandler) {
+        log.info("REST handler shut down. Restarting")
+        restHandler =
+          context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
+      } else if (ref == cache) {
+        log.info("REST handler shut down. Restarting")
+        cache = context.actorOf(SnowflakeCache.props(eventStream), "RestHandler")
+      }
+    case CreateGateway =>
       gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
-    case Terminated(ref) if ref == restHandler =>
-      log.info("Gateway handler shut down. Restarting")
-      restHandler =
-        context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
   }
 }
 object DiscordClient extends FailFastCirceSupport {
@@ -130,7 +142,7 @@ object DiscordClient extends FailFastCirceSupport {
   ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, settings), "DiscordClient"))
 
   /**
-    * Send this to the client to log out
+    * Send this to the client to log out and stop gracefully
     */
   case object ShutdownClient
 
@@ -138,6 +150,8 @@ object DiscordClient extends FailFastCirceSupport {
     * Send this to the client to log in
     */
   case object StartClient
+
+  private case object CreateGateway
 
   /**
     * Fetch the websocket gateway
