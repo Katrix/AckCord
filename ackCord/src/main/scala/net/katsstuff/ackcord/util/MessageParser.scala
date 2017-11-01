@@ -32,19 +32,50 @@ import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
 import shapeless.tag._
 
+/**
+  * MessageParser is a typeclass to simplify parsing messages. It can derive
+  * instances for any ADT, and makes it much easier to work with messages.
+  * @tparam A The type to parse.
+  */
 trait MessageParser[A] { self =>
+
+  /**
+    * Parse a message into the needed types.
+    * @param strings The content of the message where each string is
+    *                separated by a space.
+    * @param c The cache to use.
+    * @return Left with an error message if it failed to parse, or Right with
+    *         the remaining arguments, and the parsed value.
+    */
   def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)]
 
+  /**
+    * Create a new parser by filtering the values created by this parser.
+    * @param f The predicate.
+    * @param error The error message if the value does not match the predicate.
+    */
   def filterWithError(f: A => Boolean, error: String): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
       self.parse(strings)(c).filterOrElse({ case (_, obj) => f(obj) }, error)
   }
 
+  /**
+    * Create a new parser by applying a function to the result of this parser
+    * @param f The function to apply
+    * @tparam B The new parser type
+    */
   def map[B](f: A => B): MessageParser[B] = new MessageParser[B] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], B)] =
       self.parse(strings)(c).map { case (tail, obj) => tail -> f(obj) }
   }
 
+  /**
+    * Apply a partial function of this parser, returning the error if the
+    * function isn't defined.
+    * @param error The error to return if the partial function isn't defined.
+    * @param pf The partial function to apply.
+    * @tparam B The new parser type.
+    */
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], B)] = {
       val base = self.parse(strings)(c)
@@ -63,8 +94,14 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
   def apply[A](implicit parser: MessageParser[A]): MessageParser[A] = parser
 
-  def parseHlist[L <: HList](message: String)(implicit parser: MessageParser[L], c: CacheSnapshot): Either[String, L] =
-    parser.parse(message.split(" ").toList).map(_._2)
+  /**
+    * Parse a message as an type
+    * @param message The message to parse
+    * @param parser The parser to use
+    * @param c The cache to use
+    * @tparam A The type to parse the message as
+    * @return Left with an error message if it failed to parse, or Right with the parsed type
+    */
   def parse[A](message: String)(implicit parser: MessageParser[A], c: CacheSnapshot): Either[String, A] =
     parser.parse(message.split(" ").toList).map(_._2)
 
@@ -72,19 +109,41 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
 trait MessageParserInstances {
 
+  /**
+    * Create a parser from a string
+    * @param f The function to transform the string with
+    * @tparam A The type to parse
+    */
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
       if (strings.nonEmpty) Right((strings.tail, f(strings.head)))
       else Left("No more arguments left")
   }
 
+  /**
+    * Parse a string with a function that can throw
+    * @param f The function to transform the string with. This can throw an exception
+    * @tparam A The type to parse
+    */
   def withTry[A](f: String => A): MessageParser[A] = fromTry(s => Try(f(s)))
+
+  /**
+    * Parse a string with a try
+    * @param f The function to transform the string with.
+    * @tparam A The type to parse
+    */
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
       if (strings.nonEmpty) f(strings.head).toEither.fold(e => Left(e.getMessage), a => Right(strings.tail -> a))
       else Left("No more arguments left")
   }
 
+  /**
+    * Same as [[fromTry]] but with a custom error.
+    * @param errorMessage The error message to use
+    * @param f The function to transform the string with.
+    * @tparam A The type to parse
+    */
   def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
       if (strings.nonEmpty) f(strings.head).toEither.fold(_ => Left(errorMessage), a => Right(strings.tail -> a))
@@ -113,7 +172,7 @@ trait MessageParserInstances {
   val roleRegex:    Regex = """<@&(\d+)>""".r
   val emojiRegex:   Regex = """<:\w+:(\d+)>""".r
 
-  def regexParser[A](
+  private def snowflakeParser[A](
       name: String,
       regex: Regex,
       getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]
@@ -131,10 +190,10 @@ trait MessageParserInstances {
     }
   }
 
-  implicit val userParser:    MessageParser[User]    = regexParser("user", userRegex, _.getUser(_))
-  implicit val channelParser: MessageParser[Channel] = regexParser("channel", channelRegex, _.getChannel(_))
-  implicit val roleParser:    MessageParser[Role]    = regexParser("role", roleRegex, _.getRole(_))
-  implicit val emojiParser:   MessageParser[Emoji]   = regexParser("emoji", emojiRegex, _.getEmoji(_))
+  implicit val userParser:    MessageParser[User]    = snowflakeParser("user", userRegex, _.getUser(_))
+  implicit val channelParser: MessageParser[Channel] = snowflakeParser("channel", channelRegex, _.getChannel(_))
+  implicit val roleParser:    MessageParser[Role]    = snowflakeParser("role", roleRegex, _.getRole(_))
+  implicit val emojiParser:   MessageParser[Emoji]   = snowflakeParser("emoji", emojiRegex, _.getEmoji(_))
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {
