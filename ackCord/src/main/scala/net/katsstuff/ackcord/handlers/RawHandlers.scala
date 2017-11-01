@@ -264,7 +264,6 @@ object RawHandlers extends Handlers {
       reactions = obj.reactions.getOrElse(Seq.empty),
       nonce = obj.nonce,
       pinned = obj.pinned,
-      webhookId = obj.webhookId,
       messageType = obj.`type`
     )
 
@@ -291,7 +290,6 @@ object RawHandlers extends Handlers {
           reactions = obj.reactions.getOrElse(message.reactions),
           nonce = obj.nonce.orElse(message.nonce),
           pinned = obj.pinned.getOrElse(message.pinned),
-          webhookId = obj.webhookId.orElse(message.webhookId)
         )
 
         builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, newMessage)

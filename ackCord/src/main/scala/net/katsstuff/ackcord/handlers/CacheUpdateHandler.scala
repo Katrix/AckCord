@@ -25,6 +25,9 @@ package net.katsstuff.ackcord.handlers
 
 import akka.event.LoggingAdapter
 
+/**
+  * A [[CacheHandler]] for updates.
+  */
 trait CacheUpdateHandler[Obj] extends CacheHandler[Obj]
 object CacheUpdateHandler {
   def updateHandler[Obj](f: (CacheSnapshotBuilder, Obj, LoggingAdapter) => Unit): CacheUpdateHandler[Obj] =

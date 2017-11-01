@@ -25,7 +25,27 @@ package net.katsstuff.ackcord.data
 
 import java.time.OffsetDateTime
 
+/**
+  * A simple invite.
+  * @param code An invite code.
+  * @param guild The guild the invite is for.
+  * @param channel The channel the invite is for.
+  */
 case class Invite(code: String, guild: InviteGuild, channel: InviteChannel)
+
+/**
+  * An invite with extra information.
+  * @param code An invite code.
+  * @param guild The guild the invite is for.
+  * @param channel The channel the invite is for.
+  * @param inviter The user that created the invite.
+  * @param uses How many times the invite has been used.
+  * @param maxUses How many times this invite can be used.
+  * @param maxAge The duration in seconds when the invite will expire
+  * @param temporary If this invite is temporary
+  * @param createdAt When this invite was created
+  * @param revoked If this invite has been revoked
+  */
 case class InviteWithMetadata(
     code: String,
     guild: InviteGuild,
@@ -39,5 +59,19 @@ case class InviteWithMetadata(
     revoked: Boolean
 )
 
+/**
+  * A partial guild with the information used by an invite
+  * @param id The guild id
+  * @param name The guild name
+  * @param splash The guild splash hash
+  * @param icon The guild icon hash
+  */
 case class InviteGuild(id: GuildId, name: String, splash: Option[String], icon: Option[String])
+
+/**
+  * A partial channel with the information used by an invite
+  * @param id The channel id
+  * @param name The channel name
+  * @param `type` The type of channel
+  */
 case class InviteChannel(id: ChannelId, name: String, `type`: ChannelType)

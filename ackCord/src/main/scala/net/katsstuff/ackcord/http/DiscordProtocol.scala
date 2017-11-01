@@ -155,13 +155,13 @@ trait DiscordProtocol {
       "reactions"        -> a.reactions.asJson,
       "nonce"            -> a.nonce.asJson,
       "pinned"           -> a.pinned.asJson,
-      "webhook_id"       -> a.webhookId.asJson,
       "type"             -> a.`type`.asJson
     )
 
     a.author match {
-      case user: User             => Json.obj(base :+ "author" -> user.asJson: _*)
-      case webhook: WebhookAuthor => Json.obj(base :+ "author" -> webhook.asJson: _*)
+      case user: User => Json.obj(base :+ "author" -> user.asJson: _*)
+      case webhook: WebhookAuthor =>
+        Json.obj(base ++ Seq("author" -> webhook.asJson, "webhook_id" -> webhook.id.asJson): _*)
     }
   }
   implicit val rawMessageDecoder: Decoder[RawMessage] = (c: HCursor) => {
@@ -183,7 +183,6 @@ trait DiscordProtocol {
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
       nonce           <- c.get[Option[Snowflake]]("nonce")
       pinned          <- c.get[Boolean]("pinned")
-      webhookId       <- c.get[Option[String]]("webhook_id")
       tpe             <- c.get[MessageType]("type")
     } yield
       RawMessage(
@@ -202,7 +201,6 @@ trait DiscordProtocol {
         reactions,
         nonce,
         pinned,
-        webhookId,
         tpe
       )
   }

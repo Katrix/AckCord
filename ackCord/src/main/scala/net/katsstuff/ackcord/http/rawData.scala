@@ -27,6 +27,28 @@ import java.time.OffsetDateTime
 
 import net.katsstuff.ackcord.data._
 
+/**
+  * A raw channel before going through the cache.
+  * @param id The channel id.
+  * @param `type` The channel type.
+  * @param guildId The guildId this channel belongs to if it's a guild channel.
+  * @param position The position of this channel if it's a guild channel.
+  * @param permissionOverwrites The permission overwrites of this channel if
+  *                             it's a guild channel.
+  * @param name The name of this channel if it's a guild channel.
+  * @param topic The topic of this channel if it's a guild voice channel.
+  * @param nsfw If this channel is NSFW if it's a guild channel.
+  * @param lastMessageId The last message id if it's a text channel. The id
+  *                      may be invalid.
+  * @param bitrate The bitrate of this channel if it's a guild voice channel.
+  * @param userLimit The user limit of this channel if it's a guild voice channel.
+  * @param recipients The recipients of this channel if it's a group DM channel.
+  * @param icon The icon of this channel if it has one.
+  * @param ownerId The owner of this channel if it's a DM or group DM channel.
+  * @param applicationId The application id of this channel if it's a
+  *                      guild channel.
+  * @param parentId The category of this channel if it's a guild channel.
+  */
 case class RawChannel(
     id: ChannelId,
     `type`: ChannelType,
@@ -47,6 +69,15 @@ case class RawChannel(
 )
 
 //Remember to edit RawGuildMemberWithGuild when editing this
+/**
+  * Represents a user in a guild.
+  * @param user The user of this member.
+  * @param nick The nickname of this user in this guild.
+  * @param roles The roles of this user.
+  * @param joinedAt When this user joined the guild.
+  * @param deaf If this user is deaf.
+  * @param mute IF this user is mute.
+  */
 case class RawGuildMember(
     user: User,
     nick: Option[String],
@@ -56,6 +87,25 @@ case class RawGuildMember(
     mute: Boolean
 )
 
+/**
+  * A raw message before going through the cache.
+  * @param id The id of the message.
+  * @param channelId The channel this message was sent to.
+  * @param author The author that sent this message.
+  * @param content The content of this message.
+  * @param timestamp The timestamp this message was created.
+  * @param editedTimestamp The timestamp this message was last edited.
+  * @param tts If this message is has text-to-speech enabled.
+  * @param mentionEveryone If this message mentions everyone.
+  * @param mentions All the users this message mentions.
+  * @param mentionRoles All the roles this message mentions.
+  * @param attachment All the attachments of this message.
+  * @param embeds All the embeds of this message.
+  * @param reactions All the reactions on this message.
+  * @param nonce A nonce for this message.
+  * @param pinned If this message is pinned.
+  * @param `type` The message type
+  */
 case class RawMessage(
     id: MessageId,
     channelId: ChannelId,
@@ -72,10 +122,41 @@ case class RawMessage(
     reactions: Option[Seq[Reaction]], //reactions can be missing
     nonce: Option[Snowflake],
     pinned: Boolean,
-    webhookId: Option[String],
     `type`: MessageType
 )
 
+/**
+  * A a raw guild before going through the cache.
+  * @param id The id of the guild.
+  * @param name The name of the guild.
+  * @param icon The icon hash.
+  * @param splash The splash hash.
+  * @param ownerId The userId of the owner.
+  * @param region The voice region
+  * @param afkChannelId The channelId of the AFK channel.
+  * @param afkTimeout The amount of seconds you need to be AFK before being
+  *                   moved to the AFK channel.
+  * @param embedEnabled If the embed is enabled.
+  * @param embedChannelId The channelId for the embed.
+  * @param verificationLevel The verification level for the guild.
+  * @param defaultMessageNotifications The notification level for the guild.
+  * @param explicitContentFilter The explicit content filter level for the guild.
+  * @param roles The roles of the guild.
+  * @param emojis The emojis of the guild.
+  * @param features The enabled guild features.
+  * @param mfaLevel The MFA level.
+  * @param applicationId The application id if this guild is bot created.
+  * @param widgetEnabled If the widget is enabled.
+  * @param widgetChannelId The channel id for the widget.
+  * @param joinedAt When the client joined the guild.
+  * @param large If this guild is above the large threshold.
+  * @param unavailable If this guild is unavailable.
+  * @param memberCount The amount of members in the guild.
+  * @param voiceStates The voice states of the guild.
+  * @param members The guild members in the guild.
+  * @param channels The channels in the guild.
+  * @param presences The presences in the guild.
+  */
 case class RawGuild(
     id: GuildId,
     name: String,
@@ -107,6 +188,17 @@ case class RawGuild(
     presences: Option[Seq[RawPresence]]
 )
 
+/**
+  * A raw role before going through the cache.
+  * @param id The id of this role.
+  * @param name The name of this role.
+  * @param color The color of this role.
+  * @param hoist If this role is listed in the sidebar.
+  * @param position The position of this role.
+  * @param permissions The permissions this role grant.
+  * @param managed If this is a bot role.
+  * @param mentionable If you can mention this role.
+  */
 case class RawRole(
     id: RoleId,
     name: String,
@@ -121,9 +213,34 @@ case class RawRole(
     Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable)
 }
 
+/**
+  * The content of a presence.
+  * @param name The text show.
+  * @param `type` The type of the presence.
+  * @param url A uri if the type is streaming.
+  */
 case class RawPresenceGame(name: String, `type`: Int, url: Option[String])
+
+/**
+  * A raw presence.
+  * @param user A partial user.
+  * @param game The content of the presence.
+  * @param status The presence status.
+  */
 case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus])
 
+/**
+  * A user where fields can be missing.
+  * @param id The id of the user.
+  * @param username The name of the user.
+  * @param discriminator The discriminator for the user. Those four last
+  *                      digits when clicking in a users name.
+  * @param avatar The users avatar hash
+  * @param bot If this user is a bot
+  * @param mfaEnabled If this user has two factor authentication enabled.
+  * @param verified If this user is verified. Requires the email OAuth scope.
+  * @param email The users email. Requires the email OAuth scope.
+  */
 //Remember to edit User when editing this
 case class PartialUser(
     id: UserId,
@@ -136,6 +253,11 @@ case class PartialUser(
     email: Option[String] //Email can be null
 )
 
+/**
+  * A raw ban before going through the cache.
+  * @param reason Why the user was banned.
+  * @param user The user that was baned.
+  */
 case class RawBan(
     reason: Option[String],
     user: User

@@ -851,14 +851,23 @@ object Requests {
     override def handleResponse:  CacheHandler[User] = Handlers.userUpdateHandler
   }
 
+  case class GetUserGuildsGuild(
+      id: GuildId,
+      name: String,
+      icon: Option[String],
+      owner: Boolean,
+      permissions: Permission
+  )
   case class GetCurrentUserGuildsData(before: Option[GuildId] = None, after: Option[GuildId] = None, limit: Int = 100)
   case class GetCurrentUserGuilds(params: GetCurrentUserGuildsData)
-      extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[RawGuild]] {
-    override def route:           RestRoute                         = Routes.getCurrentUserGuilds
-    override def paramsEncoder:   Encoder[GetCurrentUserGuildsData] = deriveEncoder[GetCurrentUserGuildsData]
-    override def responseDecoder: Decoder[Seq[RawGuild]]            = Decoder[Seq[RawGuild]]
-    override def handleResponse: CacheHandler[Seq[RawGuild]] =
-      CacheUpdateHandler.seqHandler(RawHandlers.rawGuildUpdateHandler)
+      extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[GetUserGuildsGuild]] {
+    override def route:           RestRoute                             = Routes.getCurrentUserGuilds
+    override def paramsEncoder:   Encoder[GetCurrentUserGuildsData]     = deriveEncoder[GetCurrentUserGuildsData]
+    override def responseDecoder: Decoder[Seq[GetUserGuildsGuild]]      = {
+      implicit val dec: Decoder[GetUserGuildsGuild] = deriveDecoder[GetUserGuildsGuild]
+      Decoder[Seq[GetUserGuildsGuild]]
+    }
+    override def handleResponse:  CacheHandler[Seq[GetUserGuildsGuild]] = new NOOPHandler[Seq[GetUserGuildsGuild]]
   }
 
   case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {

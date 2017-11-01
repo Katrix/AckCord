@@ -36,6 +36,9 @@ object ImageData {
   }
 }
 
+/**
+  * An enum of all the different message types.
+  */
 trait MessageType
 object MessageType {
   object Default              extends MessageType
@@ -100,7 +103,27 @@ sealed trait Author {
     */
   def userId: Option[UserId] = user.map(_.id)
 }
+
+/**
+  * An webhook author
+  * @param id The webhook id
+  * @param name The name of the webhook
+  * @param avatar The webhook's avatar hash
+  */
 case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
+
+/**
+  * A Discord user.
+  * @param id The id of the user.
+  * @param username The name of the user.
+  * @param discriminator The discriminator for the user. Those four last
+  *                      digits when clicking in a users name.
+  * @param avatar The users avatar hash
+  * @param bot If this user is a bot
+  * @param mfaEnabled If this user has two factor authentication enabled.
+  * @param verified If this user is verified. Requires the email OAuth scope.
+  * @param email The users email. Requires the email OAuth scope.
+  */
 //Remember to edit PartialUser when editing this
 case class User(
     id: UserId,
@@ -116,6 +139,14 @@ case class User(
   override def name: String = username
 }
 
+/**
+  * A connection that a user has attached.
+  * @param id The id of the connection.
+  * @param name The name of the connection.
+  * @param `type` The connection type (twitch, youtube).
+  * @param revoked If the connection has been revoked.
+  * @param integrations Integrations of the connection.
+  */
 case class Connection(
     id: String,
     name: String,
@@ -124,6 +155,25 @@ case class Connection(
     integrations: Seq[Integration] //TODO: Partial
 )
 
+/**
+  * A message sent to a channel.
+  * @param id The id of the message.
+  * @param channelId The channel this message was sent to.
+  * @param author The author that sent this message.
+  * @param content The content of this message.
+  * @param timestamp The timestamp this message was created.
+  * @param editedTimestamp The timestamp this message was last edited.
+  * @param tts If this message is has text-to-speech enabled.
+  * @param mentionEveryone If this message mentions everyone.
+  * @param mentions All the users this message mentions.
+  * @param mentionRoles All the roles this message mentions.
+  * @param attachment All the attachments of this message.
+  * @param embeds All the embeds of this message.
+  * @param reactions All the reactions on this message.
+  * @param nonce A nonce for this message.
+  * @param pinned If this message is pinned.
+  * @param messageType The message type
+  */
 case class Message(
     id: MessageId,
     channelId: ChannelId,
@@ -140,13 +190,40 @@ case class Message(
     reactions: Seq[Reaction],
     nonce: Option[Snowflake],
     pinned: Boolean,
-    webhookId: Option[String],
     messageType: MessageType
 ) extends GetChannel
 
+/**
+  * A reaction to a message
+  * @param count The amount of people that have reacted with this emoji.
+  * @param me If the client has reacted with this emoji.
+  * @param emoji The emoji of the reaction.
+  */
 case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
+
+/**
+  * A partial emoji found in reactions
+  * @param id The id of the emoji. If it's absent, it's not a guild emoji.
+  * @param name The name of the emoji.
+  */
 case class PartialEmoji(id: Option[EmojiId], name: String)
 
+/**
+  * A received embed.
+  * @param title The title of the embed.
+  * @param `type` The embed type. Probably rich.
+  * @param description The embed description or main text.
+  * @param url The url of the embed.
+  * @param timestamp The timestamp of the embed.
+  * @param color The color of the embed
+  * @param footer The footer part of the embed.
+  * @param image The image part of the embed.
+  * @param thumbnail The thumbnail part of the embed.
+  * @param video The video part of the embed.
+  * @param provider The provider part of the embed.
+  * @param author The author part of the embed.
+  * @param fields The fields of the embed.
+  */
 case class ReceivedEmbed(
     title: Option[String],
     `type`: Option[String],
@@ -157,8 +234,8 @@ case class ReceivedEmbed(
     footer: Option[ReceivedEmbedFooter],
     image: Option[ReceivedEmbedImage],
     thumbnail: Option[ReceivedEmbedThumbnail],
-    video: Option[EmbedVideo],
-    provider: Option[EmbedProvider],
+    video: Option[ReceivedEmbedVideo],
+    provider: Option[ReceivedEmbedProvider],
     author: Option[ReceivedEmbedAuthor],
     fields: Option[Seq[EmbedField]]
 ) {
@@ -177,15 +254,51 @@ case class ReceivedEmbed(
   )
 }
 
-case class ReceivedEmbedThumbnail(url: String, proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+/**
+  * The thumbnail part of a received embed.
+  * @param url The url to the thumbnail.
+  * @param proxyUrl The proxy url of the thumbnail.
+  * @param height The height of the thumbnail.
+  * @param width The width of the thumbnail.
+  */
+case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, width: Int) {
 
   def toOutgoing: OutgoingEmbedThumbnail = OutgoingEmbedThumbnail(url)
 }
-case class EmbedVideo(url: Option[String], height: Option[Int], width: Option[Int])
-case class ReceivedEmbedImage(url: String, proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+
+/**
+  * The video part of a received embed.
+  * @param url The url of the video.
+  * @param height The height of the video.
+  * @param width The width of the video.
+  */
+case class ReceivedEmbedVideo(url: String, height: Int, width: Int)
+
+/**
+  * The image part of a received embed.
+  * @param url The url of the image.
+  * @param proxyUrl The proxy url of the image.
+  * @param height The height of the image.
+  * @param width The width of the image.
+  */
+case class ReceivedEmbedImage(url: String, proxyUrl: String, height: Int, width: Int) {
   def toOutgoing: OutgoingEmbedImage = OutgoingEmbedImage(url)
 }
-case class EmbedProvider(name: Option[String], url: Option[String])
+
+/**
+  * The provider part of a received embed.
+  * @param name The name of the provider.
+  * @param url The url of a provider.
+  */
+case class ReceivedEmbedProvider(name: String, url: String)
+
+/**
+  * The author part of a received embed.
+  * @param name The author name
+  * @param url An url for the author text.
+  * @param iconUrl An icon url for the author.
+  * @param proxyIconUrl A proxy url for the icon.
+  */
 case class ReceivedEmbedAuthor(
     name: String,
     url: Option[String],
@@ -195,15 +308,38 @@ case class ReceivedEmbedAuthor(
 
   def toOutgoing: OutgoingEmbedAuthor = OutgoingEmbedAuthor(name, url, iconUrl)
 }
+
+/**
+  * The footer part of a received embed.
+  * @param text The footer text.
+  * @param iconUrl An icon url for the footer.
+  * @param proxyIconUrl A proxy url for the footer.
+  */
 case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String]) {
   def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
 }
 
+/**
+  * A field for an embed
+  * @param name The name or title of the field.
+  * @param value The value or text of the field
+  * @param inline If the field is rendered inline.
+  */
 case class EmbedField(name: String, value: String, inline: Option[Boolean] = None) {
   require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
   require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
 }
 
+/**
+  * An attachment for a message
+  * @param id The id of the attachment
+  * @param filename The filename of the attachment
+  * @param size The file size in bytes
+  * @param url The url of the attachment
+  * @param proxyUrl The proxyUrl of the attachment
+  * @param height The height of the attachment if it's an image
+  * @param width The width of the attachment if it's an image
+  */
 case class Attachment(
     id: Snowflake,
     filename: String,
@@ -214,6 +350,19 @@ case class Attachment(
     width: Option[Int]
 )
 
+/**
+  * An outgoing embed.
+  * @param title The title of the embed.
+  * @param description The embed description or main text.
+  * @param url The url of the embed.
+  * @param timestamp The timestamp of the embed.
+  * @param color The color of the embed
+  * @param footer The footer part of the embed.
+  * @param image The image part of the embed.
+  * @param thumbnail The thumbnail part of the embed.
+  * @param author The author part of the embed.
+  * @param fields The fields of the embed.
+  */
 case class OutgoingEmbed(
     title: Option[String] = None,
     description: Option[String] = None,
@@ -240,11 +389,33 @@ case class OutgoingEmbed(
   }, "An embed can't have more than 6000 characters in total")
 }
 
+/**
+  * The thumbnail part of an outgoing embed.
+  * @param url The url to the thumbnail.
+  */
 case class OutgoingEmbedThumbnail(url: String)
+
+/**
+  * The image part of an outgoing embed.
+  * @param url The url to the image.
+  */
 case class OutgoingEmbedImage(url: String)
+
+/**
+  * The author part of an outgoing embed
+  * @param name The name of the author
+  * @param url The url to link when clicking on the author
+  * @param iconUrl The icon to show besides the author.
+  */
 case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None) {
   require(name.length <= 256, "The author name of an embed can't have more than 256 characters")
 }
+
+/**
+  * The footer part of an outgoing embed.
+  * @param text The text of the footer
+  * @param iconUrl The icon url of the footer.
+  */
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
 }

@@ -23,6 +23,18 @@
  */
 package net.katsstuff.ackcord.data
 
+/**
+  * Represents a user voice connection status
+  * @param guildId The guild this state belongs to
+  * @param channelId The channel the user is in, or None if the user isn't in a channel
+  * @param userId The user of this state.
+  * @param sessionId The sessionId
+  * @param deaf If the user is deafened by the guild
+  * @param mute If the user is muted by the guild
+  * @param selfDeaf If the user is deafened locally
+  * @param selfMute If the user is muted locally
+  * @param suppress If the client has muted the user
+  */
 case class VoiceState(
     guildId: Option[GuildId],
     channelId: Option[ChannelId], //channelId can be null
@@ -37,6 +49,17 @@ case class VoiceState(
     with GetVChannelOpt
     with GetUser
 
+/**
+  * A voice region
+  * @param id The id of the region
+  * @param name The name of the voice region
+  * @param sampleHostname An example host name
+  * @param samplePort An example host port
+  * @param vip If this is a VIP only server
+  * @param optimal If this is the server closest to the client
+  * @param deprecated If this is a deprecated region
+  * @param custom If this is a custom region
+  */
 case class VoiceRegion(
     id: String,
     name: String,

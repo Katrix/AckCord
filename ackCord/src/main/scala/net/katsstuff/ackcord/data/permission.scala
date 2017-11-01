@@ -23,23 +23,69 @@
  */
 package net.katsstuff.ackcord.data
 
+/**
+  * A permission to do some action. In AckCord this is represented as a
+  * value class around int.
+  */
 class Permission private (val int: Int) extends AnyVal {
 
-  def addPermissions(other: Permission):       Permission = Permission(this.int | other.int)
-  def removePermissions(other: Permission):    Permission = Permission(this.int & ~other.int)
-  def togglePermissions(other: Permission):    Permission = Permission(this.int ^ other.int)
-  def hasPermissions(permissions: Permission): Boolean    = (this.int & permissions.int) != 0
+  /**
+    * Add a permission to this permission.
+    * @param other The other permission.
+    */
+  def addPermissions(other: Permission): Permission = Permission(this.int | other.int)
+
+  /**
+    * Add a permission to this permission.
+    * @param other The other permission.
+    */
+  def |(other: Permission): Permission = addPermissions(other)
+
+  /**
+    * Add a permission to this permission.
+    * @param other The other permission.
+    */
+  def +(other: Permission): Permission = addPermissions(other)
+
+  /**
+    * Remove a permission from this permission.
+    * @param other The permission to remove.
+    */
+  def removePermissions(other: Permission): Permission = Permission(this.int & ~other.int)
+
+  /**
+    * Remove a permission from this permission.
+    * @param other The permission to remove.
+    */
+  def -(other: Permission): Permission = Permission(this.int & ~other.int)
+
+  /**
+    * Toggle a permission in this permission.
+    * @param other The permission to toggle.
+    */
+  def togglePermissions(other: Permission): Permission = Permission(this.int ^ other.int)
+
+  /**
+    * Check if this permission has a permission.
+    * @param permissions The permission to check against.
+    */
+  def hasPermissions(permissions: Permission): Boolean = (this.int & permissions.int) != 0
 
   override def toString: String = int.toString
 }
 object Permission {
 
-  private def apply(int: Int):         Permission = new Permission(int)
-  def apply(permissions: Permission*): Permission = permissions.fold(None)((a1, a2) => a1.addPermissions(a2))
+  private def apply(int: Int): Permission = new Permission(int)
 
+  /**
+    * Create a permission that has all the permissions passed in.
+    */
+  def apply(permissions: Permission*): Permission = permissions.fold(None)(_ | _)
+
+  /**
+    * Create a permission from an int.
+    */
   def fromInt(int: Int): Permission = apply(int)
-
-  val None = Permission(0x00000000)
 
   val CreateInstantInvite = Permission(0x00000001)
   val KickMembers         = Permission(0x00000002)
@@ -70,6 +116,7 @@ object Permission {
   val ManageWebhooks      = Permission(0x20000000)
   val ManageEmojis        = Permission(0x40000000)
 
+  val None = Permission(0x00000000)
   val All = Permission(
     CreateInstantInvite,
     KickMembers,
@@ -102,6 +149,18 @@ object Permission {
   )
 }
 
+/**
+  * A role in a guild.
+  * @param id The id of this role.
+  * @param guildId The guildId this role belongs to.
+  * @param name The name of this role.
+  * @param color The color of this role.
+  * @param hoist If this role is listed in the sidebar.
+  * @param position The position of this role.
+  * @param permissions The permissions this role grant.
+  * @param managed If this is a bot role.
+  * @param mentionable If you can mention this role.
+  */
 case class Role(
     id: RoleId,
     guildId: GuildId,

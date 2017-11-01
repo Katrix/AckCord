@@ -23,6 +23,17 @@
  */
 package net.katsstuff.ackcord.data
 
+/**
+  * A webhook
+  * @param id The webhook id
+  * @param guildId The guild it belongs to
+  * @param channelId The channel it belongs to
+  * @param user The user that created the webhook. Not present when getting
+  *             a webhook with a token.
+  * @param name The name of the webhook
+  * @param avatar The avatar of the webhook.
+  * @param token The token of the webhook
+  */
 case class Webhook(
     id: Snowflake,
     guildId: Option[GuildId],

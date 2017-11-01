@@ -25,7 +25,16 @@ package net.katsstuff.ackcord.handlers
 
 import akka.event.LoggingAdapter
 
+/**
+  * A class that handles creating a new cache snapshot with an object
+  */
 trait CacheHandler[Obj] {
 
+  /**
+    * Updates the builder with the object
+    * @param builder The builder to update
+    * @param obj The logger to update with
+    * @param log A logging adapter
+    */
   def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit
 }
