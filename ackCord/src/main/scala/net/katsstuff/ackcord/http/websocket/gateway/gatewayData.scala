@@ -35,10 +35,18 @@ import net.katsstuff.ackcord.http.websocket.WsMessage
 import shapeless._
 import shapeless.labelled.FieldType
 
+/**
+  * Base trait for all gateway messages.
+  */
 sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
   def t: Option[ComplexGatewayEvent[D, _]] = None
 }
 
+/**
+  * Sends a new event.
+  * @param sequence The seq number.
+  * @param event The sent event.
+  */
 case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _]) extends GatewayMessage[Data] {
   override val s:  Some[Int]                          = Some(sequence)
   override val t:  Some[ComplexGatewayEvent[Data, _]] = Some(event)
@@ -46,10 +54,24 @@ case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _]) ex
   override def d:  Data                               = event.data
 }
 
+/**
+  * Sent and received to confirm the connection is still going.
+  * @param d The previous sequence.
+  */
 case class Heartbeat(d: Option[Int]) extends GatewayMessage[Option[Int]] {
   override def op: GatewayOpCode = GatewayOpCode.Heartbeat
 }
 
+/**
+  * @param token The bot token.
+  * @param properties A map of properties to send.
+  * @param compress If compressed messages should be used.
+  * @param largeThreshold The threshold where the gateway stops sending
+  *                       offline users.
+  * @param shard The shard info, the first index is the shard id, while the
+  *              second is the total amount of shards.
+  * @param presence The presence data to start with.
+  */
 case class IdentifyData(
     token: String,
     properties: Map[String, String],
@@ -62,11 +84,25 @@ object IdentifyData {
   def createProperties: Map[String, String] =
     Map("$os" -> System.getProperty("os.name"), "$browser" -> "AckCord", "$device" -> "AckCord")
 }
+
+/**
+  * Sent by the client to log in.
+  */
 case class Identify(d: IdentifyData) extends GatewayMessage[IdentifyData] {
   override def op: GatewayOpCode = GatewayOpCode.Identify
 }
 
+/**
+  * @param since If present, instant when the user went idle.
+  * @param game The presence text.
+  * @param status The status of the user.
+  * @param afk If the user is AFK.
+  */
 case class StatusData(since: Option[Instant], game: Option[RawPresenceGame], status: PresenceStatus, afk: Boolean)
+
+/**
+  * Sent when a presence or status changes.
+  */
 case class StatusUpdate(d: StatusData) extends GatewayMessage[StatusData] {
   override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
@@ -77,45 +113,86 @@ case class VoiceStateUpdate(d: VoiceStateUpdateData) extends GatewayMessage[Voic
 }
 
 /**
-  * @param token The voice connection token
-  * @param guildId The guild of the update
-  * @param endpoint The voice server
+  * @param token The voice connection token.
+  * @param guildId The guild of the update.
+  * @param endpoint The voice server.
   */
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
 case class VoiceServerUpdate(d: VoiceServerUpdateData) extends GatewayMessage[VoiceServerUpdateData] {
   override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
 }
 
+/**
+  * @param token The bot token.
+  * @param sessionId The sessionId received earlier.
+  * @param seq The last seq received.
+  */
 case class ResumeData(token: String, sessionId: String, seq: Int)
+
+/**
+  * Sent by the client instead of [[Identify]] when resuming a connection.
+  */
 case class Resume(d: ResumeData) extends GatewayMessage[ResumeData] {
   override def op: GatewayOpCode = GatewayOpCode.Resume
 }
 
+/**
+  * Sent by the gateway to indicate that the client should reconnect.
+  */
 case object Reconnect extends GatewayMessage[NotUsed] {
   override def op: GatewayOpCode = GatewayOpCode.Reconnect
   override def d:  NotUsed       = NotUsed
 }
 
-case class RequestGuildMembersData(guildId: GuildId, query: String, limit: Int)
+/**
+  * @param guildId The guildId to request for.
+  * @param query Return all the users where their username start with this.
+  *              or an empty string for all users.
+  * @param limit The amount of users to send, or 0 for all users.
+  */
+case class RequestGuildMembersData(guildId: GuildId, query: String = "", limit: Int = 0)
+
+/**
+  * Sent by the client to receive all the members of a guild, even logged out ones.
+  */
 case class RequestGuildMembers(d: RequestGuildMembersData) extends GatewayMessage[RequestGuildMembersData] {
   override def op: GatewayOpCode = GatewayOpCode.RequestGuildMembers
 }
 
+/**
+  * Sent by the gateway if the session is invalid when resuming a connection.
+  * @param resumable If the connection is resumable.
+  */
 case class InvalidSession(resumable: Boolean) extends GatewayMessage[Boolean] {
   override def op: GatewayOpCode = GatewayOpCode.InvalidSession
   override def d:  Boolean       = resumable
 }
 
+/**
+  * @param heartbeatInterval The amount of milliseconds inbetween the time
+  *                          to send a heartbeat.
+  */
 case class HelloData(heartbeatInterval: Int, _trace: Seq[String])
+
+/**
+  * Sent by the gateway as a response to [[Identify]]
+  */
 case class Hello(d: HelloData) extends GatewayMessage[HelloData] {
   override def op: GatewayOpCode = GatewayOpCode.Hello
 }
 
+/**
+  * Sent by the gateway as a response to [[Heartbeat]].
+  */
 case object HeartbeatACK extends GatewayMessage[NotUsed] {
   override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
   override def d:  NotUsed       = NotUsed
 }
 
+/**
+  * All the different opcodes used by the gateway.
+  * @param code The number of the opcode.
+  */
 sealed abstract case class GatewayOpCode(code: Int)
 object GatewayOpCode {
   object Dispatch            extends GatewayOpCode(0)
@@ -131,6 +208,9 @@ object GatewayOpCode {
   object Hello               extends GatewayOpCode(10)
   object HeartbeatACK        extends GatewayOpCode(11)
 
+  /**
+    * Get an opcode from a number if it exists.
+    */
   def forCode(code: Int): Option[GatewayOpCode] = code match {
     case 0  => Some(Dispatch)
     case 1  => Some(Heartbeat)
@@ -148,31 +228,54 @@ object GatewayOpCode {
   }
 }
 
-trait ComplexGatewayEvent[Data, HandlerType] {
+/**
+  * Base trait for all gateway events.
+  * @tparam Data The data this event carries.
+  * @tparam HandlerType The type the cache handler takes.
+  */
+sealed trait ComplexGatewayEvent[Data, HandlerType] {
+
+  /**
+    * The name of this event.
+    */
   def name: String
 
-  def data:         Data
-  def cacheHandler: CacheHandler[HandlerType]
-  def handlerData:  HandlerType
+  /**
+    * The data carried by this event.
+    */
+  def data: Data
 
+  /**
+    * The cache handler used to handle this event.
+    */
+  def cacheHandler: CacheHandler[HandlerType]
+
+  /**
+    * Convert the data carried by this event into a format the cache handler can understand.
+    */
+  def handlerData: HandlerType
+
+  /**
+    * Creates an [[APIMessage]] as long as all the needed components are in place.
+    */
   def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage]
 }
-trait SimpleGatewayEvent[Data] extends ComplexGatewayEvent[Data, Data] {
+
+/**
+  * A simpler gateway event where the data type and the handler type are the same.
+  */
+sealed trait SimpleGatewayEvent[Data] extends ComplexGatewayEvent[Data, Data] {
   override def handlerData: Data = data
 }
 
 object GatewayEvent {
-  private def notImplementedHandler[A] = new CacheHandler[A] {
-    override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit =
-      log.warning(s"Not implemented handler for $obj")
-  }
 
   /**
-    * @param v The API version used
-    * @param user The client user
-    * @param privateChannels The DM channels for this client
+    * @param v The API version used.
+    * @param user The client user.
+    * @param privateChannels The DM channels for this client.
     * @param guilds The guilds for this client. Not available at first.
-    * @param sessionId The session id
+    * @param sessionId The session id.
     */
   case class ReadyData(
       v: Int,
@@ -225,7 +328,7 @@ object GatewayEvent {
   /**
     * Sent to the client when a channel is edited or updated.
     * @param data The channel that was edited. This will always be a
-    *                guild channel
+    *                guild channel.
     */
   case class ChannelUpdate(data: RawChannel) extends OptGuildEvent[RawChannel] {
     override def name:         String                   = "CHANNEL_UPDATE"
@@ -249,8 +352,8 @@ object GatewayEvent {
   }
 
   /**
-    * @param channelId The channel where the change happened
-    * @param timestamp The time the most recent pinned message was pinned
+    * @param channelId The channel where the change happened.
+    * @param timestamp The time the most recent pinned message was pinned.
     */
   case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: Option[OffsetDateTime])
 
@@ -263,8 +366,9 @@ object GatewayEvent {
     * channel. This is not sent when a pinned message is deleted.
     */
   case class ChannelPinsUpdate(data: ChannelPinsUpdateData) extends ChannelEvent[ChannelPinsUpdateData] {
-    override def name:         String                              = "CHANNEL_PINS_UPDATE"
-    override def cacheHandler: CacheHandler[ChannelPinsUpdateData] = notImplementedHandler
+    override def name: String = "CHANNEL_PINS_UPDATE"
+    override def cacheHandler: CacheHandler[ChannelPinsUpdateData] =
+      new NOOPHandler[ChannelPinsUpdateData] //No way for us to know what changed
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, current, prev))
     override def channelId: ChannelId = data.channelId
@@ -278,7 +382,7 @@ object GatewayEvent {
     * Sent to the client after the client connects to the gateway, when a
     * previously unavailable guild becomes available, and when the client
     * joins a new guild.
-    * @param data The created guild object
+    * @param data The created guild object.
     */
   case class GuildCreate(data: RawGuild) extends GuildEvent[RawGuild] {
     override def name:         String                 = "GUILD_CREATE"
@@ -303,7 +407,7 @@ object GatewayEvent {
   /**
     * Sent to the client either if a guild becomes unavailable due to and
     * outage, or if the client leaves or is kicked from a guild.
-    * @param data The deleted or unavailable guild
+    * @param data The deleted or unavailable guild.
     */
   case class GuildDelete(data: UnavailableGuild) extends GuildEvent[UnavailableGuild] {
     override def name:         String                         = "GUILD_DELETE"
@@ -335,7 +439,7 @@ object GatewayEvent {
 
   /**
     * Sent to the client when an user is unbanned from a guild.
-    * @param data The unbanned user with a guildId of what guild the user was unbanned from .
+    * @param data The unbanned user with a guildId of what guild the user was unbanned from.
     */
   case class GuildBanRemove(data: GuildUser) extends ComplexGuildEvent[GuildUser, (GuildId, User)] {
     override def name:         String                        = "GUILD_BAN_REMOVE"
@@ -400,7 +504,7 @@ object GatewayEvent {
 
   /**
     * Sent to the client when a user joins the guild.
-    * @param data The new guild member, includes a guild id
+    * @param data The new guild member, includes a guild id.
     */
   case class GuildMemberAdd(data: RawGuildMemberWithGuild) extends GuildEvent[RawGuildMemberWithGuild] {
     override def name:         String                                = "GUILD_MEMBER_ADD"
@@ -414,8 +518,8 @@ object GatewayEvent {
   }
 
   /**
-    * @param user The user that left
-    * @param guildId The guild the user left from
+    * @param user The user that left.
+    * @param guildId The guild the user left from.
     */
   case class GuildMemberRemoveData(guildId: GuildId, user: User)
 
@@ -431,13 +535,12 @@ object GatewayEvent {
   }
 
   /**
-    * The fields seen here
-    * are all the fields that can change. Looking at the users [[GuildMember]]
-    * for changes is pointless.
-    * @param guildId The guild of the guild member
-    * @param roles Thew new roles for the guild member
-    * @param user The user of the updated guild member
-    * @param nick Nick of the user if one was set
+    * The fields seen here are all the fields that can change. Looking at the
+    * users [[RawGuildMember]] for changes is pointless.
+    * @param guildId The guild of the guild member.
+    * @param roles Thew new roles for the guild member.
+    * @param user The user of the updated guild member.
+    * @param nick Nick of the user if one was set.
     */
   case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //TODO: Nick can probably be null here
 
@@ -477,8 +580,8 @@ object GatewayEvent {
   }
 
   /**
-    * @param guildId The guild of the modified role
-    * @param role The modified role
+    * @param guildId The guild of the modified role.
+    * @param role The modified role.
     */
   case class GuildRoleModifyData(guildId: GuildId, role: RawRole)
 
@@ -509,13 +612,13 @@ object GatewayEvent {
   }
 
   /**
-    * @param guildId The guild of the deleted role
+    * @param guildId The guild of the deleted role.
     * @param roleId The deleted role.
     */
   case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)
 
   /**
-    * Sent to the client when a role is deleted
+    * Sent to the client when a role is deleted.
     */
   case class GuildRoleDelete(data: GuildRoleDeleteData) extends GuildEvent[GuildRoleDeleteData] {
     override def name:         String                            = "GUILD_ROLE_DELETE"
@@ -530,7 +633,7 @@ object GatewayEvent {
 
   /**
     * Sent to the client when a message is created (posted).
-    * @param data The sent message
+    * @param data The sent message.
     */
   case class MessageCreate(data: RawMessage) extends ChannelEvent[RawMessage] {
     override def name:         String                   = "MESSAGE_CREATE"
@@ -562,7 +665,7 @@ object GatewayEvent {
 
   /**
     * Sent to the client when a message is updated.
-    * @param data The new message
+    * @param data The new message.
     */
   case class MessageUpdate(data: RawPartialMessage) extends ChannelEvent[RawPartialMessage] {
     override def name:         String                          = "MESSAGE_UPDATE"
@@ -594,8 +697,8 @@ object GatewayEvent {
   }
 
   /**
-    * @param ids The deleted messages
-    * @param channelId The channel of the deleted messages
+    * @param ids The deleted messages.
+    * @param channelId The channel of the deleted messages.
     */
   case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId)
 
@@ -618,7 +721,7 @@ object GatewayEvent {
     * @param userId The user that caused the reaction change.
     * @param channelId The channel of the message.
     * @param messageId The message the reaction belonged to.
-    * @param emoji The emoji the user reacted with
+    * @param emoji The emoji the user reacted with.
     */
   case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: PartialEmoji)
 
@@ -678,11 +781,11 @@ object GatewayEvent {
   }
 
   /**
-    * @param user The user of the presence
-    * @param roles The roles of the user
-    * @param game The new presence message
-    * @param guildId The guild where the update took place
-    * @param status The new status
+    * @param user The user of the presence.
+    * @param roles The roles of the user.
+    * @param game The new presence message.
+    * @param guildId The guild where the update took place.
+    * @param status The new status.
     */
   case class PresenceUpdateData(
       user: PartialUser,
@@ -708,14 +811,14 @@ object GatewayEvent {
   }
 
   /**
-    * @param channelId The channel where the typing happened
-    * @param userId The user that began typing
-    * @param timestamp When user started typing
+    * @param channelId The channel where the typing happened.
+    * @param userId The user that began typing.
+    * @param timestamp When user started typing.
     */
   case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)
 
   /**
-    * Sent to the client when a user starts typing in a channel
+    * Sent to the client when a user starts typing in a channel.
     */
   case class TypingStart(data: TypingStartData) extends ChannelEvent[TypingStartData] {
     override def name:         String                        = "TYPING_START"
@@ -741,8 +844,8 @@ object GatewayEvent {
   }
 
   /**
-    * Sent to the client when a user joins/leaves/moves voice channels
-    * @param data New voice states
+    * Sent to the client when a user joins/leaves/moves voice channels.
+    * @param data New voice states.
     */
   case class VoiceStateUpdate(data: VoiceState) extends OptGuildEvent[VoiceState] {
     override def name:         String                   = "VOICE_STATUS_UPDATE"
@@ -766,8 +869,8 @@ object GatewayEvent {
   }
 
   /**
-    * @param guildId The guild of the updated webhook
-    * @param channelId The channel for the webhook
+    * @param guildId The guild of the updated webhook.
+    * @param channelId The channel for the webhook.
     */
   case class WebhookUpdateData(guildId: GuildId, channelId: ChannelId)
 
