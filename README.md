@@ -47,6 +47,9 @@ eventStream.subscribe(context.actorOf(MyActor.props, "MyActor"), classOf[APIMess
 ## The CacheSnapshot
 You'll probably encounter the `CacheSnapshot` relatively early. AckCord handles the concept of a cache my having an object called the CacheSnapshot. Many of the commands you find in AckCord takes an implicit cache(although there exists alternatives where it makes sense), to allow you to operate on the current state. When you receive an event, you get two cache snapshots. The current on that contains all the changes that this even brought, and the previous one, without any of the changes caused by that event. You just have to choose which one you want to use (it's normally the current one).
 
+## Sending requests
+There are two ways to send requests in AckCord. The first one is to create `Request` objects with requests from the `RESTRequests` object. The second is to import `net.katsstuff.ackcord.syntax._` and use the extensions methods provided by that. However you do it, when sending requests, there are two more things you can provide as part of the request. The first is the request context. This is an object that allows you to keep track of what request was made in what context. The second is an actor to send the response to. When using the syntax import, this is by default set to the actor that sent the request.
+
 ## The GuildRouter
 Often you find yourself wanting to have an actor specific for each guild the bot is in. You can use the `GuildRouter` to achieve that. While not a real router, it gets the job done nicely. To use the `GuildRouter`, simply pass it a `Props` of the actor you want one of for each guild, subscribe the `GuildRouter` to some event, and it will take care of the rest. The `GuildRouter` also allows you to specify a separate actor to send all messages which could, but doesn't have a guild. For example when a message is created. It could be a message in a guild channel, or it could be a message in a DM channel.
 ```scala
