@@ -34,7 +34,7 @@ import shapeless.tag.@@
 
 package object syntax {
 
-  implicit class ChannelSyntax(val channel: Channel) extends AnyVal {
+  implicit class ChannelSyntax(private val channel: Channel) extends AnyVal {
 
     /**
       * Delete or close this channel.
@@ -84,7 +84,7 @@ package object syntax {
     }
   }
 
-  implicit class TChannelSyntax(val tChannel: TChannel) extends AnyVal {
+  implicit class TChannelSyntax(private val tChannel: TChannel) extends AnyVal {
 
     /**
       * Send a message to this channel.
@@ -164,7 +164,7 @@ package object syntax {
       Request(TriggerTypingIndicator(tChannel.id), context, sendResponseTo)
   }
 
-  implicit class GuildChannelSyntax(val channel: GuildChannel) extends AnyVal {
+  implicit class GuildChannelSyntax(private val channel: GuildChannel) extends AnyVal {
 
     /**
       * Get the category of this channel.
@@ -243,7 +243,7 @@ package object syntax {
       Request(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
   }
 
-  implicit class TGuildChannelSyntax(val channel: TGuildChannel) extends AnyVal {
+  implicit class TGuildChannelSyntax(private val channel: TGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -336,7 +336,7 @@ package object syntax {
       Request(GetChannelWebhooks(channel.id), context, sendResponseTo)
   }
 
-  implicit class VGuildChannelSyntax(val channel: VGuildChannel) extends AnyVal {
+  implicit class VGuildChannelSyntax(private val channel: VGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -373,7 +373,7 @@ package object syntax {
     )
   }
 
-  implicit class CategorySyntax(val category: GuildCategory) extends AnyVal {
+  implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
 
     /**
       * Get all the channels in this category.
@@ -530,7 +530,7 @@ package object syntax {
     )
   }
 
-  implicit class GuildSyntax(val guild: Guild) extends AnyVal {
+  implicit class GuildSyntax(private val guild: Guild) extends AnyVal {
 
     /**
       * Get the owner of this guild.
@@ -1030,7 +1030,7 @@ package object syntax {
       Request(DeleteGuild(guild.id), context, sendResponseTo)
   }
 
-  implicit class GuildMemberSyntax(val guildMember: GuildMember) extends AnyVal {
+  implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {
 
     /**
       * Get all the roles for this guild member.
@@ -1108,7 +1108,7 @@ package object syntax {
       Request(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
   }
 
-  implicit class GuildEmojiSyntax(val emoji: Emoji) extends AnyVal {
+  implicit class GuildEmojiSyntax(private val emoji: Emoji) extends AnyVal {
 
     /**
       * Mention this role so it can be formatted correctly in messages.
@@ -1132,7 +1132,7 @@ package object syntax {
       Request(DeleteGuildEmoji(emoji.id, guildId), context, sendResponseTo)
   }
 
-  implicit class RoleSyntax(val role: Role) extends AnyVal {
+  implicit class RoleSyntax(private val role: Role) extends AnyVal {
 
     /**
       * Mention this role.
@@ -1167,7 +1167,7 @@ package object syntax {
       Request(DeleteGuildRole(role.guildId, role.id), context, sendResponseTo)
   }
 
-  implicit class MessageSyntax(val message: Message) extends AnyVal {
+  implicit class MessageSyntax(private val message: Message) extends AnyVal {
 
     /**
       * Create a reaction for a message.
@@ -1236,7 +1236,7 @@ package object syntax {
       Request(DeletePinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
   }
 
-  implicit class UserSyntax(val user: User) extends AnyVal {
+  implicit class UserSyntax(private val user: User) extends AnyVal {
 
     /**
       * Get an existing DM channel for this user.
@@ -1262,7 +1262,7 @@ package object syntax {
     def mentionNick: String = s"<@!${user.id}>"
   }
 
-  implicit class DiscordClientSyntax(val client: ActorRef @@ DiscordClient) extends AnyVal {
+  implicit class DiscordClientSyntax(private val client: ActorRef @@ DiscordClient) extends AnyVal {
 
     /**
       * Fetch a channel by id.
@@ -1373,7 +1373,7 @@ package object syntax {
       Request(GetWebhookWithToken(id, token), context, sendResponseTo)
   }
 
-  implicit class InviteSyntax(val invite: Invite) extends AnyVal {
+  implicit class InviteSyntax(private val invite: Invite) extends AnyVal {
 
     /**
       * Delete this invite.
@@ -1388,7 +1388,7 @@ package object syntax {
       Request(AcceptInvite(invite.code), context, sendResponseTo)
   }
 
-  implicit class WebhookSyntax(val webhook: Webhook) extends AnyVal {
+  implicit class WebhookSyntax(private val webhook: Webhook) extends AnyVal {
 
     /**
       * Modify this webhook.
