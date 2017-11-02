@@ -28,7 +28,7 @@ import java.nio.file.Paths
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
-import net.katsstuff.ackcord.commands.{CommandDescription, CommandErrorHandler, CommandMeta, ParsedCommandActor}
+import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
@@ -37,9 +37,8 @@ import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{DiscordClient, Request, RequestFailed, RequestResponse}
 
 class PingCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
-  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
+  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     client ! Request(Requests.CreateMessage(msg.channelId, CreateMessageData("Pong")), NotUsed, self)
-  }
 }
 object PingCommand {
   def props(client: ClientActor): Props = Props(new PingCommand(client))
@@ -63,11 +62,7 @@ class SendFileCommand(val client: ClientActor) extends ParsedCommandActor[NotUse
 
     msg.tChannel.foreach { tChannel =>
       //Use channel to construct request
-      client ! tChannel.sendMessage(
-        "Here is the file",
-        file = Seq(Paths.get("theFile.txt")),
-        embed = Some(embed)
-      )
+      client ! tChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
     }
   }
 }
@@ -90,12 +85,10 @@ class InfoChannelCommand(val client: ClientActor) extends ParsedCommandActor[Gui
 
   override def handleCommand(msg: Message, channel: GuildChannel, remaining: List[String])(
       implicit c: CacheSnapshot
-  ): Unit = {
-    client ! client.fetchChannel(
-      channel.id,
-      GetChannelInfo(channel.guildId, channel.id, msg.channelId, c)
-    )(infoResponseHandler)
-  }
+  ): Unit =
+    client ! client.fetchChannel(channel.id, GetChannelInfo(channel.guildId, channel.id, msg.channelId, c))(
+      infoResponseHandler
+    )
 }
 object InfoChannelCommand {
   def props(client: ClientActor): Props = Props(new InfoChannelCommand(client))
@@ -142,9 +135,7 @@ object InfoCommandHandler {
   def props(client: ClientActor): Props = Props(new InfoCommandHandler(client))
 }
 
-class KillCommand(main: ActorRef, val client: ClientActor)
-    extends ParsedCommandActor[NotUsed]
-    with ActorLogging {
+class KillCommand(main: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] with ActorLogging {
   context.watch(main)
 
   override def receive: Receive = {
@@ -171,23 +162,24 @@ object KillCommand {
     )
 }
 
-class ExampleErrorHandler(val client: ClientActor) extends CommandErrorHandler {
+class ExampleErrorHandler(val client: ClientActor, allCommands: Map[CmdCategory, Set[String]])
+    extends CommandErrorHandler {
   override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] =
     Some(CreateMessageData("No command specified"))
-  override def unknownCommandReply(msg: Message, args: List[String])(
+  override def unknownCommandReply(msg: Message, cat: CmdCategory, command: String, args: List[String])(
       implicit c: CacheSnapshot
-  ): Option[CreateMessageData] = {
-    println("Sending no command" + self)
-    Some(CreateMessageData(s"No command named ${args.head} known"))
-  }
+  ): Option[CreateMessageData] =
+    if (allCommands.get(cat).exists(_.contains(command))) None
+    else Some(CreateMessageData(s"No command named $command known"))
 }
 object ExampleErrorHandler {
-  def props(client: ClientActor): Props = Props(new ExampleErrorHandler(client))
+  def props(client: ClientActor, allCommands: Map[CmdCategory, Set[String]]): Props =
+    Props(new ExampleErrorHandler(client, allCommands))
 }
 
 class IgnoreUnknownErrorHandler(val client: ClientActor) extends CommandErrorHandler {
   override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] = None
-  override def unknownCommandReply(msg: Message, args: List[String])(
+  override def unknownCommandReply(msg: Message, cat: CmdCategory, command: String, args: List[String])(
       implicit c: CacheSnapshot
   ): Option[CreateMessageData] = None
 }

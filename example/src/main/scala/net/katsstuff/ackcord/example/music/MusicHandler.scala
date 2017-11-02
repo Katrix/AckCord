@@ -37,9 +37,16 @@ import akka.actor.{ActorLogging, ActorRef, FSM, Props}
 import akka.pattern.pipe
 import akka.stream.Materializer
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandRouter, CommandMeta}
+import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel, UserId}
-import net.katsstuff.ackcord.example.ExampleErrorHandler
+import net.katsstuff.ackcord.example.{
+  ExampleCmdCategories,
+  ExampleErrorHandler,
+  InfoChannelCommand,
+  KillCommand,
+  PingCommand,
+  SendFileCommand
+}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
@@ -64,9 +71,22 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       PauseCommand.cmdMeta(self, client)
     )
 
+  val baseCommands =
+    Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
+  private val allCommands = baseCommands ++ commands :+ KillCommand.cmdMeta(null, client)
+  private val allCommandNames = {
+    val base     = CommandMeta.routerMap(allCommands, client).mapValues(_.keySet)
+    val withHelp = base(ExampleCmdCategories.!) + "help"
+    base + (ExampleCmdCategories.! -> withHelp)
+  }
+
   val commandDispatcher: ActorRef = context.actorOf(
     CommandRouter
-      .props(needMention = true, CommandMeta.routerMap(commands, client), ExampleErrorHandler.props(client)),
+      .props(
+        needMention = true,
+        CommandMeta.routerMap(baseCommands, client),
+        ExampleErrorHandler.props(client, allCommandNames)
+      ),
     "MusicHandlerCommands"
   )
 

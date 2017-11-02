@@ -23,16 +23,20 @@
  */
 package net.katsstuff.ackcord.example
 
+import java.util.Locale
+
+import scala.collection.mutable
 import scala.util.{Failure, Success}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandRouter, CommandMeta}
-import net.katsstuff.ackcord.example.music.MusicHandler
+import net.katsstuff.ackcord.commands.CommandRouter.TerminatedCommand
+import net.katsstuff.ackcord.commands.{CmdCategory, CommandMeta, CommandRouter}
+import net.katsstuff.ackcord.example.music.{MusicHandler, NextCommand, PauseCommand, QueueCommand, StopCommand}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, DiscordClient, ClientSettings}
+import net.katsstuff.ackcord.{APIMessage, ClientSettings, DiscordClient}
 
 object Example {
 
@@ -64,16 +68,30 @@ class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client
     implicit materializer: Materializer
 ) extends Actor
     with ActorLogging {
-  val commands = Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
-
   import context.dispatcher
   implicit val system: ActorSystem = context.system
+
+  val commands =
+    Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
+  private val allCommands = commands ++ Seq(
+    KillCommand.cmdMeta(self, client),
+    QueueCommand.cmdMeta(null, client),
+    StopCommand.cmdMeta(null, client),
+    NextCommand.cmdMeta(null, client),
+    PauseCommand.cmdMeta(null, client)
+  )
+  private val allCommandNames = {
+    val base     = CommandMeta.routerMap(allCommands, client).mapValues(_.keySet)
+    val withHelp = base(ExampleCmdCategories.!) + "help"
+    base + (ExampleCmdCategories.! -> withHelp)
+  }
 
   //We set up a command dispatcher, that sends the correct command to the corresponding actor
   val commandDispatcher: Props = CommandRouter.props(
     needMention = true,
-    CommandMeta.routerMap(commands, client), //This method on CommandMeta wires up our command handling for us
-    ExampleErrorHandler.props(client)
+    CommandMeta
+      .routerMap(commands :+ ExampleHelpCommand.cmdMeta(CommandMeta.helpCmdMap(allCommands), client), client), //This method on CommandMeta wires up our command handling for us
+    ExampleErrorHandler.props(client, allCommandNames)
   )
 
   //This command need to be handled for itself to avoid a deadlock
