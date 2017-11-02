@@ -86,7 +86,7 @@ class CommandRouter(
               val newArgs = lowercaseCommand.substring(cat.prefix.length) :: args.tail
               handlerMap.get(newArgs.head) match {
                 case Some(handler) => handler ! Command(msg, newArgs.tail, c)
-                case None          => errorHandler ! UnknownCommand(msg, newArgs, c)
+                case None          => errorHandler ! UnknownCommand(msg, cat, newArgs.head, newArgs.tail, c)
               }
             }
           }
@@ -156,11 +156,13 @@ object CommandRouter {
     * Sent to the error handler if a correct category is supplied,
     * but no handler for the command is found.
     * @param msg The message that triggered this.
+    * @param category The category that was used.
+    * @param command The unknown command.
     * @param args The already parsed args. These will not include stuff like
     *             the category and mention.
     * @param c The cache snapshot.
     */
-  case class UnknownCommand(msg: Message, args: List[String], c: CacheSnapshot)
+  case class UnknownCommand(msg: Message, category: CmdCategory, command: String, args: List[String], c: CacheSnapshot)
 
   /**
     * Sent to a handler when a valid command was used.

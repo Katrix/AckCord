@@ -40,8 +40,8 @@ trait CommandErrorHandler extends Actor {
   override def receive: Receive = {
     case NoCommand(msg, c) =>
       noCommandReply(msg)(c).foreach(sendMsg(msg.channelId, _))
-    case UnknownCommand(msg, args, c) =>
-      unknownCommandReply(msg, args)(c).foreach(sendMsg(msg.channelId, _))
+    case UnknownCommand(msg, cat, command, args, c) =>
+      unknownCommandReply(msg, cat, command, args)(c).foreach(sendMsg(msg.channelId, _))
   }
 
   private def sendMsg(channelId: ChannelId, data: CreateMessageData): Unit =
@@ -57,8 +57,12 @@ trait CommandErrorHandler extends Actor {
   /**
     * Create a reply for errors where no command by that name is known.
     * @param msg The base message.
-    * @param args The args passed in. The head is the unknown command name.
+    * @param category The category that was used.
+    * @param command The unknown command.
+    * @param args The args passed in.
     * @param c The current cache.
     */
-  def unknownCommandReply(msg: Message, args: List[String])(implicit c: CacheSnapshot): Option[CreateMessageData]
+  def unknownCommandReply(msg: Message, category: CmdCategory, command: String, args: List[String])(
+      implicit c: CacheSnapshot
+  ): Option[CreateMessageData]
 }
