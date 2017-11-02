@@ -16,7 +16,7 @@ lazy val ackCord = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.16.0",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.18.1",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core",
       //"io.circe" %% "circe-generic",
