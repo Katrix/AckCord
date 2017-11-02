@@ -109,10 +109,10 @@ class RESTHandler(
     case Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo)
         if !rateLimits.contains(request.route.uri) =>
       val route       = request.route
-      val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.createBody)
+      val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody)
 
       if (AckCordSettings().LogSentREST) {
-        log.debug("Sending request {} to {} with method {}", request.toJsonParams.noSpaces, route.uri, route.method)
+        log.debug("Sending request {} to {} with method {}", request.jsonParams.noSpaces, route.uri, route.method)
       }
 
       queueRequest(httpRequest, request, contextual, sendResponseTo)

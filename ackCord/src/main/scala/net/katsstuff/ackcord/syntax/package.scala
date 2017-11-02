@@ -35,30 +35,49 @@ import shapeless.tag.@@
 package object syntax {
 
   implicit class ChannelSyntax(val channel: Channel) extends AnyVal {
+
+    /**
+      * Delete or close this channel.
+      */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteCloseChannel(channel.id), context, sendResponseTo)
     def mention: String = s"<#${channel.id}>"
 
+    /**
+      * If this is a text channel, convert it to one.
+      */
     def asTChannel: Option[TChannel] = channel match {
       case gChannel: TChannel => Some(gChannel)
       case _                  => None
     }
 
+    /**
+      * If this is a DM channel, convert it to one.
+      */
     def asDMChannel: Option[DMChannel] = channel match {
       case gChannel: DMChannel => Some(gChannel)
       case _                   => None
     }
 
+    /**
+      * If this is a guild channel, convert it to one.
+      */
     def asGuildChannel: Option[GuildChannel] = channel match {
       case gChannel: GuildChannel => Some(gChannel)
       case _                      => None
     }
 
+    /**
+      * If this is a text guild channel, convert it to one.
+      */
     def asTGuildChannel: Option[TGuildChannel] = channel match {
       case gChannel: TGuildChannel => Some(gChannel)
       case _                       => None
     }
 
+    /**
+      * If this is a text voice channel, convert it to one.
+      */
     def asVGuildChannel: Option[VGuildChannel] = channel match {
       case gChannel: VGuildChannel => Some(gChannel)
       case _                       => None
@@ -66,72 +85,99 @@ package object syntax {
   }
 
   implicit class TChannelSyntax(val tChannel: TChannel) extends AnyVal {
+
+    /**
+      * Send a message to this channel.
+      * @param content The content of the message.
+      * @param tts If this is a text-to-speech message.
+      * @param files The files to send with this message. You can reference these
+      *              files in the embed using `attachment://filename`.
+      * @param embed An embed to send with this message.
+      */
     def sendMessage[Context](
-        content: String,
+        content: String = "",
         tts: Boolean = false,
-        file: Seq[Path] = Seq.empty,
+        files: Seq[Path] = Seq.empty,
         embed: Option[OutgoingEmbed] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, file, embed)), NotUsed, sendResponseTo)
+      Request(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed)), NotUsed, sendResponseTo)
 
-    def fetchMessagesAround[Context](around: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed)(
+    /**
+      * Fetch messages around a message id.
+      * @param around The message to get messages around.
+      * @param limit The max amount of messages to return.
+      */
+    def fetchMessagesAround[Context](around: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(Some(around), None, None, limit)),
       context,
       sendResponseTo
     )
-    def fetchMessagesBefore[Context](before: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed)(
+
+    /**
+      * Fetch messages before a message id.
+      * @param before The message to get messages before.
+      * @param limit The max amount of messages to return.
+      */
+    def fetchMessagesBefore[Context](before: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(None, Some(before), None, limit)),
       context,
       sendResponseTo
     )
-    def fetchMessagesAfter[Context](after: MessageId, limit: Option[Int] = Some(50), context: Context = NotUsed)(
+
+    /**
+      * Fetch messages after a message id.
+      * @param after The message to get messages after.
+      * @param limit The max amount of messages to return.
+      */
+    def fetchMessagesAfter[Context](after: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, Some(after), limit)),
       context,
       sendResponseTo
     )
-    def fetchMessages[Context](limit: Option[Int] = Some(50), context: Context = NotUsed)(
+
+    /**
+      * Fetch messages in this channel.
+      * @param limit The max amount of messages to return.
+      */
+    def fetchMessages[Context](limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
       Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context, sendResponseTo)
 
+    /**
+      * Fetch a message in this channel.
+      */
     def fetchMessage[Context](id: MessageId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetChannelMessage(tChannel.id, id), context, sendResponseTo)
 
-    def editChannelPermissions[Context](role: Role, allow: Permission, deny: Permission, context: Context = NotUsed)(
-        implicit sendResponseTo: ActorRef
-    ) = Request(
-      EditChannelPermissions(tChannel.id, role.id, EditChannelPermissionsData(allow, deny, "role")),
-      context,
-      sendResponseTo
-    )
-
-    def deleteChannelPermissions[Context](user: User, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteChannelPermission(tChannel.id, user.id), context, sendResponseTo)
-
+    /**
+      * Triggers typing in a channel.
+      */
     def triggerTyping[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(TriggerTypingIndicator(tChannel.id), context, sendResponseTo)
-
-    def fetchPinnedMessages[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetPinnedMessages(tChannel.id), context, sendResponseTo)
   }
 
   implicit class GuildChannelSyntax(val channel: GuildChannel) extends AnyVal {
+
+    /**
+      * Get the category of this channel.
+      */
     def category(implicit snapshot: CacheSnapshot): Option[GuildCategory] =
       for {
-        catId <- channel.parentId
         guild <- channel.guild
-        cat <- guild.channels.collectFirst {
-          case (_, ch: GuildCategory) if ch.id == catId => ch
-        }
+        cat   <- category(guild)
       } yield cat
 
+    /**
+      * Get the category of this channel using a preexisting guild.
+      */
     def category(guild: Guild): Option[GuildCategory] =
       for {
         catId <- channel.parentId
@@ -139,9 +185,75 @@ package object syntax {
           case (_, ch: GuildCategory) if ch.id == catId => ch
         }
       } yield cat
+
+    /**
+      * Edit the permission overrides of a role
+      * @param roleId The role to edit the permissions for.
+      * @param allow The new allowed permissions.
+      * @param deny The new denied permissions.
+      */
+    def editChannelPermissions[Context](
+        roleId: RoleId,
+        allow: Permission,
+        deny: Permission,
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) = Request(
+      EditChannelPermissions(channel.id, roleId, EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Role)),
+      context,
+      sendResponseTo
+    )
+
+    /**
+      * Edit the permission overrides of a user
+      * @param userId The user to edit the permissions for.
+      * @param allow The new allowed permissions.
+      * @param deny The new denied permissions.
+      */
+    def editChannelPermissions[Context](
+        userId: UserId,
+        allow: Permission,
+        deny: Permission,
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) = Request(
+      EditChannelPermissions(
+        channel.id,
+        userId,
+        EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Member)
+      ),
+      context,
+      sendResponseTo
+    )
+
+    /**
+      * Delete the permission overwrites for a user
+      * @param userId The user to remove the permission overwrites for
+      */
+    def deleteChannelPermissions[Context](userId: UserId, context: Context = NotUsed)(
+        implicit sendResponseTo: ActorRef
+    ) =
+      Request(DeleteChannelPermission(channel.id, userId), context, sendResponseTo)
+
+    /**
+      * Delete the permission overwrites for a role
+      * @param roleId The role to remove the permission overwrites for
+      */
+    def deleteChannelPermissions[Context](roleId: RoleId, context: Context = NotUsed)(
+        implicit sendResponseTo: ActorRef
+    ) =
+      Request(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
   }
 
   implicit class TGuildChannelSyntax(val channel: TGuildChannel) extends AnyVal {
+
+    /**
+      * Update the settings of this channel.
+      * @param name New name of the channel.
+      * @param position New position of the channel.
+      * @param topic The new channel topic for text channels.
+      * @param nsfw If the channel is NSFW for text channels.
+      * @param permissionOverwrites The new channel permission overwrites.
+      * @param category The new category id of the channel.
+      */
     def modify[Context](
         name: String = channel.name,
         position: Int = channel.position,
@@ -153,15 +265,35 @@ package object syntax {
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyChannel(
         channel.id,
-        ModifyChannelData(name, position, topic, Some(nsfw), None, None, permissionOverwrites.values.toSeq, category)
+        ModifyChannelData(
+          name = Some(name),
+          position = Some(position),
+          topic = topic,
+          nsfw = Some(nsfw),
+          bitrate = None,
+          userLimit = None,
+          permissionOverwrites = Some(permissionOverwrites.values.toSeq),
+          parentId = category
+        )
       ),
       context,
       sendResponseTo
     )
 
+    /**
+      * Fetch all the invites created for this channel.
+      */
     def fetchInvites[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetChannelInvites(channel.id), context, sendResponseTo)
 
+    /**
+      * Create an invite for this channel.
+      * @param maxAge Duration in seconds before this invite expires.
+      * @param maxUses Amount of times this invite can be used before expiring,
+      *                or 0 for unlimited.
+      * @param temporary If this invite only grants temporary membership.
+      * @param unique If true, guarantees to create a new invite.
+      */
     def createInvite[Context](
         maxAge: Int = 86400,
         maxUses: Int = 0,
@@ -174,11 +306,47 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Delete multiple messages at the same time.
+      * @param ids The messages to delete.
+      */
     def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids)), context, sendResponseTo)
+
+    /**
+      * Fetch all the pinned messages in this channel.
+      */
+    def fetchPinnedMessages[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(GetPinnedMessages(channel.id), context, sendResponseTo)
+
+    /**
+      * Create a webhook for this channel.
+      * @param name The webhook name.
+      * @param avatar The webhook avatar.
+      */
+    def createWebhook[Context](name: String, avatar: ImageData, context: Context = NotUsed)(
+        implicit sendResponseTo: ActorRef
+    ) =
+      Request(CreateWebhook(channel.id, CreateWebhookData(name, avatar)), context, sendResponseTo)
+
+    /**
+      * Fetch the webhooks for this channel.
+      */
+    def fetchWebhooks[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(GetChannelWebhooks(channel.id), context, sendResponseTo)
   }
 
   implicit class VGuildChannelSyntax(val channel: VGuildChannel) extends AnyVal {
+
+    /**
+      * Update the settings of this channel.
+      * @param name New name of the channel.
+      * @param position New position of the channel.
+      * @param bitrate The new channel bitrate for voice channels.
+      * @param userLimit The new user limit for voice channel.
+      * @param permissionOverwrites The new channel permission overwrites.
+      * @param category The new category id of the channel.
+      */
     def modify[Context](
         name: String = channel.name,
         position: Int = channel.position,
@@ -191,13 +359,12 @@ package object syntax {
       ModifyChannel(
         channel.id,
         ModifyChannelData(
-          name = name,
-          position = position,
-          topic = None,
+          name = Some(name),
+          position = Some(position),
           nsfw = Some(channel.nsfw),
           bitrate = Some(bitrate),
           userLimit = Some(userLimit),
-          permissionOverwrites = permissionOverwrites.values.toSeq,
+          permissionOverwrites = Some(permissionOverwrites.values.toSeq),
           parentId = category
         )
       ),
@@ -207,6 +374,10 @@ package object syntax {
   }
 
   implicit class CategorySyntax(val category: GuildCategory) extends AnyVal {
+
+    /**
+      * Get all the channels in this category.
+      */
     def channels(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
       category.guild
         .map { g =>
@@ -216,49 +387,128 @@ package object syntax {
         }
         .getOrElse(Seq.empty)
 
+    /**
+      * Get all the channels in this category using an preexisting guild.
+      */
     def channels(guild: Guild): Seq[GuildChannel] =
       guild.channels.collect { case (_, ch) if ch.parentId.contains(category.id) => ch }.toSeq
 
+    /**
+      * Get all the text channels in this category.
+      */
     def tChannels(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
       channels.collect { case tChannel: TGuildChannel => tChannel }
 
+    /**
+      * Get all the text channels in this category using an preexisting guild.
+      */
     def tChannels(guild: Guild): Seq[TGuildChannel] =
       channels(guild).collect { case tChannel: TGuildChannel => tChannel }
 
+    /**
+      * Get all the voice channels in this category.
+      */
     def vChannels(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
       channels.collect { case tChannel: VGuildChannel => tChannel }
 
+    /**
+      * Get all the voice channels in this category using an preexisting guild.
+      */
     def vChannels(guild: Guild): Seq[VGuildChannel] =
       channels(guild).collect { case tChannel: VGuildChannel => tChannel }
 
+    /**
+      * Get a channel by id in this category.
+      * @param id The id of the channel.
+      */
     def channelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] = channels.find(_.id == id)
-    def channelById(id: ChannelId, guild: Guild):                     Option[GuildChannel] = channels(guild).find(_.id == id)
+
+    /**
+      * Get a channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
+    def channelById(id: ChannelId, guild: Guild): Option[GuildChannel] = channels(guild).find(_.id == id)
+
+    /**
+      * Get a text channel by id in this category.
+      * @param id The id of the channel.
+      */
     def tChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = channelById(id).collect {
       case tChannel: TGuildChannel => tChannel
     }
+
+    /**
+      * Get a text channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
     def tChannelById(id: ChannelId, guild: Guild): Option[TGuildChannel] = channelById(id, guild).collect {
       case tChannel: TGuildChannel => tChannel
     }
+
+    /**
+      * Get a voice channel by id in this category.
+      * @param id The id of the channel.
+      */
     def vChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = channelById(id).collect {
       case vChannel: VGuildChannel => vChannel
     }
+
+    /**
+      * Get a voice channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
     def vChannelById(id: ChannelId, guild: Guild): Option[VGuildChannel] = channelById(id, guild).collect {
       case vChannel: VGuildChannel => vChannel
     }
 
+    /**
+      * Get all the channels with a name in this category.
+      * @param name The name of the guilds.
+      */
     def channelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
       channels.filter(_.name == name)
+
+    /**
+      * Get all the channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
     def channelsByName(name: String, guild: Guild): Seq[GuildChannel] =
       channels(guild).filter(_.name == name)
+
+    /**
+      * Get all the text channels with a name in this category.
+      * @param name The name of the guilds.
+      */
     def tChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
       tChannels.filter(_.name == name)
+
+    /**
+      * Get all the text channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
     def tChannelsByName(name: String, guild: Guild): Seq[TGuildChannel] =
       tChannels(guild).filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category.
+      * @param name The name of the guilds.
+      */
     def vChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
       vChannels.filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
     def vChannelsByName(name: String, guild: Guild): Seq[VGuildChannel] =
       vChannels(guild).filter(_.name == name)
 
+    /**
+      * Update the settings of this category.
+      * @param name New name of the category.
+      * @param position New position of the category.
+      * @param permissionOverwrites The new category permission overwrites.
+      */
     def modify[Context](
         name: String = category.name,
         position: Int = category.position,
@@ -268,13 +518,10 @@ package object syntax {
       ModifyChannel(
         category.id,
         ModifyChannelData(
-          name = name,
-          position = position,
-          topic = None,
+          name = Some(name),
+          position = Some(position),
           nsfw = Some(category.nsfw),
-          bitrate = None,
-          userLimit = None,
-          permissionOverwrites = permissionOverwrites.values.toSeq,
+          permissionOverwrites = Some(permissionOverwrites.values.toSeq),
           parentId = category.parentId
         )
       ),
@@ -284,20 +531,45 @@ package object syntax {
   }
 
   implicit class GuildSyntax(val guild: Guild) extends AnyVal {
-    def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
-    def everyoneRole:                            Role         = guild.roles(RoleId(guild.id)) //The everyone role should always be present
-    def mentionEveryone:                         String       = "@everyone"
 
+    /**
+      * Get the owner of this guild.
+      */
+    def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
+
+    /**
+      * Get the everyone role in this guild.
+      */
+    def everyoneRole: Role = guild.roles(RoleId(guild.id)) //The everyone role should always be present
+
+    /**
+      * Get the everyone mention for this guild.
+      */
+    def mentionEveryone: String = "@everyone"
+
+    /**
+      * Modify this guild.
+      * @param name The new name of the guild
+      * @param region The new voice region for the guild
+      * @param verificationLevel The new verification level to use for the guild.
+      * @param defaultMessageNotifications The new notification level to use
+      *                                    for the guild.
+      * @param afkChannelId The new afk channel of the guild.
+      * @param afkTimeout The new afk timeout in seconds for the guild.
+      * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
+      * @param ownerId Transfer ownership of this guild. Must be the owner.
+      * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
+      */
     def modify[Context](
         name: Option[String] = None,
         region: Option[String] = None,
         verificationLevel: Option[VerificationLevel] = None,
-        defaultMessageNotification: Option[NotificationLevel] = None,
+        defaultMessageNotifications: Option[NotificationLevel] = None,
         afkChannelId: Option[ChannelId] = None,
         afkTimeout: Option[Int] = None,
-        icon: Option[String] = None,
+        icon: Option[ImageData] = None,
         ownerId: Option[UserId] = None,
-        splash: Option[String] = None,
+        splash: Option[ImageData] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyGuild(
@@ -306,7 +578,7 @@ package object syntax {
           name = name,
           region = region,
           verificationLevel = verificationLevel,
-          defaultMessageNotification = defaultMessageNotification,
+          defaultMessageNotifications = defaultMessageNotifications,
           afkChannelId = afkChannelId,
           afkTimeout = afkTimeout,
           icon = icon,
@@ -318,12 +590,45 @@ package object syntax {
       sendResponseTo
     )
 
-    def fetchAllChannels[Context](channelId: ChannelId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    /**
+      * Fetch all channels in this guild.
+      */
+    def fetchAllChannels[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildChannels(guild.id), context, sendResponseTo)
 
-    def createChannel[Context](
+    /**
+      * Create a text channel in this guild.
+      * @param name The name of the channel.
+      * @param permissionOverwrites The permission overwrites for the channel.
+      * @param category The category id for the channel.
+      * @param nsfw If the channel is NSFW.
+      */
+    def createTextChannel[Context](
         name: String,
-        `type`: Option[ChannelType],
+        permissionOverwrites: Option[Seq[PermissionOverwrite]],
+        category: Option[ChannelId],
+        nsfw: Option[Boolean],
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) = Request(
+      CreateGuildChannel(
+        guild.id,
+        CreateGuildChannelData(name, Some(ChannelType.GuildText), None, None, permissionOverwrites, category, nsfw)
+      ),
+      context,
+      sendResponseTo
+    )
+
+    /**
+      * Create a voice channel in this guild.
+      * @param name The name of the channel.
+      * @param bitrate The bitrate for the channel if it's a voice channel.
+      * @param userLimit The user limit for the channel if it's a voice channel.
+      * @param permissionOverwrites The permission overwrites for the channel.
+      * @param category The category id for the channel.
+      * @param nsfw If the channel is NSFW.
+      */
+    def createVoiceChannel[Context](
+        name: String,
         bitrate: Option[Int],
         userLimit: Option[Int],
         permissionOverwrites: Option[Seq[PermissionOverwrite]],
@@ -333,12 +638,44 @@ package object syntax {
     )(implicit sendResponseTo: ActorRef) = Request(
       CreateGuildChannel(
         guild.id,
-        CreateGuildChannelData(name, `type`, bitrate, userLimit, permissionOverwrites, category, nsfw)
+        CreateGuildChannelData(
+          name,
+          Some(ChannelType.GuildVoice),
+          bitrate,
+          userLimit,
+          permissionOverwrites,
+          category,
+          nsfw
+        )
       ),
       context,
       sendResponseTo
     )
 
+    /**
+      * Create a category in this guild.
+      * @param name The name of the channel.
+      * @param permissionOverwrites The permission overwrites for the channel.
+      * @param nsfw If the channel is NSFW.
+      */
+    def createCategory[Context](
+        name: String,
+        permissionOverwrites: Option[Seq[PermissionOverwrite]],
+        nsfw: Option[Boolean],
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) = Request(
+      CreateGuildChannel(
+        guild.id,
+        CreateGuildChannelData(name, Some(ChannelType.GuildCategory), None, None, permissionOverwrites, None, nsfw)
+      ),
+      context,
+      sendResponseTo
+    )
+
+    /**
+      * Modify the positions of several channels.
+      * @param newPositions A map betweem the channelId and the new positions.
+      */
     def modifyChannelPositions[Context](newPositions: Map[ChannelId, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
@@ -347,15 +684,30 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Fetch a guild member by id.
+      */
     def fetchGuildMember[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildMember(guild.id, userId), context, sendResponseTo)
 
+    /**
+      * Fetch all the bans for this guild.
+      */
     def fetchBans[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildBans(guild.id), context, sendResponseTo)
 
+    /**
+      * Unban a user.
+      * @param userId The user to unban.
+      */
     def unban[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(RemoveGuildBan(guild.id, userId), context, sendResponseTo)
 
+    /**
+      * Get all the guild members in this guild.
+      * @param limit The max amount of members to get
+      * @param after Get userIds after this id
+      */
     def fetchAllGuildMember[Context](
         limit: Option[Int] = None,
         after: Option[UserId] = None,
@@ -363,6 +715,14 @@ package object syntax {
     )(implicit sendResponseTo: ActorRef) =
       Request(ListGuildMembers(guild.id, ListGuildMembersData(limit, after)), context, sendResponseTo)
 
+    /**
+      * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
+      * @param accessToken The OAuth2 access token.
+      * @param nick The nickname to give to the user.
+      * @param roles The roles to give to the user.
+      * @param mute If the user should be muted.
+      * @param deaf If the user should be deafened.
+      */
     def addGuildMember[Context](
         userId: UserId,
         accessToken: String,
@@ -377,9 +737,21 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Fetch all the roles in this guild.
+      */
     def fetchRoles[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildRoles(guild.id), context, sendResponseTo)
-    def createRoles[Context](
+
+    /**
+      * Create a new role.
+      * @param name The name of the role.
+      * @param permissions The permissions this role has.
+      * @param color The color of the role.
+      * @param hoist If this role is shown in the right sidebar.
+      * @param mentionable If this role is mentionable.
+      */
+    def createRole[Context](
         name: Option[String],
         permissions: Option[Permission],
         color: Option[Int],
@@ -392,6 +764,10 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Modify the positions of several roles
+      * @param newPositions A map from the role id to their new position.
+      */
     def modifyRolePositions[Context](newPositions: Map[RoleId, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
@@ -400,22 +776,55 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Check how many members would be removed if a prune was started now.
+      * @param days The number of days to prune for.
+      */
     def fetchPruneCount[Context](days: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildPruneCount(guild.id, GuildPruneData(days)), context, sendResponseTo)
+
+    /**
+      * Begin a prune.
+      * @param days The number of days to prune for.
+      */
     def beginPrune[Context](days: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(BeginGuildPrune(guild.id, GuildPruneData(days)), context, sendResponseTo)
 
+    /**
+      * Fetch the voice regions for this guild.
+      */
     def fetchVoiceRegions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildVoiceRegions(guild.id), context, sendResponseTo)
 
+    /**
+      * Fetch the invites for this guild.
+      */
     def fetchInvites[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildInvites(guild.id), context, sendResponseTo)
 
+    /**
+      * Fetch the integrations for this guild.
+      */
     def fetchIntegrations[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildIntegrations(guild.id), context, sendResponseTo)
+
+    /**
+      * Attach an integration to this guild.
+      * @param tpe The integration type.
+      * @param id The integration id.
+      */
     def createIntegration[Context](tpe: String, id: IntegrationId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id)), context, sendResponseTo)
+
+    /**
+      * Modify an existing integration for this guild.
+      * @param id The id of the ingration
+      * @param expireBehavior The behavior of expiring subscribers.
+      * @param expireGracePeriod The grace period before expiring subscribers.
+      * @param enableEmoticons If emojis should be synced for this integration.
+      *                        (Twitch only)
+      */
     def modifyIntegration[Context](
         id: IntegrationId,
         expireBehavior: Int,
@@ -431,96 +840,218 @@ package object syntax {
       context,
       sendResponseTo
     )
+
+    /**
+      * Delete an integration.
+      * @param id The integration id.
+      */
     def removeIntegration[Context](id: IntegrationId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteGuildIntegration(guild.id, id), context, sendResponseTo)
+
+    /**
+      * Sync an integration
+      * @param id The integration id.
+      */
     def syncIntegration[Context](id: IntegrationId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(SyncGuildIntegration(guild.id, id), context, sendResponseTo)
 
+    /**
+      * Fetch the guild embed for this guild.
+      */
     def fetchEmbed[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildEmbed(guild.id), context, sendResponseTo)
+
+    /**
+      * Modify a guild embed for this guild.
+      */
     def modifyEmbed[Context](embed: GuildEmbed, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(ModifyGuildEmbed(guild.id, embed), context, sendResponseTo)
 
+    /**
+      * Get all the text channels in the guild.
+      */
     def tChannels: Seq[TGuildChannel] =
       guild.channels.values.collect {
         case tChannel: TGuildChannel => tChannel
       }.toSeq
 
+    /**
+      * Get all the voice channels in the guild.
+      */
     def vChannels: Seq[VGuildChannel] =
       guild.channels.values.collect {
         case tChannel: VGuildChannel => tChannel
       }.toSeq
 
+    /**
+      * Get a channel by id in this guild.
+      */
     def channelById(id: ChannelId): Option[GuildChannel] = guild.channels.get(id)
+
+    /**
+      * Get a text channel by id in this guild.
+      */
     def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).collect {
       case tChannel: TGuildChannel => tChannel
     }
+
+    /**
+      * Get a voice channel by id in this guild.
+      */
     def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).collect {
       case vChannel: VGuildChannel => vChannel
     }
 
-    def channelsByName(name: String):  Seq[GuildChannel]  = guild.channels.values.filter(_.name == name).toSeq
+    /**
+      * Get all the channels with a name.
+      */
+    def channelsByName(name: String): Seq[GuildChannel] = guild.channels.values.filter(_.name == name).toSeq
+
+    /**
+      * Get all the text channels with a name.
+      */
     def tChannelsByName(name: String): Seq[TGuildChannel] = tChannels.filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name.
+      */
     def vChannelsByName(name: String): Seq[VGuildChannel] = vChannels.filter(_.name == name)
 
+    /**
+      * Get the afk channel in this guild.
+      */
     def afkChannel: Option[VGuildChannel] = guild.afkChannelId.flatMap(vChannelById)
 
-    def roleById(id: RoleId):      Option[Role] = guild.roles.get(id)
-    def rolesByName(name: String): Seq[Role]    = guild.roles.values.filter(_.name == name).toSeq
+    /**
+      * Get a role by id.
+      */
+    def roleById(id: RoleId): Option[Role] = guild.roles.get(id)
 
-    def emojiById(id: EmojiId):     Option[Emoji] = guild.emojis.get(id)
-    def emojisByName(name: String): Seq[Emoji]    = guild.emojis.values.filter(_.name == name).toSeq
+    /**
+      * Get all the roles with a name.
+      */
+    def rolesByName(name: String): Seq[Role] = guild.roles.values.filter(_.name == name).toSeq
 
-    def memberById(id: UserId):     Option[GuildMember] = guild.members.get(id)
+    /**
+      * Get an emoji by id.
+      */
+    def emojiById(id: EmojiId): Option[Emoji] = guild.emojis.get(id)
+
+    /**
+      * Get all the emoji with a name.
+      */
+    def emojisByName(name: String): Seq[Emoji] = guild.emojis.values.filter(_.name == name).toSeq
+
+    /**
+      * Get a guild member by a user id.
+      */
+    def memberById(id: UserId): Option[GuildMember] = guild.members.get(id)
+
+    /**
+      * Get a guild member from a user.
+      */
     def memberFromUser(user: User): Option[GuildMember] = memberById(user.id)
 
+    /**
+      * Get all the guild members with a role
+      * @param roleId The role to check for.
+      */
     def membersWithRole(roleId: RoleId): Seq[GuildMember] =
       guild.members.collect {
         case (_, mem) if mem.roleIds.contains(roleId) => mem
       }.toSeq
 
-    def presenceById(id: UserId):    Option[Presence] = guild.presences.get(id)
+    /**
+      * Get a presence by a user id.
+      */
+    def presenceById(id: UserId): Option[Presence] = guild.presences.get(id)
+
+    /**
+      * Get a presence for a user.
+      */
     def presenceForUser(user: User): Option[Presence] = presenceById(user.id)
 
+    /**
+      * Fetch all the emojis for this guild.
+      */
     def fetchEmojis[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(ListGuildEmojis(guild.id), context, sendResponseTo)
+
+    /**
+      * Fetch a single emoji from this guild.
+      * @param emojiId The id of the emoji to fetch.
+      */
     def fetchSingleEmoji[Context](emojiId: EmojiId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildEmoji(emojiId, guild.id), context, sendResponseTo)
+
+    /**
+      * Create a new emoji in this guild.
+      * @param name The name of the emoji.
+      * @param image The image for the emoji.
+      */
     def createEmoji[Context](name: String, image: ImageData, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image)), context, sendResponseTo)
 
-    def createRole[Context](
-        name: Option[String] = None,
-        permissions: Option[Permission] = None,
-        color: Option[Int] = None,
-        hoist: Option[Boolean] = None,
-        mentionable: Option[Boolean] = None,
-        context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
-      CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable)),
-      context,
-      sendResponseTo
-    )
-
+    /**
+      * Get a voice state for a user.
+      */
     def voiceStateFor(userId: UserId): Option[VoiceState] = guild.voiceStates.get(userId)
 
+    /**
+      * Modify the clients nickname.
+      * @param nick The new nickname
+      */
+    def setNick[Context](nick: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick)), context, sendResponseTo)
+
+    /**
+      * Fetch an audit log for a this guild.
+      */
     def fetchAuditLog[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuildAuditLog(guild.id), context, sendResponseTo)
 
+    /**
+      * Fetch the webhooks in this guild.
+      */
+    def fetchWebhooks[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(GetGuildWebhooks(guild.id), context, sendResponseTo)
+
+    /**
+      * Leave this guild.
+      */
     def leaveGuild[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(LeaveGuild(guild.id), context, sendResponseTo)
+
+    /**
+      * Delete this guild. Must be the owner.
+      */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteGuild(guild.id), context, sendResponseTo)
   }
 
   implicit class GuildMemberSyntax(val guildMember: GuildMember) extends AnyVal {
+
+    /**
+      * Get all the roles for this guild member.
+      */
     def rolesForUser(implicit snapshot: CacheSnapshot): Seq[Role] =
       guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).toSeq.flatten
 
+    /**
+      * Get all the roles for this guild member given a preexisting guild.
+      */
     def rolesForUser(guild: Guild): Seq[Role] =
       guildMember.roleIds.flatMap(guild.roles.get)
 
+    /**
+      * Modify this guild member.
+      * @param nick The nickname to give to the user.
+      * @param roles The roles to give to the user.
+      * @param mute If the user should be muted.
+      * @param deaf If the user should be deafened.
+      * @param channelId The id of the channel to move the user to.
+      */
     def modify[Context](
         nick: Option[String],
         roles: Option[Seq[RoleId]],
@@ -538,33 +1069,84 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Add a role to this member.
+      * @param roleId The role to add
+      */
     def addRole[Context](roleId: RoleId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(AddGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
+
+    /**
+      * Remove a role from this member.
+      * @param roleId The role to remove
+      */
     def removeRole[Context](roleId: RoleId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(RemoveGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
+
+    /**
+      * Kick this guild member.
+      */
     def kick[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(RemoveGuildMember(guildMember.guildId, guildMember.userId), context, sendResponseTo)
+
+    /**
+      * Ban this guild member.
+      * @param deleteMessageDays The number of days to delete messages for
+      *                              this banned user.
+      */
     def ban[Context](deleteMessageDays: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(
         CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays)),
         context,
         sendResponseTo
       )
+
+    /**
+      * Unban this user.
+      */
     def unban[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
   }
 
   implicit class GuildEmojiSyntax(val emoji: Emoji) extends AnyVal {
-    def asString: String =
+
+    /**
+      * Mention this role so it can be formatted correctly in messages.
+      */
+    def mention: String =
       if (!emoji.managed) s"${emoji.name}:${emoji.id}" else ???
+
+    /**
+      * Modify this emoji.
+      * @param name The new name of the emoji.
+      * @param guildId The guildId of this emoji.
+      */
     def modify[Context](name: String, guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context, sendResponseTo)
+
+    /**
+      * Delete this emoji.
+      * @param guildId The guildId of this emoji.
+      */
     def delete[Context](guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteGuildEmoji(emoji.id, guildId), context, sendResponseTo)
   }
 
   implicit class RoleSyntax(val role: Role) extends AnyVal {
+
+    /**
+      * Mention this role.
+      */
     def mention: String = s"<@&${role.id}>"
+
+    /**
+      * Modify this role.
+      * @param name The new name of the role.
+      * @param permissions The new permissions this role has.
+      * @param color The new color of the role.
+      * @param hoist If this role is shown in the right sidebar.
+      * @param mentionable If this role is mentionable.
+      */
     def modify[Context](
         name: Option[String],
         permissions: Option[Permission],
@@ -578,27 +1160,56 @@ package object syntax {
       sendResponseTo
     )
 
+    /**
+      * Delete this role.
+      */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteGuildRole(role.guildId, role.id), context, sendResponseTo)
   }
 
   implicit class MessageSyntax(val message: Message) extends AnyVal {
+
+    /**
+      * Create a reaction for a message.
+      * @param guildEmoji The emoji to react with.
+      */
     def createReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(CreateReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
+      Request(CreateReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
+    /**
+      * Delete the clients reaction to a message.
+      * @param guildEmoji The emoji to remove a reaction for.
+      */
     def deleteOwnReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
+      Request(DeleteOwnReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
+    /**
+      * Delete the reaction of a user with an emoji.
+      * @param guildEmoji The emoji of the reaction to remove.
+      * @param userId The userId to remove for.
+      */
     def deleteUserReaction[Context](guildEmoji: Emoji, userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId), context, sendResponseTo)
+    ) = Request(DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId), context, sendResponseTo)
 
+    /**
+      * Fetch all the users that have reacted with an emoji for this message.
+      * @param guildEmoji The emoji the get the reactors for.
+      */
     def fetchReactions[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetReactions(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
+      Request(GetReactions(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
+    /**
+      * Clear all the reactions on this message.
+      */
     def deleteAllReactions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteAllReactions(message.channelId, message.id), context, sendResponseTo)
 
+    /**
+      * Edit this message.
+      * @param content The new content of this message
+      * @param embed The new embed of this message
+      */
     def edit[Context](
         content: Option[String] = Some(message.content),
         embed: Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
@@ -606,38 +1217,87 @@ package object syntax {
     )(implicit sendResponseTo: ActorRef) =
       Request(EditMessage(message.channelId, message.id, EditMessageData(content, embed)), content, sendResponseTo)
 
+    /**
+      * Delete this message.
+      */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteMessage(message.channelId, message.id), context, sendResponseTo)
 
+    /**
+      * Pin this message.
+      */
     def pin[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(AddPinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
+
+    /**
+      * Unpin this message.
+      */
     def unpin[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeletePinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
   }
 
   implicit class UserSyntax(val user: User) extends AnyVal {
+
+    /**
+      * Get an existing DM channel for this user.
+      */
     def getDMChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.dmChannels.collectFirst {
       case (_, ch) if ch.userId == user.id => ch
     }
+
+    /**
+      * Create a new dm channel for this user.
+      */
     def createDMChannel[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(CreateDm(CreateDMData(user.id)), context, sendResponseTo)
 
-    def mention:     String = s"<@${user.id}>"
+    /**
+      * Mention this user.
+      */
+    def mention: String = s"<@${user.id}>"
+
+    /**
+      * Mention this user with their nickname.
+      */
     def mentionNick: String = s"<@!${user.id}>"
   }
 
   implicit class DiscordClientSyntax(val client: ActorRef @@ DiscordClient) extends AnyVal {
+
+    /**
+      * Fetch a channel by id.
+      */
     def fetchChannel[Context](channelId: ChannelId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetChannel(channelId), context, sendResponseTo)
+
+    /**
+      * Fetch a guild by id.
+      */
     def fetchGuild[Context](guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetGuild(guildId), context, sendResponseTo)
+
+    /**
+      * Fetch a user by id.
+      */
     def fetchUser[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetUser(userId), context, sendResponseTo)
 
+    /**
+      * Create a new guild. Bots can only have 10 guilds by default.
+      * @param name The name of the guild
+      * @param region The voice region for the guild
+      * @param icon The icon to use for the guild. Must be 128x128 jpeg.
+      * @param verificationLevel The verification level to use for the guild.
+      * @param defaultMessageNotifications The notification level to use for
+      *                                    the guild.
+      * @param roles The roles for the new guild. Note, here the snowflake is
+      *              just a placeholder.
+      * @param channels The channels for the new guild.
+      */
     def createGuild[Context](
         name: String,
         region: String,
-        icon: String,
+        icon: Option[ImageData],
         verificationLevel: VerificationLevel,
         defaultMessageNotifications: NotificationLevel,
         roles: Seq[Role],
@@ -649,36 +1309,129 @@ package object syntax {
       sendResponseTo
     )
 
-    def fetchCurrentUser[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    /**
+      * Fetch the client user.
+      */
+    def fetchClientUser[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetCurrentUser, context, sendResponseTo)
+
+    /**
+      * Get the guilds of the client user.
+      * @param before Get guilds before this id.
+      * @param after Get guilds after this id.
+      * @param limit The max amount of guilds to return.
+      */
     def fetchCurrentUserGuilds[Context](
         before: Option[GuildId] = None,
         after: Option[GuildId] = None,
-        limit: Int = 100,
+        limit: Option[Int] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
       Request(GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit)), context, sendResponseTo)
 
+    /**
+      * Fetch the DMs of the client user.
+      */
     def fetchUserDMs[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetUserDMs, context, sendResponseTo)
+
+    /**
+      * Create a group DM to a few users.
+      * @param accessTokens The access tokens of users that have granted the bot
+      *                     the `gdm.join` scope.
+      * @param nicks A map specifying the nicnames for the users in this group DM.
+      */
     def createGroupDM[Context](accessTokens: Seq[String], nicks: Map[UserId, String], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
 
+    /**
+      * Fetch an invite by code.
+      * @param inviteCode The invite code.
+      */
     def fetchInvite[Context](inviteCode: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetInvite(inviteCode), context, sendResponseTo)
-    def deleteInvite[Context](inviteCode: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteInvite(inviteCode), context, sendResponseTo)
-    def acceptInvite[Context](inviteCode: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(AcceptInvite(inviteCode), context, sendResponseTo)
 
+    /**
+      * Fetcha list of voice regions that can be used when creating a guild.
+      */
     def fetchVoiceRegions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(ListVoiceRegions, context, sendResponseTo)
+
+    /**
+      * Fetch a webhook by id.
+      */
+    def fetchWebhook[Context](id: Snowflake, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(GetWebhook(id), context, sendResponseTo)
+
+    /**
+      * Fetch a webhook by id with token. Doesn't require authentication.
+      */
+    def fetchWebhook[Context](id: Snowflake, token: String, context: Context = NotUsed)(
+        implicit sendResponseTo: ActorRef
+    ) =
+      Request(GetWebhookWithToken(id, token), context, sendResponseTo)
   }
 
-  implicit class BotUserSyntax(val botUser: User @@ BotUser) extends AnyVal {
-    def setNick[Context](guildId: GuildId, nick: String, context: Context = NotUsed)(
-        implicit sendResponseTo: ActorRef
-    ) = Request(ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick)), context, sendResponseTo)
+  implicit class InviteSyntax(val invite: Invite) extends AnyVal {
+
+    /**
+      * Delete this invite.
+      */
+    def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(DeleteInvite(invite.code), context, sendResponseTo)
+
+    /**
+      * Accept this invite.
+      */
+    def accept[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(AcceptInvite(invite.code), context, sendResponseTo)
+  }
+
+  implicit class WebhookSyntax(val webhook: Webhook) extends AnyVal {
+
+    /**
+      * Modify this webhook.
+      * @param name Name of the webhook.
+      * @param avatar The avatar data of the webhook.
+      * @param channelId The channel this webhook should be moved to.
+      */
+    def modify[Context](
+        name: Option[String] = None,
+        avatar: Option[ImageData] = None,
+        channelId: Option[Snowflake] = None,
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) =
+      Request(ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId)), context, sendResponseTo)
+
+    /**
+      * Modify this webhook with a token. Doesn't require authentication.
+      * @param name Name of the webhook.
+      * @param avatar The avatar data of the webhook.
+      * @param channelId The channel this webhook should be moved to.
+      */
+    def modifyWithToken[Context](
+        name: Option[String] = None,
+        avatar: Option[ImageData] = None,
+        channelId: Option[Snowflake] = None,
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) =
+      Request(
+        ModifyWebhookWithToken(webhook.id, webhook.token, ModifyWebhookData(name, avatar, channelId)),
+        context,
+        sendResponseTo
+      )
+
+    /**
+      * Delete this webhook.
+      */
+    def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(DeleteWebhook(webhook.id), context, sendResponseTo)
+
+    /**
+      * Delete this webhook with a token. Doesn't require authentication.
+      */
+    def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+      Request(DeleteWebhookWithToken(webhook.id, webhook.token), context, sendResponseTo)
   }
 }
