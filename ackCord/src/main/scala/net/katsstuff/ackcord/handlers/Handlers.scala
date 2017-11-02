@@ -50,17 +50,17 @@ trait Handlers {
 
   implicit val channelUpdateHandler: CacheUpdateHandler[Channel] = updateHandler { (builder, obj, log) =>
     obj match {
-      case dmChannel: DMChannel           => handleUpdateLog(builder, dmChannel, log)
-      case groupDmChannel: GroupDMChannel => handleUpdateLog(builder, groupDmChannel, log)
-      case guildChannel: GuildChannel     => handleUpdateLog(builder, guildChannel, log)
+      case dmChannel: DMChannel           => handleUpdateLog(builder, dmChannel, log)(dmChannelUpdateHandler)
+      case groupDmChannel: GroupDMChannel => handleUpdateLog(builder, groupDmChannel, log)(groupDmChannelUpdateHandler)
+      case guildChannel: GuildChannel     => handleUpdateLog(builder, guildChannel, log)(guildChannelUpdateHandler)
     }
   }
 
-  implicit val guildUpdateHandler: CacheUpdateHandler[Guild] = updateHandler { (builder, obj, log) =>
+  implicit val guildUpdateHandler: CacheUpdateHandler[Guild] = updateHandler { (builder, obj, _) =>
     builder.guilds.put(obj.id, obj)
   }
 
-  implicit val userUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, log) =>
+  implicit val userUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
     builder.users.put(obj.id, obj)
   }
 
@@ -72,7 +72,7 @@ trait Handlers {
       }
   }
 
-  val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, log) =>
+  val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
     builder.botUser = tag[BotUser](obj)
   }
 

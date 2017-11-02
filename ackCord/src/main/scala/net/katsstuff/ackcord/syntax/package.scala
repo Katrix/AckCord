@@ -192,7 +192,7 @@ package object syntax {
       * @param allow The new allowed permissions.
       * @param deny The new denied permissions.
       */
-    def editChannelPermissions[Context](
+    def editChannelPermissionsRole[Context](
         roleId: RoleId,
         allow: Permission,
         deny: Permission,
@@ -209,7 +209,7 @@ package object syntax {
       * @param allow The new allowed permissions.
       * @param deny The new denied permissions.
       */
-    def editChannelPermissions[Context](
+    def editChannelPermissionsUser[Context](
         userId: UserId,
         allow: Permission,
         deny: Permission,
@@ -228,19 +228,17 @@ package object syntax {
       * Delete the permission overwrites for a user
       * @param userId The user to remove the permission overwrites for
       */
-    def deleteChannelPermissions[Context](userId: UserId, context: Context = NotUsed)(
+    def deleteChannelPermissionsUser[Context](userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) =
-      Request(DeleteChannelPermission(channel.id, userId), context, sendResponseTo)
+    ) = Request(DeleteChannelPermission(channel.id, userId), context, sendResponseTo)
 
     /**
       * Delete the permission overwrites for a role
       * @param roleId The role to remove the permission overwrites for
       */
-    def deleteChannelPermissions[Context](roleId: RoleId, context: Context = NotUsed)(
+    def deleteChannelPermissionsRole[Context](roleId: RoleId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) =
-      Request(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
+    ) = Request(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
   }
 
   implicit class TGuildChannelSyntax(private val channel: TGuildChannel) extends AnyVal {
@@ -1367,7 +1365,7 @@ package object syntax {
     /**
       * Fetch a webhook by id with token. Doesn't require authentication.
       */
-    def fetchWebhook[Context](id: Snowflake, token: String, context: Context = NotUsed)(
+    def fetchWebhookWithToken[Context](id: Snowflake, token: String, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
       Request(GetWebhookWithToken(id, token), context, sendResponseTo)
@@ -1431,7 +1429,7 @@ package object syntax {
     /**
       * Delete this webhook with a token. Doesn't require authentication.
       */
-    def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    def deleteWithToken[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteWebhookWithToken(webhook.id, webhook.token), context, sendResponseTo)
   }
 }

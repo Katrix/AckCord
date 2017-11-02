@@ -250,7 +250,7 @@ trait DeriveMessageParser {
   }
 
   implicit def caseSerializer[A, Repr](
-      implicit gen: LabelledGeneric.Aux[A, Repr],
+      implicit gen: Generic.Aux[A, Repr],
       ser: Lazy[MessageParser[Repr]]
   ): MessageParser[A] =
     new MessageParser[A] {
