@@ -1,4 +1,6 @@
 # AckCord
+*You do what you want, exactly how you want it.*
+
 AckCord is a Scala library using Akka for the Discord API. Unlike many other libraries, AckCord hides little of the underlying aspects, and gives the user much more freedom in how they want to set up their bot. Want to use a custom cache, or no cache at all, sure thing, just wire up the cache with the other actors instead of using the defaults. Have no need for the websocket part of the library? All good, just use the REST part and forget about the other parts.
 
 While AckCord is still in active development, and no real version has been released so far, you can try AckCord by adding this to your `build.sbt` file.
