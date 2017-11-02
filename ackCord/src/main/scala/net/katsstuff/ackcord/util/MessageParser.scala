@@ -27,7 +27,7 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 import akka.NotUsed
-import net.katsstuff.ackcord.data.{CacheSnapshot, Channel, GuildChannel, Emoji, Role, Snowflake, TChannel, TGuildChannel, User}
+import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
 import shapeless.tag._
@@ -247,6 +247,28 @@ trait DeriveMessageParser {
         case (remaining, head) =>
           tailParser.value.parse(remaining).map { case (lastRemaining, tail) => lastRemaining -> (head :: tail) }
       }
+  }
+
+  implicit val cNilParser: MessageParser[CNil] = new MessageParser[CNil] {
+    override def parse(strings: List[String])(
+        implicit
+        c: CacheSnapshot
+    ): Either[String, (List[String], CNil)] = throw new IllegalStateException("Tried to parse CNil")
+  }
+
+  implicit def coProductParser[Head, Tail <: Coproduct](
+      implicit headParser: Lazy[MessageParser[Head]],
+      tailParser: Lazy[MessageParser[Tail]]
+  ): MessageParser[Head :+: Tail] = new MessageParser[Head :+: Tail] {
+    override def parse(strings: List[String])(
+        implicit
+        c: CacheSnapshot
+    ): Either[String, (List[String], Head :+: Tail)] = {
+      val head = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
+      lazy val tail = tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
+
+      head.left.map(_ => tail).joinLeft
+    }
   }
 
   implicit def caseSerializer[A, Repr](
