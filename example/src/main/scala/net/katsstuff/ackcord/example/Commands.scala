@@ -136,12 +136,12 @@ object InfoCommandHandler {
 }
 
 class KillCommand(main: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] with ActorLogging {
-  context.watch(main)
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient => //We make sure to ignore this to be able to run code after the shutdown is complete
     case Terminated(`main`) =>
       log.info("Everything shut down")
+      context.system.terminate()
       context.system.terminate()
     case x if super.receive.isDefinedAt(x) => super.receive(x)
   }
@@ -149,6 +149,7 @@ class KillCommand(main: ActorRef, val client: ClientActor) extends ParsedCommand
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     log.info("Received shutdown command")
     main ! ShutdownClient
+    context.watch(main)
   }
 }
 object KillCommand {

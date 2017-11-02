@@ -116,7 +116,7 @@ sealed trait CacheHandlerEvent[Data] {
   def handler: CacheHandler[Data]
 
   /**
-    * Updates a [[CacheSnapshotBuilder]] with the data in this object.
+    * Updates a [[net.katsstuff.ackcord.handlers.CacheSnapshotBuilder]] with the data in this object.
     */
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
     handler.handle(builder, data)
@@ -126,7 +126,7 @@ sealed trait CacheHandlerEvent[Data] {
   * An event that should publish an [[APIMessage]]
   * @param data The data
   * @param sendEvent A function to gather the needed variables to send the
-  *                  event. The [[CacheSnapshot]]s passed is the current, and
+  *                  event. The [[net.katsstuff.ackcord.data.CacheSnapshot]]s passed is the current, and
   *                  previous snapshot, in that order.
   * @param handler The handler to process the data of this event with
   * @tparam Data The data it contains

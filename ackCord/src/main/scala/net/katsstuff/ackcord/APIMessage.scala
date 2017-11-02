@@ -146,7 +146,7 @@ object APIMessage {
 
   /**
     * Sent to the client when an user is banned from a guild. If you need the
-    * [[GuildMember]] object of the user, you can find it in [[prevSnapshot]].
+    * [[net.katsstuff.ackcord.data.GuildMember]] object of the user, you can find it in [[prevSnapshot]].
     * @param guild The guild the user was banned from.
     * @param user The banned user.
     */
@@ -192,7 +192,7 @@ object APIMessage {
 
   /**
     * Sent to the client when a user leaves the guild (or is kicked or banned).
-    * If you need the [[GuildMember]], you can find it in [[prevSnapshot]].
+    * If you need the [[net.katsstuff.ackcord.data.GuildMember]], you can find it in [[prevSnapshot]].
     * @param user The user that left
     * @param guild The guild the user left
     */
@@ -201,7 +201,7 @@ object APIMessage {
 
   /**
     * Sent to the client when a guild member is updated. The fields seen here
-    * are all the fields that can change. Looking at the users [[GuildMember]]
+    * are all the fields that can change. Looking at the users [[net.katsstuff.ackcord.data.GuildMember]]
     * for changes is pointless.
     * @param guild The guild of the guild member
     * @param roles Thew new roles for the guild member

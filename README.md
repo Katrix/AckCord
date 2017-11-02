@@ -3,10 +3,9 @@
 
 AckCord is a Scala library using Akka for the Discord API. Unlike many other libraries, AckCord hides little of the underlying aspects, and gives the user much more freedom in how they want to set up their bot. Want to use a custom cache, or no cache at all, sure thing, just wire up the cache with the other actors instead of using the defaults. Have no need for the websocket part of the library? All good, just use the REST part and forget about the other parts.
 
-While AckCord is still in active development, and no real version has been released so far, you can try AckCord by adding this to your `build.sbt` file.
+While AckCord is still in active development, you can try AckCord by adding this to your `build.sbt` file.
 ```scala
-resolvers += "jitpack" at "https://jitpack.io"
-libraryDependencies += "com.github.Katrix-.AckCord" % "ackCord" % "master-SNAPSHOT"
+libraryDependencies += "net.katsstuff" %% "ackCord" % "0.1"
 ```
 
 # Usage
@@ -60,7 +59,7 @@ context.actorOf(GuildRouter.props(MyActor.props, Some(nonGuildHandler)), "MyActo
 ## Commands
 You probably also want some commands for your bot. AckCord has a seperate module that makes dealing with commands easier. First add a dependency on the command module.
 ```scala
-libraryDependencies += "com.github.Katrix-.AckCord" % "ackCordCommands" % "master-SNAPSHOT"
+libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.1"
 ```
 
 ### Command handlers
