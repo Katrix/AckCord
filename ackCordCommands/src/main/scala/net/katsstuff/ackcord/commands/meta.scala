@@ -27,6 +27,7 @@ import java.util.Locale
 
 import akka.actor.Props
 import net.katsstuff.ackcord.DiscordClient.ClientActor
+import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -81,14 +82,15 @@ object CommandMeta {
     * @param commands The commands to use.
     */
   def routerMap(commands: Seq[CommandMeta[_]], client: ClientActor): Map[CmdCategory, Map[String, Props]] = {
-    commands.groupBy(_.category).mapValues { seq =>
-      val res = for {
-        meta  <- seq
-        alias <- meta.alias
-      } yield
-        alias -> CommandFilter.createActorFilter(meta.filters, CommandParser.props(meta.parser, meta.handler), client)
+    commands.groupBy(_.category).map {
+      case (cat, seq) =>
+        val res = for {
+          meta  <- seq
+          alias <- meta.alias
+        } yield
+          alias -> CommandFilter.createActorFilter(meta.filters, CommandParser.props(meta.parser, meta.handler), client)
 
-      res.toMap
+        cat -> res.toMap
     }
   }
 

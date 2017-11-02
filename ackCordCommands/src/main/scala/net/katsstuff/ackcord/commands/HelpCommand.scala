@@ -32,10 +32,12 @@ import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.{Request, RequestFailed, RequestResponse}
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
+import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCommand.{RegisterCommand, UnregisterCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
+import net.katsstuff.ackcord.util.MessageParser
 
 /**
   * A base for help commands. Takes [[ParsedCommand]] where the argument is
@@ -60,26 +62,29 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
   }
 
   override def receive: Receive = {
-    case ParsedCommand(msg, Some(cmd: String), _, c) =>
+    case ParsedCommand(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: CacheSnapshot = c
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
-      for {
-        channel <- msg.tChannel
-        cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
-        descMap <- commands.get(cat)
-      } {
-        val command = lowercaseCommand.substring(cat.prefix.length)
-        descMap.get(command) match {
-          case Some(desc) =>
-            client ! Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
-          case None => client ! channel.sendMessage("Unknown command")
+      msg.tChannel.foreach { channel =>
+        val res = for {
+          cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+          descMap <- commands.get(cat)
+        } yield {
+          val command = lowercaseCommand.substring(cat.prefix.length)
+          descMap.get(command) match {
+            case Some(desc) =>
+              Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
+            case None => channel.sendMessage("Unknown command")
+          }
+        }
+
+        res match {
+          case Some(req) => client ! req
+          case None      => client ! channel.sendMessage("Unknown category")
         }
       }
 
-    case ParsedCommand(msg, None, _, c) =>
-      implicit val cache: CacheSnapshot = c
-      client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
-    case ParsedCommand(msg, Some(page: Int), _, c) =>
+    case ParsedCommand(msg, Some(PageArgs(page)), _, c) =>
       implicit val cache: CacheSnapshot = c
       if (page > 0) {
         client ! Request(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
@@ -88,6 +93,9 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
           client ! channel.sendMessage(s"Invalid page $page")
         }
       }
+    case ParsedCommand(msg, None, _, c) =>
+      implicit val cache: CacheSnapshot = c
+      client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
     case ParseError(msg, e, c) =>
       implicit val cache: CacheSnapshot = c
       msg.tChannel.foreach { channel =>
@@ -99,8 +107,8 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
         .put(name.toLowerCase(Locale.ROOT), desc)
     case UnregisterCommand(cat, name) =>
       commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
-    case RequestResponse(data, _)   => handleResponse(data)
-    case RequestFailed(e, _)        => handleFailedResponse(e)
+    case RequestResponse(data, _) => handleResponse(data)
+    case RequestFailed(e, _)      => handleFailedResponse(e)
   }
 
   /**
@@ -135,6 +143,27 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
   def handleFailedResponse(e: Throwable): Unit = throw e
 }
 object HelpCommand {
+  sealed trait HelpCommandArgs
+  object HelpCommandArgs {
+    case class CommandArgs(command: String) extends HelpCommandArgs
+    case class PageArgs(page: Int)          extends HelpCommandArgs
+
+    //We write out the parser ourself as string parses any string
+    implicit val parser: MessageParser[HelpCommandArgs] = new MessageParser[HelpCommandArgs] {
+      override def parse(
+          strings: List[String]
+      )(implicit c: CacheSnapshot): Either[String, (List[String], HelpCommandArgs)] = {
+        if (strings.nonEmpty) {
+          val head :: tail = strings
+          MessageParser.intParser
+            .parse(strings)
+            .map(t => t._1 -> PageArgs(t._2))
+            .left
+            .flatMap(_ => Right((tail, CommandArgs(head))))
+        } else Left("Not enough arguments")
+      }
+    }
+  }
 
   /**
     * Send to the help command to register a new command
