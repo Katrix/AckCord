@@ -36,7 +36,16 @@ import net.katsstuff.ackcord.syntax._
   * is easy.
   */
 trait CommandFilter {
+
+  /**
+    * Check if the message can be executed.
+    */
   def isAllowed(msg: Message)(implicit c: CacheSnapshot):    Boolean
+
+  /**
+    * If the message could not be executed, get an error message to
+    * give the user.
+    */
   def errorMessage(msg: Message)(implicit c: CacheSnapshot): String
 }
 object CommandFilter {

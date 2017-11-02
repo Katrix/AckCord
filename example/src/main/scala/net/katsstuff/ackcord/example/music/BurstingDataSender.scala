@@ -40,7 +40,6 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
   final val AheadLimit  = 150
 
   implicit val system: ActorSystem = context.system
-  import context.dispatcher
 
   var isSpeaking          = false
   var hasEnabledBurstMode = false
