@@ -74,9 +74,9 @@ object Requests {
   }
 
   trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed] {
-    override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
-    override val handleResponse = new NOOPHandler[NotUsed]
-    override def expectedResponseCode: StatusCode = StatusCodes.NoContent
+    override def responseDecoder:      Decoder[NotUsed]      = (_: HCursor) => Right(NotUsed)
+    override def handleResponse:       CacheHandler[NotUsed] = NOOPHandler
+    override def expectedResponseCode: StatusCode            = StatusCodes.NoContent
   }
 
   trait NoParamsResponseRequest extends NoParamsRequest[NotUsed] with NoResponseRequest[NotUsed]
@@ -104,7 +104,7 @@ object Requests {
   case class GetGuildAuditLog(guildId: GuildId) extends NoParamsRequest[AuditLog] {
     override def route:                                      RestRoute              = Routes.getGuildAuditLogs(guildId)
     override def responseDecoder:                            Decoder[AuditLog]      = Decoder[AuditLog]
-    override def handleResponse:                             CacheHandler[AuditLog] = new NOOPHandler[AuditLog]
+    override def handleResponse:                             CacheHandler[AuditLog] = NOOPHandler
     override def requiredPermissions:                        Permission             = Permission.ViewAuditLog
     override def havePermissions(implicit c: CacheSnapshot): Boolean                = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -303,7 +303,7 @@ object Requests {
   case class GetChannelInvites(channelId: ChannelId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
     override def route:               RestRoute                             = Routes.getChannelInvites(channelId)
     override def responseDecoder:     Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
-    override def handleResponse:      CacheHandler[Seq[InviteWithMetadata]] = new NOOPHandler[Seq[InviteWithMetadata]]
+    override def handleResponse:      CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
     override def requiredPermissions: Permission                            = Permission.ManageChannels
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -320,7 +320,7 @@ object Requests {
     override def route:               RestRoute                        = Routes.getChannelInvites(channelId)
     override def paramsEncoder:       Encoder[CreateChannelInviteData] = deriveEncoder[CreateChannelInviteData]
     override def responseDecoder:     Decoder[Invite]                  = Decoder[Invite]
-    override def handleResponse:      CacheHandler[Invite]             = new NOOPHandler[Invite]
+    override def handleResponse:      CacheHandler[Invite]             = NOOPHandler
     override def requiredPermissions: Permission                       = Permission.CreateInstantInvite
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -732,7 +732,7 @@ object Requests {
   trait GuildPrune extends SimpleRESTRequest[GuildPruneData, GuildPruneResponse] {
     override def paramsEncoder:   Encoder[GuildPruneData]          = deriveEncoder[GuildPruneData]
     override def responseDecoder: Decoder[GuildPruneResponse]      = deriveDecoder[GuildPruneResponse]
-    override def handleResponse:  CacheHandler[GuildPruneResponse] = new NOOPHandler[GuildPruneResponse]
+    override def handleResponse:  CacheHandler[GuildPruneResponse] = NOOPHandler
   }
 
   case class GetGuildPruneCount(guildId: GuildId, params: GuildPruneData) extends GuildPrune {
@@ -750,13 +750,13 @@ object Requests {
   case class GetGuildVoiceRegions(guildId: GuildId) extends NoParamsRequest[Seq[VoiceRegion]] {
     override def route:           RestRoute                      = Routes.getGuildVoiceRegions(guildId)
     override def responseDecoder: Decoder[Seq[VoiceRegion]]      = Decoder[Seq[VoiceRegion]]
-    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
+    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = NOOPHandler
   }
 
   case class GetGuildInvites(guildId: GuildId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
     override def route:                                      RestRoute                             = Routes.getGuildInvites(guildId)
     override def responseDecoder:                            Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
-    override def handleResponse:                             CacheHandler[Seq[InviteWithMetadata]] = new NOOPHandler[Seq[InviteWithMetadata]]
+    override def handleResponse:                             CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
     override def requiredPermissions:                        Permission                            = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean                               = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -764,7 +764,7 @@ object Requests {
   case class GetGuildIntegrations(guildId: GuildId) extends NoParamsRequest[Seq[Integration]] {
     override def route:                                      RestRoute                      = Routes.getGuildIntegrations(guildId)
     override def responseDecoder:                            Decoder[Seq[Integration]]      = Decoder[Seq[Integration]]
-    override def handleResponse:                             CacheHandler[Seq[Integration]] = new NOOPHandler[Seq[Integration]]
+    override def handleResponse:                             CacheHandler[Seq[Integration]] = NOOPHandler
     override def requiredPermissions:                        Permission                     = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean                        = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -806,7 +806,7 @@ object Requests {
   case class GetGuildEmbed(guildId: GuildId) extends NoParamsRequest[GuildEmbed] {
     override def route:                                      RestRoute                = Routes.getGuildEmbed(guildId)
     override def responseDecoder:                            Decoder[GuildEmbed]      = Decoder[GuildEmbed]
-    override def handleResponse:                             CacheHandler[GuildEmbed] = new NOOPHandler[GuildEmbed]
+    override def handleResponse:                             CacheHandler[GuildEmbed] = NOOPHandler
     override def requiredPermissions:                        Permission               = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -815,7 +815,7 @@ object Requests {
     override def route:                                      RestRoute                = Routes.modifyGuildEmbed(guildId)
     override def paramsEncoder:                              Encoder[GuildEmbed]      = Encoder[GuildEmbed]
     override def responseDecoder:                            Decoder[GuildEmbed]      = Decoder[GuildEmbed]
-    override def handleResponse:                             CacheHandler[GuildEmbed] = new NOOPHandler[GuildEmbed]
+    override def handleResponse:                             CacheHandler[GuildEmbed] = NOOPHandler
     override def requiredPermissions:                        Permission               = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -823,20 +823,20 @@ object Requests {
   case class GetInvite(inviteCode: String) extends NoParamsRequest[Invite] {
     override def route:           RestRoute            = Routes.getInvite(inviteCode)
     override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:  CacheHandler[Invite] = new NOOPHandler[Invite]
+    override def handleResponse:  CacheHandler[Invite] = NOOPHandler
   }
 
   case class DeleteInvite(inviteCode: String) extends NoParamsRequest[Invite] {
     override def route:               RestRoute            = Routes.deleteInvite(inviteCode)
     override def responseDecoder:     Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:      CacheHandler[Invite] = new NOOPHandler[Invite]
+    override def handleResponse:      CacheHandler[Invite] = NOOPHandler
     override def requiredPermissions: Permission           = Permission.ManageChannels
   }
 
   case class AcceptInvite(inviteCode: String) extends NoParamsRequest[Invite] {
     override def route:           RestRoute            = Routes.acceptInvite(inviteCode)
     override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:  CacheHandler[Invite] = new NOOPHandler[Invite]
+    override def handleResponse:  CacheHandler[Invite] = NOOPHandler
   }
 
   case object GetCurrentUser extends NoParamsRequest[User] {
@@ -861,13 +861,13 @@ object Requests {
   case class GetCurrentUserGuildsData(before: Option[GuildId] = None, after: Option[GuildId] = None, limit: Int = 100)
   case class GetCurrentUserGuilds(params: GetCurrentUserGuildsData)
       extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[GetUserGuildsGuild]] {
-    override def route:           RestRoute                             = Routes.getCurrentUserGuilds
-    override def paramsEncoder:   Encoder[GetCurrentUserGuildsData]     = deriveEncoder[GetCurrentUserGuildsData]
-    override def responseDecoder: Decoder[Seq[GetUserGuildsGuild]]      = {
+    override def route:         RestRoute                         = Routes.getCurrentUserGuilds
+    override def paramsEncoder: Encoder[GetCurrentUserGuildsData] = deriveEncoder[GetCurrentUserGuildsData]
+    override def responseDecoder: Decoder[Seq[GetUserGuildsGuild]] = {
       implicit val dec: Decoder[GetUserGuildsGuild] = deriveDecoder[GetUserGuildsGuild]
       Decoder[Seq[GetUserGuildsGuild]]
     }
-    override def handleResponse:  CacheHandler[Seq[GetUserGuildsGuild]] = new NOOPHandler[Seq[GetUserGuildsGuild]]
+    override def handleResponse: CacheHandler[Seq[GetUserGuildsGuild]] = NOOPHandler
   }
 
   case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {
@@ -902,14 +902,14 @@ object Requests {
   case object GetUserConnections extends NoParamsRequest[Seq[Connection]] {
     override def route:           RestRoute                     = Routes.getUserConnections
     override def responseDecoder: Decoder[Seq[Connection]]      = Decoder[Seq[Connection]]
-    override def handleResponse:  CacheHandler[Seq[Connection]] = new NOOPHandler[Seq[Connection]]
+    override def handleResponse:  CacheHandler[Seq[Connection]] = NOOPHandler
   }
 
   //Voice
   case object ListVoiceRegions extends NoParamsRequest[Seq[VoiceRegion]] {
     override def route:           RestRoute                      = Routes.listVoiceRegions
     override def responseDecoder: Decoder[Seq[VoiceRegion]]      = Decoder[Seq[VoiceRegion]]
-    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = new NOOPHandler[Seq[VoiceRegion]]
+    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = NOOPHandler
   }
 
   //Webhook
@@ -919,7 +919,7 @@ object Requests {
     override def route:               RestRoute                  = Routes.createWebhook(channelId)
     override def paramsEncoder:       Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
     override def requiredPermissions: Permission                 = Permission.ManageWebhooks
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -928,7 +928,7 @@ object Requests {
   case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsRequest[Seq[Webhook]] {
     override def route:               RestRoute                  = Routes.getChannelWebhooks(channelId)
     override def responseDecoder:     Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
-    override def handleResponse:      CacheHandler[Seq[Webhook]] = new NOOPHandler[Seq[Webhook]]
+    override def handleResponse:      CacheHandler[Seq[Webhook]] = NOOPHandler
     override def requiredPermissions: Permission                 = Permission.ManageWebhooks
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -937,7 +937,7 @@ object Requests {
   case class GetGuildWebhooks(guildId: GuildId) extends NoParamsRequest[Seq[Webhook]] {
     override def route:                                      RestRoute                  = Routes.getGuildWebhooks(guildId)
     override def responseDecoder:                            Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
-    override def handleResponse:                             CacheHandler[Seq[Webhook]] = new NOOPHandler[Seq[Webhook]]
+    override def handleResponse:                             CacheHandler[Seq[Webhook]] = NOOPHandler
     override def requiredPermissions:                        Permission                 = Permission.ManageWebhooks
     override def havePermissions(implicit c: CacheSnapshot): Boolean                    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -945,14 +945,14 @@ object Requests {
   case class GetWebhook(id: Snowflake) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook] = new NOOPHandler[Webhook]
+    override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
     override def requiredPermissions: Permission            = Permission.ManageWebhooks //TODO: Correct?
   }
 
   case class GetWebhookWithToken(id: Snowflake, token: String) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook] = new NOOPHandler[Webhook]
+    override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
     override def requiredPermissions: Permission            = Permission.ManageWebhooks //TODO: Correct?
   }
 
@@ -962,7 +962,7 @@ object Requests {
     override def route:               RestRoute                  = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
     override def paramsEncoder:       Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
-    override def handleResponse:      CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
     override def requiredPermissions: Permission                 = Permission.ManageWebhooks
   }
 
@@ -971,7 +971,7 @@ object Requests {
     override def route:               RestRoute                  = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
     override def paramsEncoder:       Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
-    override def handleResponse:      CacheHandler[Webhook]      = new NOOPHandler[Webhook]
+    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
     override def requiredPermissions: Permission                 = Permission.ManageWebhooks
   }
 

@@ -25,6 +25,9 @@ package net.katsstuff.ackcord.handlers
 
 import akka.event.LoggingAdapter
 
-class NOOPHandler[A] extends CacheHandler[A] {
-  override def handle(builder: CacheSnapshotBuilder, obj: A)(implicit log: LoggingAdapter): Unit = ()
+/**
+  * A handler that takes no action
+  */
+object NOOPHandler extends CacheHandler[Any] {
+  override def handle(builder: CacheSnapshotBuilder, obj: Any)(implicit log: LoggingAdapter): Unit = ()
 }

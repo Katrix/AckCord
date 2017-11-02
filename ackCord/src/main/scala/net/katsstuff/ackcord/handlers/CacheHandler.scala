@@ -28,7 +28,7 @@ import akka.event.LoggingAdapter
 /**
   * A class that handles creating a new cache snapshot with an object
   */
-trait CacheHandler[Obj] {
+trait CacheHandler[-Obj] {
 
   /**
     * Updates the builder with the object

@@ -304,7 +304,7 @@ object GatewayEvent {
     */
   case class Resumed(data: ResumedData) extends SimpleGatewayEvent[ResumedData] {
     override def name:         String                    = "RESUMED"
-    override def cacheHandler: CacheHandler[ResumedData] = new NOOPHandler[ResumedData]
+    override def cacheHandler: CacheHandler[ResumedData] = NOOPHandler
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       Some(APIMessage.Resumed(current, prev))
   }
@@ -368,7 +368,7 @@ object GatewayEvent {
   case class ChannelPinsUpdate(data: ChannelPinsUpdateData) extends ChannelEvent[ChannelPinsUpdateData] {
     override def name: String = "CHANNEL_PINS_UPDATE"
     override def cacheHandler: CacheHandler[ChannelPinsUpdateData] =
-      new NOOPHandler[ChannelPinsUpdateData] //No way for us to know what changed
+      NOOPHandler //No way for us to know what changed
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, current, prev))
     override def channelId: ChannelId = data.channelId
@@ -479,7 +479,7 @@ object GatewayEvent {
   case class GuildIntegrationsUpdate(data: GuildIntegrationsUpdateData)
       extends GuildEvent[GuildIntegrationsUpdateData] {
     override def name:         String                                    = "GUILD_INTEGRATIONS_UPDATE"
-    override def cacheHandler: CacheHandler[GuildIntegrationsUpdateData] = new NOOPHandler[GuildIntegrationsUpdateData]
+    override def cacheHandler: CacheHandler[GuildIntegrationsUpdateData] = NOOPHandler
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
     override def guildId: GuildId = data.guildId
@@ -860,7 +860,7 @@ object GatewayEvent {
     */
   case class VoiceServerUpdate(data: VoiceServerUpdateData) extends GuildEvent[VoiceServerUpdateData] {
     override def name:         String                              = "VOICE_SERVER_UPDATE"
-    override def cacheHandler: CacheHandler[VoiceServerUpdateData] = new NOOPHandler[VoiceServerUpdateData]
+    override def cacheHandler: CacheHandler[VoiceServerUpdateData] = NOOPHandler
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       current
         .getGuild(data.guildId)
@@ -879,7 +879,7 @@ object GatewayEvent {
     */
   case class WebhookUpdate(data: WebhookUpdateData) extends GuildEvent[WebhookUpdateData] {
     override def name:         String                          = "WEBHOOK_UPDATE"
-    override def cacheHandler: CacheHandler[WebhookUpdateData] = new NOOPHandler[WebhookUpdateData]
+    override def cacheHandler: CacheHandler[WebhookUpdateData] = NOOPHandler
     override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
       for {
         guild   <- current.getGuild(data.guildId)

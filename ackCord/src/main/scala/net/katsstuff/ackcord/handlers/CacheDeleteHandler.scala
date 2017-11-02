@@ -28,7 +28,7 @@ import akka.event.LoggingAdapter
 /**
   * A [[CacheHandler]] for deletion operations.
   */
-trait CacheDeleteHandler[Obj] extends CacheHandler[Obj]
+trait CacheDeleteHandler[-Obj] extends CacheHandler[Obj]
 object CacheDeleteHandler {
   def deleteHandler[Obj](f: (CacheSnapshotBuilder, Obj, LoggingAdapter) => Unit): CacheDeleteHandler[Obj] =
     new CacheDeleteHandler[Obj] {
