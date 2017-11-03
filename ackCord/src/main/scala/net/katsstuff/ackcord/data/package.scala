@@ -80,7 +80,7 @@ package object data {
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
+    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
 
     /**

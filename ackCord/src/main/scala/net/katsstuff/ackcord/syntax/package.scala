@@ -82,6 +82,14 @@ package object syntax {
       case gChannel: VGuildChannel => Some(gChannel)
       case _                       => None
     }
+
+    /**
+      * If this is a category, convert it to one.
+      */
+    def asCategory: Option[GuildCategory] = channel match {
+      case cat: GuildCategory => Some(cat)
+      case _                  => None
+    }
   }
 
   implicit class TChannelSyntax(private val tChannel: TChannel) extends AnyVal {
@@ -258,7 +266,7 @@ package object syntax {
         topic: Option[String] = channel.topic,
         nsfw: Boolean = channel.nsfw,
         permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
-        category: Option[ChannelId],
+        category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyChannel(
@@ -351,7 +359,7 @@ package object syntax {
         bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
         permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
-        category: Option[ChannelId],
+        category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyChannel(
@@ -369,6 +377,16 @@ package object syntax {
       context,
       sendResponseTo
     )
+
+    /**
+      * Get the users connected to this voice channel.
+      */
+    def connectedUsers(implicit c: CacheSnapshot): Seq[User] = c.getGuild(channel.guildId).map(connectedUsers).getOrElse(Seq.empty)
+
+    /**
+      * Get the users connected to this voice channel using an preexisting guild.
+      */
+    def connectedUsers(guild: Guild): Seq[User] = guild.voiceStates.filter(_._2.channelId.contains(channel.id)).keys.flatMap(_.resolve).toSeq
   }
 
   implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
@@ -882,6 +900,15 @@ package object syntax {
       }.toSeq
 
     /**
+      * Get all the categories in this guild.
+      * @return
+      */
+    def categories: Seq[GuildCategory] =
+      guild.channels.values.collect {
+        case category: GuildCategory => category
+      }.toSeq
+
+    /**
       * Get a channel by id in this guild.
       */
     def channelById(id: ChannelId): Option[GuildChannel] = guild.channels.get(id)
@@ -889,16 +916,17 @@ package object syntax {
     /**
       * Get a text channel by id in this guild.
       */
-    def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).collect {
-      case tChannel: TGuildChannel => tChannel
-    }
+    def tChannelById(id: ChannelId): Option[TGuildChannel] = channelById(id).flatMap(_.asTGuildChannel)
 
     /**
       * Get a voice channel by id in this guild.
       */
-    def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).collect {
-      case vChannel: VGuildChannel => vChannel
-    }
+    def vChannelById(id: ChannelId): Option[VGuildChannel] = channelById(id).flatMap(_.asVGuildChannel)
+
+    /**
+      * Get a category by id in this guild.
+      */
+    def categoryById(id: ChannelId): Option[GuildCategory] = channelById(id).flatMap(_.asCategory)
 
     /**
       * Get all the channels with a name.
@@ -914,6 +942,11 @@ package object syntax {
       * Get all the voice channels with a name.
       */
     def vChannelsByName(name: String): Seq[VGuildChannel] = vChannels.filter(_.name == name)
+
+    /**
+      * Get all the categories with a name.
+      */
+    def categoriesByName(name: String): Seq[GuildCategory] = categories.filter(_.name == name)
 
     /**
       * Get the afk channel in this guild.
