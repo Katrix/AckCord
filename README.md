@@ -5,7 +5,7 @@ AckCord is a Scala library using Akka for the Discord API. Unlike many other lib
 
 While AckCord is still in active development, you can try AckCord by adding this to your `build.sbt` file.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackCord" % "0.1"
+libraryDependencies += "net.katsstuff" %% "ackCord" % "0.2"
 ```
 
 # Usage
@@ -59,7 +59,7 @@ context.actorOf(GuildRouter.props(MyActor.props, Some(nonGuildHandler)), "MyActo
 ## Commands
 You probably also want some commands for your bot. AckCord has a seperate module that makes dealing with commands easier. First add a dependency on the command module.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.1"
+libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.2"
 ```
 
 ### Command handlers
