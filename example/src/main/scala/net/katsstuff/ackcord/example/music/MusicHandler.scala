@@ -84,7 +84,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     CommandRouter
       .props(
         needMention = true,
-        CommandMeta.routerMap(baseCommands, client),
+        CommandMeta.routerMap(commands, client),
         ExampleErrorHandler.props(client, allCommandNames)
       ),
     "MusicHandlerCommands"
