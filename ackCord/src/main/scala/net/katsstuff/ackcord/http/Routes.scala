@@ -40,6 +40,7 @@ object Routes {
 
   //WS
   val gateway: Uri = s"$base/gateway"
+  val botGateway: Uri = s"$gateway/bo"
 
   //REST
   type InviteCode = String

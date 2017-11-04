@@ -25,12 +25,13 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor._
 import akka.event.EventStream
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
@@ -181,6 +182,45 @@ object DiscordClient extends FailFastCirceSupport {
             Future.successful(gateway)
           case Left(e) => Future.failed(e)
         }
+      }
+  }
+
+  /**
+    * Fetch the websocket gateway with information about how many shards should be used.
+    * @param system The actor system to use
+    * @param mat The materializer to use
+    * @param ec The execution context to use
+    * @return An URI with the websocket gateway uri
+    */
+  def fetchWsGatewayWithShards(token: String)(
+      implicit system: ActorSystem,
+      mat: Materializer,
+      ec: ExecutionContext
+  ): Future[(Uri, Int)] = {
+    val http = Http()
+    val auth = Authorization(RESTHandler.botCredentials(token))
+    http
+      .singleRequest(HttpRequest(uri = Routes.botGateway, headers = List(auth)))
+      .flatMap {
+        case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
+        case HttpResponse(code, headers, entity, _) =>
+          entity.discardBytes()
+          Future.failed(
+            new IllegalStateException(
+              s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"
+            )
+          )
+      }
+      .flatMap { json =>
+        val res = for {
+          gateway <- json.hcursor.get[String]("url")
+          shards  <- json.hcursor.get[Int]("shards")
+        } yield {
+          http.system.log.info("Got WS gateway: {}", gateway)
+          (gateway: Uri, shards)
+        }
+
+        res.fold(Future.failed, Future.successful)
       }
   }
 }
