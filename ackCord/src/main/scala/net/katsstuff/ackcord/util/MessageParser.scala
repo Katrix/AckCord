@@ -182,7 +182,7 @@ trait MessageParserInstances {
         val head = strings.head
 
         for {
-          m   <- userRegex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
+          m   <- regex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
           _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
           obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
         } yield strings.tail -> obj
