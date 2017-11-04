@@ -34,7 +34,7 @@ import net.katsstuff.ackcord.{RequestAnswer, RequestFailed, RequestResponse}
   */
 class PromiseResponder extends Actor {
   override def receive: Receive = {
-    case RequestResponse(data, ctx: Promise[Any]) =>
+    case RequestResponse(data, ctx: Promise[Any @unchecked]) =>
       ctx.success(data)
       context.stop(self)
     case RequestFailed(e, ctx: Promise[_]) =>
