@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.handlers
 
 import scala.collection.mutable
 
+import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent._
 import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
@@ -49,7 +50,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites.map(v => v.id -> v).toMap,
+              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
               rawChannel.topic,
               rawChannel.lastMessageId,
               rawChannel.nsfw.getOrElse(false),
@@ -71,7 +72,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites.map(v => v.id -> v).toMap,
+              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
               bitRate,
               userLimit,
               rawChannel.nsfw.getOrElse(false),
@@ -92,7 +93,7 @@ object RawHandlers extends Handlers {
                 guildId,
                 name,
                 position,
-                permissionOverwrites.map(v => v.id -> v).toMap,
+                SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
                 rawChannel.nsfw.getOrElse(false),
                 rawChannel.parentId
               )
@@ -158,8 +159,8 @@ object RawHandlers extends Handlers {
       verificationLevel = obj.verificationLevel,
       defaultMessageNotifications = obj.defaultMessageNotifications,
       explicitContentFilter = obj.explicitContentFilter,
-      roles = obj.roles.map(r => r.id   -> r.makeRole(obj.id)).toMap,
-      emojis = obj.emojis.map(e => e.id -> e).toMap,
+      roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.makeRole(obj.id)): _*),
+      emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e): _*),
       features = obj.features,
       mfaLevel = obj.mfaLevel,
       applicationId = obj.applicationId,
@@ -168,10 +169,13 @@ object RawHandlers extends Handlers {
       joinedAt = obj.joinedAt.orElse(oldGuild.map(_.joinedAt)).get,
       large = obj.large.orElse(oldGuild.map(_.large)).get,
       memberCount = obj.memberCount.orElse(oldGuild.map(_.memberCount)).get,
-      voiceStates = obj.voiceStates.map(_.map(v => v.userId -> v).toMap).orElse(oldGuild.map(_.voiceStates)).get,
-      members = members.toMap,
-      channels = Map.empty,
-      presences = presences.map(p => p.userId -> p).toMap
+      voiceStates = obj.voiceStates
+        .map(seq => SnowflakeMap(seq.map(v => v.userId -> v): _*))
+        .orElse(oldGuild.map(_.voiceStates))
+        .get,
+      members = SnowflakeMap(members: _*),
+      channels = SnowflakeMap.empty,
+      presences = SnowflakeMap(presences.map(p => p.userId -> p): _*)
     )
 
     handleUpdateLog(builder, guild, log)
@@ -183,7 +187,7 @@ object RawHandlers extends Handlers {
     case (builder, obj @ GuildEmojisUpdateData(guildId, emojis), log) =>
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          builder.guilds.put(guildId, guild.copy(emojis = emojis.map(e => e.id -> e).toMap))
+          builder.guilds.put(guildId, guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e): _*)))
         case None => log.warning(s"Can't find guild for emojis update $obj")
       }
   }
@@ -210,7 +214,7 @@ object RawHandlers extends Handlers {
 
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          val newGuild = guild.copy(members = guild.members ++ newMembers.map(m => m.userId -> m))
+          val newGuild = guild.copy(members = guild.members ++ SnowflakeMap(newMembers.map(m => m.userId -> m): _*))
           builder.guilds.put(guildId, newGuild)
         case None => log.warning(s"Can't find guild for guildMember update $obj")
       }
@@ -316,9 +320,10 @@ object RawHandlers extends Handlers {
       }
   }
 
-  implicit val rawBanUpdateHandler: CacheUpdateHandler[(GuildId, RawBan)] = updateHandler { case (builder, (guildId, obj), log) =>
-    builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, Ban(obj.reason, obj.user.id))
-    handleUpdateLog(builder, obj.user, log)
+  implicit val rawBanUpdateHandler: CacheUpdateHandler[(GuildId, RawBan)] = updateHandler {
+    case (builder, (guildId, obj), log) =>
+      builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, Ban(obj.reason, obj.user.id))
+      handleUpdateLog(builder, obj.user, log)
   }
 
   //Delete
@@ -336,7 +341,7 @@ object RawHandlers extends Handlers {
             guildId,
             name,
             position,
-            permissionOverwrites.map(v => v.id -> v).toMap,
+            SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
             rawChannel.topic,
             rawChannel.lastMessageId,
             rawChannel.nsfw.getOrElse(false),
@@ -358,7 +363,7 @@ object RawHandlers extends Handlers {
             guildId,
             name,
             position,
-            permissionOverwrites.map(v => v.id -> v).toMap,
+            SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
             bitRate,
             userLimit,
             rawChannel.nsfw.getOrElse(false),
@@ -379,7 +384,7 @@ object RawHandlers extends Handlers {
               guildId,
               name,
               position,
-              permissionOverwrites.map(v => v.id -> v).toMap,
+              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
               rawChannel.nsfw.getOrElse(false),
               rawChannel.parentId
             )
@@ -465,7 +470,8 @@ object RawHandlers extends Handlers {
       }
   }
 
-  implicit val rawBanDeleteHandler: CacheDeleteHandler[(GuildId, User)] = deleteHandler { case (builder, (guildId, obj), log) =>
+  implicit val rawBanDeleteHandler: CacheDeleteHandler[(GuildId, User)] = deleteHandler {
+    case (builder, (guildId, obj), log) =>
       builder.bans.get(guildId).foreach(_.remove(obj.id))
       handleUpdateLog(builder, obj, log)
   }

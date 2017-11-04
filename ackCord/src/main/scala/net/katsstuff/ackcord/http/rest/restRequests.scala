@@ -32,6 +32,7 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, Status
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
+import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
@@ -1392,7 +1393,7 @@ object Requests {
     *                     the `gdm.join` scope.
     * @param nicks A map specifying the nicnames for the users in this group DM.
     */
-  case class CreateGroupDMData(accessTokens: Seq[String], nicks: Map[UserId, String])
+  case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[UserId, String])
 
   /**
     * Create a group DM. By default the client is limited to 10 active group DMs.
@@ -1400,7 +1401,7 @@ object Requests {
   case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
     override def route: RestRoute = Routes.createDM
     override def paramsEncoder: Encoder[CreateGroupDMData] = (data: CreateGroupDMData) => {
-      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.content -> t._2).asJson)
+      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.toString -> t._2).asJson)
     }
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler

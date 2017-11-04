@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.data
 
+import net.katsstuff.ackcord.SnowflakeMap
+
 /**
   * Different type of channels
   */
@@ -146,7 +148,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * The permission overwrites for this channel
     */
-  def permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite]
+  def permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite]
 
   /**
     * If this channel is marked as NSFW.
@@ -167,7 +169,7 @@ case class TGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
     nsfw: Boolean,
@@ -187,7 +189,7 @@ case class VGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
     bitrate: Int,
     userLimit: Int,
     nsfw: Boolean,
@@ -204,7 +206,7 @@ case class GuildCategory(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
     nsfw: Boolean,
     parentId: Option[ChannelId]
 ) extends GuildChannel {

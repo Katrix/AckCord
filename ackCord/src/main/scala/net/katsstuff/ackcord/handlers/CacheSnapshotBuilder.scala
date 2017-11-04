@@ -27,10 +27,9 @@ import java.time.Instant
 
 import scala.collection.mutable
 
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data._
-
 import shapeless.tag._
 
 /**
@@ -49,19 +48,19 @@ class CacheSnapshotBuilder(
     var bans: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A, B] = mutable.Map[A, B]
+  override type MapType[A <: Snowflake, B] = mutable.Map[A, B]
 
   def toImmutable: CacheSnapshot = CacheSnapshot(
     botUser = botUser,
-    dmChannels = dmChannels.toMap,
-    groupDmChannels = groupDmChannels.toMap,
-    unavailableGuilds = unavailableGuilds.toMap,
-    guilds = guilds.toMap,
-    messages = messages.map { case (k, v)   => k -> v.toMap }.toMap,
-    lastTyped = lastTyped.map { case (k, v) => k -> v.toMap }.toMap,
-    users = users.toMap,
-    presences = presences.map { case (k, v) => k -> v.toMap }.toMap,
-    bans = bans.map { case (k, v) => k -> v.toMap }.toMap
+    dmChannels = SnowflakeMap(dmChannels.toSeq: _*),
+    groupDmChannels = SnowflakeMap(groupDmChannels.toSeq: _*),
+    unavailableGuilds = SnowflakeMap(unavailableGuilds.toSeq: _*),
+    guilds = SnowflakeMap(guilds.toSeq: _*),
+    messages = SnowflakeMap(messages.map { case (k, v)   => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
+    lastTyped = SnowflakeMap(lastTyped.map { case (k, v) => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
+    users = SnowflakeMap(users.toSeq: _*),
+    presences = SnowflakeMap(presences.map { case (k, v) => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
+    bans = SnowflakeMap(bans.map { case (k, v)           => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*)
   )
   override def getChannelMessages(channelId: ChannelId): mutable.Map[MessageId, Message] =
     messages.getOrElse(channelId, mutable.Map.empty)
@@ -80,7 +79,7 @@ object CacheSnapshotBuilder {
     lastTyped = snapshot.lastTyped.map { case (k, v)            => k -> toMutableMap(v) }(breakOut),
     users = toMutableMap(snapshot.users),
     presences = snapshot.presences.map { case (k, v) => k -> toMutableMap(v) }(breakOut),
-    bans = snapshot.bans.map { case (k, v) => k -> toMutableMap(v) }(breakOut)
+    bans = snapshot.bans.map { case (k, v)           => k -> toMutableMap(v) }(breakOut)
   )
 
   private def toMutableMap[A, B](map: Map[A, B]): mutable.Map[A, B] = {

@@ -25,9 +25,8 @@ package net.katsstuff.ackcord.data
 
 import java.time.Instant
 
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
-
 import shapeless.tag._
 
 /**
@@ -35,22 +34,22 @@ import shapeless.tag._
   */
 case class CacheSnapshot(
     botUser: User @@ BotUser,
-    dmChannels: Map[ChannelId, DMChannel],
-    groupDmChannels: Map[ChannelId, GroupDMChannel],
-    unavailableGuilds: Map[GuildId, UnavailableGuild],
-    guilds: Map[GuildId, Guild],
-    messages: Map[ChannelId, Map[MessageId, Message]],
-    lastTyped: Map[ChannelId, Map[UserId, Instant]],
-    users: Map[UserId, User],
-    presences: Map[GuildId, Map[UserId, Presence]],
-    bans: Map[GuildId, Map[UserId, Ban]]
+    dmChannels: SnowflakeMap[ChannelId, DMChannel],
+    groupDmChannels: SnowflakeMap[ChannelId, GroupDMChannel],
+    unavailableGuilds: SnowflakeMap[GuildId, UnavailableGuild],
+    guilds: SnowflakeMap[GuildId, Guild],
+    messages: SnowflakeMap[ChannelId, SnowflakeMap[MessageId, Message]],
+    lastTyped: SnowflakeMap[ChannelId, SnowflakeMap[UserId, Instant]],
+    users: SnowflakeMap[UserId, User],
+    presences: SnowflakeMap[GuildId, SnowflakeMap[UserId, Presence]],
+    bans: SnowflakeMap[GuildId, SnowflakeMap[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A, B] = Map[A, B]
+  override type MapType[A <: Snowflake, B] = SnowflakeMap[A, B]
 
-  override def getChannelMessages(channelId: ChannelId): Map[MessageId, Message] =
-    messages.getOrElse(channelId, Map.empty)
+  override def getChannelMessages(channelId: ChannelId): SnowflakeMap[MessageId, Message] =
+    messages.getOrElse(channelId, SnowflakeMap.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): Map[UserId, Instant] =
-    lastTyped.getOrElse(channelId, Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): SnowflakeMap[UserId, Instant] =
+    lastTyped.getOrElse(channelId, SnowflakeMap.empty)
 }

@@ -265,7 +265,7 @@ package object syntax {
         position: Int = channel.position,
         topic: Option[String] = channel.topic,
         nsfw: Boolean = channel.nsfw,
-        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
@@ -358,7 +358,7 @@ package object syntax {
         position: Int = channel.position,
         bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
-        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
@@ -381,12 +381,14 @@ package object syntax {
     /**
       * Get the users connected to this voice channel.
       */
-    def connectedUsers(implicit c: CacheSnapshot): Seq[User] = c.getGuild(channel.guildId).map(connectedUsers).getOrElse(Seq.empty)
+    def connectedUsers(implicit c: CacheSnapshot): Seq[User] =
+      c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolve)).getOrElse(Seq.empty)
 
     /**
       * Get the users connected to this voice channel using an preexisting guild.
       */
-    def connectedUsers(guild: Guild): Seq[User] = guild.voiceStates.filter(_._2.channelId.contains(channel.id)).keys.flatMap(_.resolve).toSeq
+    def connectedUsers(guild: Guild): Seq[UserId] =
+      guild.voiceStates.filter(_._2.channelId.contains(channel.id)).keys.toSeq
   }
 
   implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
@@ -528,7 +530,7 @@ package object syntax {
     def modify[Context](
         name: String = category.name,
         position: Int = category.position,
-        permissionOverwrites: Map[UserOrRoleId, PermissionOverwrite] = category.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = category.permissionOverwrites,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyChannel(
@@ -692,7 +694,7 @@ package object syntax {
       * Modify the positions of several channels.
       * @param newPositions A map betweem the channelId and the new positions.
       */
-    def modifyChannelPositions[Context](newPositions: Map[ChannelId, Int], context: Context = NotUsed)(
+    def modifyChannelPositions[Context](newPositions: SnowflakeMap[ChannelId, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       ModifyGuildChannelPositions(guild.id, newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq),
@@ -784,7 +786,7 @@ package object syntax {
       * Modify the positions of several roles
       * @param newPositions A map from the role id to their new position.
       */
-    def modifyRolePositions[Context](newPositions: Map[RoleId, Int], context: Context = NotUsed)(
+    def modifyRolePositions[Context](newPositions: SnowflakeMap[RoleId, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq),
@@ -1372,7 +1374,7 @@ package object syntax {
       *                     the `gdm.join` scope.
       * @param nicks A map specifying the nicnames for the users in this group DM.
       */
-    def createGroupDM[Context](accessTokens: Seq[String], nicks: Map[UserId, String], context: Context = NotUsed)(
+    def createGroupDM[Context](accessTokens: Seq[String], nicks: SnowflakeMap[UserId, String], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
 

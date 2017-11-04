@@ -25,6 +25,8 @@ package net.katsstuff.ackcord.data
 
 import java.time.OffsetDateTime
 
+import net.katsstuff.ackcord.SnowflakeMap
+
 /**
   * A guild which that status of is unknown.
   */
@@ -207,8 +209,8 @@ case class Guild(
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
-    roles: Map[RoleId, Role],
-    emojis: Map[EmojiId, Emoji],
+    roles: SnowflakeMap[RoleId, Role],
+    emojis: SnowflakeMap[EmojiId, Emoji],
     features: Seq[String], //TODO: What is a feature?
     mfaLevel: MFALevel,
     applicationId: Option[Snowflake],
@@ -217,10 +219,10 @@ case class Guild(
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
-    voiceStates: Map[UserId, VoiceState], //guildId is absent in those received in GuildCreate
-    members: Map[UserId, GuildMember],
-    channels: Map[ChannelId, GuildChannel],
-    presences: Map[UserId, Presence]
+    voiceStates: SnowflakeMap[UserId, VoiceState], //guildId is absent in those received in GuildCreate
+    members: SnowflakeMap[UserId, GuildMember],
+    channels: SnowflakeMap[ChannelId, GuildChannel],
+    presences: SnowflakeMap[UserId, Presence]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 }
