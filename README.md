@@ -5,7 +5,7 @@ AckCord is a Scala library using Akka for the Discord API. Unlike many other lib
 
 While AckCord is still in active development, you can try AckCord by adding this to your `build.sbt` file.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackCord" % "0.2"
+libraryDependencies += "net.katsstuff" %% "ackcord" % "0.2"
 ```
 
 # Usage
