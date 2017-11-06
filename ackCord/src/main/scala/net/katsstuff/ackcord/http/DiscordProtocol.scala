@@ -91,7 +91,7 @@ trait DiscordProtocol {
   implicit val unavailableGuildEncoder: Encoder[UnavailableGuild] = deriveEncoder
   implicit val unavailableGuildDecoder: Decoder[UnavailableGuild] = deriveDecoder
 
-  implicit val permissionEncoder: Encoder[Permission] = Encoder[Long].contramap(_.long)
+  implicit val permissionEncoder: Encoder[Permission] = Encoder[Long].contramap(identity)
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Long].emap(i => Right(Permission.fromLong(i)))
 
   implicit val permissionValueEncoder: Encoder[PermissionOverwrite] = deriveEncoder

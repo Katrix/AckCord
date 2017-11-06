@@ -200,4 +200,128 @@ package object data {
   object IntegrationId {
     def apply(s: Long): IntegrationId = SnowflakeType[Integration](s)
   }
+
+  /**
+    * A permission to do some action. In AckCord this is represented as a
+    * value class around int.
+    */
+  type Permission = Long @@ Permission.type
+  object Permission {
+
+    private[data] def apply(long: Long): Long @@ Permission.type = tagS[Permission.type](long)
+
+    /**
+      * Create a permission that has all the permissions passed in.
+      */
+    def apply(permissions: Permission*): Permission = permissions.fold(None)(_ ++ _)
+
+    /**
+      * Create a permission from an int.
+      */
+    def fromLong(long: Long): Long @@ Permission.type = apply(long)
+
+    val CreateInstantInvite = Permission(0x00000001)
+    val KickMembers         = Permission(0x00000002)
+    val BanMembers          = Permission(0x00000004)
+    val Administrator       = Permission(0x00000008)
+    val ManageChannels      = Permission(0x00000010)
+    val ManageGuild         = Permission(0x00000020)
+    val AddReactions        = Permission(0x00000040)
+    val ViewAuditLog        = Permission(0x00000080)
+    val ReadMessages        = Permission(0x00000400)
+    val SendMessages        = Permission(0x00000800)
+    val SendTtsMessages     = Permission(0x00001000)
+    val ManageMessages      = Permission(0x00002000)
+    val EmbedLinks          = Permission(0x00004000)
+    val AttachFiles         = Permission(0x00008000)
+    val ReadMessageHistory  = Permission(0x00010000)
+    val MentionEveryone     = Permission(0x00020000)
+    val UseExternalEmojis   = Permission(0x00040000)
+    val Connect             = Permission(0x00100000)
+    val Speak               = Permission(0x00200000)
+    val MuteMembers         = Permission(0x00400000)
+    val DeafenMembers       = Permission(0x00800000)
+    val MoveMembers         = Permission(0x01000000)
+    val UseVad              = Permission(0x02000000)
+    val ChangeNickname      = Permission(0x04000000)
+    val ManageNicknames     = Permission(0x08000000)
+    val ManageRoles         = Permission(0x10000000)
+    val ManageWebhooks      = Permission(0x20000000)
+    val ManageEmojis        = Permission(0x40000000)
+
+    val None = Permission(0x00000000)
+    val All = Permission(
+      CreateInstantInvite,
+      KickMembers,
+      BanMembers,
+      Administrator,
+      ManageChannels,
+      ManageGuild,
+      AddReactions,
+      ViewAuditLog,
+      ReadMessages,
+      SendMessages,
+      SendTtsMessages,
+      ManageMessages,
+      EmbedLinks,
+      AttachFiles,
+      ReadMessageHistory,
+      MentionEveryone,
+      UseExternalEmojis,
+      Connect,
+      Speak,
+      MuteMembers,
+      DeafenMembers,
+      MoveMembers,
+      UseVad,
+      ChangeNickname,
+      ManageNicknames,
+      ManageRoles,
+      ManageWebhooks,
+      ManageEmojis,
+    )
+  }
+  implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {
+
+    /**
+      * Add a permission to this permission.
+      * @param other The other permission.
+      */
+    def addPermissions(other: Permission): Permission = Permission(permission | other)
+
+    /**
+      * Add a permission to this permission.
+      * @param other The other permission.
+      */
+    def ++(other: Permission): Permission = addPermissions(other)
+
+    /**
+      * Remove a permission from this permission.
+      * @param other The permission to remove.
+      */
+    def removePermissions(other: Permission): Permission = Permission(permission & ~other)
+
+    /**
+      * Remove a permission from this permission.
+      * @param other The permission to remove.
+      */
+    def --(other: Permission): Permission = removePermissions(other)
+
+    /**
+      * Toggle a permission in this permission.
+      * @param other The permission to toggle.
+      */
+    def togglePermissions(other: Permission): Permission = Permission(permission ^ other)
+
+    /**
+      * Check if this permission has a permission.
+      * @param other The permission to check against.
+      */
+    def hasPermissions(other: Permission): Boolean = (permission & other) != 0
+
+    /**
+      * Check if this permission grants any permissions.
+      */
+    def isNone: Boolean = permission == 0
+  }
 }
