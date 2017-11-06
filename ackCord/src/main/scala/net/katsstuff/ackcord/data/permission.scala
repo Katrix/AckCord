@@ -27,13 +27,13 @@ package net.katsstuff.ackcord.data
   * A permission to do some action. In AckCord this is represented as a
   * value class around int.
   */
-class Permission private (val int: Int) extends AnyVal {
+class Permission private (val long: Long) extends AnyVal {
 
   /**
     * Add a permission to this permission.
     * @param other The other permission.
     */
-  def addPermissions(other: Permission): Permission = Permission(this.int | other.int)
+  def addPermissions(other: Permission): Permission = Permission(this.long | other.long)
 
   /**
     * Add a permission to this permission.
@@ -51,31 +51,31 @@ class Permission private (val int: Int) extends AnyVal {
     * Remove a permission from this permission.
     * @param other The permission to remove.
     */
-  def removePermissions(other: Permission): Permission = Permission(this.int & ~other.int)
+  def removePermissions(other: Permission): Permission = Permission(this.long & ~other.long)
 
   /**
     * Remove a permission from this permission.
     * @param other The permission to remove.
     */
-  def -(other: Permission): Permission = Permission(this.int & ~other.int)
+  def -(other: Permission): Permission = Permission(this.long & ~other.long)
 
   /**
     * Toggle a permission in this permission.
     * @param other The permission to toggle.
     */
-  def togglePermissions(other: Permission): Permission = Permission(this.int ^ other.int)
+  def togglePermissions(other: Permission): Permission = Permission(this.long ^ other.long)
 
   /**
     * Check if this permission has a permission.
     * @param permissions The permission to check against.
     */
-  def hasPermissions(permissions: Permission): Boolean = (this.int & permissions.int) != 0
+  def hasPermissions(permissions: Permission): Boolean = (this.long & permissions.long) != 0
 
-  override def toString: String = int.toString
+  override def toString: String = long.toString
 }
 object Permission {
 
-  private def apply(int: Int): Permission = new Permission(int)
+  private def apply(long: Long): Permission = new Permission(long)
 
   /**
     * Create a permission that has all the permissions passed in.
@@ -85,7 +85,7 @@ object Permission {
   /**
     * Create a permission from an int.
     */
-  def fromInt(int: Int): Permission = apply(int)
+  def fromLong(long: Long): Permission = apply(long)
 
   val CreateInstantInvite = Permission(0x00000001)
   val KickMembers         = Permission(0x00000002)
