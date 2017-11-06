@@ -75,11 +75,6 @@ trait BaseRESTRequest[Response, HandlerType] {
   def processResponse(response: Response): HandlerType
 
   /**
-    * The expected response code from this request.
-    */
-  def expectedResponseCode: StatusCode = StatusCodes.OK
-
-  /**
     * The permissions needed to use this request.
     */
   def requiredPermissions: Permission = Permission.None
@@ -150,7 +145,6 @@ object Requests {
   trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed] {
     override def responseDecoder:      Decoder[NotUsed]      = (_: HCursor) => Right(NotUsed)
     override def handleResponse:       CacheHandler[NotUsed] = NOOPHandler
-    override def expectedResponseCode: StatusCode            = StatusCodes.NoContent
   }
 
   /**
@@ -878,7 +872,6 @@ object Requests {
       extends GuildMemberRequest[AddGuildMemberData] {
     override def route:                RestRoute                   = Routes.addGuildMember(userId, guildId)
     override def paramsEncoder:        Encoder[AddGuildMemberData] = deriveEncoder[AddGuildMemberData]
-    override def expectedResponseCode: StatusCode                  = StatusCodes.Created
     override def requiredPermissions: Permission = {
       def ifDefined(opt: Option[_], perm: Permission): Permission = if (opt.isDefined) perm else Permission.None
       Permission(

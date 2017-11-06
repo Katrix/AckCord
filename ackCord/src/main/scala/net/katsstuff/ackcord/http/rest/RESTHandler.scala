@@ -253,15 +253,14 @@ class RESTResponder(
       parent ! HandleRateLimitAndRetry(headers, Request(req.restRequest, req.context, req.sendTo))
       entity.discardBytes()
       sender() ! AckSink
-    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, ctx, sendTo))
-        if request.expectedResponseCode == StatusCodes.NoContent =>
+    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       entity.discardBytes()
       sender() ! AckSink
       sendTo ! RequestResponse((), ctx)
-    case (Success(HttpResponse(response, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
+    case (Success(HttpResponse(responseCode, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
-      if (request.expectedResponseCode == response) {
+      if (responseCode.isSuccess()) {
         Unmarshal(entity)
           .to[Json]
           .flatMap { json =>
@@ -279,9 +278,12 @@ class RESTResponder(
               sendTo ! RequestFailed(e, ctx)
           }
       } else {
-        log.warning("Unexpected response code {} for {}", response.intValue, request)
+        log.warning("Failed response code {} {} for {}", responseCode.intValue, responseCode.reason, request)
         entity.discardBytes()
-        sendTo ! RequestFailed(new IllegalStateException(s"Unexpected response code ${response.intValue()}"), ctx)
+        sendTo ! RequestFailed(
+          new IllegalStateException(s"Failed response code ${responseCode.intValue} ${responseCode.reason}"),
+          ctx
+        )
       }
       sender() ! AckSink
     case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
