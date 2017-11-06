@@ -22,18 +22,39 @@
  * SOFTWARE.
  */
 package net.katsstuff.ackcord
+
+import java.lang.{Long => JLong}
+import java.time.LocalDateTime
+
+import scala.language.implicitConversions
+
 import shapeless._
 import shapeless.tag._
 
 package object data {
 
+  sealed trait SnowflakeTag[+A]
+  type SnowflakeType[A] = Long @@ SnowflakeTag[A]
+  object SnowflakeType {
+    def apply[A](long: Long): Long @@ SnowflakeTag[A] = tag[SnowflakeTag[A]](long)
+    def apply[A](content: String): SnowflakeType[A] = apply[A](JLong.parseUnsignedLong(content))
+  }
+
+  implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
+    def creationDate: LocalDateTime = ???
+    def asString:     String        = JLong.toUnsignedString(snowflake)
+  }
+
+  type RawSnowflake = SnowflakeType[Any]
+  object RawSnowflake {
+    def apply(content: String): RawSnowflake = RawSnowflake(JLong.parseUnsignedLong(content))
+    def apply(long: Long):      RawSnowflake = SnowflakeType[Any](long)
+  }
+
   //Some type aliases for better documentation by the types
-  type GuildId = Snowflake @@ Guild
+  type GuildId = SnowflakeType[Guild]
   object GuildId {
-    def apply(s: Snowflake): GuildId = {
-      val t = tag[Guild](s)
-      t
-    }
+    def apply(s: Long): GuildId = SnowflakeType[Guild](s)
   }
   implicit class GuildIdSyntax(private val guildId: GuildId) extends AnyVal {
 
@@ -43,12 +64,9 @@ package object data {
     def resolve(implicit c: CacheSnapshot): Option[Guild] = c.getGuild(guildId)
   }
 
-  type ChannelId = Snowflake @@ Channel
+  type ChannelId = SnowflakeType[Channel]
   object ChannelId {
-    def apply(s: Snowflake): ChannelId = {
-      val t = tag[Channel](s)
-      t
-    }
+    def apply(s: Long): ChannelId = SnowflakeType[Channel](s)
   }
   implicit class ChannelIdSyntax(private val channelId: ChannelId) extends AnyVal {
 
@@ -91,12 +109,9 @@ package object data {
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
-  type MessageId = Snowflake @@ Message
+  type MessageId = SnowflakeType[Message]
   object MessageId {
-    def apply(s: Snowflake): MessageId = {
-      val t = tag[Message](s)
-      t
-    }
+    def apply(s: Long): MessageId = SnowflakeType[Message](s)
   }
   implicit class MessageIdSyntax(private val messageId: MessageId) extends AnyVal {
 
@@ -112,12 +127,9 @@ package object data {
     def resolve(channelId: ChannelId)(implicit c: CacheSnapshot): Option[Message] = c.getMessage(channelId, messageId)
   }
 
-  type UserId = Snowflake @@ User
+  type UserId = SnowflakeType[User]
   object UserId {
-    def apply(s: Snowflake): UserId = {
-      val t = tag[User](s)
-      t
-    }
+    def apply(s: Long): UserId = SnowflakeType[User](s)
   }
   implicit class UserIdSyntax(private val userId: UserId) extends AnyVal {
 
@@ -134,12 +146,9 @@ package object data {
       c.getGuild(guildId).flatMap(_.members.get(userId))
   }
 
-  type RoleId = Snowflake @@ Role
+  type RoleId = SnowflakeType[Role]
   object RoleId {
-    def apply(s: Snowflake): RoleId = {
-      val t = tag[Role](s)
-      t
-    }
+    def apply(s: Long): RoleId = SnowflakeType[Role](s)
   }
   implicit class RoleIdSyntax(private val roleId: RoleId) extends AnyVal {
 
@@ -156,17 +165,17 @@ package object data {
       c.getGuild(guildId).flatMap(_.roles.get(roleId))
   }
 
-  type UserOrRoleId = Snowflake
+  sealed trait UserOrRoleTag
+  type UserOrRoleId = SnowflakeType[UserOrRoleTag]
   object UserOrRoleId {
-    def apply(s: Snowflake): UserOrRoleId = s
+    def apply(s: Long): UserOrRoleId = SnowflakeType[UserOrRoleTag](s)
   }
+  implicit def liftUser(userId: UserId): UserOrRoleId = UserOrRoleId(userId)
+  implicit def liftRole(userId: RoleId): UserOrRoleId = UserOrRoleId(userId)
 
-  type EmojiId = Snowflake @@ Emoji
+  type EmojiId = SnowflakeType[Emoji]
   object EmojiId {
-    def apply(s: Snowflake): EmojiId = {
-      val t = tag[Emoji](s)
-      t
-    }
+    def apply(s: Long): EmojiId = SnowflakeType[Emoji](s)
   }
   implicit class EmojiIdSyntax(private val emojiId: EmojiId) extends AnyVal {
 
@@ -183,11 +192,8 @@ package object data {
       c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
 
-  type IntegrationId = Snowflake @@ Integration
+  type IntegrationId = SnowflakeType[Integration]
   object IntegrationId {
-    def apply(s: Snowflake): IntegrationId = {
-      val t = tag[Integration](s)
-      t
-    }
+    def apply(s: Long): IntegrationId = SnowflakeType[Integration](s)
   }
 }

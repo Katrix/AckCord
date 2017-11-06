@@ -76,27 +76,8 @@ trait DiscordProtocol {
   implicit val auditLogEventDecoder: Decoder[AuditLogEvent] =
     Decoder[Int].emap(i => AuditLogEvent.fromId(i).toRight(s"No valid event for id $i"))
 
-  implicit val snowflakeEncoder: Encoder[Snowflake] = Encoder[String].contramap(_.toString)
-  implicit val snowflakeDecoder: Decoder[Snowflake] = Decoder[String].emap(s => Right(Snowflake(s)))
-
-  def snowflakeTagEncoder[A]: Encoder[Snowflake @@ A] = snowflakeEncoder.contramap(identity)
-  def snowflakeTagDecoder[A]: Decoder[Snowflake @@ A] = snowflakeDecoder.emap(s => Right(tag[A](s)))
-
-  implicit val guildIdEncoder:       Encoder[GuildId]       = snowflakeTagEncoder
-  implicit val channelIdEncoder:     Encoder[ChannelId]     = snowflakeTagEncoder
-  implicit val messageIdEncoder:     Encoder[MessageId]     = snowflakeTagEncoder
-  implicit val userIdEncoder:        Encoder[UserId]        = snowflakeTagEncoder
-  implicit val roleIdEncoder:        Encoder[RoleId]        = snowflakeTagEncoder
-  implicit val emojiIdEncoder:       Encoder[EmojiId]       = snowflakeTagEncoder
-  implicit val integrationIdEncoder: Encoder[IntegrationId] = snowflakeTagEncoder
-
-  implicit val guildIdDecoder:       Decoder[GuildId]       = snowflakeTagDecoder
-  implicit val channelIdDecoder:     Decoder[ChannelId]     = snowflakeTagDecoder
-  implicit val messageIdDecoder:     Decoder[MessageId]     = snowflakeTagDecoder
-  implicit val userIdDecoder:        Decoder[UserId]        = snowflakeTagDecoder
-  implicit val roleIdDecoder:        Decoder[RoleId]        = snowflakeTagDecoder
-  implicit val emojiIdDecoder:       Decoder[EmojiId]       = snowflakeTagDecoder
-  implicit val integrationIdDecoder: Decoder[IntegrationId] = snowflakeTagDecoder
+  implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
+  implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] = Decoder[String].emap(s => Right(SnowflakeType[A](s)))
 
   implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
   implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))
@@ -181,7 +162,7 @@ trait DiscordProtocol {
       attachment      <- c.get[Seq[Attachment]]("attachments")
       embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
-      nonce           <- c.get[Option[Snowflake]]("nonce")
+      nonce           <- c.get[Option[RawSnowflake]]("nonce")
       pinned          <- c.get[Boolean]("pinned")
       tpe             <- c.get[MessageType]("type")
     } yield

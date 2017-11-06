@@ -176,7 +176,7 @@ trait MessageParserInstances {
   private def snowflakeParser[A](
       name: String,
       regex: Regex,
-      getObj: (CacheSnapshot, Snowflake @@ A) => Option[A]
+      getObj: (CacheSnapshot, SnowflakeType[A]) => Option[A]
   ): MessageParser[A] = new MessageParser[A] {
     override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
       if (strings.nonEmpty) {
@@ -185,7 +185,7 @@ trait MessageParserInstances {
         for {
           m   <- regex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
           _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-          obj <- getObj(c, tag[A](Snowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
+          obj <- getObj(c, SnowflakeType[A](RawSnowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
         } yield strings.tail -> obj
       } else Left("No more arguments left")
     }

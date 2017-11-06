@@ -82,12 +82,12 @@ object MessageType {
   * A author of a message. While a message is normally sent by a [[User]],
   * it can also be sent by a [[WebhookAuthor]].
   */
-sealed trait Author {
+sealed trait Author[A] {
 
   /**
     * The id for this author.
     */
-  def id: Snowflake
+  def id: SnowflakeType[A]
 
   /**
     * Returns the user if this author is a user.
@@ -114,7 +114,7 @@ sealed trait Author {
   * @param name The name of the webhook
   * @param avatar The webhook's avatar hash
   */
-case class WebhookAuthor(id: Snowflake, name: String, avatar: String) extends Author
+case class WebhookAuthor(id: SnowflakeType[Webhook], name: String, avatar: String) extends Author[Webhook]
 
 /**
   * A Discord user.
@@ -138,7 +138,7 @@ case class User(
     mfaEnabled: Option[Boolean], //mfaEnabled can be missing
     verified: Option[Boolean], //verified can be missing
     email: Option[String] //Email can be null
-) extends Author {
+) extends Author[User] {
 
   override def name: String = username
 
@@ -191,7 +191,7 @@ case class Connection(
 case class Message(
     id: MessageId,
     channelId: ChannelId,
-    author: Author,
+    author: Author[_],
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -202,7 +202,7 @@ case class Message(
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
-    nonce: Option[Snowflake],
+    nonce: Option[RawSnowflake],
     pinned: Boolean,
     messageType: MessageType
 ) extends GetChannel {
@@ -212,7 +212,7 @@ case class Message(
       .findAllMatchIn(content)
       .flatMap { m =>
         Try {
-          ChannelId(Snowflake(m.group(1)))
+          ChannelId(RawSnowflake(m.group(1)))
         }.toOption
       }
       .toSeq
@@ -391,7 +391,7 @@ case class EmbedField(name: String, value: String, inline: Option[Boolean] = Non
   * @param width The width of the attachment if it's an image
   */
 case class Attachment(
-    id: Snowflake,
+    id: RawSnowflake,
     filename: String,
     size: Int,
     url: String,

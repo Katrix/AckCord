@@ -35,7 +35,7 @@ import akka.actor.{ActorRef, ActorSystem, FSM, Props}
 import akka.io.{IO, UdpConnected}
 import akka.util.ByteString
 import net.katsstuff.ackcord.AudioAPIMessage
-import net.katsstuff.ackcord.data.{Snowflake, UserId}
+import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.util.AckCordSettings
 
 /**
@@ -53,7 +53,7 @@ class VoiceUDPHandler(
     port: Int,
     sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef],
-    serverId: Snowflake,
+    serverId: RawSnowflake,
     userId: UserId
 ) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] {
   import VoiceUDPHandler._
@@ -201,7 +201,7 @@ object VoiceUDPHandler {
       port: Int,
       sendTo: Option[ActorRef],
       sendSoundTo: Option[ActorRef],
-      serverId: Snowflake,
+      serverId: RawSnowflake,
       userId: UserId
   ): Props = Props(new VoiceUDPHandler(address, ssrc, port, sendTo, sendSoundTo, serverId, userId))
 

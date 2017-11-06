@@ -34,22 +34,22 @@ import shapeless.tag._
   */
 case class CacheSnapshot(
     botUser: User @@ BotUser,
-    dmChannels: SnowflakeMap[ChannelId, DMChannel],
-    groupDmChannels: SnowflakeMap[ChannelId, GroupDMChannel],
-    unavailableGuilds: SnowflakeMap[GuildId, UnavailableGuild],
-    guilds: SnowflakeMap[GuildId, Guild],
-    messages: SnowflakeMap[ChannelId, SnowflakeMap[MessageId, Message]],
-    lastTyped: SnowflakeMap[ChannelId, SnowflakeMap[UserId, Instant]],
-    users: SnowflakeMap[UserId, User],
-    presences: SnowflakeMap[GuildId, SnowflakeMap[UserId, Presence]],
-    bans: SnowflakeMap[GuildId, SnowflakeMap[UserId, Ban]]
+    dmChannels: SnowflakeMap[Channel, DMChannel],
+    groupDmChannels: SnowflakeMap[Channel, GroupDMChannel],
+    unavailableGuilds: SnowflakeMap[Guild, UnavailableGuild],
+    guilds: SnowflakeMap[Guild, Guild],
+    messages: SnowflakeMap[Channel, SnowflakeMap[Message, Message]],
+    lastTyped: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
+    users: SnowflakeMap[User, User],
+    presences: SnowflakeMap[Guild, SnowflakeMap[User, Presence]],
+    bans: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A <: Snowflake, B] = SnowflakeMap[A, B]
+  override type MapType[A, B] = SnowflakeMap[A, B]
 
-  override def getChannelMessages(channelId: ChannelId): SnowflakeMap[MessageId, Message] =
+  override def getChannelMessages(channelId: ChannelId): SnowflakeMap[Message, Message] =
     messages.getOrElse(channelId, SnowflakeMap.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): SnowflakeMap[UserId, Instant] =
+  override def getChannelLastTyped(channelId: ChannelId): SnowflakeMap[User, Instant] =
     lastTyped.getOrElse(channelId, SnowflakeMap.empty)
 }

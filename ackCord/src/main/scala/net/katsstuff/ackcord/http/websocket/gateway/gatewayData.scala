@@ -647,7 +647,7 @@ object GatewayEvent {
   case class RawPartialMessage(
       id: MessageId,
       channelId: ChannelId,
-      author: Option[Author],
+      author: Option[Author[_]],
       content: Option[String],
       timestamp: Option[OffsetDateTime],
       editedTimestamp: Option[OffsetDateTime],
@@ -658,7 +658,7 @@ object GatewayEvent {
       attachment: Option[Seq[Attachment]],
       embeds: Option[Seq[ReceivedEmbed]],
       reactions: Option[Seq[Reaction]],
-      nonce: Option[Snowflake],
+      nonce: Option[RawSnowflake],
       pinned: Option[Boolean],
       webhookId: Option[String]
   )

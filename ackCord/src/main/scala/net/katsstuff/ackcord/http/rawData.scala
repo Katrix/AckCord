@@ -64,7 +64,7 @@ case class RawChannel(
     recipients: Option[Seq[User]],
     icon: Option[String],
     ownerId: Option[UserId],
-    applicationId: Option[Snowflake],
+    applicationId: Option[RawSnowflake],
     parentId: Option[ChannelId]
 )
 
@@ -109,7 +109,7 @@ case class RawGuildMember(
 case class RawMessage(
     id: MessageId,
     channelId: ChannelId,
-    author: Author,
+    author: Author[_],
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -120,7 +120,7 @@ case class RawMessage(
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
-    nonce: Option[Snowflake],
+    nonce: Option[RawSnowflake],
     pinned: Boolean,
     `type`: MessageType
 )
@@ -175,7 +175,7 @@ case class RawGuild(
     emojis: Seq[Emoji],
     features: Seq[String],
     mfaLevel: MFALevel,
-    applicationId: Option[Snowflake],
+    applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean], //Can be missing
     widgetChannelId: Option[ChannelId], //Can be missing
     joinedAt: Option[OffsetDateTime],

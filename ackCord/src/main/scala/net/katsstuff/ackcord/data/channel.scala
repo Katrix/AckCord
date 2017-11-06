@@ -153,7 +153,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * The permission overwrites for this channel
     */
-  def permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite]
+  def permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite]
 
   /**
     * If this channel is marked as NSFW.
@@ -174,7 +174,7 @@ case class TGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
     nsfw: Boolean,
@@ -194,7 +194,7 @@ case class VGuildChannel(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
     bitrate: Int,
     userLimit: Int,
     nsfw: Boolean,
@@ -211,7 +211,7 @@ case class GuildCategory(
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
     nsfw: Boolean,
     parentId: Option[ChannelId]
 ) extends GuildChannel {
@@ -242,7 +242,7 @@ case class GroupDMChannel(
     users: Seq[UserId],
     lastMessageId: Option[MessageId],
     ownerId: UserId,
-    applicationId: Option[Snowflake],
+    applicationId: Option[RawSnowflake],
     icon: Option[String]
 ) extends Channel
     with TChannel {

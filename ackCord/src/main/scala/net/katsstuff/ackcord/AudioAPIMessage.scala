@@ -25,7 +25,7 @@ package net.katsstuff.ackcord
 
 import akka.actor.ActorRef
 import akka.util.ByteString
-import net.katsstuff.ackcord.data.{Snowflake, UserId}
+import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.RTPHeader
 
 /**
@@ -38,7 +38,7 @@ sealed trait AudioAPIMessage {
   /**
     * The server id for the voice channel. For guilds this is the guild id.
     */
-  def serverId: Snowflake
+  def serverId: RawSnowflake
 
   /**
     * The client user id
@@ -58,7 +58,7 @@ object AudioAPIMessage {
       ssrc: Int,
       isSpeaking: Boolean,
       delay: Option[Int],
-      serverId: Snowflake,
+      serverId: RawSnowflake,
       userId: UserId
   ) extends AudioAPIMessage
 
@@ -66,7 +66,7 @@ object AudioAPIMessage {
     * Sent to the listener when everything is ready to send voice data.
     * @param udpHandler The udp handler. Used for sending data.
     */
-  case class Ready(udpHandler: ActorRef, serverId: Snowflake, userId: UserId) extends AudioAPIMessage
+  case class Ready(udpHandler: ActorRef, serverId: RawSnowflake, userId: UserId) extends AudioAPIMessage
 
   /**
     * Sent to the data receiver when a user speaks.
@@ -74,6 +74,6 @@ object AudioAPIMessage {
     * @param header The RTP header. This contains the ssrc of the speaker.
     *               To get the userId of the speaker, use [[UserSpeaking]].
     */
-  case class ReceivedData(data: ByteString, header: RTPHeader, serverId: Snowflake, userId: UserId)
+  case class ReceivedData(data: ByteString, header: RTPHeader, serverId: RawSnowflake, userId: UserId)
       extends AudioAPIMessage
 }

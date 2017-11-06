@@ -40,7 +40,7 @@ trait CacheSnapshotLike {
   /**
     * The map type to use. Mutable for builder, immutable otherwise
     */
-  type MapType[A <: Snowflake, B] <: collection.Map[A, B]
+  type MapType[A, B] <: collection.Map[SnowflakeType[A], B]
 
   /**
     * Our bot user. Tagged to allow special syntax
@@ -50,49 +50,49 @@ trait CacheSnapshotLike {
   /**
     * The current dm channels
     */
-  def dmChannels: MapType[ChannelId, DMChannel]
+  def dmChannels: MapType[Channel, DMChannel]
 
   /**
     * The current group dm channels
     */
-  def groupDmChannels: MapType[ChannelId, GroupDMChannel]
+  def groupDmChannels: MapType[Channel, GroupDMChannel]
 
   /**
     * The guilds currently not available
     */
-  def unavailableGuilds: MapType[GuildId, UnavailableGuild]
+  def unavailableGuilds: MapType[Guild, UnavailableGuild]
 
   /**
     * The currently joined guilds
     */
-  def guilds: MapType[GuildId, Guild]
+  def guilds: MapType[Guild, Guild]
 
   /**
     * All messages, organized by channelId, and then messageId
     */
-  def messages: MapType[ChannelId, MapType[MessageId, Message]]
+  def messages: MapType[Channel, MapType[Message, Message]]
 
   /**
     * The point each user typed for each channel
     */
-  def lastTyped: MapType[ChannelId, MapType[UserId, Instant]]
+  def lastTyped: MapType[Channel, MapType[User, Instant]]
 
   /**
     * All the users currently tracked
     */
-  def users: MapType[UserId, User]
+  def users: MapType[User, User]
 
   /**
     * The presences of users for a specific guild
     */
-  def presences: MapType[GuildId, MapType[UserId, Presence]]
+  def presences: MapType[Guild, MapType[User, Presence]]
 
   /**
     * The bans received this session. NOTE: This is not all the bans that exists,
     * only the ones received during this session. If you want all the bans,
     * use [[net.katsstuff.ackcord.http.rest.Requests.GetGuildBans]].
     */
-  def bans: MapType[GuildId, MapType[UserId, Ban]]
+  def bans: MapType[Guild, MapType[User, Ban]]
 
   /**
     * Get a dm channel by id
@@ -157,7 +157,7 @@ trait CacheSnapshotLike {
   /**
     * Get all the messages for a certain channel
     */
-  def getChannelMessages(channelId: ChannelId): MapType[MessageId, Message]
+  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
 
   /**
     * Get a message, specifying both the channel, and message id
@@ -175,7 +175,7 @@ trait CacheSnapshotLike {
   /**
     * Get a map of when users last typed in a channel
     */
-  def getChannelLastTyped(channelId: ChannelId): MapType[UserId, Instant]
+  def getChannelLastTyped(channelId: ChannelId): MapType[User, Instant]
 
   /**
     * Get the instant a user last typed in a channel

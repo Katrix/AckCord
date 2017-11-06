@@ -183,7 +183,7 @@ object GatewayProtocol extends DiscordProtocol {
       attachment      <- c.downField("attachments").as[Option[Seq[Attachment]]]
       embeds          <- c.downField("embeds").as[Option[Seq[ReceivedEmbed]]]
       reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
-      nonce           <- c.downField("nonce").as[Option[Snowflake]]
+      nonce           <- c.downField("nonce").as[Option[RawSnowflake]]
       pinned          <- c.downField("pinned").as[Option[Boolean]]
       webhookId       <- c.downField("webhook_id").as[Option[String]]
     } yield

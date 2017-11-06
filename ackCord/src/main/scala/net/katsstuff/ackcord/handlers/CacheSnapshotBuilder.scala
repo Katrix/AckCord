@@ -48,7 +48,7 @@ class CacheSnapshotBuilder(
     var bans: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A <: Snowflake, B] = mutable.Map[A, B]
+  override type MapType[A, B] = mutable.Map[SnowflakeType[A], B]
 
   def toImmutable: CacheSnapshot = CacheSnapshot(
     botUser = botUser,

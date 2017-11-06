@@ -209,20 +209,20 @@ case class Guild(
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
-    roles: SnowflakeMap[RoleId, Role],
-    emojis: SnowflakeMap[EmojiId, Emoji],
+    roles: SnowflakeMap[Role, Role],
+    emojis: SnowflakeMap[Emoji, Emoji],
     features: Seq[String], //TODO: What is a feature?
     mfaLevel: MFALevel,
-    applicationId: Option[Snowflake],
+    applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean], //Can me missing
     widgetChannelId: Option[ChannelId], //Can be missing
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
-    voiceStates: SnowflakeMap[UserId, VoiceState], //guildId is absent in those received in GuildCreate
-    members: SnowflakeMap[UserId, GuildMember],
-    channels: SnowflakeMap[ChannelId, GuildChannel],
-    presences: SnowflakeMap[UserId, Presence]
+    voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
+    members: SnowflakeMap[User, GuildMember],
+    channels: SnowflakeMap[Channel, GuildChannel],
+    presences: SnowflakeMap[User, Presence]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 

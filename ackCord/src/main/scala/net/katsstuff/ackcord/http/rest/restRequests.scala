@@ -323,7 +323,7 @@ object Requests {
     */
   case class CreateMessageData(
       content: String = "",
-      nonce: Option[Snowflake] = None,
+      nonce: Option[RawSnowflake] = None,
       tts: Boolean = false,
       files: Seq[Path] = Seq.empty,
       embed: Option[OutgoingEmbed] = None
@@ -1393,7 +1393,7 @@ object Requests {
     *                     the `gdm.join` scope.
     * @param nicks A map specifying the nicnames for the users in this group DM.
     */
-  case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[UserId, String])
+  case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User, String])
 
   /**
     * Create a group DM. By default the client is limited to 10 active group DMs.
@@ -1401,7 +1401,7 @@ object Requests {
   case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
     override def route: RestRoute = Routes.createDM
     override def paramsEncoder: Encoder[CreateGroupDMData] = (data: CreateGroupDMData) => {
-      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.toString -> t._2).asJson)
+      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.asString -> t._2).asJson)
     }
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
@@ -1475,7 +1475,7 @@ object Requests {
   /**
     * Get a webhook by id.
     */
-  case class GetWebhook(id: Snowflake) extends NoParamsRequest[Webhook] {
+  case class GetWebhook(id: RawSnowflake) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
     override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
@@ -1485,7 +1485,7 @@ object Requests {
   /**
     * Get a webhook by id with a token. Doesn't require authentication.
     */
-  case class GetWebhookWithToken(id: Snowflake, token: String) extends NoParamsRequest[Webhook] {
+  case class GetWebhookWithToken(id: RawSnowflake, token: String) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
     override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
@@ -1500,13 +1500,13 @@ object Requests {
   case class ModifyWebhookData(
       name: Option[String] = None,
       avatar: Option[ImageData] = None,
-      channelId: Option[Snowflake] = None
+      channelId: Option[RawSnowflake] = None
   )
 
   /**
     * Modify a webhook.
     */
-  case class ModifyWebhook(id: Snowflake, params: ModifyWebhookData)
+  case class ModifyWebhook(id: RawSnowflake, params: ModifyWebhookData)
       extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
     override def route:               RestRoute                  = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
@@ -1518,7 +1518,7 @@ object Requests {
   /**
     * Modify a webhook with a token. Doesn't require authentication
     */
-  case class ModifyWebhookWithToken(id: Snowflake, token: String, params: ModifyWebhookData)
+  case class ModifyWebhookWithToken(id: RawSnowflake, token: String, params: ModifyWebhookData)
       extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
     override def route:               RestRoute                  = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
@@ -1530,7 +1530,7 @@ object Requests {
   /**
     * Delete a webhook.
     */
-  case class DeleteWebhook(id: Snowflake) extends NoParamsResponseRequest {
+  case class DeleteWebhook(id: RawSnowflake) extends NoParamsResponseRequest {
     override def route:               RestRoute  = Routes.deleteWebhook(id)
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
@@ -1538,7 +1538,7 @@ object Requests {
   /**
     * Delete a webhook with a token. Doesn't require authentication
     */
-  case class DeleteWebhookWithToken(id: Snowflake, token: String) extends NoParamsResponseRequest {
+  case class DeleteWebhookWithToken(id: RawSnowflake, token: String) extends NoParamsResponseRequest {
     override def route:               RestRoute  = Routes.deleteWebhookWithToken(token, id)
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }

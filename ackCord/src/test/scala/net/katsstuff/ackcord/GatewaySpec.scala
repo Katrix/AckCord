@@ -84,7 +84,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
         GatewayEvent.ReadyData(
           v = 6,
           user = User(
-            id = UserId(Snowflake("12345")),
+            id = UserId(RawSnowflake("12345")),
             username = "TestBot",
             discriminator = "1234",
             avatar = None,

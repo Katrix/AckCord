@@ -44,10 +44,10 @@ case class AuditLog(webhooks: Seq[Webhook], users: Seq[User], auditLogEntries: S
   * @param reason The reason for the change
   */
 case class AuditLogEntry(
-    targetId: Snowflake,
+    targetId: RawSnowflake,
     changes: Seq[AuditLogChange[_]],
     userId: UserId,
-    id: Snowflake,
+    id: RawSnowflake,
     actionType: AuditLogEvent,
     options: Seq[OptionalAuditLogInfo],
     reason: String
@@ -305,7 +305,7 @@ object AuditLogChange {
   /**
     * ApplicationId of webhook or bot
     */
-  case class ApplicationId(oldValue: Snowflake, newValue: Snowflake) extends AuditLogChange[Snowflake]
+  case class ApplicationId(oldValue: RawSnowflake, newValue: RawSnowflake) extends AuditLogChange[RawSnowflake]
 
   /**
     * Permissions of role changed
@@ -395,7 +395,7 @@ object AuditLogChange {
   /**
     * Id of changed object
     */
-  case class Id(oldValue: Snowflake, newValue: Snowflake) extends AuditLogChange[Snowflake]
+  case class Id(oldValue: RawSnowflake, newValue: RawSnowflake) extends AuditLogChange[RawSnowflake]
 
   /**
     * Type of object changed

@@ -27,7 +27,6 @@ import java.nio.file.Path
 
 import akka.NotUsed
 import akka.actor.ActorRef
-import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.rest.Requests._
 import shapeless.tag.@@
@@ -264,7 +263,7 @@ package object syntax {
         position: Int = channel.position,
         topic: Option[String] = channel.topic,
         nsfw: Boolean = channel.nsfw,
-        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
@@ -357,7 +356,7 @@ package object syntax {
         position: Int = channel.position,
         bitrate: Int = channel.bitrate,
         userLimit: Int = channel.userLimit,
-        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = channel.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
@@ -529,7 +528,7 @@ package object syntax {
     def modify[Context](
         name: String = category.name,
         position: Int = category.position,
-        permissionOverwrites: SnowflakeMap[UserOrRoleId, PermissionOverwrite] = category.permissionOverwrites,
+        permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = category.permissionOverwrites,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) = Request(
       ModifyChannel(
@@ -683,7 +682,7 @@ package object syntax {
       * Modify the positions of several channels.
       * @param newPositions A map betweem the channelId and the new positions.
       */
-    def modifyChannelPositions[Context](newPositions: SnowflakeMap[ChannelId, Int], context: Context = NotUsed)(
+    def modifyChannelPositions[Context](newPositions: SnowflakeMap[Channel, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       ModifyGuildChannelPositions(guild.id, newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq),
@@ -775,7 +774,7 @@ package object syntax {
       * Modify the positions of several roles
       * @param newPositions A map from the role id to their new position.
       */
-    def modifyRolePositions[Context](newPositions: SnowflakeMap[RoleId, Int], context: Context = NotUsed)(
+    def modifyRolePositions[Context](newPositions: SnowflakeMap[Role, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(
       ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq),
@@ -1342,7 +1341,7 @@ package object syntax {
       *                     the `gdm.join` scope.
       * @param nicks A map specifying the nicnames for the users in this group DM.
       */
-    def createGroupDM[Context](accessTokens: Seq[String], nicks: SnowflakeMap[UserId, String], context: Context = NotUsed)(
+    def createGroupDM[Context](accessTokens: Seq[String], nicks: SnowflakeMap[User, String], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = Request(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
 
@@ -1362,13 +1361,13 @@ package object syntax {
     /**
       * Fetch a webhook by id.
       */
-    def fetchWebhook[Context](id: Snowflake, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    def fetchWebhook[Context](id: RawSnowflake, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetWebhook(id), context, sendResponseTo)
 
     /**
       * Fetch a webhook by id with token. Doesn't require authentication.
       */
-    def fetchWebhookWithToken[Context](id: Snowflake, token: String, context: Context = NotUsed)(
+    def fetchWebhookWithToken[Context](id: RawSnowflake, token: String, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
       Request(GetWebhookWithToken(id, token), context, sendResponseTo)
@@ -1400,7 +1399,7 @@ package object syntax {
     def modify[Context](
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[Snowflake] = None,
+        channelId: Option[RawSnowflake] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
       Request(ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId)), context, sendResponseTo)
@@ -1414,7 +1413,7 @@ package object syntax {
     def modifyWithToken[Context](
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[Snowflake] = None,
+        channelId: Option[RawSnowflake] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
       Request(

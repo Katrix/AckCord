@@ -40,7 +40,7 @@ sealed trait VoiceMessage[D] extends WsMessage[D, VoiceOpCode]
   * @param sessionId The session id received in [[net.katsstuff.ackcord.APIMessage.VoiceStateUpdate]]
   * @param token The token received in [[net.katsstuff.ackcord.APIMessage.VoiceServerUpdate]]
   */
-case class IdentifyData(serverId: Snowflake, userId: UserId, sessionId: String, token: String)
+case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: String, token: String)
 
 /**
   * Sent by the client to inform Discord that we want to send voice data.
@@ -142,7 +142,7 @@ case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
   * @param sessionId The session id
   * @param token The token
   */
-case class ResumeData(serverId: Snowflake, sessionId: String, token: String)
+case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
 
 /**
   * Sent by the client when we want to resume a connection after getting

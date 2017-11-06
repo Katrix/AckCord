@@ -27,33 +27,33 @@ import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.{AbstractMap, LongMap, MapLike}
 import scala.collection.mutable
 
-import net.katsstuff.ackcord.data.Snowflake
+import net.katsstuff.ackcord.data.SnowflakeType
 
 //A wrapper around a LongMap which allows a nice API. We overwrite everything LongMap overrides.
-class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
-    extends AbstractMap[K, V]
-    with Map[K, V]
-    with MapLike[K, V, SnowflakeMap[K, V]] {
+class SnowflakeMap[K, +V](private val inner: LongMap[V])
+    extends AbstractMap[SnowflakeType[K], V]
+    with Map[SnowflakeType[K], V]
+    with MapLike[SnowflakeType[K], V, SnowflakeMap[K, V]] {
+  type Key = SnowflakeType[K]
 
-  //This is safe as the K type is only more specific than Snowflake because of phantom types.
-  private def castSnowflake(k: Long): K = Snowflake(k).asInstanceOf[K]
+  private def castSnowflake(k: Long): Key = SnowflakeType[K](k)
 
   override def empty: SnowflakeMap[K, V] = new SnowflakeMap(inner.empty)
 
-  override def toList: List[(K, V)] = inner.toList.map {
+  override def toList: List[(Key, V)] = inner.toList.map {
     case (k, v) => (castSnowflake(k), v)
   }
 
-  override def iterator: Iterator[(K, V)] = inner.iterator.map {
+  override def iterator: Iterator[(Key, V)] = inner.iterator.map {
     case (k, v) => (castSnowflake(k), v)
   }
 
-  override final def foreach[U](f: ((K, V)) => U): Unit =
+  override final def foreach[U](f: ((Key, V)) => U): Unit =
     inner.foreach {
       case (k, v) => f(castSnowflake(k), v)
     }
 
-  override def keysIterator: Iterator[K] = inner.keysIterator.map(castSnowflake)
+  override def keysIterator: Iterator[Key] = inner.keysIterator.map(castSnowflake)
 
   /**
     * Loop over the keys of the map. The same as keys.foreach(f), but may
@@ -61,7 +61,7 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
     *
     * @param f The loop body
     */
-  final def foreachKey(f: Snowflake => Unit): Unit = inner.foreachKey(k => f(castSnowflake(k)))
+  final def foreachKey(f: Key => Unit): Unit = inner.foreachKey(k => f(castSnowflake(k)))
 
   override def valuesIterator: Iterator[V] = inner.valuesIterator
 
@@ -77,28 +77,28 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
 
   override def isEmpty: Boolean = inner.isEmpty
 
-  override def filter(p: ((K, V)) => Boolean): SnowflakeMap[K, V] =
+  override def filter(p: ((Key, V)) => Boolean): SnowflakeMap[K, V] =
     new SnowflakeMap(inner.filter {
       case (k, v) => p(castSnowflake(k), v)
     })
 
-  def transform[S](f: (K, V) => S): SnowflakeMap[K, S] =
+  def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.transform[S] {
       case (k, v) => f(castSnowflake(k), v)
     })
 
   override final def size: Int = inner.size
 
-  override final def get(key: K): Option[V] = inner.get(key.long)
+  override final def get(key: Key): Option[V] = inner.get(key)
 
-  override final def getOrElse[V1 >: V](key: K, default: => V1): V1 = inner.getOrElse(key.long, default)
+  override final def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key, default)
 
-  override final def apply(key: K): V = inner.apply(key.long)
+  override final def apply(key: Key): V = inner.apply(key)
 
-  override def +[V1 >: V](kv: (K, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1.long, kv._2))
+  override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1, kv._2))
 
-  override def updated[V1 >: V](key: K, value: V1): SnowflakeMap[K, V1] =
-    new SnowflakeMap(inner.updated(key.long, value))
+  override def updated[V1 >: V](key: Key, value: V1): SnowflakeMap[K, V1] =
+    new SnowflakeMap(inner.updated(key, value))
 
   /**
     * Updates the map, using the provided function to resolve conflicts if the key is already present.
@@ -117,10 +117,10 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
     * @param f      The function used to resolve conflicts.
     * @return       The updated map.
     */
-  def updateWith[S >: V](key: K, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.updateWith(key.long, value, f))
+  def updateWith[S >: V](key: Key, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
+    new SnowflakeMap(inner.updateWith(key, value, f))
 
-  override def -(key: K): SnowflakeMap[K, V] = new SnowflakeMap(inner - key.long)
+  override def -(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner - key)
 
   /**
     * A combined transform and filter function. Returns an `SnowflakeMap` such that
@@ -131,7 +131,7 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
     * @param f     The transforming function.
     * @return      The modified map.
     */
-  def modifyOrRemove[S](f: (K, V) => Option[S]): SnowflakeMap[K, S] =
+  def modifyOrRemove[S](f: (Key, V) => Option[S]): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.modifyOrRemove {
       case (k, v) => f(castSnowflake(k), v)
     })
@@ -144,7 +144,7 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
     * @param f       The function used to resolve conflicts between two mappings.
     * @return        Union of `this` and `that`, with identical key conflicts resolved using the function `f`.
     */
-  def unionWith[S >: V](that: SnowflakeMap[K, S], f: (K, S, S) => S): SnowflakeMap[K, S] =
+  def unionWith[S >: V](that: SnowflakeMap[Key, S], f: (Key, S, S) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.unionWith[S](that.inner, (l, s1, s2) => f(castSnowflake(l), s1, s2)))
 
   /**
@@ -158,7 +158,7 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
     * @param f       The combining function.
     * @return        Intersection of `this` and `that`, with values for identical keys produced by function `f`.
     */
-  def intersectionWith[S, R](that: SnowflakeMap[K, S], f: (K, V, S) => R): SnowflakeMap[K, R] =
+  def intersectionWith[S, R](that: SnowflakeMap[Key, S], f: (Key, V, S) => R): SnowflakeMap[K, R] =
     new SnowflakeMap(inner.intersectionWith[S, R](that.inner, (l, v, s) => f(castSnowflake(l), v, s)))
 
   /**
@@ -173,22 +173,22 @@ class SnowflakeMap[K <: Snowflake, +V](private val inner: LongMap[V])
 
   def ++[S >: V](that: SnowflakeMap[K, S]): SnowflakeMap[K, S] = new SnowflakeMap(inner ++ that.inner)
 
-  final def firstKey: K = castSnowflake(inner.firstKey)
+  final def firstKey: Key = castSnowflake(inner.firstKey)
 
-  final def lastKey: K = castSnowflake(inner.lastKey)
+  final def lastKey: Key = castSnowflake(inner.lastKey)
 }
 object SnowflakeMap {
 
-  def empty[A <: Snowflake, B]: SnowflakeMap[A, B] = new SnowflakeMap(LongMap.empty)
-  def singleton[A <: Snowflake, B](key: A, value: B): SnowflakeMap[A, B] =
-    new SnowflakeMap(LongMap.singleton(key.long, value))
-  def apply[A <: Snowflake, B](elems: (A, B)*): SnowflakeMap[A, B] =
-    new SnowflakeMap(LongMap.apply(elems.map(t => t._1.long -> t._2): _*))
+  def empty[A, B]: SnowflakeMap[A, B] = new SnowflakeMap(LongMap.empty)
+  def singleton[A, B](key: SnowflakeType[A], value: B): SnowflakeMap[A, B] =
+    new SnowflakeMap(LongMap.singleton(key, value))
+  def apply[A, B](elems: (SnowflakeType[A], B)*): SnowflakeMap[A, B] =
+    new SnowflakeMap(LongMap.apply(elems: _*))
 
-  implicit def canBuildFrom[S <: Snowflake, A, B]: CanBuildFrom[SnowflakeMap[S, A], (S, B), SnowflakeMap[S, B]] =
-    new CanBuildFrom[SnowflakeMap[S, A], (S, B), SnowflakeMap[S, B]] {
-      override def apply(from: SnowflakeMap[S, A]): mutable.Builder[(S, B), SnowflakeMap[S, B]] = apply()
-      override def apply(): mutable.Builder[(S, B), SnowflakeMap[S, B]] =
-        new mutable.MapBuilder[S, B, SnowflakeMap[S, B]](empty)
+  implicit def canBuildFrom[S, A, B]: CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] =
+    new CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] {
+      override def apply(from: SnowflakeMap[S, A]): mutable.Builder[(SnowflakeType[S], B), SnowflakeMap[S, B]] = apply()
+      override def apply(): mutable.Builder[(SnowflakeType[S], B), SnowflakeMap[S, B]] =
+        new mutable.MapBuilder[SnowflakeType[S], B, SnowflakeMap[S, B]](empty)
     }
 }

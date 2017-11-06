@@ -35,7 +35,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
 import io.circe
 import io.circe.parser
-import net.katsstuff.ackcord.data.{Snowflake, UserId}
+import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}
@@ -55,7 +55,7 @@ import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
   */
 class VoiceWsHandler(
     address: String,
-    serverId: Snowflake,
+    serverId: RawSnowflake,
     userId: UserId,
     sessionId: String,
     token: String,
@@ -222,7 +222,7 @@ class VoiceWsHandler(
 object VoiceWsHandler {
   def props(
       address: String,
-      serverId: Snowflake,
+      serverId: RawSnowflake,
       userId: UserId,
       sessionId: String,
       token: String,
