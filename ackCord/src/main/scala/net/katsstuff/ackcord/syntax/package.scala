@@ -41,7 +41,6 @@ package object syntax {
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(DeleteCloseChannel(channel.id), context, sendResponseTo)
-    def mention: String = s"<#${channel.id}>"
 
     /**
       * If this is a text channel, convert it to one.
@@ -554,16 +553,6 @@ package object syntax {
       * Get the owner of this guild.
       */
     def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
-
-    /**
-      * Get the everyone role in this guild.
-      */
-    def everyoneRole: Role = guild.roles(RoleId(guild.id)) //The everyone role should always be present
-
-    /**
-      * Get the everyone mention for this guild.
-      */
-    def mentionEveryone: String = "@everyone"
 
     /**
       * Modify this guild.
@@ -1141,13 +1130,7 @@ package object syntax {
       Request(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
   }
 
-  implicit class GuildEmojiSyntax(private val emoji: Emoji) extends AnyVal {
-
-    /**
-      * Mention this role so it can be formatted correctly in messages.
-      */
-    def mention: String =
-      if (!emoji.managed) s"${emoji.name}:${emoji.id}" else ???
+  implicit class EmojiSyntax(private val emoji: Emoji) extends AnyVal {
 
     /**
       * Modify this emoji.
@@ -1166,11 +1149,6 @@ package object syntax {
   }
 
   implicit class RoleSyntax(private val role: Role) extends AnyVal {
-
-    /**
-      * Mention this role.
-      */
-    def mention: String = s"<@&${role.id}>"
 
     /**
       * Modify this role.
@@ -1283,16 +1261,6 @@ package object syntax {
       */
     def createDMChannel[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(CreateDm(CreateDMData(user.id)), context, sendResponseTo)
-
-    /**
-      * Mention this user.
-      */
-    def mention: String = s"<@${user.id}>"
-
-    /**
-      * Mention this user with their nickname.
-      */
-    def mentionNick: String = s"<@!${user.id}>"
   }
 
   implicit class DiscordClientSyntax(private val client: ActorRef @@ DiscordClient) extends AnyVal {

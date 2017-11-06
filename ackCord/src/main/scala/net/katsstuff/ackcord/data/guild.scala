@@ -225,6 +225,16 @@ case class Guild(
     presences: SnowflakeMap[UserId, Presence]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
+
+  /**
+    * Get the everyone role in this guild.
+    */
+  def everyoneRole: Role = roles(RoleId(id)) //The everyone role should always be present
+
+  /**
+    * Get the everyone mention for this guild.
+    */
+  def mentionEveryone: String = "@everyone"
 }
 
 /**
@@ -343,7 +353,13 @@ case class GuildMember(
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
   */
-case class Emoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean)
+case class Emoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean) {
+
+  /**
+    * Mention this role so it can be formatted correctly in messages.
+    */
+  def mention: String = if (!managed) s"$name:$id" else ???
+}
 
 /**
   * The text in a presence

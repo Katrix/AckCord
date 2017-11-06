@@ -171,4 +171,10 @@ case class Role(
     permissions: Permission,
     managed: Boolean,
     mentionable: Boolean
-) extends GetGuild
+) extends GetGuild {
+
+  /**
+    * Mention this role.
+    */
+  def mention: String = s"<@&$id>"
+}

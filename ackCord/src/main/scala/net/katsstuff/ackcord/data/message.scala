@@ -137,6 +137,16 @@ case class User(
 ) extends Author {
 
   override def name: String = username
+
+  /**
+    * Mention this user.
+    */
+  def mention: String = s"<@$id>"
+
+  /**
+    * Mention this user with their nickname.
+    */
+  def mentionNick: String = s"<@!$id>"
 }
 
 /**

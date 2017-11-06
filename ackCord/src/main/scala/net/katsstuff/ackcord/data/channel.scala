@@ -111,6 +111,11 @@ sealed trait Channel {
     * The channel type of this channel
     */
   def channelType: ChannelType
+
+  /**
+    * Get a representation of this channel that can refer to it in messages.
+    */
+  def mention: String = s"<#$id>"
 }
 
 /**
