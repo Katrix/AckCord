@@ -36,24 +36,24 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     with MapLike[SnowflakeType[K], V, SnowflakeMap[K, V]] {
   type Key = SnowflakeType[K]
 
-  private def castSnowflake(k: Long): Key = SnowflakeType[K](k)
+  private def keyToSnowflake(k: Long): Key = SnowflakeType[K](k)
 
   override def empty: SnowflakeMap[K, V] = new SnowflakeMap(inner.empty)
 
   override def toList: List[(Key, V)] = inner.toList.map {
-    case (k, v) => (castSnowflake(k), v)
+    case (k, v) => (keyToSnowflake(k), v)
   }
 
   override def iterator: Iterator[(Key, V)] = inner.iterator.map {
-    case (k, v) => (castSnowflake(k), v)
+    case (k, v) => (keyToSnowflake(k), v)
   }
 
   override final def foreach[U](f: ((Key, V)) => U): Unit =
     inner.foreach {
-      case (k, v) => f(castSnowflake(k), v)
+      case (k, v) => f(keyToSnowflake(k), v)
     }
 
-  override def keysIterator: Iterator[Key] = inner.keysIterator.map(castSnowflake)
+  override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
 
   /**
     * Loop over the keys of the map. The same as keys.foreach(f), but may
@@ -61,7 +61,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *
     * @param f The loop body
     */
-  final def foreachKey(f: Key => Unit): Unit = inner.foreachKey(k => f(castSnowflake(k)))
+  final def foreachKey(f: Key => Unit): Unit = inner.foreachKey(k => f(keyToSnowflake(k)))
 
   override def valuesIterator: Iterator[V] = inner.valuesIterator
 
@@ -79,12 +79,12 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   override def filter(p: ((Key, V)) => Boolean): SnowflakeMap[K, V] =
     new SnowflakeMap(inner.filter {
-      case (k, v) => p(castSnowflake(k), v)
+      case (k, v) => p(keyToSnowflake(k), v)
     })
 
   def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.transform[S] {
-      case (k, v) => f(castSnowflake(k), v)
+      case (k, v) => f(keyToSnowflake(k), v)
     })
 
   override final def size: Int = inner.size
@@ -133,7 +133,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     */
   def modifyOrRemove[S](f: (Key, V) => Option[S]): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.modifyOrRemove {
-      case (k, v) => f(castSnowflake(k), v)
+      case (k, v) => f(keyToSnowflake(k), v)
     })
 
   /**
@@ -145,7 +145,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @return        Union of `this` and `that`, with identical key conflicts resolved using the function `f`.
     */
   def unionWith[S >: V](that: SnowflakeMap[Key, S], f: (Key, S, S) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.unionWith[S](that.inner, (l, s1, s2) => f(castSnowflake(l), s1, s2)))
+    new SnowflakeMap(inner.unionWith[S](that.inner, (l, s1, s2) => f(keyToSnowflake(l), s1, s2)))
 
   /**
     * Forms the intersection of these two maps with a combining function. The
@@ -159,7 +159,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @return        Intersection of `this` and `that`, with values for identical keys produced by function `f`.
     */
   def intersectionWith[S, R](that: SnowflakeMap[Key, S], f: (Key, V, S) => R): SnowflakeMap[K, R] =
-    new SnowflakeMap(inner.intersectionWith[S, R](that.inner, (l, v, s) => f(castSnowflake(l), v, s)))
+    new SnowflakeMap(inner.intersectionWith[S, R](that.inner, (l, v, s) => f(keyToSnowflake(l), v, s)))
 
   /**
     * Left biased intersection. Returns the map that has all the same mappings as this but only for keys
@@ -173,9 +173,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   def ++[S >: V](that: SnowflakeMap[K, S]): SnowflakeMap[K, S] = new SnowflakeMap(inner ++ that.inner)
 
-  final def firstKey: Key = castSnowflake(inner.firstKey)
+  final def firstKey: Key = keyToSnowflake(inner.firstKey)
 
-  final def lastKey: Key = castSnowflake(inner.lastKey)
+  final def lastKey: Key = keyToSnowflake(inner.lastKey)
 }
 object SnowflakeMap {
 

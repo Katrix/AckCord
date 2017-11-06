@@ -1475,7 +1475,7 @@ object Requests {
   /**
     * Get a webhook by id.
     */
-  case class GetWebhook(id: RawSnowflake) extends NoParamsRequest[Webhook] {
+  case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
     override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
@@ -1485,7 +1485,7 @@ object Requests {
   /**
     * Get a webhook by id with a token. Doesn't require authentication.
     */
-  case class GetWebhookWithToken(id: RawSnowflake, token: String) extends NoParamsRequest[Webhook] {
+  case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsRequest[Webhook] {
     override def route:               RestRoute             = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
     override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
@@ -1500,13 +1500,13 @@ object Requests {
   case class ModifyWebhookData(
       name: Option[String] = None,
       avatar: Option[ImageData] = None,
-      channelId: Option[RawSnowflake] = None
+      channelId: Option[ChannelId] = None
   )
 
   /**
     * Modify a webhook.
     */
-  case class ModifyWebhook(id: RawSnowflake, params: ModifyWebhookData)
+  case class ModifyWebhook(id: SnowflakeType[Webhook], params: ModifyWebhookData)
       extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
     override def route:               RestRoute                  = Routes.getWebhook(id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
@@ -1518,7 +1518,7 @@ object Requests {
   /**
     * Modify a webhook with a token. Doesn't require authentication
     */
-  case class ModifyWebhookWithToken(id: RawSnowflake, token: String, params: ModifyWebhookData)
+  case class ModifyWebhookWithToken(id: SnowflakeType[Webhook], token: String, params: ModifyWebhookData)
       extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
     override def route:               RestRoute                  = Routes.getWebhookWithToken(token, id)
     override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
@@ -1530,7 +1530,7 @@ object Requests {
   /**
     * Delete a webhook.
     */
-  case class DeleteWebhook(id: RawSnowflake) extends NoParamsResponseRequest {
+  case class DeleteWebhook(id: SnowflakeType[Webhook]) extends NoParamsResponseRequest {
     override def route:               RestRoute  = Routes.deleteWebhook(id)
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
@@ -1538,7 +1538,7 @@ object Requests {
   /**
     * Delete a webhook with a token. Doesn't require authentication
     */
-  case class DeleteWebhookWithToken(id: RawSnowflake, token: String) extends NoParamsResponseRequest {
+  case class DeleteWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsResponseRequest {
     override def route:               RestRoute  = Routes.deleteWebhookWithToken(token, id)
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }

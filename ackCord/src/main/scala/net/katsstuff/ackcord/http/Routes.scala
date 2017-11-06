@@ -234,23 +234,23 @@ object Routes {
   val listVoiceRegions = RestRoute(s"$base/voice/regions", GET)
 
   //WebHook
-  val webhook: RawSnowflake => Uri = id => s"$base/webhooks/$id"
-  val webhookWithToken: (String, RawSnowflake) => Uri =
+  val webhook: SnowflakeType[Webhook] => Uri = id => s"$base/webhooks/$id"
+  val webhookWithToken: (String, SnowflakeType[Webhook]) => Uri =
     Function.uncurried(token => webhook.andThen(uri => s"$uri/$token"))
   val channelWebhooks: ChannelId => String = channel.andThen(uri => s"$uri/webhooks")
 
   val createWebhook:          ChannelId => RestRoute              = channelWebhooks.andThen(RestRoute(_, POST))
   val getChannelWebhooks:     ChannelId => RestRoute              = channelWebhooks.andThen(RestRoute(_, GET))
   val getGuildWebhooks:       GuildId => RestRoute                = guild.andThen(uri => RestRoute(s"$uri/webhooks", GET))
-  val getWebhook:             RawSnowflake => RestRoute           = webhook.andThen(RestRoute(_, GET))
-  val getWebhookWithToken:    (String, RawSnowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, GET))
-  val modifyWebhook:          RawSnowflake => RestRoute           = webhook.andThen(RestRoute(_, PATCH))
-  val modifyWebhookWithToken: (String, RawSnowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, PATCH))
-  val deleteWebhook:          RawSnowflake => RestRoute           = webhook.andThen(RestRoute(_, DELETE))
-  val deleteWebhookWithToken: (String, RawSnowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, DELETE))
-  val executeWebhook:         (String, RawSnowflake) => RestRoute = webhookWithToken.andThen(RestRoute(_, POST))
-  val executeSlackWebhook: (String, RawSnowflake) => RestRoute =
+  val getWebhook:             SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, GET))
+  val getWebhookWithToken:    (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, GET))
+  val modifyWebhook:          SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, PATCH))
+  val modifyWebhookWithToken: (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, PATCH))
+  val deleteWebhook:          SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, DELETE))
+  val deleteWebhookWithToken: (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, DELETE))
+  val executeWebhook:         (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, POST))
+  val executeSlackWebhook: (String, SnowflakeType[Webhook]) => RestRoute =
     webhookWithToken.andThen(uri => RestRoute(s"$uri/slack", POST))
-  val executeGithubWebhook: (String, RawSnowflake) => RestRoute =
+  val executeGithubWebhook: (String, SnowflakeType[Webhook]) => RestRoute =
     webhookWithToken.andThen(uri => RestRoute(s"$uri/github", POST))
 }

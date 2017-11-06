@@ -38,15 +38,8 @@ import akka.pattern.pipe
 import akka.stream.Materializer
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
-import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel, UserId}
-import net.katsstuff.ackcord.example.{
-  ExampleCmdCategories,
-  ExampleErrorHandler,
-  InfoChannelCommand,
-  KillCommand,
-  PingCommand,
-  SendFileCommand
-}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
+import net.katsstuff.ackcord.example.{ExampleCmdCategories, ExampleErrorHandler, InfoChannelCommand, KillCommand, PingCommand, SendFileCommand}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
@@ -269,7 +262,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
 
   def connect(vChannelId: ChannelId, endPoint: String, clientId: UserId, sessionId: String, token: String): State = {
     val voiceWs =
-      context.actorOf(VoiceWsHandler.props(endPoint, guildId, clientId, sessionId, token, Some(self), None), "VoiceWS")
+      context.actorOf(VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None), "VoiceWS")
     voiceWs ! Login
     log.info("Connected")
     stay using HasVoiceWs(voiceWs, vChannelId)

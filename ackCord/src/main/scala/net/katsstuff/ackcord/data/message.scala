@@ -391,7 +391,7 @@ case class EmbedField(name: String, value: String, inline: Option[Boolean] = Non
   * @param width The width of the attachment if it's an image
   */
 case class Attachment(
-    id: RawSnowflake,
+    id: SnowflakeType[Attachment],
     filename: String,
     size: Int,
     url: String,

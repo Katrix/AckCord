@@ -24,31 +24,35 @@
 package net.katsstuff.ackcord
 
 import java.lang.{Long => JLong}
-import java.time.LocalDateTime
+import java.time.Instant
 
 import scala.language.implicitConversions
 
-import shapeless._
 import shapeless.tag._
 
 package object data {
 
+  private object SharedTagger extends Tagger[Nothing]
+  private def tagS[U]: Tagger[U] = SharedTagger.asInstanceOf[Tagger[U]]
+
   sealed trait SnowflakeTag[+A]
   type SnowflakeType[A] = Long @@ SnowflakeTag[A]
   object SnowflakeType {
-    def apply[A](long: Long): Long @@ SnowflakeTag[A] = tag[SnowflakeTag[A]](long)
-    def apply[A](content: String): SnowflakeType[A] = apply[A](JLong.parseUnsignedLong(content))
+    def apply[A](long: Long):      Long @@ SnowflakeTag[A] = tagS[SnowflakeTag[A]](long)
+    def apply[A](content: String): SnowflakeType[A]        = apply[A](JLong.parseUnsignedLong(content))
   }
 
+  private val DiscordEpoch = 1420070400000L
   implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
-    def creationDate: LocalDateTime = ???
-    def asString:     String        = JLong.toUnsignedString(snowflake)
+    def creationDate: Instant      = Instant.ofEpochMilli(DiscordEpoch + (snowflake >> 22))
+    def asString:     String       = JLong.toUnsignedString(snowflake)
   }
 
-  type RawSnowflake = SnowflakeType[Any]
+  sealed trait RawSnowflakeTag
+  type RawSnowflake = SnowflakeType[RawSnowflakeTag]
   object RawSnowflake {
     def apply(content: String): RawSnowflake = RawSnowflake(JLong.parseUnsignedLong(content))
-    def apply(long: Long):      RawSnowflake = SnowflakeType[Any](long)
+    def apply(long: Long):      RawSnowflake = SnowflakeType[RawSnowflakeTag](long)
   }
 
   //Some type aliases for better documentation by the types

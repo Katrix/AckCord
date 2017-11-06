@@ -1361,13 +1361,13 @@ package object syntax {
     /**
       * Fetch a webhook by id.
       */
-    def fetchWebhook[Context](id: RawSnowflake, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    def fetchWebhook[Context](id: SnowflakeType[Webhook], context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
       Request(GetWebhook(id), context, sendResponseTo)
 
     /**
       * Fetch a webhook by id with token. Doesn't require authentication.
       */
-    def fetchWebhookWithToken[Context](id: RawSnowflake, token: String, context: Context = NotUsed)(
+    def fetchWebhookWithToken[Context](id: SnowflakeType[Webhook], token: String, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
       Request(GetWebhookWithToken(id, token), context, sendResponseTo)
@@ -1399,7 +1399,7 @@ package object syntax {
     def modify[Context](
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[RawSnowflake] = None,
+        channelId: Option[ChannelId] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
       Request(ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId)), context, sendResponseTo)
@@ -1413,7 +1413,7 @@ package object syntax {
     def modifyWithToken[Context](
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[RawSnowflake] = None,
+        channelId: Option[ChannelId] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
       Request(

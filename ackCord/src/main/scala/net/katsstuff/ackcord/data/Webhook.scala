@@ -35,7 +35,7 @@ package net.katsstuff.ackcord.data
   * @param token The token of the webhook
   */
 case class Webhook(
-    id: RawSnowflake,
+    id: SnowflakeType[Webhook],
     guildId: Option[GuildId],
     channelId: ChannelId,
     user: Option[User],
