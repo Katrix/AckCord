@@ -344,7 +344,41 @@ case class GuildMember(
     */
   def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshot): Permission =
     permissionsWithOverrides(permissions, channelId)
+
+  /**
+    * Check if this user has any roles above the passed in roles.
+    */
+  def hasRoleAbove(others: Seq[RoleId])(implicit c: CacheSnapshot): Boolean = {
+    guild.exists { guild =>
+      val ownerId = guild.ownerId
+      if (this.userId == ownerId) true
+      else {
+        def maxRolesPosition(roles: Seq[RoleId]): Int = {
+          val poses = roles.flatMap(_.resolve(this.guildId)).map(_.position)
+          if (poses.isEmpty) 0
+          else poses.max
+        }
+
+        maxRolesPosition(this.roleIds) > maxRolesPosition(others)
+      }
+    }
+  }
+
+  /**
+    * Check if this user has any roles above the passed in roles.
+    */
+  def hasRoleAbove(other: GuildMember)(implicit c: CacheSnapshot): Boolean = {
+    guild.exists { guild =>
+      val ownerId = guild.ownerId
+      if (this.userId == ownerId) true
+      else if (other.userId == ownerId) false
+      else {
+        hasRoleAbove(other.roleIds)
+      }
+    }
+  }
 }
+
 /**
   * An emoji in a guild.
   * @param id The id of the emoji.
@@ -375,7 +409,7 @@ sealed trait PresenceContent {
 /**
   * The presence of someone playing a game
   */
-case class PresenceGame(name: String)                   extends PresenceContent
+case class PresenceGame(name: String) extends PresenceContent
 
 /**
   * The presence of someone streaming

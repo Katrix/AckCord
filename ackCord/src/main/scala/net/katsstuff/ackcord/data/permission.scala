@@ -177,4 +177,14 @@ case class Role(
     * Mention this role.
     */
   def mention: String = s"<@&$id>"
+
+  /**
+    * Check if this role is above another role.
+    */
+  def isAbove(other: Role): Boolean = this.position > other.position
+
+  /**
+    * Check if this role is below another role.
+    */
+  def isBelow(other: Role): Boolean = this.position < other.position
 }
