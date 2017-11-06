@@ -68,7 +68,9 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   var isShuttingDown = false
 
   override def receive: Receive = {
-    case msg @ (_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg)
+    case msg: APIMessage.Ready =>
+      msg.snapshot.unavailableGuilds.keys.foreach(sendToGuild(_, msg))
+    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg)
     case msg: APIMessage.GuildMessage                                                   => sendToGuild(msg.guild.id, msg)
     case msg: APIMessage.ChannelMessage =>
       msg.channel match {
