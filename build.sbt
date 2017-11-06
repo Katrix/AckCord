@@ -65,7 +65,9 @@ lazy val example = project
     commonSettings,
     name := "ackcord-example",
     version := "1.0",
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.42"
+    libraryDependencies += "com.sedmelluq"     % "lavaplayer"      % "1.2.42",
+    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % "2.5.6",
+    libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
   .dependsOn(ackCord, ackCordCommands)
 
