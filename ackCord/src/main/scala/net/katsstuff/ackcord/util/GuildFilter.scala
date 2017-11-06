@@ -27,7 +27,6 @@ import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, Props, Terminated}
 import akka.event.Logging
-import akka.routing.Broadcast
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
@@ -61,7 +60,7 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   * @param handlerProps A props for the handler.
   */
 class GuildFilter(guildId: GuildId, handlerProps: Props) extends Actor with ActorLogging {
-  private var handler        = context.actorOf(handlerProps)
+  private var handler        = context.actorOf(handlerProps, "FilterHandler")
   var channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
   var isShuttingDown = false
   context.watch(handler)
@@ -103,7 +102,7 @@ class GuildFilter(guildId: GuildId, handlerProps: Props) extends Actor with Acto
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
       handler ! ShutdownClient
-    case Terminated(ref) =>
+    case Terminated(_) =>
       val level = if (isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
       log.log(level, "Actor for guild {} shut down", guildId)
 
