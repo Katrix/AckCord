@@ -26,6 +26,10 @@ package net.katsstuff.ackcord.data
 import java.time.OffsetDateTime
 import java.util.Base64
 
+import scala.util.Try
+
+import net.katsstuff.ackcord.util.MessageParser
+
 //TODO
 class ImageData(val rawData: String) extends AnyVal
 object ImageData {
@@ -201,7 +205,43 @@ case class Message(
     nonce: Option[Snowflake],
     pinned: Boolean,
     messageType: MessageType
-) extends GetChannel
+) extends GetChannel {
+
+  def channelMentions: Seq[ChannelId] = {
+    MessageParser.channelRegex
+      .findAllMatchIn(content)
+      .flatMap { m =>
+        Try {
+          ChannelId(Snowflake(m.group(1)))
+        }.toOption
+      }
+      .toSeq
+  }
+
+  /**
+    * Formats mentions in this message to their normal syntax with names.
+    */
+  def formatMentions(implicit c: CacheSnapshot): String = {
+    val withUsers = mentions
+      .flatMap(_.resolve)
+      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.name}"))
+    val withRoles = mentionRoles
+      .flatMap(_.resolve)
+      .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
+
+    val optGuildId = channelId.resolve.collect {
+      case channel: GuildChannel => channel.guildId
+    }
+
+    optGuildId.fold(withRoles) { guildId =>
+      val withChannels = channelMentions
+        .flatMap(_.guildResolve(guildId))
+        .foldRight(withRoles)((channel, content) => content.replace(channel.mention, s"@${channel.name}"))
+
+      withChannels
+    }
+  }
+}
 
 /**
   * A reaction to a message
