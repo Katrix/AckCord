@@ -28,7 +28,7 @@ object AckCord {
   /**
     * Current version of AckCord
     */
-  val Version = "0.3"
+  val Version = "0.4"
 
   /**
     * Current Discord API version in use
