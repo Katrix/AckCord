@@ -160,12 +160,13 @@ trait MessageParserInstances {
         Right((Nil, tagged))
       }
     }
-  implicit val byteParser:   MessageParser[Byte]   = withTry(_.toByte)
-  implicit val shortParser:  MessageParser[Short]  = withTry(_.toShort)
-  implicit val intParser:    MessageParser[Int]    = withTry(_.toInt)
-  implicit val longParser:   MessageParser[Long]   = withTry(_.toLong)
-  implicit val floatParser:  MessageParser[Float]  = withTry(_.toFloat)
-  implicit val doubleParser: MessageParser[Double] = withTry(_.toDouble)
+  implicit val byteParser:    MessageParser[Byte]    = withTry(_.toByte)
+  implicit val shortParser:   MessageParser[Short]   = withTry(_.toShort)
+  implicit val intParser:     MessageParser[Int]     = withTry(_.toInt)
+  implicit val longParser:    MessageParser[Long]    = withTry(_.toLong)
+  implicit val floatParser:   MessageParser[Float]   = withTry(_.toFloat)
+  implicit val doubleParser:  MessageParser[Double]  = withTry(_.toDouble)
+  implicit val booleanParser: MessageParser[Boolean] = withTry(_.toBoolean)
 
   val userRegex:    Regex = """<@!?(\d+)>""".r
   val channelRegex: Regex = """<#(\d+)>""".r
@@ -264,7 +265,7 @@ trait DeriveMessageParser {
         implicit
         c: CacheSnapshot
     ): Either[String, (List[String], Head :+: Tail)] = {
-      val head = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
+      val head      = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
       lazy val tail = tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
 
       head.left.map(_ => tail).joinLeft
