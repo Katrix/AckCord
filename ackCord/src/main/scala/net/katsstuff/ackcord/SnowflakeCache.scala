@@ -25,7 +25,7 @@ package net.katsstuff.ackcord
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorLogging, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.{EventStream, LoggingAdapter}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
@@ -56,9 +56,7 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
   private def isReady: Boolean = prevSnapshot != null && snapshot != null
 
   override def receive: Receive = {
-    case readyHandler: CacheHandlerEvent[_]
-        if readyHandler.data
-          .isInstanceOf[ReadyData] => //An instanceOf test isn't really the best way here, but I just say a one time exception
+    case readyEvent @ APIMessageHandlerEvent(_: ReadyData, sendEvent, _) =>
       val builder = new CacheSnapshotBuilder(
         null, //The event will populate this,
         mutable.Map.empty,
@@ -72,16 +70,12 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
         mutable.Map.empty
       )
 
-      readyHandler.handle(builder)(log)
+      readyEvent.handle(builder)(log)
 
       prevSnapshot = builder.toImmutable
       snapshot = prevSnapshot
 
-      readyHandler match {
-        case event: APIMessageHandlerEvent[_] =>
-          event.sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
-        case _ =>
-      }
+      sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
     case handlerEvent: CacheHandlerEvent[_] if isReady =>
       val builder = CacheSnapshotBuilder(snapshot)
       handlerEvent.handle(builder)(log)
@@ -90,6 +84,8 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
       handlerEvent match {
         case event: APIMessageHandlerEvent[_] =>
           event.sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
+        case event: SendHandledDataEvent[_] =>
+          event.findData(snapshot, prevSnapshot).foreach(event.sendTo ! _)
         case _ =>
       }
     case _ if !isReady => log.error("Received event before ready")
@@ -123,13 +119,13 @@ sealed trait CacheHandlerEvent[Data] {
 }
 
 /**
-  * An event that should publish an [[APIMessage]]
-  * @param data The data
+  * An event that should publish an [[APIMessage]].
+  * @param data The data.
   * @param sendEvent A function to gather the needed variables to send the
   *                  event. The [[net.katsstuff.ackcord.data.CacheSnapshot]]s passed is the current, and
   *                  previous snapshot, in that order.
-  * @param handler The handler to process the data of this event with
-  * @tparam Data The data it contains
+  * @param handler The handler to process the data of this event with.
+  * @tparam Data The data it contains.
   */
 case class APIMessageHandlerEvent[Data](
     data: Data,
@@ -138,9 +134,24 @@ case class APIMessageHandlerEvent[Data](
 ) extends CacheHandlerEvent[Data]
 
 /**
+  * An event where after the data has been processed, it's sent to a receiver.
+  * @param data The data.
+  * @param handler The handler to process the data of this event with.
+  * @param findData Find the data to send.
+  * @param sendTo The receiver of the handled data.
+  * @tparam Data The data it contains.
+  */
+case class SendHandledDataEvent[Data](
+    data: Data,
+    handler: CacheHandler[Data],
+    findData: (CacheSnapshot, CacheSnapshot) => Option[Any],
+    sendTo: ActorRef
+) extends CacheHandlerEvent[Data]
+
+/**
   * Any other event that updates the cache with it's data.
-  * @param data The data
-  * @param handler The handler to process the data of this event with
-  * @tparam Data The data it contains
+  * @param data The data.
+  * @param handler The handler to process the data of this event with.
+  * @tparam Data The data it contains.
   */
 case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]

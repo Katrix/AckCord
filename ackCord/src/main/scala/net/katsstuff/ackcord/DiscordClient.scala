@@ -39,7 +39,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.http.rest.{ComplexRESTRequest, RESTHandler}
+import net.katsstuff.ackcord.http.rest.{BaseRequest, ComplexRESTRequest, RequestHandler}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
@@ -62,7 +62,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
   private val restHandler =
-    context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
+    context.actorOf(RequestHandler.cacheProps(RequestHandler.botCredentials(settings.token), cache), "RestHandler")
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -83,8 +83,8 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
-    case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
-    case request @ Request(_: ComplexRESTRequest[_, _, _], _, _, _) => restHandler.forward(request)
+    case request: GatewayMessage[_] => gatewayHandler.forward(request)
+    case request: Request[_, _]     => restHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
@@ -185,13 +185,11 @@ object DiscordClient extends FailFastCirceSupport {
     * @param ec The execution context to use
     * @return An URI with the websocket gateway uri
     */
-  def fetchWsGatewayWithShards(token: String)(
-      implicit system: ActorSystem,
-      mat: Materializer,
-      ec: ExecutionContext
-  ): Future[(Uri, Int)] = {
+  def fetchWsGatewayWithShards(
+      token: String
+  )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[(Uri, Int)] = {
     val http = Http()
-    val auth = Authorization(RESTHandler.botCredentials(token))
+    val auth = Authorization(RequestHandler.botCredentials(token))
     http
       .singleRequest(HttpRequest(uri = Routes.botGateway, headers = List(auth)))
       .flatMap {

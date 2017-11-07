@@ -34,7 +34,7 @@ import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
 import net.katsstuff.ackcord.http.rest.Requests
 import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{DiscordClient, Request, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.{DiscordClient, Request, RequestError, RequestFailed, RequestResponse}
 
 class PingCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
@@ -129,7 +129,8 @@ class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
 
       log.info(res.toString)
       context.stop(self)
-    case RequestFailed(_, GetChannelInfo(guildId, _, senderChannelId, c)) =>
+    case error :RequestFailed[_] =>
+      val GetChannelInfo(guildId, _, senderChannelId, c) = error.context
       implicit val cache: CacheSnapshot = c
       senderChannelId.tResolve(guildId).foreach(client ! _.sendMessage("Error encountered"))
       context.stop(self)

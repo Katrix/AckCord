@@ -25,10 +25,16 @@ package net.katsstuff.ackcord.http.rest
 
 import java.nio.file.{Files, Path}
 
+import scala.concurrent.{ExecutionContext, Future}
+
 import akka.NotUsed
 import akka.event.LoggingAdapter
+import akka.stream.Materializer
 import akka.http.scaladsl.model.Multipart.FormData
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, StatusCode, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, ResponseEntity}
+import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.util.ByteString
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
@@ -40,19 +46,15 @@ import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEmojisUpda
 import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
 
 /**
-  * Base trait for all REST requests in AckCord. If you feel an endpoint is
-  * missing, and AckCord hasn't added it yet, you can extend this and create
-  * your own request. I'd recommend you to extend
-  * [[ComplexRESTRequest]] or [[SimpleRESTRequest]] tough for simplicity.
-  * @tparam Response The response type of the request
-  * @tparam HandlerType The response type as the cache handler can handle it.
+  * Base super simple trait for all HTTP requests in AckCord.
+  * @tparam Response The parsed response type.
   */
-trait BaseRESTRequest[Response, HandlerType] {
+trait BaseRequest[Response] {
 
   /**
     * The router for this request.
     */
-  def route: RestRoute
+  def route: RequestRoute
 
   /**
     * The body of the request to send.
@@ -60,19 +62,54 @@ trait BaseRESTRequest[Response, HandlerType] {
   def requestBody: RequestEntity
 
   /**
+    * Parses the response from this request.
+    * @param responseEntity The response entity.
+    */
+  def parseResponse(responseEntity: ResponseEntity)(implicit mat: Materializer, ec: ExecutionContext): Future[Response]
+}
+
+/**
+  * Base trait for all REST requests in AckCord. If you feel an endpoint is
+  * missing, and AckCord hasn't added it yet, you can extend this and create
+  * your own request. I'd recommend you to extend
+  * [[ComplexRESTRequest]] or [[SimpleRESTRequest]] tough for simplicity.
+  * @tparam RawResponse The response type of the request
+  * @tparam HandlerType The response type as the cache handler can handle it.
+  * @tparam Response The response type as sent back to the handler.
+  */
+trait BaseRESTRequest[RawResponse, HandlerType, Response] extends BaseRequest[RawResponse] with FailFastCirceSupport {
+
+  override def parseResponse(
+      responseEntity: ResponseEntity
+  )(implicit mat: Materializer, ec: ExecutionContext): Future[RawResponse] =
+    Unmarshal(responseEntity)
+      .to[Json]
+      .flatMap(json => Future.fromTry(json.as(responseDecoder).toTry))
+
+  /**
     * A decoder to decode the response.
     */
-  def responseDecoder: Decoder[Response]
+  def responseDecoder: Decoder[RawResponse]
 
   /**
     * A cache handler to update the cache with the response of this request.
     */
-  def handleResponse: CacheHandler[HandlerType]
+  def cacheHandler: CacheHandler[HandlerType]
 
   /**
     * Convert the response to a format the cache handler can understand.
     */
-  def processResponse(response: Response): HandlerType
+  def convertToCacheHandlerType(response: RawResponse): HandlerType
+
+  /**
+    * Check if this request has a more nicer response object that can be gotten through the cache.
+    */
+  def hasCustomResponseData: Boolean
+
+  /**
+    * Find the data to send back to the handler.
+    */
+  def findData(response: RawResponse)(current: CacheSnapshot, prev: CacheSnapshot): Option[Response]
 
   /**
     * The permissions needed to use this request.
@@ -98,7 +135,8 @@ trait BaseRESTRequest[Response, HandlerType] {
   * A simpler, request trait where the params are defined explicitly and converted to json.
   * @tparam Params The json parameters of the request.
   */
-trait ComplexRESTRequest[Params, Response, HandlerType] extends BaseRESTRequest[Response, HandlerType] {
+trait ComplexRESTRequest[Params, RawResponse, HandlerType, Response]
+    extends BaseRESTRequest[RawResponse, HandlerType, Response] {
 
   /**
     * The params of this request
@@ -124,8 +162,9 @@ trait ComplexRESTRequest[Params, Response, HandlerType] extends BaseRESTRequest[
   * An even simpler request trait where the response type and the handler type
   * are the same.
   */
-trait SimpleRESTRequest[Params, Response] extends ComplexRESTRequest[Params, Response, Response] {
-  override def processResponse(response: Response): Response = response
+trait SimpleRESTRequest[Params, RawResponse, Response]
+    extends ComplexRESTRequest[Params, RawResponse, RawResponse, Response] {
+  override def convertToCacheHandlerType(response: RawResponse): RawResponse = response
 }
 
 object Requests {
@@ -134,23 +173,39 @@ object Requests {
   /**
     * A simple request that takes to params.
     */
-  trait NoParamsRequest[Response] extends SimpleRESTRequest[NotUsed, Response] {
+  trait NoParamsRequest[RawResponse, Response] extends SimpleRESTRequest[NotUsed, RawResponse, Response] {
     override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
     override def params:        NotUsed          = NotUsed
   }
 
+  trait NoNiceResponseRequest[Params, RawResponse] extends SimpleRESTRequest[Params, RawResponse, NotUsed] {
+    override def hasCustomResponseData: Boolean = false
+
+    override def findData(response: RawResponse)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
+  }
+
+  /**
+    * A trait for when there is no nicer response that can be gotten through the cache.
+    */
+  trait NoParamsNiceResponseRequest[RawResponse]
+      extends NoParamsRequest[RawResponse, NotUsed]
+      with NoNiceResponseRequest[NotUsed, RawResponse]
+
   /**
     * A simple request that doesn't have a response.
     */
-  trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed] {
-    override def responseDecoder:      Decoder[NotUsed]      = (_: HCursor) => Right(NotUsed)
-    override def handleResponse:       CacheHandler[NotUsed] = NOOPHandler
+  trait NoResponseRequest[Params] extends SimpleRESTRequest[Params, NotUsed, NotUsed] {
+    override def responseDecoder: Decoder[NotUsed]      = (_: HCursor) => Right(NotUsed)
+    override def cacheHandler:    CacheHandler[NotUsed] = NOOPHandler
+
+    override def hasCustomResponseData:                                                    Boolean         = false
+    override def findData(response: NotUsed)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
   }
 
   /**
     * A simple request that has neither params nor a response.
     */
-  trait NoParamsResponseRequest extends NoParamsRequest[NotUsed] with NoResponseRequest[NotUsed]
+  trait NoParamsResponseRequest extends NoParamsRequest[NotUsed, NotUsed] with NoResponseRequest[NotUsed]
 
   /**
     * Check if a client has the needed permissions in a guild
@@ -187,12 +242,14 @@ object Requests {
   /**
     * Get an audit log for a given guild.
     */
-  case class GetGuildAuditLog(guildId: GuildId) extends NoParamsRequest[AuditLog] {
-    override def route:                                      RestRoute              = Routes.getGuildAuditLogs(guildId)
-    override def responseDecoder:                            Decoder[AuditLog]      = Decoder[AuditLog]
-    override def handleResponse:                             CacheHandler[AuditLog] = NOOPHandler
-    override def requiredPermissions:                        Permission             = Permission.ViewAuditLog
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                = hasPermissionsGuild(guildId, requiredPermissions)
+  case class GetGuildAuditLog(guildId: GuildId) extends NoParamsNiceResponseRequest[AuditLog] {
+    override def route: RequestRoute = Routes.getGuildAuditLogs(guildId)
+
+    override def responseDecoder: Decoder[AuditLog]      = Decoder[AuditLog]
+    override def cacheHandler:    CacheHandler[AuditLog] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ViewAuditLog
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   //Channels
@@ -200,12 +257,17 @@ object Requests {
   /**
     * Get a channel by id.
     */
-  case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel] {
-    def route:                    RestRoute                = Routes.getChannel(channelId)
+  case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, Channel] {
+    def route:                    RequestRoute             = Routes.getChannel(channelId)
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
-    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
+      current.getChannel(channelId)
   }
 
   /**
@@ -239,26 +301,38 @@ object Requests {
     * @param channelId The channel to update.
     */
   case class ModifyChannel(channelId: ChannelId, params: ModifyChannelData)
-      extends SimpleRESTRequest[ModifyChannelData, RawChannel] {
-    override def route:               RestRoute                  = Routes.modifyChannelPut(channelId)
-    override def paramsEncoder:       Encoder[ModifyChannelData] = deriveEncoder[ModifyChannelData]
-    override def responseDecoder:     Decoder[RawChannel]        = Decoder[RawChannel]
-    override def handleResponse:      CacheHandler[RawChannel]   = RawHandlers.rawChannelUpdateHandler
-    override def requiredPermissions: Permission                 = Permission.ManageChannels
+      extends SimpleRESTRequest[ModifyChannelData, RawChannel, Channel] {
+    override def route:         RequestRoute               = Routes.modifyChannelPut(channelId)
+    override def paramsEncoder: Encoder[ModifyChannelData] = deriveEncoder[ModifyChannelData]
+
+    override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+
+    override def requiredPermissions: Permission = Permission.ManageChannels
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
+      current.getChannel(channelId)
   }
 
   /**
     * Delete a guild channel, or close a DM channel.
     */
-  case class DeleteCloseChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel] {
-    override def route:               RestRoute                = Routes.deleteCloseChannel(channelId)
-    override def responseDecoder:     Decoder[RawChannel]      = Decoder[RawChannel]
-    override def handleResponse:      CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
-    override def requiredPermissions: Permission               = Permission.ManageChannels
+  case class DeleteCloseChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, Channel] {
+    override def route: RequestRoute = Routes.deleteCloseChannel(channelId)
+
+    override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
+
+    override def requiredPermissions: Permission = Permission.ManageChannels
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
+      prev.getChannel(channelId)
   }
 
   /**
@@ -284,27 +358,42 @@ object Requests {
     * Get the messages in a channel.
     */
   case class GetChannelMessages(channelId: ChannelId, params: GetChannelMessagesData)
-      extends SimpleRESTRequest[GetChannelMessagesData, Seq[RawMessage]] {
-    override def route:           RestRoute                       = Routes.getChannelMessages(channelId)
-    override def paramsEncoder:   Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
-    override def responseDecoder: Decoder[Seq[RawMessage]]        = Decoder[Seq[RawMessage]]
-    override def handleResponse: CacheHandler[Seq[RawMessage]] =
+      extends SimpleRESTRequest[GetChannelMessagesData, Seq[RawMessage], Seq[Message]] {
+    override def route:         RequestRoute                    = Routes.getChannelMessages(channelId)
+    override def paramsEncoder: Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
+
+    override def responseDecoder: Decoder[Seq[RawMessage]] = Decoder[Seq[RawMessage]]
+    override def cacheHandler: CacheHandler[Seq[RawMessage]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
+
     override def requiredPermissions: Permission = Permission.ReadMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawMessage]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Message]] =
+      Some(current.getChannelMessages(channelId).values.toSeq)
   }
 
   /**
     * Get a specific message in a channel.
     */
-  case class GetChannelMessage(channelId: ChannelId, messageId: MessageId) extends NoParamsRequest[RawMessage] {
-    override def route:               RestRoute                = Routes.getChannelMessage(messageId, channelId)
-    override def responseDecoder:     Decoder[RawMessage]      = Decoder[RawMessage]
-    override def handleResponse:      CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
-    override def requiredPermissions: Permission               = Permission.ReadMessageHistory
+  case class GetChannelMessage(channelId: ChannelId, messageId: MessageId)
+      extends NoParamsRequest[RawMessage, Message] {
+    override def route: RequestRoute = Routes.getChannelMessage(messageId, channelId)
+
+    override def responseDecoder: Decoder[RawMessage]      = Decoder[RawMessage]
+    override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
+
+    override def requiredPermissions: Permission = Permission.ReadMessageHistory
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
+      current.getMessage(channelId, messageId)
   }
 
   /**
@@ -338,12 +427,9 @@ object Requests {
     * Create a message in a channel.
     */
   case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
-      extends SimpleRESTRequest[CreateMessageData, RawMessage] {
-    override def route:           RestRoute                  = Routes.createMessage(channelId)
-    override def paramsEncoder:   Encoder[CreateMessageData] = createMessageDataEncoder
-    override def responseDecoder: Decoder[RawMessage]        = Decoder[RawMessage]
-    override def handleResponse:  CacheHandler[RawMessage]   = RawHandlers.rawMessageUpdateHandler
-
+      extends SimpleRESTRequest[CreateMessageData, RawMessage, Message] {
+    override def route:         RequestRoute               = Routes.createMessage(channelId)
+    override def paramsEncoder: Encoder[CreateMessageData] = createMessageDataEncoder
     override def requestBody: RequestEntity = {
       this match {
         case CreateMessage(_, CreateMessageData(_, _, _, files, _)) if files.nonEmpty =>
@@ -358,17 +444,26 @@ object Requests {
         case _ => super.requestBody
       }
     }
+
+    override def responseDecoder: Decoder[RawMessage]      = Decoder[RawMessage]
+    override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
+
     override def requiredPermissions: Permission =
       if (params.tts) Permission(Permission.SendMessages, Permission.SendTtsMessages) else Permission.SendMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
+      current.getMessage(channelId, response.id)
   }
 
   /**
     * Create a reaction for a message.
     */
   case class CreateReaction(channelId: ChannelId, messageId: MessageId, emoji: String) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.createReaction(emoji, messageId, channelId)
+    override def route: RequestRoute = Routes.createReaction(emoji, messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ReadMessageHistory
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -379,7 +474,7 @@ object Requests {
     */
   case class DeleteOwnReaction(channelId: ChannelId, messageId: MessageId, emoji: String)
       extends NoParamsResponseRequest {
-    override def route: RestRoute = Routes.deleteOwnReaction(emoji, messageId, channelId)
+    override def route: RequestRoute = Routes.deleteOwnReaction(emoji, messageId, channelId)
   }
 
   /**
@@ -387,7 +482,8 @@ object Requests {
     */
   case class DeleteUserReaction(channelId: ChannelId, messageId: MessageId, emoji: String, userId: UserId)
       extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteUserReaction(userId, emoji, messageId, channelId)
+    override def route: RequestRoute = Routes.deleteUserReaction(userId, emoji, messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -397,17 +493,19 @@ object Requests {
     * Get all the users that have reacted with an emoji for a message.
     */
   case class GetReactions(channelId: ChannelId, messageId: MessageId, emoji: String)
-      extends NoParamsRequest[Seq[User]] {
-    override def route:           RestRoute               = Routes.getReactions(emoji, messageId, channelId)
+      extends NoParamsNiceResponseRequest[Seq[User]] {
+    override def route: RequestRoute = Routes.getReactions(emoji, messageId, channelId)
+
     override def responseDecoder: Decoder[Seq[User]]      = Decoder[Seq[User]]
-    override def handleResponse:  CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
+    override def cacheHandler:    CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
   }
 
   /**
     * Clear all reactions from a message.
     */
   case class DeleteAllReactions(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteAllReactions(messageId, channelId)
+    override def route: RequestRoute = Routes.deleteAllReactions(messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -425,18 +523,24 @@ object Requests {
     * Edit an existing message
     */
   case class EditMessage(channelId: ChannelId, messageId: MessageId, params: EditMessageData)
-      extends SimpleRESTRequest[EditMessageData, RawMessage] {
-    override def route:           RestRoute                = Routes.editMessage(messageId, channelId)
-    override def paramsEncoder:   Encoder[EditMessageData] = deriveEncoder[EditMessageData]
+      extends SimpleRESTRequest[EditMessageData, RawMessage, Message] {
+    override def route:         RequestRoute             = Routes.editMessage(messageId, channelId)
+    override def paramsEncoder: Encoder[EditMessageData] = deriveEncoder[EditMessageData]
+
     override def responseDecoder: Decoder[RawMessage]      = Decoder[RawMessage]
-    override def handleResponse:  CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
+    override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
+      current.getMessage(channelId, messageId)
   }
 
   /**
     * Delete a message
     */
   case class DeleteMessage(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteMessage(messageId, channelId)
+    override def route: RequestRoute = Routes.deleteMessage(messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -454,9 +558,10 @@ object Requests {
     */
   case class BulkDeleteMessages(channelId: ChannelId, params: BulkDeleteMessagesData)
       extends NoResponseRequest[BulkDeleteMessagesData] {
-    override def route:               RestRoute                       = Routes.bulkDeleteMessages(channelId)
-    override def paramsEncoder:       Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
-    override def requiredPermissions: Permission                      = Permission.ManageMessages
+    override def route:         RequestRoute                    = Routes.bulkDeleteMessages(channelId)
+    override def paramsEncoder: Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
+
+    override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -473,9 +578,10 @@ object Requests {
     */
   case class EditChannelPermissions(channelId: ChannelId, overwriteId: UserOrRoleId, params: EditChannelPermissionsData)
       extends NoResponseRequest[EditChannelPermissionsData] {
-    override def route:               RestRoute                           = Routes.editChannelPermissions(overwriteId, channelId)
-    override def paramsEncoder:       Encoder[EditChannelPermissionsData] = deriveEncoder[EditChannelPermissionsData]
-    override def requiredPermissions: Permission                          = Permission.ManageRoles
+    override def route:         RequestRoute                        = Routes.editChannelPermissions(overwriteId, channelId)
+    override def paramsEncoder: Encoder[EditChannelPermissionsData] = deriveEncoder[EditChannelPermissionsData]
+
+    override def requiredPermissions: Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -484,18 +590,21 @@ object Requests {
     * Delete a permission overwrite for a channel.
     */
   case class DeleteChannelPermission(channelId: ChannelId, overwriteId: UserOrRoleId) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteChannelPermissions(overwriteId, channelId)
+    override def route: RequestRoute = Routes.deleteChannelPermissions(overwriteId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageRoles
   }
 
   /**
     * Get all invites for this channel. Can only be used on guild channels.
     */
-  case class GetChannelInvites(channelId: ChannelId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
-    override def route:               RestRoute                             = Routes.getChannelInvites(channelId)
-    override def responseDecoder:     Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
-    override def handleResponse:      CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
-    override def requiredPermissions: Permission                            = Permission.ManageChannels
+  case class GetChannelInvites(channelId: ChannelId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
+    override def route: RequestRoute = Routes.getChannelInvites(channelId)
+
+    override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
+    override def cacheHandler:    CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageChannels
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -518,12 +627,14 @@ object Requests {
     * Create a new invite for a channel. Can only be used on guild channels.
     */
   case class CreateChannelInvite(channelId: ChannelId, params: CreateChannelInviteData)
-      extends SimpleRESTRequest[CreateChannelInviteData, Invite] {
-    override def route:               RestRoute                        = Routes.getChannelInvites(channelId)
-    override def paramsEncoder:       Encoder[CreateChannelInviteData] = deriveEncoder[CreateChannelInviteData]
-    override def responseDecoder:     Decoder[Invite]                  = Decoder[Invite]
-    override def handleResponse:      CacheHandler[Invite]             = NOOPHandler
-    override def requiredPermissions: Permission                       = Permission.CreateInstantInvite
+      extends NoNiceResponseRequest[CreateChannelInviteData, Invite] {
+    override def route:         RequestRoute                     = Routes.getChannelInvites(channelId)
+    override def paramsEncoder: Encoder[CreateChannelInviteData] = deriveEncoder[CreateChannelInviteData]
+
+    override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
+    override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.CreateInstantInvite
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -532,24 +643,32 @@ object Requests {
     * Triggers a typing indicator in a channel.
     */
   case class TriggerTypingIndicator(channelId: ChannelId) extends NoParamsResponseRequest {
-    override def route: RestRoute = Routes.triggerTyping(channelId)
+    override def route: RequestRoute = Routes.triggerTyping(channelId)
   }
 
   /**
     * Get all the pinned messages in a channel.
     */
-  case class GetPinnedMessages(channelId: ChannelId) extends NoParamsRequest[Seq[RawMessage]] {
-    override def route:           RestRoute                = Routes.getPinnedMessage(channelId)
+  case class GetPinnedMessages(channelId: ChannelId) extends NoParamsRequest[Seq[RawMessage], Seq[Message]] {
+    override def route: RequestRoute = Routes.getPinnedMessage(channelId)
+
     override def responseDecoder: Decoder[Seq[RawMessage]] = Decoder[Seq[RawMessage]]
-    override def handleResponse: CacheHandler[Seq[RawMessage]] =
+    override def cacheHandler: CacheHandler[Seq[RawMessage]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawMessage]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Message]] =
+      Some(response.map(_.id).flatMap(current.getMessage(channelId, _)))
   }
 
   /**
     * Add a new pinned message to a channel.
     */
   case class AddPinnedChannelMessages(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.addPinnedChannelMessage(messageId, channelId)
+    override def route: RequestRoute = Routes.addPinnedChannelMessage(messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -559,7 +678,8 @@ object Requests {
     * Delete a pinned message in a channel.
     */
   case class DeletePinnedChannelMessages(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deletePinnedChannelMessage(messageId, channelId)
+    override def route: RequestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
+
     override def requiredPermissions: Permission = Permission.ManageMessages
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
@@ -581,15 +701,19 @@ object Requests {
   /**
     * Get all the emijis for this guild.
     */
-  case class ListGuildEmojis(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[Emoji], GuildEmojisUpdateData] {
-    override def route:           RestRoute                           = Routes.listGuildEmojis(guildId)
-    override def paramsEncoder:   Encoder[NotUsed]                    = (_: NotUsed) => Json.obj()
-    override def params:          NotUsed                             = NotUsed
+  case class ListGuildEmojis(guildId: GuildId)
+      extends ComplexRESTRequest[NotUsed, Seq[Emoji], GuildEmojisUpdateData, NotUsed] {
+    override def route:         RequestRoute     = Routes.listGuildEmojis(guildId)
+    override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+    override def params:        NotUsed          = NotUsed
+
     override def responseDecoder: Decoder[Seq[Emoji]]                 = Decoder[Seq[Emoji]]
-    override def handleResponse:  CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
-    override def processResponse(response: Seq[Emoji]): GuildEmojisUpdateData =
+    override def cacheHandler:    CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
+    override def convertToCacheHandlerType(response: Seq[Emoji]): GuildEmojisUpdateData =
       GuildEmojisUpdateData(guildId, response)
-    override def havePermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData:                                                       Boolean         = false
+    override def findData(response: Seq[Emoji])(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
   }
 
   //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
@@ -603,22 +727,28 @@ object Requests {
     * Create a new emoji for a guild.
     */
   case class CreateGuildEmoji(guildId: GuildId, params: CreateGuildEmojiData)
-      extends SimpleRESTRequest[CreateGuildEmojiData, Emoji] {
-    override def route:                                      RestRoute                     = Routes.createGuildEmoji(guildId)
-    override def paramsEncoder:                              Encoder[CreateGuildEmojiData] = deriveEncoder[CreateGuildEmojiData]
-    override def responseDecoder:                            Decoder[Emoji]                = Decoder[Emoji]
-    override def handleResponse:                             CacheHandler[Emoji]           = Handlers.guildEmojiUpdateHandler(guildId)
-    override def requiredPermissions:                        Permission                    = Permission.ManageEmojis
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                       = hasPermissionsGuild(guildId, requiredPermissions)
+      extends NoNiceResponseRequest[CreateGuildEmojiData, Emoji] {
+    override def route:         RequestRoute                  = Routes.createGuildEmoji(guildId)
+    override def paramsEncoder: Encoder[CreateGuildEmojiData] = deriveEncoder[CreateGuildEmojiData]
+
+    override def responseDecoder: Decoder[Emoji]      = Decoder[Emoji]
+    override def cacheHandler:    CacheHandler[Emoji] = Handlers.guildEmojiUpdateHandler(guildId)
+
+    override def requiredPermissions:                        Permission = Permission.ManageEmojis
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData:                                                  Boolean         = false
+    override def findData(response: Emoji)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
   }
 
   /**
     * Get an emoji in a guild by id.
     */
-  case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[Emoji] {
-    override def route:           RestRoute           = Routes.getGuildEmoji(emojiId, guildId)
+  case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsNiceResponseRequest[Emoji] {
+    override def route: RequestRoute = Routes.getGuildEmoji(emojiId, guildId)
+
     override def responseDecoder: Decoder[Emoji]      = Decoder[Emoji]
-    override def handleResponse:  CacheHandler[Emoji] = Handlers.guildEmojiUpdateHandler(guildId)
+    override def cacheHandler:    CacheHandler[Emoji] = Handlers.guildEmojiUpdateHandler(guildId)
   }
 
   //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
@@ -631,20 +761,23 @@ object Requests {
     * Modify an existing emoji.
     */
   case class ModifyGuildEmoji(emojiId: EmojiId, guildId: GuildId, params: ModifyGuildEmojiData)
-      extends SimpleRESTRequest[ModifyGuildEmojiData, Emoji] {
-    override def route:                                      RestRoute                     = Routes.modifyGuildEmoji(emojiId, guildId)
-    override def paramsEncoder:                              Encoder[ModifyGuildEmojiData] = deriveEncoder[ModifyGuildEmojiData]
-    override def responseDecoder:                            Decoder[Emoji]                = Decoder[Emoji]
-    override def handleResponse:                             CacheHandler[Emoji]           = Handlers.guildEmojiUpdateHandler(guildId)
-    override def requiredPermissions:                        Permission                    = Permission.ManageEmojis
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                       = hasPermissionsGuild(guildId, requiredPermissions)
+      extends NoNiceResponseRequest[ModifyGuildEmojiData, Emoji] {
+    override def route:         RequestRoute                  = Routes.modifyGuildEmoji(emojiId, guildId)
+    override def paramsEncoder: Encoder[ModifyGuildEmojiData] = deriveEncoder[ModifyGuildEmojiData]
+
+    override def responseDecoder: Decoder[Emoji]      = Decoder[Emoji]
+    override def cacheHandler:    CacheHandler[Emoji] = Handlers.guildEmojiUpdateHandler(guildId)
+
+    override def requiredPermissions:                        Permission = Permission.ManageEmojis
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Delete an emoji from a guild.
     */
   case class DeleteGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.deleteGuildEmoji(emojiId, guildId)
+    override def route: RequestRoute = Routes.deleteGuildEmoji(emojiId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageEmojis
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -676,23 +809,33 @@ object Requests {
   /**
     * Create a new guild. Bots can only have 10 guilds by default.
     */
-  case class CreateGuild(params: CreateGuildData) extends SimpleRESTRequest[CreateGuildData, RawGuild] {
-    override def route: RestRoute = Routes.createGuild
+  case class CreateGuild(params: CreateGuildData) extends SimpleRESTRequest[CreateGuildData, RawGuild, Guild] {
+    override def route: RequestRoute = Routes.createGuild
     override def paramsEncoder: Encoder[CreateGuildData] = {
       import io.circe.generic.extras.auto._
       deriveEncoder[CreateGuildData]
     }
+
     override def responseDecoder: Decoder[RawGuild]      = Decoder[RawGuild]
-    override def handleResponse:  CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
+    override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
+      current.getGuild(response.id)
   }
 
   /**
     * Get a guild by id.
     */
-  case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild] {
-    override def route:           RestRoute              = Routes.getGuild(guildId)
+  case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild, Guild] {
+    override def route: RequestRoute = Routes.getGuild(guildId)
+
     override def responseDecoder: Decoder[RawGuild]      = Decoder[RawGuild]
-    override def handleResponse:  CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
+    override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
+      current.getGuild(guildId)
   }
 
   /**
@@ -723,30 +866,43 @@ object Requests {
     * Modify an existing guild.
     */
   case class ModifyGuild(guildId: GuildId, params: ModifyGuildData)
-      extends SimpleRESTRequest[ModifyGuildData, RawGuild] {
-    override def route:                                      RestRoute                = Routes.modifyGuild(guildId)
-    override def paramsEncoder:                              Encoder[ModifyGuildData] = deriveEncoder[ModifyGuildData]
-    override def responseDecoder:                            Decoder[RawGuild]        = Decoder[RawGuild]
-    override def handleResponse:                             CacheHandler[RawGuild]   = RawHandlers.rawGuildUpdateHandler
-    override def requiredPermissions:                        Permission               = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
+      extends SimpleRESTRequest[ModifyGuildData, RawGuild, Guild] {
+    override def route:         RequestRoute             = Routes.modifyGuild(guildId)
+    override def paramsEncoder: Encoder[ModifyGuildData] = deriveEncoder[ModifyGuildData]
+
+    override def responseDecoder: Decoder[RawGuild]      = Decoder[RawGuild]
+    override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
+      current.getGuild(guildId)
   }
 
   /**
     * Delete a guild. Must be the owner.
     */
   case class DeleteGuild(guildId: GuildId) extends NoParamsResponseRequest {
-    override def route: RestRoute = Routes.deleteGuild(guildId)
+    override def route: RequestRoute = Routes.deleteGuild(guildId)
   }
 
   /**
     * Get all the channels for a guild.
     */
-  case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawChannel]] {
-    override def route:           RestRoute                = Routes.getGuildChannels(guildId)
+  case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawChannel], Seq[GuildChannel]] {
+    override def route: RequestRoute = Routes.getGuildChannels(guildId)
+
     override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
-    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+    override def cacheHandler: CacheHandler[Seq[RawChannel]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawChannel]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[GuildChannel]] =
+      current.getGuild(guildId).map(_.channels.values.toSeq)
   }
 
   /**
@@ -774,16 +930,22 @@ object Requests {
     * Create a channel in a guild.
     */
   case class CreateGuildChannel(guildId: GuildId, params: CreateGuildChannelData)
-      extends SimpleRESTRequest[CreateGuildChannelData, RawChannel] {
-    override def route: RestRoute = Routes.createGuildChannel(guildId)
+      extends SimpleRESTRequest[CreateGuildChannelData, RawChannel, Channel] {
+    override def route: RequestRoute = Routes.createGuildChannel(guildId)
     override def paramsEncoder: Encoder[CreateGuildChannelData] = {
       import io.circe.generic.extras.auto._
       deriveEncoder[CreateGuildChannelData]
     }
-    override def responseDecoder:                            Decoder[RawChannel]      = Decoder[RawChannel]
-    override def handleResponse:                             CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
-    override def requiredPermissions:                        Permission               = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageChannels
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
+      current.getGuildChannel(guildId, response.id)
   }
 
   /**
@@ -796,27 +958,40 @@ object Requests {
     * Modify the positions of several channels.
     */
   case class ModifyGuildChannelPositions(guildId: GuildId, params: Seq[ModifyGuildChannelPositionsData])
-      extends SimpleRESTRequest[Seq[ModifyGuildChannelPositionsData], Seq[RawChannel]] {
-    override def route: RestRoute = Routes.modifyGuildChannelsPositions(guildId)
+      extends SimpleRESTRequest[Seq[ModifyGuildChannelPositionsData], Seq[RawChannel], Seq[Channel]] {
+    override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
       implicit val enc: Encoder[ModifyGuildChannelPositionsData] = deriveEncoder[ModifyGuildChannelPositionsData]
       Encoder[Seq[ModifyGuildChannelPositionsData]]
     }
+
     override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
-    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+    override def cacheHandler: CacheHandler[Seq[RawChannel]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+
     override def requiredPermissions:                        Permission = Permission.ManageChannels
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawChannel]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Channel]] =
+      current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.channels.get))
   }
 
   trait GuildMemberRequest[Params]
-      extends ComplexRESTRequest[Params, RawGuildMember, GatewayEvent.RawGuildMemberWithGuild] {
+      extends ComplexRESTRequest[Params, RawGuildMember, GatewayEvent.RawGuildMemberWithGuild, GuildMember] {
     def guildId: GuildId
+
     override def responseDecoder: Decoder[RawGuildMember] = Decoder[RawGuildMember]
-    override def handleResponse: CacheHandler[GatewayEvent.RawGuildMemberWithGuild] =
+    override def cacheHandler: CacheHandler[GatewayEvent.RawGuildMemberWithGuild] =
       RawHandlers.rawGuildMemberWithGuildUpdateHandler
-    override def processResponse(response: RawGuildMember): GatewayEvent.RawGuildMemberWithGuild =
+    override def convertToCacheHandlerType(response: RawGuildMember): GatewayEvent.RawGuildMemberWithGuild =
       GatewayEvent.RawGuildMemberWithGuild(guildId, response)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawGuildMember)(current: CacheSnapshot, prev: CacheSnapshot): Option[GuildMember] =
+      current.getGuild(guildId).flatMap(_.members.get(response.user.id))
   }
 
   /**
@@ -825,7 +1000,7 @@ object Requests {
   case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberRequest[NotUsed] {
     override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
     override def params:        NotUsed          = NotUsed
-    override def route:         RestRoute        = Routes.getGuildMember(userId, guildId)
+    override def route:         RequestRoute     = Routes.getGuildMember(userId, guildId)
   }
 
   /**
@@ -840,14 +1015,23 @@ object Requests {
     * Get all the guild members in this guild.
     */
   case class ListGuildMembers(guildId: GuildId, params: ListGuildMembersData)
-      extends ComplexRESTRequest[ListGuildMembersData, Seq[RawGuildMember], GatewayEvent.GuildMemberChunkData] {
-    override def route:           RestRoute                     = Routes.listGuildMembers(guildId)
-    override def paramsEncoder:   Encoder[ListGuildMembersData] = deriveEncoder[ListGuildMembersData]
-    override def responseDecoder: Decoder[Seq[RawGuildMember]]  = Decoder[Seq[RawGuildMember]]
-    override def handleResponse: CacheHandler[GatewayEvent.GuildMemberChunkData] =
+      extends ComplexRESTRequest[ListGuildMembersData, Seq[RawGuildMember], GatewayEvent.GuildMemberChunkData, Seq[
+        GuildMember
+      ]] {
+    override def route:         RequestRoute                  = Routes.listGuildMembers(guildId)
+    override def paramsEncoder: Encoder[ListGuildMembersData] = deriveEncoder[ListGuildMembersData]
+
+    override def responseDecoder: Decoder[Seq[RawGuildMember]] = Decoder[Seq[RawGuildMember]]
+    override def cacheHandler: CacheHandler[GatewayEvent.GuildMemberChunkData] =
       RawHandlers.rawGuildMemberChunkHandler
-    override def processResponse(response: Seq[RawGuildMember]): GatewayEvent.GuildMemberChunkData =
+    override def convertToCacheHandlerType(response: Seq[RawGuildMember]): GatewayEvent.GuildMemberChunkData =
       GatewayEvent.GuildMemberChunkData(guildId, response)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawGuildMember]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[GuildMember]] =
+      current.getGuild(guildId).map(_.members.values.toSeq)
   }
 
   /**
@@ -870,8 +1054,9 @@ object Requests {
     */
   case class AddGuildMember(guildId: GuildId, userId: UserId, params: AddGuildMemberData)
       extends GuildMemberRequest[AddGuildMemberData] {
-    override def route:                RestRoute                   = Routes.addGuildMember(userId, guildId)
-    override def paramsEncoder:        Encoder[AddGuildMemberData] = deriveEncoder[AddGuildMemberData]
+    override def route:         RequestRoute                = Routes.addGuildMember(userId, guildId)
+    override def paramsEncoder: Encoder[AddGuildMemberData] = deriveEncoder[AddGuildMemberData]
+
     override def requiredPermissions: Permission = {
       def ifDefined(opt: Option[_], perm: Permission): Permission = if (opt.isDefined) perm else Permission.None
       Permission(
@@ -905,8 +1090,9 @@ object Requests {
     */
   case class ModifyGuildMember(guildId: GuildId, userId: UserId, params: ModifyGuildMemberData)
       extends NoResponseRequest[ModifyGuildMemberData] {
-    override def route:         RestRoute                      = Routes.modifyGuildMember(userId, guildId)
+    override def route:         RequestRoute                   = Routes.modifyGuildMember(userId, guildId)
     override def paramsEncoder: Encoder[ModifyGuildMemberData] = deriveEncoder[ModifyGuildMemberData]
+
     override def requiredPermissions: Permission = {
       def ifDefined(opt: Option[_], perm: Permission): Permission = if (opt.isDefined) perm else Permission.None
       Permission(
@@ -926,11 +1112,12 @@ object Requests {
     * Modify the clients nickname.
     */
   case class ModifyBotUsersNick(guildId: GuildId, params: ModifyBotUsersNickData)
-      extends SimpleRESTRequest[ModifyBotUsersNickData, String] {
-    override def route:           RestRoute                       = Routes.modifyCurrentNick(guildId)
-    override def paramsEncoder:   Encoder[ModifyBotUsersNickData] = deriveEncoder[ModifyBotUsersNickData]
-    override def responseDecoder: Decoder[String]                 = Decoder[String]
-    override def handleResponse: CacheHandler[String] = new CacheUpdateHandler[String] {
+      extends NoNiceResponseRequest[ModifyBotUsersNickData, String] {
+    override def route:         RequestRoute                    = Routes.modifyCurrentNick(guildId)
+    override def paramsEncoder: Encoder[ModifyBotUsersNickData] = deriveEncoder[ModifyBotUsersNickData]
+
+    override def responseDecoder: Decoder[String] = Decoder[String]
+    override def cacheHandler: CacheHandler[String] = new CacheUpdateHandler[String] {
       override def handle(builder: CacheSnapshotBuilder, obj: String)(implicit log: LoggingAdapter): Unit = {
         for {
           guild     <- builder.getGuild(guildId)
@@ -941,6 +1128,7 @@ object Requests {
         }
       }
     }
+
     override def requiredPermissions:                        Permission = Permission.ChangeNickname
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -949,7 +1137,8 @@ object Requests {
     * Add a role to a guild member.
     */
   case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.addGuildMemberRole(roleId, userId, guildId)
+    override def route: RequestRoute = Routes.addGuildMemberRole(roleId, userId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -958,7 +1147,8 @@ object Requests {
     * Remove a role from a guild member.
     */
   case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.removeGuildMemberRole(roleId, userId, guildId)
+    override def route: RequestRoute = Routes.removeGuildMemberRole(roleId, userId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -967,7 +1157,8 @@ object Requests {
     * Kicks a guild member.
     */
   case class RemoveGuildMember(guildId: GuildId, userId: UserId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.removeGuildMember(userId, guildId)
+    override def route: RequestRoute = Routes.removeGuildMember(userId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.KickMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -975,16 +1166,23 @@ object Requests {
   /**
     * Get all the bans for this guild.
     */
-  case class GetGuildBans(guildId: GuildId) extends ComplexRESTRequest[NotUsed, Seq[RawBan], Seq[(GuildId, RawBan)]] {
-    override def route:           RestRoute            = Routes.getGuildBans(guildId)
+  case class GetGuildBans(guildId: GuildId)
+      extends ComplexRESTRequest[NotUsed, Seq[RawBan], Seq[(GuildId, RawBan)], Seq[Ban]] {
+    override def route:         RequestRoute     = Routes.getGuildBans(guildId)
+    override def params:        NotUsed          = NotUsed
+    override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+
     override def responseDecoder: Decoder[Seq[RawBan]] = Decoder[Seq[RawBan]]
-    override def handleResponse: CacheHandler[Seq[(GuildId, RawBan)]] =
+    override def cacheHandler: CacheHandler[Seq[(GuildId, RawBan)]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawBanUpdateHandler)
-    override def params:                                     NotUsed                = NotUsed
-    override def paramsEncoder:                              Encoder[NotUsed]       = (_: NotUsed) => Json.obj()
-    override def processResponse(response: Seq[RawBan]):     Seq[(GuildId, RawBan)] = response.map(guildId -> _)
-    override def requiredPermissions:                        Permission             = Permission.BanMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                = hasPermissionsGuild(guildId, requiredPermissions)
+    override def convertToCacheHandlerType(response: Seq[RawBan]): Seq[(GuildId, RawBan)] = response.map(guildId -> _)
+
+    override def requiredPermissions:                        Permission = Permission.BanMembers
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: Seq[RawBan])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Ban]] =
+      current.bans.get(guildId).map(_.values.toSeq)
   }
 
   /**
@@ -998,17 +1196,19 @@ object Requests {
     */
   case class CreateGuildBan(guildId: GuildId, userId: UserId, params: CreateGuildBanData)
       extends NoResponseRequest[CreateGuildBanData] {
-    override def route:                                      RestRoute                   = Routes.createGuildMemberBan(userId, guildId)
-    override def paramsEncoder:                              Encoder[CreateGuildBanData] = deriveEncoder[CreateGuildBanData]
-    override def requiredPermissions:                        Permission                  = Permission.BanMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                     = hasPermissionsGuild(guildId, requiredPermissions)
+    override def route:         RequestRoute                = Routes.createGuildMemberBan(userId, guildId)
+    override def paramsEncoder: Encoder[CreateGuildBanData] = deriveEncoder[CreateGuildBanData]
+
+    override def requiredPermissions:                        Permission = Permission.BanMembers
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Unban a user from a guild.
     */
   case class RemoveGuildBan(guildId: GuildId, userId: UserId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.removeGuildMemberBan(userId, guildId)
+    override def route: RequestRoute = Routes.removeGuildMemberBan(userId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.BanMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1017,18 +1217,23 @@ object Requests {
     * Get all the roles in a guild.
     */
   case class GetGuildRoles(guildId: GuildId)
-      extends ComplexRESTRequest[NotUsed, Seq[RawRole], Seq[GatewayEvent.GuildRoleModifyData]] {
-    override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+      extends ComplexRESTRequest[NotUsed, Seq[RawRole], Seq[GatewayEvent.GuildRoleModifyData], Seq[Role]] {
+    override def route:         RequestRoute     = Routes.getGuildRole(guildId)
     override def params:        NotUsed          = NotUsed
+    override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 
-    override def route:           RestRoute             = Routes.getGuildRole(guildId)
     override def responseDecoder: Decoder[Seq[RawRole]] = Decoder[Seq[RawRole]]
-    override def handleResponse: CacheHandler[Seq[GatewayEvent.GuildRoleModifyData]] =
+    override def cacheHandler: CacheHandler[Seq[GatewayEvent.GuildRoleModifyData]] =
       CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
+    override def convertToCacheHandlerType(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
       response.map(GatewayEvent.GuildRoleModifyData(guildId, _))
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: Seq[RawRole])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Role]] =
+      current.getGuild(guildId).map(_.roles.values.toSeq)
   }
 
   /**
@@ -1050,15 +1255,21 @@ object Requests {
     * Create a new role in a guild.
     */
   case class CreateGuildRole(guildId: GuildId, params: CreateGuildRoleData)
-      extends ComplexRESTRequest[CreateGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
-    override def route:           RestRoute                                      = Routes.createGuildRole(guildId)
-    override def paramsEncoder:   Encoder[CreateGuildRoleData]                   = deriveEncoder[CreateGuildRoleData]
+      extends ComplexRESTRequest[CreateGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData, Role] {
+    override def route:         RequestRoute                 = Routes.createGuildRole(guildId)
+    override def paramsEncoder: Encoder[CreateGuildRoleData] = deriveEncoder[CreateGuildRoleData]
+
     override def responseDecoder: Decoder[RawRole]                               = Decoder[RawRole]
-    override def handleResponse:  CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: RawRole): GatewayEvent.GuildRoleModifyData =
+    override def cacheHandler:    CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
+    override def convertToCacheHandlerType(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawRole)(current: CacheSnapshot, prev: CacheSnapshot): Option[Role] =
+      current.getRole(guildId, response.id)
   }
 
   /**
@@ -1071,19 +1282,27 @@ object Requests {
     * Modify the positions of several roles.
     */
   case class ModifyGuildRolePositions(guildId: GuildId, params: Seq[ModifyGuildRolePositionsData])
-      extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[GatewayEvent.GuildRoleModifyData]] {
-    override def route: RestRoute = Routes.modifyGuildRolePositions(guildId)
+      extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[GatewayEvent.GuildRoleModifyData], Seq[
+        Role
+      ]] {
+    override def route: RequestRoute = Routes.modifyGuildRolePositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
       implicit val enc: Encoder[ModifyGuildRolePositionsData] = deriveEncoder[ModifyGuildRolePositionsData]
       Encoder[Seq[ModifyGuildRolePositionsData]]
     }
+
     override def responseDecoder: Decoder[Seq[RawRole]] = Decoder[Seq[RawRole]]
-    override def handleResponse: CacheHandler[Seq[GatewayEvent.GuildRoleModifyData]] =
+    override def cacheHandler: CacheHandler[Seq[GatewayEvent.GuildRoleModifyData]] =
       CacheUpdateHandler.seqHandler(RawHandlers.roleUpdateHandler)
-    override def processResponse(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
+    override def convertToCacheHandlerType(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
       response.map(GatewayEvent.GuildRoleModifyData(guildId, _))
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: Seq[RawRole])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Role]] =
+      current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.roles.get))
   }
 
   /**
@@ -1105,22 +1324,29 @@ object Requests {
     * Modify a role.
     */
   case class ModifyGuildRole(guildId: GuildId, roleId: RoleId, params: ModifyGuildRoleData)
-      extends ComplexRESTRequest[ModifyGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData] {
-    override def route:           RestRoute                                      = Routes.modifyGuildRole(roleId, guildId)
-    override def paramsEncoder:   Encoder[ModifyGuildRoleData]                   = deriveEncoder[ModifyGuildRoleData]
+      extends ComplexRESTRequest[ModifyGuildRoleData, RawRole, GatewayEvent.GuildRoleModifyData, Role] {
+    override def route:         RequestRoute                 = Routes.modifyGuildRole(roleId, guildId)
+    override def paramsEncoder: Encoder[ModifyGuildRoleData] = deriveEncoder[ModifyGuildRoleData]
+
     override def responseDecoder: Decoder[RawRole]                               = Decoder[RawRole]
-    override def handleResponse:  CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def processResponse(response: RawRole): GatewayEvent.GuildRoleModifyData =
+    override def cacheHandler:    CacheHandler[GatewayEvent.GuildRoleModifyData] = RawHandlers.roleUpdateHandler
+    override def convertToCacheHandlerType(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawRole)(current: CacheSnapshot, prev: CacheSnapshot): Option[Role] =
+      current.getRole(guildId, roleId)
   }
 
   /**
     * Delete a role in a guild.
     */
   case class DeleteGuildRole(guildId: GuildId, roleId: RoleId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.deleteGuildRole(roleId, guildId)
+    override def route: RequestRoute = Routes.deleteGuildRole(roleId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1135,17 +1361,19 @@ object Requests {
     */
   case class GuildPruneResponse(pruned: Int)
 
-  trait GuildPrune extends SimpleRESTRequest[GuildPruneData, GuildPruneResponse] {
-    override def paramsEncoder:   Encoder[GuildPruneData]          = deriveEncoder[GuildPruneData]
+  trait GuildPrune extends NoNiceResponseRequest[GuildPruneData, GuildPruneResponse] {
+    override def paramsEncoder: Encoder[GuildPruneData] = deriveEncoder[GuildPruneData]
+
     override def responseDecoder: Decoder[GuildPruneResponse]      = deriveDecoder[GuildPruneResponse]
-    override def handleResponse:  CacheHandler[GuildPruneResponse] = NOOPHandler
+    override def cacheHandler:    CacheHandler[GuildPruneResponse] = NOOPHandler
   }
 
   /**
     * Check how many members would be removed if a prune was started now.
     */
   case class GetGuildPruneCount(guildId: GuildId, params: GuildPruneData) extends GuildPrune {
-    override def route:                                      RestRoute  = Routes.getGuildPruneCount(guildId)
+    override def route: RequestRoute = Routes.getGuildPruneCount(guildId)
+
     override def requiredPermissions:                        Permission = Permission.KickMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1154,7 +1382,8 @@ object Requests {
     * Begin a guild prune.
     */
   case class BeginGuildPrune(guildId: GuildId, params: GuildPruneData) extends GuildPrune {
-    override def route:                                      RestRoute  = Routes.beginGuildPrune(guildId)
+    override def route: RequestRoute = Routes.beginGuildPrune(guildId)
+
     override def requiredPermissions:                        Permission = Permission.KickMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1162,32 +1391,37 @@ object Requests {
   /**
     * Get the voice regions for this guild.
     */
-  case class GetGuildVoiceRegions(guildId: GuildId) extends NoParamsRequest[Seq[VoiceRegion]] {
-    override def route:           RestRoute                      = Routes.getGuildVoiceRegions(guildId)
+  case class GetGuildVoiceRegions(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
+    override def route: RequestRoute = Routes.getGuildVoiceRegions(guildId)
+
     override def responseDecoder: Decoder[Seq[VoiceRegion]]      = Decoder[Seq[VoiceRegion]]
-    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = NOOPHandler
+    override def cacheHandler:    CacheHandler[Seq[VoiceRegion]] = NOOPHandler
   }
 
   /**
     * Get the invites for this guild.
     */
-  case class GetGuildInvites(guildId: GuildId) extends NoParamsRequest[Seq[InviteWithMetadata]] {
-    override def route:                                      RestRoute                             = Routes.getGuildInvites(guildId)
-    override def responseDecoder:                            Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
-    override def handleResponse:                             CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
-    override def requiredPermissions:                        Permission                            = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                               = hasPermissionsGuild(guildId, requiredPermissions)
+  case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
+    override def route: RequestRoute = Routes.getGuildInvites(guildId)
+
+    override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
+    override def cacheHandler:    CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Get the integrations for this guild.
     */
-  case class GetGuildIntegrations(guildId: GuildId) extends NoParamsRequest[Seq[Integration]] {
-    override def route:                                      RestRoute                      = Routes.getGuildIntegrations(guildId)
-    override def responseDecoder:                            Decoder[Seq[Integration]]      = Decoder[Seq[Integration]]
-    override def handleResponse:                             CacheHandler[Seq[Integration]] = NOOPHandler
-    override def requiredPermissions:                        Permission                     = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                        = hasPermissionsGuild(guildId, requiredPermissions)
+  case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Integration]] {
+    override def route: RequestRoute = Routes.getGuildIntegrations(guildId)
+
+    override def responseDecoder: Decoder[Seq[Integration]]      = Decoder[Seq[Integration]]
+    override def cacheHandler:    CacheHandler[Seq[Integration]] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1201,10 +1435,11 @@ object Requests {
     */
   case class CreateGuildIntegration(guildId: GuildId, params: CreateGuildIntegrationData)
       extends NoResponseRequest[CreateGuildIntegrationData] {
-    override def route:                                      RestRoute                           = Routes.createGuildIntegrations(guildId)
-    override def paramsEncoder:                              Encoder[CreateGuildIntegrationData] = deriveEncoder[CreateGuildIntegrationData]
-    override def requiredPermissions:                        Permission                          = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                             = hasPermissionsGuild(guildId, requiredPermissions)
+    override def route:         RequestRoute                        = Routes.createGuildIntegrations(guildId)
+    override def paramsEncoder: Encoder[CreateGuildIntegrationData] = deriveEncoder[CreateGuildIntegrationData]
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1224,17 +1459,19 @@ object Requests {
     */
   case class ModifyGuildIntegration(guildId: GuildId, integrationId: IntegrationId, params: ModifyGuildIntegrationData)
       extends NoResponseRequest[ModifyGuildIntegrationData] {
-    override def route:                                      RestRoute                           = Routes.modifyGuildIntegration(integrationId, guildId)
-    override def paramsEncoder:                              Encoder[ModifyGuildIntegrationData] = deriveEncoder[ModifyGuildIntegrationData]
-    override def requiredPermissions:                        Permission                          = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                             = hasPermissionsGuild(guildId, requiredPermissions)
+    override def route:         RequestRoute                        = Routes.modifyGuildIntegration(integrationId, guildId)
+    override def paramsEncoder: Encoder[ModifyGuildIntegrationData] = deriveEncoder[ModifyGuildIntegrationData]
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Delete an integration.
     */
   case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.deleteGuildIntegration(integrationId, guildId)
+    override def route: RequestRoute = Routes.deleteGuildIntegration(integrationId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1243,7 +1480,8 @@ object Requests {
     * Sync an integration.
     */
   case class SyncGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
-    override def route:                                      RestRoute  = Routes.syncGuildIntegration(integrationId, guildId)
+    override def route: RequestRoute = Routes.syncGuildIntegration(integrationId, guildId)
+
     override def requiredPermissions:                        Permission = Permission.ManageGuild
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
@@ -1251,70 +1489,81 @@ object Requests {
   /**
     * Get the guild embed for a guild.
     */
-  case class GetGuildEmbed(guildId: GuildId) extends NoParamsRequest[GuildEmbed] {
-    override def route:                                      RestRoute                = Routes.getGuildEmbed(guildId)
-    override def responseDecoder:                            Decoder[GuildEmbed]      = Decoder[GuildEmbed]
-    override def handleResponse:                             CacheHandler[GuildEmbed] = NOOPHandler
-    override def requiredPermissions:                        Permission               = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
+  case class GetGuildEmbed(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildEmbed] {
+    override def route: RequestRoute = Routes.getGuildEmbed(guildId)
+
+    override def responseDecoder: Decoder[GuildEmbed]      = Decoder[GuildEmbed]
+    override def cacheHandler:    CacheHandler[GuildEmbed] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Modify a guild embed for a guild.
     */
-  case class ModifyGuildEmbed(guildId: GuildId, params: GuildEmbed) extends SimpleRESTRequest[GuildEmbed, GuildEmbed] {
-    override def route:                                      RestRoute                = Routes.modifyGuildEmbed(guildId)
-    override def paramsEncoder:                              Encoder[GuildEmbed]      = Encoder[GuildEmbed]
-    override def responseDecoder:                            Decoder[GuildEmbed]      = Decoder[GuildEmbed]
-    override def handleResponse:                             CacheHandler[GuildEmbed] = NOOPHandler
-    override def requiredPermissions:                        Permission               = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                  = hasPermissionsGuild(guildId, requiredPermissions)
+  case class ModifyGuildEmbed(guildId: GuildId, params: GuildEmbed)
+      extends NoNiceResponseRequest[GuildEmbed, GuildEmbed] {
+    override def route:         RequestRoute        = Routes.modifyGuildEmbed(guildId)
+    override def paramsEncoder: Encoder[GuildEmbed] = Encoder[GuildEmbed]
+
+    override def responseDecoder: Decoder[GuildEmbed]      = Decoder[GuildEmbed]
+    override def cacheHandler:    CacheHandler[GuildEmbed] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Get an invite for a given invite code
     */
-  case class GetInvite(inviteCode: String) extends NoParamsRequest[Invite] {
-    override def route:           RestRoute            = Routes.getInvite(inviteCode)
+  case class GetInvite(inviteCode: String) extends NoParamsNiceResponseRequest[Invite] {
+    override def route: RequestRoute = Routes.getInvite(inviteCode)
+
     override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:  CacheHandler[Invite] = NOOPHandler
+    override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
   }
 
   /**
     * Delete an invite.
     */
-  case class DeleteInvite(inviteCode: String) extends NoParamsRequest[Invite] {
-    override def route:               RestRoute            = Routes.deleteInvite(inviteCode)
-    override def responseDecoder:     Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:      CacheHandler[Invite] = NOOPHandler
-    override def requiredPermissions: Permission           = Permission.ManageChannels
+  case class DeleteInvite(inviteCode: String) extends NoParamsNiceResponseRequest[Invite] {
+    override def route: RequestRoute = Routes.deleteInvite(inviteCode)
+
+    override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
+    override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageChannels
   }
 
   /**
     * Accept invite.
     */
-  case class AcceptInvite(inviteCode: String) extends NoParamsRequest[Invite] {
-    override def route:           RestRoute            = Routes.acceptInvite(inviteCode)
+  case class AcceptInvite(inviteCode: String) extends NoParamsNiceResponseRequest[Invite] {
+    override def route: RequestRoute = Routes.acceptInvite(inviteCode)
+
     override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
-    override def handleResponse:  CacheHandler[Invite] = NOOPHandler
+    override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
   }
 
   /**
     * Fet the client user.
     */
-  case object GetCurrentUser extends NoParamsRequest[User] {
-    override def route:           RestRoute          = Routes.getCurrentUser
+  case object GetCurrentUser extends NoParamsNiceResponseRequest[User] {
+    override def route: RequestRoute = Routes.getCurrentUser
+
     override def responseDecoder: Decoder[User]      = Decoder[User]
-    override def handleResponse:  CacheHandler[User] = Handlers.botUserUpdateHandler
+    override def cacheHandler:    CacheHandler[User] = Handlers.botUserUpdateHandler
   }
 
   /**
     * Get a user by id.
     */
-  case class GetUser(userId: UserId) extends NoParamsRequest[User] {
-    override def route:           RestRoute          = Routes.getUser(userId)
+  case class GetUser(userId: UserId) extends NoParamsNiceResponseRequest[User] {
+    override def route: RequestRoute = Routes.getUser(userId)
+
     override def responseDecoder: Decoder[User]      = Decoder[User]
-    override def handleResponse:  CacheHandler[User] = Handlers.userUpdateHandler
+    override def cacheHandler:    CacheHandler[User] = Handlers.userUpdateHandler
   }
 
   case class GetUserGuildsGuild(
@@ -1342,28 +1591,35 @@ object Requests {
     * Get the guilds the client user is in.
     */
   case class GetCurrentUserGuilds(params: GetCurrentUserGuildsData)
-      extends SimpleRESTRequest[GetCurrentUserGuildsData, Seq[GetUserGuildsGuild]] {
-    override def route:         RestRoute                         = Routes.getCurrentUserGuilds
+      extends NoNiceResponseRequest[GetCurrentUserGuildsData, Seq[GetUserGuildsGuild]] {
+    override def route:         RequestRoute                      = Routes.getCurrentUserGuilds
     override def paramsEncoder: Encoder[GetCurrentUserGuildsData] = deriveEncoder[GetCurrentUserGuildsData]
+
     override def responseDecoder: Decoder[Seq[GetUserGuildsGuild]] = {
       implicit val dec: Decoder[GetUserGuildsGuild] = deriveDecoder[GetUserGuildsGuild]
       Decoder[Seq[GetUserGuildsGuild]]
     }
-    override def handleResponse: CacheHandler[Seq[GetUserGuildsGuild]] = NOOPHandler
+    override def cacheHandler: CacheHandler[Seq[GetUserGuildsGuild]] = NOOPHandler
   }
 
   /**
     * Leave a guild.
     */
   case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {
-    override def route: RestRoute = Routes.leaveGuild(guildId)
+    override def route: RequestRoute = Routes.leaveGuild(guildId)
   }
 
-  case object GetUserDMs extends NoParamsRequest[Seq[RawChannel]] {
-    override def route:           RestRoute                = Routes.getUserDMs
+  case object GetUserDMs extends NoParamsRequest[Seq[RawChannel], Seq[DMChannel]] {
+    override def route: RequestRoute = Routes.getUserDMs
+
     override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
-    override def handleResponse: CacheHandler[Seq[RawChannel]] =
+    override def cacheHandler: CacheHandler[Seq[RawChannel]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(
+        response: Seq[RawChannel]
+    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[DMChannel]] = Some(current.dmChannels.values.toSeq)
   }
 
   /**
@@ -1374,11 +1630,16 @@ object Requests {
   /**
     * Create a new DM channel.
     */
-  case class CreateDm(params: CreateDMData) extends SimpleRESTRequest[CreateDMData, RawChannel] {
-    override def route:           RestRoute                = Routes.createDM
-    override def paramsEncoder:   Encoder[CreateDMData]    = deriveEncoder[CreateDMData]
+  case class CreateDm(params: CreateDMData) extends SimpleRESTRequest[CreateDMData, RawChannel, DMChannel] {
+    override def route:         RequestRoute          = Routes.createDM
+    override def paramsEncoder: Encoder[CreateDMData] = deriveEncoder[CreateDMData]
+
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
-    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[DMChannel] =
+      current.getDmChannel(response.id)
   }
 
   /**
@@ -1391,32 +1652,41 @@ object Requests {
   /**
     * Create a group DM. By default the client is limited to 10 active group DMs.
     */
-  case class CreateGroupDm(params: CreateGroupDMData) extends SimpleRESTRequest[CreateGroupDMData, RawChannel] {
-    override def route: RestRoute = Routes.createDM
+  case class CreateGroupDm(params: CreateGroupDMData)
+      extends SimpleRESTRequest[CreateGroupDMData, RawChannel, GroupDMChannel] {
+    override def route: RequestRoute = Routes.createDM
     override def paramsEncoder: Encoder[CreateGroupDMData] = (data: CreateGroupDMData) => {
-      Json.obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.asString -> t._2).asJson)
+      Json
+        .obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.asString -> t._2).asJson)
     }
+
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
-    override def handleResponse:  CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+    override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
+
+    override def hasCustomResponseData: Boolean = true
+    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[GroupDMChannel] =
+      current.getGroupDmChannel(response.id)
   }
 
   /**
     * Get a list of connection objects. Requires the `connection` OAuth2 scope.
     */
-  case object GetUserConnections extends NoParamsRequest[Seq[Connection]] {
-    override def route:           RestRoute                     = Routes.getUserConnections
+  case object GetUserConnections extends NoParamsNiceResponseRequest[Seq[Connection]] {
+    override def route: RequestRoute = Routes.getUserConnections
+
     override def responseDecoder: Decoder[Seq[Connection]]      = Decoder[Seq[Connection]]
-    override def handleResponse:  CacheHandler[Seq[Connection]] = NOOPHandler
+    override def cacheHandler:    CacheHandler[Seq[Connection]] = NOOPHandler
   }
 
   //Voice
   /**
     * List all the voice regions that can be used when creating a guild.
     */
-  case object ListVoiceRegions extends NoParamsRequest[Seq[VoiceRegion]] {
-    override def route:           RestRoute                      = Routes.listVoiceRegions
+  case object ListVoiceRegions extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
+    override def route: RequestRoute = Routes.listVoiceRegions
+
     override def responseDecoder: Decoder[Seq[VoiceRegion]]      = Decoder[Seq[VoiceRegion]]
-    override def handleResponse:  CacheHandler[Seq[VoiceRegion]] = NOOPHandler
+    override def cacheHandler:    CacheHandler[Seq[VoiceRegion]] = NOOPHandler
   }
 
   //Webhook
@@ -1432,12 +1702,14 @@ object Requests {
     * Create a new webhook in a channel.
     */
   case class CreateWebhook(channelId: ChannelId, params: CreateWebhookData)
-      extends SimpleRESTRequest[CreateWebhookData, Webhook] {
-    override def route:               RestRoute                  = Routes.createWebhook(channelId)
-    override def paramsEncoder:       Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
-    override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
-    override def requiredPermissions: Permission                 = Permission.ManageWebhooks
+      extends NoNiceResponseRequest[CreateWebhookData, Webhook] {
+    override def route:         RequestRoute               = Routes.createWebhook(channelId)
+    override def paramsEncoder: Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
+
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def cacheHandler:    CacheHandler[Webhook] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -1445,11 +1717,13 @@ object Requests {
   /**
     * Get the webhooks in a channel.
     */
-  case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsRequest[Seq[Webhook]] {
-    override def route:               RestRoute                  = Routes.getChannelWebhooks(channelId)
-    override def responseDecoder:     Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
-    override def handleResponse:      CacheHandler[Seq[Webhook]] = NOOPHandler
-    override def requiredPermissions: Permission                 = Permission.ManageWebhooks
+  case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
+    override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
+
+    override def responseDecoder: Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
+    override def cacheHandler:    CacheHandler[Seq[Webhook]] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
@@ -1457,32 +1731,39 @@ object Requests {
   /**
     * Get the webhooks in a guild.
     */
-  case class GetGuildWebhooks(guildId: GuildId) extends NoParamsRequest[Seq[Webhook]] {
-    override def route:                                      RestRoute                  = Routes.getGuildWebhooks(guildId)
-    override def responseDecoder:                            Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
-    override def handleResponse:                             CacheHandler[Seq[Webhook]] = NOOPHandler
-    override def requiredPermissions:                        Permission                 = Permission.ManageWebhooks
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                    = hasPermissionsGuild(guildId, requiredPermissions)
+  case class GetGuildWebhooks(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
+    override def route: RequestRoute = Routes.getGuildWebhooks(guildId)
+
+    override def responseDecoder: Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
+    override def cacheHandler:    CacheHandler[Seq[Webhook]] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageWebhooks
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
     * Get a webhook by id.
     */
-  case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsRequest[Webhook] {
-    override def route:               RestRoute             = Routes.getWebhook(id)
-    override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
-    override def requiredPermissions: Permission            = Permission.ManageWebhooks //TODO: Correct?
+  case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsNiceResponseRequest[Webhook] {
+    override def route: RequestRoute = Routes.getWebhook(id)
+
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def cacheHandler:    CacheHandler[Webhook] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
 
   /**
     * Get a webhook by id with a token. Doesn't require authentication.
     */
-  case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsRequest[Webhook] {
-    override def route:               RestRoute             = Routes.getWebhookWithToken(token, id)
-    override def responseDecoder:     Decoder[Webhook]      = Decoder[Webhook]
-    override def handleResponse:      CacheHandler[Webhook] = NOOPHandler
-    override def requiredPermissions: Permission            = Permission.ManageWebhooks //TODO: Correct?
+  case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String)
+      extends NoParamsNiceResponseRequest[Webhook] {
+    override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
+
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def cacheHandler:    CacheHandler[Webhook] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
 
   /**
@@ -1500,31 +1781,36 @@ object Requests {
     * Modify a webhook.
     */
   case class ModifyWebhook(id: SnowflakeType[Webhook], params: ModifyWebhookData)
-      extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
-    override def route:               RestRoute                  = Routes.getWebhook(id)
-    override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
-    override def paramsEncoder:       Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
-    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
-    override def requiredPermissions: Permission                 = Permission.ManageWebhooks
+      extends NoNiceResponseRequest[ModifyWebhookData, Webhook] {
+    override def route:         RequestRoute               = Routes.getWebhook(id)
+    override def paramsEncoder: Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+
+    override def responseDecoder: Decoder[Webhook]      = Decoder[Webhook]
+    override def cacheHandler:    CacheHandler[Webhook] = NOOPHandler
+
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
 
   /**
     * Modify a webhook with a token. Doesn't require authentication
     */
   case class ModifyWebhookWithToken(id: SnowflakeType[Webhook], token: String, params: ModifyWebhookData)
-      extends SimpleRESTRequest[ModifyWebhookData, Webhook] {
-    override def route:               RestRoute                  = Routes.getWebhookWithToken(token, id)
-    override def responseDecoder:     Decoder[Webhook]           = Decoder[Webhook]
-    override def paramsEncoder:       Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
-    override def handleResponse:      CacheHandler[Webhook]      = NOOPHandler
-    override def requiredPermissions: Permission                 = Permission.ManageWebhooks
+      extends NoNiceResponseRequest[ModifyWebhookData, Webhook] {
+    override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
+
+    override def paramsEncoder:   Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+    override def responseDecoder: Decoder[Webhook]           = Decoder[Webhook]
+
+    override def cacheHandler:        CacheHandler[Webhook] = NOOPHandler
+    override def requiredPermissions: Permission            = Permission.ManageWebhooks
   }
 
   /**
     * Delete a webhook.
     */
   case class DeleteWebhook(id: SnowflakeType[Webhook]) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteWebhook(id)
+    override def route: RequestRoute = Routes.deleteWebhook(id)
+
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
 
@@ -1532,7 +1818,8 @@ object Requests {
     * Delete a webhook with a token. Doesn't require authentication
     */
   case class DeleteWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsResponseRequest {
-    override def route:               RestRoute  = Routes.deleteWebhookWithToken(token, id)
+    override def route: RequestRoute = Routes.deleteWebhookWithToken(token, id)
+
     override def requiredPermissions: Permission = Permission.ManageWebhooks
   }
 
@@ -1541,5 +1828,116 @@ object Requests {
   case class ExecuteWebhook(id: Snowflake, token: String, params: Nothing) extends SimpleRESTRequest[Nothing, Nothing] {
     override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
   }
- */
+   */
+
+  /**
+    * Base traits for all traits to get images
+    */
+  trait GetImage extends BaseRequest[ByteString] {
+    require(desiredSize >= 16 && desiredSize <= 2048, "Can't request an image smaller than 16 or bigger than 2048")
+    require(isPowerOf2(desiredSize), "Can only request an image sizes that are powers of 2")
+    require(allowedFormats.contains(format), "That format is not allowed for this image")
+
+    /**
+      * The desired size of the image. Must be between 16 and 2048, and must be a power of 2.
+      */
+    def desiredSize: Int
+
+    /**
+      * The format to get the image in.
+      */
+    def format: ImageFormat
+
+    /**
+      * The allowed formats for this image.
+      */
+    def allowedFormats: Seq[ImageFormat]
+
+    override def requestBody: RequestEntity = HttpEntity.Empty
+    override def parseResponse(
+        responseEntity: ResponseEntity
+    )(implicit mat: Materializer, ec: ExecutionContext): Future[ByteString] =
+      Unmarshal(responseEntity).to[ByteString]
+  }
+
+  /**
+    * Get the image of a custom emoji. Always returns a PNG.
+    */
+  case class GetCustomEmojiImage(desiredSize: Int, emojiId: EmojiId) extends GetImage {
+    override def route:          RequestRoute     = Routes.emojiImage(emojiId, format, desiredSize)
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
+    override def format:         ImageFormat      = ImageFormat.PNG
+  }
+
+  /**
+    * Get a guild icon image. Allowed formats are PNG, JPEG and WebP.
+    */
+  case class GetGuildIconImage(desiredSize: Int, format: ImageFormat, guildId: GuildId, iconHash: String)
+      extends GetImage {
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+    override def route:          RequestRoute     = Routes.guildIconImage(guildId, iconHash, format, desiredSize)
+  }
+
+  /**
+    * Get a guild splash image. Allowed formats are PNG, JPEG and WebP.
+    */
+  case class GetGuildSplashImage(desiredSize: Int, format: ImageFormat, guildId: GuildId, splashHash: String)
+      extends GetImage {
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+    override def route:          RequestRoute     = Routes.guildSplashImage(guildId, splashHash, format, desiredSize)
+  }
+
+  /**
+    * Geth the default avatar of a user. Always returns a PNG.
+    */
+  case class GetDefaultUserAvatarImage(desiredSize: Int, discriminator: Int) extends GetImage {
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
+    override def format:         ImageFormat      = ImageFormat.PNG
+    override def route:          RequestRoute     = Routes.defaultUserAvatarImage(discriminator, format, desiredSize)
+  }
+
+  /**
+    * Get the image of a user avatar. Allowed formats are PNG, JPEG, WebP and GIF.
+    */
+  case class GetUserAvatarImage(desiredSize: Int, format: ImageFormat, userId: UserId, avatarHash: String)
+      extends GetImage {
+    override def allowedFormats: Seq[ImageFormat] =
+      Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
+    override def route: RequestRoute = Routes.userAvatarImage(userId, avatarHash, format, desiredSize)
+  }
+
+  /**
+    * Get the icon of an application. Allowed formats are PNG, JPEG and WebP.
+    */
+  case class GetApplicationIconImage(
+      desiredSize: Int,
+      format: ImageFormat,
+      applicationId: RawSnowflake,
+      iconHash: String
+  ) extends GetImage {
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+    override def route:          RequestRoute     = Routes.applicationIconImage(applicationId, iconHash, format, desiredSize)
+  }
+
+  //https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
+  private def isPowerOf2(num: Int): Boolean = (num & (num - 1)) == 0
+
+  sealed trait ImageFormat {
+    def extensions: Seq[String]
+    def extension: String = extensions.head
+  }
+  object ImageFormat {
+    case object JPEG extends ImageFormat {
+      override def extensions: Seq[String] = Seq("jpg", "jpeg")
+    }
+    case object PNG extends ImageFormat {
+      override def extensions: Seq[String] = Seq("png")
+    }
+    case object WebP extends ImageFormat {
+      override def extensions: Seq[String] = Seq("webp")
+    }
+    case object GIF extends ImageFormat {
+      override def extensions: Seq[String] = Seq("gif")
+    }
+  }
 }

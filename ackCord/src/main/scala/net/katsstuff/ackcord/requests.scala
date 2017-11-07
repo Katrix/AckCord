@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord
 
 import akka.actor.ActorRef
+import net.katsstuff.ackcord.http.rest.BaseRequest
 
 /**
   * Sent as a response from a [[Request]].
@@ -60,10 +61,9 @@ case class RequestRatelimited[Context](context: Context) extends RequestFailed[C
   * Sent when a [[Request]] encounters an error.
   * @param e The error that failed this request.
   * @param context The context sent with the request.
-  * @tparam E The error type.
   * @tparam Context The context type.
   */
-case class RequestError[E <: Throwable, Context](e: E, context: Context) extends RequestFailed[Context]
+case class RequestError[Context](e: Throwable, context: Context) extends RequestFailed[Context]
 
 /**
   * Used to wrap a request in such a way that the handler know who to respond to.
@@ -71,13 +71,39 @@ case class RequestError[E <: Throwable, Context](e: E, context: Context) extends
   * @param context The data to send with the request.
   * @param sendResponseTo The actor to send the reply to in the form of [[RequestAnswer]].
   * @param retries The amount of times to retry this request if rate limited.
-  * @tparam RequestTpe The request type.
+  * @tparam Response The expected response type.
   * @tparam Context The context type.
   */
-case class Request[RequestTpe, Context](request: RequestTpe, context: Context, sendResponseTo: ActorRef, retries: Int = 0) {
+case class Request[Response, Context](
+    request: BaseRequest[Response],
+    context: Context,
+    sendResponseTo: ActorRef,
+    retries: Int = 0
+) {
 
   /**
     * Set the amount of times to retry this request if rate limited.
     */
-  def withRetry(num: Int): Request[RequestTpe, Context] = this.copy(retries = num)
+  def withRetry(num: Int): Request[Response, Context] = this.copy(retries = num)
+
+  /**
+    * Send a ratelimited response to the response actor.
+    */
+  def respondRatelimited(implicit sender: ActorRef = ActorRef.noSender): Unit =
+    sendResponseTo ! RequestRatelimited(context)
+
+  /**
+    * Send a error response to the response actor.
+    * @param e The error.
+    */
+  def respondError(e: Throwable)(implicit sender: ActorRef = ActorRef.noSender): Unit =
+    sendResponseTo ! RequestError(e, context)
+
+  /**
+    * Send a response to the response actor.
+    * @param data The data to send with the response.
+    * @tparam Data The data type.
+    */
+  def respond[Data](data: Data)(implicit sender: ActorRef = ActorRef.noSender): Unit =
+    sendResponseTo ! RequestResponse(data, context)
 }

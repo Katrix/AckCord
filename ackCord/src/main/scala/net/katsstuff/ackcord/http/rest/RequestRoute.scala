@@ -31,4 +31,4 @@ import akka.http.scaladsl.model.{HttpMethod, Uri}
   * @param uri The uri to send to
   * @param method The method to use
   */
-case class RestRoute(uri: Uri, method: HttpMethod)
+case class RequestRoute(uri: Uri, method: HttpMethod)

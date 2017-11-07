@@ -27,7 +27,8 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.Uri
 import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.rest.RestRoute
+import net.katsstuff.ackcord.http.rest.RequestRoute
+import net.katsstuff.ackcord.http.rest.Requests.ImageFormat
 
 /**
   * All the routes used by AckCord
@@ -37,6 +38,7 @@ object Routes {
   val discord = "discordapp.com"
 
   val base: Uri = s"https://$discord/api/v${AckCord.DiscordApiVersion}"
+  val cdn:  Uri = s"https://cdn.$discord/"
 
   //WS
   val gateway:    Uri = s"$base/gateway"
@@ -65,173 +67,179 @@ object Routes {
   val guilds: Uri            = s"$base/guilds"
   val guild:  GuildId => Uri = guildId => s"$guilds/$guildId"
 
-  val getGuildAuditLogs: GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/audit-logs", GET))
+  val getGuildAuditLogs: GuildId => RequestRoute = guild.andThen(uri => RequestRoute(s"$uri/audit-logs", GET))
 
   //Channel routes
 
   val channel: ChannelId => Uri = channelId => s"$base/channels/$channelId"
 
-  val getChannel:         ChannelId => RestRoute = channel.andThen(RestRoute(_, GET))
-  val modifyChannelPut:   ChannelId => RestRoute = channel.andThen(RestRoute(_, PUT))
-  val modifyChannelPatch: ChannelId => RestRoute = channel.andThen(RestRoute(_, PATCH))
-  val deleteCloseChannel: ChannelId => RestRoute = channel.andThen(RestRoute(_, DELETE))
+  val getChannel:         ChannelId => RequestRoute = channel.andThen(RequestRoute(_, GET))
+  val modifyChannelPut:   ChannelId => RequestRoute = channel.andThen(RequestRoute(_, PUT))
+  val modifyChannelPatch: ChannelId => RequestRoute = channel.andThen(RequestRoute(_, PATCH))
+  val deleteCloseChannel: ChannelId => RequestRoute = channel.andThen(RequestRoute(_, DELETE))
 
   val channelMessages: ChannelId => Uri = channel.andThen(uri => s"$uri/messages")
   val channelMessage: (MessageId, ChannelId) => Uri =
     Function.uncurried(messageId => channelMessages.andThen(uri => s"$uri/$messageId"))
 
-  val getChannelMessages: ChannelId => RestRoute              = channelMessages.andThen(RestRoute(_, GET))
-  val getChannelMessage:  (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, GET))
-  val createMessage:      ChannelId => RestRoute              = channelMessages.andThen(RestRoute(_, POST))
-  val editMessage:        (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, PATCH))
-  val deleteMessage:      (MessageId, ChannelId) => RestRoute = channelMessage.andThen(RestRoute(_, DELETE))
-  val bulkDeleteMessages: (ChannelId) => RestRoute =
-    channelMessages.andThen(uri => RestRoute(s"$uri/bulk-delete", POST))
+  val getChannelMessages: ChannelId => RequestRoute              = channelMessages.andThen(RequestRoute(_, GET))
+  val getChannelMessage:  (MessageId, ChannelId) => RequestRoute = channelMessage.andThen(RequestRoute(_, GET))
+  val createMessage:      ChannelId => RequestRoute              = channelMessages.andThen(RequestRoute(_, POST))
+  val editMessage:        (MessageId, ChannelId) => RequestRoute = channelMessage.andThen(RequestRoute(_, PATCH))
+  val deleteMessage:      (MessageId, ChannelId) => RequestRoute = channelMessage.andThen(RequestRoute(_, DELETE))
+  val bulkDeleteMessages: (ChannelId) => RequestRoute =
+    channelMessages.andThen(uri => RequestRoute(s"$uri/bulk-delete", POST))
 
   val reactions: (MessageId, ChannelId) => Uri = channelMessage.andThen(uri => s"$uri/reactions")
   val emojiReactions: (Emoji, MessageId, ChannelId) => Uri =
     Function.uncurried(emoji => reactions.andThen(uri => s"$uri/$emoji": Uri).curried)
   val modifyMeReaction: (Emoji, MessageId, ChannelId) => Uri = emojiReactions.andThen(uri => s"$uri/@me")
 
-  val createReaction:    (Emoji, MessageId, ChannelId) => RestRoute = modifyMeReaction.andThen(RestRoute(_, PUT))
-  val deleteOwnReaction: (Emoji, MessageId, ChannelId) => RestRoute = modifyMeReaction.andThen(RestRoute(_, DELETE))
-  val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => RestRoute =
-    Function.uncurried(userId => emojiReactions.andThen(uri => RestRoute(s"$uri/$userId", DELETE)).curried)
+  val createReaction: (Emoji, MessageId, ChannelId) => RequestRoute = modifyMeReaction.andThen(RequestRoute(_, PUT))
+  val deleteOwnReaction: (Emoji, MessageId, ChannelId) => RequestRoute =
+    modifyMeReaction.andThen(RequestRoute(_, DELETE))
+  val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => RequestRoute =
+    Function.uncurried(userId => emojiReactions.andThen(uri => RequestRoute(s"$uri/$userId", DELETE)).curried)
 
-  val getReactions:       (Emoji, MessageId, ChannelId) => RestRoute = emojiReactions.andThen(RestRoute(_, GET))
-  val deleteAllReactions: (MessageId, ChannelId) => RestRoute        = reactions.andThen(RestRoute(_, DELETE))
+  val getReactions:       (Emoji, MessageId, ChannelId) => RequestRoute = emojiReactions.andThen(RequestRoute(_, GET))
+  val deleteAllReactions: (MessageId, ChannelId) => RequestRoute        = reactions.andThen(RequestRoute(_, DELETE))
 
   val channelPermissions: (UserOrRoleId, ChannelId) => Uri =
     Function.uncurried(overwrite => channel.andThen(uri => s"$uri/permissions/$overwrite"))
 
-  val editChannelPermissions: (UserOrRoleId, ChannelId) => RestRoute = channelPermissions.andThen(RestRoute(_, PUT))
-  val deleteChannelPermissions: (UserOrRoleId, ChannelId) => RestRoute =
-    channelPermissions.andThen(RestRoute(_, DELETE))
+  val editChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute =
+    channelPermissions.andThen(RequestRoute(_, PUT))
+  val deleteChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute =
+    channelPermissions.andThen(RequestRoute(_, DELETE))
 
   val channelInvites: ChannelId => Uri = channel.andThen(uri => s"$uri/invites")
 
-  val getChannelInvites:    ChannelId => RestRoute = channelInvites.andThen(RestRoute(_, GET))
-  val createChannelInvites: ChannelId => RestRoute = channelInvites.andThen(RestRoute(_, POST))
+  val getChannelInvites:    ChannelId => RequestRoute = channelInvites.andThen(RequestRoute(_, GET))
+  val createChannelInvites: ChannelId => RequestRoute = channelInvites.andThen(RequestRoute(_, POST))
 
-  val triggerTyping: ChannelId => RestRoute = channel.andThen(uri => RestRoute(s"$uri/typing", POST))
+  val triggerTyping: ChannelId => RequestRoute = channel.andThen(uri => RequestRoute(s"$uri/typing", POST))
 
-  val pinnedMessage:    ChannelId => Uri       = channel.andThen(uri => s"$uri/pins")
-  val getPinnedMessage: ChannelId => RestRoute = pinnedMessage.andThen(RestRoute(_, GET))
+  val pinnedMessage:    ChannelId => Uri          = channel.andThen(uri => s"$uri/pins")
+  val getPinnedMessage: ChannelId => RequestRoute = pinnedMessage.andThen(RequestRoute(_, GET))
 
   val channelPinnedMessage: (MessageId, ChannelId) => Uri =
     Function.uncurried(messageId => pinnedMessage.andThen(uri => s"$uri/$messageId"))
-  val addPinnedChannelMessage: (MessageId, ChannelId) => RestRoute = channelPinnedMessage.andThen(RestRoute(_, PUT))
-  val deletePinnedChannelMessage: (MessageId, ChannelId) => RestRoute =
-    channelPinnedMessage.andThen(RestRoute(_, DELETE))
+  val addPinnedChannelMessage: (MessageId, ChannelId) => RequestRoute =
+    channelPinnedMessage.andThen(RequestRoute(_, PUT))
+  val deletePinnedChannelMessage: (MessageId, ChannelId) => RequestRoute =
+    channelPinnedMessage.andThen(RequestRoute(_, DELETE))
 
   val groupDmRecipient: (UserId, ChannelId) => Uri =
     Function.uncurried(userId => channel.andThen(uri => s"$uri/$userId"))
-  val groupDmAddRecipient:    (UserId, ChannelId) => RestRoute = groupDmRecipient.andThen(RestRoute(_, PUT))
-  val groupDmRemoveRecipient: (UserId, ChannelId) => RestRoute = groupDmRecipient.andThen(RestRoute(_, DELETE))
+  val groupDmAddRecipient:    (UserId, ChannelId) => RequestRoute = groupDmRecipient.andThen(RequestRoute(_, PUT))
+  val groupDmRemoveRecipient: (UserId, ChannelId) => RequestRoute = groupDmRecipient.andThen(RequestRoute(_, DELETE))
 
   //Emoji routes
 
-  val guildEmojis:      GuildId => Uri       = guild.andThen(uri => s"$uri/emojis")
-  val listGuildEmojis:  GuildId => RestRoute = guildEmojis.andThen(RestRoute(_, GET))
-  val createGuildEmoji: GuildId => RestRoute = guildEmojis.andThen(RestRoute(_, POST))
+  val guildEmojis:      GuildId => Uri          = guild.andThen(uri => s"$uri/emojis")
+  val listGuildEmojis:  GuildId => RequestRoute = guildEmojis.andThen(RequestRoute(_, GET))
+  val createGuildEmoji: GuildId => RequestRoute = guildEmojis.andThen(RequestRoute(_, POST))
 
   val guildEmoji: (EmojiId, GuildId) => Uri =
     Function.uncurried(emojiId => guildEmojis.andThen(uri => s"$uri/$emojiId"))
-  val getGuildEmoji:    (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, GET))
-  val modifyGuildEmoji: (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, PATCH))
-  val deleteGuildEmoji: (EmojiId, GuildId) => RestRoute = guildEmoji.andThen(RestRoute(_, DELETE))
+  val getGuildEmoji:    (EmojiId, GuildId) => RequestRoute = guildEmoji.andThen(RequestRoute(_, GET))
+  val modifyGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.andThen(RequestRoute(_, PATCH))
+  val deleteGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.andThen(RequestRoute(_, DELETE))
 
   //Guild routes
-  val createGuild = RestRoute(guilds, POST)
-  val getGuild:    GuildId => RestRoute = guild.andThen(RestRoute(_, GET))
-  val modifyGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, PATCH))
-  val deleteGuild: GuildId => RestRoute = guild.andThen(RestRoute(_, DELETE))
+  val createGuild = RequestRoute(guilds, POST)
+  val getGuild:    GuildId => RequestRoute = guild.andThen(RequestRoute(_, GET))
+  val modifyGuild: GuildId => RequestRoute = guild.andThen(RequestRoute(_, PATCH))
+  val deleteGuild: GuildId => RequestRoute = guild.andThen(RequestRoute(_, DELETE))
 
-  val guildChannels:                GuildId => Uri       = guild.andThen(uri => s"$uri/channels")
-  val getGuildChannels:             GuildId => RestRoute = guildChannels.andThen(RestRoute(_, GET))
-  val createGuildChannel:           GuildId => RestRoute = guildChannels.andThen(RestRoute(_, POST))
-  val modifyGuildChannelsPositions: GuildId => RestRoute = guildChannels.andThen(RestRoute(_, PATCH))
+  val guildChannels:                GuildId => Uri          = guild.andThen(uri => s"$uri/channels")
+  val getGuildChannels:             GuildId => RequestRoute = guildChannels.andThen(RequestRoute(_, GET))
+  val createGuildChannel:           GuildId => RequestRoute = guildChannels.andThen(RequestRoute(_, POST))
+  val modifyGuildChannelsPositions: GuildId => RequestRoute = guildChannels.andThen(RequestRoute(_, PATCH))
 
-  val guildMembers:      GuildId => Uri                 = guild.andThen(uri => s"$uri/members")
-  val guildMember:       (UserId, GuildId) => Uri       = Function.uncurried(userId => guildMembers.andThen(uri => s"$uri/$userId"))
-  val getGuildMember:    (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, GET))
-  val listGuildMembers:  GuildId => RestRoute           = guildMembers.andThen(RestRoute(_, GET))
-  val addGuildMember:    (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, PUT))
-  val modifyGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, PATCH))
-  val removeGuildMember: (UserId, GuildId) => RestRoute = guildMember.andThen(RestRoute(_, DELETE))
-  val modifyCurrentNick: GuildId => RestRoute           = guildMembers.andThen(uri => RestRoute(s"$uri/@me/nick", PATCH))
+  val guildMembers:      GuildId => Uri                    = guild.andThen(uri => s"$uri/members")
+  val guildMember:       (UserId, GuildId) => Uri          = Function.uncurried(userId => guildMembers.andThen(uri => s"$uri/$userId"))
+  val getGuildMember:    (UserId, GuildId) => RequestRoute = guildMember.andThen(RequestRoute(_, GET))
+  val listGuildMembers:  GuildId => RequestRoute           = guildMembers.andThen(RequestRoute(_, GET))
+  val addGuildMember:    (UserId, GuildId) => RequestRoute = guildMember.andThen(RequestRoute(_, PUT))
+  val modifyGuildMember: (UserId, GuildId) => RequestRoute = guildMember.andThen(RequestRoute(_, PATCH))
+  val removeGuildMember: (UserId, GuildId) => RequestRoute = guildMember.andThen(RequestRoute(_, DELETE))
+  val modifyCurrentNick: GuildId => RequestRoute           = guildMembers.andThen(uri => RequestRoute(s"$uri/@me/nick", PATCH))
 
   val guildMemberRole: (RoleId, UserId, GuildId) => Uri =
     Function.uncurried(roleId => guildMember.andThen(uri => s"$uri/roles/$roleId": Uri).curried)
 
-  val addGuildMemberRole:    (RoleId, UserId, GuildId) => RestRoute = guildMemberRole.andThen(RestRoute(_, PUT))
-  val removeGuildMemberRole: (RoleId, UserId, GuildId) => RestRoute = guildMemberRole.andThen(RestRoute(_, DELETE))
+  val addGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute = guildMemberRole.andThen(RequestRoute(_, PUT))
+  val removeGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute =
+    guildMemberRole.andThen(RequestRoute(_, DELETE))
 
   val guildBans: (GuildId) => String = guild.andThen(uri => s"$uri/bans")
   val guildMemberBan: (UserId, GuildId) => String =
     Function.uncurried(userId => guildBans.andThen(uri => s"$uri/$userId"))
 
-  val getGuildBans:         GuildId => RestRoute           = guildBans.andThen(RestRoute(_, GET))
-  val createGuildMemberBan: (UserId, GuildId) => RestRoute = guildMemberBan.andThen(RestRoute(_, PUT))
-  val removeGuildMemberBan: (UserId, GuildId) => RestRoute = guildMemberBan.andThen(RestRoute(_, DELETE))
+  val getGuildBans:         GuildId => RequestRoute           = guildBans.andThen(RequestRoute(_, GET))
+  val createGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.andThen(RequestRoute(_, PUT))
+  val removeGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.andThen(RequestRoute(_, DELETE))
 
-  val guildRoles:               GuildId => Uri       = guild.andThen(uri => s"$uri/roles")
-  val getGuildRole:             GuildId => RestRoute = guildRoles.andThen(RestRoute(_, GET))
-  val createGuildRole:          GuildId => RestRoute = guildRoles.andThen(RestRoute(_, POST))
-  val modifyGuildRolePositions: GuildId => RestRoute = guildRoles.andThen(RestRoute(_, PATCH))
+  val guildRoles:               GuildId => Uri          = guild.andThen(uri => s"$uri/roles")
+  val getGuildRole:             GuildId => RequestRoute = guildRoles.andThen(RequestRoute(_, GET))
+  val createGuildRole:          GuildId => RequestRoute = guildRoles.andThen(RequestRoute(_, POST))
+  val modifyGuildRolePositions: GuildId => RequestRoute = guildRoles.andThen(RequestRoute(_, PATCH))
 
-  val guildRole:       (RoleId, GuildId) => Uri       = Function.uncurried(roleId => guildRoles.andThen(uri => s"$uri/$roleId"))
-  val modifyGuildRole: (RoleId, GuildId) => RestRoute = guildRole.andThen(RestRoute(_, PATCH))
-  val deleteGuildRole: (RoleId, GuildId) => RestRoute = guildRole.andThen(RestRoute(_, DELETE))
+  val guildRole:       (RoleId, GuildId) => Uri          = Function.uncurried(roleId => guildRoles.andThen(uri => s"$uri/$roleId"))
+  val modifyGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.andThen(RequestRoute(_, PATCH))
+  val deleteGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.andThen(RequestRoute(_, DELETE))
 
-  val guildPrune:         GuildId => Uri       = guild.andThen(uri => s"$uri/prune")
-  val getGuildPruneCount: GuildId => RestRoute = guildPrune.andThen(RestRoute(_, GET))
-  val beginGuildPrune:    GuildId => RestRoute = guildPrune.andThen(RestRoute(_, POST))
+  val guildPrune:         GuildId => Uri          = guild.andThen(uri => s"$uri/prune")
+  val getGuildPruneCount: GuildId => RequestRoute = guildPrune.andThen(RequestRoute(_, GET))
+  val beginGuildPrune:    GuildId => RequestRoute = guildPrune.andThen(RequestRoute(_, POST))
 
-  val getGuildVoiceRegions: GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/regions", GET))
-  val getGuildInvites:      GuildId => RestRoute = guild.andThen(uri => RestRoute(s"$uri/invites", GET))
+  val getGuildVoiceRegions: GuildId => RequestRoute = guild.andThen(uri => RequestRoute(s"$uri/regions", GET))
+  val getGuildInvites:      GuildId => RequestRoute = guild.andThen(uri => RequestRoute(s"$uri/invites", GET))
 
-  val guildIntegrations:       GuildId => Uri       = guild.andThen(uri => s"$uri/integrations")
-  val getGuildIntegrations:    GuildId => RestRoute = guildIntegrations.andThen(RestRoute(_, GET))
-  val createGuildIntegrations: GuildId => RestRoute = guildIntegrations.andThen(RestRoute(_, POST))
+  val guildIntegrations:       GuildId => Uri          = guild.andThen(uri => s"$uri/integrations")
+  val getGuildIntegrations:    GuildId => RequestRoute = guildIntegrations.andThen(RequestRoute(_, GET))
+  val createGuildIntegrations: GuildId => RequestRoute = guildIntegrations.andThen(RequestRoute(_, POST))
 
   val guildIntegration: (IntegrationId, GuildId) => Uri =
     Function.uncurried(integrationId => guildIntegrations.andThen(uri => s"$uri/$integrationId"))
-  val modifyGuildIntegration: (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(RestRoute(_, PATCH))
-  val deleteGuildIntegration: (IntegrationId, GuildId) => RestRoute = guildIntegration.andThen(RestRoute(_, DELETE))
-  val syncGuildIntegration: (IntegrationId, GuildId) => RestRoute =
-    guildIntegration.andThen(uri => RestRoute(s"$uri/sync", PATCH))
+  val modifyGuildIntegration: (IntegrationId, GuildId) => RequestRoute =
+    guildIntegration.andThen(RequestRoute(_, PATCH))
+  val deleteGuildIntegration: (IntegrationId, GuildId) => RequestRoute =
+    guildIntegration.andThen(RequestRoute(_, DELETE))
+  val syncGuildIntegration: (IntegrationId, GuildId) => RequestRoute =
+    guildIntegration.andThen(uri => RequestRoute(s"$uri/sync", PATCH))
 
-  val guildEmbed:       GuildId => Uri       = guild.andThen(uri => s"$uri/embed")
-  val getGuildEmbed:    GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, GET))
-  val modifyGuildEmbed: GuildId => RestRoute = guildEmbed.andThen(RestRoute(_, PATCH))
+  val guildEmbed:       GuildId => Uri          = guild.andThen(uri => s"$uri/embed")
+  val getGuildEmbed:    GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, GET))
+  val modifyGuildEmbed: GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, PATCH))
 
   //Invites
-  val invites:      Uri                     = s"$base/invites"
-  val inviteCode:   InviteCode => Uri       = code => s"$invites/$code"
-  val getInvite:    InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, GET))
-  val deleteInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, DELETE))
-  val acceptInvite: InviteCode => RestRoute = inviteCode.andThen(RestRoute(_, POST))
+  val invites:      Uri                        = s"$base/invites"
+  val inviteCode:   InviteCode => Uri          = code => s"$invites/$code"
+  val getInvite:    InviteCode => RequestRoute = inviteCode.andThen(RequestRoute(_, GET))
+  val deleteInvite: InviteCode => RequestRoute = inviteCode.andThen(RequestRoute(_, DELETE))
+  val acceptInvite: InviteCode => RequestRoute = inviteCode.andThen(RequestRoute(_, POST))
 
   //Users
-  val users:          Uri       = s"$base/users"
-  val currentUser:    Uri       = s"$users/@me"
-  val getCurrentUser: RestRoute = RestRoute(currentUser, GET)
+  val users:          Uri          = s"$base/users"
+  val currentUser:    Uri          = s"$users/@me"
+  val getCurrentUser: RequestRoute = RequestRoute(currentUser, GET)
 
-  val getUser:              UserId => RestRoute  = userId => RestRoute(s"$users/$userId", GET)
-  val modifyCurrentUser:    RestRoute            = RestRoute(currentUser, PATCH)
-  val currentUserGuilds:    Uri                  = s"$currentUser/guilds"
-  val getCurrentUserGuilds: RestRoute            = RestRoute(currentUserGuilds, GET)
-  val leaveGuild:           GuildId => RestRoute = guildId => RestRoute(s"$currentUserGuilds/$guildId", DELETE)
+  val getUser:              UserId => RequestRoute  = userId => RequestRoute(s"$users/$userId", GET)
+  val modifyCurrentUser:    RequestRoute            = RequestRoute(currentUser, PATCH)
+  val currentUserGuilds:    Uri                     = s"$currentUser/guilds"
+  val getCurrentUserGuilds: RequestRoute            = RequestRoute(currentUserGuilds, GET)
+  val leaveGuild:           GuildId => RequestRoute = guildId => RequestRoute(s"$currentUserGuilds/$guildId", DELETE)
 
-  val userDMs:    Uri       = s"$currentUser/channels"
-  val getUserDMs: RestRoute = RestRoute(userDMs, GET)
-  val createDM:   RestRoute = RestRoute(userDMs, POST)
+  val userDMs:    Uri          = s"$currentUser/channels"
+  val getUserDMs: RequestRoute = RequestRoute(userDMs, GET)
+  val createDM:   RequestRoute = RequestRoute(userDMs, POST)
 
-  val getUserConnections: RestRoute = RestRoute(s"$currentUser/connections", GET)
+  val getUserConnections: RequestRoute = RequestRoute(s"$currentUser/connections", GET)
 
   //Voice
-  val listVoiceRegions = RestRoute(s"$base/voice/regions", GET)
+  val listVoiceRegions = RequestRoute(s"$base/voice/regions", GET)
 
   //WebHook
   val webhook: SnowflakeType[Webhook] => Uri = id => s"$base/webhooks/$id"
@@ -239,18 +247,36 @@ object Routes {
     Function.uncurried(token => webhook.andThen(uri => s"$uri/$token"))
   val channelWebhooks: ChannelId => String = channel.andThen(uri => s"$uri/webhooks")
 
-  val createWebhook:          ChannelId => RestRoute              = channelWebhooks.andThen(RestRoute(_, POST))
-  val getChannelWebhooks:     ChannelId => RestRoute              = channelWebhooks.andThen(RestRoute(_, GET))
-  val getGuildWebhooks:       GuildId => RestRoute                = guild.andThen(uri => RestRoute(s"$uri/webhooks", GET))
-  val getWebhook:             SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, GET))
-  val getWebhookWithToken:    (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, GET))
-  val modifyWebhook:          SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, PATCH))
-  val modifyWebhookWithToken: (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, PATCH))
-  val deleteWebhook:          SnowflakeType[Webhook] => RestRoute           = webhook.andThen(RestRoute(_, DELETE))
-  val deleteWebhookWithToken: (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, DELETE))
-  val executeWebhook:         (String, SnowflakeType[Webhook]) => RestRoute = webhookWithToken.andThen(RestRoute(_, POST))
-  val executeSlackWebhook: (String, SnowflakeType[Webhook]) => RestRoute =
-    webhookWithToken.andThen(uri => RestRoute(s"$uri/slack", POST))
-  val executeGithubWebhook: (String, SnowflakeType[Webhook]) => RestRoute =
-    webhookWithToken.andThen(uri => RestRoute(s"$uri/github", POST))
+  val createWebhook:      ChannelId => RequestRoute              = channelWebhooks.andThen(RequestRoute(_, POST))
+  val getChannelWebhooks: ChannelId => RequestRoute              = channelWebhooks.andThen(RequestRoute(_, GET))
+  val getGuildWebhooks:   GuildId => RequestRoute                = guild.andThen(uri => RequestRoute(s"$uri/webhooks", GET))
+  val getWebhook:         SnowflakeType[Webhook] => RequestRoute = webhook.andThen(RequestRoute(_, GET))
+  val getWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute =
+    webhookWithToken.andThen(RequestRoute(_, GET))
+  val modifyWebhook: SnowflakeType[Webhook] => RequestRoute = webhook.andThen(RequestRoute(_, PATCH))
+  val modifyWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute =
+    webhookWithToken.andThen(RequestRoute(_, PATCH))
+  val deleteWebhook: SnowflakeType[Webhook] => RequestRoute = webhook.andThen(RequestRoute(_, DELETE))
+  val deleteWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute =
+    webhookWithToken.andThen(RequestRoute(_, DELETE))
+  val executeWebhook: (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.andThen(RequestRoute(_, POST))
+  val executeSlackWebhook: (String, SnowflakeType[Webhook]) => RequestRoute =
+    webhookWithToken.andThen(uri => RequestRoute(s"$uri/slack", POST))
+  val executeGithubWebhook: (String, SnowflakeType[Webhook]) => RequestRoute =
+    webhookWithToken.andThen(uri => RequestRoute(s"$uri/github", POST))
+
+  //Images
+  val emojiImage: (EmojiId, ImageFormat, Int) => RequestRoute = (emojiId, format, size) =>
+    RequestRoute(s"$cdn/emojis/$emojiId.${format.extension}?size=$size", GET)
+  val guildIconImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
+    RequestRoute(s"$cdn/icons/$guildId/$hash.${format.extension}?size=$size", GET)
+  val guildSplashImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
+    RequestRoute(s"$cdn/splashes/$guildId/$hash.${format.extension}?size=$size", GET)
+  val defaultUserAvatarImage: (Int, ImageFormat, Int) => RequestRoute = (discriminator, format, size) =>
+    RequestRoute(s"$cdn/embed/avatars/${discriminator % 5}.${format.extension}?size=$size", GET)
+  val userAvatarImage: (UserId, String, ImageFormat, Int) => RequestRoute = (userId, hash, format, size) =>
+    RequestRoute(s"$cdn/avatars/$userId/$hash.${format.extension}?size=$size", GET)
+  val applicationIconImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
+    (applicationId, hash, format, size) =>
+      RequestRoute(s"$cdn/app-icons/$applicationId/$hash.${format.extension}?size=$size", GET)
 }
