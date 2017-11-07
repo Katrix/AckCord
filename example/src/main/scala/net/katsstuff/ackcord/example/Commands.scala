@@ -81,7 +81,7 @@ object SendFileCommand {
 
 class InfoChannelCommand(val client: ClientActor) extends ParsedCommandActor[GuildChannel] {
 
-  val infoResponseHandler: ActorRef = context.actorOf(InfoCommandHandler.props(client))
+  def infoResponseHandler: ActorRef = context.actorOf(InfoCommandHandler.props(client))
 
   override def handleCommand(msg: Message, channel: GuildChannel, remaining: List[String])(
       implicit c: CacheSnapshot
@@ -128,7 +128,11 @@ class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
       }
 
       log.info(res.toString)
-    case RequestFailed(e, _) => throw e
+      context.stop(self)
+    case RequestFailed(_, GetChannelInfo(guildId, _, senderChannelId, c)) =>
+      implicit val cache: CacheSnapshot = c
+      senderChannelId.tResolve(guildId).foreach(client ! _.sendMessage("Error encountered"))
+      context.stop(self)
   }
 }
 object InfoCommandHandler {

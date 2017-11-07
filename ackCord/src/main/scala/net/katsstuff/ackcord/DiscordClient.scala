@@ -58,18 +58,16 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
     with Timers {
   private implicit val system: ActorSystem = context.system
 
-  private var cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
+  private val cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
-  private var restHandler =
+  private val restHandler =
     context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
 
   context.watch(gatewayHandler)
-  context.watch(restHandler)
-  context.watch(cache)
 
   //If we fail more than 5 time in 3 minutes we want to wait to restart the gateway handler
   override def supervisorStrategy: SupervisorStrategy =
@@ -78,6 +76,8 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
+      context.watch(cache)
+      context.watch(restHandler)
       context.stop(cache)
       restHandler.forward(DiscordClient.ShutdownClient)
       gatewayHandler.forward(AbstractWsHandler.Logout)
@@ -88,20 +88,13 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
-      if (shutdownCount == 2) {
+      if (shutdownCount == 3) {
         context.stop(self)
       }
     case Terminated(ref) =>
       if (ref == gatewayHandler) {
         log.info("Gateway handler shut down. Restarting in 5 minutes")
         timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
-      } else if (ref == restHandler) {
-        log.info("REST handler shut down. Restarting")
-        restHandler =
-          context.actorOf(RESTHandler.cacheProps(RESTHandler.botCredentials(settings.token), cache), "RestHandler")
-      } else if (ref == cache) {
-        log.info("REST handler shut down. Restarting")
-        cache = context.actorOf(SnowflakeCache.props(eventStream), "RestHandler")
       }
     case CreateGateway =>
       gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")

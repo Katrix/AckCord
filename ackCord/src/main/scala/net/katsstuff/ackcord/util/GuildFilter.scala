@@ -51,18 +51,17 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   * Global events like [[APIMessage.Ready]], [[APIMessage.Resumed]] and
   * [[APIMessage.UserUpdate]] are sent to matter what.
   *
-  * It also respects [[DiscordClient.ShutdownClient]].
-  * It sends the shutdown to the handler, and the hander has stopped, it stops
-  * itself. The handler will not receive any further
-  * events once a shutdown has been started.
+  * It also respects [[DiscordClient.ShutdownClient]]. If it receives the
+  * shutdown message, it will send it to the handler too.
+  *
+  * If the handler ever stops, then this will stop too.
   *
   * @param guildId The only guildID to allow through.
   * @param handlerProps A props for the handler.
   */
 class GuildFilter(guildId: GuildId, handlerProps: Props) extends Actor with ActorLogging {
-  private var handler        = context.actorOf(handlerProps, "FilterHandler")
-  var channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
-  var isShuttingDown = false
+  private val handler = context.actorOf(handlerProps, "FilterHandler")
+  val channelToGuild  = mutable.HashMap.empty[ChannelId, GuildId]
   context.watch(handler)
 
   override def receive: Receive = {
@@ -99,23 +98,14 @@ class GuildFilter(guildId: GuildId, handlerProps: Props) extends Actor with Acto
       msg.guildId.foreach(sendToGuild(_, msg))
     case msg: GatewayEvent.ChannelEvent[_] =>
       channelToGuild.get(msg.channelId).foreach(sendToGuild(_, msg))
-    case DiscordClient.ShutdownClient =>
-      isShuttingDown = true
-      handler ! ShutdownClient
+    case DiscordClient.ShutdownClient => handler ! ShutdownClient
     case Terminated(_) =>
-      val level = if (isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
-      log.log(level, "Actor for guild {} shut down", guildId)
-
-      if (isShuttingDown) {
-        context.stop(self)
-      } else {
-        handler = context.actorOf(handlerProps)
-      }
+      log.info("Actor {} for guild {} stopped. Stopping filter.", handler, guildId)
+      context.stop(self)
   }
 
-  def sendToGuild(guildId: GuildId, msg: Any): Unit = if (!isShuttingDown && guildId == this.guildId) handler ! msg
+  def sendToGuild(guildId: GuildId, msg: Any): Unit = if (guildId == this.guildId) handler ! msg
 }
 object GuildFilter {
-  def props(guildId: GuildId, props: Props): Props =
-    Props(new GuildFilter(guildId, props))
+  def props(guildId: GuildId, props: Props): Props = Props(new GuildFilter(guildId, props))
 }
