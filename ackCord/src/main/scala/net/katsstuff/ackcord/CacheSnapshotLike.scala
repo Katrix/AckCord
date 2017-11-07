@@ -148,6 +148,11 @@ trait CacheSnapshotLike {
   }
 
   /**
+    * Get a role by a guildId and a roleID.
+    */
+  def getRole(guildId: GuildId, roleId: RoleId): Option[Role] = getGuild(guildId).flatMap(_.roles.get(roleId))
+
+  /**
     * Get an emoji by id without knowing the guild it belongs to
     */
   def getEmoji(id: EmojiId): Option[Emoji] = guilds.values.collectFirst {

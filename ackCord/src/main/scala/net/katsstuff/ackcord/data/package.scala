@@ -166,7 +166,7 @@ package object data {
       * Resolve the role this id represents relative to a guild id.
       */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
-      c.getGuild(guildId).flatMap(_.roles.get(roleId))
+      c.getRole(guildId, roleId)
   }
 
   sealed trait UserOrRoleTag

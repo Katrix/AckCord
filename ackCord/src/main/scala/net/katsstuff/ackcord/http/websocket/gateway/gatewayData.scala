@@ -554,7 +554,7 @@ object GatewayEvent {
       current
         .getGuild(data.guildId)
         .map { g =>
-          APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole), data.user, data.nick, current, prev)
+          APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole(guildId, _)), data.user, data.nick, current, prev)
         }
     override def guildId: GuildId = data.guildId
   }
