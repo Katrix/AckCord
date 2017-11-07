@@ -24,11 +24,12 @@
 package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Status}
-import net.katsstuff.ackcord.{DiscordClient, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.{DiscordClient, RequestError, RequestFailed, RequestRatelimited, RequestResponse}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.http.RatelimitException
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.RequestFailedResponder
 import shapeless.{TypeCase, Typeable}
@@ -72,10 +73,12 @@ trait BaseCommandActor extends Actor {
   */
 trait CommandActor extends BaseCommandActor {
   override def receive: Receive = {
-    case Command(msg, args, c)        => handleCommand(msg, args)(c)
-    case Status.Failure(e)            => handleFailure(e)
-    case RequestResponse(data, ctx)   => handleResponse(data, ctx)
-    case RequestFailed(e, ctx)        => handleFailedResponse(e, ctx)
+    case Command(msg, args, c)      => handleCommand(msg, args)(c)
+    case Status.Failure(e)          => handleFailure(e)
+    case RequestResponse(data, ctx) => handleResponse(data, ctx)
+    case RequestError(e, ctx)       => handleFailedResponse(e, ctx)
+    case RequestRatelimited(ctx) =>
+      handleFailedResponse(new RatelimitException, ctx)
     case DiscordClient.ShutdownClient => context.stop(self)
   }
 
@@ -106,10 +109,12 @@ abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends Bas
   override def receive: Receive = {
     case ParsedCommand(msg, IsA(args), remaining, c) =>
       handleCommand(msg, args, remaining)(c)
-    case ParseError(msg, e, c)        => handleParseError(msg, e)(c)
-    case Status.Failure(e)            => handleFailure(e)
-    case RequestResponse(data, ctx)   => handleResponse(data, ctx)
-    case RequestFailed(e, ctx)        => handleFailedResponse(e, ctx)
+    case ParseError(msg, e, c)      => handleParseError(msg, e)(c)
+    case Status.Failure(e)          => handleFailure(e)
+    case RequestResponse(data, ctx) => handleResponse(data, ctx)
+    case RequestError(e, ctx)       => handleFailedResponse(e, ctx)
+    case RequestRatelimited(ctx) =>
+      handleFailedResponse(new RatelimitException, ctx)
     case DiscordClient.ShutdownClient => context.stop(self)
   }
 

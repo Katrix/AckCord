@@ -28,7 +28,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Timers}
+import akka.actor.SupervisorStrategy.{Escalate, Stop}
+import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
@@ -41,7 +42,7 @@ import io.circe.Json
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.rest.RESTHandler.{HandleRateLimitAndRetry, ProcessedRequest, RateLimitStop, RemoveRateLimit, UpdateRateLimit}
 import net.katsstuff.ackcord.util.AckCordSettings
-import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.{AckCord, DiscordClient, MiscHandlerEvent, Request, RequestError, RequestRatelimited, RequestResponse}
 
 /**
   * An actor responsible for sending REST requests to Discord. You are free to
@@ -67,12 +68,10 @@ class RESTHandler(
   implicit val system: ActorSystem = context.system
   import context.dispatcher
 
-  val responder: ActorRef = context.actorOf(RESTResponder.props(self, responseProcessor, responseFunc), "RESTResponder")
-
   private val requestQueue = {
     val poolClientFlow = Http().cachedHostConnectionPoolHttps[ProcessedRequest[_, _, _]](Routes.discord)
     val responderSink = Sink.actorRefWithAck[(Try[HttpResponse], ProcessedRequest[_, _, _])](
-      ref = responder,
+      ref = context.actorOf(RESTResponder.props(self, responseProcessor, responseFunc), "RESTResponder"),
       onInitMessage = RESTResponder.InitSink,
       ackMessage = RESTResponder.AckSink,
       onCompleteMessage = RESTResponder.CompletedSink,
@@ -91,6 +90,14 @@ class RESTHandler(
   private val auth      = Authorization(token)
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AckCord, ${AckCord.Version})")
 
+  //Like the default strategy except that we escalate if stuff goes wrong
+  override def supervisorStrategy: SupervisorStrategy = OneForOneStrategy() {
+    case _: ActorInitializationException ⇒ Stop
+    case _: ActorKilledException         ⇒ Stop
+    case _: DeathPactException           ⇒ Stop
+    case _: Exception                    ⇒ Escalate
+  }
+
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       requestQueue.watchCompletion().foreach { _ =>
@@ -106,7 +113,7 @@ class RESTHandler(
     case UpdateRateLimit(uri, headers)              => updateRateLimit(uri, headers)
     case HandleRateLimitAndRetry(headers, retryObj) => handleRatelimitAndRetry(headers, retryObj)
     //The d and h here makes IntelliJ happy. They serves no other purpose
-    case Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo)
+    case Request(request: ComplexRESTRequest[_, d, h], contextual, sendResponseTo, retries)
         if !rateLimits.contains(request.route.uri) =>
       val route       = request.route
       val httpRequest = HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody)
@@ -115,12 +122,16 @@ class RESTHandler(
         log.debug("Sending request {} to {} with method {}", request.jsonParams.noSpaces, route.uri, route.method)
       }
 
-      queueRequest(httpRequest, request, contextual, sendResponseTo)
+      queueRequest(httpRequest, request, contextual, sendResponseTo, retries)
     case Status.Failure(e) => throw e
     //If we get here then the request is rate limited
-    case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], _, _) =>
-      val duration = rateLimits.get(request.route.uri).map(_._1).getOrElse(0)
-      timers.startSingleTimer(fullRequest, fullRequest, duration.millis)
+    case fullRequest @ Request(request: ComplexRESTRequest[_, _, _], ctx, sendResponseTo, retries) =>
+      if(retries > 0) {
+        val duration = rateLimits.get(request.route.uri).map(_._1).getOrElse(0)
+        val newRequest = fullRequest.copy(retries = fullRequest.retries - 1)
+        timers.startSingleTimer(newRequest, newRequest, duration.millis)
+      }
+      else sendResponseTo ! RequestRatelimited(ctx)
   }
 
   def onGlobalRateLimit: Receive = {
@@ -149,7 +160,7 @@ class RESTHandler(
     }
   }
 
-  def handleRatelimitAndRetry[A](headers: Seq[HttpHeader], retryMsg: A): Unit = {
+  def handleRatelimitAndRetry(headers: Seq[HttpHeader], retryMsg: Request[_, _]): Unit = {
     if (headers.exists(header => header.is("X-RateLimit-Global") && header.value == "true")) {
       log.error("Hit global rate limit")
       headers
@@ -161,10 +172,11 @@ class RESTHandler(
           timers.startSingleTimer("RemoveGlobalRateLimit", RateLimitStop, duration.millis)
         case None => log.error("No retry time for global rate limit")
       }
-    } else {
+    } else if(retryMsg.retries > 0) {
+      val newRequest = retryMsg.copy(retries = retryMsg.retries - 1)
       headers
         .find(_.is("Retry-After"))
-        .foreach(time => timers.startSingleTimer(retryMsg, retryMsg, time.value.toLong.millis))
+        .foreach(time => timers.startSingleTimer(newRequest, newRequest, time.value.toLong.millis))
     }
   }
 
@@ -172,22 +184,23 @@ class RESTHandler(
       httpRequest: HttpRequest,
       restRequest: ComplexRESTRequest[_, _, _],
       context: Any,
-      sendTo: ActorRef
+      sendTo: ActorRef,
+      retries: Int
   ): Unit = {
     requestQueue
-      .offer(httpRequest -> ProcessedRequest(restRequest, context, sendTo))
+      .offer(httpRequest -> ProcessedRequest(restRequest, context, sendTo, retries))
       .foreach {
         case QueueOfferResult.Enqueued => //All is fine
         case QueueOfferResult.Dropped =>
           val e = new RuntimeException("Queue overflowed.")
-          sendTo ! RequestFailed(e, context)
+          sendTo ! RequestError(e, context)
           throw e
         case QueueOfferResult.Failure(e) =>
-          sendTo ! RequestFailed(e, context)
+          sendTo ! RequestError(e, context)
           throw e
         case QueueOfferResult.QueueClosed =>
           val e = new RuntimeException("Queue was closed (pool shut down) while running the request.")
-          sendTo ! RequestFailed(e, context)
+          sendTo ! RequestError(e, context)
           throw e
       }
   }
@@ -209,11 +222,12 @@ object RESTHandler {
   private[rest] case class ProcessedRequest[Response, HandlerType, Context](
       restRequest: ComplexRESTRequest[_, Response, HandlerType],
       context: Context,
-      sendTo: ActorRef
+      sendTo: ActorRef,
+      retries: Int
   )
 
   private[rest] case class UpdateRateLimit(uri: Uri, headers: Seq[HttpHeader])
-  private[rest] case class HandleRateLimitAndRetry[A](headers: Seq[HttpHeader], retryObj: A)
+  private[rest] case class HandleRateLimitAndRetry(headers: Seq[HttpHeader], retryObj: Request[_, _])
 
   /**
     * Create credentials used by bots
@@ -253,12 +267,12 @@ class RESTResponder(
       parent ! HandleRateLimitAndRetry(headers, Request(req.restRequest, req.context, req.sendTo))
       entity.discardBytes()
       sender() ! AckSink
-    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
+    case (Success(HttpResponse(StatusCodes.NoContent, headers, entity, _)), ProcessedRequest(request, ctx, sendTo, _)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       entity.discardBytes()
       sender() ! AckSink
       sendTo ! RequestResponse((), ctx)
-    case (Success(HttpResponse(responseCode, headers, entity, _)), ProcessedRequest(request, ctx, sendTo)) =>
+    case (Success(HttpResponse(responseCode, headers, entity, _)), ProcessedRequest(request, ctx, sendTo, _)) =>
       parent ! UpdateRateLimit(request.route.uri, headers)
       if (responseCode.isSuccess()) {
         Unmarshal(entity)
@@ -275,31 +289,31 @@ class RESTResponder(
               sendTo ! RequestResponse(data, ctx)
             case Failure(e) =>
               parent ! Status.Failure(e)
-              sendTo ! RequestFailed(e, ctx)
+              sendTo ! RequestError(e, ctx)
           }
       } else {
         log.warning("Failed response code {} {} for {}", responseCode.intValue, responseCode.reason, request)
         entity.discardBytes()
-        sendTo ! RequestFailed(
+        sendTo ! RequestError(
           new IllegalStateException(s"Failed response code ${responseCode.intValue} ${responseCode.reason}"),
           ctx
         )
       }
       sender() ! AckSink
-    case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
+    case (Success(HttpResponse(e @ ServerError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo, _)) =>
       log.error("Server error {} {}", intValue, e.reason)
       entity.toStrict(1.seconds).onComplete {
         case Success(ent) => log.error(ent.toString())
         case Failure(_)   => entity.discardBytes()
       }
       sender() ! AckSink
-      sendTo ! RequestFailed(new IllegalStateException(s"Server error: $intValue"), ctx)
-    case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo)) =>
+      sendTo ! RequestError(new IllegalStateException(s"Server error: $intValue"), ctx)
+    case (Success(HttpResponse(e @ ClientError(intValue), _, entity, _)), ProcessedRequest(_, ctx, sendTo, _)) =>
       log.error("Client error {}: {}", intValue, e.reason)
       entity.discardBytes()
-      sendTo ! RequestFailed(new IllegalStateException(s"Client error: $intValue"), ctx)
-    case (Failure(e), ProcessedRequest(_, ctx, sendTo)) =>
-      sendTo ! RequestFailed(e, ctx)
+      sendTo ! RequestError(new IllegalStateException(s"Client error: $intValue"), ctx)
+    case (Failure(e), ProcessedRequest(_, ctx, sendTo, _)) =>
+      sendTo ! RequestError(e, ctx)
       throw e
   }
 }

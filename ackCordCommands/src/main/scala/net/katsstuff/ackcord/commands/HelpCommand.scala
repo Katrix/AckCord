@@ -30,11 +30,12 @@ import scala.collection.mutable
 import akka.NotUsed
 import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.{Request, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.{Request, RequestError, RequestFailed, RequestRatelimited, RequestResponse}
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCommand.{RegisterCommand, UnregisterCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.http.RatelimitException
 import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
@@ -108,7 +109,9 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     case UnregisterCommand(cat, name) =>
       commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
     case RequestResponse(data, _) => handleResponse(data)
-    case RequestFailed(e, _)      => handleFailedResponse(e)
+    case RequestError(e, _)       => handleFailedResponse(e)
+    case RequestRatelimited(ctx) =>
+      handleFailedResponse(new RatelimitException)
   }
 
   /**

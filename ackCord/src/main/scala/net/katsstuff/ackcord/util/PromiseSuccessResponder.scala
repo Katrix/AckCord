@@ -37,8 +37,10 @@ class PromiseSuccessResponder extends Actor {
     case RequestResponse(data, ctx: Promise[Any @unchecked]) =>
       ctx.success(true)
       context.stop(self)
-    case RequestFailed(_, ctx: Promise[Any @unchecked]) =>
-      ctx.success(false)
+    case failed: RequestFailed[_] =>
+      failed.context match {
+        case ctx: Promise[Any @unchecked] => ctx.success(false)
+      }
       context.stop(self)
     case anwser: RequestAnswer[_] => context.stop(self)
   }

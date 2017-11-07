@@ -26,7 +26,8 @@ package net.katsstuff.ackcord.util
 import scala.concurrent.Promise
 
 import akka.actor.{Actor, Props}
-import net.katsstuff.ackcord.{RequestAnswer, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.http.RatelimitException
+import net.katsstuff.ackcord.{RequestAnswer, RequestError, RequestRatelimited, RequestResponse}
 
 /**
   * If you set the context of a request to be a promise, then this actor
@@ -37,7 +38,10 @@ class PromiseResponder extends Actor {
     case RequestResponse(data, ctx: Promise[Any @unchecked]) =>
       ctx.success(data)
       context.stop(self)
-    case RequestFailed(e, ctx: Promise[_]) =>
+    case RequestRatelimited(ctx: Promise[_]) =>
+      ctx.failure(new RatelimitException)
+      context.stop(self)
+    case RequestError(e, ctx: Promise[_]) =>
       ctx.failure(e)
       context.stop(self)
     case anwser: RequestAnswer[_] => context.stop(self)

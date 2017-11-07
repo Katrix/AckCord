@@ -84,7 +84,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]                              => gatewayHandler.forward(request)
-    case request @ Request(_: ComplexRESTRequest[_, _, _], _, _) => restHandler.forward(request)
+    case request @ Request(_: ComplexRESTRequest[_, _, _], _, _, _) => restHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)

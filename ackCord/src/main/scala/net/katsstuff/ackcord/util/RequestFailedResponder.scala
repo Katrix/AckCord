@@ -24,7 +24,8 @@
 package net.katsstuff.ackcord.util
 
 import akka.actor.{Actor, ActorRef, Props, Status}
-import net.katsstuff.ackcord.{RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.http.RatelimitException
+import net.katsstuff.ackcord.{RequestError, RequestFailed, RequestRatelimited, RequestResponse}
 
 /**
   * A simple actor that will send a [[Status.Failure]] to [[respondTo]]
@@ -34,7 +35,10 @@ import net.katsstuff.ackcord.{RequestFailed, RequestResponse}
 class RequestFailedResponder(respondTo: ActorRef) extends Actor {
   override def receive: Receive = {
     case RequestResponse(_, _) => context.stop(self)
-    case RequestFailed(e, _) =>
+    case RequestRatelimited(_) =>
+      respondTo ! Status.Failure(new RatelimitException)
+      context.stop(self)
+    case RequestError(e, _) =>
       respondTo ! Status.Failure(e)
       context.stop(self)
   }
