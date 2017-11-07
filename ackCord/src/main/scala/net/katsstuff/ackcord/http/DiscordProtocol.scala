@@ -33,8 +33,6 @@ import io.circe.generic.extras.auto._
 import io.circe.syntax._
 import io.circe._
 import net.katsstuff.ackcord.data._
-import shapeless._
-import shapeless.tag._
 
 trait DiscordProtocol {
 
@@ -74,13 +72,22 @@ trait DiscordProtocol {
     Decoder[String].emap(PresenceStatus.forName(_).toRight("Not a presence status"))
 
   implicit val auditLogEventDecoder: Decoder[AuditLogEvent] =
-    Decoder[Int].emap(i => AuditLogEvent.fromId(i).toRight(s"No valid event for id $i"))
+    Decoder[Int].emap(AuditLogEvent.fromId(_).toRight(s"No valid event type"))
 
   implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
   implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] = Decoder[String].emap(s => Right(SnowflakeType[A](s)))
 
   implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
   implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))
+
+  implicit val permissionEncoder: Encoder[Permission] = Encoder[Long].contramap(identity)
+  implicit val permissionDecoder: Decoder[Permission] = Decoder[Long].emap(i => Right(Permission.fromLong(i)))
+
+  implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
+  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] = Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
+
+  implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
+  implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
 
   implicit val rawChannelEncoder: Encoder[RawChannel] = deriveEncoder
   implicit val rawChannelDecoder: Decoder[RawChannel] = deriveDecoder
@@ -90,9 +97,6 @@ trait DiscordProtocol {
 
   implicit val unavailableGuildEncoder: Encoder[UnavailableGuild] = deriveEncoder
   implicit val unavailableGuildDecoder: Decoder[UnavailableGuild] = deriveDecoder
-
-  implicit val permissionEncoder: Encoder[Permission] = Encoder[Long].contramap(identity)
-  implicit val permissionDecoder: Decoder[Permission] = Decoder[Long].emap(i => Right(Permission.fromLong(i)))
 
   implicit val permissionValueEncoder: Encoder[PermissionOverwrite] = deriveEncoder
   implicit val permissionValueDecoder: Decoder[PermissionOverwrite] = deriveDecoder
@@ -186,10 +190,6 @@ trait DiscordProtocol {
       )
   }
 
-  implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
-  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] =
-    Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
-
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder
 
@@ -216,9 +216,6 @@ trait DiscordProtocol {
 
   implicit val guildEmojiEncoder: Encoder[Emoji] = deriveEncoder
   implicit val guildEmojiDecoder: Decoder[Emoji] = deriveDecoder
-
-  implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
-  implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
 
   implicit val connectionEncoder: Encoder[Connection] = deriveEncoder
   implicit val connectionDecoder: Decoder[Connection] = deriveDecoder

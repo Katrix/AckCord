@@ -23,17 +23,13 @@
  */
 package net.katsstuff.ackcord.example
 
-import java.util.Locale
-
-import scala.collection.mutable
 import scala.util.{Failure, Success}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandRouter.TerminatedCommand
-import net.katsstuff.ackcord.commands.{CmdCategory, CommandMeta, CommandRouter}
+import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
 import net.katsstuff.ackcord.example.music.{MusicHandler, NextCommand, PauseCommand, QueueCommand, StopCommand}
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, ClientSettings, DiscordClient}
