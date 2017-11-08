@@ -30,13 +30,21 @@ import scala.collection.mutable
 import akka.NotUsed
 import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.{Request, RequestError, RequestFailed, RequestRatelimited, RequestResponse}
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
 import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCommand.{RegisterCommand, UnregisterCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.http.RatelimitException
-import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.http.requests.Requests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.http.requests.{
+  DroppedRequestException,
+  RatelimitException,
+  RequestDropped,
+  RequestError,
+  RequestRatelimited,
+  RequestResponse,
+  RequestResponseNoData,
+  RequestWrapper
+}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -74,7 +82,7 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
           val command = lowercaseCommand.substring(cat.prefix.length)
           descMap.get(command) match {
             case Some(desc) =>
-              Request(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
+              RequestWrapper(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
             case None => channel.sendMessage("Unknown command")
           }
         }
@@ -88,7 +96,7 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
     case ParsedCommand(msg, Some(PageArgs(page)), _, c) =>
       implicit val cache: CacheSnapshot = c
       if (page > 0) {
-        client ! Request(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
+        client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
       } else {
         msg.tChannel.foreach { channel =>
           client ! channel.sendMessage(s"Invalid page $page")
@@ -96,7 +104,7 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
       }
     case ParsedCommand(msg, None, _, c) =>
       implicit val cache: CacheSnapshot = c
-      client ! Request(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
+      client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
     case ParseError(msg, e, c) =>
       implicit val cache: CacheSnapshot = c
       msg.tChannel.foreach { channel =>
@@ -108,10 +116,12 @@ abstract class HelpCommand(initialCommands: Map[CmdCategory, Map[String, Command
         .put(name.toLowerCase(Locale.ROOT), desc)
     case UnregisterCommand(cat, name) =>
       commands.get(cat).foreach(_.remove(name.toLowerCase(Locale.ROOT)))
-    case RequestResponse(data, _) => handleResponse(data)
-    case RequestError(e, _)       => handleFailedResponse(e)
-    case RequestRatelimited(ctx) =>
-      handleFailedResponse(new RatelimitException)
+    case RequestResponse(data, _, _, _, _) => handleResponse(data)
+    case RequestResponseNoData(_, _, _, _) => handleResponse(NotUsed)
+    case RequestError(_, e, _)             => handleFailedResponse(e)
+    case RequestRatelimited(_, tilReset, global, wrapper) =>
+      handleFailedResponse(new RatelimitException(global, tilReset, wrapper.request.route.uri))
+    case RequestDropped(_, wrapper) => handleFailedResponse(new DroppedRequestException(wrapper.request.route.uri))
   }
 
   /**

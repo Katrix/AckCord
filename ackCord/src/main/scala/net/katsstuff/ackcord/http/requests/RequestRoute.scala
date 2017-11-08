@@ -21,30 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.util
+package net.katsstuff.ackcord.http.requests
 
-import scala.concurrent.Promise
-
-import akka.actor.{Actor, Props}
-import net.katsstuff.ackcord.{RequestAnswer, RequestFailed, RequestResponse}
+import akka.http.scaladsl.model.{HttpMethod, Uri}
 
 /**
-  * Will complete a promise in the context of a request with a boolean,
-  * signaling if the request failed or succeeded.
+  * Used by requests for specifying an uri to send to,
+  * together with a method to use.
+  * @param uri The uri to send to
+  * @param method The method to use
   */
-class PromiseSuccessResponder extends Actor {
-  override def receive: Receive = {
-    case RequestResponse(data, ctx: Promise[Any @unchecked]) =>
-      ctx.success(true)
-      context.stop(self)
-    case failed: RequestFailed[_] =>
-      failed.context match {
-        case ctx: Promise[Any @unchecked] => ctx.success(false)
-      }
-      context.stop(self)
-    case anwser: RequestAnswer[_] => context.stop(self)
-  }
-}
-object PromiseSuccessResponder {
-  def props: Props = Props(new PromiseSuccessResponder)
-}
+case class RequestRoute(uri: Uri, method: HttpMethod)

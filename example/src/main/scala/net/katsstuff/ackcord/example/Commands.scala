@@ -31,14 +31,14 @@ import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
-import net.katsstuff.ackcord.http.rest.Requests
-import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
+import net.katsstuff.ackcord.http.requests.{RequestFailed, RequestResponse, RequestWrapper, Requests}
+import net.katsstuff.ackcord.http.requests.Requests.CreateMessageData
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{DiscordClient, Request, RequestError, RequestFailed, RequestResponse}
+import net.katsstuff.ackcord.DiscordClient
 
 class PingCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
-    client ! Request(Requests.CreateMessage(msg.channelId, CreateMessageData("Pong")), NotUsed, self)
+    client ! RequestWrapper(Requests.CreateMessage(msg.channelId, CreateMessageData("Pong")), NotUsed, self)
 }
 object PingCommand {
   def props(client: ClientActor): Props = Props(new PingCommand(client))
@@ -115,7 +115,7 @@ object InfoChannelCommand {
 
 class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
   override def receive: Receive = {
-    case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c)) =>
+    case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _) =>
       implicit val cache: CacheSnapshot = c
       requestedChannelId.guildResolve(guildId).map(_.name) match {
         case Some(name) =>
@@ -129,7 +129,7 @@ class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
 
       log.info(res.toString)
       context.stop(self)
-    case error :RequestFailed[_] =>
+    case error :RequestFailed[_, _] =>
       val GetChannelInfo(guildId, _, senderChannelId, c) = error.context
       implicit val cache: CacheSnapshot = c
       senderChannelId.tResolve(guildId).foreach(client ! _.sendMessage("Error encountered"))

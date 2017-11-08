@@ -29,11 +29,12 @@ import scala.util.control.NonFatal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props, Status}
+import akka.event.Logging
 import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.stream.Materializer
+import akka.stream.{Attributes, Materializer}
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import io.circe
@@ -70,12 +71,12 @@ class GatewayHandler(
     val jsonFlow = Flow[Message]
       .collect {
         case t: TextMessage   => t.textStream.fold("")(_ + _)
-        case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).via(Deflate.decoderFlow).map(_.utf8String)
+        case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
       }
       .flatMapConcat(identity)
 
     val withLogging = if (AckCordSettings().LogReceivedWs) {
-      jsonFlow.log("Received payload")
+      jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else jsonFlow
 
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))

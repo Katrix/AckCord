@@ -28,7 +28,7 @@ import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs
 import net.katsstuff.ackcord.commands.{CmdCategory, CommandDescription, CommandMeta, HelpCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.http.rest.Requests.CreateMessageData
+import net.katsstuff.ackcord.http.requests.Requests.CreateMessageData
 import net.katsstuff.ackcord.util.MessageParser
 
 class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]], client: ClientActor)

@@ -21,13 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.http.rest
+package net.katsstuff.ackcord.http.requests
 
 import java.nio.file.{Files, Path}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 import akka.NotUsed
+import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import akka.http.scaladsl.model.Multipart.FormData
@@ -44,12 +45,13 @@ import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEmojisUpdateData
 import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
+import net.katsstuff.ackcord.util.AckCordSettings
 
 /**
   * Base super simple trait for all HTTP requests in AckCord.
   * @tparam Response The parsed response type.
   */
-trait BaseRequest[Response] {
+trait BaseRequest[+Response] {
 
   /**
     * The router for this request.
@@ -65,7 +67,9 @@ trait BaseRequest[Response] {
     * Parses the response from this request.
     * @param responseEntity The response entity.
     */
-  def parseResponse(responseEntity: ResponseEntity)(implicit mat: Materializer, ec: ExecutionContext): Future[Response]
+  def parseResponse(
+      responseEntity: ResponseEntity
+  )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Response]
 }
 
 /**
@@ -81,10 +85,22 @@ trait BaseRESTRequest[RawResponse, HandlerType, Response] extends BaseRequest[Ra
 
   override def parseResponse(
       responseEntity: ResponseEntity
-  )(implicit mat: Materializer, ec: ExecutionContext): Future[RawResponse] =
+  )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[RawResponse] = {
     Unmarshal(responseEntity)
       .to[Json]
-      .flatMap(json => Future.fromTry(json.as(responseDecoder).toTry))
+      .flatMap { json =>
+        if (AckCordSettings().LogReceivedREST) {
+          system.log.debug(
+            "Received REST response from {} with method {} and content {}",
+            route.uri,
+            route.method.value,
+            json.noSpaces
+          )
+        }
+
+        Future.fromTry(json.as(responseDecoder).toTry)
+      }
+  }
 
   /**
     * A decoder to decode the response.
@@ -1856,7 +1872,7 @@ object Requests {
     override def requestBody: RequestEntity = HttpEntity.Empty
     override def parseResponse(
         responseEntity: ResponseEntity
-    )(implicit mat: Materializer, ec: ExecutionContext): Future[ByteString] =
+    )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[ByteString] =
       Unmarshal(responseEntity).to[ByteString]
   }
 

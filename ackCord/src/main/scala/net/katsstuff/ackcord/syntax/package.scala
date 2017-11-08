@@ -28,7 +28,8 @@ import java.nio.file.Path
 import akka.NotUsed
 import akka.actor.ActorRef
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.rest.Requests._
+import net.katsstuff.ackcord.http.requests.RequestWrapper
+import net.katsstuff.ackcord.http.requests.Requests._
 import shapeless.tag.@@
 
 package object syntax {
@@ -39,7 +40,7 @@ package object syntax {
       * Delete or close this channel.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteCloseChannel(channel.id), context, sendResponseTo)
+      RequestWrapper(DeleteCloseChannel(channel.id), context, sendResponseTo)
 
     /**
       * If this is a text channel, convert it to one.
@@ -107,7 +108,7 @@ package object syntax {
         embed: Option[OutgoingEmbed] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed)), NotUsed, sendResponseTo)
+      RequestWrapper(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed)), NotUsed, sendResponseTo)
 
     /**
       * Fetch messages around a message id.
@@ -116,7 +117,7 @@ package object syntax {
       */
     def fetchMessagesAround[Context](around: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(
+    ) = RequestWrapper(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(Some(around), None, None, limit)),
       context,
       sendResponseTo
@@ -129,7 +130,7 @@ package object syntax {
       */
     def fetchMessagesBefore[Context](before: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(
+    ) = RequestWrapper(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(None, Some(before), None, limit)),
       context,
       sendResponseTo
@@ -142,7 +143,7 @@ package object syntax {
       */
     def fetchMessagesAfter[Context](after: MessageId, limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(
+    ) = RequestWrapper(
       GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, Some(after), limit)),
       context,
       sendResponseTo
@@ -155,19 +156,19 @@ package object syntax {
     def fetchMessages[Context](limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
-      Request(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context, sendResponseTo)
+      RequestWrapper(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context, sendResponseTo)
 
     /**
       * Fetch a message in this channel.
       */
     def fetchMessage[Context](id: MessageId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetChannelMessage(tChannel.id, id), context, sendResponseTo)
+      RequestWrapper(GetChannelMessage(tChannel.id, id), context, sendResponseTo)
 
     /**
       * Triggers typing in a channel.
       */
     def triggerTyping[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(TriggerTypingIndicator(tChannel.id), context, sendResponseTo)
+      RequestWrapper(TriggerTypingIndicator(tChannel.id), context, sendResponseTo)
   }
 
   implicit class GuildChannelSyntax(private val channel: GuildChannel) extends AnyVal {
@@ -203,7 +204,7 @@ package object syntax {
         allow: Permission,
         deny: Permission,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       EditChannelPermissions(channel.id, roleId, EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Role)),
       context,
       sendResponseTo
@@ -220,7 +221,7 @@ package object syntax {
         allow: Permission,
         deny: Permission,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       EditChannelPermissions(
         channel.id,
         userId,
@@ -236,7 +237,7 @@ package object syntax {
       */
     def deleteChannelPermissionsUser[Context](userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(DeleteChannelPermission(channel.id, userId), context, sendResponseTo)
+    ) = RequestWrapper(DeleteChannelPermission(channel.id, userId), context, sendResponseTo)
 
     /**
       * Delete the permission overwrites for a role
@@ -244,7 +245,7 @@ package object syntax {
       */
     def deleteChannelPermissionsRole[Context](roleId: RoleId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
+    ) = RequestWrapper(DeleteChannelPermission(channel.id, roleId), context, sendResponseTo)
   }
 
   implicit class TGuildChannelSyntax(private val channel: TGuildChannel) extends AnyVal {
@@ -266,7 +267,7 @@ package object syntax {
         permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyChannel(
         channel.id,
         ModifyChannelData(
@@ -288,7 +289,7 @@ package object syntax {
       * Fetch all the invites created for this channel.
       */
     def fetchInvites[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetChannelInvites(channel.id), context, sendResponseTo)
+      RequestWrapper(GetChannelInvites(channel.id), context, sendResponseTo)
 
     /**
       * Create an invite for this channel.
@@ -304,7 +305,7 @@ package object syntax {
         temporary: Boolean = false,
         unique: Boolean = false,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateChannelInvite(channel.id, CreateChannelInviteData(maxAge, maxUses, temporary, unique)),
       context,
       sendResponseTo
@@ -315,13 +316,13 @@ package object syntax {
       * @param ids The messages to delete.
       */
     def bulkDelete[Context](ids: Seq[MessageId], context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids)), context, sendResponseTo)
+      RequestWrapper(BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids)), context, sendResponseTo)
 
     /**
       * Fetch all the pinned messages in this channel.
       */
     def fetchPinnedMessages[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetPinnedMessages(channel.id), context, sendResponseTo)
+      RequestWrapper(GetPinnedMessages(channel.id), context, sendResponseTo)
 
     /**
       * Create a webhook for this channel.
@@ -331,13 +332,13 @@ package object syntax {
     def createWebhook[Context](name: String, avatar: ImageData, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
-      Request(CreateWebhook(channel.id, CreateWebhookData(name, avatar)), context, sendResponseTo)
+      RequestWrapper(CreateWebhook(channel.id, CreateWebhookData(name, avatar)), context, sendResponseTo)
 
     /**
       * Fetch the webhooks for this channel.
       */
     def fetchWebhooks[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetChannelWebhooks(channel.id), context, sendResponseTo)
+      RequestWrapper(GetChannelWebhooks(channel.id), context, sendResponseTo)
   }
 
   implicit class VGuildChannelSyntax(private val channel: VGuildChannel) extends AnyVal {
@@ -359,7 +360,7 @@ package object syntax {
         permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = channel.permissionOverwrites,
         category: Option[ChannelId] = channel.parentId,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyChannel(
         channel.id,
         ModifyChannelData(
@@ -530,7 +531,7 @@ package object syntax {
         position: Int = category.position,
         permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite] = category.permissionOverwrites,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyChannel(
         category.id,
         ModifyChannelData(
@@ -577,7 +578,7 @@ package object syntax {
         ownerId: Option[UserId] = None,
         splash: Option[ImageData] = None,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyGuild(
         guild.id,
         ModifyGuildData(
@@ -600,7 +601,7 @@ package object syntax {
       * Fetch all channels in this guild.
       */
     def fetchAllChannels[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildChannels(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildChannels(guild.id), context, sendResponseTo)
 
     /**
       * Create a text channel in this guild.
@@ -615,7 +616,7 @@ package object syntax {
         category: Option[ChannelId],
         nsfw: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateGuildChannel(
         guild.id,
         CreateGuildChannelData(name, Some(ChannelType.GuildText), None, None, permissionOverwrites, category, nsfw)
@@ -641,7 +642,7 @@ package object syntax {
         category: Option[ChannelId],
         nsfw: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateGuildChannel(
         guild.id,
         CreateGuildChannelData(
@@ -669,7 +670,7 @@ package object syntax {
         permissionOverwrites: Option[Seq[PermissionOverwrite]],
         nsfw: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateGuildChannel(
         guild.id,
         CreateGuildChannelData(name, Some(ChannelType.GuildCategory), None, None, permissionOverwrites, None, nsfw)
@@ -684,7 +685,7 @@ package object syntax {
       */
     def modifyChannelPositions[Context](newPositions: SnowflakeMap[Channel, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(
+    ) = RequestWrapper(
       ModifyGuildChannelPositions(guild.id, newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq),
       context,
       sendResponseTo
@@ -694,20 +695,20 @@ package object syntax {
       * Fetch a guild member by id.
       */
     def fetchGuildMember[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildMember(guild.id, userId), context, sendResponseTo)
+      RequestWrapper(GetGuildMember(guild.id, userId), context, sendResponseTo)
 
     /**
       * Fetch all the bans for this guild.
       */
     def fetchBans[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildBans(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildBans(guild.id), context, sendResponseTo)
 
     /**
       * Unban a user.
       * @param userId The user to unban.
       */
     def unban[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(RemoveGuildBan(guild.id, userId), context, sendResponseTo)
+      RequestWrapper(RemoveGuildBan(guild.id, userId), context, sendResponseTo)
 
     /**
       * Get all the guild members in this guild.
@@ -719,7 +720,7 @@ package object syntax {
         after: Option[UserId] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(ListGuildMembers(guild.id, ListGuildMembersData(limit, after)), context, sendResponseTo)
+      RequestWrapper(ListGuildMembers(guild.id, ListGuildMembersData(limit, after)), context, sendResponseTo)
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
@@ -737,7 +738,7 @@ package object syntax {
         mute: Option[Boolean],
         deaf: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       AddGuildMember(guild.id, userId, AddGuildMemberData(accessToken, nick, roles, mute, deaf)),
       context,
       sendResponseTo
@@ -747,7 +748,7 @@ package object syntax {
       * Fetch all the roles in this guild.
       */
     def fetchRoles[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildRoles(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildRoles(guild.id), context, sendResponseTo)
 
     /**
       * Create a new role.
@@ -764,7 +765,7 @@ package object syntax {
         hoist: Option[Boolean],
         mentionable: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable)),
       context,
       sendResponseTo
@@ -776,7 +777,7 @@ package object syntax {
       */
     def modifyRolePositions[Context](newPositions: SnowflakeMap[Role, Int], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(
+    ) = RequestWrapper(
       ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq),
       context,
       sendResponseTo
@@ -787,32 +788,32 @@ package object syntax {
       * @param days The number of days to prune for.
       */
     def fetchPruneCount[Context](days: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildPruneCount(guild.id, GuildPruneData(days)), context, sendResponseTo)
+      RequestWrapper(GetGuildPruneCount(guild.id, GuildPruneData(days)), context, sendResponseTo)
 
     /**
       * Begin a prune.
       * @param days The number of days to prune for.
       */
     def beginPrune[Context](days: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(BeginGuildPrune(guild.id, GuildPruneData(days)), context, sendResponseTo)
+      RequestWrapper(BeginGuildPrune(guild.id, GuildPruneData(days)), context, sendResponseTo)
 
     /**
       * Fetch the voice regions for this guild.
       */
     def fetchVoiceRegions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildVoiceRegions(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildVoiceRegions(guild.id), context, sendResponseTo)
 
     /**
       * Fetch the invites for this guild.
       */
     def fetchInvites[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildInvites(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildInvites(guild.id), context, sendResponseTo)
 
     /**
       * Fetch the integrations for this guild.
       */
     def fetchIntegrations[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildIntegrations(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildIntegrations(guild.id), context, sendResponseTo)
 
     /**
       * Attach an integration to this guild.
@@ -821,7 +822,7 @@ package object syntax {
       */
     def createIntegration[Context](tpe: String, id: IntegrationId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id)), context, sendResponseTo)
+    ) = RequestWrapper(CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id)), context, sendResponseTo)
 
     /**
       * Modify an existing integration for this guild.
@@ -837,7 +838,7 @@ package object syntax {
         expireGracePeriod: Int,
         enableEmoticons: Boolean,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyGuildIntegration(
         guild.id,
         id,
@@ -852,26 +853,26 @@ package object syntax {
       * @param id The integration id.
       */
     def removeIntegration[Context](id: IntegrationId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteGuildIntegration(guild.id, id), context, sendResponseTo)
+      RequestWrapper(DeleteGuildIntegration(guild.id, id), context, sendResponseTo)
 
     /**
       * Sync an integration
       * @param id The integration id.
       */
     def syncIntegration[Context](id: IntegrationId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(SyncGuildIntegration(guild.id, id), context, sendResponseTo)
+      RequestWrapper(SyncGuildIntegration(guild.id, id), context, sendResponseTo)
 
     /**
       * Fetch the guild embed for this guild.
       */
     def fetchEmbed[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildEmbed(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildEmbed(guild.id), context, sendResponseTo)
 
     /**
       * Modify a guild embed for this guild.
       */
     def modifyEmbed[Context](embed: GuildEmbed, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(ModifyGuildEmbed(guild.id, embed), context, sendResponseTo)
+      RequestWrapper(ModifyGuildEmbed(guild.id, embed), context, sendResponseTo)
 
     /**
       * Get all the text channels in the guild.
@@ -996,14 +997,14 @@ package object syntax {
       * Fetch all the emojis for this guild.
       */
     def fetchEmojis[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(ListGuildEmojis(guild.id), context, sendResponseTo)
+      RequestWrapper(ListGuildEmojis(guild.id), context, sendResponseTo)
 
     /**
       * Fetch a single emoji from this guild.
       * @param emojiId The id of the emoji to fetch.
       */
     def fetchSingleEmoji[Context](emojiId: EmojiId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildEmoji(emojiId, guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildEmoji(emojiId, guild.id), context, sendResponseTo)
 
     /**
       * Create a new emoji in this guild.
@@ -1012,7 +1013,7 @@ package object syntax {
       */
     def createEmoji[Context](name: String, image: ImageData, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image)), context, sendResponseTo)
+    ) = RequestWrapper(CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image)), context, sendResponseTo)
 
     /**
       * Get a voice state for a user.
@@ -1024,31 +1025,31 @@ package object syntax {
       * @param nick The new nickname
       */
     def setNick[Context](nick: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick)), context, sendResponseTo)
+      RequestWrapper(ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick)), context, sendResponseTo)
 
     /**
       * Fetch an audit log for a this guild.
       */
     def fetchAuditLog[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildAuditLog(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildAuditLog(guild.id), context, sendResponseTo)
 
     /**
       * Fetch the webhooks in this guild.
       */
     def fetchWebhooks[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuildWebhooks(guild.id), context, sendResponseTo)
+      RequestWrapper(GetGuildWebhooks(guild.id), context, sendResponseTo)
 
     /**
       * Leave this guild.
       */
     def leaveGuild[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(LeaveGuild(guild.id), context, sendResponseTo)
+      RequestWrapper(LeaveGuild(guild.id), context, sendResponseTo)
 
     /**
       * Delete this guild. Must be the owner.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteGuild(guild.id), context, sendResponseTo)
+      RequestWrapper(DeleteGuild(guild.id), context, sendResponseTo)
   }
 
   implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {
@@ -1080,7 +1081,7 @@ package object syntax {
         deaf: Option[Boolean],
         channelId: Option[ChannelId] = None,
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyGuildMember(
         guildMember.guildId,
         guildMember.userId,
@@ -1095,20 +1096,20 @@ package object syntax {
       * @param roleId The role to add
       */
     def addRole[Context](roleId: RoleId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(AddGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
+      RequestWrapper(AddGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
 
     /**
       * Remove a role from this member.
       * @param roleId The role to remove
       */
     def removeRole[Context](roleId: RoleId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(RemoveGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
+      RequestWrapper(RemoveGuildMemberRole(guildMember.guildId, guildMember.userId, roleId), context, sendResponseTo)
 
     /**
       * Kick this guild member.
       */
     def kick[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(RemoveGuildMember(guildMember.guildId, guildMember.userId), context, sendResponseTo)
+      RequestWrapper(RemoveGuildMember(guildMember.guildId, guildMember.userId), context, sendResponseTo)
 
     /**
       * Ban this guild member.
@@ -1116,7 +1117,7 @@ package object syntax {
       *                              this banned user.
       */
     def ban[Context](deleteMessageDays: Int, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(
+      RequestWrapper(
         CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays)),
         context,
         sendResponseTo
@@ -1126,7 +1127,7 @@ package object syntax {
       * Unban this user.
       */
     def unban[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
+      RequestWrapper(RemoveGuildBan(guildMember.guildId, guildMember.userId), context, sendResponseTo)
   }
 
   implicit class EmojiSyntax(private val emoji: Emoji) extends AnyVal {
@@ -1137,14 +1138,14 @@ package object syntax {
       * @param guildId The guildId of this emoji.
       */
     def modify[Context](name: String, guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context, sendResponseTo)
+      RequestWrapper(ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name)), context, sendResponseTo)
 
     /**
       * Delete this emoji.
       * @param guildId The guildId of this emoji.
       */
     def delete[Context](guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteGuildEmoji(emoji.id, guildId), context, sendResponseTo)
+      RequestWrapper(DeleteGuildEmoji(emoji.id, guildId), context, sendResponseTo)
   }
 
   implicit class RoleSyntax(private val role: Role) extends AnyVal {
@@ -1164,7 +1165,7 @@ package object syntax {
         hoist: Option[Boolean],
         mentionable: Option[Boolean],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable)),
       context,
       sendResponseTo
@@ -1174,7 +1175,7 @@ package object syntax {
       * Delete this role.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteGuildRole(role.guildId, role.id), context, sendResponseTo)
+      RequestWrapper(DeleteGuildRole(role.guildId, role.id), context, sendResponseTo)
   }
 
   implicit class MessageSyntax(private val message: Message) extends AnyVal {
@@ -1184,14 +1185,14 @@ package object syntax {
       * @param guildEmoji The emoji to react with.
       */
     def createReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(CreateReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(CreateReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
     /**
       * Delete the clients reaction to a message.
       * @param guildEmoji The emoji to remove a reaction for.
       */
     def deleteOwnReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteOwnReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(DeleteOwnReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
     /**
       * Delete the reaction of a user with an emoji.
@@ -1200,20 +1201,20 @@ package object syntax {
       */
     def deleteUserReaction[Context](guildEmoji: Emoji, userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId), context, sendResponseTo)
+    ) = RequestWrapper(DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId), context, sendResponseTo)
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
       * @param guildEmoji The emoji the get the reactors for.
       */
     def fetchReactions[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetReactions(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(GetReactions(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
 
     /**
       * Clear all the reactions on this message.
       */
     def deleteAllReactions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteAllReactions(message.channelId, message.id), context, sendResponseTo)
+      RequestWrapper(DeleteAllReactions(message.channelId, message.id), context, sendResponseTo)
 
     /**
       * Edit this message.
@@ -1225,25 +1226,25 @@ package object syntax {
         embed: Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(EditMessage(message.channelId, message.id, EditMessageData(content, embed)), content, sendResponseTo)
+      RequestWrapper(EditMessage(message.channelId, message.id, EditMessageData(content, embed)), content, sendResponseTo)
 
     /**
       * Delete this message.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteMessage(message.channelId, message.id), context, sendResponseTo)
+      RequestWrapper(DeleteMessage(message.channelId, message.id), context, sendResponseTo)
 
     /**
       * Pin this message.
       */
     def pin[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(AddPinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
+      RequestWrapper(AddPinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
 
     /**
       * Unpin this message.
       */
     def unpin[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeletePinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
+      RequestWrapper(DeletePinnedChannelMessages(message.channelId, message.id), context, sendResponseTo)
   }
 
   implicit class UserSyntax(private val user: User) extends AnyVal {
@@ -1259,7 +1260,7 @@ package object syntax {
       * Create a new dm channel for this user.
       */
     def createDMChannel[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(CreateDm(CreateDMData(user.id)), context, sendResponseTo)
+      RequestWrapper(CreateDm(CreateDMData(user.id)), context, sendResponseTo)
   }
 
   implicit class DiscordClientSyntax(private val client: ActorRef @@ DiscordClient) extends AnyVal {
@@ -1268,19 +1269,19 @@ package object syntax {
       * Fetch a channel by id.
       */
     def fetchChannel[Context](channelId: ChannelId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetChannel(channelId), context, sendResponseTo)
+      RequestWrapper(GetChannel(channelId), context, sendResponseTo)
 
     /**
       * Fetch a guild by id.
       */
     def fetchGuild[Context](guildId: GuildId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetGuild(guildId), context, sendResponseTo)
+      RequestWrapper(GetGuild(guildId), context, sendResponseTo)
 
     /**
       * Fetch a user by id.
       */
     def fetchUser[Context](userId: UserId, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetUser(userId), context, sendResponseTo)
+      RequestWrapper(GetUser(userId), context, sendResponseTo)
 
     /**
       * Create a new guild. Bots can only have 10 guilds by default.
@@ -1303,7 +1304,7 @@ package object syntax {
         roles: Seq[Role],
         channels: Seq[CreateGuildChannelData],
         context: Context = NotUsed
-    )(implicit sendResponseTo: ActorRef) = Request(
+    )(implicit sendResponseTo: ActorRef) = RequestWrapper(
       CreateGuild(CreateGuildData(name, region, icon, verificationLevel, defaultMessageNotifications, roles, channels)),
       context,
       sendResponseTo
@@ -1313,7 +1314,7 @@ package object syntax {
       * Fetch the client user.
       */
     def fetchClientUser[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetCurrentUser, context, sendResponseTo)
+      RequestWrapper(GetCurrentUser, context, sendResponseTo)
 
     /**
       * Get the guilds of the client user.
@@ -1327,13 +1328,13 @@ package object syntax {
         limit: Option[Int] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit)), context, sendResponseTo)
+      RequestWrapper(GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit)), context, sendResponseTo)
 
     /**
       * Fetch the DMs of the client user.
       */
     def fetchUserDMs[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetUserDMs, context, sendResponseTo)
+      RequestWrapper(GetUserDMs, context, sendResponseTo)
 
     /**
       * Create a group DM to a few users.
@@ -1343,26 +1344,26 @@ package object syntax {
       */
     def createGroupDM[Context](accessTokens: Seq[String], nicks: SnowflakeMap[User, String], context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = Request(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
+    ) = RequestWrapper(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
 
     /**
       * Fetch an invite by code.
       * @param inviteCode The invite code.
       */
     def fetchInvite[Context](inviteCode: String, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetInvite(inviteCode), context, sendResponseTo)
+      RequestWrapper(GetInvite(inviteCode), context, sendResponseTo)
 
     /**
       * Fetcha list of voice regions that can be used when creating a guild.
       */
     def fetchVoiceRegions[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(ListVoiceRegions, context, sendResponseTo)
+      RequestWrapper(ListVoiceRegions, context, sendResponseTo)
 
     /**
       * Fetch a webhook by id.
       */
     def fetchWebhook[Context](id: SnowflakeType[Webhook], context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(GetWebhook(id), context, sendResponseTo)
+      RequestWrapper(GetWebhook(id), context, sendResponseTo)
 
     /**
       * Fetch a webhook by id with token. Doesn't require authentication.
@@ -1370,7 +1371,7 @@ package object syntax {
     def fetchWebhookWithToken[Context](id: SnowflakeType[Webhook], token: String, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) =
-      Request(GetWebhookWithToken(id, token), context, sendResponseTo)
+      RequestWrapper(GetWebhookWithToken(id, token), context, sendResponseTo)
   }
 
   implicit class InviteSyntax(private val invite: Invite) extends AnyVal {
@@ -1379,13 +1380,13 @@ package object syntax {
       * Delete this invite.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteInvite(invite.code), context, sendResponseTo)
+      RequestWrapper(DeleteInvite(invite.code), context, sendResponseTo)
 
     /**
       * Accept this invite.
       */
     def accept[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(AcceptInvite(invite.code), context, sendResponseTo)
+      RequestWrapper(AcceptInvite(invite.code), context, sendResponseTo)
   }
 
   implicit class WebhookSyntax(private val webhook: Webhook) extends AnyVal {
@@ -1402,7 +1403,7 @@ package object syntax {
         channelId: Option[ChannelId] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId)), context, sendResponseTo)
+      RequestWrapper(ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId)), context, sendResponseTo)
 
     /**
       * Modify this webhook with a token. Doesn't require authentication.
@@ -1416,7 +1417,7 @@ package object syntax {
         channelId: Option[ChannelId] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      Request(
+      RequestWrapper(
         ModifyWebhookWithToken(webhook.id, webhook.token, ModifyWebhookData(name, avatar, channelId)),
         context,
         sendResponseTo
@@ -1426,12 +1427,12 @@ package object syntax {
       * Delete this webhook.
       */
     def delete[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteWebhook(webhook.id), context, sendResponseTo)
+      RequestWrapper(DeleteWebhook(webhook.id), context, sendResponseTo)
 
     /**
       * Delete this webhook with a token. Doesn't require authentication.
       */
     def deleteWithToken[Context](context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      Request(DeleteWebhookWithToken(webhook.id, webhook.token), context, sendResponseTo)
+      RequestWrapper(DeleteWebhookWithToken(webhook.id, webhook.token), context, sendResponseTo)
   }
 }

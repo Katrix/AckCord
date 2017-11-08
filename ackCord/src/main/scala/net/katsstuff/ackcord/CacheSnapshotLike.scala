@@ -90,7 +90,7 @@ trait CacheSnapshotLike {
   /**
     * The bans received this session. NOTE: This is not all the bans that exists,
     * only the ones received during this session. If you want all the bans,
-    * use [[net.katsstuff.ackcord.http.rest.Requests.GetGuildBans]].
+    * use [[net.katsstuff.ackcord.http.requests.Requests.GetGuildBans]].
     */
   def bans: MapType[Guild, MapType[User, Ban]]
 

@@ -28,10 +28,11 @@ import scala.util.control.NonFatal
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props, Status}
+import akka.event.Logging
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.stream.Materializer
+import akka.stream.{Attributes, Materializer}
 import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
 import io.circe
 import io.circe.parser
@@ -77,7 +78,7 @@ class VoiceWsHandler(
       .flatMapConcat(identity)
 
     val withLogging = if (AckCordSettings().LogReceivedWs) {
-      jsonFlow.log("Received payload")
+      jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else jsonFlow
 
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))

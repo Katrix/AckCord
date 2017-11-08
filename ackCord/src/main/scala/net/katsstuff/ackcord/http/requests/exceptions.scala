@@ -21,32 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.util
+package net.katsstuff.ackcord.http.requests
 
-import scala.concurrent.Promise
-
-import akka.actor.{Actor, Props}
-import net.katsstuff.ackcord.http.RatelimitException
-import net.katsstuff.ackcord.{RequestAnswer, RequestError, RequestRatelimited, RequestResponse}
+import akka.http.scaladsl.model.{StatusCode, Uri}
 
 /**
-  * If you set the context of a request to be a promise, then this actor
-  * can complete the promise for you. One time use only.
+  * An exception for Http errors.
   */
-class PromiseResponder extends Actor {
-  override def receive: Receive = {
-    case RequestResponse(data, ctx: Promise[Any @unchecked]) =>
-      ctx.success(data)
-      context.stop(self)
-    case RequestRatelimited(ctx: Promise[_]) =>
-      ctx.failure(new RatelimitException)
-      context.stop(self)
-    case RequestError(e, ctx: Promise[_]) =>
-      ctx.failure(e)
-      context.stop(self)
-    case anwser: RequestAnswer[_] => context.stop(self)
-  }
+class HttpException(statusCode: StatusCode) extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}")
+
+/**
+  * An exception that signals than an endpoint is ratelimited.
+  *
+  * @param global If the rate limit is global.
+  * @param tilRetry The amount of time in milliseconds until the ratelimit
+  *                 goes away.
+  * @param uri The Uri for the request.
+  */
+class RatelimitException(global: Boolean, tilRetry: Long, uri: Uri) extends Exception {
+  if(global) "Encountered global ratelimit"
+  else s"Encountered ratelimit at $uri"
 }
-object PromiseResponder {
-  def props: Props = Props(new PromiseResponder)
-}
+
+/**
+  * An exception that signals that a request was dropped.
+  * @param uri The Uri for the request.
+  */
+class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")

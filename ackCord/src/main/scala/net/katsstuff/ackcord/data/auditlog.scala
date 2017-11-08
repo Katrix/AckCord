@@ -25,7 +25,7 @@
 package net.katsstuff.ackcord.data
 
 /**
-  * Root audit log object. Received from [[net.katsstuff.ackcord.http.rest.Requests.GetGuildAuditLog]]
+  * Root audit log object. Received from [[net.katsstuff.ackcord.http.requests.Requests.GetGuildAuditLog]]
   * @param webhooks The webhooks found in the log
   * @param users The users found in the log
   * @param auditLogEntries The entries of the log

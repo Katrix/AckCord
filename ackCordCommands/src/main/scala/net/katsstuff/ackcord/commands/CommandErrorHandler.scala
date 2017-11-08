@@ -26,10 +26,10 @@ package net.katsstuff.ackcord.commands
 import akka.NotUsed
 import akka.actor.Actor
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.Request
 import net.katsstuff.ackcord.commands.CommandRouter.{NoCommand, UnknownCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, Message}
-import net.katsstuff.ackcord.http.rest.Requests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.http.requests.RequestWrapper
+import net.katsstuff.ackcord.http.requests.Requests.{CreateMessage, CreateMessageData}
 
 /**
   * A default command error handler that will send a message as response to the invalid command.
@@ -45,7 +45,7 @@ trait CommandErrorHandler extends Actor {
   }
 
   private def sendMsg(channelId: ChannelId, data: CreateMessageData): Unit =
-    client ! Request(CreateMessage(channelId, data), NotUsed, self)
+    client ! RequestWrapper(CreateMessage(channelId, data), NotUsed, self)
 
   /**
     * Create a reply for errors where no command was specified.
