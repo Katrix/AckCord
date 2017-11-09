@@ -28,21 +28,22 @@ import scala.concurrent.duration._
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler, TimerGraphStageLogic}
 import akka.stream.{Attributes, FanInShape2, Inlet, Outlet}
 
-//Much of this was taken from the Delay graph stage
-class GlobalRatelimit[Data, Ctx]
-    extends GraphStage[FanInShape2[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], SentRequest[Data, Ctx]]] {
-  val in:       Inlet[RequestWrapper[Data, Ctx]] = Inlet("GlobalRatelimit.in")
-  val answerIn: Inlet[RequestAnswer[Data, Ctx]]  = Inlet("GlobalRatelimit.answerIn")
-  val out:      Outlet[SentRequest[Data, Ctx]]   = Outlet("GlobalRatelimit.out")
+//Some of this was taken from the Delay graph stage
+class GlobalRatelimiter[Data, Ctx]
+    extends GraphStage[FanInShape2[RequestWrapper[Data, Ctx], RequestRatelimited[Data, Ctx], SentRequest[Data, Ctx]]] {
+  val in:       Inlet[RequestWrapper[Data, Ctx]]     = Inlet("GlobalRatelimiter.in")
+  val answerIn: Inlet[RequestRatelimited[Data, Ctx]] = Inlet("GlobalRatelimiter.answerIn")
+  val out:      Outlet[SentRequest[Data, Ctx]]       = Outlet("GlobalRatelimiter.out")
   override def shape = new FanInShape2(in, answerIn, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new TimerGraphStageLogic(shape) with InHandler with OutHandler {
-      def timerName: String = "GlobalRateLimit"
+      def timerName: String = "GlobalRateLimiter"
 
       private var ratelimitTimeout = 0.toLong
-      private var elem:  RequestWrapper[Data, Ctx] = _
-      def isRatelimited: Boolean                   = ratelimitTimeout - System.currentTimeMillis() > 0
+      private var elem: RequestWrapper[Data, Ctx] = _
+
+      def isRatelimited: Boolean = ratelimitTimeout - System.currentTimeMillis() > 0
 
       override def preStart(): Unit = pull(answerIn)
 
@@ -88,14 +89,18 @@ class GlobalRatelimit[Data, Ctx]
         }
       )
 
-      def completeIfReady(): Unit =
-        if (isClosed(in) && elem == null) completeStage()
+      def completeIfReady(): Unit = {
+        if(isClosed(in)) {
+          if(elem == null) completeStage()
+          else emit(out, elem, () => completeStage())
+        }
+      }
 
       final override protected def onTimer(key: Any): Unit = {
         if (isAvailable(out) && elem != null) {
           push(out, elem)
+          elem = null
         }
-        elem = null
         completeIfReady()
       }
     }

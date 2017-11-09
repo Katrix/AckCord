@@ -39,7 +39,7 @@ import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Partition, Sink}
-import akka.stream.{FlowShape, Materializer, OverflowStrategy}
+import akka.stream.{FlowShape, Materializer, OverflowStrategy, SinkShape}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.AckCord
@@ -84,12 +84,11 @@ object RequestStreams {
       implicit mat: Materializer,
       system: ActorSystem
   ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
-    val flow = createHttpRequestFlow[Data, Ctx](credentials)
+    createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
       .via(requestParser)
-      .mapAsync(parallelism)(identity)
-
-    flow.alsoTo(sendRatelimitUpdates)
+      .mapAsyncUnordered(parallelism)(identity)
+      .alsoTo(sendRatelimitUpdates.async)
   }
 
   def requestFlowWithRatelimit[Data, Ctx](
@@ -107,42 +106,49 @@ object RequestStreams {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val inFlow = builder.add(Flow[RequestWrapper[Data, Ctx]])
-
-      val globalRatelimitBuffer = builder.add(Flow[RequestWrapper[Data, Ctx]].buffer(bufferSize, overflowStrategy))
-      val globalRateLimiter     = builder.add(new GlobalRatelimit[Data, Ctx])
-      val uriRateLimiter        = builder.add(requestsWithRouteRatelimit[Data, Ctx](uriRatelimiterActor, maxAllowedWait))
+      val in                = builder.add(Flow[RequestWrapper[Data, Ctx]])
+      val buffer            = builder.add(Flow[RequestWrapper[Data, Ctx]].buffer(bufferSize, overflowStrategy))
+      val globalRateLimiter = builder.add(new GlobalRatelimiter[Data, Ctx])
+      val globalMain        = FlowShape(globalRateLimiter.in0, globalRateLimiter.out)
+      val globalSecondary   = globalRateLimiter.in1
+      val uri =
+        builder.add(requestsWithRouteRatelimit[Data, Ctx](uriRatelimiterActor, maxAllowedWait, parallelism))
 
       val partition = builder.add(Partition[SentRequest[Data, Ctx]](2, {
         case _: RequestWrapper[_, _] => 0
         case _: RequestDropped[_, _] => 1
       }))
+      val requests = partition.out(0).collect { case wrapper: RequestWrapper[Data, Ctx] => wrapper }
+      val dropped  = partition.out(1).collect { case dropped: RequestDropped[Data, Ctx] => dropped }
 
-      val requests = builder.add(requestFlow[Data, Ctx](credentials, parallelism))
+      val network      = builder.add(requestFlow[Data, Ctx](credentials, parallelism))
+      val answerFanout = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
+      val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
-      val answerBroadcaster = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
+      val ratelimited = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
+        case req @ RequestRatelimited(_, _, true, _) => req
+      })
 
-      val answerMerger = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
+      // format: OFF
+      in ~> buffer ~> globalMain ~> uri ~> partition
+                                           requests ~> network ~> answerFanout ~> out
+                                           dropped  ~>                            out
+                      globalSecondary   <~ ratelimited         <~ answerFanout
+      // format: ON
 
-      inFlow ~> globalRatelimitBuffer ~> globalRateLimiter.in0; globalRateLimiter.out ~> uriRateLimiter ~> partition
-
-      partition.out(0).collect { case wrapper: RequestWrapper[Data, Ctx] => wrapper } ~> requests ~> answerBroadcaster
-      partition.out(1).collect { case dropped: RequestDropped[Data, Ctx] => dropped } ~> answerMerger
-
-      answerBroadcaster ~> answerMerger
-      globalRateLimiter.in1 <~ answerBroadcaster
-
-      FlowShape(inFlow.in, answerMerger.out)
+      FlowShape(in.in, out.out)
     }
 
     Flow.fromGraph(graph)
   }
 
-  def requestsWithRouteRatelimit[Data, Ctx](ratelimiter: ActorRef, maxAllowedWait: FiniteDuration)(
-      implicit system: ActorSystem
-  ): Flow[SentRequest[Data, Ctx], SentRequest[Data, Ctx], NotUsed] = {
+  def requestsWithRouteRatelimit[Data, Ctx](
+      ratelimiter: ActorRef,
+      maxAllowedWait: FiniteDuration,
+      parallelism: Int = 4
+  )(implicit system: ActorSystem): Flow[SentRequest[Data, Ctx], SentRequest[Data, Ctx], NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
-    Flow[SentRequest[Data, Ctx]].mapAsync(4) {
+    Flow[SentRequest[Data, Ctx]].mapAsyncUnordered(parallelism) {
       case wrapper @ RequestWrapper(request, _, _) =>
         import system.dispatcher
         val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri)
