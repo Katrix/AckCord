@@ -26,7 +26,6 @@ package net.katsstuff.ackcord.util
 import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, Props, Terminated}
-import akka.event.Logging
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent

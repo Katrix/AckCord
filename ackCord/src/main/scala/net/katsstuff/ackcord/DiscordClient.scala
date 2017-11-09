@@ -34,13 +34,13 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.scaladsl.{Flow, RestartFlow, Sink, Source}
-import akka.stream.{DelayOverflowStrategy, Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{RestartFlow, Sink, Source}
+import akka.stream.{Materializer, OverflowStrategy}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.{CacheSnapshot, PresenceStatus}
-import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, GlobalRatelimit, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}

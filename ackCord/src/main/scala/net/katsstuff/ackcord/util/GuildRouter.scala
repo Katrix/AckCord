@@ -30,9 +30,9 @@ import akka.event.Logging
 import akka.routing.Broadcast
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.util.GuildRouter.{GetGuildActor, ResponseGetGuild, SendToGuildActor, TerminatedGuild}
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 
 /**
   * Will send all [[APIMessage]]s with the same guild

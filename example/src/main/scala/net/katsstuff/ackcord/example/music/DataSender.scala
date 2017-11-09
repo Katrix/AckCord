@@ -29,7 +29,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{silence, SendData, SendDataBurst}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{SendData, SendDataBurst, silence}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor with ActorLogging {

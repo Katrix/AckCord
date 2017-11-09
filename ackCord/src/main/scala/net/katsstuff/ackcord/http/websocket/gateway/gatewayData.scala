@@ -26,7 +26,6 @@ package net.katsstuff.ackcord.http.websocket.gateway
 import java.time.{Instant, OffsetDateTime}
 
 import akka.NotUsed
-import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
@@ -554,7 +553,14 @@ object GatewayEvent {
       current
         .getGuild(data.guildId)
         .map { g =>
-          APIMessage.GuildMemberUpdate(g, data.roles.flatMap(current.getRole(guildId, _)), data.user, data.nick, current, prev)
+          APIMessage.GuildMemberUpdate(
+            g,
+            data.roles.flatMap(current.getRole(guildId, _)),
+            data.user,
+            data.nick,
+            current,
+            prev
+          )
         }
     override def guildId: GuildId = data.guildId
   }

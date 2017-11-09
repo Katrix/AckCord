@@ -30,9 +30,7 @@ import akka.stream.{Attributes, FanInShape2, Inlet, Outlet}
 
 //Much of this was taken from the Delay graph stage
 class GlobalRatelimit[Data, Ctx]
-    extends GraphStage[
-      FanInShape2[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], SentRequest[Data, Ctx]]
-    ] {
+    extends GraphStage[FanInShape2[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], SentRequest[Data, Ctx]]] {
   val in:       Inlet[RequestWrapper[Data, Ctx]] = Inlet("GlobalRatelimit.in")
   val answerIn: Inlet[RequestAnswer[Data, Ctx]]  = Inlet("GlobalRatelimit.answerIn")
   val out:      Outlet[SentRequest[Data, Ctx]]   = Outlet("GlobalRatelimit.out")
@@ -43,8 +41,8 @@ class GlobalRatelimit[Data, Ctx]
       def timerName: String = "GlobalRateLimit"
 
       private var ratelimitTimeout = 0.toLong
-      private var elem: RequestWrapper[Data, Ctx] = _
-      def isRatelimited: Boolean = ratelimitTimeout - System.currentTimeMillis() > 0
+      private var elem:  RequestWrapper[Data, Ctx] = _
+      def isRatelimited: Boolean                   = ratelimitTimeout - System.currentTimeMillis() > 0
 
       override def preStart(): Unit = pull(answerIn)
 
@@ -69,9 +67,8 @@ class GlobalRatelimit[Data, Ctx]
         completeIfReady()
       }
 
-      override def onUpstreamFinish(): Unit = {
+      override def onUpstreamFinish(): Unit =
         completeIfReady()
-      }
 
       setHandler(in, this)
       setHandler(out, this)
@@ -95,7 +92,7 @@ class GlobalRatelimit[Data, Ctx]
         if (isClosed(in) && elem == null) completeStage()
 
       final override protected def onTimer(key: Any): Unit = {
-        if(isAvailable(out) && elem != null) {
+        if (isAvailable(out) && elem != null) {
           push(out, elem)
         }
         elem = null

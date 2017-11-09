@@ -39,7 +39,7 @@ class HttpException(statusCode: StatusCode) extends Exception(s"${statusCode.int
   * @param uri The Uri for the request.
   */
 class RatelimitException(global: Boolean, tilRetry: Long, uri: Uri) extends Exception {
-  if(global) "Encountered global ratelimit"
+  if (global) "Encountered global ratelimit"
   else s"Encountered ratelimit at $uri"
 }
 

@@ -24,7 +24,6 @@
 package net.katsstuff.ackcord.http.websocket.voice
 
 import akka.util.ByteString
-import io.circe.Decoder.Result
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
@@ -89,7 +88,8 @@ object VoiceWsProtocol extends DiscordProtocol {
         case VoiceOpCode.Resumed            => Right(Resumed)
         case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
         case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
-        case VoiceOpCode.Hello              => dC.downField("heartbeat_interval").as[Int].map(Hello) //Documentation is lying, the data is on the d field
+        case VoiceOpCode.Hello =>
+          dC.downField("heartbeat_interval").as[Int].map(Hello) //Documentation is lying, the data is on the d field
       }
     }
   }

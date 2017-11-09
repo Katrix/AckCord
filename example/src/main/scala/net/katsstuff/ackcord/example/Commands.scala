@@ -27,14 +27,14 @@ import java.nio.file.Paths
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import net.katsstuff.ackcord.DiscordClient
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
-import net.katsstuff.ackcord.http.requests.{RequestFailed, RequestResponse, RequestWrapper, Requests}
 import net.katsstuff.ackcord.http.requests.Requests.CreateMessageData
+import net.katsstuff.ackcord.http.requests.{RequestFailed, RequestResponse, RequestWrapper, Requests}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.DiscordClient
 
 class PingCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
@@ -129,7 +129,7 @@ class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
 
       log.info(res.toString)
       context.stop(self)
-    case error :RequestFailed[_, _] =>
+    case error: RequestFailed[_, _] =>
       val GetChannelInfo(guildId, _, senderChannelId, c) = error.context
       implicit val cache: CacheSnapshot = c
       senderChannelId.tResolve(guildId).foreach(client ! _.sendMessage("Error encountered"))

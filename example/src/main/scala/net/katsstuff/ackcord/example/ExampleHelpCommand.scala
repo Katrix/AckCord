@@ -42,12 +42,12 @@ class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDe
     val groupedCommands = commands.grouped(10).toSeq
     if (page > groupedCommands.length) {
       CreateMessageData(s"Max pages: ${groupedCommands.length}")
-    }
-    else {
+    } else {
       val strings = groupedCommands(page).map {
         case (cat, innerMap) =>
-          val res = innerMap.groupBy(_._2.name).map { case (_, map) =>
-            createContent(cat, printCategory = false, map.keys.toSeq, map.head._2)
+          val res = innerMap.groupBy(_._2.name).map {
+            case (_, map) =>
+              createContent(cat, printCategory = false, map.keys.toSeq, map.head._2)
           }
 
           s"Category: ${cat.prefix}   ${cat.description}\n" + res.mkString("\n")
@@ -59,7 +59,7 @@ class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDe
   def createContent(cat: CmdCategory, printCategory: Boolean, names: Seq[String], desc: CommandDescription): String = {
     val builder = StringBuilder.newBuilder
     builder.append(s"Name: ${desc.name}\n")
-    if(printCategory) builder.append(s"Category: ${cat.prefix}   ${cat.description}\n")
+    if (printCategory) builder.append(s"Category: ${cat.prefix}   ${cat.description}\n")
     builder.append(s"Description: ${desc.description}\n")
     builder.append(s"Usage: ${cat.prefix}${names.mkString("|")} ${desc.usage}\n")
 

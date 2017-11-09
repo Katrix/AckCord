@@ -23,8 +23,9 @@
  */
 package net.katsstuff.ackcord.example.music
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import scala.concurrent.duration._
+
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
 import akka.util.ByteString
@@ -33,7 +34,8 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
     extends Actor
-    with ActorLogging with Timers {
+    with ActorLogging
+    with Timers {
   import DataSender._
 
   final val BehindLimit = -40

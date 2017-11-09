@@ -32,8 +32,8 @@ import akka.event.Logging
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.stream.{Attributes, Materializer}
 import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
+import akka.stream.{Attributes, Materializer}
 import io.circe
 import io.circe.parser
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}

@@ -44,8 +44,8 @@ package object data {
 
   private val DiscordEpoch = 1420070400000L
   implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
-    def creationDate: Instant      = Instant.ofEpochMilli(DiscordEpoch + (snowflake >> 22))
-    def asString:     String       = JLong.toUnsignedString(snowflake)
+    def creationDate: Instant = Instant.ofEpochMilli(DiscordEpoch + (snowflake >> 22))
+    def asString:     String  = JLong.toUnsignedString(snowflake)
   }
 
   sealed trait RawSnowflakeTag

@@ -29,9 +29,9 @@ import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
-import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 
 /**
   * Used to parse valid commands and send them to some handler.
@@ -57,7 +57,7 @@ class CommandRouter(
   import net.katsstuff.ackcord.commands.CommandRouter._
 
   val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
-  val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, ActorRef]]
+  val commands       = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, ActorRef]]
   var isShuttingDown = false
 
   addCommands(initialCommands)

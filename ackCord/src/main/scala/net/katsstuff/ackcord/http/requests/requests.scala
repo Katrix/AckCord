@@ -30,10 +30,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.stream.Materializer
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.Materializer
 import akka.util.ByteString
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe._

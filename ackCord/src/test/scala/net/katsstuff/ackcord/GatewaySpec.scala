@@ -245,9 +245,7 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef, cache: O
   }
 }
 object MockedGatewayHandler {
-  def props(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
-      implicit mat: Materializer
-  ): Props =
+  def props(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(implicit mat: Materializer): Props =
     Props(new MockedGatewayHandler(settings, gateway, cache))
 }
 

@@ -27,7 +27,6 @@ import java.util.Locale
 
 import akka.actor.Props
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs
 import net.katsstuff.ackcord.util.MessageParser
 
 /**

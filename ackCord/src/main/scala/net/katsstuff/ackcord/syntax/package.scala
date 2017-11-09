@@ -108,7 +108,11 @@ package object syntax {
         embed: Option[OutgoingEmbed] = None,
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      RequestWrapper(CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed)), NotUsed, sendResponseTo)
+      RequestWrapper(
+        CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed)),
+        NotUsed,
+        sendResponseTo
+      )
 
     /**
       * Fetch messages around a message id.
@@ -155,8 +159,11 @@ package object syntax {
       */
     def fetchMessages[Context](limit: Option[Int] = None, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) =
-      RequestWrapper(GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)), context, sendResponseTo)
+    ) = RequestWrapper(
+      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit)),
+      context,
+      sendResponseTo
+    )
 
     /**
       * Fetch a message in this channel.
@@ -1201,7 +1208,11 @@ package object syntax {
       */
     def deleteUserReaction[Context](guildEmoji: Emoji, userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
-    ) = RequestWrapper(DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId), context, sendResponseTo)
+    ) = RequestWrapper(
+      DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId),
+      context,
+      sendResponseTo
+    )
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
@@ -1226,7 +1237,11 @@ package object syntax {
         embed: Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
         context: Context = NotUsed
     )(implicit sendResponseTo: ActorRef) =
-      RequestWrapper(EditMessage(message.channelId, message.id, EditMessageData(content, embed)), content, sendResponseTo)
+      RequestWrapper(
+        EditMessage(message.channelId, message.id, EditMessageData(content, embed)),
+        content,
+        sendResponseTo
+      )
 
     /**
       * Delete this message.
@@ -1342,9 +1357,12 @@ package object syntax {
       *                     the `gdm.join` scope.
       * @param nicks A map specifying the nicnames for the users in this group DM.
       */
-    def createGroupDM[Context](accessTokens: Seq[String], nicks: SnowflakeMap[User, String], context: Context = NotUsed)(
-        implicit sendResponseTo: ActorRef
-    ) = RequestWrapper(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
+    def createGroupDM[Context](
+        accessTokens: Seq[String],
+        nicks: SnowflakeMap[User, String],
+        context: Context = NotUsed
+    )(implicit sendResponseTo: ActorRef) =
+      RequestWrapper(CreateGroupDm(CreateGroupDMData(accessTokens, nicks)), context, sendResponseTo)
 
     /**
       * Fetch an invite by code.
@@ -1362,7 +1380,9 @@ package object syntax {
     /**
       * Fetch a webhook by id.
       */
-    def fetchWebhook[Context](id: SnowflakeType[Webhook], context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
+    def fetchWebhook[Context](id: SnowflakeType[Webhook], context: Context = NotUsed)(
+        implicit sendResponseTo: ActorRef
+    ) =
       RequestWrapper(GetWebhook(id), context, sendResponseTo)
 
     /**

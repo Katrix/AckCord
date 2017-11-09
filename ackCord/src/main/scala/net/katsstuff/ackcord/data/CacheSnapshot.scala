@@ -25,8 +25,8 @@ package net.katsstuff.ackcord.data
 
 import java.time.Instant
 
-import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import shapeless.tag._
 
 /**

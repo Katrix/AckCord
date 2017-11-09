@@ -35,16 +35,7 @@ import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs.{CommandArgs, 
 import net.katsstuff.ackcord.commands.HelpCommand.{RegisterCommand, UnregisterCommand}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.Requests.{CreateMessage, CreateMessageData}
-import net.katsstuff.ackcord.http.requests.{
-  DroppedRequestException,
-  RatelimitException,
-  RequestDropped,
-  RequestError,
-  RequestRatelimited,
-  RequestResponse,
-  RequestResponseNoData,
-  RequestWrapper
-}
+import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 

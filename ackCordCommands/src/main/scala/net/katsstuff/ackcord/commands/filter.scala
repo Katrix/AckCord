@@ -25,8 +25,8 @@ package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.commands.CommandParser.ParsedCommand
+import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.data.{CacheSnapshot, DMChannel, GroupDMChannel, GuildChannel, Message, Permission, UserId}
 import net.katsstuff.ackcord.syntax._
 
@@ -40,7 +40,7 @@ trait CommandFilter {
   /**
     * Check if the message can be executed.
     */
-  def isAllowed(msg: Message)(implicit c: CacheSnapshot):    Boolean
+  def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean
 
   /**
     * If the message could not be executed, get an error message to
@@ -109,8 +109,7 @@ object Context {
   case object DM    extends Context
 }
 
-class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props, client: ClientActor)
-    extends Actor {
+class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props, client: ClientActor) extends Actor {
   val forwardTo: ActorRef = context.actorOf(forwardToProps, s"${self.path.name}AfterFilter")
 
   override def receive: Receive = {

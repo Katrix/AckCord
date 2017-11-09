@@ -167,12 +167,8 @@ object APIMessage {
     * @param guild The guild where the update occoured.
     * @param emojis The new emojis.
     */
-  case class GuildEmojiUpdate(
-      guild: Guild,
-      emojis: Seq[Emoji],
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends GuildMessage
+  case class GuildEmojiUpdate(guild: Guild, emojis: Seq[Emoji], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+      extends GuildMessage
 
   /**
     * Sent to the client when the integrations of a guild were updated. You

@@ -39,21 +39,19 @@ import akka.stream.Materializer
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
-import net.katsstuff.ackcord.example.{ExampleCmdCategories, ExampleErrorHandler, InfoChannelCommand, KillCommand, PingCommand, SendFileCommand}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
+import net.katsstuff.ackcord.example.{ExampleCmdCategories, ExampleErrorHandler, InfoChannelCommand, KillCommand, PingCommand, SendFileCommand}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.RequestFailedResponder
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
 
 class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer)
     extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
-
   import context.dispatcher
 
   val commands =
@@ -89,8 +87,6 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   player.addListener(new AudioEventSender(self))
 
   var lastTChannel: TChannel = _
-
-  def errorResponder: ActorRef = context.actorOf(RequestFailedResponder.props(self))
 
   onTermination {
     case StopEvent(_, _, _) if player != null => player.destroy()
@@ -262,7 +258,10 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
 
   def connect(vChannelId: ChannelId, endPoint: String, clientId: UserId, sessionId: String, token: String): State = {
     val voiceWs =
-      context.actorOf(VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None), "VoiceWS")
+      context.actorOf(
+        VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None),
+        "VoiceWS"
+      )
     voiceWs ! Login
     log.info("Connected")
     stay using HasVoiceWs(voiceWs, vChannelId)

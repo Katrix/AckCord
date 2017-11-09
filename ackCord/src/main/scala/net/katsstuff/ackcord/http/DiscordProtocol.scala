@@ -27,11 +27,11 @@ import java.time.{Instant, OffsetDateTime}
 
 import scala.util.Try
 
-import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.semiauto._
-import io.circe.generic.extras.auto._
-import io.circe.syntax._
 import io.circe._
+import io.circe.generic.extras.Configuration
+import io.circe.generic.extras.auto._
+import io.circe.generic.extras.semiauto._
+import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 
 trait DiscordProtocol {
@@ -75,7 +75,8 @@ trait DiscordProtocol {
     Decoder[Int].emap(AuditLogEvent.fromId(_).toRight(s"No valid event type"))
 
   implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
-  implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] = Decoder[String].emap(s => Right(SnowflakeType[A](s)))
+  implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] =
+    Decoder[String].emap(s => Right(SnowflakeType[A](s)))
 
   implicit val instantEncoder: Encoder[Instant] = Encoder[Long].contramap(_.getEpochSecond)
   implicit val instantDecoder: Decoder[Instant] = Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l)))
@@ -84,7 +85,8 @@ trait DiscordProtocol {
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Long].emap(i => Right(Permission.fromLong(i)))
 
   implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
-  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] = Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
+  implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] =
+    Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s)))
 
   implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
   implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))

@@ -30,12 +30,11 @@ import scala.util.control.NonFatal
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.event.Logging
-import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
-import akka.stream.{Attributes, Materializer}
 import akka.stream.scaladsl._
+import akka.stream.{Attributes, Materializer}
 import akka.util.ByteString
 import io.circe
 import io.circe.parser
@@ -70,8 +69,9 @@ class GatewayHandler(
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
-        case t: TextMessage   => t.textStream.fold("")(_ + _)
-        case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
+        case t: TextMessage => t.textStream.fold("")(_ + _)
+        case b: BinaryMessage =>
+          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
       }
       .flatMapConcat(identity)
 
@@ -195,9 +195,7 @@ object GatewayHandler {
   )(implicit mat: Materializer): Props =
     Props(new GatewayHandler(wsUri, settings, responseProcessor, responseFunc))
 
-  def cacheProps(wsUri: Uri, settings: ClientSettings, snowflakeCache: ActorRef)(
-      implicit mat: Materializer
-  ): Props = {
+  def cacheProps(wsUri: Uri, settings: ClientSettings, snowflakeCache: ActorRef)(implicit mat: Materializer): Props = {
     val f = (dispatch: Dispatch[_]) => {
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
 

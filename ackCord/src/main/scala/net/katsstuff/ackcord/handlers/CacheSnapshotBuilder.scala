@@ -27,9 +27,9 @@ import java.time.Instant
 
 import scala.collection.mutable
 
-import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 import shapeless.tag._
 
 /**

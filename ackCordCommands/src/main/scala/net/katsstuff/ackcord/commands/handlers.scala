@@ -24,23 +24,14 @@
 package net.katsstuff.ackcord.commands
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, Status}
+import akka.actor.{Actor, Status}
 import net.katsstuff.ackcord.DiscordClient
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
+import net.katsstuff.ackcord.commands.CommandRouter.Command
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
-import net.katsstuff.ackcord.http.requests.{
-  DroppedRequestException,
-  RatelimitException,
-  RequestDropped,
-  RequestError,
-  RequestRatelimited,
-  RequestResponse,
-  RequestResponseNoData
-}
+import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.RequestFailedResponder
 import shapeless.{TypeCase, Typeable}
 
 /**
@@ -50,12 +41,7 @@ import shapeless.{TypeCase, Typeable}
 trait BaseCommandActor extends Actor {
 
   /**
-    * Create a new [[RequestFailedResponder]]. Useful for detecting errors.
-    */
-  def errorResponder: ActorRef = context.actorOf(RequestFailedResponder.props(self))
-
-  /**
-    * Handle a potential error comming from for example using [[errorResponder]].
+    * Handle a potential error.
     * @param e The exception
     */
   def handleFailure(e: Throwable): Unit = throw e

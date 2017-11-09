@@ -258,7 +258,4 @@ case class PartialUser(
   * @param reason Why the user was banned.
   * @param user The user that was baned.
   */
-case class RawBan(
-    reason: Option[String],
-    user: User
-)
+case class RawBan(reason: Option[String], user: User)

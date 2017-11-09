@@ -77,7 +77,7 @@ trait GetVChannelOpt {
   /**
     * Resolve the channelId of this object as a voice channel.
     */
-  def vChannel(implicit snapshot: CacheSnapshot):   Option[Channel]   = channelId.flatMap(snapshot.getChannel).collect {
+  def vChannel(implicit snapshot: CacheSnapshot): Option[Channel] = channelId.flatMap(snapshot.getChannel).collect {
     case vChannel: VGuildChannel => vChannel
   }
 }
