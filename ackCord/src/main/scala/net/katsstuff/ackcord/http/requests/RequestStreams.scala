@@ -23,6 +23,9 @@
  */
 package net.katsstuff.ackcord.http.requests
 
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -33,8 +36,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{HttpHeader, HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{AskTimeoutException, ask}
+import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
+import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Partition, Sink}
 import akka.stream.{FlowShape, Materializer, OverflowStrategy}
 import akka.util.Timeout
@@ -53,34 +56,27 @@ object RequestStreams {
     _uriRatelimitActor
   }
 
-  /**
-    * Create credentials used by bots
-    */
-  def botCredentials(token: String): HttpCredentials = GenericHttpCredentials("Bot", token)
+  private def findCustomHeader[H <: ModeledCustomHeader[H]](
+      companion: ModeledCustomHeaderCompanion[H],
+      response: HttpResponse
+  ): Option[H] =
+    response.headers.collectFirst {
+      case h if companion.parse(h.value).isSuccess => companion.parse(h.value).get
+    }
 
-  /**
-    * Create OAuth2 credentials
-    */
-  def oAuth2Credentials(token: String): HttpCredentials = OAuth2BearerToken(token)
+  private def remainingRequests(response: HttpResponse): Int =
+    findCustomHeader(`X-RateLimit-Remaining`, response).fold(-1)(_.remaining)
 
-  private def remainingRequests(headers: Seq[HttpHeader]): Int =
-    headers.find(_.is("X-RateLimit-Remaining")).map(remaining => remaining.value.toInt).getOrElse(-1)
-
-  private def timeTilReset(headers: Seq[HttpHeader]): Long = {
-    headers
-      .find(_.is("Retry-After"))
-      .map(_.value().toLong)
-      .orElse(
-        headers
-          .find(_.is("X-RateLimit-Reset"))
-          .map(_.value().toLong.seconds - System.currentTimeMillis().millis)
-          .map(_.toMillis)
-      )
+  private def timeTilReset(response: HttpResponse): Long =
+    findCustomHeader(`Retry-After`, response)
+      .map(_.tilReset.toMillis)
+      .orElse(findCustomHeader(`X-RateLimit-Reset`, response).map { h =>
+        Instant.now().until(h.resetAt, ChronoUnit.MILLIS)
+      })
       .getOrElse(-1)
-  }
 
-  private def isGlobalRatelimit(headers: Seq[HttpHeader]): Boolean =
-    headers.exists(header => header.is("X-RateLimit-Global") && header.value == "true")
+  private def isGlobalRatelimit(response: HttpResponse): Boolean =
+    findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AckCord, ${AckCord.Version})")
 
@@ -198,14 +194,15 @@ object RequestStreams {
         import system.dispatcher
         response match {
           case Success(httpResponse) =>
-            val headers      = httpResponse.headers
-            val tilReset     = timeTilReset(headers)
-            val remainingReq = remainingRequests(headers)
+            val tilReset     = timeTilReset(httpResponse)
+            val remainingReq = remainingRequests(httpResponse)
 
             httpResponse.status match {
               case StatusCodes.TooManyRequests =>
                 httpResponse.discardEntityBytes()
-                Future.successful(RequestRatelimited(request.context, tilReset, isGlobalRatelimit(headers), request))
+                Future.successful(
+                  RequestRatelimited(request.context, tilReset, isGlobalRatelimit(httpResponse), request)
+                )
               case StatusCodes.NoContent =>
                 httpResponse.discardEntityBytes()
                 Future.successful(RequestResponseNoData(request.context, remainingReq, tilReset, request))

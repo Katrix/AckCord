@@ -40,7 +40,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.{CacheSnapshot, PresenceStatus}
-import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, BotAuthentication, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
@@ -70,7 +70,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
         bufferSize = 100,
         overflowStrategy = OverflowStrategy.backpressure,
         maxAllowedWait = 2.minutes,
-        credentials = RequestStreams.botCredentials(settings.token)
+        credentials = BotAuthentication(settings.token)
       )
     }
 
@@ -219,7 +219,7 @@ object DiscordClient extends FailFastCirceSupport {
       token: String
   )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[(Uri, Int)] = {
     val http = Http()
-    val auth = Authorization(RequestStreams.botCredentials(token))
+    val auth = Authorization(BotAuthentication(token))
     http
       .singleRequest(HttpRequest(uri = Routes.botGateway, headers = List(auth)))
       .flatMap {
