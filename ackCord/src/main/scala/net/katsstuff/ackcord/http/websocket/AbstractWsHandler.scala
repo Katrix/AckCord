@@ -28,40 +28,41 @@ import scala.concurrent.duration.FiniteDuration
 import scala.language.higherKinds
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, FSM}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, Message, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{Materializer, OverflowStrategy}
 import io.circe
-import io.circe.syntax._
-import io.circe.{Encoder, Error}
-import net.katsstuff.ackcord.util.AckCordSettings
+import io.circe.Error
 
 /**
   * An abstract websocket handler. Handles going from inactive to active, and termination
-  * @param mat The [[Materializer]] to use
   * @tparam WsMessage The type of the websocket messages
   * @tparam Resume The resume data type
   */
-abstract class AbstractWsHandler[WsMessage[_], Resume](implicit mat: Materializer)
-    extends FSM[AbstractWsHandler.State, AbstractWsHandler.Data[Resume]] {
+abstract class AbstractWsHandler[WsMessage, Resume](implicit mat: Materializer)
+    extends Actor
+    with Timers
+    with ActorLogging {
   import AbstractWsHandler._
+  import context.dispatcher
 
   private implicit val system:  ActorSystem      = context.system
   private var sendFirstSinkAck: Option[ActorRef] = None
+  var shuttingDown = false
 
-  import context.dispatcher
+  var resume: Option[Resume]                     = None
+  var queue:  SourceQueueWithComplete[WsMessage] = _
+  var receivedAck = true
 
-  startWith(Inactive, WithResumeData(None))
+  override def postStop(): Unit =
+    if (queue != null) queue.complete()
 
-  onTermination {
-    case StopEvent(_, _, data) =>
-      data.queueOpt.foreach(_.complete())
-  }
+  def parseMessage: Flow[Message, Either[circe.Error, WsMessage], NotUsed]
 
-  def parseMessage: Flow[Message, Either[circe.Error, WsMessage[_]], NotUsed]
+  def createMessage: Flow[WsMessage, Message, NotUsed]
 
   /**
     * The full uri to connect to
@@ -74,38 +75,32 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](implicit mat: Materialize
   def wsFlow: Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
     Http().webSocketClientFlow(wsUri)
 
-  /**
-    * Utility method to create a payload from a message
-    */
-  def createPayload[A](msg: WsMessage[A])(implicit encoder: Encoder[WsMessage[A]]): String = {
-    val payload = msg.asJson.noSpaces
-    if (AckCordSettings().LogSentWs) {
-      log.debug("Sending payload: {}", payload)
-    }
-    payload
-  }
+  def heartbeatTimerKey: String = "SendHeartbeats"
+
+  def restartLoginKey: String = "RestartLogin"
 
   /**
     * The base handler when inactive
     */
-  val whenInactiveBase: StateFunction = {
-    case Event(Login, data) =>
+  val whenInactiveBase: Receive = {
+    case Login =>
       log.info("Logging in")
-      val src = Source.queue[Message](64, OverflowStrategy.backpressure)
-      val sink = Sink.actorRefWithAck[Either[Error, WsMessage[_]]](
+      val src = Source.queue[WsMessage](64, OverflowStrategy.backpressure)
+      val sink = Sink.actorRefWithAck[Either[Error, WsMessage]](
         ref = self,
         onInitMessage = InitSink,
         ackMessage = AckSink,
         onCompleteMessage = CompletedSink
       )
+      val flow = createMessage.viaMat(wsFlow)(Keep.right).viaMat(parseMessage)(Keep.left)
 
       log.debug("WS uri: {}", wsUri)
-      val (queue, future) = src.viaMat(wsFlow)(Keep.both).via(parseMessage).toMat(sink)(Keep.left).run()
+      val (sourceQueue, future) = src.viaMat(flow)(Keep.both).toMat(sink)(Keep.left).run()
 
       future.foreach {
         case InvalidUpgradeResponse(response, cause) =>
           response.discardEntityBytes()
-          queue.complete()
+          sourceQueue.complete()
           throw new IllegalStateException(s"Could not connect to gateway: $cause")
         case ValidUpgrade(response, _) =>
           log.debug("Valid login: {}", response.entity.toString)
@@ -113,31 +108,33 @@ abstract class AbstractWsHandler[WsMessage[_], Resume](implicit mat: Materialize
           self ! ValidWsUpgrade
       }
 
-      stay using WithQueue(queue, data.resumeOpt)
-    case Event(ValidWsUpgrade, _) =>
+      queue = sourceQueue
+    case ValidWsUpgrade =>
       log.info("Logged in, going to Active")
       sendFirstSinkAck.foreach { act =>
         act ! AckSink
       }
-      goto(Active)
-    case Event(InitSink, _) =>
-      sendFirstSinkAck = Some(sender())
-      stay()
+
+      becomeActive()
+    case InitSink => sendFirstSinkAck = Some(sender())
   }
 
-  /**
-    * What to do when inactive. If you override this, remember to call
-    * [[whenInactiveBase.andThen()]].
-    */
-  def whenInactive: StateFunction = whenInactiveBase
+  def becomeActive(): Unit = context.become(active)
 
-  when(Inactive)(whenInactive)
+  def becomeInactive(): Unit = {
+    context.become(inactive)
+    queue = null
+    receivedAck = true
+  }
+
+  def inactive: Receive = whenInactiveBase
+
+  def active: Receive
+
+  override def receive: Receive = inactive
 }
-object AbstractWsHandler {
-  sealed trait State
-  case object Inactive extends State
-  case object Active   extends State
 
+object AbstractWsHandler {
   case object InitSink
   case object AckSink
   case object CompletedSink
@@ -161,22 +158,4 @@ object AbstractWsHandler {
     * @param waitDur The amount of time to wait until connecting again
     */
   case class Restart(fresh: Boolean, waitDur: FiniteDuration)
-
-  /**
-    * And exception throw when something is wrong with the ack received
-    * (or if no ack was received) from Discord.
-    */
-  class AckException(msg: String) extends Exception(msg)
-
-  private[websocket] trait Data[Resume] {
-    def resumeOpt: Option[Resume]
-    def queueOpt:  Option[SourceQueueWithComplete[Message]]
-  }
-  case class WithResumeData[Resume](resumeOpt: Option[Resume]) extends Data[Resume] {
-    override def queueOpt: Option[SourceQueueWithComplete[Message]] = None
-  }
-  case class WithQueue[Resume](queue: SourceQueueWithComplete[Message], resumeOpt: Option[Resume])
-      extends Data[Resume] {
-    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
-  }
 }

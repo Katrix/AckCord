@@ -31,14 +31,15 @@ import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.event.Logging
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.stream.scaladsl.{Flow, SourceQueueWithComplete}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
+import akka.stream.scaladsl.{Compression, Flow}
 import akka.stream.{Attributes, Materializer}
+import akka.util.ByteString
 import io.circe
 import io.circe.parser
+import io.circe.syntax._
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}
 import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
@@ -62,18 +63,26 @@ class VoiceWsHandler(
     token: String,
     sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef]
-)(implicit mat: Materializer)
-    extends AbstractWsHandler[VoiceMessage, ResumeData] {
+)(implicit val mat: Materializer)
+    extends AbstractWsHandler[VoiceMessage[_], ResumeData] {
+
   import AbstractWsHandler._
   import VoiceWsHandler._
   import VoiceWsProtocol._
 
   private implicit val system: ActorSystem = context.system
+  private var ssrc:            Int         = -1
+  private var previousNonce:   Option[Int] = None
+  private var localAddress:    String      = _
+  private var localPort:       Int         = -1
+  private var connectionActor: ActorRef    = _
 
   def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
         case t: TextMessage => t.textStream.fold("")(_ + _)
+        case b: BinaryMessage =>
+          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
       }
       .flatMapConcat(identity)
 
@@ -84,141 +93,171 @@ class VoiceWsHandler(
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
 
+  override def createMessage: Flow[VoiceMessage[_], Message, NotUsed] = Flow[VoiceMessage[_]].map { msg =>
+    val payload = msg.asJson.noSpaces
+    if (AckCordSettings().LogSentWs) {
+      log.debug("Sending payload: {}", payload)
+    }
+    TextMessage(payload)
+  }
+
   override def wsUri: Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
-  onTransition {
-    case Inactive -> Active => self ! SendIdentify //We act first here
+  override def preStart(): Unit = {
+    self ! SendIdentify
+    resume = Some(ResumeData(serverId, sessionId, token))
   }
 
-  override def whenInactive: StateFunction = whenInactiveBase.orElse {
-    case Event(ConnectionDied, _) => stay()
+  override def becomeActive(): Unit = {
+    super.becomeActive()
+    self ! SendIdentify //We act first here
   }
 
-  when(Active) {
-    case Event(InitSink, _) =>
-      sender() ! AckSink
-      stay()
-    case Event(CompletedSink, _) =>
-      log.info("Websocket connection completed")
-      self ! Logout
-      stay()
-    case Event(Status.Failure(e), _) =>
-      log.error(e, "Connection interrupted")
-      throw e
-    case Event(Left(NonFatal(e)), _) => throw e
-    case event @ Event(Right(_: VoiceMessage[_]), _) =>
-      val res = handleWsMessages(event)
-      sender() ! AckSink
-      res
-    case Event(SendIdentify, WithQueue(queue, _)) =>
-      val identifyObject = IdentifyData(serverId, userId, sessionId, token)
+  override def becomeInactive(): Unit = {
+    super.becomeInactive()
+    ssrc = -1
+  }
 
-      val payload = createPayload(Identify(identifyObject))
-      queue.offer(TextMessage(payload))
+  override def inactive: Receive = whenInactiveBase.orElse {
+    case ConnectionDied =>
+      if (shuttingDown) {
+        log.info("UDP connection stopped when shut down in inactive state. Stopping.")
+        context.stop(self)
+      }
+      connectionActor = null
+  }
 
-      stay()
-    case Event(SendSelectProtocol, WithUDPActor(Some(IPData(localAddress, port)), _, _, _, _, queue, _)) =>
-      val protocolObj = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, port, "xsalsa20_poly1305"))
-      val payload     = createPayload(SelectProtocol(protocolObj))
-      queue.offer(TextMessage(payload))
-      stay()
-    case Event(SendHeartbeat, data @ WithUDPActor(_, receivedAck, _, _, _, queue, _)) =>
-      if (receivedAck) {
-        val nonce = System.currentTimeMillis().toInt
+  override def active: Receive = {
+    val base: Receive = {
+      case InitSink =>
+        sender() ! AckSink
+      case CompletedSink =>
+        queue = null
+        timers.cancel(heartbeatTimerKey)
 
-        val payload = createPayload(Heartbeat(nonce))
-        queue.offer(TextMessage(payload))
-        log.debug("Sent Heartbeat")
+        if (connectionActor == null) {
+          if (shuttingDown) {
+            log.info("Websocket and UDP connection completed when shutting down. Stopping.")
+            context.stop(self)
+          } else {
+            log.info("Websocket and UDP connection completed. Logging in again.")
+            if (!timers.isTimerActive(restartLoginKey)) {
+              self ! Login
+            }
+            becomeInactive()
+          }
+        } else {
+          log.info("Websocket connection completed. Waiting for UDP connection.")
+        }
+      case ConnectionDied =>
+        connectionActor = null
 
-        stay using data.copy(receivedAck = false, previousNonce = Some(nonce))
-      } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
-    case Event(SendHeartbeat, data @ WithHeartbeat(_, receivedAck, _, queue, _)) =>
-      if (receivedAck) {
-        val nonce = System.currentTimeMillis().toInt
+        if (queue == null) {
+          if (shuttingDown) {
+            log.info("Websocket and UDP connection completed when shutting down. Stopping.")
+            context.stop(self)
+          } else {
+            log.info("Websocket and UDP connection completed. Logging in again.")
+            if (!timers.isTimerActive(restartLoginKey)) {
+              self ! Login
+            }
+            becomeInactive()
+          }
+        } else {
+          log.info("UDP connection completed. Waiting for websocket connection.")
+        }
+      case Status.Failure(e) =>
+        //TODO: Inspect error
+        log.error(e, "Encountered websocket error")
+        self ! Restart(fresh = false, 1.seconds)
+      case Left(NonFatal(e)) =>
+        log.error(e, "Encountered websocket parsing error")
+        self ! Restart(fresh = false, 1.seconds)
+      case SendIdentify =>
+        queue.offer(Identify(IdentifyData(serverId, userId, sessionId, token)))
+        resume = Some(ResumeData(serverId, sessionId, token))
+      case SendSelectProtocol =>
+        require(localPort != -1)
 
-        val payload = createPayload(Heartbeat(nonce))
-        queue.offer(TextMessage(payload))
-        log.debug("Sent Heartbeat")
+        val data = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, localPort, "xsalsa20_poly1305"))
+        queue.offer(SelectProtocol(data))
+        localAddress = null
+        localPort = -1
+      case SendHeartbeat =>
+        if (receivedAck) {
+          val nonce = System.currentTimeMillis().toInt
 
-        stay using data.copy(receivedAck = false, previousNonce = Some(nonce))
-      } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
-    case Event(FoundIP(localAddress, port), data: WithUDPActor) =>
-      self ! SendSelectProtocol
-      stay using data.copy(ipData = Some(IPData(localAddress, port)))
-    case Event(SetSpeaking(speaking), data: WithUDPActor) =>
-      val message = SpeakingData(speaking, None, data.ssrc, Some(userId))
-      val payload = createPayload(Speaking(message))
+          queue.offer(Heartbeat(nonce))
+          log.debug("Sent Heartbeat")
 
-      data.queue.offer(TextMessage(payload))
-      stay()
-    case Event(ConnectionDied, _) =>
-      throw new IllegalStateException("Voice connection died") //This should never happen as long as we're in the active state
-    case Event(Logout, data: WithUDPActor) =>
-      data.queueOpt.foreach(_.complete())
-      data.connectionActor ! Disconnect
-      log.info("Logging out, Stopping")
-      stop()
-    case Event(Restart(fresh, waitDur), data) =>
-      data.queueOpt.foreach(_.complete())
-      setTimer("RestartLogin", Login, waitDur)
-      log.info("Restarting, going to Inactive")
-      goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
+          receivedAck = false
+          previousNonce = Some(nonce)
+        } else {
+          log.warning("Did not receive HeartbeatACK between heartbeats. Restarting.")
+          self ! Restart(fresh = false, 0.millis)
+        }
+      case FoundIP(foundLocalAddress, foundPort) =>
+        self ! SendSelectProtocol
+        localAddress = foundLocalAddress
+        localPort = foundPort
+      case SetSpeaking(speaking) =>
+        if (queue != null && ssrc != -1) {
+          queue.offer(Speaking(SpeakingData(speaking, None, ssrc, Some(userId))))
+        }
+      case Logout =>
+        queue.complete()
+        connectionActor ! Disconnect
+        log.info("Logging out")
+        shuttingDown = true
+      case Restart(fresh, waitDur) =>
+        queue.complete()
+        connectionActor ! Disconnect
+        timers.startSingleTimer(restartLoginKey, Login, waitDur)
+        log.info("Restarting")
+        if (fresh) {
+          resume = None
+        }
+    }
+
+    base.orElse(handleWsMessages)
   }
 
   /**
     * Handles all websocket messages received
     */
-  def handleWsMessages: StateFunction = {
-    case Event(Right(Ready(ReadyObject(ssrc, port, _, _))), data: WithHeartbeat) =>
-      val connectionActor =
-        context.actorOf(
-          VoiceUDPHandler.props(address, ssrc, port, sendTo, sendSoundTo, serverId, userId),
-          "VoiceUDPHandler"
-        )
+  def handleWsMessages: Receive = {
+    case Right(Ready(ReadyData(readySsrc, port, _, _))) =>
+      ssrc = readySsrc
+      connectionActor = context.actorOf(
+        VoiceUDPHandler.props(address, port, ssrc, sendTo, sendSoundTo, serverId, userId),
+        "VoiceUDPHandler"
+      )
       connectionActor ! DoIPDiscovery(self)
       context.watchWith(connectionActor, ConnectionDied)
-      val newData = WithUDPActor(
-        ipData = None,
-        receivedAck = data.receivedAck,
-        previousNonce = data.previousNonce,
-        ssrc = ssrc,
-        connectionActor = connectionActor,
-        queue = data.queue,
-        resume = data.resume
-      )
 
-      stay using newData
-    case Event(Right(Hello(heartbeatInterval)), WithQueue(queue, _)) =>
+      sender() ! AckSink
+    case Right(Hello(heartbeatInterval)) =>
       self ! SendHeartbeat
-      setTimer("SendHeartbeats", SendHeartbeat, (heartbeatInterval * 0.75).toInt.millis, repeat = true)
-      stay using WithHeartbeat(
-        ipData = None,
-        receivedAck = true,
-        previousNonce = None,
-        queue = queue,
-        resume = ResumeData(serverId, sessionId, token)
-      )
-    case Event(Right(HeartbeatACK(nonce)), data: WithUDPActor) => //TODO: Redesign data system to prevent this
-      log.debug("Received HeartbeatACK")
-      if (data.previousNonce.contains(nonce)) {
-        stay using data.copy(receivedAck = true)
-      } else throw new AckException(s"Received unknown nonce $nonce for HeartbeatACK")
-    case Event(Right(HeartbeatACK(nonce)), data: WithHeartbeat) =>
-      log.debug("Received HeartbeatACK")
-      if (data.previousNonce.contains(nonce)) {
-        stay using data.copy(receivedAck = true)
-      } else throw new AckException(s"Received unknown nonce $nonce for HeartbeatACK")
-    case Event(Right(SessionDescription(SessionDescriptionData(_, secretKey))), data: WithUDPActor) =>
-      data.connectionActor ! StartConnection(secretKey)
-      stay()
-    case Event(Right(Speaking(SpeakingData(isSpeaking, delay, ssrc, Some(speakingUserId)))), _) =>
-      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, ssrc, isSpeaking, delay, serverId, userId))
-      stay()
-    case Event(Right(IgnoreMessage12), _)        => stay()
-    case Event(Right(IgnoreClientDisconnect), _) => stay()
-  }
+      timers.startPeriodicTimer(heartbeatTimerKey, SendHeartbeat, (heartbeatInterval * 0.75).toInt.millis)
+      receivedAck = true
+      previousNonce = None
 
-  initialize()
+      sender() ! AckSink
+    case Right(HeartbeatACK(nonce)) =>
+      log.debug("Received HeartbeatACK")
+      if (previousNonce.contains(nonce)) {
+        receivedAck = true
+      } else {
+        log.warning("Did not receive correct nonce in HeartbeatACK. Restarting.")
+        self ! Restart(fresh = false, 500.millis)
+      }
+    case Right(SessionDescription(SessionDescriptionData(_, secretKey))) =>
+      connectionActor ! StartConnection(secretKey)
+    case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, Some(speakingUserId)))) =>
+      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, userSsrc, isSpeaking, delay, serverId, userId))
+    case Right(IgnoreMessage12)        => //NO-OP
+    case Right(IgnoreClientDisconnect) => //NO-OP
+  }
 }
 object VoiceWsHandler {
   def props(
@@ -240,29 +279,4 @@ object VoiceWsHandler {
     * Sent to [[VoiceWsHandler]]. Used to set the client as speaking or not.
     */
   case class SetSpeaking(speaking: Boolean)
-
-  private case class WithUDPActor(
-      ipData: Option[IPData],
-      receivedAck: Boolean,
-      previousNonce: Option[Int],
-      ssrc: Int,
-      connectionActor: ActorRef,
-      queue: SourceQueueWithComplete[Message],
-      resume: ResumeData
-  ) extends Data[ResumeData] {
-    def resumeOpt:         Option[ResumeData]                       = Some(resume)
-    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
-  }
-
-  private case class IPData(address: String, port: Int)
-  private case class WithHeartbeat(
-      ipData: Option[IPData],
-      receivedAck: Boolean,
-      previousNonce: Option[Int],
-      queue: SourceQueueWithComplete[Message],
-      resume: ResumeData
-  ) extends Data[ResumeData] {
-    def resumeOpt:         Option[ResumeData]                       = Some(resume)
-    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
-  }
 }

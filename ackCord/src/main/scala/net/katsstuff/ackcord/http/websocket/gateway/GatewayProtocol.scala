@@ -31,6 +31,7 @@ import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http._
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 
 object GatewayProtocol extends DiscordProtocol {
 
@@ -134,10 +135,6 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val webhookUpdateDataEncoder: Encoder[GatewayEvent.WebhookUpdateData] = deriveEncoder
   implicit val webhookUpdateDataDecoder: Decoder[GatewayEvent.WebhookUpdateData] = deriveDecoder
 
-  implicit def wsMessageEncoder[Data: Encoder]: Encoder[GatewayMessage[Data]] =
-    (a: GatewayMessage[Data]) =>
-      Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson, "t" -> a.t.map(_.name).asJson)
-
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
       val base = Seq(
@@ -207,6 +204,10 @@ object GatewayProtocol extends DiscordProtocol {
       )
   }
 
+  implicit def wsMessageEncoder[D]: Encoder[GatewayMessage[D]] =
+    (a: GatewayMessage[D]) =>
+      Json.obj("op" -> a.op.asJson, "d" -> a.dEncoder(a.d), "s" -> a.s.asJson, "t" -> a.t.map(_.name).asJson)
+
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
     val opC = c.downField("op")
     val dC  = c.downField("d")
@@ -232,7 +233,7 @@ object GatewayProtocol extends DiscordProtocol {
   private def decodeDispatch(c: HCursor): Decoder.Result[Dispatch[_]] = {
     val dC = c.downField("d")
 
-    def createDispatch[Data: Decoder](
+    def createDispatch[Data: Decoder: Encoder](
         seq: Int,
         create: Data => ComplexGatewayEvent[Data, _]
     ): Either[DecodingFailure, Dispatch[Data]] =

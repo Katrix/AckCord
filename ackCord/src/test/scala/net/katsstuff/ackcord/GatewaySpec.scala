@@ -241,7 +241,7 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef, cache: O
       Future.successful(response)
     }
 
-    Flow.fromSinkAndSourceMat(sendToServer, sendToClient)(Keep.right)
+    Flow.fromSinkAndSourceCoupledMat(sendToServer, sendToClient)(Keep.right)
   }
 }
 object MockedGatewayHandler {

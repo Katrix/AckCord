@@ -26,11 +26,13 @@ package net.katsstuff.ackcord.http.websocket.gateway
 import java.time.{Instant, OffsetDateTime}
 
 import akka.NotUsed
+import io.circe.{Encoder, Json}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http._
 import net.katsstuff.ackcord.http.websocket.WsMessage
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayProtocol._
 import shapeless._
 import shapeless.labelled.FieldType
 
@@ -46,7 +48,8 @@ sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
   * @param sequence The seq number.
   * @param event The sent event.
   */
-case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _]) extends GatewayMessage[Data] {
+case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _])(implicit val dEncoder: Encoder[Data])
+    extends GatewayMessage[Data] {
   override val s:  Some[Int]                          = Some(sequence)
   override val t:  Some[ComplexGatewayEvent[Data, _]] = Some(event)
   override def op: GatewayOpCode                      = GatewayOpCode.Dispatch
@@ -58,7 +61,8 @@ case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _]) ex
   * @param d The previous sequence.
   */
 case class Heartbeat(d: Option[Int]) extends GatewayMessage[Option[Int]] {
-  override def op: GatewayOpCode = GatewayOpCode.Heartbeat
+  override def op:       GatewayOpCode        = GatewayOpCode.Heartbeat
+  override def dEncoder: Encoder[Option[Int]] = Encoder[Option[Int]]
 }
 
 /**
@@ -88,7 +92,8 @@ object IdentifyData {
   * Sent by the client to log in.
   */
 case class Identify(d: IdentifyData) extends GatewayMessage[IdentifyData] {
-  override def op: GatewayOpCode = GatewayOpCode.Identify
+  override def op:       GatewayOpCode         = GatewayOpCode.Identify
+  override def dEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
 }
 
 /**
@@ -103,12 +108,14 @@ case class StatusData(since: Option[Instant], game: Option[RawPresenceGame], sta
   * Sent when a presence or status changes.
   */
 case class StatusUpdate(d: StatusData) extends GatewayMessage[StatusData] {
-  override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
+  override def op:       GatewayOpCode       = GatewayOpCode.StatusUpdate
+  override def dEncoder: Encoder[StatusData] = Encoder[StatusData]
 }
 
 case class VoiceStateUpdateData(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean)
 case class VoiceStateUpdate(d: VoiceStateUpdateData) extends GatewayMessage[VoiceStateUpdateData] {
-  override def op: GatewayOpCode = GatewayOpCode.VoiceStateUpdate
+  override def op:       GatewayOpCode                 = GatewayOpCode.VoiceStateUpdate
+  override def dEncoder: Encoder[VoiceStateUpdateData] = Encoder[VoiceStateUpdateData]
 }
 
 /**
@@ -118,7 +125,8 @@ case class VoiceStateUpdate(d: VoiceStateUpdateData) extends GatewayMessage[Voic
   */
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
 case class VoiceServerUpdate(d: VoiceServerUpdateData) extends GatewayMessage[VoiceServerUpdateData] {
-  override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
+  override def op:       GatewayOpCode                  = GatewayOpCode.VoiceServerPing
+  override def dEncoder: Encoder[VoiceServerUpdateData] = Encoder[VoiceServerUpdateData]
 }
 
 /**
@@ -132,15 +140,17 @@ case class ResumeData(token: String, sessionId: String, seq: Int)
   * Sent by the client instead of [[Identify]] when resuming a connection.
   */
 case class Resume(d: ResumeData) extends GatewayMessage[ResumeData] {
-  override def op: GatewayOpCode = GatewayOpCode.Resume
+  override def op:       GatewayOpCode       = GatewayOpCode.Resume
+  override def dEncoder: Encoder[ResumeData] = Encoder[ResumeData]
 }
 
 /**
   * Sent by the gateway to indicate that the client should reconnect.
   */
 case object Reconnect extends GatewayMessage[NotUsed] {
-  override def op: GatewayOpCode = GatewayOpCode.Reconnect
-  override def d:  NotUsed       = NotUsed
+  override def op:       GatewayOpCode    = GatewayOpCode.Reconnect
+  override def d:        NotUsed          = NotUsed
+  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
@@ -155,7 +165,8 @@ case class RequestGuildMembersData(guildId: GuildId, query: String = "", limit: 
   * Sent by the client to receive all the members of a guild, even logged out ones.
   */
 case class RequestGuildMembers(d: RequestGuildMembersData) extends GatewayMessage[RequestGuildMembersData] {
-  override def op: GatewayOpCode = GatewayOpCode.RequestGuildMembers
+  override def op:       GatewayOpCode                    = GatewayOpCode.RequestGuildMembers
+  override def dEncoder: Encoder[RequestGuildMembersData] = Encoder[RequestGuildMembersData]
 }
 
 /**
@@ -163,8 +174,9 @@ case class RequestGuildMembers(d: RequestGuildMembersData) extends GatewayMessag
   * @param resumable If the connection is resumable.
   */
 case class InvalidSession(resumable: Boolean) extends GatewayMessage[Boolean] {
-  override def op: GatewayOpCode = GatewayOpCode.InvalidSession
-  override def d:  Boolean       = resumable
+  override def op:       GatewayOpCode    = GatewayOpCode.InvalidSession
+  override def d:        Boolean          = resumable
+  override def dEncoder: Encoder[Boolean] = Encoder[Boolean]
 }
 
 /**
@@ -177,15 +189,17 @@ case class HelloData(heartbeatInterval: Int, _trace: Seq[String])
   * Sent by the gateway as a response to [[Identify]]
   */
 case class Hello(d: HelloData) extends GatewayMessage[HelloData] {
-  override def op: GatewayOpCode = GatewayOpCode.Hello
+  override def op:       GatewayOpCode      = GatewayOpCode.Hello
+  override def dEncoder: Encoder[HelloData] = Encoder[HelloData]
 }
 
 /**
   * Sent by the gateway as a response to [[Heartbeat]].
   */
 case object HeartbeatACK extends GatewayMessage[NotUsed] {
-  override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
-  override def d:  NotUsed       = NotUsed
+  override def op:       GatewayOpCode    = GatewayOpCode.HeartbeatACK
+  override def d:        NotUsed          = NotUsed
+  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**

@@ -49,8 +49,8 @@ import net.katsstuff.ackcord.util.AckCordSettings
   */
 class VoiceUDPHandler(
     address: String,
-    ssrc: Int,
     port: Int,
+    ssrc: Int,
     sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef],
     serverId: RawSnowflake,
@@ -80,9 +80,9 @@ class VoiceUDPHandler(
     case Event(UdpConnected.Connected, NoSocket) => stay using WithSocket(sender())
     case Event(ip: DoIPDiscovery, NoSocket)      =>
       //We received the request a bit early, resend it
-      setTimer("ResendIPDiscovery", ip, 100.millis)
+      setTimer("ResendIPDiscovery", ip, 50.millis)
       log.debug("Resending DoIPDiscovery request")
-      stay()
+      stay
     case Event(ip: DoIPDiscovery, WithSocket(socket)) =>
       val payload = ByteString(ssrc).padTo(70, 0.toByte)
       socket ! UdpConnected.Send(payload)
@@ -100,12 +100,12 @@ class VoiceUDPHandler(
       goto(Active) using WithSecret(socket, new TweetNaclFast.SecretBox(secretKey.toArray))
     case Event(Disconnect, WithSocket(socket)) =>
       socket ! UdpConnected.Disconnect
-      stay()
+      stay
     case Event(UdpConnected.Disconnect, WithSocket(socket)) =>
       socket ! UdpConnected.Disconnect
-      stay()
+      stay
     case Event(UdpConnected.Disconnected, _) =>
-      stop()
+      stop
   }
 
   when(Active) {
@@ -120,24 +120,24 @@ class VoiceUDPHandler(
           } else log.error("Failed to decrypt voice data Header: {} Received voice: {}", rtpHeader, voice)
         }
       }
-      stay()
+      stay
     case Event(SendData(data), WithSecret(socket, secret)) =>
       queuePacket(data, secret, socket)
-      stay()
+      stay
     case Event(BeginBurstMode, _) =>
       log.info("Beginning bursting mode")
       burstSender = sender()
       sendDataRequest()
-      stay()
+      stay
     case Event(StopBurstMode, _) =>
       burstSender = null
-      stay()
+      stay
     case Event(SendDataBurst(data), WithSecret(socket, secret)) =>
       hasSentRequest = false
       if (data.nonEmpty) {
         queuePackets(data, secret, socket)
       }
-      stay()
+      stay
     case Event(UDPAck, WithSecret(socket, _)) =>
       queue.dequeue() //Remove the one we received an ack for
 
@@ -145,15 +145,15 @@ class VoiceUDPHandler(
         socket ! UdpConnected.Send(queue.head, UDPAck)
         sendDataRequest()
       }
-      stay()
+      stay
     case Event(Disconnect, WithSecret(socket, _)) =>
       socket ! UdpConnected.Disconnect
-      stay()
+      stay
     case Event(UdpConnected.Disconnect, WithSecret(socket, _)) =>
       socket ! UdpConnected.Disconnect
-      stay()
+      stay
     case Event(UdpConnected.Disconnected, _) =>
-      stop()
+      stop
   }
 
   def createPayload(data: ByteString, secret: TweetNaclFast.SecretBox): ByteString = {
@@ -197,13 +197,13 @@ class VoiceUDPHandler(
 object VoiceUDPHandler {
   def props(
       address: String,
-      ssrc: Int,
       port: Int,
+      ssrc: Int,
       sendTo: Option[ActorRef],
       sendSoundTo: Option[ActorRef],
       serverId: RawSnowflake,
       userId: UserId
-  ): Props = Props(new VoiceUDPHandler(address, ssrc, port, sendTo, sendSoundTo, serverId, userId))
+  ): Props = Props(new VoiceUDPHandler(address, port, ssrc, sendTo, sendSoundTo, serverId, userId))
 
   sealed trait State
   case object Inactive extends State

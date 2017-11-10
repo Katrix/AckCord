@@ -44,8 +44,8 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] = deriveEncoder
   implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] = deriveDecoder
 
-  implicit val readyDataEncoder: Encoder[ReadyObject] = deriveEncoder
-  implicit val readyDataDecoder: Decoder[ReadyObject] = deriveDecoder
+  implicit val readyDataEncoder: Encoder[ReadyData] = deriveEncoder
+  implicit val readyDataDecoder: Decoder[ReadyData] = deriveDecoder
 
   implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
     Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
@@ -63,8 +63,8 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
   implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
 
-  implicit def wsMessageEncoder[Data: Encoder]: Encoder[VoiceMessage[Data]] =
-    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.d.asJson, "s" -> a.s.asJson)
+  implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
+    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.dEncoder(a.d), "s" -> a.s.asJson)
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
     c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>

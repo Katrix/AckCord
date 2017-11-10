@@ -28,7 +28,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Props, Stash, Status}
 import akka.event.Logging
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
@@ -38,8 +38,8 @@ import akka.stream.{Attributes, Materializer}
 import akka.util.ByteString
 import io.circe
 import io.circe.parser
+import io.circe.syntax._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Data
 import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, ClientSettings}
 
@@ -58,10 +58,10 @@ class GatewayHandler(
     settings: ClientSettings,
     responseProcessor: Option[ActorRef],
     responseFunc: Dispatch[_] => Any
-)(implicit mat: Materializer)
-    extends AbstractWsHandler[GatewayMessage, ResumeData] {
+)(implicit val mat: Materializer)
+    extends AbstractWsHandler[GatewayMessage[_], ResumeData]
+    with Stash {
   import AbstractWsHandler._
-  import GatewayHandler._
   import GatewayProtocol._
 
   private implicit val system: ActorSystem = context.system
@@ -82,49 +82,77 @@ class GatewayHandler(
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 
+  override def createMessage: Flow[GatewayMessage[_], Message, NotUsed] = Flow[GatewayMessage[_]].map { msg =>
+    val payload = msg.asJson.noSpaces
+    if (AckCordSettings().LogSentWs) {
+      log.debug("Sending payload: {}", payload)
+    }
+    TextMessage(payload)
+  }
+
   def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
-  when(Active) {
-    case Event(InitSink, _) =>
-      sender() ! AckSink
-      stay()
-    case Event(CompletedSink, _) =>
-      log.info("Websocket connection completed")
-      self ! Logout
-      stay()
-    case Event(Status.Failure(e), _) => throw e
-    case Event(Left(NonFatal(e)), _) => throw e
-    case event @ Event(Right(_: GatewayMessage[_]), _) =>
-      val res = handleWsMessages(event)
-      sender() ! AckSink
-      res
-    case event @ Event(_: GatewayMessage[_], _) => handleExternalMessage(event)
-    case Event(SendHeartbeat, data @ WithHeartbeat(receivedAck, source, resume)) =>
-      if (receivedAck) {
-        val seq = resume.map(_.seq)
+  override def active: Receive = {
+    val base: Receive = {
+      case InitSink =>
+        sender() ! AckSink
+      case CompletedSink =>
+        queue = null
+        timers.cancel(heartbeatTimerKey)
 
-        val payload = createPayload(Heartbeat(seq))
-        source.offer(TextMessage(payload))
-        log.debug("Sent Heartbeat")
+        if (shuttingDown) {
+          log.info("Websocket connection completed. Stopping.")
+          context.stop(self)
+        } else {
+          log.info("Websocket connection completed. Logging in again.")
+          if (!timers.isTimerActive(restartLoginKey)) {
+            self ! Login
+          }
+          becomeInactive()
+        }
+      case Status.Failure(e) =>
+        //TODO: Inspect error
+        log.error(e, "Encountered websocket error")
+        self ! Restart(fresh = false, 1.seconds)
+      case Left(NonFatal(e)) =>
+        log.error(e, "Encountered websocket parsing error")
+        self ! Restart(fresh = false, 1.seconds)
+      case SendHeartbeat =>
+        if (receivedAck) {
+          val seq = resume.map(_.seq)
 
-        stay using data.copy(receivedAck = false)
-      } else throw new AckException("Did not receive a Heartbeat ACK between heartbeats")
-    case Event(Logout, data) =>
-      data.queueOpt.foreach(_.complete())
-      stop()
-    case Event(Restart(fresh, waitDur), data) =>
-      data.queueOpt.foreach(_.complete())
-      setTimer("RestartLogin", Login, waitDur)
-      goto(Inactive) using WithResumeData(if (fresh) None else data.resumeOpt)
+          queue.offer(Heartbeat(seq))
+          log.debug("Sent Heartbeat")
+          receivedAck = false
+        } else {
+          //TODO: Non 1000 close code
+          log.warning("Did not receive HeartbeatACK between heartbeats. Restarting.")
+          self ! Restart(fresh = false, 0.millis)
+        }
+      case Logout =>
+        log.info("Shutting down")
+        queue.complete()
+        shuttingDown = true
+      case Restart(fresh, waitDur) =>
+        log.info("Restarting")
+        queue.complete()
+
+        timers.startSingleTimer(restartLoginKey, Login, waitDur)
+        if (fresh) {
+          resume = None
+        }
+    }
+
+    base.orElse(handleWsMessages).orElse(handleExternalMessage)
   }
 
   /**
     * Handles all websocket messages received
     */
-  def handleWsMessages: StateFunction = {
-    case Event(Right(Hello(data)), WithQueue(queue, resume)) =>
-      val payload = resume match {
-        case Some(resumeData) => createPayload(Resume(resumeData))
+  def handleWsMessages: Receive = {
+    case Right(Hello(data)) =>
+      val message = resume match {
+        case Some(resumeData) => Resume(resumeData)
         case None =>
           val identifyObject = IdentifyData(
             token = settings.token,
@@ -135,55 +163,62 @@ class GatewayHandler(
             presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
           )
 
-          createPayload(Identify(identifyObject))
+          Identify(identifyObject)
       }
 
-      queue.offer(TextMessage(payload))
+      queue.offer(message)
       self ! SendHeartbeat
-      setTimer("SendHeartbeats", SendHeartbeat, data.heartbeatInterval.millis, repeat = true)
-      stay using WithHeartbeat(receivedAck = true, queue, resume)
-    case Event(Right(dispatch: Dispatch[_]), data: WithHeartbeat[ResumeData @unchecked]) =>
-      val stayData = dispatch.event match {
+      timers.startPeriodicTimer(heartbeatTimerKey, SendHeartbeat, data.heartbeatInterval.millis)
+      sender() ! AckSink
+      unstashAll()
+
+      receivedAck = true
+    case Right(dispatch: Dispatch[_]) =>
+      resume = dispatch.event match {
         case GatewayEvent.Ready(readyData) =>
           val resumeData = ResumeData(settings.token, readyData.sessionId, dispatch.sequence)
-          data.copy(resumeOpt = Some(resumeData))
+          Some(resumeData)
         case _ =>
-          data.copy(resumeOpt = data.resumeOpt.map(_.copy(seq = dispatch.sequence)))
+          resume.map(_.copy(seq = dispatch.sequence))
       }
 
       responseProcessor.foreach(_ ! responseFunc(dispatch))
-      stay using stayData
-    case Event(Right(HeartbeatACK), data: WithHeartbeat[ResumeData @unchecked]) =>
+
+      sender() ! AckSink
+    case Right(Heartbeat(_)) =>
+      self ! SendHeartbeat
+
+      sender() ! AckSink
+    case Right(HeartbeatACK) =>
       log.debug("Received HeartbeatACK")
-      stay using data.copy(receivedAck = true)
-    case Event(Right(Reconnect), _) =>
+
+      sender() ! AckSink
+      receivedAck = true
+    case Right(Reconnect) =>
       log.info("Was told to reconnect by gateway")
       self ! Restart(fresh = false, 100.millis)
-      stay()
-    case Event(Right(InvalidSession(resumable)), _) =>
+
+      sender() ! AckSink
+    case Right(InvalidSession(resumable)) =>
       log.error("Invalid session. Trying to establish new session in 5 seconds")
       self ! Restart(fresh = !resumable, 5.seconds)
-      stay()
+
+      sender() ! AckSink
   }
 
   /**
     * Handle external messages sent from neither this nor Discord
     */
-  def handleExternalMessage: StateFunction = {
-    case Event(request: RequestGuildMembers, WithHeartbeat(_, queue, _)) =>
-      val payload = createPayload(request)
-      queue.offer(TextMessage(payload))
+  def handleExternalMessage: Receive = {
+    case request: RequestGuildMembers =>
+      if (queue != null) queue.offer(request)
+      else stash()
+
       log.debug("Requested guild data for {}", request.d.guildId)
-
-      stay
-    case Event(request: VoiceStateUpdate, WithHeartbeat(_, queue, _)) =>
-      val payload = createPayload(request)
-      queue.offer(TextMessage(payload))
-
-      stay
+    case request: VoiceStateUpdate =>
+      if (queue != null) queue.offer(request)
+      else stash()
   }
-
-  initialize()
 }
 object GatewayHandler {
 
@@ -203,13 +238,5 @@ object GatewayHandler {
     }
 
     Props(new GatewayHandler(wsUri, settings, Some(snowflakeCache), f))
-  }
-
-  private case class WithHeartbeat[Resume](
-      receivedAck: Boolean,
-      queue: SourceQueueWithComplete[Message],
-      resumeOpt: Option[Resume]
-  ) extends Data[Resume] {
-    override def queueOpt: Option[SourceQueueWithComplete[Message]] = Some(queue)
   }
 }

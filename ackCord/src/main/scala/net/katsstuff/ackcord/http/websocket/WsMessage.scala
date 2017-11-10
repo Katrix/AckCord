@@ -25,6 +25,8 @@ package net.katsstuff.ackcord.http.websocket
 
 import scala.language.higherKinds
 
+import io.circe.Encoder
+
 /**
   * Represents a message sent by websocket handlers
   * @tparam D The data in this message
@@ -34,4 +36,5 @@ private[websocket] trait WsMessage[D, OpCode] {
   def op: OpCode
   def d:  D
   def s: Option[Int] = None
+  def dEncoder: Encoder[D]
 }
