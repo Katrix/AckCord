@@ -37,9 +37,9 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{ask, AskTimeoutException}
+import akka.pattern.{AskTimeoutException, ask}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Partition, Sink}
-import akka.stream.{FlowShape, Materializer, OverflowStrategy, SinkShape}
+import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.AckCord
@@ -88,7 +88,7 @@ object RequestStreams {
       .via(requestHttpFlow)
       .via(requestParser)
       .mapAsyncUnordered(parallelism)(identity)
-      .alsoTo(sendRatelimitUpdates.async)
+      .alsoTo(sendRatelimitUpdates)
   }
 
   def requestFlowWithRatelimit[Data, Ctx](
@@ -108,7 +108,7 @@ object RequestStreams {
 
       val in                = builder.add(Flow[RequestWrapper[Data, Ctx]])
       val buffer            = builder.add(Flow[RequestWrapper[Data, Ctx]].buffer(bufferSize, overflowStrategy))
-      val globalRateLimiter = builder.add(new GlobalRatelimiter[Data, Ctx])
+      val globalRateLimiter = builder.add(new GlobalRatelimiter[Data, Ctx].named("GlobalRateLimiter"))
       val globalMain        = FlowShape(globalRateLimiter.in0, globalRateLimiter.out)
       val globalSecondary   = globalRateLimiter.in1
       val uri =
@@ -156,9 +156,9 @@ object RequestStreams {
         future.map(_ => wrapper).recover {
           case _: AskTimeoutException => wrapper.toDropped
         }
-      case dropped: RequestDropped[_, _] => Future.successful(dropped)
+      case dropped @ RequestDropped(_, _) => Future.successful(dropped)
     }
-  }
+  }.addAttributes(Attributes.name("UriRatelimiter"))
 
   def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
       implicit system: ActorSystem
@@ -183,7 +183,7 @@ object RequestStreams {
 
         (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), wrapper)
     }
-  }
+  }.named("CreateRequest")
 
   def requestHttpFlow[Data, Ctx](
       implicit mat: Materializer,
@@ -228,7 +228,7 @@ object RequestStreams {
 
           case Failure(e) => Future.successful(RequestError(request.context, e, request))
         }
-    }
+    }.named("RequestParser")
 
   def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink.foreach[RequestAnswer[Data, Ctx]] { answer =>
@@ -238,5 +238,5 @@ object RequestStreams {
       if (_uriRatelimitActor != null && tilReset != -1 && remainingRequests != -1) {
         _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests)
       }
-    }
+    }.async.named("SendAnswersToRatelimiter")
 }

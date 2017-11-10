@@ -63,7 +63,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
   private val requestHandler: ActorRef = {
-    val source = Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail)
+    val source = Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail).named("DefaultRequestHandlerActor")
     val flow = RestartFlow.withBackoff(30.seconds, 2.minutes, 0.2D) { () =>
       log.info("(Re)Starting request flow")
       RequestStreams.requestFlowWithRatelimit[Any, Any](
@@ -72,7 +72,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
         maxAllowedWait = 2.minutes,
         credentials = BotAuthentication(settings.token)
       )
-    }
+    }.named("DefaultRequestHandlerFlow")
 
     val sink = Sink.foreach[RequestAnswer[Any, Any]] {
       case RequestResponse(
@@ -89,7 +89,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
         cache ! SendHandledDataEvent(data, request.cacheHandler, withWrapper, sendTo)
 
       case answer => answer.toWrapper.sendResponseTo ! answer
-    }
+    }.named("DefaultRequestHandlerSink")
 
     source.via(flow).to(sink).run()
   }

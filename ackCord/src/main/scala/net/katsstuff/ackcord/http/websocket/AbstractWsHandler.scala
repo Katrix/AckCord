@@ -85,14 +85,14 @@ abstract class AbstractWsHandler[WsMessage, Resume](implicit mat: Materializer)
   val whenInactiveBase: Receive = {
     case Login =>
       log.info("Logging in")
-      val src = Source.queue[WsMessage](64, OverflowStrategy.backpressure)
+      val src = Source.queue[WsMessage](64, OverflowStrategy.backpressure).named("GatewayQueue")
       val sink = Sink.actorRefWithAck[Either[Error, WsMessage]](
         ref = self,
         onInitMessage = InitSink,
         ackMessage = AckSink,
         onCompleteMessage = CompletedSink
-      )
-      val flow = createMessage.viaMat(wsFlow)(Keep.right).viaMat(parseMessage)(Keep.left)
+      ).named("GatewaySink")
+      val flow = createMessage.viaMat(wsFlow)(Keep.right).viaMat(parseMessage)(Keep.left).named("Gateway")
 
       log.debug("WS uri: {}", wsUri)
       val (sourceQueue, future) = src.viaMat(flow)(Keep.both).toMat(sink)(Keep.left).run()
