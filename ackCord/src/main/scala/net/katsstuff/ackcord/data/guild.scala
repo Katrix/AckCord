@@ -392,7 +392,12 @@ case class Emoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: B
   /**
     * Mention this role so it can be formatted correctly in messages.
     */
-  def mention: String = if (!managed) s"$name:$id" else ???
+  def mention: String = if(!managed) s"<:$asString:>" else asString
+
+  /**
+    * Returns a string representation of this emoji used in requests.
+    */
+  def asString: String = if (!managed) s"$name:$id" else s"$name"
 }
 
 /**

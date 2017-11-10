@@ -1192,14 +1192,14 @@ package object syntax {
       * @param guildEmoji The emoji to react with.
       */
     def createReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      RequestWrapper(CreateReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(CreateReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
 
     /**
       * Delete the clients reaction to a message.
       * @param guildEmoji The emoji to remove a reaction for.
       */
     def deleteOwnReaction[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      RequestWrapper(DeleteOwnReaction(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
 
     /**
       * Delete the reaction of a user with an emoji.
@@ -1209,7 +1209,7 @@ package object syntax {
     def deleteUserReaction[Context](guildEmoji: Emoji, userId: UserId, context: Context = NotUsed)(
         implicit sendResponseTo: ActorRef
     ) = RequestWrapper(
-      DeleteUserReaction(message.channelId, message.id, guildEmoji.mention, userId),
+      DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId),
       context,
       sendResponseTo
     )
@@ -1219,7 +1219,7 @@ package object syntax {
       * @param guildEmoji The emoji the get the reactors for.
       */
     def fetchReactions[Context](guildEmoji: Emoji, context: Context = NotUsed)(implicit sendResponseTo: ActorRef) =
-      RequestWrapper(GetReactions(message.channelId, message.id, guildEmoji.mention), context, sendResponseTo)
+      RequestWrapper(GetReactions(message.channelId, message.id, guildEmoji.asString), context, sendResponseTo)
 
     /**
       * Clear all the reactions on this message.
