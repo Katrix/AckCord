@@ -29,7 +29,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor._
-import akka.event.EventStream
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
@@ -39,8 +38,8 @@ import akka.stream.{Materializer, OverflowStrategy}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
-import net.katsstuff.ackcord.data.{CacheSnapshot, PresenceStatus}
-import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, BotAuthentication, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.data.PresenceStatus
+import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
@@ -49,47 +48,53 @@ import shapeless.tag.@@
 /**
   * The core actor that controls all the other used actors of AckCord
   * @param gatewayWsUri The gateway websocket uri
-  * @param eventStream The eventStream to publish events to
   * @param settings The settings to use
   * @param mat The materializer to use
   */
-class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: ClientSettings)(implicit mat: Materializer)
+class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer)
     extends Actor
     with ActorLogging
     with Timers {
   private implicit val system: ActorSystem = context.system
 
-  private val cache = context.actorOf(SnowflakeCache.props(eventStream), "SnowflakeCache")
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
   private val requestHandler: ActorRef = {
-    val source = Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail).named("DefaultRequestHandlerActor")
-    val flow = RestartFlow.withBackoff(30.seconds, 2.minutes, 0.2D) { () =>
-      log.info("(Re)Starting request flow")
-      RequestStreams.requestFlowWithRatelimit[Any, Any](
-        bufferSize = 100,
-        overflowStrategy = OverflowStrategy.backpressure,
-        maxAllowedWait = 2.minutes,
-        credentials = BotAuthentication(settings.token)
-      )
-    }.named("DefaultRequestHandlerFlow")
+    val source =
+      Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail).named("DefaultRequestHandlerActor")
+    val flow = RestartFlow
+      .withBackoff(30.seconds, 2.minutes, 0.2D) { () =>
+        log.info("(Re)Starting request flow")
+        RequestStreams.requestFlowWithRatelimit[Any, Any](
+          bufferSize = 100,
+          overflowStrategy = OverflowStrategy.backpressure,
+          maxAllowedWait = 2.minutes,
+          credentials = BotAuthentication(settings.token)
+        )
+      }
+      .named("DefaultRequestHandlerFlow")
 
-    val sink = Sink.foreach[RequestAnswer[Any, Any]] {
-      case RequestResponse(
-          data,
-          ctx,
-          remainingRequests,
-          tilReset,
-          wrapper @ RequestWrapper(request: BaseRESTRequest[Any @unchecked, Any @unchecked, Any @unchecked], _, sendTo)
-          ) if request.hasCustomResponseData =>
-        val withWrapper = request
-          .findData(data)(_: CacheSnapshot, _: CacheSnapshot)
-          .map(newData => RequestResponse(newData, ctx, remainingRequests, tilReset, wrapper))
+    val sink = Sink
+      .foreach[RequestAnswer[Any, Any]] {
+        case RequestResponse(
+            data,
+            ctx,
+            remainingRequests,
+            tilReset,
+            wrapper @ RequestWrapper(
+              request: BaseRESTRequest[Any @unchecked, Any @unchecked, Any @unchecked],
+              _,
+              sendTo
+            )
+            ) if request.hasCustomResponseData =>
+          val withWrapper = request
+            .findData(data)(_: CacheState)
+            .map(newData => RequestResponse(newData, ctx, remainingRequests, tilReset, wrapper))
 
-        cache ! SendHandledDataEvent(data, request.cacheHandler, withWrapper, sendTo)
-
-      case answer => answer.toWrapper.sendResponseTo ! answer
-    }.named("DefaultRequestHandlerSink")
+          cache.publishSingle(SendHandledDataEvent(data, request.cacheHandler, withWrapper, sendTo))
+        case answer => answer.toWrapper.sendResponseTo ! answer
+      }
+      .named("DefaultRequestHandlerSink")
 
     source.via(flow).to(sink).run()
   }
@@ -106,9 +111,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
-      context.watch(cache)
       context.watch(requestHandler)
-      context.stop(cache)
       requestHandler ! Status.Success(1)
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
@@ -118,7 +121,7 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
-      if (shutdownCount == 3) {
+      if (shutdownCount == 2) {
         context.stop(self)
       }
     case Terminated(ref) =>
@@ -131,10 +134,10 @@ class DiscordClient(gatewayWsUri: Uri, eventStream: EventStream, settings: Clien
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, eventStream: EventStream, settings: ClientSettings)(implicit mat: Materializer): Props =
-    Props(new DiscordClient(wsUri, eventStream, settings))
-  def props(wsUri: Uri, eventStream: EventStream, token: String)(implicit mat: Materializer): Props =
-    props(wsUri, eventStream, ClientSettings(token))
+  def props(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props =
+    Props(new DiscordClient(wsUri, settings, cache))
+  def props(wsUri: Uri, token: String, cache: Cache)(implicit mat: Materializer): Props =
+    props(wsUri, ClientSettings(token), cache)
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
@@ -142,28 +145,26 @@ object DiscordClient extends FailFastCirceSupport {
   /**
     * Create a client actor given the needed arguments
     * @param wsUri The websocket gateway uri
-    * @param eventStream The event stream to use for the cache
     * @param token The bot token to use for authentication
     * @param system The actor system to use for creating the client actor
     * @param mat The materializer to use
     */
-  def connect(wsUri: Uri, eventStream: EventStream, token: String)(
+  def connect(wsUri: Uri, token: String, cache: Cache)(
       implicit system: ActorSystem,
       mat: Materializer
-  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, token), "DiscordClient"))
+  ): ClientActor = tagClient(system.actorOf(props(wsUri, token, cache), "DiscordClient"))
 
   /**
     * Create a client actor given the needed arguments
     * @param wsUri The websocket gateway uri
-    * @param eventStream The event stream to use for the cache
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
     * @param mat The materializer to use
     */
-  def connect(wsUri: Uri, eventStream: EventStream, settings: ClientSettings)(
+  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache)(
       implicit system: ActorSystem,
       mat: Materializer
-  ): ClientActor = tagClient(system.actorOf(props(wsUri, eventStream, settings), "DiscordClient"))
+  ): ClientActor = tagClient(system.actorOf(props(wsUri, settings, cache), "DiscordClient"))
 
   /**
     * Send this to the client to log out and stop gracefully
@@ -270,12 +271,11 @@ case class ClientSettings(
 
   /**
     * Connect to discord using these settings
-    * @param eventStream The eventStream to publish events to
     * @param wsUri The websocket uri to use
     * @param system The actor system to use
     * @param mat The materializer to use
     * @return The discord client actor
     */
-  def connect(eventStream: EventStream, wsUri: Uri)(implicit system: ActorSystem, mat: Materializer): ClientActor =
-    DiscordClient.connect(wsUri, eventStream, this)
+  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem, mat: Materializer): ClientActor =
+    DiscordClient.connect(wsUri, this, cache)
 }

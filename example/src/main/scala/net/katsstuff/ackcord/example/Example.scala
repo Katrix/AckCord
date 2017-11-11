@@ -26,13 +26,12 @@ package net.katsstuff.ackcord.example
 import scala.util.{Failure, Success}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
-import akka.event.EventStream
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
 import net.katsstuff.ackcord.example.music.{MusicHandler, NextCommand, PauseCommand, QueueCommand, StopCommand}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, ClientSettings, DiscordClient}
+import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordClient}
 
 object Example {
 
@@ -46,13 +45,13 @@ object Example {
       sys.exit()
     }
 
-    val eventStream = new EventStream(system)
-    val token       = args.head
+    val cache = Cache.create
+    val token = args.head
 
     val settings = ClientSettings(token = token)
-    DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
+    DiscordClient.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
       case Success(clientActor) =>
-        system.actorOf(ExampleMain.props(settings, eventStream, clientActor), "Main")
+        system.actorOf(ExampleMain.props(settings, cache, clientActor), "Main")
       case Failure(e) =>
         println("Could not connect to Discord")
         throw e
@@ -60,9 +59,8 @@ object Example {
   }
 }
 
-class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client: ClientActor)(
-    implicit materializer: Materializer
-) extends Actor
+class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActor)(implicit materializer: Materializer)
+    extends Actor
     with ActorLogging {
   import context.dispatcher
   implicit val system: ActorSystem = context.system
@@ -108,11 +106,11 @@ class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client
   var guildDispatcherMusic: ActorRef =
     context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
 
-  eventStream.subscribe(guildDispatcherCommands, classOf[APIMessage.MessageCreate])
-  eventStream.subscribe(killCommandDispatcher, classOf[APIMessage.MessageCreate])
-  eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.MessageCreate])
-  eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.VoiceServerUpdate])
-  eventStream.subscribe(guildDispatcherMusic, classOf[APIMessage.VoiceStateUpdate])
+  cache.subscribeAPIActor(guildDispatcherCommands, "Completed", classOf[APIMessage.MessageCreate])
+  cache.subscribeAPIActor(killCommandDispatcher, "Completed", classOf[APIMessage.MessageCreate])
+  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.MessageCreate])
+  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceServerUpdate])
+  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceStateUpdate])
   client ! DiscordClient.StartClient
 
   private var shutdownCount = 0
@@ -144,7 +142,7 @@ class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client
       guildDispatcherMusic = context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
     case Terminated(ref) if ref == client =>
       log.warning("Discord client actor went down. Trying to restart")
-      DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
+      DiscordClient.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
         case Success(clientActor) => client = clientActor
         case Failure(e) =>
           println("Could not connect to Discord")
@@ -153,8 +151,6 @@ class ExampleMain(settings: ClientSettings, eventStream: EventStream, var client
   }
 }
 object ExampleMain {
-  def props(settings: ClientSettings, eventStream: EventStream, client: ClientActor)(
-      implicit materializer: Materializer
-  ): Props =
-    Props(new ExampleMain(settings, eventStream, client))
+  def props(settings: ClientSettings, cache: Cache, client: ClientActor)(implicit materializer: Materializer): Props =
+    Props(new ExampleMain(settings, cache, client))
 }

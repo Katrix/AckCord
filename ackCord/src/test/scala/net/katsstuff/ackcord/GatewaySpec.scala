@@ -65,15 +65,15 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
     a
   }
 
-  def mkHandler(gateway: ActorRef, cache: Option[ActorRef] = None): ActorRef = {
-    val a = system.actorOf(MockedGatewayHandler.props(settings, gateway, cache), s"GatewayHandler$handlerNameNum")
+  def mkHandler(gateway: ActorRef): ActorRef = {
+    val a = system.actorOf(MockedGatewayHandler.props(settings, gateway), s"GatewayHandler$handlerNameNum")
     handlerNameNum += 1
     a
   }
 
-  def mkGatewayAndHandler(cache: Option[ActorRef] = None): (ActorRef, ActorRef) = {
+  def mkGatewayAndHandler(): (ActorRef, ActorRef) = {
     val gateway = mkGateway
-    val handler = mkHandler(gateway, cache)
+    val handler = mkHandler(gateway)
     (gateway, handler)
   }
 
@@ -228,9 +228,9 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   }
 }
 
-class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(
+class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(
     implicit mat: Materializer
-) extends GatewayHandler(Uri./, settings, cache, identity) {
+) extends GatewayHandler(Uri./, settings, Sink.ignore.mapMaterializedValue(_ => NotUsed)) {
 
   override def wsFlow: Flow[Message, Message, Future[WebSocketUpgradeResponse]] = {
     val response = ValidUpgrade(HttpResponse(), None)
@@ -245,8 +245,8 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef, cache: O
   }
 }
 object MockedGatewayHandler {
-  def props(settings: ClientSettings, gateway: ActorRef, cache: Option[ActorRef])(implicit mat: Materializer): Props =
-    Props(new MockedGatewayHandler(settings, gateway, cache))
+  def props(settings: ClientSettings, gateway: ActorRef)(implicit mat: Materializer): Props =
+    Props(new MockedGatewayHandler(settings, gateway))
 }
 
 class MockedGateway(sendMessagesTo: ActorRef) extends Actor with Stash {

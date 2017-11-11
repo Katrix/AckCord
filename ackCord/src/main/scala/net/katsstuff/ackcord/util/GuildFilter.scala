@@ -72,11 +72,11 @@ class GuildFilter(guildId: GuildId, handlerProps: Props) extends Actor with Acto
         case _                =>
       }
     case msg: APIMessage.MessageMessage =>
-      msg.message.channel(msg.snapshot) match {
+      msg.message.channel(msg.cache.current) match {
         case Some(gchannel: GuildChannel) => sendToGuild(gchannel.guildId, msg)
         case _                            =>
       }
-    case msg @ APIMessage.VoiceStateUpdate(state, _, _) =>
+    case msg @ APIMessage.VoiceStateUpdate(state, _) =>
       state.guildId match {
         case Some(id) => sendToGuild(id, msg)
         case None     =>

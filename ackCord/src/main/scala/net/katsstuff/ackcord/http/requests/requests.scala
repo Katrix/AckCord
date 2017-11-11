@@ -39,7 +39,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
-import net.katsstuff.ackcord.SnowflakeMap
+import net.katsstuff.ackcord.{CacheState, SnowflakeMap}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
@@ -125,7 +125,7 @@ trait BaseRESTRequest[RawResponse, HandlerType, Response] extends BaseRequest[Ra
   /**
     * Find the data to send back to the handler.
     */
-  def findData(response: RawResponse)(current: CacheSnapshot, prev: CacheSnapshot): Option[Response]
+  def findData(response: RawResponse)(cache: CacheState): Option[Response]
 
   /**
     * The permissions needed to use this request.
@@ -197,7 +197,7 @@ object Requests {
   trait NoNiceResponseRequest[Params, RawResponse] extends SimpleRESTRequest[Params, RawResponse, NotUsed] {
     override def hasCustomResponseData: Boolean = false
 
-    override def findData(response: RawResponse)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
+    override def findData(response: RawResponse)(cache: CacheState): Option[NotUsed] = None
   }
 
   /**
@@ -215,7 +215,7 @@ object Requests {
     override def cacheHandler:    CacheHandler[NotUsed] = NOOPHandler
 
     override def hasCustomResponseData:                                                    Boolean         = false
-    override def findData(response: NotUsed)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
+    override def findData(response: NotUsed)(cache: CacheState): Option[NotUsed] = None
   }
 
   /**
@@ -282,8 +282,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
-      current.getChannel(channelId)
+    override def findData(response: RawChannel)(cache: CacheState): Option[Channel] =
+      cache.current.getChannel(channelId)
   }
 
   /**
@@ -329,8 +329,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
-      current.getChannel(channelId)
+    override def findData(response: RawChannel)(cache: CacheState): Option[Channel] =
+      cache.current.getChannel(channelId)
   }
 
   /**
@@ -347,8 +347,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
-      prev.getChannel(channelId)
+    override def findData(response: RawChannel)(cache: CacheState): Option[Channel] =
+      cache.previous.getChannel(channelId)
   }
 
   /**
@@ -387,10 +387,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawMessage]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Message]] =
-      Some(current.getChannelMessages(channelId).values.toSeq)
+    override def findData(response: Seq[RawMessage])(cache: CacheState): Option[Seq[Message]] =
+      Some(cache.current.getChannelMessages(channelId).values.toSeq)
   }
 
   /**
@@ -408,8 +406,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
-      current.getMessage(channelId, messageId)
+    override def findData(response: RawMessage)(cache: CacheState): Option[Message] =
+      cache.current.getMessage(channelId, messageId)
   }
 
   /**
@@ -470,8 +468,8 @@ object Requests {
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
-      current.getMessage(channelId, response.id)
+    override def findData(response: RawMessage)(cache: CacheState): Option[Message] =
+      cache.current.getMessage(channelId, response.id)
   }
 
   /**
@@ -547,8 +545,8 @@ object Requests {
     override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawMessage)(current: CacheSnapshot, prev: CacheSnapshot): Option[Message] =
-      current.getMessage(channelId, messageId)
+    override def findData(response: RawMessage)(cache: CacheState): Option[Message] =
+      cache.current.getMessage(channelId, messageId)
   }
 
   /**
@@ -673,10 +671,8 @@ object Requests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawMessage]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Message]] =
-      Some(response.map(_.id).flatMap(current.getMessage(channelId, _)))
+    override def findData(response: Seq[RawMessage])(cache: CacheState): Option[Seq[Message]] =
+      Some(response.map(_.id).flatMap(cache.current.getMessage(channelId, _)))
   }
 
   /**
@@ -729,7 +725,7 @@ object Requests {
       GuildEmojisUpdateData(guildId, response)
 
     override def hasCustomResponseData:                                                       Boolean         = false
-    override def findData(response: Seq[Emoji])(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
+    override def findData(response: Seq[Emoji])(cache: CacheState): Option[NotUsed] = None
   }
 
   //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
@@ -754,7 +750,7 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData:                                                  Boolean         = false
-    override def findData(response: Emoji)(current: CacheSnapshot, prev: CacheSnapshot): Option[NotUsed] = None
+    override def findData(response: Emoji)(cache: CacheState): Option[NotUsed] = None
   }
 
   /**
@@ -836,8 +832,8 @@ object Requests {
     override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
-      current.getGuild(response.id)
+    override def findData(response: RawGuild)(cache: CacheState): Option[Guild] =
+      cache.current.getGuild(response.id)
   }
 
   /**
@@ -850,8 +846,8 @@ object Requests {
     override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
-      current.getGuild(guildId)
+    override def findData(response: RawGuild)(cache: CacheState): Option[Guild] =
+      cache.current.getGuild(guildId)
   }
 
   /**
@@ -893,8 +889,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawGuild)(current: CacheSnapshot, prev: CacheSnapshot): Option[Guild] =
-      current.getGuild(guildId)
+    override def findData(response: RawGuild)(cache: CacheState): Option[Guild] =
+      cache.current.getGuild(guildId)
   }
 
   /**
@@ -915,10 +911,8 @@ object Requests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawChannel]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[GuildChannel]] =
-      current.getGuild(guildId).map(_.channels.values.toSeq)
+    override def findData(response: Seq[RawChannel])(cache: CacheState): Option[Seq[GuildChannel]] =
+      cache.current.getGuild(guildId).map(_.channels.values.toSeq)
   }
 
   /**
@@ -960,8 +954,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[Channel] =
-      current.getGuildChannel(guildId, response.id)
+    override def findData(response: RawChannel)(cache: CacheState): Option[Channel] =
+      cache.current.getGuildChannel(guildId, response.id)
   }
 
   /**
@@ -989,10 +983,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawChannel]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Channel]] =
-      current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.channels.get))
+    override def findData(response: Seq[RawChannel])(cache: CacheState): Option[Seq[Channel]] =
+      cache.current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.channels.get))
   }
 
   trait GuildMemberRequest[Params]
@@ -1006,8 +998,8 @@ object Requests {
       GatewayEvent.RawGuildMemberWithGuild(guildId, response)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawGuildMember)(current: CacheSnapshot, prev: CacheSnapshot): Option[GuildMember] =
-      current.getGuild(guildId).flatMap(_.members.get(response.user.id))
+    override def findData(response: RawGuildMember)(cache: CacheState): Option[GuildMember] =
+      cache.current.getGuild(guildId).flatMap(_.members.get(response.user.id))
   }
 
   /**
@@ -1044,10 +1036,8 @@ object Requests {
       GatewayEvent.GuildMemberChunkData(guildId, response)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawGuildMember]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[GuildMember]] =
-      current.getGuild(guildId).map(_.members.values.toSeq)
+    override def findData(response: Seq[RawGuildMember])(cache: CacheState): Option[Seq[GuildMember]] =
+      cache.current.getGuild(guildId).map(_.members.values.toSeq)
   }
 
   /**
@@ -1197,8 +1187,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: Seq[RawBan])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Ban]] =
-      current.bans.get(guildId).map(_.values.toSeq)
+    override def findData(response: Seq[RawBan])(cache: CacheState): Option[Seq[Ban]] =
+      cache.current.bans.get(guildId).map(_.values.toSeq)
   }
 
   /**
@@ -1248,8 +1238,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: Seq[RawRole])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Role]] =
-      current.getGuild(guildId).map(_.roles.values.toSeq)
+    override def findData(response: Seq[RawRole])(cache: CacheState): Option[Seq[Role]] =
+      cache.current.getGuild(guildId).map(_.roles.values.toSeq)
   }
 
   /**
@@ -1284,8 +1274,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawRole)(current: CacheSnapshot, prev: CacheSnapshot): Option[Role] =
-      current.getRole(guildId, response.id)
+    override def findData(response: RawRole)(cache: CacheState): Option[Role] =
+      cache.current.getRole(guildId, response.id)
   }
 
   /**
@@ -1317,8 +1307,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: Seq[RawRole])(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[Role]] =
-      current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.roles.get))
+    override def findData(response: Seq[RawRole])(cache: CacheState): Option[Seq[Role]] =
+      cache.current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.roles.get))
   }
 
   /**
@@ -1353,8 +1343,8 @@ object Requests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawRole)(current: CacheSnapshot, prev: CacheSnapshot): Option[Role] =
-      current.getRole(guildId, roleId)
+    override def findData(response: RawRole)(cache: CacheState): Option[Role] =
+      cache.current.getRole(guildId, roleId)
   }
 
   /**
@@ -1633,9 +1623,8 @@ object Requests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(
-        response: Seq[RawChannel]
-    )(current: CacheSnapshot, prev: CacheSnapshot): Option[Seq[DMChannel]] = Some(current.dmChannels.values.toSeq)
+    override def findData(response: Seq[RawChannel])(cache: CacheState): Option[Seq[DMChannel]] = Some(
+      cache.current.dmChannels.values.toSeq)
   }
 
   /**
@@ -1654,8 +1643,8 @@ object Requests {
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[DMChannel] =
-      current.getDmChannel(response.id)
+    override def findData(response: RawChannel)(cache: CacheState): Option[DMChannel] =
+      cache.current.getDmChannel(response.id)
   }
 
   /**
@@ -1680,8 +1669,8 @@ object Requests {
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
 
     override def hasCustomResponseData: Boolean = true
-    override def findData(response: RawChannel)(current: CacheSnapshot, prev: CacheSnapshot): Option[GroupDMChannel] =
-      current.getGroupDmChannel(response.id)
+    override def findData(response: RawChannel)(cache: CacheState): Option[GroupDMChannel] =
+      cache.current.getGroupDmChannel(response.id)
   }
 
   /**

@@ -28,7 +28,7 @@ import scala.language.postfixOps
 import scala.util.control.NonFatal
 
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Props, Stash, Status}
+import akka.actor.{ActorSystem, Props, Stash, Status}
 import akka.event.Logging
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
@@ -41,23 +41,21 @@ import io.circe.parser
 import io.circe.syntax._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.util.AckCordSettings
-import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, ClientSettings}
+import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, Cache, ClientSettings}
 
 /**
   * Responsible for normal websocket communication with Discord.
   * Some REST messages can't be sent until this has authenticated.
   * @param rawWsUri The raw uri to connect to without params
-  * @param settings The settings to use
-  * @param responseProcessor An actor which receive all responses sent through this actor
-  * @param responseFunc A function to apply to all responses before sending
-  *                     them to the [[responseProcessor]].
-  * @param mat The [[Materializer]] to use
+  * @param settings The settings to use.
+  * @param mat The [[Materializer]] to use.
+  * @param outSink A sink which will be materialized for each new event that
+  *                is sent to this gateway.
   */
 class GatewayHandler(
     rawWsUri: Uri,
     settings: ClientSettings,
-    responseProcessor: Option[ActorRef],
-    responseFunc: Dispatch[_] => Any
+    outSink: Sink[Dispatch[_], NotUsed]
 )(implicit val mat: Materializer)
     extends AbstractWsHandler[GatewayMessage[_], ResumeData]
     with Stash {
@@ -182,7 +180,7 @@ class GatewayHandler(
           resume.map(_.copy(seq = dispatch.sequence))
       }
 
-      responseProcessor.foreach(_ ! responseFunc(dispatch))
+      outSink.runWith(Source.single(dispatch))
 
       sender() ! AckSink
     case Right(Heartbeat(_)) =>
@@ -225,18 +223,16 @@ object GatewayHandler {
   def props(
       wsUri: Uri,
       settings: ClientSettings,
-      responseProcessor: Option[ActorRef],
-      responseFunc: Dispatch[_] => Any
+      outSink: Sink[Dispatch[_], NotUsed]
   )(implicit mat: Materializer): Props =
-    Props(new GatewayHandler(wsUri, settings, responseProcessor, responseFunc))
+    Props(new GatewayHandler(wsUri, settings, outSink))
 
-  def cacheProps(wsUri: Uri, settings: ClientSettings, snowflakeCache: ActorRef)(implicit mat: Materializer): Props = {
-    val f = (dispatch: Dispatch[_]) => {
+  def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props = {
+    val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
-
       APIMessageHandlerEvent(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
-    Props(new GatewayHandler(wsUri, settings, Some(snowflakeCache), f))
+    Props(new GatewayHandler(wsUri, settings, sink))
   }
 }

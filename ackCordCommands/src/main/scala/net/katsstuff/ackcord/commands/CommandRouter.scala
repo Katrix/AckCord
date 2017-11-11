@@ -76,11 +76,11 @@ class CommandRouter(
   }
 
   override def receive: Receive = {
-    case APIMessage.MessageCreate(msg, c, _) =>
-      implicit val cache: CacheSnapshot = c
+    case APIMessage.MessageCreate(msg, c) =>
+      implicit val cache: CacheSnapshot = c.current
       if (!isShuttingDown) {
         isValidCommand(msg).foreach { args =>
-          if (args == Nil) errorHandler ! NoCommand(msg, c)
+          if (args == Nil) errorHandler ! NoCommand(msg, c.current)
           else {
             val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
             for {
@@ -89,8 +89,8 @@ class CommandRouter(
             } {
               val withoutPrefix = lowercaseCommand.substring(cat.prefix.length)
               handlerMap.get(withoutPrefix) match {
-                case Some(handler) => handler ! Command(msg, args.tail, c)
-                case None          => errorHandler ! UnknownCommand(msg, cat, withoutPrefix, args.tail, c)
+                case Some(handler) => handler ! Command(msg, args.tail, c.current)
+                case None          => errorHandler ! UnknownCommand(msg, cat, withoutPrefix, args.tail, c.current)
               }
             }
           }

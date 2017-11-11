@@ -40,7 +40,14 @@ import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
-import net.katsstuff.ackcord.example.{ExampleCmdCategories, ExampleErrorHandler, InfoChannelCommand, KillCommand, PingCommand, SendFileCommand}
+import net.katsstuff.ackcord.example.{
+  ExampleCmdCategories,
+  ExampleErrorHandler,
+  InfoChannelCommand,
+  KillCommand,
+  PingCommand,
+  SendFileCommand
+}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
@@ -103,22 +110,22 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(msg: APIMessage.MessageCreate, _) =>
       commandDispatcher.forward(msg)
       stay()
-    case Event(APIMessage.VoiceStateUpdate(state, c, _), Connecting(Some(endPoint), _, Some(token), Some(vChannelId)))
-        if state.userId == c.botUser.id =>
+    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(token), Some(vChannelId)))
+        if state.userId == c.current.botUser.id =>
       log.info("Received session id")
-      connect(vChannelId, endPoint, c.botUser.id, state.sessionId, token)
-    case Event(APIMessage.VoiceStateUpdate(state, c, _), con: Connecting)
-        if state.userId == c.botUser.id => //We did not have an endPoint and token
+      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, token)
+    case Event(APIMessage.VoiceStateUpdate(state, c), con: Connecting)
+        if state.userId == c.current.botUser.id => //We did not have an endPoint and token
       log.info("Received session id")
       stay using con.copy(sessionId = Some(state.sessionId))
     case Event(
-        APIMessage.VoiceServerUpdate(token, guild, endPoint, c, _),
+        APIMessage.VoiceServerUpdate(token, guild, endPoint, c),
         Connecting(_, Some(sessionId), _, Some(vChannelId))
         ) if guild.id == guildId =>
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
       log.info("Got token and endpoint")
-      connect(vChannelId, usedEndpoint, c.botUser.id, sessionId, token)
-    case Event(APIMessage.VoiceServerUpdate(token, guild, endPoint, _, _), con: Connecting)
+      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, token)
+    case Event(APIMessage.VoiceServerUpdate(token, guild, endPoint, _), con: Connecting)
         if guild.id == guildId => //We did not have a sessionId
       log.info("Got token and endpoint")
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
@@ -163,8 +170,8 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       } else queueTracks(None, playlist.getTracks.asScala: _*)
       stay()
     case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
-    case Event(APIMessage.VoiceStateUpdate(_, _, _), _)           => stay() //NO-OP
-    case Event(APIMessage.VoiceServerUpdate(_, _, _, _, _), _)    => stay() //NO-OP
+    case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
+    case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _)       => stay() //NO-OP
   }
 
   when(Active) {
@@ -175,8 +182,8 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(msg: APIMessage.MessageCreate, _) =>
       commandDispatcher.forward(msg)
       stay()
-    case Event(APIMessage.VoiceStateUpdate(_, _, _), _)        => stay() //NO-OP
-    case Event(APIMessage.VoiceServerUpdate(_, _, _, _, _), _) => stay() //NO-OP
+    case Event(APIMessage.VoiceStateUpdate(_, _), _)        => stay() //NO-OP
+    case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _) => stay() //NO-OP
     case Event(StopMusic(tChannel), CanSendAudio(voiceWs, dataSender, _)) =>
       lastTChannel = tChannel
       player.stopTrack()

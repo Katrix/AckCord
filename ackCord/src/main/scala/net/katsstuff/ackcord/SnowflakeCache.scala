@@ -25,10 +25,9 @@ package net.katsstuff.ackcord
 
 import scala.collection.mutable
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.event.{EventStream, LoggingAdapter}
-import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
+import akka.actor.{Actor, ActorLogging, Props}
+import akka.event.EventStream
+import net.katsstuff.ackcord.handlers.CacheSnapshotBuilder
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 
 /**
@@ -38,22 +37,13 @@ import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
   */
 class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
-  private var prevSnapshot: CacheSnapshot = _
-  private var snapshot:     CacheSnapshot = _
-
-  private def updateSnapshot(newSnapshot: CacheSnapshot): Unit = {
-    //If there is no change we don't need to update. We don't do a value comparision because of how complex the cache is
-    if (newSnapshot ne snapshot) {
-      prevSnapshot = snapshot
-      snapshot = newSnapshot
-    }
-  }
+  private var state: CacheState = _
 
   /**
     * We only handle events when we are ready to, and we have received
     * the ready event.
     */
-  private def isReady: Boolean = prevSnapshot != null && snapshot != null
+  private def isReady: Boolean = state != null
 
   override def receive: Receive = {
     case readyEvent @ APIMessageHandlerEvent(_: ReadyData, sendEvent, _) =>
@@ -72,20 +62,21 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 
       readyEvent.handle(builder)(log)
 
-      prevSnapshot = builder.toImmutable
-      snapshot = prevSnapshot
+      val snapshot = builder.toImmutable
+      state = CacheState(snapshot, snapshot)
 
-      sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
+      sendEvent(state).foreach(eventStream.publish)
     case handlerEvent: CacheHandlerEvent[_] if isReady =>
-      val builder = CacheSnapshotBuilder(snapshot)
+      val builder = CacheSnapshotBuilder(state.current)
       handlerEvent.handle(builder)(log)
 
-      updateSnapshot(builder.toImmutable)
+      state = state.update(builder.toImmutable)
+
       handlerEvent match {
         case event: APIMessageHandlerEvent[_] =>
-          event.sendEvent(snapshot, prevSnapshot).foreach(eventStream.publish)
+          event.sendEvent(state).foreach(eventStream.publish)
         case event: SendHandledDataEvent[_] =>
-          event.findData(snapshot, prevSnapshot).foreach(event.sendTo ! _)
+          event.findData(state).foreach(event.sendTo ! _)
         case _ =>
       }
     case _ if !isReady => log.error("Received event before ready")
@@ -94,64 +85,3 @@ class SnowflakeCache(eventStream: EventStream) extends Actor with ActorLogging {
 object SnowflakeCache {
   def props(eventStream: EventStream): Props = Props(new SnowflakeCache(eventStream))
 }
-
-/**
-  * Represents some sort of event handled by the cache
-  * @tparam Data The data it contains
-  */
-sealed trait CacheHandlerEvent[Data] {
-
-  /**
-    * The data to update
-    */
-  def data: Data
-
-  /**
-    * A handler for the data
-    */
-  def handler: CacheHandler[Data]
-
-  /**
-    * Updates a [[net.katsstuff.ackcord.handlers.CacheSnapshotBuilder]] with the data in this object.
-    */
-  def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
-    handler.handle(builder, data)
-}
-
-/**
-  * An event that should publish an [[APIMessage]].
-  * @param data The data.
-  * @param sendEvent A function to gather the needed variables to send the
-  *                  event. The [[net.katsstuff.ackcord.data.CacheSnapshot]]s passed is the current, and
-  *                  previous snapshot, in that order.
-  * @param handler The handler to process the data of this event with.
-  * @tparam Data The data it contains.
-  */
-case class APIMessageHandlerEvent[Data](
-    data: Data,
-    sendEvent: (CacheSnapshot, CacheSnapshot) => Option[APIMessage],
-    handler: CacheHandler[Data]
-) extends CacheHandlerEvent[Data]
-
-/**
-  * An event where after the data has been processed, it's sent to a receiver.
-  * @param data The data.
-  * @param handler The handler to process the data of this event with.
-  * @param findData Find the data to send.
-  * @param sendTo The receiver of the handled data.
-  * @tparam Data The data it contains.
-  */
-case class SendHandledDataEvent[Data](
-    data: Data,
-    handler: CacheHandler[Data],
-    findData: (CacheSnapshot, CacheSnapshot) => Option[Any],
-    sendTo: ActorRef
-) extends CacheHandlerEvent[Data]
-
-/**
-  * Any other event that updates the cache with it's data.
-  * @param data The data.
-  * @param handler The handler to process the data of this event with.
-  * @tparam Data The data it contains.
-  */
-case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]

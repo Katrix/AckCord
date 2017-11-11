@@ -27,7 +27,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import akka.NotUsed
 import io.circe.{Encoder, Json}
-import net.katsstuff.ackcord.APIMessage
+import net.katsstuff.ackcord.{APIMessage, CacheState}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http._
@@ -271,7 +271,7 @@ sealed trait ComplexGatewayEvent[Data, HandlerType] {
   /**
     * Creates an [[APIMessage]] as long as all the needed components are in place.
     */
-  def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage]
+  def createEvent(state: CacheState): Option[APIMessage]
 }
 
 /**
@@ -306,8 +306,8 @@ object GatewayEvent {
   case class Ready(data: ReadyData) extends SimpleGatewayEvent[ReadyData] {
     override def name:         String                  = "READY"
     override def cacheHandler: CacheHandler[ReadyData] = ReadyHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      Some(APIMessage.Ready(current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      Some(APIMessage.Ready(state))
   }
 
   case class ResumedData(_trace: Seq[String])
@@ -318,8 +318,8 @@ object GatewayEvent {
   case class Resumed(data: ResumedData) extends SimpleGatewayEvent[ResumedData] {
     override def name:         String                    = "RESUMED"
     override def cacheHandler: CacheHandler[ResumedData] = NOOPHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      Some(APIMessage.Resumed(current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      Some(APIMessage.Resumed(state))
   }
 
   sealed trait OptGuildEvent[Data] extends SimpleGatewayEvent[Data] {
@@ -333,8 +333,8 @@ object GatewayEvent {
   case class ChannelCreate(data: RawChannel) extends OptGuildEvent[RawChannel] {
     override def name:         String                   = "CHANNEL_CREATE"
     override def cacheHandler: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getChannel(data.id).map(c => APIMessage.ChannelCreate(c, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getChannel(data.id).map(c => APIMessage.ChannelCreate(c, state))
     override def guildId: Option[GuildId] = data.guildId
   }
 
@@ -346,8 +346,8 @@ object GatewayEvent {
   case class ChannelUpdate(data: RawChannel) extends OptGuildEvent[RawChannel] {
     override def name:         String                   = "CHANNEL_UPDATE"
     override def cacheHandler: CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuildChannel(data.id).map(c => APIMessage.ChannelUpdate(c, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuildChannel(data.id).map(c => APIMessage.ChannelUpdate(c, state))
     override def guildId: Option[GuildId] = data.guildId
   }
 
@@ -359,8 +359,8 @@ object GatewayEvent {
   case class ChannelDelete(data: RawChannel) extends OptGuildEvent[RawChannel] {
     override def name:         String                   = "CHANNEL_DELETE"
     override def cacheHandler: CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      prev.getChannel(data.id).map(c => APIMessage.ChannelDelete(c, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.previous.getChannel(data.id).map(c => APIMessage.ChannelDelete(c, state))
     override def guildId: Option[GuildId] = data.guildId
   }
 
@@ -382,8 +382,8 @@ object GatewayEvent {
     override def name: String = "CHANNEL_PINS_UPDATE"
     override def cacheHandler: CacheHandler[ChannelPinsUpdateData] =
       NOOPHandler //No way for us to know what changed
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getTChannel(data.channelId).map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, state))
     override def channelId: ChannelId = data.channelId
   }
 
@@ -400,8 +400,8 @@ object GatewayEvent {
   case class GuildCreate(data: RawGuild) extends GuildEvent[RawGuild] {
     override def name:         String                 = "GUILD_CREATE"
     override def cacheHandler: CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.id).map(g => APIMessage.GuildCreate(g, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.id).map(g => APIMessage.GuildCreate(g, state))
     override def guildId: GuildId = data.id
   }
 
@@ -412,8 +412,8 @@ object GatewayEvent {
   case class GuildUpdate(data: RawGuild) extends GuildEvent[RawGuild] {
     override def name:         String                 = "GUILD_UPDATE"
     override def cacheHandler: CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, state))
     override def guildId: GuildId = data.id
   }
 
@@ -425,8 +425,8 @@ object GatewayEvent {
   case class GuildDelete(data: UnavailableGuild) extends GuildEvent[UnavailableGuild] {
     override def name:         String                         = "GUILD_DELETE"
     override def cacheHandler: CacheHandler[UnavailableGuild] = RawHandlers.deleteGuildDataHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      prev.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.previous.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, state))
     override def guildId: GuildId = data.id
   }
 
@@ -445,8 +445,8 @@ object GatewayEvent {
     override def name:         String                          = "GUILD_BAN_ADD"
     override def cacheHandler: CacheHandler[(GuildId, RawBan)] = RawHandlers.rawBanUpdateHandler
     override def handlerData:  (GuildId, RawBan)               = (data.head, RawBan(None, userGen.from(data.tail)))
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.head).map(g => APIMessage.GuildBanAdd(g, userGen.from(data.tail), state))
     override def guildId: GuildId = data.head
   }
 
@@ -458,8 +458,8 @@ object GatewayEvent {
     override def name:         String                        = "GUILD_BAN_REMOVE"
     override def cacheHandler: CacheHandler[(GuildId, User)] = RawHandlers.rawBanDeleteHandler
     override def handlerData:  (GuildId, User)               = (data.head, userGen.from(data.tail))
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.head).map(g => APIMessage.GuildBanRemove(g, userGen.from(data.tail), state))
     override def guildId: GuildId = data.head
   }
 
@@ -475,8 +475,8 @@ object GatewayEvent {
   case class GuildEmojisUpdate(data: GuildEmojisUpdateData) extends GuildEvent[GuildEmojisUpdateData] {
     override def name:         String                              = "GUILD_EMOJIS_UPDATE"
     override def cacheHandler: CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -493,8 +493,8 @@ object GatewayEvent {
       extends GuildEvent[GuildIntegrationsUpdateData] {
     override def name:         String                                    = "GUILD_INTEGRATIONS_UPDATE"
     override def cacheHandler: CacheHandler[GuildIntegrationsUpdateData] = NOOPHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -522,11 +522,11 @@ object GatewayEvent {
   case class GuildMemberAdd(data: RawGuildMemberWithGuild) extends GuildEvent[RawGuildMemberWithGuild] {
     override def name:         String                                = "GUILD_MEMBER_ADD"
     override def cacheHandler: CacheHandler[RawGuildMemberWithGuild] = RawHandlers.rawGuildMemberWithGuildUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        g   <- current.getGuild(data.guildId)
+        g   <- state.current.getGuild(data.guildId)
         mem <- g.members.get(data.user.id)
-      } yield APIMessage.GuildMemberAdd(mem, g, current, prev)
+      } yield APIMessage.GuildMemberAdd(mem, g, state)
     override def guildId: GuildId = data.guildId
   }
 
@@ -542,8 +542,8 @@ object GatewayEvent {
   case class GuildMemberRemove(data: GuildMemberRemoveData) extends GuildEvent[GuildMemberRemoveData] {
     override def name:         String                              = "GUILD_MEMBER_REMOVE"
     override def cacheHandler: CacheHandler[GuildMemberRemoveData] = RawHandlers.rawGuildMemberDeleteHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -563,17 +563,16 @@ object GatewayEvent {
   case class GuildMemberUpdate(data: GuildMemberUpdateData) extends GuildEvent[GuildMemberUpdateData] {
     override def name:         String                              = "GUILD_MEMBER_UPDATE"
     override def cacheHandler: CacheHandler[GuildMemberUpdateData] = RawHandlers.rawGuildMemberUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current
         .getGuild(data.guildId)
         .map { g =>
           APIMessage.GuildMemberUpdate(
             g,
-            data.roles.flatMap(current.getRole(guildId, _)),
+            data.roles.flatMap(state.current.getRole(guildId, _)),
             data.user,
             data.nick,
-            current,
-            prev
+            state
           )
         }
     override def guildId: GuildId = data.guildId
@@ -592,10 +591,10 @@ object GatewayEvent {
   case class GuildMemberChunk(data: GuildMemberChunkData) extends GuildEvent[GuildMemberChunkData] {
     override def name:         String                             = "GUILD_MEMBER_CHUNK"
     override def cacheHandler: CacheHandler[GuildMemberChunkData] = RawHandlers.rawGuildMemberChunkHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), current, prev))
+        .map(g => APIMessage.GuildMembersChunk(g, data.members.flatMap(m => g.members.get(m.user.id)), state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -611,10 +610,10 @@ object GatewayEvent {
   case class GuildRoleCreate(data: GuildRoleModifyData) extends GuildEvent[GuildRoleModifyData] {
     override def name:         String                            = "GUILD_ROLE_CREATE"
     override def cacheHandler: CacheHandler[GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.GuildRoleCreate(g, data.role.makeRole(data.guildId), current, prev))
+        .map(g => APIMessage.GuildRoleCreate(g, data.role.makeRole(data.guildId), state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -624,10 +623,10 @@ object GatewayEvent {
   case class GuildRoleUpdate(data: GuildRoleModifyData) extends GuildEvent[GuildRoleModifyData] {
     override def name:         String                            = "GUILD_ROLE_UPDATE"
     override def cacheHandler: CacheHandler[GuildRoleModifyData] = RawHandlers.roleUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.GuildRoleUpdate(g, data.role.makeRole(data.guildId), current, prev))
+        .map(g => APIMessage.GuildRoleUpdate(g, data.role.makeRole(data.guildId), state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -643,10 +642,10 @@ object GatewayEvent {
   case class GuildRoleDelete(data: GuildRoleDeleteData) extends GuildEvent[GuildRoleDeleteData] {
     override def name:         String                            = "GUILD_ROLE_DELETE"
     override def cacheHandler: CacheHandler[GuildRoleDeleteData] = RawHandlers.roleDeleteHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      prev.getGuild(data.guildId).flatMap(g => g.roles.get(data.roleId).map(g -> _)).map {
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.previous.getGuild(data.guildId).flatMap(g => g.roles.get(data.roleId).map(g -> _)).map {
         case (g, r) =>
-          APIMessage.GuildRoleDelete(g, r, current, prev)
+          APIMessage.GuildRoleDelete(g, r, state)
       }
     override def guildId: GuildId = data.guildId
   }
@@ -658,8 +657,8 @@ object GatewayEvent {
   case class MessageCreate(data: RawMessage) extends ChannelEvent[RawMessage] {
     override def name:         String                   = "MESSAGE_CREATE"
     override def cacheHandler: CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, state))
     override def channelId: ChannelId = data.channelId
   }
 
@@ -690,8 +689,8 @@ object GatewayEvent {
   case class MessageUpdate(data: RawPartialMessage) extends ChannelEvent[RawPartialMessage] {
     override def name:         String                          = "MESSAGE_UPDATE"
     override def cacheHandler: CacheHandler[RawPartialMessage] = RawHandlers.rawPartialMessageUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, state))
     override def channelId: ChannelId = data.channelId
   }
 
@@ -707,10 +706,10 @@ object GatewayEvent {
   case class MessageDelete(data: MessageDeleteData) extends ChannelEvent[MessageDeleteData] {
     override def name:         String                          = "MESSAGE_DELETE"
     override def cacheHandler: CacheHandler[MessageDeleteData] = RawHandlers.rawMessageDeleteHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      prev.getMessage(data.id).flatMap { message =>
-        current.getChannel(data.channelId).collect {
-          case channel: TChannel => APIMessage.MessageDelete(message, channel, current, prev)
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.previous.getMessage(data.id).flatMap { message =>
+        state.current.getChannel(data.channelId).collect {
+          case channel: TChannel => APIMessage.MessageDelete(message, channel, state)
         }
       }
     override def channelId: ChannelId = data.channelId
@@ -729,10 +728,10 @@ object GatewayEvent {
   case class MessageDeleteBulk(data: MessageDeleteBulkData) extends ChannelEvent[MessageDeleteBulkData] {
     override def name:         String                              = "MESSAGE_DELETE_BULK"
     override def cacheHandler: CacheHandler[MessageDeleteBulkData] = RawHandlers.rawMessageDeleteBulkHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getChannel(data.channelId).collect {
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getChannel(data.channelId).collect {
         case channel: TChannel =>
-          APIMessage.MessageDeleteBulk(data.ids.flatMap(prev.getMessage(_).toSeq), channel, current, prev)
+          APIMessage.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).toSeq), channel, state)
       }
     override def channelId: ChannelId = data.channelId
   }
@@ -751,13 +750,13 @@ object GatewayEvent {
   case class MessageReactionAdd(data: MessageReactionData) extends ChannelEvent[MessageReactionData] {
     override def name:         String                            = "MESSAGE_REACTION_ADD"
     override def cacheHandler: CacheHandler[MessageReactionData] = RawHandlers.rawMessageReactionUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        user     <- current.getUser(data.userId)
-        channel  <- current.getChannel(data.channelId)
+        user     <- state.current.getUser(data.userId)
+        channel  <- state.current.getChannel(data.channelId)
         tChannel <- Typeable[TChannel].cast(channel)
-        message  <- current.getMessage(data.channelId, data.messageId)
-      } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, current, prev)
+        message  <- state.current.getMessage(data.channelId, data.messageId)
+      } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, state)
     override def channelId: ChannelId = data.channelId
   }
 
@@ -767,13 +766,13 @@ object GatewayEvent {
   case class MessageReactionRemove(data: MessageReactionData) extends ChannelEvent[MessageReactionData] {
     override def name:         String                            = "MESSAGE_REACTION_REMOVE"
     override def cacheHandler: CacheHandler[MessageReactionData] = RawHandlers.rawMessageReactionRemoveHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        user     <- current.getUser(data.userId)
-        channel  <- current.getChannel(data.channelId)
+        user     <- state.current.getUser(data.userId)
+        channel  <- state.current.getChannel(data.channelId)
         tChannel <- Typeable[TChannel].cast(channel)
-        message  <- current.getMessage(data.channelId, data.messageId)
-      } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, current, prev)
+        message  <- state.current.getMessage(data.channelId, data.messageId)
+      } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, state)
     override def channelId: ChannelId = data.channelId
   }
 
@@ -791,12 +790,12 @@ object GatewayEvent {
     override def name: String = "MESSAGE_REACTION_REMOVE_ALL"
     override def cacheHandler: CacheHandler[MessageReactionRemoveAllData] =
       RawHandlers.rawMessageReactionRemoveAllHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        channel  <- current.getChannel(data.channelId)
+        channel  <- state.current.getChannel(data.channelId)
         tChannel <- Typeable[TChannel].cast(channel)
-        message  <- current.getMessage(data.channelId, data.messageId)
-      } yield APIMessage.MessageReactionRemoveAll(tChannel, message, current, prev)
+        message  <- state.current.getMessage(data.channelId, data.messageId)
+      } yield APIMessage.MessageReactionRemoveAll(tChannel, message, state)
     override def channelId: ChannelId = data.channelId
   }
 
@@ -821,12 +820,12 @@ object GatewayEvent {
   case class PresenceUpdate(data: PresenceUpdateData) extends GuildEvent[PresenceUpdateData] {
     override def name:         String                           = "PRESENCE_UPDATE"
     override def cacheHandler: CacheHandler[PresenceUpdateData] = PresenceUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        guild    <- current.getGuild(data.guildId)
-        user     <- current.getUser(data.user.id)
+        guild    <- state.current.getGuild(data.guildId)
+        user     <- state.current.getUser(data.user.id)
         presence <- guild.presences.get(user.id)
-      } yield APIMessage.PresenceUpdate(guild, user, data.roles, presence, current, prev)
+      } yield APIMessage.PresenceUpdate(guild, user, data.roles, presence, state)
     override def guildId: GuildId = data.guildId
   }
 
@@ -843,10 +842,10 @@ object GatewayEvent {
   case class TypingStart(data: TypingStartData) extends ChannelEvent[TypingStartData] {
     override def name:         String                        = "TYPING_START"
     override def cacheHandler: CacheHandler[TypingStartData] = RawHandlers.lastTypedHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current.getUser(data.userId).flatMap { user =>
-        current.getChannel(data.channelId).collect {
-          case channel: TChannel => APIMessage.TypingStart(channel, user, data.timestamp, current, prev)
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current.getUser(data.userId).flatMap { user =>
+        state.current.getChannel(data.channelId).collect {
+          case channel: TChannel => APIMessage.TypingStart(channel, user, data.timestamp, state)
         }
       }
     override def channelId: ChannelId = data.channelId
@@ -859,8 +858,8 @@ object GatewayEvent {
   case class UserUpdate(data: User) extends SimpleGatewayEvent[User] {
     override def name:         String             = "USER_UPDATE"
     override def cacheHandler: CacheHandler[User] = RawHandlers.userUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      Some(APIMessage.UserUpdate(data, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      Some(APIMessage.UserUpdate(data, state))
   }
 
   /**
@@ -870,8 +869,8 @@ object GatewayEvent {
   case class VoiceStateUpdate(data: VoiceState) extends OptGuildEvent[VoiceState] {
     override def name:         String                   = "VOICE_STATUS_UPDATE"
     override def cacheHandler: CacheHandler[VoiceState] = Handlers.voiceStateUpdateHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      Some(APIMessage.VoiceStateUpdate(data, current, prev))
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      Some(APIMessage.VoiceStateUpdate(data, state))
     override def guildId: Option[GuildId] = data.guildId
   }
 
@@ -881,10 +880,10 @@ object GatewayEvent {
   case class VoiceServerUpdate(data: VoiceServerUpdateData) extends GuildEvent[VoiceServerUpdateData] {
     override def name:         String                              = "VOICE_SERVER_UPDATE"
     override def cacheHandler: CacheHandler[VoiceServerUpdateData] = NOOPHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
-      current
+    override def createEvent(state: CacheState): Option[APIMessage] =
+      state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, current, prev))
+        .map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -900,11 +899,11 @@ object GatewayEvent {
   case class WebhookUpdate(data: WebhookUpdateData) extends GuildEvent[WebhookUpdateData] {
     override def name:         String                          = "WEBHOOK_UPDATE"
     override def cacheHandler: CacheHandler[WebhookUpdateData] = NOOPHandler
-    override def createEvent(current: CacheSnapshot, prev: CacheSnapshot): Option[APIMessage] =
+    override def createEvent(state: CacheState): Option[APIMessage] =
       for {
-        guild   <- current.getGuild(data.guildId)
+        guild   <- state.current.getGuild(data.guildId)
         channel <- guild.channels.get(data.channelId)
-      } yield APIMessage.WebhookUpdate(guild, channel, current, prev)
+      } yield APIMessage.WebhookUpdate(guild, channel, state)
     override def guildId: GuildId = data.guildId
   }
 }

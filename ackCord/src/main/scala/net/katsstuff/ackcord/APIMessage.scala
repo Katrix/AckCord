@@ -35,20 +35,11 @@ import net.katsstuff.ackcord.data._
 sealed trait APIMessage {
 
   /**
-    * A snapshot of the cache before this event happened.
-    *
-    * Put this in the implicit scope if you want to access the state as it was
-    * before the event happened.
+    * The current state of the cache. Contains both a snapshot of how the
+    * cache looks like after this message (the current one), and a snapshot for
+    * how the cache looked like before this message.
     */
-  def prevSnapshot: CacheSnapshot
-
-  /**
-    * A snapshot of the cache after this event happened.
-    *
-    * Put this in the implicit scope if you want to access the state as it was
-    * after the event happened.
-    */
-  def snapshot: CacheSnapshot
+  def cache: CacheState
 }
 object APIMessage {
 
@@ -56,12 +47,12 @@ object APIMessage {
     * Sent to the client when Discord is ready to serve requests. No requests
     * should be sent before this has been received.
     */
-  case class Ready(snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class Ready(cache: CacheState) extends APIMessage
 
   /**
     * Sent to the client when a previously interrupted connection is resumed.
     */
-  case class Resumed(snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class Resumed(cache: CacheState) extends APIMessage
 
   /**
     * Trait that covers all channel messages
@@ -78,24 +69,21 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends ChannelMessage
+  case class ChannelCreate(channel: Channel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a channel is edited or updated.
     * @param channel The channel that was edited. This will always be a
     *                guild channel
     */
-  case class ChannelUpdate(channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends ChannelMessage
+  case class ChannelUpdate(channel: GuildChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a channel is deleted. The current snapshot will
     * not contain the channel.
     * @param channel The channel that was deleted.
     */
-  case class ChannelDelete(channel: Channel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends ChannelMessage
+  case class ChannelDelete(channel: Channel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a message is pinned or unpinned in a text
@@ -103,12 +91,8 @@ object APIMessage {
     * @param channel The channel where the change happened
     * @param mostRecent The time the most recent pinned message was pinned
     */
-  case class ChannelPinsUpdate(
-      channel: TChannel,
-      mostRecent: Option[OffsetDateTime],
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends ChannelMessage
+  case class ChannelPinsUpdate(channel: TChannel, mostRecent: Option[OffsetDateTime], cache: CacheState)
+      extends ChannelMessage
 
   /**
     * Trait that covers all guild messages.
@@ -127,13 +111,13 @@ object APIMessage {
     * joins a new guild.
     * @param guild The created guild object
     */
-  case class GuildCreate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends GuildMessage
+  case class GuildCreate(guild: Guild, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when the guild object is updated.
     * @param guild The updated guild.
     */
-  case class GuildUpdate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends GuildMessage
+  case class GuildUpdate(guild: Guild, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client either if a guild becomes unavailable due to and
@@ -141,59 +125,52 @@ object APIMessage {
     * @param guild The deleted guild
     * @param unavailable If an outage caused this event
     */
-  case class GuildDelete(guild: Guild, unavailable: Boolean, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildDelete(guild: Guild, unavailable: Boolean, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when an user is banned from a guild. If you need the
-    * [[net.katsstuff.ackcord.data.GuildMember]] object of the user, you can find it in [[prevSnapshot]].
+    * [[net.katsstuff.ackcord.data.GuildMember]] object of the user, you can find it in [[cache.previous]].
     * @param guild The guild the user was banned from.
     * @param user The banned user.
     */
-  case class GuildBanAdd(guild: Guild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildBanAdd(guild: Guild, user: User, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when an user is unbanned from a guild.
     * @param guild The guild where the user was previously banned.
     * @param user The previously banned user.
     */
-  case class GuildBanRemove(guild: Guild, user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildBanRemove(guild: Guild, user: User, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when the emojis of a guild have been updated. If you
-    * need the old emojis, you can find them in [[prevSnapshot]].
+    * need the old emojis, you can find them in [[cache.previous]].
     * @param guild The guild where the update occoured.
     * @param emojis The new emojis.
     */
-  case class GuildEmojiUpdate(guild: Guild, emojis: Seq[Emoji], snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildEmojiUpdate(guild: Guild, emojis: Seq[Emoji], cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when the integrations of a guild were updated. You
     * have to fetch the integrations yourself.
     * @param guild The guild where the update occurred.
     */
-  case class GuildIntegrationsUpdate(guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildIntegrationsUpdate(guild: Guild, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a user joins the guild.
     * @param member The new member
     * @param guild The joined guild
     */
-  case class GuildMemberAdd(member: GuildMember, guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildMemberAdd(member: GuildMember, guild: Guild, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a user leaves the guild (or is kicked or banned).
-    * If you need the [[net.katsstuff.ackcord.data.GuildMember]], you can find it in [[prevSnapshot]].
+    * If you need the [[net.katsstuff.ackcord.data.GuildMember]], you can find it in [[cache.previous]].
     * @param user The user that left
     * @param guild The guild the user left
     */
-  case class GuildMemberRemove(user: User, guild: Guild, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildMemberRemove(user: User, guild: Guild, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a guild member is updated. The fields seen here
@@ -204,14 +181,8 @@ object APIMessage {
     * @param user The user of the updated guild member
     * @param nick Nick of the user if one was set
     */
-  case class GuildMemberUpdate(
-      guild: Guild,
-      roles: Seq[Role],
-      user: User,
-      nick: Option[String],
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends GuildMessage
+  case class GuildMemberUpdate(guild: Guild, roles: Seq[Role], user: User, nick: Option[String], cache: CacheState)
+      extends GuildMessage
 
   /**
     * Sent to the client if the client requests to get all members
@@ -219,36 +190,28 @@ object APIMessage {
     * @param guild The guild requested for.
     * @param members The guild members in this chunk.
     */
-  case class GuildMembersChunk(
-      guild: Guild,
-      members: Seq[GuildMember],
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends GuildMessage
+  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a new role is created.
     * @param guild The guild of the new role
     * @param role The new role
     */
-  case class GuildRoleCreate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildRoleCreate(guild: Guild, role: Role, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a role is updated.
     * @param guild The guild of the updated role
     * @param role The updated role
     */
-  case class GuildRoleUpdate(guild: Guild, role: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildRoleUpdate(guild: Guild, role: Role, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a role is deleted
     * @param guild The guild of the deleted role
     * @param roleId The deleted role.
     */
-  case class GuildRoleDelete(guild: Guild, roleId: Role, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends GuildMessage
+  case class GuildRoleDelete(guild: Guild, roleId: Role, cache: CacheState) extends GuildMessage
 
   /**
     * Trait that covers all message messages.
@@ -265,23 +228,21 @@ object APIMessage {
     * Sent to the client when a message is created (posted).
     * @param message The sent message
     */
-  case class MessageCreate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends MessageMessage
+  case class MessageCreate(message: Message, cache: CacheState) extends MessageMessage
 
   /**
     * Sent to the client when a message is updated.
     * @param message The new message. The check changes, the old message can
-    *                be found in [[prevSnapshot]].
+    *                be found in [[cache.previous]].
     */
-  case class MessageUpdate(message: Message, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends MessageMessage
+  case class MessageUpdate(message: Message, cache: CacheState) extends MessageMessage
 
   /**
     * Sent to the client when a message is deleted.
     * @param message The deleted message.
     * @param channel The channel of the message.
     */
-  case class MessageDelete(message: Message, channel: TChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+  case class MessageDelete(message: Message, channel: TChannel, cache: CacheState)
       extends MessageMessage
       with ChannelMessage
 
@@ -291,12 +252,7 @@ object APIMessage {
     * @param messages The deleted messages
     * @param channel The channel of the deleted messages
     */
-  case class MessageDeleteBulk(
-      messages: Seq[Message],
-      channel: TChannel,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends ChannelMessage
+  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user adds a reaction to a message.
@@ -305,14 +261,8 @@ object APIMessage {
     * @param message The message the user added an reaction to.
     * @param emoji The emoji the user reacted with
     */
-  case class MessageReactionAdd(
-      user: User,
-      channel: TChannel,
-      message: Message,
-      emoji: PartialEmoji,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends MessageMessage
+  case class MessageReactionAdd(user: User, channel: TChannel, message: Message, emoji: PartialEmoji, cache: CacheState)
+      extends MessageMessage
       with ChannelMessage
 
   /**
@@ -327,23 +277,18 @@ object APIMessage {
       channel: TChannel,
       message: Message,
       emoji: PartialEmoji,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
+      cache: CacheState
   ) extends MessageMessage
       with ChannelMessage
 
   /**
     * Sent to the client when a user removes all reactions from a message.
-    * The emojis of the message can be found in [[prevSnapshot]].
+    * The emojis of the message can be found in [[cache.previous]].
     * @param channel The channel of the message.
     * @param message The message the user removed the reactions from.
     */
-  case class MessageReactionRemoveAll(
-      channel: TChannel,
-      message: Message,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends MessageMessage
+  case class MessageReactionRemoveAll(channel: TChannel, message: Message, cache: CacheState)
+      extends MessageMessage
       with ChannelMessage
 
   /**
@@ -353,14 +298,8 @@ object APIMessage {
     * @param roleIds The roles of the user
     * @param presence The new presence
     */
-  case class PresenceUpdate(
-      guild: Guild,
-      user: User,
-      roleIds: Seq[RoleId],
-      presence: Presence,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends GuildMessage
+  case class PresenceUpdate(guild: Guild, user: User, roleIds: Seq[RoleId], presence: Presence, cache: CacheState)
+      extends GuildMessage
 
   /**
     * Sent to the client when a user starts typing in a channel
@@ -368,26 +307,19 @@ object APIMessage {
     * @param user The user that began typing
     * @param timestamp When user started typing
     */
-  case class TypingStart(
-      channel: TChannel,
-      user: User,
-      timestamp: Instant,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends ChannelMessage
+  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user object is updated.
     * @param user The new user.
     */
-  case class UserUpdate(user: User, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot) extends APIMessage
+  case class UserUpdate(user: User, cache: CacheState) extends APIMessage
 
   /**
     * Sent to the client when a user joins/leaves/moves voice channels
     * @param voiceState New voice states
     */
-  case class VoiceStateUpdate(voiceState: VoiceState, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
-      extends APIMessage
+  case class VoiceStateUpdate(voiceState: VoiceState, cache: CacheState) extends APIMessage
 
   /**
     * Sent a guilds voice server is updated. Also used when connecting to a voice channel.
@@ -395,20 +327,14 @@ object APIMessage {
     * @param guild The guild of the update
     * @param endpoint The voice server
     */
-  case class VoiceServerUpdate(
-      token: String,
-      guild: Guild,
-      endpoint: String,
-      snapshot: CacheSnapshot,
-      prevSnapshot: CacheSnapshot
-  ) extends GuildMessage
+  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when guilds webhooks are updated.
     * @param guild The guild of the updated webhook
     * @param channel The channel for the webhook
     */
-  case class WebhookUpdate(guild: Guild, channel: GuildChannel, snapshot: CacheSnapshot, prevSnapshot: CacheSnapshot)
+  case class WebhookUpdate(guild: Guild, channel: GuildChannel, cache: CacheState)
       extends GuildMessage
       with ChannelMessage
 
