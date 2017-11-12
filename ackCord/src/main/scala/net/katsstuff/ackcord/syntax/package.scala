@@ -395,6 +395,12 @@ package object syntax {
       */
     def connectedUsers(guild: Guild): Seq[UserId] =
       guild.voiceStates.filter(_._2.channelId.contains(channel.id)).keys.toSeq
+
+    /**
+      * Get the guild members connected to this voice channel.
+      */
+    def connectedMembers(implicit c: CacheSnapshot): Seq[GuildMember] =
+      c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolveMember(g.id))).getOrElse(Seq.empty)
   }
 
   implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
