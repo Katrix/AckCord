@@ -32,7 +32,7 @@ import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
   *
   * @tparam Data The data it contains
   */
-sealed trait CacheHandlerEvent[Data] {
+sealed trait CacheUpdate[Data] {
 
   /**
     * The data to update
@@ -60,11 +60,11 @@ sealed trait CacheHandlerEvent[Data] {
   * @param handler The handler to process the data of this event with.
   * @tparam Data The data it contains.
   */
-case class APIMessageHandlerEvent[Data](
+case class APIMessageCacheUpdate[Data](
     data: Data,
     sendEvent: CacheState => Option[APIMessage],
     handler: CacheHandler[Data]
-) extends CacheHandlerEvent[Data]
+) extends CacheUpdate[Data]
 
 /**
   * An event where after the data has been processed, it's sent to a receiver.
@@ -74,12 +74,12 @@ case class APIMessageHandlerEvent[Data](
   * @param sendTo The receiver of the handled data.
   * @tparam Data The data it contains.
   */
-case class SendHandledDataEvent[Data](
+case class SendHandledDataCacheUpdate[Data](
     data: Data,
     handler: CacheHandler[Data],
     findData: CacheState => Option[Any],
     sendTo: ActorRef
-) extends CacheHandlerEvent[Data]
+) extends CacheUpdate[Data]
 
 /**
   * Any other event that updates the cache with it's data.
@@ -87,4 +87,4 @@ case class SendHandledDataEvent[Data](
   * @param handler The handler to process the data of this event with.
   * @tparam Data The data it contains.
   */
-case class MiscHandlerEvent[Data](data: Data, handler: CacheHandler[Data]) extends CacheHandlerEvent[Data]
+case class MiscCacheUpdate[Data](data: Data, handler: CacheHandler[Data]) extends CacheUpdate[Data]

@@ -33,14 +33,14 @@ import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import net.katsstuff.ackcord.handlers.CacheSnapshotBuilder
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 
-object SnowflakeCacheStreams {
+object CacheStreams {
 
   def cacheStreams[D](
       implicit system: ActorSystem,
       mat: Materializer
-  ): (Sink[CacheHandlerEvent[D], NotUsed], Source[(CacheHandlerEvent[D], CacheState), NotUsed]) = {
+  ): (Sink[CacheUpdate[D], NotUsed], Source[(CacheUpdate[D], CacheState), NotUsed]) = {
     val (sink, source) = MergeHub
-      .source[CacheHandlerEvent[D]](perProducerBufferSize = 16)
+      .source[CacheUpdate[D]](perProducerBufferSize = 16)
       .via(cacheUpdater[D])
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
       .run()
@@ -48,24 +48,24 @@ object SnowflakeCacheStreams {
     (sink, source)
   }
 
-  def createApiMessages[D]: Flow[(CacheHandlerEvent[D], CacheState), APIMessage, NotUsed] = {
-    Flow[(CacheHandlerEvent[D], CacheState)]
+  def createApiMessages[D]: Flow[(CacheUpdate[D], CacheState), APIMessage, NotUsed] = {
+    Flow[(CacheUpdate[D], CacheState)]
       .collect {
-        case (APIMessageHandlerEvent(_, sendEvent, _), state) => sendEvent(state)
+        case (APIMessageCacheUpdate(_, sendEvent, _), state) => sendEvent(state)
       }
       .flatMapConcat(_.fold[Source[APIMessage, NotUsed]](Source.empty)(Source.single))
   }
 
-  def sendHandledData[D]: Sink[(CacheHandlerEvent[D], CacheState), Future[Done]] = {
-    Sink.foreach[(CacheHandlerEvent[D], CacheState)] {
-      case (SendHandledDataEvent(_, _, findData, sendTo), state) => findData(state).foreach(sendTo ! _)
+  def sendHandledData[D]: Sink[(CacheUpdate[D], CacheState), Future[Done]] = {
+    Sink.foreach[(CacheUpdate[D], CacheState)] {
+      case (SendHandledDataCacheUpdate(_, _, findData, sendTo), state) => findData(state).foreach(sendTo ! _)
       case _                                                     =>
     }
   }
 
   def cacheUpdater[D](
       implicit system: ActorSystem
-  ): Flow[CacheHandlerEvent[D], (CacheHandlerEvent[D], CacheState), NotUsed] = {
+  ): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] = {
     var state: CacheState = null
 
     /**
@@ -74,9 +74,9 @@ object SnowflakeCacheStreams {
       */
     def isReady: Boolean = state != null
 
-    Flow[CacheHandlerEvent[D]].statefulMapConcat { () => update =>
+    Flow[CacheUpdate[D]].statefulMapConcat { () => update =>
       val newState = update match {
-        case readyEvent @ APIMessageHandlerEvent(_: ReadyData, _, _) =>
+        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
           val builder = new CacheSnapshotBuilder(
             null, //The event will populate this,
             mutable.Map.empty,
@@ -94,7 +94,7 @@ object SnowflakeCacheStreams {
 
           val snapshot = builder.toImmutable
           CacheState(snapshot, snapshot)
-        case handlerEvent: CacheHandlerEvent[_] if isReady =>
+        case handlerEvent: CacheUpdate[_] if isReady =>
           val builder = CacheSnapshotBuilder(state.current)
           handlerEvent.handle(builder)(system.log)
 

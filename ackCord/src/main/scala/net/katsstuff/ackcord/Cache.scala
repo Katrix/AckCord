@@ -37,26 +37,26 @@ import akka.stream.scaladsl.{Sink, Source}
   * @param subscribe A source to subscribe to. All updates are pushed here.
   */
 case class Cache(
-    publish: Sink[CacheHandlerEvent[Any], NotUsed],
-    subscribe: Source[(CacheHandlerEvent[Any], CacheState), NotUsed]
+    publish: Sink[CacheUpdate[Any], NotUsed],
+    subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed]
 ) {
 
   /**
     * Publish a single element to this cache.
     */
-  def publishSingle(elem: CacheHandlerEvent[Any])(implicit mat: Materializer): Unit =
+  def publishSingle(elem: CacheUpdate[Any])(implicit mat: Materializer): Unit =
     publish.runWith(Source.single(elem))
 
   /**
     * Publish many elements to this cache.
     */
-  def publishMany(it: immutable.Iterable[CacheHandlerEvent[Any]])(implicit mat: Materializer): Unit =
+  def publishMany(it: immutable.Iterable[CacheUpdate[Any]])(implicit mat: Materializer): Unit =
     publish.runWith(Source(it))
 
   /**
     * A source used to subscribe to [[APIMessage]]s sent to this cache.
     */
-  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(SnowflakeCacheStreams.createApiMessages[Any])
+  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages[Any])
 
   /**
     * Subscribe an actor to this cache using [[Sink.actorRef]].
@@ -83,7 +83,7 @@ case class Cache(
 }
 object Cache {
   def create(implicit system: ActorSystem, mat: Materializer): Cache = {
-    val (publish, subscribe) = SnowflakeCacheStreams.cacheStreams[Any]
+    val (publish, subscribe) = CacheStreams.cacheStreams[Any]
     Cache(publish, subscribe)
   }
 }

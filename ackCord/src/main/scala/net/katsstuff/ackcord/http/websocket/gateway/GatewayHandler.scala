@@ -41,7 +41,7 @@ import io.circe.parser
 import io.circe.syntax._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.util.AckCordSettings
-import net.katsstuff.ackcord.{APIMessageHandlerEvent, AckCord, Cache, ClientSettings}
+import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSettings}
 
 /**
   * Responsible for normal websocket communication with Discord.
@@ -230,7 +230,7 @@ object GatewayHandler {
   def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props = {
     val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
-      APIMessageHandlerEvent(event.handlerData, event.createEvent, event.cacheHandler)
+      APIMessageCacheUpdate(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
     Props(new GatewayHandler(wsUri, settings, sink))

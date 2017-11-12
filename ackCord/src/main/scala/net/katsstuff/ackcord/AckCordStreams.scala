@@ -101,25 +101,25 @@ object AckCordStreams {
         _,
         RequestWrapper(restRequest: BaseRESTRequest[Data @unchecked, _, Response @unchecked], _, _)
         ) =>
-          MiscHandlerEvent(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
-            .asInstanceOf[CacheHandlerEvent[Any]] //FIXME
+          MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
+            .asInstanceOf[CacheUpdate[Any]] //FIXME
       })
 
       val repeater = builder.add(RepeatLast.flow[RequestAnswer[Data, Ctx]])
 
-      val zipper = builder.add(Zip[RequestAnswer[Data, Ctx], (CacheHandlerEvent[Any], CacheState)])
+      val zipper = builder.add(Zip[RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState)])
 
-      val findPublished = builder.add(Flow[(RequestAnswer[Data, Ctx], (CacheHandlerEvent[Any], CacheState))].collect {
-        case (RequestResponse(data, _, _, _, _), (MiscHandlerEvent(data2, _), state)) if data == data2 =>
+      val findPublished = builder.add(Flow[(RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState))].collect {
+        case (RequestResponse(data, _, _, _, _), (MiscCacheUpdate(data2, _), state)) if data == data2 =>
           restRequest.findData(data)(state)
       })
 
       // format: OFF
 
       request ~> broadcaster ~> cacheEvent ~>               cache.publish
-      broadcaster ~> repeater    ~> zipper.in0
-      zipper.in1 <~ cache.subscribe
-      zipper.out ~> findPublished
+                 broadcaster ~> repeater   ~> zipper.in0
+                                              zipper.in1 <~ cache.subscribe
+                                              zipper.out ~> findPublished
 
       // format: ON
 

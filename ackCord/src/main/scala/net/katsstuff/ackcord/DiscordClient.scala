@@ -91,7 +91,7 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
             .findData(data)(_: CacheState)
             .map(newData => RequestResponse(newData, ctx, remainingRequests, tilReset, wrapper))
 
-          cache.publishSingle(SendHandledDataEvent(data, request.cacheHandler, withWrapper, sendTo))
+          cache.publishSingle(SendHandledDataCacheUpdate(data, request.cacheHandler, withWrapper, sendTo))
         case answer => answer.toWrapper.sendResponseTo ! answer
       }
       .named("DefaultRequestHandlerSink")
