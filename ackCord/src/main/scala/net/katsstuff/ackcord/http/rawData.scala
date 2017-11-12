@@ -25,6 +25,8 @@ package net.katsstuff.ackcord.http
 
 import java.time.OffsetDateTime
 
+import cats.Traverse
+import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 
 /**
@@ -66,7 +68,88 @@ case class RawChannel(
     ownerId: Option[UserId],
     applicationId: Option[RawSnowflake],
     parentId: Option[ChannelId]
-)
+) {
+
+  /**
+    * Try to convert this to a normal channel.
+    */
+  def toChannel: Option[Channel] = {
+    `type` match {
+      case ChannelType.GuildText =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          TGuildChannel(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            topic,
+            lastMessageId,
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+      case ChannelType.DM =>
+        for {
+          recipients <- recipients
+          if recipients.nonEmpty
+        } yield {
+          DMChannel(id, lastMessageId, recipients.head.id)
+        }
+      case ChannelType.GuildVoice =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+          bitrate              <- bitrate
+          userLimit            <- userLimit
+        } yield {
+          VGuildChannel(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            bitrate,
+            userLimit,
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+      case ChannelType.GroupDm =>
+        for {
+          name       <- name
+          recipients <- recipients
+          ownerId    <- ownerId
+        } yield {
+          GroupDMChannel(id, name, recipients.map(_.id), lastMessageId, ownerId, applicationId, icon)
+        }
+      case ChannelType.GuildCategory =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          GuildCategory(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+    }
+  }
+}
 
 //Remember to edit RawGuildMemberWithGuild when editing this
 /**
@@ -85,7 +168,13 @@ case class RawGuildMember(
     joinedAt: OffsetDateTime,
     deaf: Boolean,
     mute: Boolean
-)
+) {
+
+  /**
+    * Convert this to a normal guild member.
+    */
+  def toGuildMember(guildId: GuildId) = GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
+}
 
 /**
   * A raw message before going through the cache.
@@ -123,7 +212,31 @@ case class RawMessage(
     nonce: Option[RawSnowflake],
     pinned: Boolean,
     `type`: MessageType
-)
+) {
+
+  /**
+    * Convert this to a normal message.
+    */
+  def toMessage: Message =
+    Message(
+      id,
+      channelId,
+      author,
+      content,
+      timestamp,
+      editedTimestamp,
+      tts,
+      mentionEveryone,
+      mentions.map(_.id),
+      mentionRoles,
+      attachment,
+      embeds,
+      reactions.getOrElse(Seq.empty),
+      nonce,
+      pinned,
+      `type`
+    )
+}
 
 /**
   * A a raw guild before going through the cache.
@@ -186,7 +299,58 @@ case class RawGuild(
     members: Option[Seq[RawGuildMember]],
     channels: Option[Seq[RawChannel]],
     presences: Option[Seq[RawPresence]]
-)
+) {
+
+  /**
+    * Try to convert this to a normal guild.
+    */
+  def toGuild: Option[Guild] = {
+    import cats.implicits._
+    import net.katsstuff.ackcord.syntax._
+
+    for {
+      joinedAt    <- joinedAt
+      large       <- large
+      memberCount <- memberCount
+      voiceStates <- voiceStates
+      members     <- members
+      rawChannels <- channels
+      channels    <- Traverse[List].sequence(rawChannels.map(_.toChannel.flatMap(_.asGuildChannel)).toList)
+      presences   <- presences
+    } yield {
+
+      Guild(
+        id,
+        name,
+        icon,
+        splash,
+        ownerId,
+        region,
+        afkChannelId,
+        afkTimeout,
+        embedEnabled,
+        embedChannelId,
+        verificationLevel,
+        defaultMessageNotifications,
+        explicitContentFilter,
+        SnowflakeMap(roles.map(r => r.id  -> r.toRole(id)): _*),
+        SnowflakeMap(emojis.map(e => e.id -> e): _*),
+        features,
+        mfaLevel,
+        applicationId,
+        widgetEnabled,
+        widgetChannelId,
+        joinedAt,
+        large,
+        memberCount,
+        SnowflakeMap(voiceStates.map(v => v.userId  -> v): _*),
+        SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id)): _*),
+        SnowflakeMap(channels.map(ch => ch.id       -> ch): _*),
+        SnowflakeMap(presences.map(p => p.user.id   -> p.toPresence): _*)
+      )
+    }
+  }
+}
 
 /**
   * A raw role before going through the cache.
@@ -209,7 +373,8 @@ case class RawRole(
     managed: Boolean,
     mentionable: Boolean
 ) {
-  def makeRole(guildId: GuildId): Role =
+
+  def toRole(guildId: GuildId): Role =
     Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable)
 }
 
@@ -219,7 +384,10 @@ case class RawRole(
   * @param `type` The type of the presence.
   * @param url A uri if the type is streaming.
   */
-case class RawPresenceGame(name: String, `type`: Int, url: Option[String])
+case class RawPresenceGame(name: String, `type`: Int, url: Option[String]) {
+
+  def toContent: PresenceContent = url.fold[PresenceContent](PresenceGame(name))(PresenceStreaming(name, _))
+}
 
 /**
   * A raw presence.
@@ -227,7 +395,10 @@ case class RawPresenceGame(name: String, `type`: Int, url: Option[String])
   * @param game The content of the presence.
   * @param status The presence status.
   */
-case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus])
+case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus]) {
+
+  def toPresence: Presence = Presence(user.id, game.map(_.toContent), status.getOrElse(PresenceStatus.Online))
+}
 
 /**
   * A user where fields can be missing.
@@ -258,4 +429,6 @@ case class PartialUser(
   * @param reason Why the user was banned.
   * @param user The user that was baned.
   */
-case class RawBan(reason: Option[String], user: User)
+case class RawBan(reason: Option[String], user: User) {
+  def toBan: Ban = Ban(reason, user.id)
+}

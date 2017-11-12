@@ -159,7 +159,7 @@ object RawHandlers extends Handlers {
       verificationLevel = obj.verificationLevel,
       defaultMessageNotifications = obj.defaultMessageNotifications,
       explicitContentFilter = obj.explicitContentFilter,
-      roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.makeRole(obj.id)): _*),
+      roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.toRole(obj.id)): _*),
       emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e): _*),
       features = obj.features,
       mfaLevel = obj.mfaLevel,
@@ -245,7 +245,7 @@ object RawHandlers extends Handlers {
     case (builder, obj @ GuildRoleModifyData(guildId, role), log) =>
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          builder.guilds.put(guildId, guild.copy(roles = guild.roles + ((role.id, role.makeRole(guildId)))))
+          builder.guilds.put(guildId, guild.copy(roles = guild.roles + ((role.id, role.toRole(guildId)))))
         case None => log.warning(s"No guild found for role update $obj")
       }
   }

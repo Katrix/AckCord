@@ -613,7 +613,7 @@ object GatewayEvent {
     override def createEvent(state: CacheState): Option[APIMessage] =
       state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.GuildRoleCreate(g, data.role.makeRole(data.guildId), state))
+        .map(g => APIMessage.GuildRoleCreate(g, data.role.toRole(data.guildId), state))
     override def guildId: GuildId = data.guildId
   }
 
@@ -626,7 +626,7 @@ object GatewayEvent {
     override def createEvent(state: CacheState): Option[APIMessage] =
       state.current
         .getGuild(data.guildId)
-        .map(g => APIMessage.GuildRoleUpdate(g, data.role.makeRole(data.guildId), state))
+        .map(g => APIMessage.GuildRoleUpdate(g, data.role.toRole(data.guildId), state))
     override def guildId: GuildId = data.guildId
   }
 
