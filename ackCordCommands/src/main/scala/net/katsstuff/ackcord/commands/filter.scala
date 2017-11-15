@@ -25,8 +25,8 @@ package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandParser.ParsedCommand
-import net.katsstuff.ackcord.commands.CommandRouter.Command
+import net.katsstuff.ackcord.commands.CmdParser.ParsedCommand
+import net.katsstuff.ackcord.commands.CmdRouter.Command
 import net.katsstuff.ackcord.data.{CacheSnapshot, DMChannel, GroupDMChannel, GuildChannel, Message, Permission, UserId}
 import net.katsstuff.ackcord.syntax._
 
@@ -35,7 +35,7 @@ import net.katsstuff.ackcord.syntax._
   * can be used. A few filters are defined here, but creating a custom one
   * is easy.
   */
-trait CommandFilter {
+trait CmdFilter {
 
   /**
     * Check if the message can be executed.
@@ -48,12 +48,12 @@ trait CommandFilter {
     */
   def errorMessage(msg: Message)(implicit c: CacheSnapshot): String
 }
-object CommandFilter {
+object CmdFilter {
 
   /**
     * Only allow this command to be used in a specific context
     */
-  case class InContext(context: Context) extends CommandFilter {
+  case class InContext(context: Context) extends CmdFilter {
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = msg.channel.exists {
       case _: GuildChannel   => context == Context.Guild
       case _: DMChannel      => context == Context.DM
@@ -77,7 +77,7 @@ object CommandFilter {
     * This command can only be used if the user has specific permissions.
     * If this command is not used in a guild, it will always pass this filter.
     */
-  case class NeedPermission(neededPermission: Permission) extends CommandFilter {
+  case class NeedPermission(neededPermission: Permission) extends CmdFilter {
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val res = for {
         channel      <- msg.channel
@@ -96,7 +96,7 @@ object CommandFilter {
   /**
     * Create an actor that will stop commands according to a set of filters.
     */
-  def createActorFilter(filters: Seq[CommandFilter], forwardTo: Props, client: ClientActor): Props =
+  def createActorFilter(filters: Seq[CmdFilter], forwardTo: Props, client: ClientActor): Props =
     Props(new CommandFilterActor(filters, forwardTo, client))
 }
 
@@ -109,7 +109,7 @@ object Context {
   case object DM    extends Context
 }
 
-class CommandFilterActor(filters: Seq[CommandFilter], forwardToProps: Props, client: ClientActor) extends Actor {
+class CommandFilterActor(filters: Seq[CmdFilter], forwardToProps: Props, client: ClientActor) extends Actor {
   val forwardTo: ActorRef = context.actorOf(forwardToProps, s"${self.path.name}AfterFilter")
 
   override def receive: Receive = {

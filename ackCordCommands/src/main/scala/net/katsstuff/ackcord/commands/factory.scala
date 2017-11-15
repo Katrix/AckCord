@@ -53,59 +53,39 @@ case class CmdCategory(prefix: String, description: String) {
   * @param description The description of what a command does.
   * @param usage How to use the command. Does not include the name or prefix.
   */
-case class CommandDescription(name: String, description: String, usage: String = "")
+case class CmdDescription(name: String, description: String, usage: String = "")
 
-/**
-  * Represents a parsed command, and information about it. Useful for grouping
-  * commands together and registering them at the same time.
-  * @param category The category for this command.
-  * @param alias All the aliases of this command.
-  * @param description Optional information to shot to users about the command.
-  * @param handler The handler for the command. Should accept [[net.katsstuff.ackcord.commands.CommandParser.ParsedCommand]].
-  * @param parser The parser to use for the command.
-  * @tparam A The type of the parsed args.
-  */
-case class CommandMeta[A](
+trait CmdFactory {
+  def category:                   CmdCategory
+  def aliases:                    Seq[String]
+  def props(client: ClientActor): Props
+  def description:                Option[CmdDescription]
+
+  def lowercaseAliases: Seq[String] = aliases.map(_.toLowerCase(Locale.ROOT))
+}
+
+case class UnparsedCmdFactory(
     category: CmdCategory,
-    alias: Seq[String],
-    handler: Props,
-    filters: Seq[CommandFilter] = Seq.empty,
-    description: Option[CommandDescription] = None,
+    aliases: Seq[String],
+    props: Props,
+    filters: Seq[CmdFilter] = Seq.empty,
+    description: Option[CmdDescription] = None,
+) extends CmdFactory {
+  override def props(client: ClientActor): Props =
+    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, props, client) else props
+}
+
+case class ParsedCmdFactory[A](
+    category: CmdCategory,
+    aliases: Seq[String],
+    props: Props,
+    filters: Seq[CmdFilter] = Seq.empty,
+    description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
-object CommandMeta {
+    extends CmdFactory {
 
-  /**
-    * Create a map that can be passed to a [[CommandRouter]] as the initial commands.
-    * @param client The client actor. Used for sending error messages
-    *               from the filters.
-    * @param commands The commands to use.
-    */
-  def routerMap(commands: Seq[CommandMeta[_]], client: ClientActor): Map[CmdCategory, Map[String, Props]] = {
-    commands.groupBy(_.category).map {
-      case (cat, seq) =>
-        val res = for {
-          meta  <- seq
-          alias <- meta.alias
-        } yield
-          alias -> CommandFilter.createActorFilter(meta.filters, CommandParser.props(meta.parser, meta.handler), client)
-
-        cat -> res.toMap
-    }
-  }
-
-  /**
-    * Create a map that can be passed to a [[HelpCommand]] as the initial commands.
-    * @param commands The commands to use
-    */
-  def helpCmdMap(commands: Seq[CommandMeta[_]]): Map[CmdCategory, Map[String, CommandDescription]] = {
-    commands.groupBy(_.category).mapValues { seq =>
-      val res = for {
-        meta  <- seq
-        alias <- meta.alias
-        desc  <- meta.description
-      } yield alias -> desc
-
-      res.toMap
-    }
+  override def props(client: ClientActor): Props = {
+    val parsed = CmdParser.props(parser, props)
+    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, parsed, client) else parsed
   }
 }

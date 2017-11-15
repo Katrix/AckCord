@@ -27,8 +27,8 @@ import akka.NotUsed
 import akka.actor.{Actor, Status}
 import net.katsstuff.ackcord.DiscordClient
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
-import net.katsstuff.ackcord.commands.CommandRouter.Command
+import net.katsstuff.ackcord.commands.CmdParser.{ParseError, ParsedCommand}
+import net.katsstuff.ackcord.commands.CmdRouter.Command
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
@@ -38,7 +38,7 @@ import shapeless.{TypeCase, Typeable}
   * Base trait common to all command actors. This can also be used as a
   * destination for request responses.
   */
-trait BaseCommandActor extends Actor {
+trait BaseCmdActor extends Actor {
 
   /**
     * Handle a potential error.
@@ -66,7 +66,7 @@ trait BaseCommandActor extends Actor {
   * implicit snapshot. If it receives [[DiscordClient.ShutdownClient]], it will
   * stop itself.
   */
-trait CommandActor extends BaseCommandActor {
+trait CmdActor extends BaseCmdActor {
   override def receive: Receive = {
     case Command(msg, args, c)               => handleCommand(msg, args)(c)
     case Status.Failure(e)                   => handleFailure(e)
@@ -98,26 +98,36 @@ trait CommandActor extends BaseCommandActor {
   *                 that a the correct type is received.
   * @tparam A The arg type
   */
-abstract class ParsedCommandActor[A](implicit typeable: Typeable[A]) extends BaseCommandActor {
+abstract class ParsedCmdActor[A](implicit typeable: Typeable[A]) extends BaseCmdActor {
 
   def client: ClientActor
 
   val IsA: TypeCase[A] = TypeCase[A]
 
   override def receive: Receive = {
-    case ParsedCommand(msg, IsA(args), remaining, c) =>
-      handleCommand(msg, args, remaining)(c)
-    case ParseError(msg, e, c)               => handleParseError(msg, e)(c)
-    case Status.Failure(e)                   => handleFailure(e)
-    case RequestResponse(data, _, _, ctx, _) => handleResponse(data, ctx)
-    case RequestResponseNoData(_, _, ctx, _) => handleResponse(NotUsed, ctx)
-    case RequestError(ctx, e, _)             => handleFailedResponse(e, ctx)
-    case RequestRatelimited(ctx, tilReset, global, wrapper) =>
-      handleFailedResponse(new RatelimitException(global, tilReset, wrapper.request.route.uri), ctx)
-    case RequestDropped(ctx, wrapper) =>
-      handleFailedResponse(new DroppedRequestException(wrapper.request.route.uri), ctx)
-    case DiscordClient.ShutdownClient => context.stop(self)
+    val base: Receive = {
+      case ParsedCommand(msg, IsA(args), remaining, c) =>
+        handleCommand(msg, args, remaining)(c)
+      case ParseError(msg, e, c)               => handleParseError(msg, e)(c)
+      case Status.Failure(e)                   => handleFailure(e)
+      case RequestResponse(data, _, _, ctx, _) => handleResponse(data, ctx)
+      case RequestResponseNoData(_, _, ctx, _) => handleResponse(NotUsed, ctx)
+      case RequestError(ctx, e, _)             => handleFailedResponse(e, ctx)
+      case RequestRatelimited(ctx, tilReset, global, wrapper) =>
+        handleFailedResponse(new RatelimitException(global, tilReset, wrapper.request.route.uri), ctx)
+      case RequestDropped(ctx, wrapper) =>
+        handleFailedResponse(new DroppedRequestException(wrapper.request.route.uri), ctx)
+      case DiscordClient.ShutdownClient => context.stop(self)
+    }
+
+    extraReceive.orElse(base)
   }
+
+  /**
+    * If your command actor wants to receive any extra messages, throw that
+    * logic in here.
+    */
+  def extraReceive: Receive = PartialFunction.empty
 
   /**
     * Handle a parsed command sent to this actor

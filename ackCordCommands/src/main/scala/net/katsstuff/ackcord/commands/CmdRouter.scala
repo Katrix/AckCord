@@ -28,7 +28,8 @@ import java.util.Locale
 import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import net.katsstuff.ackcord.DiscordClient.ShutdownClient
+import akka.routing.Broadcast
+import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.util.MessageParser
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
@@ -41,38 +42,23 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   * events once a shutdown has been started.
   * @param needMention If all commands handled by this dispatcher need a
   *                    mention before the command
-  * @param initialCommands The initial commands this dispatcher should start with.
-  *                        The first map is a map for the category. The second
-  *                        map is for the command name itself.
   * @param errorHandlerProps Props for the actor to send all invalid commands to.
   *                          Here you can roll your own, or you can base it of
-  *                          [[CommandErrorHandler]].
+  *                          [[CmdErrorHandler]].
   */
-class CommandRouter(
-    var needMention: Boolean,
-    initialCommands: Map[CmdCategory, Map[String, Props]],
-    errorHandlerProps: Props
-) extends Actor
+class CmdRouter(client: ClientActor, var needMention: Boolean, errorHandlerProps: Props, helpFactory: Option[CmdFactory])
+    extends Actor
     with ActorLogging {
-  import net.katsstuff.ackcord.commands.CommandRouter._
+  import net.katsstuff.ackcord.commands.CmdRouter._
 
-  val errorHandler: ActorRef = context.actorOf(errorHandlerProps, "ErrorHandler")
   val commands       = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, ActorRef]]
   var isShuttingDown = false
 
-  addCommands(initialCommands)
-
-  def addCommands(routerMap: Map[CmdCategory, Map[String, Props]]): Unit = {
-    routerMap.foreach {
-      case (cat, innerMap) =>
-        commands.getOrElseUpdate(cat, mutable.HashMap.empty) ++= innerMap.map {
-          case (name, props) =>
-            val lowercaseName = name.toLowerCase(Locale.ROOT)
-            val actor         = context.actorOf(props, lowercaseName)
-            context.watchWith(actor, TerminatedCommand(cat, lowercaseName))
-            lowercaseName -> actor
-        }
-    }
+  val errorHandler: ActorRef         = context.actorOf(errorHandlerProps, "ErrorHandler")
+  val helpCmd:      Option[ActorRef] = helpFactory.map { factory =>
+    val helpActor = context.actorOf(factory.props(client), "HelpCmd")
+    commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> helpActor)
+    helpActor
   }
 
   override def receive: Receive = {
@@ -96,37 +82,40 @@ class CommandRouter(
           }
         }
       }
-    case RegisterCommand(cat, names, handler) =>
+    case RegisterCmd(factory) =>
       if (!isShuttingDown) {
-        val lowercaseNames = names.map(_.toLowerCase(Locale.ROOT))
-        commands.getOrElseUpdate(cat, mutable.HashMap.empty) ++= lowercaseNames.map(_ -> handler)
+        val handler = context.actorOf(factory.props(client), factory.aliases.head)
+        context.watchWith(handler, TerminatedCmd(factory))
+        commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> handler)
       }
-    case UnregisterCommand(cat, names) =>
-      val lowercaseNames = names.map(_.toLowerCase(Locale.ROOT))
-      commands.get(cat).foreach(_ --= lowercaseNames)
     case SetNeedMention(newNeedMention) => needMention = newNeedMention
-    case SetNewCommands(routerMap) =>
+    case ClearCmds =>
       commands.foreach(_._2.foreach(t => context.stop(t._2)))
-      addCommands(routerMap)
-    case SendToCommand(cat, name, msg) =>
-      commands.get(cat).flatMap(_.get(name)).foreach(_ ! msg)
+    case SendToCmd(factory, msg) =>
+      commands
+        .get(factory.category)
+        .flatMap(_.find(t => factory.lowercaseAliases.contains(t._1)))
+        .foreach(_._2 ! msg)
+    case Broadcast(msg) =>
+      commands.foreach(_._2.foreach(_._2 ! msg))
     case SendToErrorHandler(msg) =>
       errorHandler ! msg
+    case SendToHelpCmd(msg) =>
+      helpCmd.foreach(_ ! msg)
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
       errorHandler ! ShutdownClient
       commands.foreach(_._2.foreach(_._2 ! DiscordClient.ShutdownClient))
-    case TerminatedCommand(category, name) =>
-      if (isShuttingDown) {
-        log.debug("Command {} in category {} shut down")
-        commands.get(category).foreach { map =>
-          map.remove(name)
-          if (map.isEmpty) commands.remove(category)
-        }
+    case TerminatedCmd(factory) =>
+      log.debug("Command {} in category {} shut down")
 
-        if (commands.isEmpty) {
-          context.stop(self)
-        }
+      commands.get(factory.category).foreach { map =>
+        map --= factory.lowercaseAliases
+        if (map.isEmpty) commands.remove(factory.category)
+      }
+
+      if (commands.isEmpty) {
+        context.stop(self)
       }
   }
 
@@ -148,9 +137,9 @@ class CommandRouter(
     } else Some(msg.content.split(" ").toList)
   }
 }
-object CommandRouter {
-  def props(needMention: Boolean, initialCommands: Map[CmdCategory, Map[String, Props]], errorHandler: Props): Props =
-    Props(new CommandRouter(needMention, initialCommands, errorHandler))
+object CmdRouter {
+  def props(client: ClientActor, needMention: Boolean, errorHandler: Props, helpCmd: Option[CmdFactory]): Props =
+    Props(new CmdRouter(client, needMention, errorHandler, helpCmd))
 
   /**
     * Sent to the error handler if no command is specified when mentioning
@@ -182,19 +171,10 @@ object CommandRouter {
   case class Command(msg: Message, args: List[String], c: CacheSnapshot)
 
   /**
-    * Send to the command handler to register a new command
-    * @param category The category for this command, for example `!`
-    * @param names The names of this command, for example `ping`
-    * @param handler The actor that will handle this command
+    * Send this to the command router to register a new command.
+    * @param factory The factory for the command.
     */
-  case class RegisterCommand(category: CmdCategory, names: Seq[String], handler: ActorRef)
-
-  /**
-    * Send to the command handler to unregister a command
-    * @param category The category for this command, for example `!`
-    * @param names The names of this command, for example `ping`
-    */
-  case class UnregisterCommand(category: CmdCategory, names: Seq[String])
+  case class RegisterCmd(factory: CmdFactory)
 
   /**
     * Set if this command router should need a mention after it's been started.
@@ -202,18 +182,17 @@ object CommandRouter {
   case class SetNeedMention(needMention: Boolean)
 
   /**
-    * Remove and stop the old commands, and use a new set of commands instead.
-    * @param routerMap The new router map to use.
+    * Removes all the commands from this command router. This will stop the 
+    * actor once all the commands have stopped.
     */
-  case class SetNewCommands(routerMap: Map[CmdCategory, Map[String, Props]])
+  case object ClearCmds
 
   /**
-    * Send a message to a command.
-    * @param category The category of the command.
-    * @param name The name of the command.
+    * Send a message to a specific command.
+    * @param factory The factory for the command.
     * @param msg The message to send.
     */
-  case class SendToCommand(category: CmdCategory, name: String, msg: Any)
+  case class SendToCmd(factory: CmdFactory, msg: Any)
 
   /**
     * Send a message to the error handler.
@@ -221,5 +200,11 @@ object CommandRouter {
     */
   case class SendToErrorHandler(msg: Any)
 
-  private case class TerminatedCommand(category: CmdCategory, name: String)
+  /**
+    * Send a command to the help command of this command router.
+    * @param msg The message to send.
+    */
+  case class SendToHelpCmd(msg: Any)
+
+  private case class TerminatedCmd(factory: CmdFactory)
 }

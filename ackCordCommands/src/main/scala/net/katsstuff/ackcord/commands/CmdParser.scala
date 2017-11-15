@@ -24,8 +24,8 @@
 package net.katsstuff.ackcord.commands
 
 import akka.actor.{Actor, ActorRef, Props}
-import net.katsstuff.ackcord.commands.CommandParser.{ParseError, ParsedCommand}
-import net.katsstuff.ackcord.commands.CommandRouter.Command
+import net.katsstuff.ackcord.commands.CmdParser.{ParseError, ParsedCommand}
+import net.katsstuff.ackcord.commands.CmdRouter.Command
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -36,17 +36,18 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param handlerProps The props of the actor that will handle the command
   * @tparam A The parser type
   */
-class CommandParser[A](parser: MessageParser[A], handlerProps: Props) extends Actor {
+class CmdParser[A](parser: MessageParser[A], handlerProps: Props) extends Actor {
   val handler: ActorRef = context.actorOf(handlerProps, "Handler")
 
   override def receive: Receive = {
     case Command(msg, args, c) =>
       implicit val cache: CacheSnapshot = c
       handler ! parser.parse(args).fold(s => ParseError(msg, s, c), t => ParsedCommand(msg, t._2, t._1, c))
+    case other => handler ! other
   }
 }
-object CommandParser {
-  def props[A](parser: MessageParser[A], handler: Props): Props = Props(new CommandParser(parser, handler))
+object CmdParser {
+  def props[A](parser: MessageParser[A], handler: Props): Props = Props(new CmdParser(parser, handler))
 
   /**
     * Props for a parser that will spit out the command the list of arguments
