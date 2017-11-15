@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord.util
 
+import scala.language.implicitConversions
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -30,7 +31,6 @@ import akka.NotUsed
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
-import shapeless.tag._
 
 /**
   * MessageParser is a typeclass to simplify parsing messages. It can derive
@@ -90,7 +90,8 @@ trait MessageParser[A] { self =>
 object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
   //Just something here to get a different implicit
-  type RemainingAsString = String @@ String
+  case class RemainingAsString(remaining: String)
+  implicit def remaining2String(remaining: RemainingAsString): String = remaining.remaining
 
   def apply[A](implicit parser: MessageParser[A]): MessageParser[A] = parser
 
@@ -153,12 +154,9 @@ trait MessageParserInstances {
   implicit val stringParser: MessageParser[String] = fromString(identity)
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {
-      override def parse(
-          strings: List[String]
-      )(implicit c: CacheSnapshot): Either[String, (List[String], RemainingAsString)] = {
-        val tagged = tag[String](strings.mkString(" "))
-        Right((Nil, tagged))
-      }
+      override def parse(strings: List[String])(
+          implicit c: CacheSnapshot
+      ): Either[String, (List[String], RemainingAsString)] = Right((Nil, RemainingAsString(strings.mkString(" "))))
     }
   implicit val byteParser:    MessageParser[Byte]    = withTry(_.toByte)
   implicit val shortParser:   MessageParser[Short]   = withTry(_.toShort)
