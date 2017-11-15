@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.util
 
+import java.util.UUID
+
 import scala.collection.mutable
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
@@ -31,7 +33,7 @@ import akka.routing.Broadcast
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
-import net.katsstuff.ackcord.util.GuildRouter.{GetGuildActor, ResponseGetGuild, SendToGuildActor, TerminatedGuild}
+import net.katsstuff.ackcord.util.GuildRouter.{AddCreateMsg, GetGuildActor, RemoveCreateMsg, ResponseGetGuild, SendToGuildActor, TerminatedGuild}
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 
 /**
@@ -65,6 +67,7 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) extends Actor with ActorLogging {
   val handlers       = mutable.HashMap.empty[GuildId, ActorRef]
   var channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
+  val createMsgs     = mutable.HashMap.empty[UUID, Any]
   var isShuttingDown = false
 
   override def receive: Receive = {
@@ -116,6 +119,14 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
       if (isShuttingDown && handlers.isEmpty) {
         context.stop(self)
       }
+    case add @ AddCreateMsg(msg) =>
+      val uuid = UUID.randomUUID()
+      createMsgs.put(uuid, msg)
+      if(add.tieToLifecycle != ActorRef.noSender) {
+        context.watchWith(add.tieToLifecycle, RemoveCreateMsg(uuid))
+      }
+    case RemoveCreateMsg(uuid) =>
+      createMsgs.remove(uuid)
   }
 
   def sendToGuild(guildId: GuildId, msg: Any): Unit = if (!isShuttingDown) getGuild(guildId) ! msg
@@ -127,7 +138,9 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   def getGuild(guildId: GuildId): ActorRef = {
     lazy val newActor = {
       log.debug("Creating new actor for guild {}", guildId)
-      context.watchWith(context.actorOf(props(guildId), guildId.toString), TerminatedGuild(guildId))
+      val newActor = context.actorOf(props(guildId), guildId.toString)
+      createMsgs.values.foreach(newActor ! _)
+      context.watchWith(newActor, TerminatedGuild(guildId))
     }
     handlers.getOrElseUpdate(guildId, newActor)
   }
@@ -157,5 +170,16 @@ object GuildRouter {
     */
   case class ResponseGetGuild(guildActor: ActorRef)
 
+  /**
+    * Send this to a guild router to send a message to all
+    * actors created from this point on by this router.
+    * @param msg The message to send.
+    * @param tieToLifecycle An actor to bind this message to. When the specified
+    *                       actor stops, the message is unregistered.
+    */
+  case class AddCreateMsg(msg: Any)(implicit val tieToLifecycle: ActorRef = ActorRef.noSender)
+
   private case class TerminatedGuild(guildId: GuildId)
+
+  private case class RemoveCreateMsg(uuid: UUID)
 }
