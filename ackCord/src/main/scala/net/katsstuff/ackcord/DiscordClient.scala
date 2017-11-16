@@ -39,6 +39,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.PresenceStatus
+import net.katsstuff.ackcord.http.requests.RESTRequests.BaseRESTRequest
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}

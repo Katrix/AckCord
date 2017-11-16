@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.Uri
 import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RequestRoute
-import net.katsstuff.ackcord.http.requests.RESTRequests.ImageFormat
+import net.katsstuff.ackcord.http.requests.ImageRequests.ImageFormat
 
 /**
   * All the routes used by AckCord
@@ -279,4 +279,10 @@ object Routes {
   val applicationIconImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
     (applicationId, hash, format, size) =>
       RequestRoute(s"$cdn/app-icons/$applicationId/$hash.${format.extension}?size=$size", GET)
+
+  //OAuth
+  val oAuth2:          Uri = s"$base/oauth2"
+  val oAuth2Authorize: Uri = s"$oAuth2/authorize"
+  val oAuth2Token:     Uri = s"$oAuth2/token"
+  val oAuth2Revoke:    Uri = s"$oAuth2Token/revoke"
 }
