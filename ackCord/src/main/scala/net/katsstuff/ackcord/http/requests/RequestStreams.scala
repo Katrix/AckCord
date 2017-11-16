@@ -34,21 +34,21 @@ import scala.util.{Failure, Success, Try}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.StatusCodes.{ClientError, ServerError}
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
 import akka.pattern.{AskTimeoutException, ask}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Partition, Sink}
-import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source, Zip}
+import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy, SourceShape}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.AckCord
-import net.katsstuff.ackcord.util.AckCordSettings
+import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCacheUpdate}
+import net.katsstuff.ackcord.http.requests.RESTRequests.{BaseRESTRequest, ComplexRESTRequest}
+import net.katsstuff.ackcord.util.{AckCordSettings, RepeatLast}
 
 object RequestStreams {
 
   private var _uriRatelimitActor: ActorRef = _
-  def uriRateLimitActor(implicit system: ActorSystem): ActorRef = {
+  private def uriRateLimitActor(implicit system: ActorSystem): ActorRef = {
     if (_uriRatelimitActor == null) {
       _uriRatelimitActor = system.actorOf(Ratelimiter.props)
     }
@@ -80,6 +80,11 @@ object RequestStreams {
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AckCord, ${AckCord.Version})")
 
+  /**
+    * A basic request flow which will send requests to Discord, and
+    * receive responses.
+    * @param credentials The credentials to use when sending the requests.
+    */
   def requestFlow[Data, Ctx](credentials: HttpCredentials, parallelism: Int = 4)(
       implicit mat: Materializer,
       system: ActorSystem
@@ -91,11 +96,16 @@ object RequestStreams {
       .alsoTo(sendRatelimitUpdates)
   }
 
+  /**
+    * A request flow which will send requests to Discord, and receive responses.
+    * Also obeys ratelimits. If it encounters a ratelimit it will backpressure.
+    * @param credentials The credentials to use when sending the requests.
+    */
   def requestFlowWithRatelimit[Data, Ctx](
-      bufferSize: Int,
-      overflowStrategy: OverflowStrategy,
-      maxAllowedWait: FiniteDuration,
       credentials: HttpCredentials,
+      bufferSize: Int = 100,
+      overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
+      maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4
   )(
       implicit mat: Materializer,
@@ -142,6 +152,9 @@ object RequestStreams {
     Flow.fromGraph(graph)
   }
 
+  /**
+    * A request flow which obeys route specific rate limits, but not global ones.
+    */
   def requestsWithRouteRatelimit[Data, Ctx](
       ratelimiter: ActorRef,
       maxAllowedWait: FiniteDuration,
@@ -160,7 +173,7 @@ object RequestStreams {
     }
   }.addAttributes(Attributes.name("UriRatelimiter"))
 
-  def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
+  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
       implicit system: ActorSystem
   ): Flow[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx]), NotUsed] = {
     Flow.fromFunction[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx])] {
@@ -185,13 +198,13 @@ object RequestStreams {
     }
   }.named("CreateRequest")
 
-  def requestHttpFlow[Data, Ctx](
+  private def requestHttpFlow[Data, Ctx](
       implicit mat: Materializer,
       system: ActorSystem
   ): Flow[(HttpRequest, RequestWrapper[Data, Ctx]), (Try[HttpResponse], RequestWrapper[Data, Ctx]), NotUsed] =
     Http().superPool[RequestWrapper[Data, Ctx]]()
 
-  def requestParser[Data, Ctx](
+  private def requestParser[Data, Ctx](
       implicit mat: Materializer,
       system: ActorSystem
   ): Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx]), Future[RequestAnswer[Data, Ctx]], NotUsed] =
@@ -230,7 +243,7 @@ object RequestStreams {
         }
     }.named("RequestParser")
 
-  def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
+  private def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink.foreach[RequestAnswer[Data, Ctx]] { answer =>
       val tilReset          = answer.tilReset
       val remainingRequests = answer.remainingRequests
@@ -239,4 +252,179 @@ object RequestStreams {
         _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests)
       }
     }.async.named("SendAnswersToRatelimiter")
+
+  /**
+    * A simple reasonable request flow using a bot token for short lived streams.
+    * @param token The bot token.
+    */
+  def simpleRequestFlow[Data, Ctx](token: String)(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+    RequestStreams.requestFlowWithRatelimit[Data, Ctx](
+      bufferSize = 32,
+      overflowStrategy = OverflowStrategy.backpressure,
+      maxAllowedWait = 2.minutes,
+      credentials = BotAuthentication(token)
+    )
+  }
+
+  /**
+    * Sends a single request.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def singleRequest[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Source[RequestAnswer[Data, Ctx], NotUsed] =
+    Source.single(wrapper).via(simpleRequestFlow(token))
+
+  /**
+    * Sends a single request and gets the response as a future.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def singleRequestFuture[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Future[RequestAnswer[Data, Ctx]] =
+    singleRequest(token, wrapper).runWith(Sink.head)
+
+  /**
+    * Sends a single request and ignores the result.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def singleRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Unit = singleRequest(token, wrapper).runWith(Sink.ignore)
+
+  /**
+    * Create a request whose answer will make a trip to the cache to get a nicer response value.
+    * @param token The bot token.
+    * @param restRequest The base REST request.
+    * @param ctx The context to send with the request.
+    */
+  def requestToCache[Data, Ctx, Response, HandlerTpe](
+      token: String,
+      restRequest: BaseRESTRequest[Data, HandlerTpe, Response],
+      ctx: Ctx,
+      timeout: FiniteDuration
+  )(implicit system: ActorSystem, mat: Materializer, cache: Cache): Source[Response, NotUsed] = {
+
+    val graph = GraphDSL.create() { implicit builder =>
+      import GraphDSL.Implicits._
+      val request     = builder.add(singleRequest(token, RequestWrapper(restRequest, ctx, ActorRef.noSender)))
+      val broadcaster = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
+
+      val asCacheUpdate = builder.add(
+        Flow[RequestAnswer[Data, Ctx]]
+          .collect {
+            case RequestResponse(data, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _, _)) =>
+              MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
+                .asInstanceOf[CacheUpdate[Any]] //FIXME
+          }
+          .initialTimeout(timeout)
+      )
+
+      val repeater = builder.add(RepeatLast.flow[RequestAnswer[Data, Ctx]])
+
+      val zipper = builder.add(Zip[RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState)])
+
+      val findPublished = builder.add(Flow[(RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState))].collect {
+        case (RequestResponse(data, _, _, _, _), (MiscCacheUpdate(data2, _), state)) if data == data2 =>
+          restRequest.findData(data)(state)
+      })
+
+      // format: OFF
+
+      request ~> broadcaster ~> asCacheUpdate ~>               cache.publish
+                 broadcaster ~> repeater      ~> zipper.in0
+                                                 zipper.in1 <~ cache.subscribe
+                                                 zipper.out ~> findPublished
+
+      // format: ON
+
+      SourceShape(findPublished.out)
+    }
+
+    Source.fromGraph(graph).flatMapConcat(_.fold[Source[Response, NotUsed]](Source.empty)(Source.single))
+  }
+
+  /**
+    * A request flow that will failed requests.
+    * @param token The bot token.
+    */
+  def retryRequestFlow[Data, Ctx](token: String)(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Flow[RequestWrapper[Data, Ctx], SuccessfulRequest[Data, Ctx], NotUsed] = {
+    val graph = GraphDSL.create() { implicit builder =>
+      import GraphDSL.Implicits._
+
+      val requestFlow = builder.add(RequestStreams.simpleRequestFlow[Data, Ctx](token))
+      val allRequests = builder.add(MergePreferred[RequestAnswer[Data, Ctx]](2))
+
+      val partitioner = builder.add(Partition[RequestAnswer[Data, Ctx]](2, {
+        case _: RequestResponse[Data, Ctx] => 0
+        case _: RequestFailed[Data, Ctx]   => 1
+      }))
+
+      val successful = partitioner.out(0).collect {
+        case response: SuccessfulRequest[Data, Ctx] => response
+      }
+      val allSuccessful = builder.add(MergePreferred[SuccessfulRequest[Data, Ctx]](3))
+
+      //Ratelimiter should take care of the ratelimits through back-pressure
+      val failed = partitioner.out(1).collect {
+        case failed: RequestFailed[Data, Ctx] => failed.toWrapper
+      }
+
+      // format: OFF
+
+      requestFlow ~> allRequests ~> partitioner
+                                    successful ~> allSuccessful
+      allRequests <~ requestFlow <~ failed.outlet
+
+      // format: ON
+
+      FlowShape(requestFlow.in, allSuccessful.out)
+    }
+
+    Flow.fromGraph(graph)
+  }
+
+  /**
+    * Sends a single request with retries if it fails.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequest[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Source[SuccessfulRequest[Data, Ctx], NotUsed] =
+    Source.single(wrapper).via(retryRequestFlow(token))
+
+  /**
+    * Sends a single request with retries if it fails, and gets the response as a future.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequestFuture[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Future[SuccessfulRequest[Data, Ctx]] =
+    retryRequest(token, wrapper).runWith(Sink.head)
+
+  /**
+    * Sends a single request with retries if it fails, and ignores the result.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Unit = retryRequest(token, wrapper).runWith(Sink.ignore)
 }
