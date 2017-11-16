@@ -63,6 +63,7 @@ class GatewayHandler(
   import GatewayProtocol._
 
   private implicit val system: ActorSystem = context.system
+  private var restartDur: FiniteDuration = _
 
   def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
@@ -103,7 +104,10 @@ class GatewayHandler(
           context.stop(self)
         } else {
           log.info("Websocket connection completed. Logging in again.")
-          if (!timers.isTimerActive(restartLoginKey)) {
+          if(restartDur != null && restartDur > 10.millis) {
+            timers.startSingleTimer(restartLoginKey, Login, restartDur)
+          }
+          else {
             self ! Login
           }
           becomeInactive()
@@ -111,10 +115,10 @@ class GatewayHandler(
       case Status.Failure(e) =>
         //TODO: Inspect error
         log.error(e, "Encountered websocket error")
-        self ! Restart(fresh = false, 1.seconds)
+        self ! Restart(fresh = false, 1.second)
       case Left(NonFatal(e)) =>
         log.error(e, "Encountered websocket parsing error")
-        self ! Restart(fresh = false, 1.seconds)
+        self ! Restart(fresh = false, 0.millis)
       case SendHeartbeat =>
         if (receivedAck) {
           val seq = resume.map(_.seq)
@@ -135,7 +139,7 @@ class GatewayHandler(
         log.info("Restarting")
         queue.complete()
 
-        timers.startSingleTimer(restartLoginKey, Login, waitDur)
+        restartDur = waitDur
         if (fresh) {
           resume = None
         }
