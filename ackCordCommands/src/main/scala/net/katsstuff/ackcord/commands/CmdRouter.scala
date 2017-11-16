@@ -57,6 +57,7 @@ class CmdRouter(client: ClientActor, var needMention: Boolean, errorHandlerProps
   val errorHandler: ActorRef         = context.actorOf(errorHandlerProps, "ErrorHandler")
   val helpCmd:      Option[ActorRef] = helpFactory.map { factory =>
     val helpActor = context.actorOf(factory.props(client), "HelpCmd")
+    helpActor ! HelpCmd.AddCmd(factory, helpActor)
     commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> helpActor)
     helpActor
   }
@@ -183,7 +184,8 @@ object CmdRouter {
 
   /**
     * Removes all the commands from this command router. This will stop the 
-    * actor once all the commands have stopped.
+    * actor once all the commands have stopped. If another command is registered
+    * right after this message is sent, the actor won't stop.
     */
   case object ClearCmds
 

@@ -29,7 +29,6 @@ import scala.collection.mutable
 
 import akka.NotUsed
 import akka.actor.ActorRef
-import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CmdParser.ParsedCommand
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
@@ -43,14 +42,14 @@ import net.katsstuff.ackcord.util.MessageParser
   * A base for help commands. Takes [[ParsedCommand]] where the argument is
   * either Option[String], representing a specific command, or Option[Int],
   * representing a page.
-  * @param client The client
   */
-abstract class HelpCmd(client: ClientActor) extends ParsedCmdActor[Option[HelpCmd.Args]] {
+abstract class HelpCmd extends ParsedCmdActor[Option[HelpCmd.Args]] {
 
   val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CmdDescription]]
 
-  override def handleCommand(msg: Message, args: Option[HelpCmd.Args], remaining: List[String])
-    (implicit c: CacheSnapshot): Unit = {
+  override def handleCommand(msg: Message, args: Option[HelpCmd.Args], remaining: List[String])(
+      implicit c: CacheSnapshot
+  ): Unit = {
     args match {
       case Some(CommandArgs(cmd)) =>
         implicit val cache: CacheSnapshot = c
@@ -64,13 +63,19 @@ abstract class HelpCmd(client: ClientActor) extends ParsedCmdActor[Option[HelpCm
             descMap.get(command) match {
               case Some(desc) =>
                 RequestWrapper(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
-              case None => channel.sendMessage("Unknown command")
+              case None =>
+                unknownCommand(cat, command).foreach(
+                  data => client ! RequestWrapper(CreateMessage(msg.channelId, data), NotUsed, self)
+                )
             }
           }
 
           res match {
             case Some(req) => client ! req
-            case None      => client ! channel.sendMessage("Unknown category")
+            case None =>
+              unknownCategory(lowercaseCommand).foreach(
+                data => client ! RequestWrapper(CreateMessage(msg.channelId, data), NotUsed, self)
+              )
           }
         }
 
@@ -91,9 +96,11 @@ abstract class HelpCmd(client: ClientActor) extends ParsedCmdActor[Option[HelpCm
 
   override def extraReceive: Receive = {
     case AddCmd(factory, handler) =>
-      factory.description.foreach { desc =>
-        commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
-        context.watchWith(handler, TerminatedCmd(factory))
+      if(handler != self) {
+        factory.description.foreach { desc =>
+          commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
+          context.watchWith(handler, TerminatedCmd(factory))
+        }
       }
     case TerminatedCmd(factory) =>
       commands.get(factory.category).foreach(_ --= factory.lowercaseAliases)
@@ -117,6 +124,10 @@ abstract class HelpCmd(client: ClientActor) extends ParsedCmdActor[Option[HelpCm
     *         by this help command.
     */
   def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
+
+  def unknownCategory(command: String): Option[CreateMessageData] = Some(CreateMessageData("Unknown category"))
+  def unknownCommand(category: CmdCategory, command: String): Option[CreateMessageData] =
+    Some(CreateMessageData("Unknown command"))
 }
 object HelpCmd {
   sealed trait Args
@@ -126,9 +137,7 @@ object HelpCmd {
 
     //We write out the parser ourself as string parses any string
     implicit val parser: MessageParser[Args] = new MessageParser[Args] {
-      override def parse(
-          strings: List[String]
-      )(implicit c: CacheSnapshot): Either[String, (List[String], Args)] = {
+      override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], Args)] = {
         if (strings.nonEmpty) {
           val head :: tail = strings
           MessageParser.intParser
@@ -141,6 +150,12 @@ object HelpCmd {
     }
   }
 
+  /**
+    * Sent to a help command to register a new help entry.
+    * @param factory The factory for the new command, where help info is located.
+    * @param handler The command actor itself. When this stops, the help entry
+    *                will be unregistered.
+    */
   case class AddCmd(factory: CmdFactory, handler: ActorRef)
 
   private case class TerminatedCmd(factory: CmdFactory)

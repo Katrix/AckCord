@@ -31,7 +31,7 @@ import net.katsstuff.ackcord.util.MessageParser
 
 /**
   * Represents some group of commands.
-  * The description has not effect on equality between to categories.
+  * The description has no effect on equality between to categories.
   * @param prefix The prefix for this category. This must be lowercase.
   * @param description The description for this category.
   */
@@ -44,6 +44,8 @@ case class CmdCategory(prefix: String, description: String) {
       case _                => false
     }
   }
+
+  override def hashCode(): Int = prefix.hashCode
 }
 
 /**
@@ -55,6 +57,10 @@ case class CmdCategory(prefix: String, description: String) {
   */
 case class CmdDescription(name: String, description: String, usage: String = "")
 
+/**
+  * A factory for a command, that also includes other information about
+  * the command.
+  */
 trait CmdFactory {
   def category:                   CmdCategory
   def aliases:                    Seq[String]
@@ -64,28 +70,28 @@ trait CmdFactory {
   def lowercaseAliases: Seq[String] = aliases.map(_.toLowerCase(Locale.ROOT))
 }
 
-case class UnparsedCmdFactory(
+case class BaseCmdFactory(
     category: CmdCategory,
     aliases: Seq[String],
-    props: Props,
+    cmdProps: ClientActor => Props,
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 ) extends CmdFactory {
   override def props(client: ClientActor): Props =
-    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, props, client) else props
+    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, cmdProps(client), client) else cmdProps(client)
 }
 
 case class ParsedCmdFactory[A](
     category: CmdCategory,
     aliases: Seq[String],
-    props: Props,
+    cmdProps: ClientActor => Props,
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
     extends CmdFactory {
 
   override def props(client: ClientActor): Props = {
-    val parsed = CmdParser.props(parser, props)
+    val parsed = CmdParser.props(parser, cmdProps(client))
     if (filters.nonEmpty) CmdFilter.createActorFilter(filters, parsed, client) else parsed
   }
 }
