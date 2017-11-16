@@ -52,7 +52,6 @@ abstract class HelpCmd extends ParsedCmdActor[Option[HelpCmd.Args]] {
   ): Unit = {
     args match {
       case Some(CommandArgs(cmd)) =>
-        implicit val cache: CacheSnapshot = c
         val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
         msg.tChannel.foreach { channel =>
           val res = for {
@@ -80,7 +79,6 @@ abstract class HelpCmd extends ParsedCmdActor[Option[HelpCmd.Args]] {
         }
 
       case Some(PageArgs(page)) =>
-        implicit val cache: CacheSnapshot = c
         if (page > 0) {
           client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
         } else {
@@ -89,7 +87,6 @@ abstract class HelpCmd extends ParsedCmdActor[Option[HelpCmd.Args]] {
           }
         }
       case None =>
-        implicit val cache: CacheSnapshot = c
         client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
     }
   }

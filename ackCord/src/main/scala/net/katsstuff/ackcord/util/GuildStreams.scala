@@ -163,7 +163,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId a message belongs to.
     */
-  def apiMessageGroupByGuildId[Msg <: APIMessage]: SubFlow[Msg, NotUsed, Flow[Msg, _, NotUsed], Sink[Msg, NotUsed]] = {
+  def apiMessageGroupByGuildId[Msg <: APIMessage] = {
     withGuildInfoApiMessage[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId
@@ -175,12 +175,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId an event belongs to.
     */
-  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]]: SubFlow[
-    Msg,
-    NotUsed,
-    Flow[Msg, _, NotUsed],
-    Sink[Msg, NotUsed]
-  ] =
+  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]] =
     withGuildInfoGatewayEvent[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId
