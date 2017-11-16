@@ -28,10 +28,10 @@ import scala.concurrent.duration._
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem}
-import akka.stream.{Materializer, OverflowStrategy, SourceShape}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Keep, Sink, Source, Zip}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, MergePreferred, Partition, Sink, Source, Zip}
+import akka.stream.{FlowShape, Materializer, OverflowStrategy, SourceShape}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
-import net.katsstuff.ackcord.http.requests.{BaseRESTRequest, BotAuthentication, RequestAnswer, RequestResponse, RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.{GuildRouter, RepeatLast}
@@ -74,7 +74,17 @@ object AckCordStreams {
       token: String,
       wrapper: RequestWrapper[Data, Ctx]
   )(implicit system: ActorSystem, mat: Materializer): Future[RequestAnswer[Data, Ctx]] =
-    singleRequest(token, wrapper).toMat(Sink.head)(Keep.right).run()
+    singleRequest(token, wrapper).runWith(Sink.head)
+
+  /**
+    * Sends a single request and ignores the result.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def singleRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Unit = singleRequest(token, wrapper).runWith(Sink.ignore)
 
   /**
     * Create a request whose answer will make a trip to the cache to get a nicer response value.
@@ -85,7 +95,8 @@ object AckCordStreams {
   def requestToCache[Data, Ctx, Response](
       token: String,
       restRequest: BaseRESTRequest[Data, _, Response],
-      ctx: Ctx
+      ctx: Ctx,
+      timeout: FiniteDuration
   )(implicit system: ActorSystem, mat: Materializer, cache: Cache): Source[Response, NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
@@ -93,17 +104,15 @@ object AckCordStreams {
       val request     = builder.add(singleRequest(token, RequestWrapper(restRequest, ctx, ActorRef.noSender)))
       val broadcaster = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
 
-      val cacheEvent = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case RequestResponse(
-        data,
-        _,
-        _,
-        _,
-        RequestWrapper(restRequest: BaseRESTRequest[Data @unchecked, _, Response @unchecked], _, _)
-        ) =>
-          MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
-            .asInstanceOf[CacheUpdate[Any]] //FIXME
-      })
+      val asCacheUpdate = builder.add(
+        Flow[RequestAnswer[Data, Ctx]]
+          .collect {
+            case RequestResponse(data, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _, _)) =>
+              MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
+                .asInstanceOf[CacheUpdate[Any]] //FIXME
+          }
+          .initialTimeout(timeout)
+      )
 
       val repeater = builder.add(RepeatLast.flow[RequestAnswer[Data, Ctx]])
 
@@ -116,10 +125,10 @@ object AckCordStreams {
 
       // format: OFF
 
-      request ~> broadcaster ~> cacheEvent ~>               cache.publish
-                 broadcaster ~> repeater   ~> zipper.in0
-                                              zipper.in1 <~ cache.subscribe
-                                              zipper.out ~> findPublished
+      request ~> broadcaster ~> asCacheUpdate ~>               cache.publish
+                 broadcaster ~> repeater      ~> zipper.in0
+                                                 zipper.in1 <~ cache.subscribe
+                                                 zipper.out ~> findPublished
 
       // format: ON
 
@@ -150,7 +159,7 @@ object AckCordStreams {
 
     Flow[Msg].statefulMapConcat { () => msg =>
       val isGuildEvent = msg match {
-        case _@(_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
+        case _ @(_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
           true
         case msg: APIMessage.GuildMessage =>
           msg.guild.id == guildId
@@ -158,7 +167,7 @@ object AckCordStreams {
           msg.channel.asGuildChannel.map(_.guildId).contains(guildId)
         case msg: APIMessage.MessageMessage =>
           msg.message.channel(msg.cache.current).flatMap(_.asGuildChannel).map(_.guildId).contains(guildId)
-        case _@APIMessage.VoiceStateUpdate(state, _) => state.guildId.contains(guildId)
+        case _ @APIMessage.VoiceStateUpdate(state, _) => state.guildId.contains(guildId)
         case msg: GatewayEvent.GuildCreate =>
           msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
           msg.guildId == guildId
@@ -170,13 +179,13 @@ object AckCordStreams {
         case msg: GatewayEvent.ChannelDelete =>
           channelToGuild.remove(msg.data.id)
           msg.guildId.contains(guildId)
-        case msg: GatewayEvent.GuildEvent[_] => msg.guildId == guildId
+        case msg: GatewayEvent.GuildEvent[_]    => msg.guildId == guildId
         case msg: GatewayEvent.OptGuildEvent[_] => msg.guildId.contains(guildId)
         case msg: GatewayEvent.ChannelEvent[_] =>
           channelToGuild.get(msg.channelId).contains(guildId)
       }
 
-      if(isGuildEvent) List(msg) else Nil
+      if (isGuildEvent) List(msg) else Nil
     }
   }
 
@@ -203,7 +212,7 @@ object AckCordStreams {
 
     Flow[Msg].statefulMapConcat { () => msg =>
       val isGuildEvent = msg match {
-        case _@(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
+        case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
           true
         case msg: GatewayEvent.GuildCreate =>
           msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
@@ -225,9 +234,78 @@ object AckCordStreams {
           channelToGuild.get(msg.channelId).contains(guildId)
       }
 
-      if(isGuildEvent) List(msg) else Nil
+      if (isGuildEvent) List(msg) else Nil
     }
   }
 
+  /**
+    * A request flow that will failed requests.
+    * @param token The bot token.
+    */
+  def retryRequestFlow[Data, Ctx](token: String)(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Flow[RequestWrapper[Data, Ctx], SuccessfulRequest[Data, Ctx], NotUsed] = {
+    val graph = GraphDSL.create() { implicit builder =>
+      import GraphDSL.Implicits._
 
+      val requestFlow = builder.add(AckCordStreams.requestFlow[Data, Ctx](token))
+      val allRequests = builder.add(MergePreferred[RequestAnswer[Data, Ctx]](2))
+
+      val partitioner = builder.add(Partition[RequestAnswer[Data, Ctx]](2, {
+        case _: RequestResponse[Data, Ctx] => 0
+        case _: RequestFailed[Data, Ctx]   => 1
+      }))
+
+      val successful = partitioner.out(0).collect {
+        case response: SuccessfulRequest[Data, Ctx] => response
+      }
+      val allSuccessful = builder.add(MergePreferred[SuccessfulRequest[Data, Ctx]](3))
+
+      //Ratelimiter should take care of the ratelimits through back-pressure
+      val failed = partitioner.out(1).collect {
+        case failed: RequestFailed[Data, Ctx] => failed.toWrapper
+      }
+
+      requestFlow ~> allRequests ~> partitioner
+      successful ~> allSuccessful
+      allRequests <~ requestFlow <~ failed.outlet
+
+      FlowShape(requestFlow.in, allSuccessful.out)
+    }
+
+    Flow.fromGraph(graph)
+  }
+
+  /**
+    * Sends a single request with retries if it fails.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequest[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Source[SuccessfulRequest[Data, Ctx], NotUsed] =
+    Source.single(wrapper).via(retryRequestFlow(token))
+
+  /**
+    * Sends a single request with retries if it fails, and gets the response as a future.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequestFuture[Data, Ctx](
+      token: String,
+      wrapper: RequestWrapper[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Future[SuccessfulRequest[Data, Ctx]] =
+    retryRequest(token, wrapper).runWith(Sink.head)
+
+  /**
+    * Sends a single request with retries if it fails, and ignores the result.
+    * @param token The bot token.
+    * @param wrapper The request to send.
+    */
+  def retryRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Unit = retryRequest(token, wrapper).runWith(Sink.ignore)
 }
