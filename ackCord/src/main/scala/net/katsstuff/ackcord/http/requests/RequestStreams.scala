@@ -212,7 +212,7 @@ object RequestStreams {
               case StatusCodes.NoContent =>
                 httpResponse.discardEntityBytes()
                 Future.successful(RequestResponseNoData(request.context, remainingReq, tilReset, request))
-              case e @ (_: ServerError | _: ClientError) =>
+              case e if e.isFailure() =>
                 httpResponse.discardEntityBytes()
                 Future.successful(RequestError(request.context, new HttpException(e), request))
               case _ => //Should be success

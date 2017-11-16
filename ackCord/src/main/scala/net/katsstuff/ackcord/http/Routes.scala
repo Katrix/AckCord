@@ -28,7 +28,7 @@ import akka.http.scaladsl.model.Uri
 import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RequestRoute
-import net.katsstuff.ackcord.http.requests.Requests.ImageFormat
+import net.katsstuff.ackcord.http.requests.RESTRequests.ImageFormat
 
 /**
   * All the routes used by AckCord

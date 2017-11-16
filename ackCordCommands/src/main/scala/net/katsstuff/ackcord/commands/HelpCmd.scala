@@ -33,7 +33,7 @@ import net.katsstuff.ackcord.commands.CmdParser.ParsedCommand
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
-import net.katsstuff.ackcord.http.requests.Requests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.http.requests.RESTRequests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser

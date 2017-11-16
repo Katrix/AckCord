@@ -73,10 +73,10 @@ trait CmdActor extends BaseCmdActor {
     case RequestResponse(data, _, _, ctx, _) => handleResponse(data, ctx)
     case RequestResponseNoData(_, _, ctx, _) => handleResponse(NotUsed, ctx)
     case RequestError(ctx, e, _)             => handleFailedResponse(e, ctx)
-    case RequestRatelimited(ctx, tilReset, global, wrapper) =>
-      handleFailedResponse(new RatelimitException(global, tilReset, wrapper.request.route.uri), ctx)
-    case RequestDropped(ctx, wrapper) =>
-      handleFailedResponse(new DroppedRequestException(wrapper.request.route.uri), ctx)
+    case req: RequestRatelimited[_, _] =>
+      handleFailedResponse(req.asException, req.context)
+    case req: RequestDropped[_, _] =>
+      handleFailedResponse(req.asException, req.context)
     case DiscordClient.ShutdownClient => context.stop(self)
   }
 
@@ -113,10 +113,10 @@ abstract class ParsedCmdActor[A](implicit typeable: Typeable[A]) extends BaseCmd
       case RequestResponse(data, _, _, ctx, _) => handleResponse(data, ctx)
       case RequestResponseNoData(_, _, ctx, _) => handleResponse(NotUsed, ctx)
       case RequestError(ctx, e, _)             => handleFailedResponse(e, ctx)
-      case RequestRatelimited(ctx, tilReset, global, wrapper) =>
-        handleFailedResponse(new RatelimitException(global, tilReset, wrapper.request.route.uri), ctx)
-      case RequestDropped(ctx, wrapper) =>
-        handleFailedResponse(new DroppedRequestException(wrapper.request.route.uri), ctx)
+      case req: RequestRatelimited[_, _] =>
+        handleFailedResponse(req.asException, req.context)
+      case req: RequestDropped[_, _] =>
+        handleFailedResponse(req.asException, req.context)
       case DiscordClient.ShutdownClient => context.stop(self)
     }
 

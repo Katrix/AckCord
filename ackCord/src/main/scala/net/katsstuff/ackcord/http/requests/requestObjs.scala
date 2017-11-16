@@ -23,7 +23,11 @@
  */
 package net.katsstuff.ackcord.http.requests
 
-import akka.http.scaladsl.model.{HttpMethod, Uri}
+import scala.concurrent.{ExecutionContext, Future}
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.{HttpMethod, RequestEntity, ResponseEntity, Uri}
+import akka.stream.Materializer
 
 /**
   * Used by requests for specifying an uri to send to,
@@ -32,3 +36,29 @@ import akka.http.scaladsl.model.{HttpMethod, Uri}
   * @param method The method to use
   */
 case class RequestRoute(uri: Uri, method: HttpMethod)
+
+
+/**
+  * Base super simple trait for all HTTP requests in AckCord.
+  * @tparam Response The parsed response type.
+  */
+trait Request[+Response] {
+
+  /**
+    * The router for this request.
+    */
+  def route: RequestRoute
+
+  /**
+    * The body of the request to send.
+    */
+  def requestBody: RequestEntity
+
+  /**
+    * Parses the response from this request.
+    * @param responseEntity The response entity.
+    */
+  def parseResponse(
+      responseEntity: ResponseEntity
+  )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Response]
+}

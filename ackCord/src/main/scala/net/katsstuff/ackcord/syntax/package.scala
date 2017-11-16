@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.ActorRef
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RequestWrapper
-import net.katsstuff.ackcord.http.requests.Requests._
+import net.katsstuff.ackcord.http.requests.RESTRequests._
 import shapeless.tag.@@
 
 package object syntax {

@@ -29,7 +29,7 @@ import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.CmdRouter.{NoCommand, UnknownCommand}
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, Message}
 import net.katsstuff.ackcord.http.requests.RequestWrapper
-import net.katsstuff.ackcord.http.requests.Requests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.http.requests.RESTRequests.{CreateMessage, CreateMessageData}
 
 /**
   * A default command error handler that will send a message as response to the invalid command.

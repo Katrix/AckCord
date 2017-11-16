@@ -97,7 +97,9 @@ case class RequestResponseNoData[+Data, Ctx](
 /**
   * Trait for all the types of failed requests.
   */
-sealed trait RequestFailed[+Data, Ctx] extends RequestAnswer[Data, Ctx]
+sealed trait RequestFailed[+Data, Ctx] extends RequestAnswer[Data, Ctx] {
+  def asException: Throwable
+}
 
 /**
   * Send if a request was rate limited.
@@ -111,7 +113,8 @@ case class RequestRatelimited[+Data, Ctx](
     toWrapper: RequestWrapper[Data, Ctx]
 ) extends RequestFailed[Data, Ctx] {
 
-  override def remainingRequests: Int = 0
+  override def remainingRequests: Int                = 0
+  override def asException:       RatelimitException = new RatelimitException(global, tilReset, toWrapper.request.route.uri)
 }
 
 /**
@@ -123,8 +126,9 @@ case class RequestRatelimited[+Data, Ctx](
   */
 case class RequestError[+Data, Ctx](context: Ctx, e: Throwable, toWrapper: RequestWrapper[Data, Ctx])
     extends RequestFailed[Data, Ctx] {
-  override def tilReset:          Long = -1
-  override def remainingRequests: Int  = -1
+  override def tilReset:          Long      = -1
+  override def remainingRequests: Int       = -1
+  override def asException:       Throwable = e
 }
 
 /**
@@ -139,6 +143,7 @@ case class RequestDropped[+Data, Ctx](context: Ctx, toWrapper: RequestWrapper[Da
     with SentRequest[Data, Ctx] {
   override def tilReset:          Long = -1
   override def remainingRequests: Int  = -1
+  override def asException = new DroppedRequestException(toWrapper.request.route.uri)
 }
 
 sealed trait SentRequest[+Data, Ctx] {
@@ -158,7 +163,7 @@ sealed trait SentRequest[+Data, Ctx] {
   * @tparam Data The expected response type.
   * @tparam Ctx The context type.
   */
-case class RequestWrapper[+Data, Ctx](request: BaseRequest[Data], context: Ctx, sendResponseTo: ActorRef)
+case class RequestWrapper[+Data, Ctx](request: Request[Data], context: Ctx, sendResponseTo: ActorRef)
     extends SentRequest[Data, Ctx] {
 
   /**
