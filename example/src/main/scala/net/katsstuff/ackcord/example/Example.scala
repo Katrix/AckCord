@@ -28,8 +28,8 @@ import scala.util.{Failure, Success}
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
-import net.katsstuff.ackcord.example.music.{MusicHandler, NextCommand, PauseCommand, QueueCommand, StopCommand}
+import net.katsstuff.ackcord.commands.{CmdCategory, CmdRouter}
+import net.katsstuff.ackcord.example.music._
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordClient}
 
@@ -65,49 +65,42 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
   import context.dispatcher
   implicit val system: ActorSystem = context.system
 
-  val commands =
-    Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
-  private val allCommands = commands ++ Seq(
-    KillCommand.cmdMeta(self, client),
-    QueueCommand.cmdMeta(null, client),
-    StopCommand.cmdMeta(null, client),
-    NextCommand.cmdMeta(null, client),
-    PauseCommand.cmdMeta(null, client)
-  )
-  private val allCommandNames = {
-    val base     = CommandMeta.routerMap(allCommands, client).mapValues(_.keySet)
-    val withHelp = base(ExampleCmdCategories.!) + "help"
-    base + (ExampleCmdCategories.! -> withHelp)
-  }
+  val commands = Seq(PingCmdFactory, SendFileCmdFactory, InfoChannelCmdFactory)
+  val killCmd  = KillCmdFactory(self)
 
   //We set up a command dispatcher, that sends the correct command to the corresponding actor
-  val commandDispatcher: Props = CommandRouter.props(
+  val cmdRouter: Props = CmdRouter.props(
+    client,
     needMention = true,
-    CommandMeta
-      .routerMap(commands :+ ExampleHelpCommand.cmdMeta(CommandMeta.helpCmdMap(allCommands), client), client), //This method on CommandMeta wires up our command handling for us
-    ExampleErrorHandler.props(client, allCommandNames)
+    ExampleErrorHandler.props(client, ExampleMain.allCommandNames),
+    Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
   )
 
   //This command need to be handled for itself to avoid a deadlock
-  val killCommandDispatcher: ActorRef = system.actorOf(
-    CommandRouter
+  val killCmdRouter: ActorRef = system.actorOf(
+    CmdRouter
       .props(
+        client,
         needMention = true,
-        CommandMeta.routerMap(Seq(KillCommand.cmdMeta(self, client)), client),
-        IgnoreUnknownErrorHandler.props(client)
+        IgnoreUnknownErrorHandler.props(client),
+        Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
       ),
     "KillCommand"
   )
 
+  killCmdRouter ! CmdRouter.RegisterCmd(KillCmdFactory(self))
+
   //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher
-  var guildDispatcherCommands: ActorRef =
-    context.actorOf(GuildRouter.props(commandDispatcher, None), "BaseCommands")
+  var guildCmdRouter: ActorRef =
+    context.actorOf(GuildRouter.props(cmdRouter, None), "BaseCommands")
+
+  commands.foreach(fac => guildCmdRouter ! GuildRouter.AddCreateMsg(CmdRouter.RegisterCmd(fac)))
 
   var guildDispatcherMusic: ActorRef =
     context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
 
-  cache.subscribeAPIActor(guildDispatcherCommands, "Completed", classOf[APIMessage.MessageCreate])
-  cache.subscribeAPIActor(killCommandDispatcher, "Completed", classOf[APIMessage.MessageCreate])
+  cache.subscribeAPIActor(guildCmdRouter, "Completed", classOf[APIMessage.MessageCreate])
+  cache.subscribeAPIActor(killCmdRouter, "Completed", classOf[APIMessage.MessageCreate])
   cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.MessageCreate])
   cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceServerUpdate])
   cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceStateUpdate])
@@ -119,14 +112,14 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
   override def preStart(): Unit = {
     context.watch(client)
     context.watch(guildDispatcherMusic)
-    context.watch(guildDispatcherCommands)
+    context.watch(guildCmdRouter)
   }
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       shutdownInitiator = sender()
       client ! DiscordClient.ShutdownClient
-      context.stop(guildDispatcherCommands)
+      context.stop(guildCmdRouter)
       guildDispatcherMusic ! DiscordClient.ShutdownClient
     case Terminated(act) if shutdownInitiator != null =>
       shutdownCount += 1
@@ -134,9 +127,9 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
       if (shutdownCount == 3) {
         context.stop(self)
       }
-    case Terminated(ref) if ref == guildDispatcherCommands =>
+    case Terminated(ref) if ref == guildCmdRouter =>
       log.warning("Guild command dispatcher went down. Restarting")
-      guildDispatcherCommands = context.actorOf(GuildRouter.props(commandDispatcher, None), "BaseCommands")
+      guildCmdRouter = context.actorOf(GuildRouter.props(cmdRouter, None), "BaseCommands")
     case Terminated(ref) if ref == guildDispatcherMusic =>
       log.warning("Guild music dispatcher went down. Restarting")
       guildDispatcherMusic = context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
@@ -153,4 +146,18 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
 object ExampleMain {
   def props(settings: ClientSettings, cache: Cache, client: ClientActor)(implicit materializer: Materializer): Props =
     Props(new ExampleMain(settings, cache, client))
+
+  private val allCommands = Seq(
+    PingCmdFactory,
+    SendFileCmdFactory,
+    InfoChannelCmdFactory,
+    KillCmdFactory(null),
+    QueueCmdFactory(null),
+    StopCmdFactory(null),
+    NextCmdFactory(null),
+    PauseCmdFactory(null),
+    ExampleHelpCmdFactory(null)
+  )
+  val allCommandNames: Map[CmdCategory, Set[String]] =
+    allCommands.map(fac => fac.category -> fac.aliases).groupBy(_._1).mapValues(_.flatMap(_._2).toSet)
 }

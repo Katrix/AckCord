@@ -31,28 +31,24 @@ import net.katsstuff.ackcord.DiscordClient
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, ShutdownClient}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.example.InfoChannelCommand.GetChannelInfo
-import net.katsstuff.ackcord.http.requests.Requests.CreateMessageData
-import net.katsstuff.ackcord.http.requests.{RequestFailed, RequestResponse, RequestWrapper, Requests}
+import net.katsstuff.ackcord.http.requests.RESTRequests.CreateMessageData
+import net.katsstuff.ackcord.http.requests.{RequestFailed, RequestResponse, RequestWrapper, RESTRequests}
 import net.katsstuff.ackcord.syntax._
 
-class PingCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class PingCmd(val client: ClientActor) extends ParsedCmdActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
-    client ! RequestWrapper(Requests.CreateMessage(msg.channelId, CreateMessageData("Pong")), NotUsed, self)
+    client ! RequestWrapper(RESTRequests.CreateMessage(msg.channelId, CreateMessageData("Pong")), NotUsed, self)
 }
-object PingCommand {
-  def props(client: ClientActor): Props = Props(new PingCommand(client))
-  def cmdMeta(client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
+object PingCmdFactory
+    extends ParsedCmdFactory[NotUsed](
       category = ExampleCmdCategories.!,
-      alias = Seq("ping"),
-      handler = props(client),
+      aliases = Seq("ping"),
+      cmdProps = client => Props(new PingCmd(client)),
       description =
-        Some(CommandDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing")),
+        Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
     )
-}
 
-class SendFileCommand(val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class SendFileCmd(val client: ClientActor) extends ParsedCmdActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     val embed = OutgoingEmbed(
       title = Some("This is an embed"),
@@ -66,20 +62,18 @@ class SendFileCommand(val client: ClientActor) extends ParsedCommandActor[NotUse
     }
   }
 }
-object SendFileCommand {
-  def props(client: ClientActor): Props = Props(new SendFileCommand(client))
-  def cmdMeta(client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
+object SendFileCmdFactory
+    extends ParsedCmdFactory[NotUsed](
       category = ExampleCmdCategories.!,
-      alias = Seq("sendFile"),
-      handler = props(client),
+      aliases = Seq("sendFile"),
+      cmdProps = client => Props(new SendFileCmd(client)),
       description = Some(
-        CommandDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing")
-      ),
+        CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing")
+      )
     )
-}
 
-class InfoChannelCommand(val client: ClientActor) extends ParsedCommandActor[GuildChannel] {
+class InfoChannelCmd(val client: ClientActor) extends ParsedCmdActor[GuildChannel] {
+  import InfoChannelCmd._
 
   def infoResponseHandler: ActorRef = context.actorOf(InfoCommandHandler.props(client))
 
@@ -90,21 +84,7 @@ class InfoChannelCommand(val client: ClientActor) extends ParsedCommandActor[Gui
       infoResponseHandler
     )
 }
-object InfoChannelCommand {
-  def props(client: ClientActor): Props = Props(new InfoChannelCommand(client))
-  def cmdMeta(client: ClientActor): CommandMeta[GuildChannel] =
-    CommandMeta[GuildChannel](
-      category = ExampleCmdCategories.!,
-      alias = Seq("infoChannel"),
-      handler = props(client),
-      description = Some(
-        CommandDescription(
-          name = "Channel info",
-          description = "Make the bot fetch information about a text channel from Discord. Used for testing"
-        )
-      ),
-    )
-
+object InfoChannelCmd {
   case class GetChannelInfo(
       guildId: GuildId,
       requestedChannelId: ChannelId,
@@ -112,8 +92,20 @@ object InfoChannelCommand {
       c: CacheSnapshot
   )
 }
+object InfoChannelCmdFactory extends ParsedCmdFactory[GuildChannel](
+  category = ExampleCmdCategories.!,
+  aliases = Seq("infoChannel"),
+  cmdProps = client => Props(new InfoChannelCmd(client)),
+  description = Some(
+    CmdDescription(
+      name = "Channel info",
+      description = "Make the bot fetch information about a text channel from Discord. Used for testing"
+    )
+  )
+)
 
 class InfoCommandHandler(client: ClientActor) extends Actor with ActorLogging {
+  import InfoChannelCmd._
   override def receive: Receive = {
     case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _) =>
       implicit val cache: CacheSnapshot = c
@@ -140,15 +132,14 @@ object InfoCommandHandler {
   def props(client: ClientActor): Props = Props(new InfoCommandHandler(client))
 }
 
-class KillCommand(main: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] with ActorLogging {
+class KillCmd(main: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] with ActorLogging {
 
-  override def receive: Receive = {
+  override def extraReceive: Receive = {
     case DiscordClient.ShutdownClient => //We make sure to ignore this to be able to run code after the shutdown is complete
     case Terminated(`main`) =>
       log.info("Everything shut down")
       context.system.terminate()
       context.system.terminate()
-    case x if super.receive.isDefinedAt(x) => super.receive(x)
   }
 
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
@@ -157,19 +148,17 @@ class KillCommand(main: ActorRef, val client: ClientActor) extends ParsedCommand
     context.watch(main)
   }
 }
-object KillCommand {
-  def props(mainActor: ActorRef, client: ClientActor): Props = Props(new KillCommand(mainActor, client))
-  def cmdMeta(mainActor: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
-      category = ExampleCmdCategories.!,
-      alias = Seq("kill", "die"),
-      handler = props(mainActor, client),
-      description = Some(CommandDescription(name = "Kill bot", description = "Shut down this bot")),
-    )
+class KillCmdFactory(main: ActorRef) extends ParsedCmdFactory[NotUsed](
+  category = ExampleCmdCategories.!,
+  aliases = Seq("kill", "die"),
+  cmdProps = client => Props(new KillCmd(main, client)),
+  description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
+)
+object KillCmdFactory {
+  def apply(main: ActorRef): KillCmdFactory = new KillCmdFactory(main)
 }
 
-class ExampleErrorHandler(val client: ClientActor, allCommands: Map[CmdCategory, Set[String]])
-    extends CommandErrorHandler {
+class ExampleErrorHandler(val client: ClientActor, allCommands: Map[CmdCategory, Set[String]]) extends CmdErrorHandler {
   override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] =
     Some(CreateMessageData("No command specified"))
   override def unknownCommandReply(msg: Message, cat: CmdCategory, command: String, args: List[String])(
@@ -183,7 +172,7 @@ object ExampleErrorHandler {
     Props(new ExampleErrorHandler(client, allCommands))
 }
 
-class IgnoreUnknownErrorHandler(val client: ClientActor) extends CommandErrorHandler {
+class IgnoreUnknownErrorHandler(val client: ClientActor) extends CmdErrorHandler {
   override def noCommandReply(msg: Message)(implicit c: CacheSnapshot): Option[CreateMessageData] = None
   override def unknownCommandReply(msg: Message, cat: CmdCategory, command: String, args: List[String])(
       implicit c: CacheSnapshot

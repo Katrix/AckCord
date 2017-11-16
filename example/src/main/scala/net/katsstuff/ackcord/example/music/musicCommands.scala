@@ -26,15 +26,13 @@ package net.katsstuff.ackcord.example.music
 import akka.NotUsed
 import akka.actor.{ActorLogging, ActorRef, Props}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandDescription, CommandFilter, CommandMeta, ParsedCommandActor}
+import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdActor, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, UserId, VoiceState}
 import net.katsstuff.ackcord.example.ExampleCmdCategories
 import net.katsstuff.ackcord.example.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import net.katsstuff.ackcord.syntax._
 
-class QueueCommand(musicHandler: ActorRef, val client: ClientActor)
-    extends ParsedCommandActor[String]
-    with ActorLogging {
+class QueueCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[String] with ActorLogging {
   override def handleCommand(msg: Message, url: String, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     val gOpt = for {
       channel      <- msg.channel
@@ -56,61 +54,63 @@ class QueueCommand(musicHandler: ActorRef, val client: ClientActor)
     }
   }
 }
-object QueueCommand {
-  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new QueueCommand(musicHandler, client))
-  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[String] =
-    CommandMeta[String](
+class QueueCmdFactory(musicHandler: ActorRef)
+    extends ParsedCmdFactory[String](
       category = ExampleCmdCategories.&,
-      alias = Seq("q", "queue"),
-      handler = props(musicHandler, client),
-      filters = Seq(CommandFilter.InGuild),
-      description = Some(CommandDescription(name = "Queue music", description = "Set an url as the url to play")),
+      aliases = Seq("q", "queue"),
+      cmdProps = client => Props(new QueueCmd(musicHandler, client)),
+      filters = Seq(CmdFilter.InGuild),
+      description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play")),
     )
+object QueueCmdFactory {
+  def apply(musicHandler: ActorRef): QueueCmdFactory = new QueueCmdFactory(musicHandler)
 }
 
-class StopCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+class StopCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! StopMusic(_))
 }
-object StopCommand {
-  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new StopCommand(musicHandler, client))
-  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
+class StopCmdFactory(musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed](
       category = ExampleCmdCategories.&,
-      alias = Seq("s", "stop"),
-      handler = props(musicHandler, client),
-      filters = Seq(CommandFilter.InGuild),
+      aliases = Seq("s", "stop"),
+      cmdProps = client => Props(new StopCmd(musicHandler, client)),
+      filters = Seq(CmdFilter.InGuild),
       description =
-        Some(CommandDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
+        Some(CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
     )
+object StopCmdFactory {
+  def apply(musicHandler: ActorRef): StopCmdFactory = new StopCmdFactory(musicHandler)
 }
-class NextCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+
+class NextCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! NextTrack(_))
 }
-object NextCommand {
-  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new NextCommand(musicHandler, client))
-  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
+class NextCmdFactory(musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed](
       category = ExampleCmdCategories.&,
-      alias = Seq("n", "next"),
-      handler = props(musicHandler, client),
-      filters = Seq(CommandFilter.InGuild),
-      description = Some(CommandDescription(name = "Next track", description = "Skip to the next track")),
+      aliases = Seq("n", "next"),
+      cmdProps = client => Props(new NextCmd(musicHandler, client)),
+      filters = Seq(CmdFilter.InGuild),
+      description = Some(CmdDescription(name = "Next track", description = "Skip to the next track")),
     )
+object NextCmdFactory {
+  def apply(musicHandler: ActorRef): NextCmdFactory = new NextCmdFactory(musicHandler)
 }
-class PauseCommand(musicHandler: ActorRef, val client: ClientActor) extends ParsedCommandActor[NotUsed] {
+
+class PauseCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
   override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
     msg.tChannel.foreach(musicHandler ! TogglePause(_))
 }
-object PauseCommand {
-  def props(musicHandler: ActorRef, client: ClientActor): Props = Props(new PauseCommand(musicHandler, client))
-  def cmdMeta(musicHandler: ActorRef, client: ClientActor): CommandMeta[NotUsed] =
-    CommandMeta[NotUsed](
+class PauseCmdFactory(musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed](
       category = ExampleCmdCategories.&,
-      alias = Seq("p", "pause"),
-      handler = props(musicHandler, client),
-      filters = Seq(CommandFilter.InGuild),
-      description = Some(CommandDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
+      aliases = Seq("p", "pause"),
+      cmdProps = client => Props(new PauseCmd(musicHandler, client)),
+      filters = Seq(CmdFilter.InGuild),
+      description = Some(CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
     )
+object PauseCmdFactory {
+  def apply(musicHandler: ActorRef): PauseCmdFactory = new PauseCmdFactory(musicHandler)
 }

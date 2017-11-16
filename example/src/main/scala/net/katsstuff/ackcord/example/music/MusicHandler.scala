@@ -37,17 +37,10 @@ import akka.actor.{ActorLogging, ActorRef, FSM, Props}
 import akka.pattern.pipe
 import akka.stream.Materializer
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CommandMeta, CommandRouter}
+import net.katsstuff.ackcord.commands.CmdRouter
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
-import net.katsstuff.ackcord.example.{
-  ExampleCmdCategories,
-  ExampleErrorHandler,
-  InfoChannelCommand,
-  KillCommand,
-  PingCommand,
-  SendFileCommand
-}
+import net.katsstuff.ackcord.example.{ExampleErrorHandler, ExampleHelpCmdFactory, ExampleMain}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
@@ -62,31 +55,20 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   import context.dispatcher
 
   val commands =
-    Seq(
-      QueueCommand.cmdMeta(self, client),
-      StopCommand.cmdMeta(self, client),
-      NextCommand.cmdMeta(self, client),
-      PauseCommand.cmdMeta(self, client)
-    )
+    Seq(QueueCmdFactory(self), StopCmdFactory(self), NextCmdFactory(self), PauseCmdFactory(self))
 
-  val baseCommands =
-    Seq(PingCommand.cmdMeta(client), SendFileCommand.cmdMeta(client), InfoChannelCommand.cmdMeta(client))
-  private val allCommands = baseCommands ++ commands :+ KillCommand.cmdMeta(null, client)
-  private val allCommandNames = {
-    val base     = CommandMeta.routerMap(allCommands, client).mapValues(_.keySet)
-    val withHelp = base(ExampleCmdCategories.!) + "help"
-    base + (ExampleCmdCategories.! -> withHelp)
-  }
-
-  val commandDispatcher: ActorRef = context.actorOf(
-    CommandRouter
+  val commandRouter: ActorRef = context.actorOf(
+    CmdRouter
       .props(
+        client,
         needMention = true,
-        CommandMeta.routerMap(commands, client),
-        ExampleErrorHandler.props(client, allCommandNames)
+        ExampleErrorHandler.props(client, ExampleMain.allCommandNames),
+        Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
       ),
     "MusicHandlerCommands"
   )
+
+  commands.foreach(fac => commandRouter ! CmdRouter.RegisterCmd(fac))
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
 
@@ -108,7 +90,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(DiscordClient.ShutdownClient, _) =>
       stop()
     case Event(msg: APIMessage.MessageCreate, _) =>
-      commandDispatcher.forward(msg)
+      commandRouter.forward(msg)
       stay()
     case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(token), Some(vChannelId)))
         if state.userId == c.current.botUser.id =>
@@ -180,7 +162,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       dataSender ! StopSendAudio
       stop()
     case Event(msg: APIMessage.MessageCreate, _) =>
-      commandDispatcher.forward(msg)
+      commandRouter.forward(msg)
       stay()
     case Event(APIMessage.VoiceStateUpdate(_, _), _)        => stay() //NO-OP
     case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _) => stay() //NO-OP

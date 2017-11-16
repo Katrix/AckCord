@@ -25,16 +25,14 @@ package net.katsstuff.ackcord.example
 
 import akka.actor.Props
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.HelpCommand.HelpCommandArgs
-import net.katsstuff.ackcord.commands.{CmdCategory, CommandDescription, CommandMeta, HelpCommand}
+import net.katsstuff.ackcord.commands.HelpCmd.Args
+import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.http.requests.Requests.CreateMessageData
-import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.http.requests.RESTRequests.CreateMessageData
 
-class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDescription]], client: ClientActor)
-    extends HelpCommand(initialCommands, client) {
+class ExampleHelpCmd(val client: ClientActor, allCommands: Map[CmdCategory, Set[String]]) extends HelpCmd {
 
-  override def createSingleReply(category: CmdCategory, name: String, desc: CommandDescription)(
+  override def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
       implicit c: CacheSnapshot
   ): CreateMessageData = CreateMessageData(createContent(category, printCategory = true, Seq(name), desc))
 
@@ -56,7 +54,7 @@ class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDe
     }
   }
 
-  def createContent(cat: CmdCategory, printCategory: Boolean, names: Seq[String], desc: CommandDescription): String = {
+  def createContent(cat: CmdCategory, printCategory: Boolean, names: Seq[String], desc: CmdDescription): String = {
     val builder = StringBuilder.newBuilder
     builder.append(s"Name: ${desc.name}\n")
     if (printCategory) builder.append(s"Category: ${cat.prefix}   ${cat.description}\n")
@@ -65,30 +63,23 @@ class ExampleHelpCommand(initialCommands: Map[CmdCategory, Map[String, CommandDe
 
     builder.mkString
   }
+
+  override def unknownCommand(category: CmdCategory, command: String): Option[CreateMessageData] =
+    if (allCommands.get(category).exists(_.contains(command))) None
+    else super.unknownCommand(category, command)
+
+  override def unknownCategory(command: String): Option[CreateMessageData] =
+    if (allCommands.exists(t => command.startsWith(t._1.prefix))) None
+    else super.unknownCategory(command)
 }
-object ExampleHelpCommand {
-  def props(initialCommands: Map[CmdCategory, Map[String, CommandDescription]], client: ClientActor): Props = {
-    val helpMap = initialCommands.getOrElse(category, Map.empty) ++ aliases
-      .map(_ -> description)
-      .toMap
-    val withHelp = initialCommands + (category -> helpMap)
-
-    Props(new ExampleHelpCommand(withHelp, client))
-  }
-
-  def aliases:     Seq[String]        = Seq("help")
-  def description: CommandDescription = CommandDescription("Help", "This command right here", "<page|command>")
-  def category:    CmdCategory        = ExampleCmdCategories.!
-
-  implicit val parser = MessageParser[Option[HelpCommandArgs]]
-
-  def cmdMeta(
-      initialCommands: Map[CmdCategory, Map[String, CommandDescription]],
-      client: ClientActor
-  ): CommandMeta[Option[HelpCommandArgs]] = CommandMeta[Option[HelpCommandArgs]](
-    category = category,
-    alias = aliases,
-    handler = props(initialCommands, client),
-    description = Some(description)
-  )
+class ExampleHelpCmdFactory(allCommands: Map[CmdCategory, Set[String]])
+    extends ParsedCmdFactory[Args](
+      category = ExampleCmdCategories.!,
+      aliases = Seq("help"),
+      cmdProps = client => Props(new ExampleHelpCmd(client, allCommands)),
+      description =
+        Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
+    )
+object ExampleHelpCmdFactory {
+  def apply(allCommands: Map[CmdCategory, Set[String]]): ExampleHelpCmdFactory = new ExampleHelpCmdFactory(allCommands)
 }
