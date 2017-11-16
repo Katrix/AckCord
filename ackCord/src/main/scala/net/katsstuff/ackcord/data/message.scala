@@ -340,7 +340,7 @@ case class ReceivedEmbedImage(url: String, proxyUrl: String, height: Int, width:
   * @param name The name of the provider.
   * @param url The url of a provider.
   */
-case class ReceivedEmbedProvider(name: String, url: String)
+case class ReceivedEmbedProvider(name: String, url: Option[String]) //url can be null
 
 /**
   * The author part of a received embed.
