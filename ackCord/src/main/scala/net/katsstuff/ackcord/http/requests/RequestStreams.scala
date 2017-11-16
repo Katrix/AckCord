@@ -91,8 +91,7 @@ object RequestStreams {
   ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
-      .via(requestParser)
-      .mapAsyncUnordered(parallelism)(identity)
+      .via(requestParser(parallelism))
       .alsoTo(sendRatelimitUpdates)
   }
 
@@ -204,11 +203,11 @@ object RequestStreams {
   ): Flow[(HttpRequest, RequestWrapper[Data, Ctx]), (Try[HttpResponse], RequestWrapper[Data, Ctx]), NotUsed] =
     Http().superPool[RequestWrapper[Data, Ctx]]()
 
-  private def requestParser[Data, Ctx](
+  private def requestParser[Data, Ctx](paralellism: Int = 4)(
       implicit mat: Materializer,
       system: ActorSystem
-  ): Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx]), Future[RequestAnswer[Data, Ctx]], NotUsed] =
-    Flow.fromFunction[(Try[HttpResponse], RequestWrapper[Data, Ctx]), Future[RequestAnswer[Data, Ctx]]] {
+  ): Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] =
+    Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx])].mapAsyncUnordered(paralellism) {
       case (response, request) =>
         import system.dispatcher
         response match {
@@ -231,9 +230,7 @@ object RequestStreams {
               case _ => //Should be success
                 request.request
                   .parseResponse(httpResponse.entity)
-                  .map[RequestAnswer[Data, Ctx]](
-                    response => RequestResponse(response, request.context, remainingReq, tilReset, request)
-                  )
+                  .map(response => RequestResponse(response, request.context, remainingReq, tilReset, request))
                   .recover {
                     case NonFatal(e) => RequestError(request.context, e, request)
                   }

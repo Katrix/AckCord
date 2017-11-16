@@ -24,15 +24,7 @@ lazy val publishSettings = Seq(
     )
   ),
   homepage := Some(url("https://github.com/Katrix-/AckCord")),
-  pomExtra := {
-    <developers>
-      <developer>
-        <id>Katrix</id>
-        <name>Nikolai Frid</name>
-        <url>https://github.com/Katrix-</url>
-      </developer>
-    </developers>
-  }
+  developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/")))
 )
 
 lazy val ackCord = project
