@@ -384,15 +384,23 @@ case class GuildMember(
   * @param id The id of the emoji.
   * @param name The emoji name.
   * @param roles The roles that can use this emoji.
+  * @param userId The id of the user that created this emoji.
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
   */
-case class Emoji(id: EmojiId, name: String, roles: Seq[RoleId], requireColons: Boolean, managed: Boolean) {
+case class Emoji(
+    id: EmojiId,
+    name: String,
+    roles: Seq[RoleId],
+    userId: Option[UserId],
+    requireColons: Boolean,
+    managed: Boolean
+) {
 
   /**
     * Mention this role so it can be formatted correctly in messages.
     */
-  def mention: String = if(!managed) s"<:$asString:>" else asString
+  def mention: String = if (!managed) s"<:$asString:>" else asString
 
   /**
     * Returns a string representation of this emoji used in requests.

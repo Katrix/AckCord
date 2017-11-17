@@ -467,7 +467,7 @@ object GatewayEvent {
     * @param guildId The guild where the update occoured.
     * @param emojis The new emojis.
     */
-  case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[Emoji])
+  case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[RawEmoji])
 
   /**
     * Sent to the client when the emojis of a guild have been updated.
@@ -476,7 +476,7 @@ object GatewayEvent {
     override def name:         String                              = "GUILD_EMOJIS_UPDATE"
     override def cacheHandler: CacheHandler[GuildEmojisUpdateData] = RawHandlers.guildEmojisUpdateDataHandler
     override def createEvent(state: CacheState): Option[APIMessage] =
-      state.current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis, state))
+      state.current.getGuild(data.guildId).map(g => APIMessage.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state))
     override def guildId: GuildId = data.guildId
   }
 

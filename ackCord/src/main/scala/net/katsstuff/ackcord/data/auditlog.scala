@@ -44,13 +44,13 @@ case class AuditLog(webhooks: Seq[Webhook], users: Seq[User], auditLogEntries: S
   * @param reason The reason for the change
   */
 case class AuditLogEntry(
-    targetId: RawSnowflake,
-    changes: Seq[AuditLogChange[_]],
+    targetId: Option[RawSnowflake],
+    changes: Option[Seq[AuditLogChange[_]]],
     userId: UserId,
     id: RawSnowflake,
     actionType: AuditLogEvent,
-    options: Seq[OptionalAuditLogInfo],
-    reason: String
+    options: Option[OptionalAuditLogInfo],
+    reason: Option[String]
 )
 
 /**

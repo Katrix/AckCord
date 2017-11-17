@@ -28,7 +28,7 @@ import scala.collection.mutable
 import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent._
-import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
 
 object RawHandlers extends Handlers {
 
@@ -187,7 +187,7 @@ object RawHandlers extends Handlers {
     case (builder, obj @ GuildEmojisUpdateData(guildId, emojis), log) =>
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          builder.guilds.put(guildId, guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e): _*)))
+          builder.guilds.put(guildId, guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e.toEmoji): _*)))
         case None => log.warning(s"Can't find guild for emojis update $obj")
       }
   }
@@ -325,6 +325,14 @@ object RawHandlers extends Handlers {
       builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, Ban(obj.reason, obj.user.id))
       handleUpdateLog(builder, obj.user, log)
   }
+
+  implicit val rawEmojiUpdateHandler: GuildId => CacheUpdateHandler[RawEmoji] = guildId =>
+    updateHandler { (builder, obj, log) =>
+      builder.guilds.get(guildId) match {
+        case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj.toEmoji))))
+        case None        => log.warning(s"No guild for emoji $obj")
+      }
+    }
 
   //Delete
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, log) =>

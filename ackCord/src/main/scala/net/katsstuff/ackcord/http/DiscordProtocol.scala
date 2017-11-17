@@ -216,8 +216,8 @@ trait DiscordProtocol {
   implicit val voiceRegionEncoder: Encoder[VoiceRegion] = deriveEncoder
   implicit val voiceRegionDecoder: Decoder[VoiceRegion] = deriveDecoder
 
-  implicit val guildEmojiEncoder: Encoder[Emoji] = deriveEncoder
-  implicit val guildEmojiDecoder: Decoder[Emoji] = deriveDecoder
+  implicit val rawEmojiEncoder: Encoder[RawEmoji] = deriveEncoder
+  implicit val rawEmojiDecoder: Decoder[RawEmoji] = deriveDecoder
 
   implicit val connectionEncoder: Encoder[Connection] = deriveEncoder
   implicit val connectionDecoder: Decoder[Connection] = deriveDecoder

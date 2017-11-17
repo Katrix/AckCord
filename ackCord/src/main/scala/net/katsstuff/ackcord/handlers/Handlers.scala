@@ -64,14 +64,6 @@ trait Handlers {
     builder.users.put(obj.id, obj)
   }
 
-  implicit val guildEmojiUpdateHandler: GuildId => CacheUpdateHandler[Emoji] = guildId =>
-    updateHandler { (builder, obj, log) =>
-      builder.guilds.get(guildId) match {
-        case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj))))
-        case None        => log.warning(s"No guild for emoji $obj")
-      }
-  }
-
   val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
     builder.botUser = tag[BotUser](obj)
   }

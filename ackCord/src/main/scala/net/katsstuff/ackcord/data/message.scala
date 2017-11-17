@@ -122,10 +122,10 @@ case class WebhookAuthor(id: SnowflakeType[Webhook], name: String, avatar: Strin
   * @param username The name of the user.
   * @param discriminator The discriminator for the user. Those four last
   *                      digits when clicking in a users name.
-  * @param avatar The users avatar hash
-  * @param bot If this user is a bot
+  * @param avatar The users avatar hash.
+  * @param bot If this user belongs to a OAuth2 application.
   * @param mfaEnabled If this user has two factor authentication enabled.
-  * @param verified If this user is verified. Requires the email OAuth scope.
+  * @param verified If this user email is verified. Requires the email OAuth scope.
   * @param email The users email. Requires the email OAuth scope.
   */
 //Remember to edit PartialUser when editing this
@@ -134,10 +134,10 @@ case class User(
     username: String,
     discriminator: String,
     avatar: Option[String], //avatar can be null
-    bot: Option[Boolean], //Bot can be missing
-    mfaEnabled: Option[Boolean], //mfaEnabled can be missing
-    verified: Option[Boolean], //verified can be missing
-    email: Option[String] //Email can be null
+    bot: Option[Boolean],
+    mfaEnabled: Option[Boolean],
+    verified: Option[Boolean],
+    email: Option[String]
 ) extends Author[User] {
 
   override def name: String = username

@@ -406,8 +406,8 @@ case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status:
   * @param username The name of the user.
   * @param discriminator The discriminator for the user. Those four last
   *                      digits when clicking in a users name.
-  * @param avatar The users avatar hash
-  * @param bot If this user is a bot
+  * @param avatar The users avatar hash.
+  * @param bot If this user belongs to a OAuth2 application.
   * @param mfaEnabled If this user has two factor authentication enabled.
   * @param verified If this user is verified. Requires the email OAuth scope.
   * @param email The users email. Requires the email OAuth scope.
@@ -418,10 +418,10 @@ case class PartialUser(
     username: Option[String],
     discriminator: Option[String],
     avatar: Option[String], //avatar can be null
-    bot: Option[Boolean], //Bot can be missing
-    mfaEnabled: Option[Boolean], //mfaEnabled can be missing
-    verified: Option[Boolean], //verified can be missing
-    email: Option[String] //Email can be null
+    bot: Option[Boolean],
+    mfaEnabled: Option[Boolean],
+    verified: Option[Boolean],
+    email: Option[String]
 )
 
 /**
@@ -431,4 +431,19 @@ case class PartialUser(
   */
 case class RawBan(reason: Option[String], user: User) {
   def toBan: Ban = Ban(reason, user.id)
+}
+
+
+/**
+  * A raw emoji before going through the cache.
+  * @param id The id of the emoji.
+  * @param name The emoji name.
+  * @param roles The roles that can use this emoji.
+  * @param user The user that created this emoji.
+  * @param requireColons If the emoji requires colons.
+  * @param managed If the emoji is managed.
+  */
+case class RawEmoji(id: EmojiId, name: String, roles: Seq[RoleId], user: Option[User], requireColons: Boolean, managed: Boolean) {
+
+  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed)
 }
