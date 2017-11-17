@@ -36,7 +36,7 @@ import io.circe._
 import io.circe.syntax._
 import net.katsstuff.ackcord.http.Routes
 
-class OAuth2Requests extends FailFastCirceSupport {
+object OAuth2Requests extends FailFastCirceSupport {
 
   sealed abstract class Scope(val name: String)
   object Scope {
