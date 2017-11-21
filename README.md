@@ -16,10 +16,10 @@ implicit val system: ActorSystem  = ActorSystem("AckCord")
 implicit val mat:    Materializer = ActorMaterializer()
 import system.dispatcher
 
-val eventStream = new EventStream(system)
+val eventStream = Cache.create
 
 val settings = ClientSettings(token = "yourTokenHere")
-DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
+DiscordClient.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
  case Success(client) =>
    client ! DiscordClient.StartClient
  case Failure(e) =>
@@ -28,36 +28,36 @@ DiscordClient.fetchWsGateway.map(settings.connect(eventStream, _)).onComplete {
 }
 ```
 
-All the normal events are published on the event stream you pass in when you connect. From there you just create actors, subscribe them to the event stream and wait for the events to roll in.
+All the normal events are published to a source found in the cache object. This source can be materialized as many times as needed. The cache itself gives you some convenience methods to subscribe to the source. 
 ```scala
 class MyActor extends Actor {
   def receive: Receive = {
-    case APIMessage.Ready(c, _) => doStuff()
+    case APIMessage.Ready(state) => doStuff()
   }
 }
 object MyActor {
   def props: Props = Props(new MyActor)
 }
 
-//In your main actor
-eventStream.subscribe(context.actorOf(MyActor.props, "MyActor"), classOf[APIMessage.Ready])
+//Somewhere with access to the cache
+cache.subscribeAPIActor(context.actorOf(MyActor.props, "MyActor"), completeMessage = PoisonPill, classOf[APIMessage.Ready])
 ```
 
-## The CacheSnapshot
-You'll probably encounter the `CacheSnapshot` relatively early. AckCord handles the concept of a cache my having an object called the CacheSnapshot. Many of the commands you find in AckCord takes an implicit cache(although there exists alternatives where it makes sense), to allow you to operate on the current state. When you receive an event, you get two cache snapshots. The current on that contains all the changes that this even brought, and the previous one, without any of the changes caused by that event. You just have to choose which one you want to use (it's normally the current one).
+## The CacheSnapshot and CacheState
+You will probably encounter the `CacheSnapshot` and `CacheState` relatively early. Cord handles the concept of a cache my having an object called the CacheSnapshot. In many cases you might be interested in the state of something both before and after some event. That's where `CacheState` comes in, which keeps track of the current, and previous snapshot. Many of the methods you find in AckCord takes an implicit cache(although there exists alternatives where it makes sense), to allow you to operate on the current state. When you receive an event, you receive a `CacheState`. You then have to choose which one you want to use (it's normally the current one) by marking it as implicit.
 
 ## Sending requests
-There are two ways to send requests in AckCord. The first one is to create `Request` objects with requests from the `RESTRequests` object. The second is to import `net.katsstuff.ackcord.syntax._` and use the extensions methods provided by that. However you do it, when sending requests, there are two more things you can provide as part of the request. The first is the request context. This is an object that allows you to keep track of what request was made in what context. The second is an actor to send the response to. When using the syntax import, this is by default set to the actor that sent the request.
+There are two ways to send requests in AckCord. The first one is to create `RequestWrapper` objects with requests from the `RESTRequests` object. The second is to import `net.katsstuff.ackcord.syntax._` and use the extensions methods provided by that. However you do it, when sending requests, there are two more things you can provide as part of the request. The first is the request context. This is an object that allows you to keep track of what request was made in what context. The second is an actor to send the response to. When using the syntax import, this is by default set to the actor that sent the request. Once you have your request wrapper, you need to send it somewhere. You can either use one of the flows in `RequestStreams` (use simpleRequestFlow if you don't know which one you need) or send it to the discord client actor.
 
 ## The GuildRouter
-Often you find yourself wanting to have an actor specific for each guild the bot is in. You can use the `GuildRouter` to achieve that. While not a real router, it gets the job done nicely. To use the `GuildRouter`, simply pass it a `Props` of the actor you want one of for each guild, subscribe the `GuildRouter` to some event, and it will take care of the rest. The `GuildRouter` also allows you to specify a separate actor to send all messages which could, but doesn't have a guild. For example when a message is created. It could be a message in a guild channel, or it could be a message in a DM channel.
+Often you find yourself wanting to have an actor specific for each guild the bot is in. You can use the `GuildRouter` to achieve that. While not a real router, it gets the job done nicely. To use the `GuildRouter`, simply pass it a `Props` of the actor you want one of for each guild, subscribe the `GuildRouter` to some event, and it will take care of the rest. The `GuildRouter` also allows you to specify a separate actor to send all messages which could, but does not have a guild. For example when a message is created. It could be a message in a guild channel, or it could be a message in a DM channel.
 ```scala
 val nonGuildHandler = context.actorOf(MyActor.props, "MyActorNonGuild")
 context.actorOf(GuildRouter.props(MyActor.props, Some(nonGuildHandler)), "MyActor")
 ```
 
 ## Commands
-You probably also want some commands for your bot. AckCord has a seperate module that makes dealing with commands easier. First add a dependency on the command module.
+You probably also want some commands for your bot. AckCord has a separate module that makes dealing with commands easier. First add a dependency on the command module.
 ```scala
 libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.6"
 ```
@@ -65,67 +65,74 @@ libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.6"
 ### Command handlers
 While you can use normal actors, AckCord also gives you special command handler actors to reduce boilerplate and make stuff a bit easier. AckCord allows you to both parse your command arguments for yourself, or get some help. Depending on which of those behaviors you want, you'll want to go with a different handler.
 ```scala
-class EchoCommand(val client: ClientActor) extends CommandActor {
+class EchoCmd(val client: ClientActor) extends CmdActor {
   override def handleCommand(msg: Message, args: List[String])(implicit c: CacheSnapshot): Unit = {
     msg.tChannel.foreach(client ! _.sendMessage(args.mkString(" ")))
   }
 }
-object EchoCommand {
-  def props(client: ClientActor): Props = Props(new EchoCommand(client))
-}
 
-class GetUsernameCommand(val client: ClientActor) extends ParsedCommandActor[User] {
+class GetUsernameCmd(val client: ClientActor) extends ParsedCmdActor[User] {
   override def handleCommand(msg: Message, args: User, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
     msg.tChannel.foreach(client ! _.sendMessage(args.username))
   }
 }
-object GetUsernameCommand {
-  def props(client: ClientActor): Props = Props(new GetUsernameCommand(client))
-}
 ```
 
-### CommandRouter
-Next you need something to send the command message to these actors. That's where the `CommandRouter`(still not a real router) comes in. While you can register commands to it when it's already started, I'd recommend you to do so when starting the actor. First though we need a `CmdCategory` for our actor which provides the name and prefix for the commands, and a `CommandParser` for our parsed command. Last we need an error handler which handles what happens if no command is specified at all, or if an unknown command is used.
+### CmdFactory
+Next you need some way to construct your actor in a proper way. A `CmdFactory` is used for this. You'll choose a different factory depending on if your actor parses the arguments it receives or not. The factory also supplies extra information about the command, like what category it's in (prefix), it's aliases, an optional description and filters. We'll go over each of these one by one.
+
+#### CmdCategory
+AckCord uses objects to mark what category a command is in. A category takes a prefix, and a name. Generally you specify your categories like this.
 ```scala
 object OurCategories {
   object ! extends CmdCategory("!", "Generic commands")
 }
-val getUsernameParser = CommandParser.props(MessageParser[User], GetUsernameCommand.props(client))
 ```
 
-Once we have all of that we can finally set up our command router.
+#### Aliases
+The aliases of a command is represented as a simple `Seq[String]`. All aliases will automatically be converted to lowercase.
+
+#### CmdDescription
+You can also supply an optional description about your command, which contains a display name, a description, and a usage which defaults to empty.
+
+#### CmdFilter
+Often times you have a command that can only be used in a guild, or with those with a specific permission, or by non bots. For cases like those you can use a `CmdFilter`. The filter will stop the command before it arrives at your actor, and send an error message in return.
+
+#### Putting it all together
+So now that we know what all the different things to, let's create our factories.
 ```scala
-
-
-val commandRouter: Props = CommandRouter.props(
-  needMention = true,
-  Map(
-    OurCategories.! -> Map(
-      "echo" -> EchoCommand.props(client),
-      "getusername" -> getUsernameParser
-    )
-  ),
-  ExampleErrorHandler.props(client)
-)
-
-eventStream.subscribe(context.actorOf(commandRouter, "OurCommands"), classOf[APIMessage.MessageCreate])
-```
-
-### CommandMeta
-Creating the map for the commands is tiresome tough. That's why we have what's called `CommandMeta` which normally sits on the companion object of the command together with the props. `CommandMeta` allows you to group together the category, aliases, handler, and command information into one object. If we decided to use it for `GetUsernameCommand` (it can only be used with parsed commands), it would look something like this.
-```scala
-def cmdMeta(client: ClientActor): CommandMeta[User] =
-  CommandMeta[User](
+object EchoCmdFactory
+  extends BaseCmdFactory(
     category = OurCategories.!,
-    alias = Seq("username", "getusername"),
-    handler = props(client)
+    aliases = Seq("echo"),
+    cmdProps = client => Props(new EchoCmd(client)),
+    description = Some(CmdDescription(name = "Echo", description = "Replies with the message sent to it"))
+  )
+
+object GetUsernameCmdFactory
+  extends ParsedCmdFactory[NotUsed](
+    category = OurCategories.!,
+    aliases = Seq("ping"),
+    cmdProps = client => Props(new GetUsernameCmd(client)),
+    description = Some(CmdDescription(name = "Get username", description = "Get the username of a user"))
   )
 ```
 
-When you have many `CommandMeta`s you can create a map you can pass to the `CommandRouter` with a single method.
+### CommandRouter
+Next you need something to send the command message to these actors. That's where the `CmdRouter`comes in (still not a real router). When creating the router pass in if we require a mention before the command, an an error handler which handles what happens if no command is specified at all, or if an unknown command is used, and an optional help command factory, which will be sent the descriptions and names of all registered commands for this router. For this example I leave out the help command.
 ```scala
-val commands: Seq[CommandMeta] = ???
-CommandMeta.routerMap(commands, client)
+val cmdRouter = context.actorOf(
+  CmdRouter.props(client, needMention = true, ExampleErrorHandler.props(client), None),
+  "OurCommands"
+)
+
+cache.subscribeAPIActor(cmdRouter, completeMessage = DiscodClien.ShutdownClient, classOf[APIMessage.MessageCreate])
+```
+
+Next we need to register our commands. To do this, send the `RegisterCmd` message to the router. If we had specified a help command, it would then also be registered with the help command.
+```scala
+cmdRouter ! CmdRouter.RegisterCmd(EchoCmdFactory)
+cmdRouter ! CmdRouter.RegisterCmd(GetUsernameCmdFactory)
 ```
 
 # More information
