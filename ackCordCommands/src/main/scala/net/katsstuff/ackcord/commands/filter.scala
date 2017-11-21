@@ -93,6 +93,12 @@ object CmdFilter {
       "You don't have permission to use this command"
   }
 
+  case object NonBot extends CmdFilter {
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
+      msg.isAuthorUser && c.getUser(UserId(msg.authorId)).exists(u => !u.bot.getOrElse(false))
+    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): String = "Bots can't use this command"
+  }
+
   /**
     * Create an actor that will stop commands according to a set of filters.
     */
