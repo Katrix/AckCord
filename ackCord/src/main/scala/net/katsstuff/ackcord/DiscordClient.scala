@@ -60,6 +60,8 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
 
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
+  cache.subscribe.runWith(CacheStreams.sendHandledData)
+
   private val requestHandler: ActorRef = {
     val source =
       Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail).named("DefaultRequestHandlerActor")
