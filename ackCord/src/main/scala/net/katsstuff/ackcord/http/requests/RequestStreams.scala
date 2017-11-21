@@ -369,10 +369,10 @@ object RequestStreams {
         case _: RequestFailed[Data, Ctx]   => 1
       }))
 
-      val successful = partitioner.out(0).collect {
+      val successful = partitioner.out(0)
+      val successfulResp = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
         case response: SuccessfulRequest[Data, Ctx] => response
-      }
-      val allSuccessful = builder.add(MergePreferred[SuccessfulRequest[Data, Ctx]](3))
+      })
 
       //Ratelimiter should take care of the ratelimits through back-pressure
       val failed = partitioner.out(1).collect {
@@ -382,12 +382,12 @@ object RequestStreams {
       // format: OFF
 
       requestFlow ~> allRequests ~> partitioner
-                                    successful ~> allSuccessful
       allRequests <~ requestFlow <~ failed.outlet
+                                    successful ~> successfulResp
 
       // format: ON
 
-      FlowShape(requestFlow.in, allSuccessful.out)
+      FlowShape(requestFlow.in, successfulResp.out)
     }
 
     Flow.fromGraph(graph)
