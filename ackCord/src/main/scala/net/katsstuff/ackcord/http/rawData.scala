@@ -67,7 +67,8 @@ case class RawChannel(
     icon: Option[String],
     ownerId: Option[UserId],
     applicationId: Option[RawSnowflake],
-    parentId: Option[ChannelId]
+    parentId: Option[ChannelId],
+    lastPinTimestamp: Option[OffsetDateTime]
 ) {
 
   /**
@@ -91,7 +92,8 @@ case class RawChannel(
             topic,
             lastMessageId,
             nsfw.getOrElse(false),
-            parentId
+            parentId,
+            lastPinTimestamp
           )
         }
       case ChannelType.DM =>
@@ -245,7 +247,9 @@ case class RawMessage(
   * @param name The name of the guild.
   * @param icon The icon hash.
   * @param splash The splash hash.
+  * @param owner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
+  * @param permissions The permissions of the current user without overwrites.
   * @param region The voice region
   * @param afkChannelId The channelId of the AFK channel.
   * @param afkTimeout The amount of seconds you need to be AFK before being
@@ -262,6 +266,7 @@ case class RawMessage(
   * @param applicationId The application id if this guild is bot created.
   * @param widgetEnabled If the widget is enabled.
   * @param widgetChannelId The channel id for the widget.
+  * @param systemChannelId The channel which system messages are sent to.
   * @param joinedAt When the client joined the guild.
   * @param large If this guild is above the large threshold.
   * @param unavailable If this guild is unavailable.
@@ -276,7 +281,9 @@ case class RawGuild(
     name: String,
     icon: Option[String], //Icon can be null
     splash: Option[String], //Splash can be null
+    owner: Option[Boolean],
     ownerId: UserId,
+    permissions: Option[Permission],
     region: String,
     afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
@@ -292,6 +299,7 @@ case class RawGuild(
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean], //Can be missing
     widgetChannelId: Option[ChannelId], //Can be missing
+    systemChannelId: Option[ChannelId],
     joinedAt: Option[OffsetDateTime],
     large: Option[Boolean],
     unavailable: Option[Boolean],
@@ -325,7 +333,9 @@ case class RawGuild(
         name,
         icon,
         splash,
+        owner,
         ownerId,
+        permissions,
         region,
         afkChannelId,
         afkTimeout,
@@ -341,6 +351,7 @@ case class RawGuild(
         applicationId,
         widgetEnabled,
         widgetChannelId,
+        systemChannelId,
         joinedAt,
         large,
         memberCount,

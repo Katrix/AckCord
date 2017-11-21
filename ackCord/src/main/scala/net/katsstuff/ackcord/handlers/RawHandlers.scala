@@ -54,7 +54,8 @@ object RawHandlers extends Handlers {
               rawChannel.topic,
               rawChannel.lastMessageId,
               rawChannel.nsfw.getOrElse(false),
-              rawChannel.parentId
+              rawChannel.parentId,
+              rawChannel.lastPinTimestamp
             )
             handleUpdateLog(builder, c, log)
           }
@@ -150,7 +151,9 @@ object RawHandlers extends Handlers {
       name = obj.name,
       icon = obj.icon,
       splash = obj.splash,
+      owner = obj.owner,
       ownerId = obj.ownerId,
+      permissions = obj.permissions,
       region = obj.region,
       afkChannelId = obj.afkChannelId,
       afkTimeout = obj.afkTimeout,
@@ -166,6 +169,7 @@ object RawHandlers extends Handlers {
       applicationId = obj.applicationId,
       widgetEnabled = obj.widgetEnabled,
       widgetChannelId = obj.widgetChannelId,
+      systemChannelId = obj.systemChannelId,
       joinedAt = obj.joinedAt.orElse(oldGuild.map(_.joinedAt)).get,
       large = obj.large.orElse(oldGuild.map(_.large)).get,
       memberCount = obj.memberCount.orElse(oldGuild.map(_.memberCount)).get,
@@ -341,7 +345,8 @@ object RawHandlers extends Handlers {
             rawChannel.topic,
             rawChannel.lastMessageId,
             rawChannel.nsfw.getOrElse(false),
-            rawChannel.parentId
+            rawChannel.parentId,
+            rawChannel.lastPinTimestamp
           )
           handleDeleteLog(builder, c, log)
         }

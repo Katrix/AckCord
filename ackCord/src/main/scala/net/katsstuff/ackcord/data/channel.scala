@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.data
 
+import java.time.OffsetDateTime
+
 import net.katsstuff.ackcord.SnowflakeMap
 
 /**
@@ -178,7 +180,8 @@ case class TGuildChannel(
     topic: Option[String],
     lastMessageId: Option[MessageId],
     nsfw: Boolean,
-    parentId: Option[ChannelId]
+    parentId: Option[ChannelId],
+    lastPinTimestamp: Option[OffsetDateTime]
 ) extends GuildChannel
     with TChannel {
   override def channelType: ChannelType = ChannelType.GuildText

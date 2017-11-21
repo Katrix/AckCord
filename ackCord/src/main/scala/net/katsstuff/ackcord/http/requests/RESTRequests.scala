@@ -851,6 +851,7 @@ object RESTRequests {
     * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
     * @param ownerId Transfer ownership of this guild. Must be the owner.
     * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
+    * @param systemChannelId The new channel which system messages will be sent to.
     */
   case class ModifyGuildData(
       name: Option[String] = None,
@@ -861,7 +862,8 @@ object RESTRequests {
       afkTimeout: Option[Int] = None,
       icon: Option[ImageData] = None,
       ownerId: Option[UserId] = None,
-      splash: Option[ImageData] = None
+      splash: Option[ImageData] = None,
+      systemChannelId: Option[ChannelId] = None
   )
 
   /**
