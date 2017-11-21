@@ -33,7 +33,7 @@ import akka.routing.Broadcast
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
-import net.katsstuff.ackcord.util.GuildRouter.{AddCreateMsg, GetGuildActor, RemoveCreateMsg, ResponseGetGuild, SendToGuildActor, TerminatedGuild}
+import net.katsstuff.ackcord.util.GuildRouter._
 import net.katsstuff.ackcord.{APIMessage, DiscordClient}
 
 /**
@@ -119,11 +119,15 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
       if (isShuttingDown && handlers.isEmpty) {
         context.stop(self)
       }
-    case add @ AddCreateMsg(msg) =>
+    case add @ AddCreateMsg(msg, sendToExisting) =>
       val uuid = UUID.randomUUID()
       createMsgs.put(uuid, msg)
-      if(add.tieToLifecycle != ActorRef.noSender) {
+      if (add.tieToLifecycle != ActorRef.noSender) {
         context.watchWith(add.tieToLifecycle, RemoveCreateMsg(uuid))
+      }
+
+      if(sendToExisting) {
+        handlers.values.foreach(_ ! msg)
       }
     case RemoveCreateMsg(uuid) =>
       createMsgs.remove(uuid)
@@ -174,10 +178,12 @@ object GuildRouter {
     * Send this to a guild router to send a message to all
     * actors created from this point on by this router.
     * @param msg The message to send.
+    * @param sendToExisting If this message should also be sent to the existing
+    *                       actors in this GuildRouter.
     * @param tieToLifecycle An actor to bind this message to. When the specified
     *                       actor stops, the message is unregistered.
     */
-  case class AddCreateMsg(msg: Any)(implicit val tieToLifecycle: ActorRef = ActorRef.noSender)
+  case class AddCreateMsg(msg: Any, sendToExisting: Boolean)(implicit val tieToLifecycle: ActorRef = ActorRef.noSender)
 
   private case class TerminatedGuild(guildId: GuildId)
 
