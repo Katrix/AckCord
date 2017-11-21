@@ -138,7 +138,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   def getGuild(guildId: GuildId): ActorRef = {
     lazy val newActor = {
       log.debug("Creating new actor for guild {}", guildId)
-      val newActor = context.actorOf(props(guildId), guildId.toString)
+      val newActor = context.actorOf(props(guildId), guildId.asString)
       createMsgs.values.foreach(newActor ! _)
       context.watchWith(newActor, TerminatedGuild(guildId))
     }
