@@ -96,13 +96,13 @@ class CmdRouter(client: ClientActor, var needMention: Boolean, errorHandlerProps
       commands
         .get(factory.category)
         .flatMap(_.find(t => factory.lowercaseAliases.contains(t._1)))
-        .foreach(_._2 ! msg)
+        .foreach(_._2.forward(msg))
     case Broadcast(msg) =>
-      commands.foreach(_._2.foreach(_._2 ! msg))
+      commands.foreach(_._2.foreach(_._2.forward(msg)))
     case SendToErrorHandler(msg) =>
-      errorHandler ! msg
+      errorHandler.forward(msg)
     case SendToHelpCmd(msg) =>
-      helpCmd.foreach(_ ! msg)
+      helpCmd.foreach(_.forward(msg))
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
       errorHandler ! ShutdownClient
