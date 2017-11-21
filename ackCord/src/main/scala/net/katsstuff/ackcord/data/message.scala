@@ -90,22 +90,9 @@ sealed trait Author[A] {
   def id: SnowflakeType[A]
 
   /**
-    * Returns the user if this author is a user.
+    * If this author is not a webhook.
     */
-  def user: Option[User] = this match {
-    case u: User => Some(u)
-    case _       => None
-  }
-
-  /**
-    * The name of this author,
-    */
-  def name: String
-
-  /**
-    * Returns the userId if this author is a user.
-    */
-  def userId: Option[UserId] = user.map(_.id)
+  def isUser: Boolean
 }
 
 /**
@@ -114,7 +101,9 @@ sealed trait Author[A] {
   * @param name The name of the webhook
   * @param avatar The webhook's avatar hash
   */
-case class WebhookAuthor(id: SnowflakeType[Webhook], name: String, avatar: String) extends Author[Webhook]
+case class WebhookAuthor(id: SnowflakeType[Webhook], name: String, avatar: String) extends Author[Webhook] {
+  override def isUser: Boolean = false
+}
 
 /**
   * A Discord user.
@@ -140,8 +129,6 @@ case class User(
     email: Option[String]
 ) extends Author[User] {
 
-  override def name: String = username
-
   /**
     * Mention this user.
     */
@@ -151,6 +138,8 @@ case class User(
     * Mention this user with their nickname.
     */
   def mentionNick: String = s"<@!$id>"
+
+  override def isUser: Boolean = true
 }
 
 /**
@@ -173,7 +162,8 @@ case class Connection(
   * A message sent to a channel.
   * @param id The id of the message.
   * @param channelId The channel this message was sent to.
-  * @param author The author that sent this message.
+  * @param authorId The id of the author that sent this message.
+  * @param isAuthorUser If the author of this message was a user.
   * @param content The content of this message.
   * @param timestamp The timestamp this message was created.
   * @param editedTimestamp The timestamp this message was last edited.
@@ -191,7 +181,8 @@ case class Connection(
 case class Message(
     id: MessageId,
     channelId: ChannelId,
-    author: Author[_],
+    authorId: RawSnowflake,
+    isAuthorUser: Boolean,
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -206,6 +197,8 @@ case class Message(
     pinned: Boolean,
     messageType: MessageType
 ) extends GetChannel {
+
+  def authorUserId: Option[UserId] = if(isAuthorUser) Some(UserId(authorId)) else None
 
   def channelMentions: Seq[ChannelId] = {
     MessageParser.channelRegex
@@ -224,7 +217,7 @@ case class Message(
   def formatMentions(implicit c: CacheSnapshot): String = {
     val withUsers = mentions
       .flatMap(_.resolve)
-      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.name}"))
+      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
     val withRoles = mentionRoles
       .flatMap(_.resolve)
       .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))

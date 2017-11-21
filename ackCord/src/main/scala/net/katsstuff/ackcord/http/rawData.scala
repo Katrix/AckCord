@@ -221,7 +221,8 @@ case class RawMessage(
     Message(
       id,
       channelId,
-      author,
+      RawSnowflake(author.id),
+      author.isUser,
       content,
       timestamp,
       editedTimestamp,

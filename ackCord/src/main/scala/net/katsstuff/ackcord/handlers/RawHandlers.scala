@@ -252,27 +252,14 @@ object RawHandlers extends Handlers {
 
   implicit val rawMessageUpdateHandler: CacheUpdateHandler[RawMessage] = updateHandler { (builder, obj, log) =>
     val users = obj.mentions
-    val message = Message(
-      id = obj.id,
-      channelId = obj.channelId,
-      author = obj.author,
-      content = obj.content,
-      timestamp = obj.timestamp,
-      editedTimestamp = obj.editedTimestamp,
-      tts = obj.tts,
-      mentionEveryone = obj.mentionEveryone,
-      mentions = obj.mentions.map(_.id),
-      mentionRoles = obj.mentionRoles,
-      attachment = obj.attachment,
-      embeds = obj.embeds,
-      reactions = obj.reactions.getOrElse(Seq.empty),
-      nonce = obj.nonce,
-      pinned = obj.pinned,
-      messageType = obj.`type`
-    )
+    val message = obj.toMessage
 
     builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, message)
     handleUpdateLog(builder, users, log)
+    obj.author match {
+      case user: User => handleUpdateLog(builder, users, log)
+      case _ =>
+    }
   }
 
   implicit val rawPartialMessageUpdateHandler: CacheUpdateHandler[RawPartialMessage] = updateHandler {
@@ -281,7 +268,8 @@ object RawHandlers extends Handlers {
 
       builder.getMessage(obj.channelId, obj.id).map { message =>
         val newMessage = message.copy(
-          author = obj.author.getOrElse(message.author),
+          authorId = obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId),
+          isAuthorUser = obj.author.map(_.isUser).getOrElse(message.isAuthorUser),
           content = obj.content.getOrElse(message.content),
           timestamp = obj.timestamp.getOrElse(message.timestamp),
           editedTimestamp = obj.editedTimestamp.orElse(message.editedTimestamp),
