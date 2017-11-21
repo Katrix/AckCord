@@ -44,27 +44,27 @@ object VerificationLevel {
   /**
     * Unrestricted access
     */
-  object NoVerification extends VerificationLevel
+  case object NoVerification extends VerificationLevel
 
   /**
     * Must have a verified email address
     */
-  object Low extends VerificationLevel
+  case object Low extends VerificationLevel
 
   /**
     * Must be a registered user for more than 5 minutes
     */
-  object Medium extends VerificationLevel
+  case object Medium extends VerificationLevel
 
   /**
     * Must be a member of the guild for more than 10 minutes
     */
-  object High extends VerificationLevel
+  case object High extends VerificationLevel
 
   /**
     * Must have a verified phone number
     */
-  object VeryHigh extends VerificationLevel
+  case object VeryHigh extends VerificationLevel
 
   def forId(id: Int): Option[VerificationLevel] = id match {
     case 0 => Some(NoVerification)
@@ -93,12 +93,12 @@ object NotificationLevel {
   /**
     * All messages trigger a notification
     */
-  object AllMessages extends NotificationLevel
+  case object AllMessages extends NotificationLevel
 
   /**
     * Only mentions trigger a notification
     */
-  object OnlyMentions extends NotificationLevel
+  case object OnlyMentions extends NotificationLevel
 
   def forId(id: Int): Option[NotificationLevel] = id match {
     case 0 => Some(AllMessages)
@@ -121,17 +121,17 @@ object FilterLevel {
   /**
     * No filtering is done.
     */
-  object Disabled extends FilterLevel
+  case object Disabled extends FilterLevel
 
   /**
     * Messages from members without roles are filtered
     */
-  object MembersWithoutRoles extends FilterLevel
+  case object MembersWithoutRoles extends FilterLevel
 
   /**
     * All messages are filtered
     */
-  object AllMembers extends FilterLevel
+  case object AllMembers extends FilterLevel
 
   def forId(id: Int): Option[FilterLevel] = id match {
     case 0 => Some(Disabled)
@@ -149,8 +149,8 @@ object FilterLevel {
 
 trait MFALevel
 object MFALevel {
-  object NoneMFA  extends MFALevel
-  object Elevated extends MFALevel
+  case object NoneMFA  extends MFALevel
+  case object Elevated extends MFALevel
 
   def forId(id: Int): Option[MFALevel] = id match {
     case 0 => Some(NoneMFA)
