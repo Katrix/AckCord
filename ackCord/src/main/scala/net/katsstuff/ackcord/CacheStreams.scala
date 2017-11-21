@@ -87,7 +87,6 @@ object CacheStreams {
             mutable.Map.empty,
             mutable.Map.empty,
             mutable.Map.empty,
-            mutable.Map.empty
           )
 
           readyEvent.handle(builder)(system.log)

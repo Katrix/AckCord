@@ -23,8 +23,6 @@
  */
 package net.katsstuff.ackcord.handlers
 
-import scala.collection.mutable
-
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.data.{Presence, PresenceGame, PresenceStreaming, User}
 import net.katsstuff.ackcord.http.RawPresenceGame
@@ -79,18 +77,18 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
           Presence(partialUser.id, content, status)
       }
 
+      val oldGuild = builder.guilds(guildId)
+
       //Add the presence
-      builder.getPresence(guildId, partialUser.id) match {
+      val guild = oldGuild.presences.get(partialUser.id) match {
         case Some(presence) =>
           val newPresence = optNewPresence.getOrElse(presence)
-          builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
+          oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
         case None =>
-          optNewPresence.foreach { newPresence =>
-            builder.presences.getOrElseUpdate(guildId, mutable.Map.empty).put(partialUser.id, newPresence)
-          }
+          optNewPresence.map { newPresence =>
+            oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
+          }.getOrElse(oldGuild)
       }
-
-      val guild = builder.guilds(guildId)
 
       //Update roles
       guild.members

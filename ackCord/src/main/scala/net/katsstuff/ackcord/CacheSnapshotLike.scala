@@ -82,11 +82,6 @@ trait CacheSnapshotLike {
   def users: MapType[User, User]
 
   /**
-    * The presences of users for a specific guild
-    */
-  def presences: MapType[Guild, MapType[User, Presence]]
-
-  /**
     * The bans received this session. NOTE: This is not all the bans that exists,
     * only the ones received during this session. If you want all the bans,
     * use [[net.katsstuff.ackcord.http.requests.RESTRequests.GetGuildBans]].
@@ -197,7 +192,7 @@ trait CacheSnapshotLike {
   /**
     * Get the presence of a user for a specific guild
     */
-  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] = presences.get(guildId).flatMap(_.get(userId))
+  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] = getGuild(guildId).flatMap(_.presences.get(userId))
 }
 
 object CacheSnapshotLike {

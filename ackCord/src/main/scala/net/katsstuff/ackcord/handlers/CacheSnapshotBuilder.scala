@@ -44,7 +44,6 @@ class CacheSnapshotBuilder(
     var messages: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
     var lastTyped: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
     var users: mutable.Map[UserId, User],
-    var presences: mutable.Map[GuildId, mutable.Map[UserId, Presence]],
     var bans: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
@@ -59,7 +58,6 @@ class CacheSnapshotBuilder(
     messages = SnowflakeMap(messages.map { case (k, v)   => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
     lastTyped = SnowflakeMap(lastTyped.map { case (k, v) => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
     users = SnowflakeMap(users.toSeq: _*),
-    presences = SnowflakeMap(presences.map { case (k, v) => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
     bans = SnowflakeMap(bans.map { case (k, v)           => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*)
   )
   override def getChannelMessages(channelId: ChannelId): mutable.Map[MessageId, Message] =
@@ -78,7 +76,6 @@ object CacheSnapshotBuilder {
     messages = toMutableMap(snapshot.messages.map { case (k, v) => k -> toMutableMap(v) }),
     lastTyped = snapshot.lastTyped.map { case (k, v)            => k -> toMutableMap(v) }(breakOut),
     users = toMutableMap(snapshot.users),
-    presences = snapshot.presences.map { case (k, v) => k -> toMutableMap(v) }(breakOut),
     bans = snapshot.bans.map { case (k, v)           => k -> toMutableMap(v) }(breakOut)
   )
 

@@ -41,7 +41,6 @@ case class CacheSnapshot(
     messages: SnowflakeMap[Channel, SnowflakeMap[Message, Message]],
     lastTyped: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
     users: SnowflakeMap[User, User],
-    presences: SnowflakeMap[Guild, SnowflakeMap[User, Presence]],
     bans: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
 ) extends CacheSnapshotLike {
 
