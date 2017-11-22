@@ -32,6 +32,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import net.katsstuff.ackcord.handlers.CacheSnapshotBuilder
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayMessage
 
 object CacheStreams {
 
@@ -48,6 +49,16 @@ object CacheStreams {
     (sink, source)
   }
 
+  def gatewayEvents[D](
+      implicit
+      mat: Materializer
+  ): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) = {
+    MergeHub
+      .source[GatewayMessage[D]](perProducerBufferSize = 16)
+      .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+      .run()
+  }
+
   def createApiMessages[D]: Flow[(CacheUpdate[D], CacheState), APIMessage, NotUsed] = {
     Flow[(CacheUpdate[D], CacheState)]
       .collect {
@@ -56,9 +67,7 @@ object CacheStreams {
       .mapConcat(_.toList)
   }
 
-  def cacheUpdater[D](
-      implicit system: ActorSystem
-  ): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] = {
+  def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] = {
     var state: CacheState = null
 
     /**

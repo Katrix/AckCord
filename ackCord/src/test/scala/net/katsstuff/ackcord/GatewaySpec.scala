@@ -35,8 +35,8 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props, Stash}
 import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.http.scaladsl.model.{HttpResponse, Uri}
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{ActorMaterializer, Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
+import akka.stream.{ActorMaterializer, FlowShape, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
 import akka.util.ByteString
 import io.circe.{parser, Encoder, Json}
@@ -132,7 +132,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
     TestKit.shutdownActorSystem(system)
 
   test("Mocked gateway should login and logout successfully") {
-    val (gateway, handler) = mkGatewayAndHandler()
+    val (_, handler) = mkGatewayAndHandler()
     handler ! Login
     expectMsg(HasSetClient)
     expectNoMessage(50.millis)
@@ -228,11 +228,17 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   }
 }
 
-class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(
-    implicit mat: Materializer
-) extends GatewayHandler(Uri./, settings, Sink.ignore.mapMaterializedValue(_ => NotUsed)) {
+class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(implicit mat: Materializer)
+    extends GatewayHandler(
+      Uri./,
+      settings,
+      Source.maybe[GatewayMessage[_]].mapMaterializedValue(_ => NotUsed),
+      Sink.ignore.mapMaterializedValue(_ => NotUsed)
+    ) {
 
-  override def wsFlow: Flow[Message, Message, Future[WebSocketUpgradeResponse]] = {
+  implicit val system: ActorSystem = context.system
+
+  override def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val response = ValidUpgrade(HttpResponse(), None)
 
     val sendToServer = Sink.foreach[Message](gateway ! _)
@@ -241,7 +247,38 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(
       Future.successful(response)
     }
 
-    Flow.fromSinkAndSourceCoupledMat(sendToServer, sendToClient)(Keep.right)
+    val wsFlow = Flow.fromSinkAndSourceCoupledMat(sendToServer, sendToClient)(Keep.right)
+
+    val msgFlow =
+      GatewayGraphStage.createMessage
+        .viaMat(wsFlow)(Keep.right)
+        .viaMat(GatewayGraphStage.parseMessage)(Keep.left)
+        .named("Gateway")
+        .collect {
+          case Right(msg) => msg
+          case Left(e)    => throw e
+        }
+
+    val wsGraphStage = new GatewayGraphStage(settings, resume)
+
+    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsGraph) =>
+      import GraphDSL.Implicits._
+
+      val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
+      val buffer     = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
+
+      // format: OFF
+
+      msgFlowG.out ~> buffer ~> wsGraph.in
+      wsGraph.out0 ~> wsMessages.in(1)
+      msgFlowG.in                            <~ wsMessages.out
+
+      // format: ON
+
+      FlowShape(wsMessages.in(0), wsGraph.out1)
+    }
+
+    Flow.fromGraph(graph)
   }
 }
 object MockedGatewayHandler {

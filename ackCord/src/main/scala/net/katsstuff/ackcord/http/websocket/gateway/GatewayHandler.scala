@@ -23,24 +23,18 @@
  */
 package net.katsstuff.ackcord.http.websocket.gateway
 
-import scala.concurrent.duration._
-import scala.language.postfixOps
-import scala.util.control.NonFatal
+import scala.concurrent.Future
 
 import akka.NotUsed
-import akka.actor.{ActorSystem, Props, Stash, Status}
-import akka.event.Logging
+import akka.actor.{ActorSystem, Props, Status}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
+import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
+import akka.pattern.pipe
 import akka.stream.scaladsl._
-import akka.stream.{Attributes, Materializer}
-import akka.util.ByteString
-import io.circe
-import io.circe.parser
-import io.circe.syntax._
+import akka.stream.{KillSwitches, Materializer, SharedKillSwitch}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.util.AckCordSettings
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler.SetResumeData
 import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSettings}
 
 /**
@@ -49,187 +43,91 @@ import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSetti
   * @param rawWsUri The raw uri to connect to without params
   * @param settings The settings to use.
   * @param mat The [[Materializer]] to use.
-  * @param outSink A sink which will be materialized for each new event that
-  *                is sent to this gateway.
+  * @param source A source of gateway messages.
+  * @param sink A sink which will be sent all the dispatches of the gateway.
   */
 class GatewayHandler(
     rawWsUri: Uri,
     settings: ClientSettings,
-    outSink: Sink[Dispatch[_], NotUsed]
+    source: Source[GatewayMessage[_], NotUsed],
+    sink: Sink[Dispatch[_], NotUsed]
 )(implicit val mat: Materializer)
-    extends AbstractWsHandler[GatewayMessage[_], ResumeData]
-    with Stash {
+    extends AbstractWsHandler[GatewayMessage[_], ResumeData] {
   import AbstractWsHandler._
-  import GatewayProtocol._
+  import context.dispatcher
 
-  private implicit val system: ActorSystem = context.system
-  private var restartDur: FiniteDuration = _
-
-  def parseMessage: Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
-    val jsonFlow = Flow[Message]
-      .collect {
-        case t: TextMessage => t.textStream.fold("")(_ + _)
-        case b: BinaryMessage =>
-          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
-      }
-      .flatMapConcat(identity)
-
-    val withLogging = if (AckCordSettings().LogReceivedWs) {
-      jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
-    } else jsonFlow
-
-    withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
-  }
-
-  override def createMessage: Flow[GatewayMessage[_], Message, NotUsed] = Flow[GatewayMessage[_]].map { msg =>
-    val payload = msg.asJson.noSpaces
-    if (AckCordSettings().LogSentWs) {
-      log.debug("Sending payload: {}", payload)
-    }
-    TextMessage(payload)
-  }
+  private implicit val system: ActorSystem      = context.system
+  private var killSwitch:      SharedKillSwitch = _
 
   def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
-  override def active: Receive = {
-    val base: Receive = {
-      case InitSink =>
-        sender() ! AckSink
-      case CompletedSink =>
-        queue = null
-        timers.cancel(heartbeatTimerKey)
+  def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
+    GatewayGraphStage.flow(wsUri, settings, resume)
 
-        if (shuttingDown) {
-          log.info("Websocket connection completed. Stopping.")
-          context.stop(self)
-        } else {
-          log.info("Websocket connection completed. Logging in again.")
-          if(restartDur != null && restartDur > 10.millis) {
-            timers.startSingleTimer(restartLoginKey, Login, restartDur)
-          }
-          else {
-            self ! Login
-          }
-          becomeInactive()
-        }
-      case Status.Failure(e) =>
-        //TODO: Inspect error
-        log.error(e, "Encountered websocket error")
-        self ! Restart(fresh = false, 1.second)
-      case Left(NonFatal(e)) =>
-        log.error(e, "Encountered websocket parsing error")
-        self ! Restart(fresh = false, 0.millis)
-      case SendHeartbeat =>
-        if (receivedAck) {
-          val seq = resume.map(_.seq)
+  override def postStop(): Unit =
+    if (killSwitch != null) killSwitch.shutdown()
 
-          queue.offer(Heartbeat(seq))
-          log.debug("Sent Heartbeat")
-          receivedAck = false
-        } else {
-          //TODO: Non 1000 close code
-          log.warning("Did not receive HeartbeatACK between heartbeats. Restarting.")
-          self ! Restart(fresh = false, 0.millis)
-        }
-      case Logout =>
-        log.info("Shutting down")
-        queue.complete()
-        shuttingDown = true
-      case Restart(fresh, waitDur) =>
-        log.info("Restarting")
-        queue.complete()
+  def inactive: Receive = {
+    case Login =>
+      log.info("Logging in")
+      killSwitch = KillSwitches.shared("GatewayComplete")
+      val (wsUpgrade, newResumeData) =
+        source.viaMat(wsFlow)(Keep.right).via(killSwitch.flow).toMat(sink)(Keep.left).run()
 
-        restartDur = waitDur
-        if (fresh) {
-          resume = None
-        }
-    }
+      newResumeData.map(SetResumeData).pipeTo(self)
 
-    base.orElse(handleWsMessages).orElse(handleExternalMessage)
-  }
-
-  /**
-    * Handles all websocket messages received
-    */
-  def handleWsMessages: Receive = {
-    case Right(Hello(data)) =>
-      val message = resume match {
-        case Some(resumeData) => Resume(resumeData)
-        case None =>
-          val identifyObject = IdentifyData(
-            token = settings.token,
-            properties = IdentifyData.createProperties,
-            compress = true,
-            largeThreshold = settings.largeThreshold,
-            shard = Seq(settings.shardNum, settings.shardTotal),
-            presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
-          )
-
-          Identify(identifyObject)
+      wsUpgrade.foreach {
+        case InvalidUpgradeResponse(response, cause) =>
+          response.discardEntityBytes()
+          killSwitch.shutdown()
+          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
+        case ValidUpgrade(response, _) =>
+          log.debug("Valid login: {}", response.entity.toString)
+          response.discardEntityBytes()
+          self ! ValidWsUpgrade
       }
 
-      queue.offer(message)
-      self ! SendHeartbeat
-      timers.startPeriodicTimer(heartbeatTimerKey, SendHeartbeat, data.heartbeatInterval.millis)
-      sender() ! AckSink
-      unstashAll()
+    case ValidWsUpgrade =>
+      log.info("Logged in, going to Active")
+      context.become(active)
+  }
 
-      receivedAck = true
-    case Right(dispatch: Dispatch[_]) =>
-      resume = dispatch.event match {
-        case GatewayEvent.Ready(readyData) =>
-          val resumeData = ResumeData(settings.token, readyData.sessionId, dispatch.sequence)
-          Some(resumeData)
-        case _ =>
-          resume.map(_.copy(seq = dispatch.sequence))
+  def active: Receive = {
+    case SetResumeData(newResume) =>
+      resume = newResume
+      killSwitch.shutdown()
+      killSwitch = null
+
+      if (shuttingDown) {
+        log.info("Websocket connection completed. Stopping.")
+        context.stop(self)
+      } else {
+        log.info("Websocket connection completed. Logging in again.")
+        self ! Login
+        context.become(inactive)
       }
-
-      outSink.runWith(Source.single(dispatch))
-
-      sender() ! AckSink
-    case Right(Heartbeat(_)) =>
-      self ! SendHeartbeat
-
-      sender() ! AckSink
-    case Right(HeartbeatACK) =>
-      log.debug("Received HeartbeatACK")
-
-      sender() ! AckSink
-      receivedAck = true
-    case Right(Reconnect) =>
-      log.info("Was told to reconnect by gateway")
-      self ! Restart(fresh = false, 100.millis)
-
-      sender() ! AckSink
-    case Right(InvalidSession(resumable)) =>
-      log.error("Invalid session. Trying to establish new session in 5 seconds")
-      self ! Restart(fresh = !resumable, 5.seconds)
-
-      sender() ! AckSink
+    case Status.Failure(e) =>
+      log.error(e, "Websocket error")
+      killSwitch.shutdown()
+      killSwitch = null
+      context.become(inactive)
+      self ! Login
+    case Logout =>
+      log.info("Shutting down")
+      killSwitch.shutdown()
+      shuttingDown = true
   }
 
-  /**
-    * Handle external messages sent from neither this nor Discord
-    */
-  def handleExternalMessage: Receive = {
-    case request: RequestGuildMembers =>
-      if (queue != null) queue.offer(request)
-      else stash()
-
-      log.debug("Requested guild data for {}", request.d.guildId)
-    case request: VoiceStateUpdate =>
-      if (queue != null) queue.offer(request)
-      else stash()
-  }
+  override def receive: Receive = inactive
 }
 object GatewayHandler {
 
   def props(
-      wsUri: Uri,
+      rawWsUri: Uri,
       settings: ClientSettings,
-      outSink: Sink[Dispatch[_], NotUsed]
-  )(implicit mat: Materializer): Props =
-    Props(new GatewayHandler(wsUri, settings, outSink))
+      source: Source[GatewayMessage[_], NotUsed],
+      sink: Sink[Dispatch[_], NotUsed]
+  )(implicit mat: Materializer): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
 
   def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props = {
     val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
@@ -237,6 +135,8 @@ object GatewayHandler {
       APIMessageCacheUpdate(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
-    Props(new GatewayHandler(wsUri, settings, sink))
+    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink))
   }
+
+  case class SetResumeData(resume: Option[ResumeData])
 }

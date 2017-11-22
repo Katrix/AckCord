@@ -29,6 +29,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayMessage
 
 /**
   * Represents a cache that can be published and subscribed to.
@@ -38,7 +39,9 @@ import akka.stream.scaladsl.{Sink, Source}
   */
 case class Cache(
     publish: Sink[CacheUpdate[Any], NotUsed],
-    subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed]
+    subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed],
+    gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
+    gatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
 ) {
 
   /**
@@ -83,7 +86,8 @@ case class Cache(
 }
 object Cache {
   def create(implicit system: ActorSystem, mat: Materializer): Cache = {
-    val (publish, subscribe) = CacheStreams.cacheStreams[Any]
-    Cache(publish, subscribe)
+    val (publish, subscribe)               = CacheStreams.cacheStreams[Any]
+    val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
+    Cache(publish, subscribe, gatewayPublish, gatewaySubscribe)
   }
 }
