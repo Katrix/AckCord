@@ -33,18 +33,18 @@ class Ratelimiter extends Actor with Timers {
   import Ratelimiter._
 
   private val remainingRequests = new mutable.HashMap[Uri, Int]
-  private val rateLimits        = new mutable.HashMap[Uri, mutable.Queue[ActorRef]]
+  private val rateLimits        = new mutable.HashMap[Uri, mutable.Queue[(ActorRef, Any)]]
 
   def receive: Receive = {
     case ResetRatelimit(uri) =>
       remainingRequests.put(uri, Int.MaxValue)
       releaseWaiting(uri)
-    case WantToPass(uri) =>
+    case WantToPass(uri, ret) =>
       if (remainingRequests.get(uri).forall(_ > 0)) {
         remainingRequests.put(uri, remainingRequests.getOrElse(uri, Int.MaxValue))
-        sender() ! MayPass
+        sender() ! ret
       } else {
-        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue(sender())
+        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue((sender(), ret))
       }
     case UpdateRatelimits(uri, timeTilReset, remainingRequestsAmount) =>
       remainingRequests.put(uri, remainingRequestsAmount)
@@ -53,18 +53,17 @@ class Ratelimiter extends Actor with Timers {
 
   def releaseWaiting(uri: Uri): Unit =
     rateLimits.get(uri).foreach { queue =>
-      queue.foreach(_ ! MayPass)
+      queue.foreach(e => e._1 ! e._2)
     }
 
   override def postStop(): Unit =
-    rateLimits.values.flatten.foreach(_ ! Status.Failure(new IllegalStateException("Ratelimiter stopped")))
+    rateLimits.values.flatten.foreach(_._1 ! Status.Failure(new IllegalStateException("Ratelimiter stopped")))
 }
 object Ratelimiter {
   //TODO: Custom dispatcher
   def props: Props = Props(new Ratelimiter())
 
-  case class WantToPass(uri: Uri)
+  case class WantToPass[A](uri: Uri, ret: A)
   case class ResetRatelimit(uri: Uri)
   case class UpdateRatelimits(uri: Uri, timeTilReset: Long, remainingRequests: Int)
-  case object MayPass
 }

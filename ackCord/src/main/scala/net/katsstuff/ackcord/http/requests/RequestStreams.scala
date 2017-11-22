@@ -41,9 +41,9 @@ import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, P
 import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy, SourceShape}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCacheUpdate}
 import net.katsstuff.ackcord.http.requests.RESTRequests.{BaseRESTRequest, ComplexRESTRequest}
-import net.katsstuff.ackcord.util.{AckCordSettings, RepeatLast}
+import net.katsstuff.ackcord.util.RepeatLast
+import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCacheUpdate}
 
 object RequestStreams {
 
@@ -161,40 +161,37 @@ object RequestStreams {
   )(implicit system: ActorSystem): Flow[SentRequest[Data, Ctx], SentRequest[Data, Ctx], NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
     Flow[SentRequest[Data, Ctx]].mapAsyncUnordered(parallelism) {
-      case wrapper @ RequestWrapper(request, _, _) =>
+      case wrapper @ RequestWrapper(request, _) =>
         import system.dispatcher
-        val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri)
+        val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri, wrapper)
 
-        future.map(_ => wrapper).recover {
+        future.mapTo[RequestWrapper[Data, Ctx]].recover {
           case _: AskTimeoutException => wrapper.toDropped
         }
       case dropped @ RequestDropped(_, _) => Future.successful(dropped)
     }
   }.addAttributes(Attributes.name("UriRatelimiter"))
 
-  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
-      implicit system: ActorSystem
+  private def createHttpRequestFlow[Data, Ctx](
+      credentials: HttpCredentials
   ): Flow[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx]), NotUsed] = {
-    Flow.fromFunction[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx])] {
-      case wrapper @ RequestWrapper(request, _, _) =>
-        val route = request.route
-        val auth  = Authorization(credentials)
-
-        if (AckCordSettings().LogSentREST) {
-          request match {
+    Flow[RequestWrapper[Data, Ctx]]
+      .log(
+        "Sent REST request",
+        req =>
+          req.request match {
             case request: ComplexRESTRequest[_, _, _, _] =>
-              system.log.debug(
-                "Sent REST request to {} with method {} and content {}",
-                route.uri,
-                route.method.value,
-                request.jsonParams.noSpaces
-              )
-            case _ =>
-          }
+              s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
+            case request => s"to ${request.route.uri} with method ${request.route.method}"
         }
+      )
+      .map {
+        case wrapper @ RequestWrapper(request, _) =>
+          val route = request.route
+          val auth  = Authorization(credentials)
 
-        (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), wrapper)
-    }
+          (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), wrapper)
+      }
   }.named("CreateRequest")
 
   private def requestHttpFlow[Data, Ctx](
@@ -203,52 +200,57 @@ object RequestStreams {
   ): Flow[(HttpRequest, RequestWrapper[Data, Ctx]), (Try[HttpResponse], RequestWrapper[Data, Ctx]), NotUsed] =
     Http().superPool[RequestWrapper[Data, Ctx]]()
 
-  private def requestParser[Data, Ctx](paralellism: Int = 4)(
+  private def requestParser[Data, Ctx](parallelism: Int = 4)(
       implicit mat: Materializer,
       system: ActorSystem
   ): Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] =
-    Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx])].mapAsyncUnordered(paralellism) {
-      case (response, request) =>
-        import system.dispatcher
-        response match {
-          case Success(httpResponse) =>
-            val tilReset     = timeTilReset(httpResponse)
-            val remainingReq = remainingRequests(httpResponse)
+    Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx])]
+      .mapAsyncUnordered(parallelism) {
+        case (response, request) =>
+          import system.dispatcher
+          response match {
+            case Success(httpResponse) =>
+              val tilReset     = timeTilReset(httpResponse)
+              val remainingReq = remainingRequests(httpResponse)
 
-            httpResponse.status match {
-              case StatusCodes.TooManyRequests =>
-                httpResponse.discardEntityBytes()
-                Future.successful(
-                  RequestRatelimited(request.context, tilReset, isGlobalRatelimit(httpResponse), request)
-                )
-              case StatusCodes.NoContent =>
-                httpResponse.discardEntityBytes()
-                Future.successful(RequestResponseNoData(request.context, remainingReq, tilReset, request))
-              case e if e.isFailure() =>
-                httpResponse.discardEntityBytes()
-                Future.successful(RequestError(request.context, new HttpException(e), request))
-              case _ => //Should be success
-                request.request
-                  .parseResponse(httpResponse.entity)
-                  .map(response => RequestResponse(response, request.context, remainingReq, tilReset, request))
-                  .recover {
-                    case NonFatal(e) => RequestError(request.context, e, request)
-                  }
-            }
+              httpResponse.status match {
+                case StatusCodes.TooManyRequests =>
+                  httpResponse.discardEntityBytes()
+                  Future.successful(
+                    RequestRatelimited(request.context, tilReset, isGlobalRatelimit(httpResponse), request)
+                  )
+                case StatusCodes.NoContent =>
+                  httpResponse.discardEntityBytes()
+                  Future.successful(RequestResponseNoData(request.context, remainingReq, tilReset, request))
+                case e if e.isFailure() =>
+                  httpResponse.discardEntityBytes()
+                  Future.successful(RequestError(request.context, new HttpException(e), request))
+                case _ => //Should be success
+                  request.request
+                    .parseResponse(httpResponse.entity)
+                    .map(response => RequestResponse(response, request.context, remainingReq, tilReset, request))
+                    .recover {
+                      case NonFatal(e) => RequestError(request.context, e, request)
+                    }
+              }
 
-          case Failure(e) => Future.successful(RequestError(request.context, e, request))
-        }
-    }.named("RequestParser")
+            case Failure(e) => Future.successful(RequestError(request.context, e, request))
+          }
+      }
+      .named("RequestParser")
 
   private def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
-    Sink.foreach[RequestAnswer[Data, Ctx]] { answer =>
-      val tilReset          = answer.tilReset
-      val remainingRequests = answer.remainingRequests
-      val uri               = answer.toWrapper.request.route.uri
-      if (_uriRatelimitActor != null && tilReset != -1 && remainingRequests != -1) {
-        _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests)
+    Sink
+      .foreach[RequestAnswer[Data, Ctx]] { answer =>
+        val tilReset          = answer.tilReset
+        val remainingRequests = answer.remainingRequests
+        val uri               = answer.toWrapper.request.route.uri
+        if (_uriRatelimitActor != null && tilReset != -1 && remainingRequests != -1) {
+          _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests)
+        }
       }
-    }.async.named("SendAnswersToRatelimiter")
+      .async
+      .named("SendAnswersToRatelimiter")
 
   /**
     * A simple reasonable request flow using a bot token for short lived streams.
@@ -313,13 +315,13 @@ object RequestStreams {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
-      val request     = builder.add(singleRequest(token, RequestWrapper(restRequest, ctx, ActorRef.noSender)))
+      val request     = builder.add(singleRequest(token, RequestWrapper(restRequest, ctx)))
       val broadcaster = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
 
       val asCacheUpdate = builder.add(
         Flow[RequestAnswer[Data, Ctx]]
           .collect {
-            case RequestResponse(data, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _, _)) =>
+            case RequestResponse(data, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _)) =>
               MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
                 .asInstanceOf[CacheUpdate[Any]] //FIXME
           }
@@ -347,7 +349,7 @@ object RequestStreams {
       SourceShape(findPublished.out)
     }
 
-    Source.fromGraph(graph).flatMapConcat(_.fold[Source[Response, NotUsed]](Source.empty)(Source.single))
+    Source.fromGraph(graph).mapConcat(_.toList)
   }
 
   /**
