@@ -26,82 +26,79 @@ package net.katsstuff.ackcord.commands
 import java.util.Locale
 
 import scala.collection.mutable
+import scala.concurrent.Future
 
-import akka.NotUsed
-import akka.actor.ActorRef
-import net.katsstuff.ackcord.commands.CmdParser.ParsedCommand
-import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
+import akka.Done
+import akka.actor.Actor
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
+import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.RESTRequests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
-  * A base for help commands. Takes [[ParsedCommand]] where the argument is
-  * either Option[String], representing a specific command, or Option[Int],
-  * representing a page.
+  * A base for help commands. Commands need to be registered manually
+  * using [[HelpCmd.AddCmd]].
   */
-abstract class HelpCmd extends ParsedCmdActor[Option[HelpCmd.Args]] {
+abstract class HelpCmd extends Actor {
+  import context.dispatcher
 
   val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CmdDescription]]
 
-  override def handleCommand(msg: Message, args: Option[HelpCmd.Args], remaining: List[String])(
-      implicit c: CacheSnapshot
-  ): Unit = {
-    args match {
-      case Some(CommandArgs(cmd)) =>
-        val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
-        msg.tChannel.foreach { channel =>
-          val res = for {
-            cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
-            descMap <- commands.get(cat)
-          } yield {
-            val command = lowercaseCommand.substring(cat.prefix.length)
-            descMap.get(command) match {
-              case Some(desc) =>
-                RequestWrapper(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)), NotUsed, self)
-              case None =>
-                unknownCommand(cat, command).foreach(
-                  data => client ! RequestWrapper(CreateMessage(msg.channelId, data), NotUsed, self)
-                )
+  override def receive: Receive = {
+    case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
+      implicit val cache: CacheSnapshot = c
+      val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
+      msg.tChannel.foreach { channel =>
+        val res = for {
+          cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+          descMap <- commands.get(cat)
+          command = lowercaseCommand.substring(cat.prefix.length)
+          req <- descMap.get(command) match {
+            case Some(desc) => Some(RequestWrapper(CreateMessage(msg.channelId, createSingleReply(cat, command, desc))))
+            case None       => unknownCommand(cat, command).map(data => RequestWrapper(CreateMessage(msg.channelId, data)))
+          }
+        } yield req
+
+        res match {
+          case Some(req) => sendMsg(req)
+          case None =>
+            unknownCategory(lowercaseCommand).foreach { data =>
+              sendMsg(RequestWrapper(CreateMessage(msg.channelId, data)))
             }
-          }
-
-          res match {
-            case Some(req) => client ! req
-            case None =>
-              unknownCategory(lowercaseCommand).foreach(
-                data => client ! RequestWrapper(CreateMessage(msg.channelId, data), NotUsed, self)
-              )
-          }
         }
+      }
 
-      case Some(PageArgs(page)) =>
-        if (page > 0) {
-          client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(page - 1)), NotUsed, self)
-        } else {
-          msg.tChannel.foreach { channel =>
-            client ! channel.sendMessage(s"Invalid page $page")
-          }
+    case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
+      implicit val cache: CacheSnapshot = c
+      if (page > 0) {
+        sendMsg(RequestWrapper(CreateMessage(msg.channelId, createReplyAll(page - 1))))
+      } else {
+        msg.tChannel.foreach { channel =>
+          sendMsg(channel.sendMessage(s"Invalid page $page"))
         }
-      case None =>
-        client ! RequestWrapper(CreateMessage(msg.channelId, createReplyAll(0)), NotUsed, self)
-    }
-  }
+      }
 
-  override def extraReceive: Receive = {
-    case AddCmd(factory, handler) =>
-      if(handler != self) {
-        factory.description.foreach { desc =>
-          commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
-          context.watchWith(handler, TerminatedCmd(factory))
+    case ParsedCmd(msg, None, _, c) =>
+      implicit val cache: CacheSnapshot = c
+      sendMsg(RequestWrapper(CreateMessage(msg.channelId, createReplyAll(0))))
+    case AddCmd(factory, complete) =>
+      factory.description.foreach { desc =>
+        commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
+        complete.onComplete { _ =>
+          self ! TerminatedCmd(factory)
         }
       }
     case TerminatedCmd(factory) =>
       commands.get(factory.category).foreach(_ --= factory.lowercaseAliases)
   }
+
+  /**
+    * Send a request.
+    */
+  def sendMsg[Data, Ctx](wrapper: RequestWrapper[Data, Ctx]): Unit
 
   /**
     * Create a reply for a single command
@@ -148,12 +145,11 @@ object HelpCmd {
   }
 
   /**
-    * Sent to a help command to register a new help entry.
-    * @param factory The factory for the new command, where help info is located.
-    * @param handler The command actor itself. When this stops, the help entry
-    *                will be unregistered.
+    * Register a new help entry for a command.
+    * @param factory The factory for the command.
+    * @param complete A future that is completed when the command is removed.
     */
-  case class AddCmd(factory: CmdFactory, handler: ActorRef)
+  case class AddCmd(factory: CmdFactory[_, _], complete: Future[Done])
 
-  private case class TerminatedCmd(factory: CmdFactory)
+  private case class TerminatedCmd(factory: CmdFactory[_, _])
 }

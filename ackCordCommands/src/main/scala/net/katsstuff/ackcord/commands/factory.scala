@@ -25,8 +25,9 @@ package net.katsstuff.ackcord.commands
 
 import java.util.Locale
 
-import akka.actor.Props
-import net.katsstuff.ackcord.DiscordClient.ClientActor
+import akka.actor.ActorSystem
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -61,37 +62,60 @@ case class CmdDescription(name: String, description: String, usage: String = "")
   * A factory for a command, that also includes other information about
   * the command.
   */
-trait CmdFactory {
-  def category:                   CmdCategory
-  def aliases:                    Seq[String]
-  def props(client: ClientActor): Props
-  def description:                Option[CmdDescription]
+trait CmdFactory[A, +Mat] {
+
+  /**
+    * The category of this command.
+    */
+  def category: CmdCategory
+
+  /**
+    * The aliases for this command.
+    */
+  def aliases: Seq[String]
+
+  /**
+    * A sink which defines the behavior of this command.
+    */
+  def sink: (String, ActorSystem, Materializer) => Sink[A, Mat]
+
+  /**
+    * A description of this command.
+    */
+  def description: Option[CmdDescription]
 
   def lowercaseAliases: Seq[String] = aliases.map(_.toLowerCase(Locale.ROOT))
 }
 
-case class BaseCmdFactory(
+/**
+  * The factory for an unparsed command.
+  * @param category The category of this command.
+  * @param aliases The aliases for this command.
+  * @param sink A sink which defines the behavior of this command.
+  * @param filters The filters to use for this command.
+  * @param description A description of this command.
+  */
+case class BaseCmdFactory[+Mat](
     category: CmdCategory,
     aliases: Seq[String],
-    cmdProps: ClientActor => Props,
+    sink: (String, ActorSystem, Materializer) => Sink[Cmd, Mat],
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
-) extends CmdFactory {
-  override def props(client: ClientActor): Props =
-    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, cmdProps(client), client) else cmdProps(client)
-}
+) extends CmdFactory[Cmd, Mat]
 
-case class ParsedCmdFactory[A](
+/**
+  * The factory for a parsed command.
+  * @param category The category of this command.
+  * @param aliases The aliases for this command.
+  * @param sink A sink which defines the behavior of this command.
+  * @param filters The filters to use for this command.
+  * @param description A description of this command.
+  */
+case class ParsedCmdFactory[A, +Mat](
     category: CmdCategory,
     aliases: Seq[String],
-    cmdProps: ClientActor => Props,
+    sink: (String, ActorSystem, Materializer) => Sink[ParsedCmd[A], Mat],
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
-    extends CmdFactory {
-
-  override def props(client: ClientActor): Props = {
-    val parsed = CmdParser.props(parser, cmdProps(client))
-    if (filters.nonEmpty) CmdFilter.createActorFilter(filters, parsed, client) else parsed
-  }
-}
+    extends CmdFactory[ParsedCmd[A], Mat]

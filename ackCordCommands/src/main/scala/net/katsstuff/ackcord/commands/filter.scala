@@ -23,11 +23,7 @@
  */
 package net.katsstuff.ackcord.commands
 
-import akka.actor.{Actor, ActorRef, Props}
-import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CmdParser.ParsedCommand
-import net.katsstuff.ackcord.commands.CmdRouter.Command
-import net.katsstuff.ackcord.data.{CacheSnapshot, DMChannel, GroupDMChannel, GuildChannel, Message, Permission, UserId}
+import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 
 /**
@@ -46,7 +42,7 @@ trait CmdFilter {
     * If the message could not be executed, get an error message to
     * give the user.
     */
-  def errorMessage(msg: Message)(implicit c: CacheSnapshot): String
+  def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String]
 }
 object CmdFilter {
 
@@ -59,8 +55,8 @@ object CmdFilter {
       case _: DMChannel      => context == Context.DM
       case _: GroupDMChannel => context == Context.DM //We consider group DMs to be DMs
     }
-    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): String =
-      s"This command can only be used in a $context"
+    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
+      Some(s"This command can only be used in a $context")
   }
 
   /**
@@ -74,6 +70,15 @@ object CmdFilter {
   object InDM extends InContext(Context.DM)
 
   /**
+    * A command that can only be used in a single guild.
+    */
+  case class InOneGuild(guildId: GuildId) extends CmdFilter {
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
+      msg.channel.flatMap(_.asGuildChannel).exists(_.guildId == guildId)
+    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
+  }
+
+  /**
     * This command can only be used if the user has specific permissions.
     * If this command is not used in a guild, it will always pass this filter.
     */
@@ -83,27 +88,24 @@ object CmdFilter {
         channel      <- msg.channel
         guildChannel <- channel.asGuildChannel
         guild        <- guildChannel.guild
-        member       <- guild.members.get(UserId(msg.author.id))
+        member       <- guild.members.get(UserId(msg.authorId))
         if member.channelPermissions(msg.channelId).hasPermissions(neededPermission)
       } yield true
 
       res.exists(identity)
     }
-    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): String =
-      "You don't have permission to use this command"
-  }
-
-  case object NonBot extends CmdFilter {
-    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.isAuthorUser && c.getUser(UserId(msg.authorId)).exists(u => !u.bot.getOrElse(false))
-    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): String = "Bots can't use this command"
+    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
+      Some("You don't have permission to use this command")
   }
 
   /**
-    * Create an actor that will stop commands according to a set of filters.
+    * A filter that only allows non bot users.
     */
-  def createActorFilter(filters: Seq[CmdFilter], forwardTo: Props, client: ClientActor): Props =
-    Props(new CommandFilterActor(filters, forwardTo, client))
+  case object NonBot extends CmdFilter {
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
+      msg.isAuthorUser && c.getUser(UserId(msg.authorId)).exists(u => !u.bot.getOrElse(false))
+    override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
+  }
 }
 
 /**
@@ -113,24 +115,4 @@ sealed trait Context
 object Context {
   case object Guild extends Context
   case object DM    extends Context
-}
-
-class CommandFilterActor(filters: Seq[CmdFilter], forwardToProps: Props, client: ClientActor) extends Actor {
-  val forwardTo: ActorRef = context.actorOf(forwardToProps, s"${self.path.name}AfterFilter")
-
-  override def receive: Receive = {
-    case cmd @ Command(msg, _, c)          => handleMsg(cmd, msg)(c)
-    case cmd @ ParsedCommand(msg, _, _, c) => handleMsg(cmd, msg)(c)
-    case other                             => forwardTo.forward(other)
-  }
-
-  def handleMsg(cmd: Any, msg: Message)(implicit c: CacheSnapshot): Unit = {
-    val notPassed = filters.filterNot(_.isAllowed(msg))
-    if (notPassed.isEmpty) forwardTo.forward(cmd)
-    else
-      for {
-        tChannel <- msg.tChannel.toSeq
-        filter   <- notPassed
-      } client ! tChannel.sendMessage(filter.errorMessage(msg))
-  }
 }
