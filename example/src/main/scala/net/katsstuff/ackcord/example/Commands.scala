@@ -33,7 +33,6 @@ import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests._
-import net.katsstuff.ackcord.http.{RawChannel, RawMessage}
 import net.katsstuff.ackcord.syntax._
 
 object PingCmdFactory
@@ -47,7 +46,7 @@ object PingCmdFactory
               implicit val cache: CacheSnapshot = c
               RequestWrapper(RESTRequests.CreateMessage(msg.channelId, RESTRequests.CreateMessageData("Pong")))
           }
-          .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore),
       description =
         Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
@@ -73,7 +72,7 @@ object SendFileCmdFactory
                 tChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
               }.toList
           }
-          .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore)
       },
       description = Some(
@@ -96,7 +95,7 @@ object InfoChannelCmdFactory
                 GetChannelInfo(channel.guildId, channel.id, msg.channelId, c)
               )
           }
-          .via(RequestStreams.simpleRequestFlow[RawChannel, GetChannelInfo](token)(system, mat))
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .mapConcat {
             case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _) =>
               implicit val cache: CacheSnapshot = c
@@ -114,7 +113,7 @@ object InfoChannelCmdFactory
               implicit val cache: CacheSnapshot = c
               senderChannelId.tResolve(guildId).map(_.sendMessage("Error encountered")).toList
           }
-          .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore)
       },
       description = Some(
@@ -169,6 +168,6 @@ object ExampleErrorHandlers {
             CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
           )
       }
-      .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+      .via(RequestStreams.simpleRequestFlow(token)(system, mat))
       .to(Sink.ignore)
 }

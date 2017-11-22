@@ -32,7 +32,6 @@ import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmd, Par
 import net.katsstuff.ackcord.data.{CacheSnapshot, GuildId, UserId, VoiceState}
 import net.katsstuff.ackcord.example.ExampleCmdCategories
 import net.katsstuff.ackcord.example.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
-import net.katsstuff.ackcord.http.RawMessage
 import net.katsstuff.ackcord.http.requests.RequestStreams
 import net.katsstuff.ackcord.syntax._
 
@@ -60,7 +59,7 @@ class QueueCmdFactory(guildId: GuildId, musicHandler: ActorRef)
 
               errorMsg.toList
           }
-          .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore)
       },
       filters = Seq(CmdFilter.InOneGuild(guildId)),
