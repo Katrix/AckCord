@@ -33,14 +33,16 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}
 
-import akka.actor.{ActorLogging, ActorRef, FSM, Props}
+import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.pattern.pipe
-import akka.stream.Materializer
+import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.CmdRouter
+import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
 import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
-import net.katsstuff.ackcord.example.{ExampleErrorHandler, ExampleHelpCmdFactory, ExampleMain}
+import net.katsstuff.ackcord.example.ExampleMain
+import net.katsstuff.ackcord.http.requests.RequestStreams
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
@@ -48,27 +50,25 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
 
-class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Materializer)
-    extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
+class MusicHandler(client1: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId)(
+    implicit mat: Materializer
+) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
+  implicit val system: ActorSystem = context.system
 
-  val commands =
-    Seq(QueueCmdFactory(self), StopCmdFactory(self), NextCmdFactory(self), PauseCmdFactory(self))
+  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
+    ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
-  val commandRouter: ActorRef = context.actorOf(
-    CmdRouter
-      .props(
-        client,
-        needMention = true,
-        ExampleErrorHandler.props(client, ExampleMain.allCommandNames),
-        Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
-      ),
-    "MusicHandlerCommands"
-  )
+  val msgActor: ActorRef = RequestStreams.simpleRequestFlow(token).runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
 
-  commands.foreach(fac => commandRouter ! CmdRouter.RegisterCmd(fac))
+  Seq(
+    QueueCmdFactory(guildId, self),
+    StopCmdFactory(guildId, self),
+    NextCmdFactory(guildId, self),
+    PauseCmdFactory(guildId, self)
+  ).foreach(registerCmd)
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
 
@@ -89,29 +89,29 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       stop()
     case Event(DiscordClient.ShutdownClient, _) =>
       stop()
-    case Event(msg: APIMessage.MessageCreate, _) =>
-      commandRouter.forward(msg)
+    case Event(APIMessage.Ready(_), _) =>
+      //Startup
       stay()
-    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(token), Some(vChannelId)))
+    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(vToken), Some(vChannelId)))
         if state.userId == c.current.botUser.id =>
       log.info("Received session id")
-      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, token)
+      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, vToken)
     case Event(APIMessage.VoiceStateUpdate(state, c), con: Connecting)
         if state.userId == c.current.botUser.id => //We did not have an endPoint and token
       log.info("Received session id")
       stay using con.copy(sessionId = Some(state.sessionId))
     case Event(
-        APIMessage.VoiceServerUpdate(token, guild, endPoint, c),
+        APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c),
         Connecting(_, Some(sessionId), _, Some(vChannelId))
         ) if guild.id == guildId =>
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
       log.info("Got token and endpoint")
-      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, token)
-    case Event(APIMessage.VoiceServerUpdate(token, guild, endPoint, _), con: Connecting)
+      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, vToken)
+    case Event(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, _), con: Connecting)
         if guild.id == guildId => //We did not have a sessionId
       log.info("Got token and endpoint")
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
-      stay using con.copy(endPoint = Some(usedEndpoint), token = Some(token))
+      stay using con.copy(endPoint = Some(usedEndpoint), token = Some(vToken))
     case Event(AudioAPIMessage.Ready(udpHandler, _, _), HasVoiceWs(voiceWs, vChannelId)) =>
       log.info("Audio ready")
       voiceWs ! SetSpeaking(true)
@@ -122,7 +122,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       nextTrack(dataSender)
       goto(Active) using CanSendAudio(voiceWs, dataSender, vChannelId)
     case Event(QueueUrl(url, tChannel, vChannelId), con @ Connecting(_, _, _, None)) =>
-      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+      client1 ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
       log.info("Received queue item in Inactive")
       lastTChannel = tChannel
       MusicHandler.loadItem(url).pipeTo(self)
@@ -137,7 +137,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       else tChannel.sendMessage("Currently joining different channel")
       stay()
     case Event(e: MusicHandlerEvents, _) =>
-      client ! e.tChannel.sendMessage("Currently not playing music")
+      msgActor ! e.tChannel.sendMessage("Currently not playing music")
       stay()
     case Event(track: AudioTrack, _) =>
       queueTrack(None, track)
@@ -161,9 +161,6 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       voiceWs ! Logout
       dataSender ! StopSendAudio
       stop()
-    case Event(msg: APIMessage.MessageCreate, _) =>
-      commandRouter.forward(msg)
-      stay()
     case Event(APIMessage.VoiceStateUpdate(_, _), _)        => stay() //NO-OP
     case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _) => stay() //NO-OP
     case Event(StopMusic(tChannel), CanSendAudio(voiceWs, dataSender, _)) =>
@@ -173,7 +170,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       voiceWs ! Logout
       context.stop(dataSender)
 
-      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      client1 ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
 
       log.info("Stopped and left")
       goto(Inactive) using Connecting(None, None, None, None)
@@ -215,7 +212,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
       log.info("Resumed")
       stay()
     case Event(e: TrackStartEvent, _) =>
-      client ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}")
+      msgActor ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}")
       stay()
     case Event(e: TrackEndEvent, CanSendAudio(_, dataSender, _)) =>
       val msg = e.endReason match {
@@ -226,7 +223,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
         case AudioTrackEndReason.CLEANUP     => "Leaking audio player"
       }
 
-      client ! lastTChannel.sendMessage(msg)
+      msgActor ! lastTChannel.sendMessage(msg)
 
       if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack(dataSender)
       else if (e.endReason != AudioTrackEndReason.REPLACED) self ! StopMusic(lastTChannel)
@@ -235,7 +232,7 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
     case Event(e: TrackExceptionEvent, _) =>
       handleFriendlyException(e.exception, Some(e.track))
     case Event(e: TrackStuckEvent, CanSendAudio(_, dataSender, _)) =>
-      client ! lastTChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track")
+      msgActor ! lastTChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track")
       nextTrack(dataSender)
       stay()
     case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
@@ -259,13 +256,13 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   def handleFriendlyException(e: FriendlyException, track: Option[AudioTrack]): State = {
     e.severity match {
       case FriendlyException.Severity.COMMON =>
-        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
+        msgActor ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
         stay()
       case FriendlyException.Severity.SUSPICIOUS =>
-        client ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
+        msgActor ! lastTChannel.sendMessage(s"Encountered error: ${e.getMessage}")
         stay()
       case FriendlyException.Severity.FAULT =>
-        client ! lastTChannel.sendMessage(s"Encountered internal error: ${e.getMessage}")
+        msgActor ! lastTChannel.sendMessage(s"Encountered internal error: ${e.getMessage}")
         throw e
     }
   }
@@ -289,8 +286,9 @@ class MusicHandler(client: ClientActor, guildId: GuildId)(implicit mat: Material
   }
 }
 object MusicHandler {
-  def props(client: ClientActor)(guildId: GuildId)(implicit mat: Materializer): Props =
-    Props(new MusicHandler(client, guildId))
+  def props(client: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef)(
+      implicit mat: Materializer
+  ): GuildId => Props = guildId => Props(new MusicHandler(client, token, commands, helpCmdActor, guildId))
 
   final val UseBurstingSender = true
 

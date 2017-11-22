@@ -23,94 +23,101 @@
  */
 package net.katsstuff.ackcord.example.music
 
-import akka.NotUsed
-import akka.actor.{ActorLogging, ActorRef, Props}
-import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdActor, ParsedCmdFactory}
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message, UserId, VoiceState}
+import scala.concurrent.Future
+
+import akka.actor.ActorRef
+import akka.stream.scaladsl.{Flow, Sink}
+import akka.{Done, NotUsed}
+import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmd, ParsedCmdFactory}
+import net.katsstuff.ackcord.data.{CacheSnapshot, GuildId, UserId, VoiceState}
 import net.katsstuff.ackcord.example.ExampleCmdCategories
 import net.katsstuff.ackcord.example.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
+import net.katsstuff.ackcord.http.RawMessage
+import net.katsstuff.ackcord.http.requests.RequestStreams
 import net.katsstuff.ackcord.syntax._
 
-class QueueCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[String] with ActorLogging {
-  override def handleCommand(msg: Message, url: String, remaining: List[String])(implicit c: CacheSnapshot): Unit = {
-    val gOpt = for {
-      channel      <- msg.channel
-      guildChannel <- channel.asTGuildChannel
-      guild        <- guildChannel.guild
-    } yield (guildChannel, guild)
-    log.info("Dummy")
-
-    gOpt match {
-      case Some((guildChannel, guild)) =>
-        guild.voiceStateFor(UserId(msg.author.id)) match {
-          case Some(VoiceState(_, Some(channelId), _, _, _, _, _, _, _)) =>
-            musicHandler ! QueueUrl(url, guildChannel, channelId)
-            log.info("Queued")
-          case _ => client ! guildChannel.sendMessage("Not in a voice channel")
-        }
-
-      case None => throw new IllegalStateException("No guild for guild command")
-    }
-  }
-}
-class QueueCmdFactory(musicHandler: ActorRef)
-    extends ParsedCmdFactory[String](
+class QueueCmdFactory(guildId: GuildId, musicHandler: ActorRef)
+    extends ParsedCmdFactory[String, NotUsed](
       category = ExampleCmdCategories.&,
       aliases = Seq("q", "queue"),
-      cmdProps = client => Props(new QueueCmd(musicHandler, client)),
-      filters = Seq(CmdFilter.InGuild),
+      sink = (token, system, mat) => {
+        Flow[ParsedCmd[String]]
+          .mapConcat {
+            case ParsedCmd(msg, url, _, c) =>
+              implicit val cache: CacheSnapshot = c
+
+              val errorMsg = for {
+                channel      <- msg.channel
+                guildChannel <- channel.asTGuildChannel
+                guild        <- guildChannel.guild
+                res <- guild.voiceStateFor(UserId(msg.authorId)) match {
+                  case Some(VoiceState(_, Some(channelId), _, _, _, _, _, _, _)) =>
+                    musicHandler ! QueueUrl(url, guildChannel, channelId)
+                    None
+                  case _ => Some(guildChannel.sendMessage("Not in a voice channel"))
+                }
+              } yield res
+
+              errorMsg.toList
+          }
+          .via(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token)(system, mat))
+          .to(Sink.ignore)
+      },
+      filters = Seq(CmdFilter.InOneGuild(guildId)),
       description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play")),
     )
 object QueueCmdFactory {
-  def apply(musicHandler: ActorRef): QueueCmdFactory = new QueueCmdFactory(musicHandler)
+  def apply(guildId: GuildId, musicHandler: ActorRef): QueueCmdFactory = new QueueCmdFactory(guildId, musicHandler)
 }
 
-class StopCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
-  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
-    msg.tChannel.foreach(musicHandler ! StopMusic(_))
-}
-class StopCmdFactory(musicHandler: ActorRef)
-    extends ParsedCmdFactory[NotUsed](
+class StopCmdFactory(guildId: GuildId, musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed, Future[Done]](
       category = ExampleCmdCategories.&,
       aliases = Seq("s", "stop"),
-      cmdProps = client => Props(new StopCmd(musicHandler, client)),
-      filters = Seq(CmdFilter.InGuild),
+      sink = (_, _, _) =>
+        Sink.foreach {
+          case ParsedCmd(msg, _, _, c) =>
+            implicit val cache: CacheSnapshot = c
+            msg.tChannel.foreach(musicHandler ! StopMusic(_))
+      },
+      filters = Seq(CmdFilter.InOneGuild(guildId)),
       description =
         Some(CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
     )
 object StopCmdFactory {
-  def apply(musicHandler: ActorRef): StopCmdFactory = new StopCmdFactory(musicHandler)
+  def apply(guildId: GuildId, musicHandler: ActorRef): StopCmdFactory = new StopCmdFactory(guildId, musicHandler)
 }
 
-class NextCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
-  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
-    msg.tChannel.foreach(musicHandler ! NextTrack(_))
-}
-class NextCmdFactory(musicHandler: ActorRef)
-    extends ParsedCmdFactory[NotUsed](
+class NextCmdFactory(guildId: GuildId, musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed, Future[Done]](
       category = ExampleCmdCategories.&,
       aliases = Seq("n", "next"),
-      cmdProps = client => Props(new NextCmd(musicHandler, client)),
-      filters = Seq(CmdFilter.InGuild),
+      sink = (_, _, _) =>
+        Sink.foreach {
+          case ParsedCmd(msg, _, _, c) =>
+            implicit val cache: CacheSnapshot = c
+            msg.tChannel.foreach(musicHandler ! NextTrack(_))
+      },
+      filters = Seq(CmdFilter.InOneGuild(guildId)),
       description = Some(CmdDescription(name = "Next track", description = "Skip to the next track")),
     )
 object NextCmdFactory {
-  def apply(musicHandler: ActorRef): NextCmdFactory = new NextCmdFactory(musicHandler)
+  def apply(guildId: GuildId, musicHandler: ActorRef): NextCmdFactory = new NextCmdFactory(guildId, musicHandler)
 }
 
-class PauseCmd(musicHandler: ActorRef, val client: ClientActor) extends ParsedCmdActor[NotUsed] {
-  override def handleCommand(msg: Message, args: NotUsed, remaining: List[String])(implicit c: CacheSnapshot): Unit =
-    msg.tChannel.foreach(musicHandler ! TogglePause(_))
-}
-class PauseCmdFactory(musicHandler: ActorRef)
-    extends ParsedCmdFactory[NotUsed](
+class PauseCmdFactory(guildId: GuildId, musicHandler: ActorRef)
+    extends ParsedCmdFactory[NotUsed, Future[Done]](
       category = ExampleCmdCategories.&,
       aliases = Seq("p", "pause"),
-      cmdProps = client => Props(new PauseCmd(musicHandler, client)),
-      filters = Seq(CmdFilter.InGuild),
+      sink = (_, _, _) =>
+        Sink.foreach {
+          case ParsedCmd(msg, _, _, c) =>
+            implicit val cache: CacheSnapshot = c
+            msg.tChannel.foreach(musicHandler ! TogglePause(_))
+      },
+      filters = Seq(CmdFilter.InOneGuild(guildId)),
       description = Some(CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
     )
 object PauseCmdFactory {
-  def apply(musicHandler: ActorRef): PauseCmdFactory = new PauseCmdFactory(musicHandler)
+  def apply(guildId: GuildId, musicHandler: ActorRef): PauseCmdFactory = new PauseCmdFactory(guildId, musicHandler)
 }

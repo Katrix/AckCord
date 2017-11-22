@@ -23,14 +23,18 @@
  */
 package net.katsstuff.ackcord.example
 
-import akka.actor.Props
-import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.HelpCmd.Args
+import akka.NotUsed
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
+import akka.stream.Materializer
+import akka.stream.scaladsl.Sink
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.RESTRequests.CreateMessageData
+import net.katsstuff.ackcord.http.requests.{RequestStreams, RequestWrapper}
 
-class ExampleHelpCmd(val client: ClientActor, allCommands: Map[CmdCategory, Set[String]]) extends HelpCmd {
+class ExampleHelpCmd(token: String)(implicit mat: Materializer) extends HelpCmd {
+
+  implicit val system: ActorSystem = context.system
 
   override def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
       implicit c: CacheSnapshot
@@ -63,23 +67,21 @@ class ExampleHelpCmd(val client: ClientActor, allCommands: Map[CmdCategory, Set[
 
     builder.mkString
   }
-
-  override def unknownCommand(category: CmdCategory, command: String): Option[CreateMessageData] =
-    if (allCommands.get(category).exists(_.contains(command))) None
-    else super.unknownCommand(category, command)
-
-  override def unknownCategory(command: String): Option[CreateMessageData] =
-    if (allCommands.exists(t => command.startsWith(t._1.prefix))) None
-    else super.unknownCategory(command)
+  override def sendMsg[Data, Ctx](wrapper: RequestWrapper[Data, Ctx]): Unit =
+    RequestStreams.singleRequestIgnore(token, wrapper)
 }
-class ExampleHelpCmdFactory(allCommands: Map[CmdCategory, Set[String]])
-    extends ParsedCmdFactory[Args](
+object ExampleHelpCmd {
+  def props(token: String)(implicit mat: Materializer): Props = Props(new ExampleHelpCmd(token))
+}
+
+class ExampleHelpCmdFactory(helpCmdActor: ActorRef)
+    extends ParsedCmdFactory[HelpCmd.Args, NotUsed](
       category = ExampleCmdCategories.!,
       aliases = Seq("help"),
-      cmdProps = client => Props(new ExampleHelpCmd(client, allCommands)),
+      sink = (_, _, _) => Sink.actorRef(helpCmdActor, PoisonPill),
       description =
         Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
     )
 object ExampleHelpCmdFactory {
-  def apply(allCommands: Map[CmdCategory, Set[String]]): ExampleHelpCmdFactory = new ExampleHelpCmdFactory(allCommands)
+  def apply(helpCmdActor: ActorRef): ExampleHelpCmdFactory = new ExampleHelpCmdFactory(helpCmdActor)
 }

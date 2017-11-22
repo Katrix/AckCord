@@ -25,10 +25,12 @@ package net.katsstuff.ackcord.example
 
 import scala.util.{Failure, Success}
 
+import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
+import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdRouter}
+import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.example.music._
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordClient}
@@ -62,84 +64,60 @@ object Example {
 class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActor)(implicit materializer: Materializer)
     extends Actor
     with ActorLogging {
-  import context.dispatcher
   implicit val system: ActorSystem = context.system
 
-  val commands = Seq(PingCmdFactory, SendFileCmdFactory, InfoChannelCmdFactory)
-  val killCmd  = KillCmdFactory(self)
-
-  //We set up a command dispatcher, that sends the correct command to the corresponding actor
-  val cmdRouter: Props = CmdRouter.props(
-    client,
-    needMention = true,
-    ExampleErrorHandler.props(client, ExampleMain.allCommandNames),
-    Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
+  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = Seq(
+    PingCmdFactory,
+    SendFileCmdFactory,
+    InfoChannelCmdFactory,
+    KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
   )
+  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(settings.token), "HelpCmd")
+  val helpCmd = ExampleHelpCmdFactory(helpCmdActor)
 
-  //This command need to be handled for itself to avoid a deadlock
-  val killCmdRouter: ActorRef = system.actorOf(
-    CmdRouter
-      .props(
-        client,
-        needMention = true,
-        IgnoreUnknownErrorHandler.props(client),
-        Some(ExampleHelpCmdFactory(ExampleMain.allCommandNames))
-      ),
-    "KillCommand"
-  )
+  //We set up a commands object, which parses potential commands
+  val commands: Commands =
+    Commands.create(
+      needMention = true,
+      categories = Set(ExampleCmdCategories.!, ExampleCmdCategories.&),
+      cache,
+      settings.token
+    )
 
-  killCmdRouter ! CmdRouter.RegisterCmd(KillCmdFactory(self))
+  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
+    ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
-  //We place the command dispatcher behind a guild dispatcher, this way each guild gets it's own command dispatcher
-  var guildCmdRouter: ActorRef =
-    context.actorOf(GuildRouter.props(cmdRouter, None), "BaseCommands")
+  genericCmds.foreach(registerCmd)
+  registerCmd(helpCmd)
 
-  commands.foreach(fac => guildCmdRouter ! GuildRouter.AddCreateMsg(CmdRouter.RegisterCmd(fac)))
+  var guildRouterMusic: ActorRef =
+    context.actorOf(
+      GuildRouter.props(MusicHandler.props(client, settings.token, commands, helpCmdActor) _, None),
+      "MusicHandler"
+    )
 
-  var guildDispatcherMusic: ActorRef =
-    context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
-
-  cache.subscribeAPIActor(guildCmdRouter, "Completed", classOf[APIMessage.MessageCreate])
-  cache.subscribeAPIActor(killCmdRouter, "Completed", classOf[APIMessage.MessageCreate])
-  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.MessageCreate])
-  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceServerUpdate])
-  cache.subscribeAPIActor(guildDispatcherMusic, "Completed", classOf[APIMessage.VoiceStateUpdate])
+  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.Ready])
+  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.VoiceServerUpdate])
+  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.VoiceStateUpdate])
   client ! DiscordClient.StartClient
 
-  private var shutdownCount = 0
-  private var shutdownInitiator: ActorRef = _
-
-  override def preStart(): Unit = {
-    context.watch(client)
-    context.watch(guildDispatcherMusic)
-    context.watch(guildCmdRouter)
-  }
+  private var shutdownCount  = 0
+  private var isShuttingDown = false
 
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
-      shutdownInitiator = sender()
+      isShuttingDown = true
+
+      context.watch(client)
+      context.watch(guildRouterMusic)
+
       client ! DiscordClient.ShutdownClient
-      context.stop(guildCmdRouter)
-      guildDispatcherMusic ! DiscordClient.ShutdownClient
-    case Terminated(act) if shutdownInitiator != null =>
+      guildRouterMusic ! DiscordClient.ShutdownClient
+    case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
-      if (shutdownCount == 3) {
+      if (shutdownCount == 2) {
         context.stop(self)
-      }
-    case Terminated(ref) if ref == guildCmdRouter =>
-      log.warning("Guild command dispatcher went down. Restarting")
-      guildCmdRouter = context.actorOf(GuildRouter.props(cmdRouter, None), "BaseCommands")
-    case Terminated(ref) if ref == guildDispatcherMusic =>
-      log.warning("Guild music dispatcher went down. Restarting")
-      guildDispatcherMusic = context.actorOf(GuildRouter.props(MusicHandler.props(client) _, None), "MusicHandler")
-    case Terminated(ref) if ref == client =>
-      log.warning("Discord client actor went down. Trying to restart")
-      DiscordClient.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
-        case Success(clientActor) => client = clientActor
-        case Failure(e) =>
-          println("Could not connect to Discord")
-          throw e
       }
   }
 }
@@ -147,17 +125,11 @@ object ExampleMain {
   def props(settings: ClientSettings, cache: Cache, client: ClientActor)(implicit materializer: Materializer): Props =
     Props(new ExampleMain(settings, cache, client))
 
-  private val allCommands = Seq(
-    PingCmdFactory,
-    SendFileCmdFactory,
-    InfoChannelCmdFactory,
-    KillCmdFactory(null),
-    QueueCmdFactory(null),
-    StopCmdFactory(null),
-    NextCmdFactory(null),
-    PauseCmdFactory(null),
-    ExampleHelpCmdFactory(null)
-  )
-  val allCommandNames: Map[CmdCategory, Set[String]] =
-    allCommands.map(fac => fac.category -> fac.aliases).groupBy(_._1).mapValues(_.flatMap(_._2).toSet)
+  def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(
+      parsedCmdFactory: ParsedCmdFactory[_, Mat]
+  )(implicit system: ActorSystem, mat: Materializer): Mat = {
+    val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
+    helpCmdActor ! HelpCmd.AddCmd(parsedCmdFactory, complete)
+    materialized
+  }
 }
