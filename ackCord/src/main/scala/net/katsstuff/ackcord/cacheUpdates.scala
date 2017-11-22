@@ -23,7 +23,6 @@
  */
 package net.katsstuff.ackcord
 
-import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
 
@@ -64,21 +63,6 @@ case class APIMessageCacheUpdate[Data](
     data: Data,
     sendEvent: CacheState => Option[APIMessage],
     handler: CacheHandler[Data]
-) extends CacheUpdate[Data]
-
-/**
-  * An event where after the data has been processed, it's sent to a receiver.
-  * @param data The data.
-  * @param handler The handler to process the data of this event with.
-  * @param findData Find the data to send.
-  * @param sendTo The receiver of the handled data.
-  * @tparam Data The data it contains.
-  */
-case class SendHandledDataCacheUpdate[Data](
-    data: Data,
-    handler: CacheHandler[Data],
-    findData: CacheState => Option[Any],
-    sendTo: ActorRef
 ) extends CacheUpdate[Data]
 
 /**

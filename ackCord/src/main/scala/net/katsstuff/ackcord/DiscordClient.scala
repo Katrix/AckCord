@@ -33,13 +33,11 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.scaladsl.{RestartFlow, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.Materializer
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
 import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.http.requests.RESTRequests.BaseRESTRequest
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
@@ -60,47 +58,6 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
 
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
-  cache.subscribe.runWith(CacheStreams.sendHandledData)
-
-  private val requestHandler: ActorRef = {
-    val source =
-      Source.actorRef[RequestWrapper[Any, Any]](100, OverflowStrategy.fail).named("DefaultRequestHandlerActor")
-    val flow = RestartFlow
-      .withBackoff(30.seconds, 2.minutes, 0.2D) { () =>
-        log.info("(Re)Starting request flow")
-        RequestStreams.requestFlowWithRatelimit[Any, Any](
-          bufferSize = 100,
-          overflowStrategy = OverflowStrategy.backpressure,
-          maxAllowedWait = 2.minutes,
-          credentials = BotAuthentication(settings.token)
-        )
-      }
-      .named("DefaultRequestHandlerFlow")
-
-    val sink = Sink
-      .foreach[RequestAnswer[Any, Any]] {
-        case RequestResponse(
-            data,
-            ctx,
-            remainingRequests,
-            tilReset,
-            wrapper @ RequestWrapper(
-              request: BaseRESTRequest[Any @unchecked, Any @unchecked, Any @unchecked],
-              _,
-              sendTo
-            )
-            ) if request.hasCustomResponseData =>
-          val withWrapper = request
-            .findData(data)(_: CacheState)
-            .map(newData => RequestResponse(newData, ctx, remainingRequests, tilReset, wrapper))
-
-          cache.publishSingle(SendHandledDataCacheUpdate(data, request.cacheHandler, withWrapper, sendTo))
-        case answer => answer.toWrapper.sendResponseTo ! answer
-      }
-      .named("DefaultRequestHandlerSink")
-
-    source.via(flow).to(sink).run()
-  }
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -114,17 +71,14 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
   override def receive: Receive = {
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
-      context.watch(requestHandler)
-      requestHandler ! Status.Success(1)
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_]    => gatewayHandler.forward(request)
-    case request: RequestWrapper[_, _] => requestHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
-      if (shutdownCount == 2) {
+      if (shutdownCount == 1) {
         context.stop(self)
       }
     case Terminated(ref) =>

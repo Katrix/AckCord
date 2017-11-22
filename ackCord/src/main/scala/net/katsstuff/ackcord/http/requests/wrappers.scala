@@ -23,7 +23,7 @@
  */
 package net.katsstuff.ackcord.http.requests
 
-import akka.actor.ActorRef
+import akka.NotUsed
 
 /**
   * Sent as a response from a [[RequestWrapper]].
@@ -159,11 +159,10 @@ sealed trait SentRequest[+Data, Ctx] {
   *
   * @param request The request object.
   * @param context The data to send with the request.
-  * @param sendResponseTo The actor to send the reply to in the form of [[RequestAnswer]].
   * @tparam Data The expected response type.
   * @tparam Ctx The context type.
   */
-case class RequestWrapper[+Data, Ctx](request: Request[Data], context: Ctx, sendResponseTo: ActorRef)
+case class RequestWrapper[+Data, Ctx](request: Request[Data], context: Ctx = NotUsed: NotUsed)
     extends SentRequest[Data, Ctx] {
 
   /**

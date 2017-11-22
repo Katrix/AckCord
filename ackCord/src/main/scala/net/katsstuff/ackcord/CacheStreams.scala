@@ -53,14 +53,7 @@ object CacheStreams {
       .collect {
         case (APIMessageCacheUpdate(_, sendEvent, _), state) => sendEvent(state)
       }
-      .flatMapConcat(_.fold[Source[APIMessage, NotUsed]](Source.empty)(Source.single))
-  }
-
-  def sendHandledData[D]: Sink[(CacheUpdate[D], CacheState), Future[Done]] = {
-    Sink.foreach[(CacheUpdate[D], CacheState)] {
-      case (SendHandledDataCacheUpdate(_, _, findData, sendTo), state) => findData(state).foreach(sendTo ! _)
-      case _                                                     =>
-    }
+      .mapConcat(_.toList)
   }
 
   def cacheUpdater[D](
