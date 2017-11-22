@@ -51,6 +51,12 @@ trait RequestAnswer[+Data, Ctx] {
   def remainingRequests: Int
 
   /**
+    * The amount of requests that can be done for this endpoint until it's reset.
+    * -1 if not known.
+    */
+  def uriRequestLimit: Int
+
+  /**
     * Get the request wrapper representation that was used to sent this request.
     */
   def toWrapper: RequestWrapper[Data, Ctx]
@@ -76,6 +82,7 @@ case class RequestResponse[+Data, Ctx](
     context: Ctx,
     remainingRequests: Int,
     tilReset: Long,
+    uriRequestLimit: Int,
     toWrapper: RequestWrapper[Data, Ctx]
 ) extends SuccessfulRequest[Data, Ctx]
 
@@ -91,6 +98,7 @@ case class RequestResponseNoData[+Data, Ctx](
     context: Ctx,
     remainingRequests: Int,
     tilReset: Long,
+    uriRequestLimit: Int,
     toWrapper: RequestWrapper[Data, Ctx]
 ) extends SuccessfulRequest[Data, Ctx]
 
@@ -110,6 +118,7 @@ case class RequestRatelimited[+Data, Ctx](
     context: Ctx,
     tilReset: Long,
     global: Boolean,
+    uriRequestLimit: Int,
     toWrapper: RequestWrapper[Data, Ctx]
 ) extends RequestFailed[Data, Ctx] {
 
@@ -128,6 +137,7 @@ case class RequestError[+Data, Ctx](context: Ctx, e: Throwable, toWrapper: Reque
     extends RequestFailed[Data, Ctx] {
   override def tilReset:          Long      = -1
   override def remainingRequests: Int       = -1
+  override def uriRequestLimit:    Int       = -1
   override def asException:       Throwable = e
 }
 
@@ -143,6 +153,7 @@ case class RequestDropped[+Data, Ctx](context: Ctx, toWrapper: RequestWrapper[Da
     with SentRequest[Data, Ctx] {
   override def tilReset:          Long = -1
   override def remainingRequests: Int  = -1
+  override def uriRequestLimit:    Int  = -1
   override def asException = new DroppedRequestException(toWrapper.request.route.uri)
 }
 

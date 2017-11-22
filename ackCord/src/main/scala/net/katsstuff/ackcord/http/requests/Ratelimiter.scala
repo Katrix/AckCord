@@ -32,29 +32,57 @@ import akka.http.scaladsl.model.Uri
 class Ratelimiter extends Actor with Timers {
   import Ratelimiter._
 
+  private val uriLimits         = new mutable.HashMap[Uri, Int]
   private val remainingRequests = new mutable.HashMap[Uri, Int]
   private val rateLimits        = new mutable.HashMap[Uri, mutable.Queue[(ActorRef, Any)]]
 
   def receive: Receive = {
     case ResetRatelimit(uri) =>
-      remainingRequests.put(uri, Int.MaxValue)
+      uriLimits.get(uri) match {
+        case Some(limit) => remainingRequests.put(uri, limit)
+        case None => remainingRequests.remove(uri)
+      }
       releaseWaiting(uri)
     case WantToPass(uri, ret) =>
+      println(s"WantToPass $uri ${remainingRequests.get(uri)}")
+
       if (remainingRequests.get(uri).forall(_ > 0)) {
-        remainingRequests.put(uri, remainingRequests.getOrElse(uri, Int.MaxValue))
+        remainingRequests.get(uri).foreach(remaining => remainingRequests.put(uri, remaining - 1))
         sender() ! ret
       } else {
-        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue((sender(), ret))
+        val actor = sender()
+        context.watchWith(actor, TimedOut(uri, actor))
+        println(s"Ratelimiting $uri")
+        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue((actor, ret))
       }
-    case UpdateRatelimits(uri, timeTilReset, remainingRequestsAmount) =>
+    case UpdateRatelimits(uri, timeTilReset, remainingRequestsAmount, requestLimit) =>
+      println(s"UpdateRateLimits $uri $timeTilReset $remainingRequestsAmount $requestLimit")
+      uriLimits.put(uri, requestLimit)
       remainingRequests.put(uri, remainingRequestsAmount)
       timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset.millis)
+    case TimedOut(uri, actorRef) =>
+      println("Timed out")
+      rateLimits.get(uri).foreach(_.dequeueFirst(_._1 == actorRef))
   }
 
-  def releaseWaiting(uri: Uri): Unit =
+  def releaseWaiting(uri: Uri): Unit = {
     rateLimits.get(uri).foreach { queue =>
-      queue.foreach(e => e._1 ! e._2)
+      def release(remaining: Int): Int = {
+        if(remaining <= 0 || queue.isEmpty) remaining
+        else {
+          val (sender, response) = queue.dequeue()
+          sender ! response
+          context.unwatch(sender)
+          release(remaining - 1)
+        }
+      }
+
+      println("Releasing waiting")
+      val newRemaining = release(remainingRequests.getOrElse(uri, Int.MaxValue))
+      println(s"New remaining amount $newRemaining ${queue.size}")
+      remainingRequests.put(uri, newRemaining)
     }
+  }
 
   override def postStop(): Unit =
     rateLimits.values.flatten.foreach(_._1 ! Status.Failure(new IllegalStateException("Ratelimiter stopped")))
@@ -65,5 +93,7 @@ object Ratelimiter {
 
   case class WantToPass[A](uri: Uri, ret: A)
   case class ResetRatelimit(uri: Uri)
-  case class UpdateRatelimits(uri: Uri, timeTilReset: Long, remainingRequests: Int)
+  case class UpdateRatelimits(uri: Uri, timeTilReset: Long, remainingRequests: Int, requestLimit: Int)
+
+  case class TimedOut(uri: Uri, actorRef: ActorRef)
 }

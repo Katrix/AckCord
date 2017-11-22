@@ -36,13 +36,13 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{AskTimeoutException, ask}
+import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source, Zip}
 import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy, SourceShape}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.http.requests.RESTRequests.{BaseRESTRequest, ComplexRESTRequest}
-import net.katsstuff.ackcord.util.RepeatLast
+import net.katsstuff.ackcord.util.{AckCordSettings, RepeatLast}
 import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCacheUpdate}
 
 object RequestStreams {
@@ -61,11 +61,14 @@ object RequestStreams {
       response: HttpResponse
   ): Option[H] =
     response.headers.collectFirst {
-      case h if companion.parse(h.value).isSuccess => companion.parse(h.value).get
-    }
+      case h if h.name == companion.name => companion.parse(h.value).toOption
+    }.flatten
 
   private def remainingRequests(response: HttpResponse): Int =
     findCustomHeader(`X-RateLimit-Remaining`, response).fold(-1)(_.remaining)
+
+  private def requestsForUri(response: HttpResponse): Int =
+    findCustomHeader(`X-RateLimit-Limit`, response).fold(-1)(_.limit)
 
   private def timeTilReset(response: HttpResponse): Long =
     findCustomHeader(`Retry-After`, response)
@@ -135,7 +138,7 @@ object RequestStreams {
       val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
       val ratelimited = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case req @ RequestRatelimited(_, _, true, _) => req
+        case req @ RequestRatelimited(_, _, true, _, _) => req
       })
 
       // format: OFF
@@ -172,19 +175,25 @@ object RequestStreams {
     }
   }.addAttributes(Attributes.name("UriRatelimiter"))
 
-  private def createHttpRequestFlow[Data, Ctx](
-      credentials: HttpCredentials
+  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
+      implicit system: ActorSystem
   ): Flow[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx]), NotUsed] = {
-    Flow[RequestWrapper[Data, Ctx]]
-      .log(
-        "Sent REST request",
-        req =>
-          req.request match {
-            case request: ComplexRESTRequest[_, _, _, _] =>
-              s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
-            case request => s"to ${request.route.uri} with method ${request.route.method}"
-        }
-      )
+    val baseFlow = Flow[RequestWrapper[Data, Ctx]]
+
+    val withLogging =
+      if (AckCordSettings().LogSentREST)
+        baseFlow.log(
+          "Sent REST request",
+          req =>
+            req.request match {
+              case request: ComplexRESTRequest[_, _, _, _] =>
+                s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
+              case request => s"to ${request.route.uri} with method ${request.route.method}"
+          }
+        )
+      else baseFlow
+
+    withLogging
       .map {
         case wrapper @ RequestWrapper(request, _) =>
           val route = request.route
@@ -212,23 +221,35 @@ object RequestStreams {
             case Success(httpResponse) =>
               val tilReset     = timeTilReset(httpResponse)
               val remainingReq = remainingRequests(httpResponse)
+              val requestLimit = requestsForUri(httpResponse)
 
               httpResponse.status match {
                 case StatusCodes.TooManyRequests =>
                   httpResponse.discardEntityBytes()
                   Future.successful(
-                    RequestRatelimited(request.context, tilReset, isGlobalRatelimit(httpResponse), request)
+                    RequestRatelimited(
+                      request.context,
+                      tilReset,
+                      isGlobalRatelimit(httpResponse),
+                      requestLimit,
+                      request
+                    )
                   )
                 case StatusCodes.NoContent =>
                   httpResponse.discardEntityBytes()
-                  Future.successful(RequestResponseNoData(request.context, remainingReq, tilReset, request))
+                  Future.successful(
+                    RequestResponseNoData(request.context, remainingReq, tilReset, requestLimit, request)
+                  )
                 case e if e.isFailure() =>
                   httpResponse.discardEntityBytes()
                   Future.successful(RequestError(request.context, new HttpException(e), request))
                 case _ => //Should be success
                   request.request
                     .parseResponse(httpResponse.entity)
-                    .map(response => RequestResponse(response, request.context, remainingReq, tilReset, request))
+                    .map(
+                      response =>
+                        RequestResponse(response, request.context, remainingReq, tilReset, requestLimit, request)
+                    )
                     .recover {
                       case NonFatal(e) => RequestError(request.context, e, request)
                     }
@@ -244,9 +265,10 @@ object RequestStreams {
       .foreach[RequestAnswer[Data, Ctx]] { answer =>
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
+        val requestLimit      = answer.uriRequestLimit
         val uri               = answer.toWrapper.request.route.uri
         if (_uriRatelimitActor != null && tilReset != -1 && remainingRequests != -1) {
-          _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests)
+          _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests, requestLimit)
         }
       }
       .async
@@ -321,7 +343,7 @@ object RequestStreams {
       val asCacheUpdate = builder.add(
         Flow[RequestAnswer[Data, Ctx]]
           .collect {
-            case RequestResponse(data, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _)) =>
+            case RequestResponse(data, _, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _)) =>
               MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
                 .asInstanceOf[CacheUpdate[Any]] //FIXME
           }
@@ -333,7 +355,7 @@ object RequestStreams {
       val zipper = builder.add(Zip[RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState)])
 
       val findPublished = builder.add(Flow[(RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState))].collect {
-        case (RequestResponse(data, _, _, _, _), (MiscCacheUpdate(data2, _), state)) if data == data2 =>
+        case (RequestResponse(data, _, _, _, _, _), (MiscCacheUpdate(data2, _), state)) if data == data2 =>
           restRequest.findData(data)(state)
       })
 

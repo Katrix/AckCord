@@ -79,7 +79,7 @@ class GlobalRatelimiter[Data, Ctx]
         new InHandler {
           override def onPush(): Unit = {
             grab(answerIn) match {
-              case RequestRatelimited(_, tilReset, true, _) if tilReset > 0 =>
+              case RequestRatelimited(_, tilReset, true, _, _) if tilReset > 0 =>
                 ratelimitTimeout = System.currentTimeMillis() + tilReset
                 scheduleOnce(timerName, tilReset.millis)
               case _ =>

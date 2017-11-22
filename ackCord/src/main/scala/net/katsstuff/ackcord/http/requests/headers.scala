@@ -74,6 +74,19 @@ object `X-Ratelimit-Global` extends ModeledCustomHeaderCompanion[`X-Ratelimit-Gl
   override def parse(value: String) = Try(new `X-Ratelimit-Global`(value.toBoolean))
 }
 
+final class `X-RateLimit-Limit`(val limit: Int) extends ModeledCustomHeader[`X-RateLimit-Limit`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] = `X-RateLimit-Limit`
+
+  override def value:             String  = limit.toString
+  override def renderInRequests:  Boolean = false
+  override def renderInResponses: Boolean = true
+}
+object `X-RateLimit-Limit` extends ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] {
+  def apply(limit: Int):             `X-RateLimit-Limit`      = new `X-RateLimit-Limit`(limit)
+  override def name:                 String                   = "X-RateLimit-Limit"
+  override def parse(value: String): Try[`X-RateLimit-Limit`] = Try(new `X-RateLimit-Limit`(value.toInt))
+}
+
 final class `Retry-After`(val tilReset: FiniteDuration) extends ModeledCustomHeader[`Retry-After`] {
   override def companion: ModeledCustomHeaderCompanion[`Retry-After`] = `Retry-After`
 
