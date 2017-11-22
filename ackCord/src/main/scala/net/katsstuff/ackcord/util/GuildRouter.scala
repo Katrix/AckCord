@@ -30,7 +30,6 @@ import scala.collection.mutable
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.Logging
 import akka.routing.Broadcast
-import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.util.GuildRouter._
@@ -110,7 +109,8 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
     case Broadcast(msg)                 => sendToAll(msg)
     case DiscordClient.ShutdownClient =>
       isShuttingDown = true
-      sendToAll(ShutdownClient)
+      sendToAll(DiscordClient.ShutdownClient)
+      if(handlers.isEmpty) context.stop(self)
     case TerminatedGuild(guildId) =>
       handlers.remove(guildId)
       val level = if (isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
