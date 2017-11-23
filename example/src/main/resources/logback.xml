@@ -11,4 +11,10 @@
         <appender-ref ref="STDOUT" />
     </root>
 
+    <logger name="akka.http.impl.engine.client.PoolGateway" level="INFO" />
+    <logger name="akka.io.TcpOutgoingConnection" level="INFO" />
+    <logger name="com.typesafe.sslconfig.ssl.DefaultHostnameVerifier" level="INFO" />
+    <logger name="akka.io.SimpleDnsManager" level="INFO" />
+    <logger name="akka.actor.TimerScheduler" level="INFO" />
+
 </configuration>

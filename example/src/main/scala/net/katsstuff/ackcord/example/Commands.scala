@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord.example
 
 import java.nio.file.Paths
+import java.time.temporal.ChronoUnit
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props, Terminated}
@@ -97,7 +98,7 @@ object InfoChannelCmdFactory
           }
           .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .mapConcat {
-            case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _) =>
+            case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _, _) =>
               implicit val cache: CacheSnapshot = c
               requestedChannelId
                 .guildResolve(guildId)
@@ -150,6 +151,61 @@ class KillCmdFactory(actorCmd: ActorRef)
 object KillCmdFactory {
   def apply(actorCmd: ActorRef): KillCmdFactory = new KillCmdFactory(actorCmd)
 }
+
+object TimeDiffCmdFactory
+    extends ParsedCmdFactory[NotUsed, NotUsed](
+      category = ExampleCmdCategories.!,
+      aliases = Seq("timeDiff"),
+      sink = (token, system, mat) =>
+        Flow[ParsedCmd[NotUsed]]
+          .mapConcat {
+            case ParsedCmd(msg, _, _, c) =>
+              implicit val cache: CacheSnapshot = c
+              msg.tChannel.map(_.sendMessage("Msg", context = msg.timestamp -> c)).toList
+          }
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
+          .mapConcat {
+            case RequestResponse(msg, (sentTime, c), _, _, _, _) =>
+              implicit val cache: CacheSnapshot = c
+              val between = ChronoUnit.MILLIS.between(sentTime, msg.timestamp)
+              msg.toMessage.tChannel.map(_.sendMessage(s"$between ms between command and response")).toList
+            case other =>
+              println(other)
+              Nil //Ignore
+          }
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
+          .to(Sink.ignore),
+      description = Some(
+        CmdDescription(
+          name = "Time diff",
+          description = "Check the about of time between a command being used. And a response being sent."
+        )
+      )
+    )
+
+object RatelimitTestCmdFactory
+    extends ParsedCmdFactory[Int, NotUsed](
+      category = ExampleCmdCategories.!,
+      aliases = Seq("ratelimitTest"),
+      sink = (token, system, mat) =>
+        Flow[ParsedCmd[Int]]
+          .mapConcat {
+            case ParsedCmd(msg, num, _, c) =>
+              implicit val cache: CacheSnapshot = c
+              msg.tChannel.toList.flatMap { ch =>
+                (1 to num).map(num => ch.sendMessage(s"Msg$num"))
+              }
+          }
+          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
+          .to(Sink.ignore),
+      description = Some(
+        CmdDescription(
+          name = "Ratelimit test",
+          description = "Send a bunch of messages at the same time to test rate limits.",
+          usage = "<messages to send>"
+        )
+      )
+    )
 
 object ExampleErrorHandlers {
   import RESTRequests._

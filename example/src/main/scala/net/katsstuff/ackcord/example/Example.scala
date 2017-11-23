@@ -70,6 +70,8 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
     PingCmdFactory,
     SendFileCmdFactory,
     InfoChannelCmdFactory,
+    TimeDiffCmdFactory,
+    RatelimitTestCmdFactory,
     KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
   )
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(settings.token), "HelpCmd")
