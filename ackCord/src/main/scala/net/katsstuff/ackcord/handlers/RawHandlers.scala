@@ -163,7 +163,7 @@ object RawHandlers extends Handlers {
       defaultMessageNotifications = obj.defaultMessageNotifications,
       explicitContentFilter = obj.explicitContentFilter,
       roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.toRole(obj.id)): _*),
-      emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e): _*),
+      emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e.toEmoji): _*),
       features = obj.features,
       mfaLevel = obj.mfaLevel,
       applicationId = obj.applicationId,
