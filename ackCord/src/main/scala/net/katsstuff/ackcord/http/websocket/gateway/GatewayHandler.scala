@@ -62,7 +62,7 @@ class GatewayHandler(
   def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
   def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
-    GatewayGraphStage.flow(wsUri, settings, resume)
+    GatewayHandlerGraphStage.flow(wsUri, settings, resume)
 
   override def postStop(): Unit =
     if (killSwitch != null) killSwitch.shutdown()

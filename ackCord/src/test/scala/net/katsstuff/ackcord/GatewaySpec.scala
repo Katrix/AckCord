@@ -250,16 +250,16 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(implicit
     val wsFlow = Flow.fromSinkAndSourceCoupledMat(sendToServer, sendToClient)(Keep.right)
 
     val msgFlow =
-      GatewayGraphStage.createMessage
+      GatewayHandlerGraphStage.createMessage
         .viaMat(wsFlow)(Keep.right)
-        .viaMat(GatewayGraphStage.parseMessage)(Keep.left)
+        .viaMat(GatewayHandlerGraphStage.parseMessage)(Keep.left)
         .named("Gateway")
         .collect {
           case Right(msg) => msg
           case Left(e)    => throw e
         }
 
-    val wsGraphStage = new GatewayGraphStage(settings, resume)
+    val wsGraphStage = new GatewayHandlerGraphStage(settings, resume)
 
     val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsGraph) =>
       import GraphDSL.Implicits._

@@ -40,18 +40,18 @@ import io.circe
 import io.circe.parser
 import io.circe.syntax._
 import net.katsstuff.ackcord.ClientSettings
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayGraphStage.Restart
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandlerGraphStage.Restart
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayProtocol._
 import net.katsstuff.ackcord.util.AckCordSettings
 
-class GatewayGraphStage(settings: ClientSettings, prevResume: Option[ResumeData])
+class GatewayHandlerGraphStage(settings: ClientSettings, prevResume: Option[ResumeData])
     extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
       Option[ResumeData]
     ]] {
-  val in:          Inlet[GatewayMessage[_]] = Inlet("GatewayGraphStage.in")
-  val dispatchOut: Outlet[Dispatch[_]]      = Outlet("GatewayGraphStage.dispatchOut")
+  val in:          Inlet[GatewayMessage[_]] = Inlet("GatewayHandlerGraphStage.in")
+  val dispatchOut: Outlet[Dispatch[_]]      = Outlet("GatewayHandlerGraphStage.dispatchOut")
 
-  val out: Outlet[GatewayMessage[_]] = Outlet("GatewayGraphStage.out")
+  val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")
 
   override def shape: FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]] =
     new FanOutShape2(in, out, dispatchOut)
@@ -111,7 +111,7 @@ class GatewayGraphStage(settings: ClientSettings, prevResume: Option[ResumeData]
                 } else null
             }
 
-            push(dispatchOut, dispatch)
+            emit(dispatchOut, dispatch)
           case Heartbeat(_) =>
             onTimer(HeartbeatTimerKey)
           case HeartbeatACK =>
@@ -124,12 +124,12 @@ class GatewayGraphStage(settings: ClientSettings, prevResume: Option[ResumeData]
           case _ => //Ignore
         }
 
-        if(!hasBeenPulled(in)) pull(in)
+        if (!hasBeenPulled(in)) pull(in)
       }
 
       override def onUpstreamFinish(): Unit = {
         if (!restarting) {
-          if(!promise.isCompleted) {
+          if (!promise.isCompleted) {
             promise.success(Option(resume))
           }
           super.onUpstreamFinish()
@@ -165,7 +165,7 @@ class GatewayGraphStage(settings: ClientSettings, prevResume: Option[ResumeData]
 
       override def onDownstreamFinish(): Unit =
         if (!restarting) {
-          if(!promise.isCompleted) {
+          if (!promise.isCompleted) {
             promise.success(Option(resume))
           }
           super.onDownstreamFinish()
@@ -178,21 +178,25 @@ class GatewayGraphStage(settings: ClientSettings, prevResume: Option[ResumeData]
     (logic, promise.future)
   }
 }
-object GatewayGraphStage {
+object GatewayHandlerGraphStage {
   private case class Restart(resumable: Boolean)
 
   def flow(wsUri: Uri, settings: ClientSettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem
   ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val msgFlow =
-      createMessage.viaMat(wsFlow(wsUri))(Keep.right).viaMat(parseMessage)(Keep.left).collect {
-        case Right(msg) => msg
-        case Left(e)    => throw e
-      }.named("GatewayMessageProcessing")
+      createMessage
+        .viaMat(wsFlow(wsUri))(Keep.right)
+        .viaMat(parseMessage)(Keep.left)
+        .collect {
+          case Right(msg) => msg
+          case Left(e)    => throw e
+        }
+        .named("GatewayMessageProcessing")
 
-    val wsGraphStage = new GatewayGraphStage(settings, prevResume).named("GatewayLogic")
+    val wsGraphStage = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
 
-    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsGraph) =>
+    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsHandlerGraph) =>
       import GraphDSL.Implicits._
 
       val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
@@ -200,13 +204,13 @@ object GatewayGraphStage {
 
       // format: OFF
       
-      msgFlowG.out ~> buffer ~> wsGraph.in
-                                wsGraph.out0 ~> wsMessages.in(1)
-      msgFlowG.in                            <~ wsMessages.out
+      msgFlowG.out ~> buffer ~> wsHandlerGraph.in
+                                wsHandlerGraph.out0 ~> wsMessages.in(1)
+      msgFlowG.in                                   <~ wsMessages.out
       
       // format: ON
 
-      FlowShape(wsMessages.in(0), wsGraph.out1)
+      FlowShape(wsMessages.in(0), wsHandlerGraph.out1)
     }
 
     Flow.fromGraph(graph)
