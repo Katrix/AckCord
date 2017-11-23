@@ -48,7 +48,7 @@ import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCache
 object RequestStreams {
 
   private var _uriRatelimitActor: ActorRef = _
-  private def uriRateLimitActor(implicit system: ActorSystem): ActorRef = {
+  def uriRateLimitActor(implicit system: ActorSystem): ActorRef = {
     if (_uriRatelimitActor == null) {
       _uriRatelimitActor = system.actorOf(Ratelimiter.props)
     }
@@ -273,6 +273,11 @@ object RequestStreams {
       }
       .async
       .named("SendAnswersToRatelimiter")
+
+  def onlyResponses[Data, Ctx]: Flow[RequestAnswer[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
+    Flow[RequestAnswer[Data, Ctx]].collect {
+      case response: RequestResponse[Data, Ctx] => response
+    }
 
   /**
     * A simple reasonable request flow using a bot token for short lived streams.
