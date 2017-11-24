@@ -37,12 +37,11 @@ import akka.stream.Materializer
   */
 case class RequestRoute(uri: Uri, method: HttpMethod)
 
-
 /**
   * Base super simple trait for all HTTP requests in AckCord.
   * @tparam Response The parsed response type.
   */
-trait Request[+Response] {
+trait Request[+Response] { self =>
 
   /**
     * The router for this request.
@@ -61,4 +60,29 @@ trait Request[+Response] {
   def parseResponse(
       responseEntity: ResponseEntity
   )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Response]
+
+  /**
+    * Transform the response of this request given an execution context.
+    */
+  def transformResponse[B](f: ExecutionContext => Future[Response] => Future[B]): Request[B] = new Request[B] {
+
+    override def route: RequestRoute = self.route
+
+    override def requestBody: RequestEntity = self.requestBody
+
+    override def parseResponse(
+        responseEntity: ResponseEntity
+    )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[B] =
+      f(ec)(self.parseResponse(responseEntity))
+  }
+
+  /**
+    * Map the result of sending this request.
+    */
+  def map[B](f: Response => B): Request[B] = transformResponse(implicit ec => _.map(f))
+
+  /**
+    * Filter the response of sending this request.
+    */
+  def filter(f: Response => Boolean): Request[Response] = transformResponse(implicit ec => _.filter(f))
 }
