@@ -72,6 +72,19 @@ lazy val ackCordCommands = project
   )
   .dependsOn(ackCord)
 
+lazy val benchmark = project
+  .settings(
+    commonSettings,
+    name := "ackcord-benchmark",
+    version := "1.0",
+    resolvers += "JitPack" at "https://jitpack.io",
+    resolvers += JCenterRepository,
+    libraryDependencies += "org.openjdk.jol"      % "jol-core"  % "0.9",
+    libraryDependencies += "com.github.austinv11" % "Discord4j" % "dev-SNAPSHOT",
+    libraryDependencies += "net.dv8tion" % "JDA" % "3.3.0_260"
+  )
+  .dependsOn(ackCord)
+
 lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(ackCord, example, ackCordCommands)
