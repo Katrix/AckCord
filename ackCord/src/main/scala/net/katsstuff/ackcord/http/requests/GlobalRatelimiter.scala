@@ -30,10 +30,10 @@ import akka.stream.{Attributes, FanInShape2, Inlet, Outlet}
 
 //Some of this was taken from the Delay graph stage
 class GlobalRatelimiter[Data, Ctx]
-    extends GraphStage[FanInShape2[RequestWrapper[Data, Ctx], RequestRatelimited[Data, Ctx], SentRequest[Data, Ctx]]] {
-  val in:       Inlet[RequestWrapper[Data, Ctx]]     = Inlet("GlobalRatelimiter.in")
-  val answerIn: Inlet[RequestRatelimited[Data, Ctx]] = Inlet("GlobalRatelimiter.answerIn")
-  val out:      Outlet[SentRequest[Data, Ctx]]       = Outlet("GlobalRatelimiter.out")
+    extends GraphStage[FanInShape2[Request[Data, Ctx], RequestRatelimited[Ctx], Request[Data, Ctx]]] {
+  val in:       Inlet[Request[Data, Ctx]]      = Inlet("GlobalRatelimiter.in")
+  val answerIn: Inlet[RequestRatelimited[Ctx]] = Inlet("GlobalRatelimiter.answerIn")
+  val out:      Outlet[Request[Data, Ctx]]     = Outlet("GlobalRatelimiter.out")
   override def shape = new FanInShape2(in, answerIn, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
@@ -41,7 +41,7 @@ class GlobalRatelimiter[Data, Ctx]
       def timerName: String = "GlobalRateLimiter"
 
       private var ratelimitTimeout = 0.toLong
-      private var elem: RequestWrapper[Data, Ctx] = _
+      private var elem: Request[Data, Ctx] = _
 
       def isRatelimited: Boolean = ratelimitTimeout - System.currentTimeMillis() > 0
 
@@ -79,9 +79,9 @@ class GlobalRatelimiter[Data, Ctx]
         new InHandler {
           override def onPush(): Unit = {
             grab(answerIn) match {
-              case RequestRatelimited(_, tilReset, true, _, _) if tilReset > 0 =>
-                ratelimitTimeout = System.currentTimeMillis() + tilReset
-                scheduleOnce(timerName, tilReset.millis)
+              case RequestRatelimited(_, true, tilReset, _, _) if tilReset > 0.millis =>
+                ratelimitTimeout = System.currentTimeMillis() + tilReset.toMillis
+                scheduleOnce(timerName, tilReset)
               case _ =>
             }
             pull(answerIn)
@@ -90,8 +90,8 @@ class GlobalRatelimiter[Data, Ctx]
       )
 
       def completeIfReady(): Unit = {
-        if(isClosed(in)) {
-          if(elem == null) completeStage()
+        if (isClosed(in)) {
+          if (elem == null) completeStage()
           else emit(out, elem, () => completeStage())
         }
       }

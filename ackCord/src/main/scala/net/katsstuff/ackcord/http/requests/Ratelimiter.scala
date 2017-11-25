@@ -59,7 +59,7 @@ class Ratelimiter extends Actor with Timers {
       println(s"UpdateRateLimits $uri $timeTilReset $remainingRequestsAmount $requestLimit")
       uriLimits.put(uri, requestLimit)
       remainingRequests.put(uri, remainingRequestsAmount)
-      timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset.millis)
+      timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset)
     case TimedOut(uri, actorRef) =>
       println("Timed out")
       rateLimits.get(uri).foreach(_.dequeueFirst(_._1 == actorRef))
@@ -93,7 +93,7 @@ object Ratelimiter {
 
   case class WantToPass[A](uri: Uri, ret: A)
   case class ResetRatelimit(uri: Uri)
-  case class UpdateRatelimits(uri: Uri, timeTilReset: Long, remainingRequests: Int, requestLimit: Int)
+  case class UpdateRatelimits(uri: Uri, timeTilReset: FiniteDuration, remainingRequests: Int, requestLimit: Int)
 
   case class TimedOut(uri: Uri, actorRef: ActorRef)
 }

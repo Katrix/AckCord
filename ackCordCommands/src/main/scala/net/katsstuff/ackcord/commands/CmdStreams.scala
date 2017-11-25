@@ -32,7 +32,7 @@ import akka.stream.{FlowShape, Materializer}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.http.RawMessage
-import net.katsstuff.ackcord.http.requests.{RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.http.requests.{Request, RequestStreams}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -121,7 +121,7 @@ object CmdStreams {
   /**
     * A flow which will send error messages as messages.
     */
-  def sendCmdErrorMsg[A <: AllCmdMessages]: Flow[A, RequestWrapper[RawMessage, NotUsed], NotUsed] =
+  def sendCmdErrorMsg[A <: AllCmdMessages]: Flow[A, Request[RawMessage, NotUsed], NotUsed] =
     Flow[A]
       .collect {
         case filtered: FilteredCmd =>

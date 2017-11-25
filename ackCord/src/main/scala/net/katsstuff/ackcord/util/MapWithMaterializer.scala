@@ -21,32 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.http.requests
+package net.katsstuff.ackcord.util
 
-import scala.concurrent.duration.FiniteDuration
+import akka.NotUsed
+import akka.stream.{Attributes, FlowShape, Inlet, Materializer, Outlet}
+import akka.stream.scaladsl.Flow
+import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
 
-import akka.http.scaladsl.model.{StatusCode, Uri}
+class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphStage[FlowShape[In, Out]] {
+  val in:  Inlet[In]   = Inlet("MapWithMaterializer.in")
+  val out: Outlet[Out] = Outlet("MapWithMaterializer.out")
+  override def shape = FlowShape(in, out)
 
-/**
-  * An exception for Http errors.
-  */
-class HttpException(statusCode: StatusCode) extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}")
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) with InHandler with OutHandler {
+      override def onPush(): Unit = push(out, f(materializer)(grab(in)))
+      override def onPull(): Unit = pull(in)
 
-/**
-  * An exception that signals than an endpoint is ratelimited.
-  *
-  * @param global If the rate limit is global.
-  * @param tilRetry The amount of time in milliseconds until the ratelimit
-  *                 goes away.
-  * @param uri The Uri for the request.
-  */
-class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri) extends Exception {
-  if (global) "Encountered global ratelimit"
-  else s"Encountered ratelimit at $uri"
+      setHandlers(in, out, this)
+    }
 }
+object MapWithMaterializer {
 
-/**
-  * An exception that signals that a request was dropped.
-  * @param uri The Uri for the request.
-  */
-class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
+  def flow[In, Out](f: => Materializer => In => Out): Flow[In, Out, NotUsed] =
+    Flow.fromGraph(new MapWithMaterializer(f))
+}

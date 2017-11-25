@@ -57,8 +57,8 @@ abstract class HelpCmd extends Actor {
           descMap <- commands.get(cat)
           command = lowercaseCommand.substring(cat.prefix.length)
           req <- descMap.get(command) match {
-            case Some(desc) => Some(RequestWrapper(CreateMessage(msg.channelId, createSingleReply(cat, command, desc))))
-            case None       => unknownCommand(cat, command).map(data => RequestWrapper(CreateMessage(msg.channelId, data)))
+            case Some(desc) => Some(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)))
+            case None       => unknownCommand(cat, command).map(data => CreateMessage(msg.channelId, data))
           }
         } yield req
 
@@ -66,7 +66,7 @@ abstract class HelpCmd extends Actor {
           case Some(req) => sendMsg(req)
           case None =>
             unknownCategory(lowercaseCommand).foreach { data =>
-              sendMsg(RequestWrapper(CreateMessage(msg.channelId, data)))
+              sendMsg(CreateMessage(msg.channelId, data))
             }
         }
       }
@@ -74,7 +74,7 @@ abstract class HelpCmd extends Actor {
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
       implicit val cache: CacheSnapshot = c
       if (page > 0) {
-        sendMsg(RequestWrapper(CreateMessage(msg.channelId, createReplyAll(page - 1))))
+        sendMsg(CreateMessage(msg.channelId, createReplyAll(page - 1)))
       } else {
         msg.tChannel.foreach { channel =>
           sendMsg(channel.sendMessage(s"Invalid page $page"))
@@ -83,7 +83,7 @@ abstract class HelpCmd extends Actor {
 
     case ParsedCmd(msg, None, _, c) =>
       implicit val cache: CacheSnapshot = c
-      sendMsg(RequestWrapper(CreateMessage(msg.channelId, createReplyAll(0))))
+      sendMsg(CreateMessage(msg.channelId, createReplyAll(0)))
     case AddCmd(factory, complete) =>
       factory.description.foreach { desc =>
         commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
@@ -98,7 +98,7 @@ abstract class HelpCmd extends Actor {
   /**
     * Send a request.
     */
-  def sendMsg[Data, Ctx](wrapper: RequestWrapper[Data, Ctx]): Unit
+  def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit
 
   /**
     * Create a reply for a single command

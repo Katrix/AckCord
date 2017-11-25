@@ -29,21 +29,20 @@ import java.time.temporal.ChronoUnit
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{ask, AskTimeoutException}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source, Zip}
-import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy, SourceShape}
+import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
+import akka.pattern.{AskTimeoutException, ask}
+import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
+import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.http.requests.RESTRequests.{BaseRESTRequest, ComplexRESTRequest}
-import net.katsstuff.ackcord.util.{AckCordSettings, RepeatLast}
-import net.katsstuff.ackcord.{AckCord, Cache, CacheState, CacheUpdate, MiscCacheUpdate}
+import net.katsstuff.ackcord.AckCord
+import net.katsstuff.ackcord.http.requests.RESTRequests.ComplexRESTRequest
+import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
 
 object RequestStreams {
 
@@ -70,13 +69,13 @@ object RequestStreams {
   private def requestsForUri(response: HttpResponse): Int =
     findCustomHeader(`X-RateLimit-Limit`, response).fold(-1)(_.limit)
 
-  private def timeTilReset(response: HttpResponse): Long =
+  private def timeTilReset(response: HttpResponse): FiniteDuration =
     findCustomHeader(`Retry-After`, response)
-      .map(_.tilReset.toMillis)
+      .map(_.tilReset)
       .orElse(findCustomHeader(`X-RateLimit-Reset`, response).map { h =>
-        Instant.now().until(h.resetAt, ChronoUnit.MILLIS)
+        Instant.now().until(h.resetAt, ChronoUnit.MILLIS).millis
       })
-      .getOrElse(-1)
+      .getOrElse(-1.millis)
 
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
@@ -88,10 +87,10 @@ object RequestStreams {
     * receive responses.
     * @param credentials The credentials to use when sending the requests.
     */
-  def requestFlow[Data, Ctx](credentials: HttpCredentials, parallelism: Int = 4)(
-      implicit mat: Materializer,
-      system: ActorSystem
-  ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  def requestFlow[Data, Ctx](
+      credentials: HttpCredentials,
+      parallelism: Int = 4
+  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
       .via(requestParser(parallelism))
@@ -109,36 +108,33 @@ object RequestStreams {
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4
-  )(
-      implicit mat: Materializer,
-      system: ActorSystem
-  ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     val uriRatelimiterActor = uriRateLimitActor(system)
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val in                = builder.add(Flow[RequestWrapper[Data, Ctx]])
-      val buffer            = builder.add(Flow[RequestWrapper[Data, Ctx]].buffer(bufferSize, overflowStrategy))
+      val in                = builder.add(Flow[Request[Data, Ctx]])
+      val buffer            = builder.add(Flow[Request[Data, Ctx]].buffer(bufferSize, overflowStrategy))
       val globalRateLimiter = builder.add(new GlobalRatelimiter[Data, Ctx].named("GlobalRateLimiter"))
       val globalMain        = FlowShape(globalRateLimiter.in0, globalRateLimiter.out)
       val globalSecondary   = globalRateLimiter.in1
       val uri =
         builder.add(requestsWithRouteRatelimit[Data, Ctx](uriRatelimiterActor, maxAllowedWait, parallelism))
 
-      val partition = builder.add(Partition[SentRequest[Data, Ctx]](2, {
-        case _: RequestWrapper[_, _] => 0
-        case _: RequestDropped[_, _] => 1
+      val partition = builder.add(Partition[MaybeRequest[Data, Ctx]](2, {
+        case _: RequestDropped[_] => 1
+        case _: Request[_, _]     => 0
       }))
-      val requests = partition.out(0).collect { case wrapper: RequestWrapper[Data, Ctx] => wrapper }
-      val dropped  = partition.out(1).collect { case dropped: RequestDropped[Data, Ctx] => dropped }
+      val requests = partition.out(0).collect { case request: Request[Data, Ctx]  => request }
+      val dropped  = partition.out(1).collect { case dropped: RequestDropped[Ctx] => dropped }
 
       val network      = builder.add(requestFlow[Data, Ctx](credentials, parallelism))
       val answerFanout = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
       val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
       val ratelimited = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case req @ RequestRatelimited(_, _, true, _, _) => req
+        case req @ RequestRatelimited(_, true, _, _, _) => req
       })
 
       // format: OFF
@@ -161,104 +157,114 @@ object RequestStreams {
       ratelimiter: ActorRef,
       maxAllowedWait: FiniteDuration,
       parallelism: Int = 4
-  )(implicit system: ActorSystem): Flow[SentRequest[Data, Ctx], SentRequest[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
-    Flow[SentRequest[Data, Ctx]].mapAsyncUnordered(parallelism) {
-      case wrapper @ RequestWrapper(request, _) =>
-        import system.dispatcher
-        val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri, wrapper)
+    Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
+      import system.dispatcher
+      val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri, request)
 
-        future.mapTo[RequestWrapper[Data, Ctx]].recover {
-          case _: AskTimeoutException => wrapper.toDropped
-        }
-      case dropped @ RequestDropped(_, _) => Future.successful(dropped)
+      future.mapTo[Request[Data, Ctx]].recover {
+        case _: AskTimeoutException => RequestDropped(request.context, request.route.uri)
+      }
     }
   }.addAttributes(Attributes.name("UriRatelimiter"))
 
-  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
-      implicit system: ActorSystem
-  ): Flow[RequestWrapper[Data, Ctx], (HttpRequest, RequestWrapper[Data, Ctx]), NotUsed] = {
-    val baseFlow = Flow[RequestWrapper[Data, Ctx]]
+  private def createHttpRequestFlow[Data, Ctx](
+      credentials: HttpCredentials
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], (HttpRequest, Request[Data, Ctx]), NotUsed] = {
+    val baseFlow = Flow[Request[Data, Ctx]]
 
     val withLogging =
       if (AckCordSettings().LogSentREST)
-        baseFlow.log(
-          "Sent REST request",
-          req =>
-            req.request match {
-              case request: ComplexRESTRequest[_, _, _, _] =>
-                s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
-              case request => s"to ${request.route.uri} with method ${request.route.method}"
-          }
-        )
+        baseFlow.log("Sent REST request", {
+          case request: ComplexRESTRequest[_, _, _, _, _] =>
+            s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
+          case request => s"to ${request.route.uri} with method ${request.route.method}"
+        })
       else baseFlow
 
     withLogging
-      .map {
-        case wrapper @ RequestWrapper(request, _) =>
-          val route = request.route
-          val auth  = Authorization(credentials)
+      .map { request =>
+        val route = request.route
+        val auth  = Authorization(credentials)
 
-          (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), wrapper)
+        (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), request)
       }
   }.named("CreateRequest")
 
   private def requestHttpFlow[Data, Ctx](
       implicit mat: Materializer,
       system: ActorSystem
-  ): Flow[(HttpRequest, RequestWrapper[Data, Ctx]), (Try[HttpResponse], RequestWrapper[Data, Ctx]), NotUsed] =
-    Http().superPool[RequestWrapper[Data, Ctx]]()
+  ): Flow[(HttpRequest, Request[Data, Ctx]), (Try[HttpResponse], Request[Data, Ctx]), NotUsed] =
+    Http().superPool[Request[Data, Ctx]]()
 
-  private def requestParser[Data, Ctx](parallelism: Int = 4)(
-      implicit mat: Materializer,
-      system: ActorSystem
-  ): Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] =
-    Flow[(Try[HttpResponse], RequestWrapper[Data, Ctx])]
-      .mapAsyncUnordered(parallelism) {
-        case (response, request) =>
-          import system.dispatcher
-          response match {
-            case Success(httpResponse) =>
-              val tilReset     = timeTilReset(httpResponse)
-              val remainingReq = remainingRequests(httpResponse)
-              val requestLimit = requestsForUri(httpResponse)
+  private def requestParser[Data, Ctx](
+      breadth: Int = 4
+  )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
+    MapWithMaterializer
+      .flow[(Try[HttpResponse], Request[Data, Ctx]), Source[RequestAnswer[Data, Ctx], NotUsed]] { implicit mat =>
+        {
+          case (response, request) =>
+            response match {
+              case Success(httpResponse) =>
+                val tilReset     = timeTilReset(httpResponse)
+                val remainingReq = remainingRequests(httpResponse)
+                val requestLimit = requestsForUri(httpResponse)
 
-              httpResponse.status match {
-                case StatusCodes.TooManyRequests =>
-                  httpResponse.discardEntityBytes()
-                  Future.successful(
-                    RequestRatelimited(
-                      request.context,
-                      tilReset,
-                      isGlobalRatelimit(httpResponse),
-                      requestLimit,
-                      request
+                httpResponse.status match {
+                  case StatusCodes.TooManyRequests =>
+                    httpResponse.discardEntityBytes()
+                    Source.single(
+                      RequestRatelimited(
+                        request.context,
+                        isGlobalRatelimit(httpResponse),
+                        tilReset,
+                        requestLimit,
+                        request.route.uri
+                      )
                     )
-                  )
-                case StatusCodes.NoContent =>
-                  httpResponse.discardEntityBytes()
-                  Future.successful(
-                    RequestResponseNoData(request.context, remainingReq, tilReset, requestLimit, request)
-                  )
-                case e if e.isFailure() =>
-                  httpResponse.discardEntityBytes()
-                  Future.successful(RequestError(request.context, new HttpException(e), request))
-                case _ => //Should be success
-                  request.request
-                    .parseResponse(httpResponse.entity)
-                    .map(
-                      response =>
-                        RequestResponse(response, request.context, remainingReq, tilReset, requestLimit, request)
-                    )
-                    .recover {
-                      case NonFatal(e) => RequestError(request.context, e, request)
-                    }
-              }
+                  case e if e.isFailure() =>
+                    httpResponse.discardEntityBytes()
+                    Source.failed(new HttpException(e))
+                  case StatusCodes.NoContent =>
+                    httpResponse.discardEntityBytes()
+                    Source
+                      .single(HttpEntity.Empty)
+                      .via(request.parseResponse(breadth))
+                      .map(
+                        data =>
+                          RequestResponse(
+                            data,
+                            request.context,
+                            remainingReq,
+                            tilReset,
+                            requestLimit,
+                            request.route.uri
+                        )
+                      )
+                  case _ => //Should be success
+                    Source
+                      .single(httpResponse.entity)
+                      .via(request.parseResponse(breadth))
+                      .map(
+                        data =>
+                          RequestResponse(
+                            data,
+                            request.context,
+                            remainingReq,
+                            tilReset,
+                            requestLimit,
+                            request.route.uri
+                        )
+                      )
+                }
 
-            case Failure(e) => Future.successful(RequestError(request.context, e, request))
-          }
+              case Failure(e) => Source.failed(e)
+            }
+        }
       }
-      .named("RequestParser")
+      .flatMapMerge(breadth, identity)
+  }.named("RequestParser")
 
   private def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink
@@ -266,8 +272,8 @@ object RequestStreams {
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
         val requestLimit      = answer.uriRequestLimit
-        val uri               = answer.toWrapper.request.route.uri
-        if (_uriRatelimitActor != null && tilReset != -1 && remainingRequests != -1) {
+        val uri               = answer.uri
+        if (_uriRatelimitActor != null && tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
           _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests, requestLimit)
         }
       }
@@ -283,10 +289,9 @@ object RequestStreams {
     * A simple reasonable request flow using a bot token for short lived streams.
     * @param token The bot token.
     */
-  def simpleRequestFlow[Data, Ctx](token: String)(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): Flow[RequestWrapper[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  def simpleRequestFlow[Data, Ctx](
+      token: String
+  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     RequestStreams.requestFlowWithRatelimit[Data, Ctx](
       bufferSize = 32,
       overflowStrategy = OverflowStrategy.backpressure,
@@ -296,127 +301,87 @@ object RequestStreams {
   }
 
   /**
+    * A simple reasonable request flow using a bot token for short lived
+    * streams that only returns successful responses.
+    * @param token The bot token.
+    */
+  def simpleRequestFlowSuccess[Data, Ctx](
+      token: String
+  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
+    simpleRequestFlow[Data, Ctx](token).collect {
+      case RequestResponse(data, ctx, _, _, _, _) => data -> ctx
+    }
+
+  /**
     * Sends a single request.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
   def singleRequest[Data, Ctx](
       token: String,
-      wrapper: RequestWrapper[Data, Ctx]
+      request: Request[Data, Ctx]
   )(implicit system: ActorSystem, mat: Materializer): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source.single(wrapper).via(simpleRequestFlow(token))
+    Source.single(request).via(simpleRequestFlow(token))
 
   /**
     * Sends a single request and gets the response as a future.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
   def singleRequestFuture[Data, Ctx](
       token: String,
-      wrapper: RequestWrapper[Data, Ctx]
+      request: Request[Data, Ctx]
   )(implicit system: ActorSystem, mat: Materializer): Future[RequestAnswer[Data, Ctx]] =
-    singleRequest(token, wrapper).runWith(Sink.head)
+    singleRequest(token, request).runWith(Sink.head)
 
   /**
     * Sends a single request and ignores the result.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
-  def singleRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+  def singleRequestIgnore[Data, Ctx](token: String, request: Request[Data, Ctx])(
       implicit system: ActorSystem,
       mat: Materializer
-  ): Unit = singleRequest(token, wrapper).runWith(Sink.ignore)
-
-  /**
-    * Create a request whose answer will make a trip to the cache to get a nicer response value.
-    * @param token The bot token.
-    * @param restRequest The base REST request.
-    * @param ctx The context to send with the request.
-    */
-  def requestToCache[Data, Ctx, Response, HandlerTpe](
-      token: String,
-      restRequest: BaseRESTRequest[Data, HandlerTpe, Response],
-      ctx: Ctx,
-      timeout: FiniteDuration
-  )(implicit system: ActorSystem, mat: Materializer, cache: Cache): Source[Response, NotUsed] = {
-
-    val graph = GraphDSL.create() { implicit builder =>
-      import GraphDSL.Implicits._
-      val request     = builder.add(singleRequest(token, RequestWrapper(restRequest, ctx)))
-      val broadcaster = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
-
-      val asCacheUpdate = builder.add(
-        Flow[RequestAnswer[Data, Ctx]]
-          .collect {
-            case RequestResponse(data, _, _, _, _, RequestWrapper(_: BaseRESTRequest[_, _, _], _)) =>
-              MiscCacheUpdate(restRequest.convertToCacheHandlerType(data), restRequest.cacheHandler)
-                .asInstanceOf[CacheUpdate[Any]] //FIXME
-          }
-          .initialTimeout(timeout)
-      )
-
-      val repeater = builder.add(RepeatLast.flow[RequestAnswer[Data, Ctx]])
-
-      val zipper = builder.add(Zip[RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState)])
-
-      val findPublished = builder.add(Flow[(RequestAnswer[Data, Ctx], (CacheUpdate[Any], CacheState))].collect {
-        case (RequestResponse(data, _, _, _, _, _), (MiscCacheUpdate(data2, _), state)) if data == data2 =>
-          restRequest.findData(data)(state)
-      })
-
-      // format: OFF
-
-      request ~> broadcaster ~> asCacheUpdate ~>               cache.publish
-                 broadcaster ~> repeater      ~> zipper.in0
-                                                 zipper.in1 <~ cache.subscribe
-                                                 zipper.out ~> findPublished
-
-      // format: ON
-
-      SourceShape(findPublished.out)
-    }
-
-    Source.fromGraph(graph).mapConcat(_.toList)
-  }
+  ): Unit = singleRequest(token, request).runWith(Sink.ignore)
 
   /**
     * A request flow that will failed requests.
     * @param token The bot token.
     */
-  def retryRequestFlow[Data, Ctx](token: String)(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): Flow[RequestWrapper[Data, Ctx], SuccessfulRequest[Data, Ctx], NotUsed] = {
+  def retryRequestFlow[Data, Ctx](
+      token: String
+  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val requestFlow = builder.add(RequestStreams.simpleRequestFlow[Data, Ctx](token))
-      val allRequests = builder.add(MergePreferred[RequestAnswer[Data, Ctx]](2))
+      val addContext = builder.add(Flow[Request[Data, Ctx]].map(request => request.withContext(request)))
+      val requestFlow = builder.add(RequestStreams.simpleRequestFlow[Data, Request[Data, Ctx]](token))
+      val allRequests = builder.add(MergePreferred[RequestAnswer[Data, Request[Data, Ctx]]](2))
 
-      val partitioner = builder.add(Partition[RequestAnswer[Data, Ctx]](2, {
-        case _: RequestResponse[Data, Ctx] => 0
-        case _: RequestFailed[Data, Ctx]   => 1
+      val partitioner = builder.add(Partition[RequestAnswer[Data, Request[Data, Ctx]]](2, {
+        case _: RequestResponse[Data, Request[Data, Ctx]] => 0
+        case _: FailedRequest[Request[Data, Ctx]]   => 1
       }))
 
       val successful = partitioner.out(0)
-      val successfulResp = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case response: SuccessfulRequest[Data, Ctx] => response
+      val successfulResp = builder.add(Flow[RequestAnswer[Data, Request[Data, Ctx]]].collect {
+        case response: RequestResponse[Data, Request[Data, Ctx]] => response.withContext(response.context.context)
       })
 
       //Ratelimiter should take care of the ratelimits through back-pressure
       val failed = partitioner.out(1).collect {
-        case failed: RequestFailed[Data, Ctx] => failed.toWrapper
+        case failed: FailedRequest[Request[Data, Ctx]] => failed.context
       }
 
       // format: OFF
 
-      requestFlow ~> allRequests ~> partitioner
-      allRequests <~ requestFlow <~ failed.outlet
-                                    successful ~> successfulResp
+      addContext  ~> requestFlow ~> allRequests ~> partitioner
+      allRequests <~ requestFlow <~ addContext  <~ failed.outlet
+                                                   successful ~> successfulResp
 
       // format: ON
 
-      FlowShape(requestFlow.in, successfulResp.out)
+      FlowShape(addContext.in, successfulResp.out)
     }
 
     Flow.fromGraph(graph)
@@ -425,32 +390,32 @@ object RequestStreams {
   /**
     * Sends a single request with retries if it fails.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
   def retryRequest[Data, Ctx](
       token: String,
-      wrapper: RequestWrapper[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Source[SuccessfulRequest[Data, Ctx], NotUsed] =
-    Source.single(wrapper).via(retryRequestFlow(token))
+      request: Request[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Source[RequestResponse[Data, Ctx], NotUsed] =
+    Source.single(request).via(retryRequestFlow(token))
 
   /**
     * Sends a single request with retries if it fails, and gets the response as a future.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
   def retryRequestFuture[Data, Ctx](
       token: String,
-      wrapper: RequestWrapper[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Future[SuccessfulRequest[Data, Ctx]] =
-    retryRequest(token, wrapper).runWith(Sink.head)
+      request: Request[Data, Ctx]
+  )(implicit system: ActorSystem, mat: Materializer): Future[RequestResponse[Data, Ctx]] =
+    retryRequest(token, request).runWith(Sink.head)
 
   /**
     * Sends a single request with retries if it fails, and ignores the result.
     * @param token The bot token.
-    * @param wrapper The request to send.
+    * @param request The request to send.
     */
-  def retryRequestIgnore[Data, Ctx](token: String, wrapper: RequestWrapper[Data, Ctx])(
+  def retryRequestIgnore[Data, Ctx](token: String, request: Request[Data, Ctx])(
       implicit system: ActorSystem,
       mat: Materializer
-  ): Unit = retryRequest(token, wrapper).runWith(Sink.ignore)
+  ): Unit = retryRequest(token, request).runWith(Sink.ignore)
 }
