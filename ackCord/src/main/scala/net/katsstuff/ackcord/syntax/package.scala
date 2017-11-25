@@ -1146,9 +1146,14 @@ package object syntax {
       * Fetch all the users that have reacted with an emoji for this message.
       * @param guildEmoji The emoji the get the reactors for.
       */
-    def fetchReactions[Ctx](guildEmoji: Emoji, context: Ctx = NotUsed: NotUsed)(
-        implicit sendResponseTo: ActorRef = ActorRef.noSender
-    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, context)
+    def fetchReactions[Ctx](
+        guildEmoji: Emoji,
+        before: Option[UserId] = None,
+        after: Option[UserId] = None,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    )(implicit sendResponseTo: ActorRef = ActorRef.noSender) =
+      GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit), context)
 
     /**
       * Clear all the reactions on this message.

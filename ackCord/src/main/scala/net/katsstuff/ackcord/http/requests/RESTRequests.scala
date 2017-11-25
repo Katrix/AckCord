@@ -472,10 +472,10 @@ object RESTRequests {
       cache.current.getMessage(channelId, response.id)
   }
   object CreateMessage {
-    def apply[Ctx](channelId: ChannelId, content: String, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
+    def mkContent[Ctx](channelId: ChannelId, content: String, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
       new CreateMessage(channelId, CreateMessageData(content), context)
 
-    def apply[Ctx](channelId: ChannelId, embed: OutgoingEmbed, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
+    def mkEmbed[Ctx](channelId: ChannelId, embed: OutgoingEmbed, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
       new CreateMessage(channelId, CreateMessageData(embed = Some(embed)), context)
   }
 
@@ -611,14 +611,14 @@ object RESTRequests {
       cache.current.getMessage(channelId, messageId)
   }
   object EditMessage {
-    def apply[Ctx](
+    def mkContent[Ctx](
         channelId: ChannelId,
         messageId: MessageId,
         content: String,
         context: Ctx = NotUsed: NotUsed
     ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(Some(content)), context)
 
-    def apply[Ctx](
+    def mkEmbed[Ctx](
         channelId: ChannelId,
         messageId: MessageId,
         embed: OutgoingEmbed,
@@ -661,7 +661,7 @@ object RESTRequests {
       hasPermissionsChannel(channelId, requiredPermissions)
   }
   object BulkDeleteMessages {
-    def apply[Ctx](
+    def mk[Ctx](
         channelId: ChannelId,
         messages: Seq[MessageId],
         context: Ctx = NotUsed: NotUsed
@@ -692,7 +692,7 @@ object RESTRequests {
       hasPermissionsChannel(channelId, requiredPermissions)
   }
   object EditChannelPermissions {
-    def apply[Ctx](
+    def mk[Ctx](
         channelId: ChannelId,
         overwriteId: UserOrRoleId,
         allow: Permission,
@@ -764,7 +764,7 @@ object RESTRequests {
       hasPermissionsChannel(channelId, requiredPermissions)
   }
   object CreateChannelInvite {
-    def apply[Ctx](
+    def mk[Ctx](
         channelId: ChannelId,
         maxAge: Int = 86400,
         maxUses: Int = 0,
@@ -883,7 +883,7 @@ object RESTRequests {
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
   }
   object CreateGuildEmoji {
-    def apply[Ctx](
+    def mk[Ctx](
         guildId: GuildId,
         name: String,
         image: ImageData,
@@ -933,7 +933,7 @@ object RESTRequests {
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
   }
   object ModifyGuildEmoji {
-    def apply[Ctx](
+    def mk[Ctx](
         emojiId: EmojiId,
         guildId: GuildId,
         name: String,
@@ -1207,7 +1207,7 @@ object RESTRequests {
       cache.current.getGuild(guildId).map(_.members.values.toSeq)
   }
   object ListGuildMembers {
-    def apply[Ctx](
+    def mk[Ctx](
         guildId: GuildId,
         limit: Option[Int] = None,
         after: Option[UserId] = None,
@@ -1322,7 +1322,7 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
   object ModifyBotUsersNick {
-    def apply[Ctx](guildId: GuildId, nick: String, context: Ctx = NotUsed: NotUsed): ModifyBotUsersNick[Ctx] =
+    def mk[Ctx](guildId: GuildId, nick: String, context: Ctx = NotUsed: NotUsed): ModifyBotUsersNick[Ctx] =
       new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick), context)
   }
 
@@ -1407,7 +1407,7 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
   object CreateGuildBan {
-    def apply[Ctx](
+    def mk[Ctx](
         guildId: GuildId,
         userId: UserId,
         deleteMessageDays: Int,
@@ -1600,7 +1600,7 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
   object GetGuildPruneCount {
-    def apply[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
+    def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
       new GetGuildPruneCount(guildId, GuildPruneData(days), context)
   }
 
@@ -1615,7 +1615,7 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
   object BeginGuildPrune {
-    def apply[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): BeginGuildPrune[Ctx] =
+    def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): BeginGuildPrune[Ctx] =
       new BeginGuildPrune(guildId, GuildPruneData(days), context)
   }
 
@@ -1909,7 +1909,7 @@ object RESTRequests {
       cache.current.getDmChannel(response.id)
   }
   object CreateDm {
-    def apply[Ctx](to: UserId, context: Ctx = NotUsed: NotUsed): CreateDm[Ctx] = new CreateDm(CreateDMData(to), context)
+    def mk[Ctx](to: UserId, context: Ctx = NotUsed: NotUsed): CreateDm[Ctx] = new CreateDm(CreateDMData(to), context)
   }
 
   /**
