@@ -26,21 +26,18 @@ package net.katsstuff.ackcord
 import scala.language.implicitConversions
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{Flow, Source}
 import cats.MonadFilter
-import net.katsstuff.ackcord.data.ChannelId
-import net.katsstuff.ackcord.http.requests.RESTRequests.GetChannel
-import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse, RequestStreams}
+import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
 
 sealed trait RequestDSL[+A] {
 
-  def map[B](f: A => B):                 RequestDSL[B]
-  def filter(f: A => Boolean):           RequestDSL[A]
-  def flatMap[B](f: A => RequestDSL[B]): RequestDSL[B]
+  def map[B](f: A => B):                    RequestDSL[B]
+  def filter(f: A => Boolean):              RequestDSL[A]
+  def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B]
+  def collect[B](f: PartialFunction[A, B]): RequestDSL[B]
 
-  def run[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed]
+  def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed]
 }
 object RequestDSL {
 
@@ -54,26 +51,36 @@ object RequestDSL {
     override def flatMap[A, B](fa: RequestDSL[A])(f: A => RequestDSL[B]): RequestDSL[B] = fa.flatMap(f)
     override def filter[A](fa: RequestDSL[A])(f: A => Boolean):           RequestDSL[A] = fa.filter(f)
 
-    override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] = ???
+    override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] = {
+      f(a).flatMap {
+        case Left(_)  => tailRecM(a)(f) //Think this is the best we can do as flatMap is a separate object.
+        case Right(v) => Pure(v)
+      }
+    }
+
     override def pure[A](x: A) = Pure(x)
     override def empty[A]: RequestDSL[A] = NoRequest
   }
 
   private case class Pure[+A](a: A) extends RequestDSL[A] {
-    override def map[B](f: A => B):                 RequestDSL[B] = Pure(f(a))
-    override def filter(f: A => Boolean):           RequestDSL[A] = if (f(a)) this else NoRequest
-    override def flatMap[B](f: A => RequestDSL[B]): RequestDSL[B] = f(a)
+    override def map[B](f: A => B):                    RequestDSL[B] = Pure(f(a))
+    override def filter(f: A => Boolean):              RequestDSL[A] = if (f(a)) this else NoRequest
+    override def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B] = f(a)
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = maybePure(f.lift(a))
 
-    override def run[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
+    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
       Source.single(a)
   }
 
   private case object NoRequest extends RequestDSL[Nothing] {
-    override def map[B](f: Nothing => B):                 RequestDSL[B]       = this
-    override def filter(f: Nothing => Boolean):           RequestDSL[Nothing] = this
-    override def flatMap[B](f: Nothing => RequestDSL[B]): RequestDSL[B]       = this
+    override def map[B](f: Nothing => B):                    RequestDSL[B]       = this
+    override def filter(f: Nothing => Boolean):              RequestDSL[Nothing] = this
+    override def flatMap[B](f: Nothing => RequestDSL[B]):    RequestDSL[B]       = this
+    override def collect[B](f: PartialFunction[Nothing, B]): RequestDSL[B]       = this
 
-    override def run[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[Nothing, NotUsed] =
+    override def toSource[B, Ctx](
+        flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]
+    ): Source[Nothing, NotUsed] =
       Source.empty[Nothing]
   }
 
@@ -81,8 +88,9 @@ object RequestDSL {
     override def map[B](f: A => B)                 = SingleRequest(request.map(f))
     override def filter(f: A => Boolean)           = SingleRequest(request.filter(f))
     override def flatMap[B](f: A => RequestDSL[B]) = AndThenRequestDSL(this, f)
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = SingleRequest(request.collect(f))
 
-    override def run[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] = {
+    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] = {
       val casted = flow.asInstanceOf[Flow[Request[A, _], RequestAnswer[A, _], NotUsed]]
 
       Source.single(request).via(casted).collect {
@@ -95,8 +103,10 @@ object RequestDSL {
     override def map[C](g: B => C):                 RequestDSL[C] = AndThenRequestDSL(request, f.andThen(_.map(g)))
     override def filter(g: B => Boolean):           RequestDSL[B] = AndThenRequestDSL(request, f.andThen(_.filter(g)))
     override def flatMap[C](g: B => RequestDSL[C]): RequestDSL[C] = AndThenRequestDSL(this, g)
+    override def collect[C](g: PartialFunction[B, C]): RequestDSL[C] =
+      AndThenRequestDSL(request, f.andThen(_.collect(g)))
 
-    override def run[C, Ctx](flow: Flow[Request[C, Ctx], RequestAnswer[C, Ctx], NotUsed]): Source[B, NotUsed] =
-      request.run(flow).flatMapConcat(s => f(s).run(flow))
+    override def toSource[C, Ctx](flow: Flow[Request[C, Ctx], RequestAnswer[C, Ctx], NotUsed]): Source[B, NotUsed] =
+      request.toSource(flow).flatMapConcat(s => f(s).toSource(flow))
   }
 }

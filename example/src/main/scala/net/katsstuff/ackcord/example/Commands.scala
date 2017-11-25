@@ -33,6 +33,7 @@ import akka.stream.scaladsl.{Flow, Sink}
 import net.katsstuff.ackcord.DiscordClient.ShutdownClient
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.http.requests.RESTRequests._
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.syntax._
 
@@ -41,11 +42,12 @@ object PingCmdFactory
       category = ExampleCmdCategories.!,
       aliases = Seq("ping"),
       sink = (token, system, mat) =>
+        //Completely manual
         Flow[ParsedCmd[NotUsed]]
           .map {
             case ParsedCmd(msg, _, _, c) =>
               implicit val cache: CacheSnapshot = c
-              RequestWrapper(RESTRequests.CreateMessage(msg.channelId, RESTRequests.CreateMessageData("Pong")))
+              CreateMessage(msg.channelId, CreateMessageData("Pong"))
           }
           .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore),
@@ -81,36 +83,26 @@ object SendFileCmdFactory
       )
     )
 
-case class GetChannelInfo(guildId: GuildId, requestedChannelId: ChannelId, senderChannelId: ChannelId, c: CacheSnapshot)
+case class GetChannelInfo(guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot)
 object InfoChannelCmdFactory
     extends ParsedCmdFactory[GuildChannel, NotUsed](
       category = ExampleCmdCategories.!,
       aliases = Seq("infoChannel"),
       sink = (token, system, mat) => {
+        //Using the context
         Flow[ParsedCmd[GuildChannel]]
           .map {
             case ParsedCmd(msg, channel, _, c) =>
               implicit val cache: CacheSnapshot = c
-              RequestWrapper(
-                RESTRequests.GetChannel(channel.id),
-                GetChannelInfo(channel.guildId, channel.id, msg.channelId, c)
-              )
+              GetChannel(channel.id, context = GetChannelInfo(channel.guildId, msg.channelId, c))
           }
           .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .mapConcat {
-            case RequestResponse(res, GetChannelInfo(guildId, requestedChannelId, senderChannelId, c), _, _, _, _) =>
+            case RequestResponse(res, GetChannelInfo(guildId, senderChannelId, c), _, _, _, _) =>
               implicit val cache: CacheSnapshot = c
-              requestedChannelId
-                .guildResolve(guildId)
-                .map(_.name)
-                .flatMap { name =>
-                  senderChannelId.guildResolve(guildId).collect {
-                    case channel: TGuildChannel => channel.sendMessage(s"Info for $name:\n$res")
-                  }
-                }
-                .toList
-            case error: RequestFailed[_, _] =>
-              val GetChannelInfo(guildId, _, senderChannelId, c) = error.context
+              senderChannelId.tResolve(guildId).map(_.sendMessage(s"Info for ${res.name}:\n$res")).toList
+            case error: FailedRequest[_] =>
+              val GetChannelInfo(guildId, senderChannelId, c) = error.context
               implicit val cache: CacheSnapshot = c
               senderChannelId.tResolve(guildId).map(_.sendMessage("Error encountered")).toList
           }
@@ -158,22 +150,21 @@ object TimeDiffCmdFactory
       aliases = Seq("timeDiff"),
       sink = (token, system, mat) =>
         Flow[ParsedCmd[NotUsed]]
-          .mapConcat {
+          .flatMapConcat {
             case ParsedCmd(msg, _, _, c) =>
               implicit val cache: CacheSnapshot = c
-              msg.tChannel.map(_.sendMessage("Msg", context = msg.timestamp -> c)).toList
+
+              //Using request dsl
+              import net.katsstuff.ackcord.RequestDSL._
+              val dsl = for {
+                channel <- maybePure(msg.tChannel)
+                sentMsg <- channel.sendMessage("Msg")
+                between = ChronoUnit.MILLIS.between(msg.timestamp, sentMsg.timestamp)
+                _ <- channel.sendMessage(s"$between msg between command and response")
+              } yield ()
+
+              dsl.toSource(RequestStreams.simpleRequestFlow(token)(system, mat))
           }
-          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-          .mapConcat {
-            case RequestResponse(msg, (sentTime, c), _, _, _, _) =>
-              implicit val cache: CacheSnapshot = c
-              val between = ChronoUnit.MILLIS.between(sentTime, msg.timestamp)
-              msg.toMessage.tChannel.map(_.sendMessage(s"$between ms between command and response")).toList
-            case other =>
-              println(other)
-              Nil //Ignore
-          }
-          .via(RequestStreams.simpleRequestFlow(token)(system, mat))
           .to(Sink.ignore),
       description = Some(
         CmdDescription(
@@ -216,13 +207,11 @@ object ExampleErrorHandlers {
     Flow[AllCmdMessages]
       .collect {
         case noCmd: NoCmd =>
-          RequestWrapper(CreateMessage(noCmd.msg.channelId, CreateMessageData("No command specified")))
+          CreateMessage(noCmd.msg.channelId, CreateMessageData("No command specified"))
         case noCmdCat: NoCmdCategory =>
-          RequestWrapper(CreateMessage(noCmdCat.msg.channelId, CreateMessageData("Unknown category")))
+          CreateMessage(noCmdCat.msg.channelId, CreateMessageData("Unknown category"))
         case unknown: RawCmd if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
-          RequestWrapper(
-            CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
-          )
+          CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
       }
       .via(RequestStreams.simpleRequestFlow(token)(system, mat))
       .to(Sink.ignore)

@@ -110,6 +110,11 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     * Filter the response of sending this request.
     */
   def filter(f: Data => Boolean): Request[Data, Ctx] = transformResponse(_.filter(f))
+
+  /**
+    * Map the result if the function is defined for the response data.
+    */
+  def collect[B](f: PartialFunction[Data, B]): Request[B, Ctx] = transformResponse(_.collect(f))
 }
 object Request {
   implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] with FunctorFilter[

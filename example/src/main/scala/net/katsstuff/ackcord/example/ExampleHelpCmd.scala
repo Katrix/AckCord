@@ -30,7 +30,7 @@ import akka.stream.scaladsl.Sink
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.RESTRequests.CreateMessageData
-import net.katsstuff.ackcord.http.requests.{RequestStreams, RequestWrapper}
+import net.katsstuff.ackcord.http.requests.{Request, RequestStreams}
 
 class ExampleHelpCmd(token: String)(implicit mat: Materializer) extends HelpCmd {
 
@@ -67,8 +67,9 @@ class ExampleHelpCmd(token: String)(implicit mat: Materializer) extends HelpCmd 
 
     builder.mkString
   }
-  override def sendMsg[Data, Ctx](wrapper: RequestWrapper[Data, Ctx]): Unit =
-    RequestStreams.singleRequestIgnore(token, wrapper)
+
+  override def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit =
+    RequestStreams.singleRequestIgnore(token, request)
 }
 object ExampleHelpCmd {
   def props(token: String)(implicit mat: Materializer): Props = Props(new ExampleHelpCmd(token))

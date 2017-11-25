@@ -44,24 +44,19 @@ class Ratelimiter extends Actor with Timers {
       }
       releaseWaiting(uri)
     case WantToPass(uri, ret) =>
-      println(s"WantToPass $uri ${remainingRequests.get(uri)}")
-
       if (remainingRequests.get(uri).forall(_ > 0)) {
         remainingRequests.get(uri).foreach(remaining => remainingRequests.put(uri, remaining - 1))
         sender() ! ret
       } else {
         val actor = sender()
         context.watchWith(actor, TimedOut(uri, actor))
-        println(s"Ratelimiting $uri")
         rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue((actor, ret))
       }
     case UpdateRatelimits(uri, timeTilReset, remainingRequestsAmount, requestLimit) =>
-      println(s"UpdateRateLimits $uri $timeTilReset $remainingRequestsAmount $requestLimit")
       uriLimits.put(uri, requestLimit)
       remainingRequests.put(uri, remainingRequestsAmount)
       timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset)
     case TimedOut(uri, actorRef) =>
-      println("Timed out")
       rateLimits.get(uri).foreach(_.dequeueFirst(_._1 == actorRef))
   }
 
@@ -77,9 +72,7 @@ class Ratelimiter extends Actor with Timers {
         }
       }
 
-      println("Releasing waiting")
       val newRemaining = release(remainingRequests.getOrElse(uri, Int.MaxValue))
-      println(s"New remaining amount $newRemaining ${queue.size}")
       remainingRequests.put(uri, newRemaining)
     }
   }
