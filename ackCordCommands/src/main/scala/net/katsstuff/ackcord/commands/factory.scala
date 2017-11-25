@@ -25,9 +25,15 @@ package net.katsstuff.ackcord.commands
 
 import java.util.Locale
 
+import scala.concurrent.Future
+
+import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.Materializer
-import akka.stream.scaladsl.Sink
+import akka.stream.{Graph, Materializer, SourceShape}
+import akka.stream.scaladsl.{Flow, Sink}
+import net.katsstuff.ackcord.RequestDSL
+import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.http.requests.RequestStreams
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -102,6 +108,23 @@ case class BaseCmdFactory[+Mat](
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 ) extends CmdFactory[Cmd, Mat]
+object BaseCmdFactory {
+  def requestDSL(
+      category: CmdCategory,
+      aliases: Seq[String],
+      flow: Flow[Cmd, RequestDSL[_], NotUsed],
+      filters: Seq[CmdFilter] = Seq.empty,
+      description: Option[CmdDescription] = None,
+  ): BaseCmdFactory[NotUsed] = {
+    val sink: (String, ActorSystem, Materializer) => Sink[Cmd, NotUsed] =
+      (token, system, mat) =>
+        flow
+          .flatMapConcat(dsl => RequestDSL(RequestStreams.simpleRequestFlow(token)(system, mat))(dsl))
+          .to(Sink.ignore)
+
+    BaseCmdFactory(category, aliases, sink, filters, description)
+  }
+}
 
 /**
   * The factory for a parsed command.
@@ -119,3 +142,99 @@ case class ParsedCmdFactory[A, +Mat](
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
     extends CmdFactory[ParsedCmd[A], Mat]
+object ParsedCmdFactory {
+  def requestDSL[A](
+      category: CmdCategory,
+      aliases: Seq[String],
+      flow: Flow[ParsedCmd[A], RequestDSL[_], NotUsed],
+      filters: Seq[CmdFilter] = Seq.empty,
+      description: Option[CmdDescription] = None,
+  )(implicit parser: MessageParser[A]): ParsedCmdFactory[A, NotUsed] = {
+    val sink: (String, ActorSystem, Materializer) => Sink[ParsedCmd[A], NotUsed] =
+      (token, system, mat) =>
+        flow
+          .flatMapConcat(dsl => RequestDSL(RequestStreams.simpleRequestFlow(token)(system, mat))(dsl))
+          .to(Sink.ignore)
+
+    new ParsedCmdFactory(category, aliases, sink, filters, description)
+  }
+}
+
+/**
+  * A class to extract the cache from a parsed cmd object.
+  */
+class ParsedCmdFlow[A] {
+  def map[B](f: CacheSnapshot => ParsedCmd[A] => B): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].map {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    }
+
+  def mapConcat[B](f: CacheSnapshot => ParsedCmd[A] => List[B]): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].mapConcat {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    }
+
+  def mapAsync[B](parallelism: Int)(f: CacheSnapshot => ParsedCmd[A] => Future[B]): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].mapAsync(parallelism) {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    }
+
+  def mapAsyncUnordered[B](
+      parallelism: Int
+  )(f: CacheSnapshot => ParsedCmd[A] => Future[B]): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].mapAsyncUnordered(parallelism) {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    }
+
+  def flatMapConcat[B](
+      f: CacheSnapshot => ParsedCmd[A] => Graph[SourceShape[B], NotUsed]
+  ): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].flatMapConcat {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    }
+
+  def flatMapMerge[B](
+      breadth: Int
+  )(f: CacheSnapshot => ParsedCmd[A] => Graph[SourceShape[B], NotUsed]): Flow[ParsedCmd[A], B, NotUsed] =
+    Flow[ParsedCmd[A]].flatMapMerge(breadth, {
+      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
+    })
+}
+object ParsedCmdFlow {
+  def apply[A] = new ParsedCmdFlow[A]
+}
+
+/**
+  * An object to extract the cache from a unparsed cmd object.
+  */
+object CmdFlow {
+  def map[B](f: CacheSnapshot => Cmd => B): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].map {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    }
+
+  def mapConcat[B](f: CacheSnapshot => Cmd => List[B]): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].mapConcat {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    }
+
+  def mapAsync[B](parallelism: Int)(f: CacheSnapshot => Cmd => Future[B]): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].mapAsync(parallelism) {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    }
+
+  def mapAsyncUnordered[B](parallelism: Int)(f: CacheSnapshot => Cmd => Future[B]): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].mapAsyncUnordered(parallelism) {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    }
+
+  def flatMapConcat[B](f: CacheSnapshot => Cmd => Graph[SourceShape[B], NotUsed]): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].flatMapConcat {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    }
+
+  def flatMapMerge[B](breadth: Int)(f: CacheSnapshot => Cmd => Graph[SourceShape[B], NotUsed]): Flow[Cmd, B, NotUsed] =
+    Flow[Cmd].flatMapMerge(breadth, {
+      case parsed @ Cmd(_, _, c) => f(c)(parsed)
+    })
+}
