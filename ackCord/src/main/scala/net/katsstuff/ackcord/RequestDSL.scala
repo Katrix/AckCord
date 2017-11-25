@@ -43,8 +43,12 @@ object RequestDSL {
 
   def init:                                     RequestDSL[Unit] = Pure(())
   implicit def wrap[A](request: Request[A, _]): RequestDSL[A]    = SingleRequest(request)
-  def pure[A](a: A):                            RequestDSL[A]    = Pure(a)
-  def maybePure[A](opt: Option[A]):             RequestDSL[A]    = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
+
+  def pure[A](a: A):                RequestDSL[A] = Pure(a)
+  def maybePure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
+  def maybeRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] =
+    opt.fold[RequestDSL[A]](NoRequest)(SingleRequest.apply)
+
   def apply[Data, Ctx, B](flow: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed])(
       dsl: RequestDSL[B]
   ): Source[B, NotUsed] = dsl.toSource(flow)
