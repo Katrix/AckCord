@@ -372,6 +372,24 @@ object RESTRequests {
     override def findData(response: Seq[RawMessage])(cache: CacheState): Option[Seq[Message]] =
       Some(cache.current.getChannelMessages(channelId).values.toSeq)
   }
+  object GetChannelMessages {
+    def around[Ctx](
+        channelId: ChannelId,
+        around: MessageId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ) = new GetChannelMessages(channelId, GetChannelMessagesData(around = Some(around), limit = limit), context)
+
+    def before[Ctx](
+        channelId: ChannelId,
+        before: MessageId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ) = new GetChannelMessages(channelId, GetChannelMessagesData(before = Some(before), limit = limit), context)
+
+    def after[Ctx](channelId: ChannelId, after: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
+      new GetChannelMessages(channelId, GetChannelMessagesData(after = Some(after), limit = limit), context)
+  }
 
   /**
     * Get a specific message in a channel.
@@ -453,6 +471,13 @@ object RESTRequests {
     override def findData(response: RawMessage)(cache: CacheState): Option[Message] =
       cache.current.getMessage(channelId, response.id)
   }
+  object CreateMessage {
+    def apply[Ctx](channelId: ChannelId, content: String, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
+      new CreateMessage(channelId, CreateMessageData(content), context)
+
+    def apply[Ctx](channelId: ChannelId, embed: OutgoingEmbed, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
+      new CreateMessage(channelId, CreateMessageData(embed = Some(embed)), context)
+  }
 
   /**
     * Create a reaction for a message.
@@ -515,12 +540,35 @@ object RESTRequests {
       channelId: ChannelId,
       messageId: MessageId,
       emoji: String,
+      params: GetReactionsData,
       context: Ctx = NotUsed: NotUsed
-  ) extends NoParamsNiceResponseRequest[Seq[User], Ctx] {
-    override def route: RequestRoute = Routes.getReactions(emoji, messageId, channelId)
+  ) extends NoNiceResponseRequest[GetReactionsData, Seq[User], Ctx] {
+    override def route:         RequestRoute              = Routes.getReactions(emoji, messageId, channelId)
+    override def paramsEncoder: Encoder[GetReactionsData] = deriveEncoder
 
     override def responseDecoder: Decoder[Seq[User]]      = Decoder[Seq[User]]
     override def cacheHandler:    CacheHandler[Seq[User]] = CacheUpdateHandler.seqHandler(Handlers.userUpdateHandler)
+  }
+  object GetReactions {
+    def before[Ctx](
+        channelId: ChannelId,
+        messageId: MessageId,
+        emoji: String,
+        before: UserId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ): GetReactions[Ctx] =
+      new GetReactions(channelId, messageId, emoji, GetReactionsData(before = Some(before), limit = limit), context)
+
+    def after[Ctx](
+        channelId: ChannelId,
+        messageId: MessageId,
+        emoji: String,
+        after: UserId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ): GetReactions[Ctx] =
+      new GetReactions(channelId, messageId, emoji, GetReactionsData(after = Some(after), limit = limit), context)
   }
 
   /**
@@ -562,6 +610,21 @@ object RESTRequests {
     override def findData(response: RawMessage)(cache: CacheState): Option[Message] =
       cache.current.getMessage(channelId, messageId)
   }
+  object EditMessage {
+    def apply[Ctx](
+        channelId: ChannelId,
+        messageId: MessageId,
+        content: String,
+        context: Ctx = NotUsed: NotUsed
+    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(Some(content)), context)
+
+    def apply[Ctx](
+        channelId: ChannelId,
+        messageId: MessageId,
+        embed: OutgoingEmbed,
+        context: Ctx = NotUsed: NotUsed
+    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = Some(embed)), context)
+  }
 
   /**
     * Delete a message
@@ -597,6 +660,13 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
+  object BulkDeleteMessages {
+    def apply[Ctx](
+        channelId: ChannelId,
+        messages: Seq[MessageId],
+        context: Ctx = NotUsed: NotUsed
+    ): BulkDeleteMessages[Ctx] = new BulkDeleteMessages(channelId, BulkDeleteMessagesData(messages), context)
+  }
 
   /**
     * @param allow The permissions to allow.
@@ -620,6 +690,17 @@ object RESTRequests {
     override def requiredPermissions: Permission = Permission.ManageRoles
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+  }
+  object EditChannelPermissions {
+    def apply[Ctx](
+        channelId: ChannelId,
+        overwriteId: UserOrRoleId,
+        allow: Permission,
+        deny: Permission,
+        tpe: PermissionOverwriteType,
+        context: Ctx = NotUsed: NotUsed
+    ): EditChannelPermissions[Ctx] =
+      new EditChannelPermissions(channelId, overwriteId, EditChannelPermissionsData(allow, deny, tpe), context)
   }
 
   /**
@@ -681,6 +762,17 @@ object RESTRequests {
     override def requiredPermissions: Permission = Permission.CreateInstantInvite
     override def havePermissions(implicit c: CacheSnapshot): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
+  }
+  object CreateChannelInvite {
+    def apply[Ctx](
+        channelId: ChannelId,
+        maxAge: Int = 86400,
+        maxUses: Int = 0,
+        temporary: Boolean = false,
+        unique: Boolean = false,
+        context: Ctx = NotUsed: NotUsed
+    ): CreateChannelInvite[Ctx] =
+      new CreateChannelInvite(channelId, CreateChannelInviteData(maxAge, maxUses, temporary, unique), context)
   }
 
   /**
@@ -790,6 +882,14 @@ object RESTRequests {
     override def hasCustomResponseData:                           Boolean       = true
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
   }
+  object CreateGuildEmoji {
+    def apply[Ctx](
+        guildId: GuildId,
+        name: String,
+        image: ImageData,
+        context: Ctx = NotUsed: NotUsed
+    ): CreateGuildEmoji[Ctx] = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image), context)
+  }
 
   /**
     * Get an emoji in a guild by id.
@@ -831,6 +931,14 @@ object RESTRequests {
 
     override def hasCustomResponseData:                           Boolean       = true
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
+  }
+  object ModifyGuildEmoji {
+    def apply[Ctx](
+        emojiId: EmojiId,
+        guildId: GuildId,
+        name: String,
+        context: Ctx = NotUsed: NotUsed
+    ): ModifyGuildEmoji[Ctx] = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name), context)
   }
 
   /**
@@ -1098,6 +1206,14 @@ object RESTRequests {
     override def findData(response: Seq[RawGuildMember])(cache: CacheState): Option[Seq[GuildMember]] =
       cache.current.getGuild(guildId).map(_.members.values.toSeq)
   }
+  object ListGuildMembers {
+    def apply[Ctx](
+        guildId: GuildId,
+        limit: Option[Int] = None,
+        after: Option[UserId] = None,
+        context: Ctx = NotUsed: NotUsed
+    ): ListGuildMembers[Ctx] = new ListGuildMembers(guildId, ListGuildMembersData(limit, after), context)
+  }
 
   /**
     * @param accessToken The OAuth2 access token.
@@ -1205,6 +1321,10 @@ object RESTRequests {
     override def requiredPermissions:                        Permission = Permission.ChangeNickname
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
+  object ModifyBotUsersNick {
+    def apply[Ctx](guildId: GuildId, nick: String, context: Ctx = NotUsed: NotUsed): ModifyBotUsersNick[Ctx] =
+      new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick), context)
+  }
 
   /**
     * Add a role to a guild member.
@@ -1285,6 +1405,14 @@ object RESTRequests {
 
     override def requiredPermissions:                        Permission = Permission.BanMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+  }
+  object CreateGuildBan {
+    def apply[Ctx](
+        guildId: GuildId,
+        userId: UserId,
+        deleteMessageDays: Int,
+        context: Ctx = NotUsed: NotUsed
+    ): CreateGuildBan[Ctx] = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays), context)
   }
 
   /**
@@ -1471,6 +1599,10 @@ object RESTRequests {
     override def requiredPermissions:                        Permission = Permission.KickMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
+  object GetGuildPruneCount {
+    def apply[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
+      new GetGuildPruneCount(guildId, GuildPruneData(days), context)
+  }
 
   /**
     * Begin a guild prune.
@@ -1481,6 +1613,10 @@ object RESTRequests {
 
     override def requiredPermissions:                        Permission = Permission.KickMembers
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+  }
+  object BeginGuildPrune {
+    def apply[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): BeginGuildPrune[Ctx] =
+      new BeginGuildPrune(guildId, GuildPruneData(days), context)
   }
 
   /**
@@ -1716,6 +1852,21 @@ object RESTRequests {
     }
     override def cacheHandler: CacheHandler[Seq[GetUserGuildsGuild]] = NOOPHandler
   }
+  object GetCurrentUserGuilds {
+    def before[Ctx](
+        before: GuildId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ): GetCurrentUserGuilds[Ctx] =
+      new GetCurrentUserGuilds(GetCurrentUserGuildsData(before = Some(before), limit = limit), context)
+
+    def after[Ctx](
+        after: GuildId,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ): GetCurrentUserGuilds[Ctx] =
+      new GetCurrentUserGuilds(GetCurrentUserGuildsData(after = Some(after), limit = limit), context)
+  }
 
   /**
     * Leave a guild.
@@ -1756,6 +1907,9 @@ object RESTRequests {
     override def hasCustomResponseData: Boolean = true
     override def findData(response: RawChannel)(cache: CacheState): Option[DMChannel] =
       cache.current.getDmChannel(response.id)
+  }
+  object CreateDm {
+    def apply[Ctx](to: UserId, context: Ctx = NotUsed: NotUsed): CreateDm[Ctx] = new CreateDm(CreateDMData(to), context)
   }
 
   /**
