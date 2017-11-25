@@ -80,7 +80,7 @@ object RequestDSL {
   private case class SingleRequest[A](request: Request[A, _]) extends RequestDSL[A] {
     override def map[B](f: A => B)                 = SingleRequest(request.map(f))
     override def filter(f: A => Boolean)           = SingleRequest(request.filter(f))
-    override def flatMap[B](f: A => RequestDSL[B]) = AndThenRequestMonad(this, f)
+    override def flatMap[B](f: A => RequestDSL[B]) = AndThenRequestDSL(this, f)
 
     override def run[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] = {
       val casted = flow.asInstanceOf[Flow[Request[A, _], RequestAnswer[A, _], NotUsed]]
@@ -91,29 +91,12 @@ object RequestDSL {
     }
   }
 
-  private case class AndThenRequestMonad[A, +B](request: RequestDSL[A], f: A => RequestDSL[B]) extends RequestDSL[B] {
-    override def map[C](g: B => C):                 RequestDSL[C] = AndThenRequestMonad(request, f.andThen(_.map(g)))
-    override def filter(g: B => Boolean):           RequestDSL[B] = AndThenRequestMonad(request, f.andThen(_.filter(g)))
-    override def flatMap[C](g: B => RequestDSL[C]): RequestDSL[C] = AndThenRequestMonad(this, g)
+  private case class AndThenRequestDSL[A, +B](request: RequestDSL[A], f: A => RequestDSL[B]) extends RequestDSL[B] {
+    override def map[C](g: B => C):                 RequestDSL[C] = AndThenRequestDSL(request, f.andThen(_.map(g)))
+    override def filter(g: B => Boolean):           RequestDSL[B] = AndThenRequestDSL(request, f.andThen(_.filter(g)))
+    override def flatMap[C](g: B => RequestDSL[C]): RequestDSL[C] = AndThenRequestDSL(this, g)
 
     override def run[C, Ctx](flow: Flow[Request[C, Ctx], RequestAnswer[C, Ctx], NotUsed]): Source[B, NotUsed] =
       request.run(flow).flatMapConcat(s => f(s).run(flow))
   }
-}
-object Other {
-  val channelId:       ChannelId    = ???
-  val token:           String       = ???
-  implicit val system: ActorSystem  = ???
-  implicit val mat:    Materializer = ???
-
-  import RequestDSL._
-  import syntax._
-  val operation = for {
-    _          <- init
-    rawChannel <- GetChannel(channelId)
-    channel    <- maybePure(rawChannel.toChannel.flatMap(_.asTGuildChannel))
-    _          <- channel.sendMessage(s"Cchannel name: ${channel.name}")
-  } yield ()
-
-  operation.run(RequestStreams.simpleRequestFlow(token)).runWith(Sink.ignore)
 }
