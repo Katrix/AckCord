@@ -50,7 +50,7 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
 
-class MusicHandler(client1: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId)(
+class MusicHandler(client: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId)(
     implicit mat: Materializer
 ) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
@@ -61,14 +61,14 @@ class MusicHandler(client1: ClientActor, token: String, commands: Commands, help
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
     ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
-  val msgActor: ActorRef = RequestStreams.simpleRequestFlow(token).runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
+  val msgActor: ActorRef =
+    RequestStreams.simpleRequestFlow(token).runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
 
-  Seq(
-    QueueCmdFactory(guildId, self),
-    StopCmdFactory(guildId, self),
-    NextCmdFactory(guildId, self),
-    PauseCmdFactory(guildId, self)
-  ).foreach(registerCmd)
+  {
+    val cmds = new commands(guildId, self)
+    import cmds._
+    Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd)
+  }
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
 
@@ -122,7 +122,7 @@ class MusicHandler(client1: ClientActor, token: String, commands: Commands, help
       nextTrack(dataSender)
       goto(Active) using CanSendAudio(voiceWs, dataSender, vChannelId)
     case Event(QueueUrl(url, tChannel, vChannelId), con @ Connecting(_, _, _, None)) =>
-      client1 ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
       log.info("Received queue item in Inactive")
       lastTChannel = tChannel
       MusicHandler.loadItem(url).pipeTo(self)
@@ -170,7 +170,7 @@ class MusicHandler(client1: ClientActor, token: String, commands: Commands, help
       voiceWs ! Logout
       context.stop(dataSender)
 
-      client1 ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
 
       log.info("Stopped and left")
       goto(Inactive) using Connecting(None, None, None, None)

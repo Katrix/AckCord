@@ -27,7 +27,7 @@ import scala.util.{Failure, Success}
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
@@ -66,19 +66,22 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
     with ActorLogging {
   implicit val system: ActorSystem = context.system
 
-  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = Seq(
-    PingCmdFactory,
-    SendFileCmdFactory,
-    InfoChannelCmdFactory,
-    TimeDiffCmdFactory,
-    RatelimitTestCmdFactory,
-    KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
-  )
+  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
+    import commands._
+    Seq(
+      PingCmdFactory,
+      SendFileCmdFactory,
+      InfoChannelCmdFactory,
+      TimeDiffCmdFactory,
+      RatelimitTestCmdFactory,
+      KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
+    )
+  }
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(settings.token), "HelpCmd")
   val helpCmd = ExampleHelpCmdFactory(helpCmdActor)
 
   //We set up a commands object, which parses potential commands
-  val commands: Commands =
+  val cmdObj: Commands =
     Commands.create(
       needMention = true,
       categories = Set(ExampleCmdCategories.!, ExampleCmdCategories.&),
@@ -87,14 +90,14 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
     )
 
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
-    ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
+    ExampleMain.registerCmd(cmdObj, helpCmdActor)(parsedCmdFactory)
 
   genericCmds.foreach(registerCmd)
   registerCmd(helpCmd)
 
   var guildRouterMusic: ActorRef =
     context.actorOf(
-      GuildRouter.props(MusicHandler.props(client, settings.token, commands, helpCmdActor) _, None),
+      GuildRouter.props(MusicHandler.props(client, settings.token, cmdObj, helpCmdActor) _, None),
       "MusicHandler"
     )
 
