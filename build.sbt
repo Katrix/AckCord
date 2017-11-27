@@ -32,7 +32,7 @@ lazy val ackCord = project
     commonSettings,
     publishSettings,
     name := "ackcord",
-    version := "0.6",
+    version := "0.7",
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
@@ -67,7 +67,7 @@ lazy val ackCordCommands = project
     commonSettings,
     publishSettings,
     name := "ackcord-commands",
-    version := "0.6",
+    version := "0.7",
     description := "AckCord-commands is an extension to AckCord to allow one to easily define commands"
   )
   .dependsOn(ackCord)
