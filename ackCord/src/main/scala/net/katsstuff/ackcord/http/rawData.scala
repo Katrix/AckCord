@@ -398,7 +398,12 @@ case class RawRole(
   */
 case class RawPresenceGame(name: String, `type`: Int, url: Option[String]) {
 
-  def toContent: PresenceContent = url.fold[PresenceContent](PresenceGame(name))(PresenceStreaming(name, _))
+  def toContent: PresenceContent = `type` match {
+    case 0 => PresenceGame(name)
+    case 1 => PresenceStreaming(name, url.get)
+    case 2 => PresenceListening(name)
+    case 3 => PresenceWatching(name)
+  }
 }
 
 /**

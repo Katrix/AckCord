@@ -437,6 +437,16 @@ case class PresenceGame(name: String) extends PresenceContent
 case class PresenceStreaming(name: String, uri: String) extends PresenceContent
 
 /**
+  * The presence of someone listening to music
+  */
+case class PresenceListening(name: String) extends PresenceContent
+
+/**
+  * The presence of someone watching something
+  */
+case class PresenceWatching(name: String) extends PresenceContent
+
+/**
   * The different statuses a user can have
   */
 sealed trait PresenceStatus

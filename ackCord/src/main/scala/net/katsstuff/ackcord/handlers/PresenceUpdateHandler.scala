@@ -24,8 +24,7 @@
 package net.katsstuff.ackcord.handlers
 
 import akka.event.LoggingAdapter
-import net.katsstuff.ackcord.data.{Presence, PresenceGame, PresenceStreaming, User}
-import net.katsstuff.ackcord.http.RawPresenceGame
+import net.katsstuff.ackcord.data.{Presence, User}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.PresenceUpdateData
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
@@ -67,37 +66,20 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
           }
       }
 
-      val optNewPresence = game.map {
-        case RawPresenceGame(name, gameType, url) =>
-          val content = gameType match {
-            case 0 => Some(PresenceGame(name))
-            case 1 => url.map(PresenceStreaming(name, _))
-          }
-
-          Presence(partialUser.id, content, status)
-      }
+      val newPresence = Presence(partialUser.id, game.map(_.toContent), status)
 
       val oldGuild = builder.guilds(guildId)
 
       //Add the presence
-      val guild = oldGuild.presences.get(partialUser.id) match {
-        case Some(presence) =>
-          val newPresence = optNewPresence.getOrElse(presence)
-          oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
-        case None =>
-          optNewPresence.map { newPresence =>
-            oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
-          }.getOrElse(oldGuild)
-      }
+      val withPresence = oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
 
       //Update roles
-      guild.members
+      val withRoles = withPresence.members
         .get(partialUser.id)
-        .map(m => guild.members + ((partialUser.id, m.copy(roleIds = roles))))
-        .foreach { newMembers =>
-          val newGuild = guild.copy(members = newMembers)
-          builder.guilds.put(guildId, newGuild)
-        }
+        .map(m => withPresence.copy(members = withPresence.members + (partialUser.id -> m.copy(roleIds = roles))))
+        .getOrElse(withPresence)
+
+      builder.guilds.put(guildId, withRoles)
     }
   }
 }

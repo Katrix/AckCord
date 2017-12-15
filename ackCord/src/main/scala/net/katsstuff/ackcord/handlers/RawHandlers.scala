@@ -28,7 +28,7 @@ import scala.collection.mutable
 import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent._
-import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawPresenceGame}
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage}
 
 object RawHandlers extends Handlers {
 
@@ -134,12 +134,7 @@ object RawHandlers extends Handlers {
     }.unzip
 
     val presences = obj.presences.getOrElse(Seq.empty).flatMap { pres =>
-      val content = pres.game.flatMap {
-        case RawPresenceGame(name, 0, _)         => Some(PresenceGame(name))
-        case RawPresenceGame(name, 1, Some(url)) => Some(PresenceStreaming(name, url))
-        case _                                   => None
-      }
-
+      val content = pres.game.map(_.toContent)
       pres.status.map(s => Presence(pres.user.id, content, s))
     }
 
@@ -255,14 +250,14 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawMessageUpdateHandler: CacheUpdateHandler[RawMessage] = updateHandler { (builder, obj, log) =>
-    val users = obj.mentions
+    val users   = obj.mentions
     val message = obj.toMessage
 
     builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, message)
     handleUpdateLog(builder, users, log)
     obj.author match {
       case user: User => handleUpdateLog(builder, users, log)
-      case _ =>
+      case _          =>
     }
   }
 
@@ -324,7 +319,7 @@ object RawHandlers extends Handlers {
         case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj.toEmoji))))
         case None        => log.warning(s"No guild for emoji $obj")
       }
-    }
+  }
 
   //Delete
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, log) =>
