@@ -35,6 +35,8 @@ import akka.stream.{Materializer, OverflowStrategy}
 /**
   * A class holding all the relevant information to create a request stream.
   * Also contains some convenience methods for common operations with requests.
+  *
+  * This should be instantiated once per bot, and shared between shards.
   */
 class RequestHelper(
     credentials: HttpCredentials,
@@ -105,7 +107,7 @@ class RequestHelper(
   /**
     * A request flow that will failed requests.
     */
-  def retryRequestFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
+  def retryFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
     RequestStreams.retryRequestFlow(
       credentials,
       bufferSize,
@@ -120,7 +122,7 @@ class RequestHelper(
     * @param request The request to send.
     */
   def retry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
-    Source.single(request).via(retryRequestFlow)
+    Source.single(request).via(retryFlow)
 
   /**
     * Sends a single request with retries if it fails, and gets the response as a future.

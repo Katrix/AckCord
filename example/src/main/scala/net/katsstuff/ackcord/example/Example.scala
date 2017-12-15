@@ -62,9 +62,8 @@ object Example {
   }
 }
 
-class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActor)(implicit materializer: Materializer)
-    extends Actor
-    with ActorLogging {
+class ExampleMain(settings: ClientSettings, cache: Cache, client: ClientActor) extends Actor with ActorLogging {
+  import cache.mat
   implicit val system: ActorSystem = context.system
 
   val requests = RequestHelper(BotAuthentication(settings.token))
@@ -77,7 +76,7 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
       InfoChannelCmdFactory,
       TimeDiffCmdFactory,
       RatelimitTestCmdFactory,
-      KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
+      KillCmdFactory(self)
     )
   }
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
@@ -99,14 +98,15 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
   registerCmd(helpCmd)
 
   var guildRouterMusic: ActorRef =
-    context.actorOf(
-      GuildRouter.props(MusicHandler.props(client, requests, cmdObj, helpCmdActor), None),
-      "MusicHandler"
-    )
+    context.actorOf(GuildRouter.props(MusicHandler.props(client, requests, cmdObj, helpCmdActor), None), "MusicHandler")
 
-  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.Ready])
-  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.VoiceServerUpdate])
-  cache.subscribeAPIActor(guildRouterMusic, "Completed", classOf[APIMessage.VoiceStateUpdate])
+  cache.subscribeAPIActor(
+    guildRouterMusic,
+    DiscordClient.ShutdownClient,
+    classOf[APIMessage.Ready],
+    classOf[APIMessage.VoiceServerUpdate],
+    classOf[APIMessage.VoiceStateUpdate]
+  )
   client ! DiscordClient.StartClient
 
   private var shutdownCount  = 0
@@ -130,12 +130,10 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
   }
 }
 object ExampleMain {
-  def props(settings: ClientSettings, cache: Cache, client: ClientActor)(implicit materializer: Materializer): Props =
+  def props(settings: ClientSettings, cache: Cache, client: ClientActor): Props =
     Props(new ExampleMain(settings, cache, client))
 
-  def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(
-      parsedCmdFactory: ParsedCmdFactory[_, Mat]
-  )(implicit system: ActorSystem, mat: Materializer): Mat = {
+  def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     helpCmdActor ! HelpCmd.AddCmd(parsedCmdFactory, complete)
     materialized

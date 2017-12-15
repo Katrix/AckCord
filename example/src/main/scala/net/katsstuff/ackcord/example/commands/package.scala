@@ -121,10 +121,11 @@ package object commands {
     def props(main: ActorRef): Props = Props(new KillCmd(main))
   }
 
-  def KillCmdFactory(actorCmd: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
+  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("kill", "die"),
-    sink = _ => Sink.actorRef(actorCmd, PoisonPill),
+    //We use system.actorOf to keep the actor alive when this actor shuts down
+    sink = requests => Sink.actorRef(requests.system.actorOf(KillCmd.props(mainActor), "KillCmd"), PoisonPill),
     description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
   )
 

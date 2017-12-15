@@ -346,8 +346,7 @@ object MusicHandler {
   }
 
   class AudioEventSender(sendTo: ActorRef) extends AudioEventListener {
-    override def onEvent(event: AudioEvent): Unit =
-      sendTo ! event
+    override def onEvent(event: AudioEvent): Unit = sendTo ! event
   }
 
   class NoMatchException extends Exception

@@ -42,19 +42,17 @@ case class Cache(
     subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
     gatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
-) {
+)(implicit val mat: Materializer) {
 
   /**
     * Publish a single element to this cache.
     */
-  def publishSingle(elem: CacheUpdate[Any])(implicit mat: Materializer): Unit =
-    publish.runWith(Source.single(elem))
+  def publishSingle(elem: CacheUpdate[Any]): Unit = publish.runWith(Source.single(elem))
 
   /**
     * Publish many elements to this cache.
     */
-  def publishMany(it: immutable.Iterable[CacheUpdate[Any]])(implicit mat: Materializer): Unit =
-    publish.runWith(Source(it))
+  def publishMany(it: immutable.Iterable[CacheUpdate[Any]]): Unit = publish.runWith(Source(it))
 
   /**
     * A source used to subscribe to [[APIMessage]]s sent to this cache.
@@ -64,10 +62,8 @@ case class Cache(
   /**
     * Subscribe an actor to this cache using [[Sink.actorRef]].
     */
-  def subscribeAPIActor(actor: ActorRef, completeMessage: Any, specificEvent: Class[_ <: APIMessage])(
-      implicit mat: Materializer
-  ): Unit =
-    subscribeAPI.filter(specificEvent.isInstance(_)).runWith(Sink.actorRef(actor, completeMessage))
+  def subscribeAPIActor(actor: ActorRef, completeMessage: Any, specificEvent: Class[_ <: APIMessage]*): Unit =
+    subscribeAPI.filter(msg => specificEvent.exists(_.isInstance(msg))).runWith(Sink.actorRef(actor, completeMessage))
 
   /**
     * Subscribe an actor to this cache using [[Sink.actorRefWithAck]].
@@ -79,7 +75,7 @@ case class Cache(
       completeMessage: Any,
       specificEvent: Class[_ <: APIMessage],
       failureMessage: Throwable => Any = Status.Failure
-  )(implicit mat: Materializer): Unit =
+  ): Unit =
     subscribeAPI
       .filter(specificEvent.isInstance(_))
       .runWith(Sink.actorRefWithAck(actor, initMessage, ackMessage, completeMessage, failureMessage))

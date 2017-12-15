@@ -48,9 +48,8 @@ import shapeless.tag.@@
   * The core actor that controls all the other used actors of AckCord
   * @param gatewayWsUri The gateway websocket uri
   * @param settings The settings to use
-  * @param mat The materializer to use
   */
-class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer)
+class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)
     extends Actor
     with ActorLogging
     with Timers {
@@ -74,7 +73,7 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordClient.StartClient =>
       gatewayHandler.forward(AbstractWsHandler.Login)
-    case request: GatewayMessage[_]    => gatewayHandler.forward(request)
+    case request: GatewayMessage[_] => gatewayHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
@@ -91,10 +90,9 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)(i
   }
 }
 object DiscordClient extends FailFastCirceSupport {
-  def props(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props =
+  def props(wsUri: Uri, settings: ClientSettings, cache: Cache): Props =
     Props(new DiscordClient(wsUri, settings, cache))
-  def props(wsUri: Uri, token: String, cache: Cache)(implicit mat: Materializer): Props =
-    props(wsUri, ClientSettings(token), cache)
+  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, ClientSettings(token), cache)
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
   type ClientActor = ActorRef @@ DiscordClient
@@ -104,24 +102,18 @@ object DiscordClient extends FailFastCirceSupport {
     * @param wsUri The websocket gateway uri
     * @param token The bot token to use for authentication
     * @param system The actor system to use for creating the client actor
-    * @param mat The materializer to use
     */
-  def connect(wsUri: Uri, token: String, cache: Cache)(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): ClientActor = tagClient(system.actorOf(props(wsUri, token, cache), "DiscordClient"))
+  def connect(wsUri: Uri, token: String, cache: Cache)(implicit system: ActorSystem): ClientActor =
+    tagClient(system.actorOf(props(wsUri, token, cache), "DiscordClient"))
 
   /**
     * Create a client actor given the needed arguments
     * @param wsUri The websocket gateway uri
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
-    * @param mat The materializer to use
     */
-  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache)(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): ClientActor = tagClient(system.actorOf(props(wsUri, settings, cache), "DiscordClient"))
+  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit system: ActorSystem): ClientActor =
+    tagClient(system.actorOf(props(wsUri, settings, cache), "DiscordClient"))
 
   /**
     * Send this to the client to log out and stop gracefully
@@ -230,9 +222,8 @@ case class ClientSettings(
     * Connect to discord using these settings
     * @param wsUri The websocket uri to use
     * @param system The actor system to use
-    * @param mat The materializer to use
     * @return The discord client actor
     */
-  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem, mat: Materializer): ClientActor =
+  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem): ClientActor =
     DiscordClient.connect(wsUri, this, cache)
 }

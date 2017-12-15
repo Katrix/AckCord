@@ -129,13 +129,13 @@ object GatewayHandler {
       sink: Sink[Dispatch[_], NotUsed]
   )(implicit mat: Materializer): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
 
-  def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit mat: Materializer): Props = {
+  def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache): Props = {
     val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
       APIMessageCacheUpdate(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
-    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink))
+    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)(cache.mat))
   }
 
   case class SetResumeData(resume: Option[ResumeData])
