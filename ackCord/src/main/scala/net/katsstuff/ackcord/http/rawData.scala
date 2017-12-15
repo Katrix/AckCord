@@ -450,7 +450,6 @@ case class RawBan(reason: Option[String], user: User) {
   def toBan: Ban = Ban(reason, user.id)
 }
 
-
 /**
   * A raw emoji before going through the cache.
   * @param id The id of the emoji.
@@ -460,7 +459,14 @@ case class RawBan(reason: Option[String], user: User) {
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
   */
-case class RawEmoji(id: EmojiId, name: String, roles: Seq[RoleId], user: Option[User], requireColons: Boolean, managed: Boolean) {
+case class RawEmoji(
+    id: EmojiId,
+    name: String,
+    roles: Seq[RoleId],
+    user: Option[User],
+    requireColons: Boolean,
+    managed: Boolean
+) {
 
   def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed)
 }
