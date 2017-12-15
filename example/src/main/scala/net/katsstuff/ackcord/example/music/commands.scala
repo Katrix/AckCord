@@ -26,7 +26,7 @@ package net.katsstuff.ackcord.example.music
 import scala.concurrent.Future
 
 import akka.actor.ActorRef
-import akka.stream.scaladsl.Sink
+import akka.stream.scaladsl.{Keep, Sink}
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdFactory, ParsedCmdFlow}
 import net.katsstuff.ackcord.data.{GuildId, UserId, VoiceState}
@@ -68,7 +68,10 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
   val StopCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = ParsedCmdFactory[NotUsed, Future[Done]](
     category = ExampleCmdCategories.&,
     aliases = Seq("s", "stop"),
-    sink = (_, _, _) => Sink.foreach(cmd => cmd.msg.tChannel.foreach(musicHandler ! StopMusic(_))),
+    sink = _ =>
+      ParsedCmdFlow[NotUsed]
+        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! StopMusic(_)))
+        .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description =
       Some(CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")),
@@ -77,7 +80,10 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
   val NextCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = ParsedCmdFactory[NotUsed, Future[Done]](
     category = ExampleCmdCategories.&,
     aliases = Seq("n", "next"),
-    sink = (_, _, _) => Sink.foreach(cmd => cmd.msg.tChannel.foreach(musicHandler ! NextTrack(_))),
+    sink = _ =>
+      ParsedCmdFlow[NotUsed]
+        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! NextTrack(_)))
+        .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description = Some(CmdDescription(name = "Next track", description = "Skip to the next track")),
   )
@@ -85,7 +91,10 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
   val PauseCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = ParsedCmdFactory[NotUsed, Future[Done]](
     category = ExampleCmdCategories.&,
     aliases = Seq("p", "pause"),
-    sink = (_, _, _) => Sink.foreach(cmd => cmd.msg.tChannel.foreach(musicHandler ! TogglePause(_))),
+    sink = _ =>
+      ParsedCmdFlow[NotUsed]
+        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! TogglePause(_)))
+        .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description = Some(CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
   )

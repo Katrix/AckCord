@@ -35,14 +35,14 @@ import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTr
 
 import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.pattern.pipe
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
-import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.example.ExampleMain
-import net.katsstuff.ackcord.http.requests.RequestStreams
+import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
@@ -50,19 +50,23 @@ import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
 
-class MusicHandler(client: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId)(
-    implicit mat: Materializer
+class MusicHandler(
+    client: ClientActor,
+    requests: RequestHelper,
+    commands: Commands,
+    helpCmdActor: ActorRef,
+    guildId: GuildId
 ) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
+  import requests.mat
   implicit val system: ActorSystem = context.system
 
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
     ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
-  val msgActor: ActorRef =
-    RequestStreams.simpleRequestFlow(token).runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
+  val msgActor: ActorRef = requests.flow.runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
 
   {
     val cmds = new commands(guildId, self)
@@ -286,9 +290,12 @@ class MusicHandler(client: ClientActor, token: String, commands: Commands, helpC
   }
 }
 object MusicHandler {
-  def props(client: ClientActor, token: String, commands: Commands, helpCmdActor: ActorRef)(
-      implicit mat: Materializer
-  ): GuildId => Props = guildId => Props(new MusicHandler(client, token, commands, helpCmdActor, guildId))
+  def props(
+      client: ClientActor,
+      requests: RequestHelper,
+      commands: Commands,
+      helpCmdActor: ActorRef
+  ): GuildId => Props = guildId => Props(new MusicHandler(client, requests, commands, helpCmdActor, guildId))
 
   final val UseBurstingSender = true
 

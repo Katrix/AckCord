@@ -35,7 +35,7 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{AskTimeoutException, ask}
+import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy}
 import akka.util.Timeout
@@ -45,15 +45,6 @@ import net.katsstuff.ackcord.http.requests.RESTRequests.ComplexRESTRequest
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
 
 object RequestStreams {
-
-  private var _uriRatelimitActor: ActorRef = _
-  def uriRateLimitActor(implicit system: ActorSystem): ActorRef = {
-    if (_uriRatelimitActor == null) {
-      _uriRatelimitActor = system.actorOf(Ratelimiter.props)
-    }
-
-    _uriRatelimitActor
-  }
 
   private def findCustomHeader[H <: ModeledCustomHeader[H]](
       companion: ModeledCustomHeaderCompanion[H],
@@ -87,14 +78,15 @@ object RequestStreams {
     * receive responses.
     * @param credentials The credentials to use when sending the requests.
     */
-  def requestFlow[Data, Ctx](
+  def requestFlowWithoutRatelimit[Data, Ctx](
       credentials: HttpCredentials,
-      parallelism: Int = 4
+      parallelism: Int = 4,
+      rateLimitActor: ActorRef
   )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
       .via(requestParser(parallelism))
-      .alsoTo(sendRatelimitUpdates)
+      .alsoTo(sendRatelimitUpdates(rateLimitActor))
   }
 
   /**
@@ -102,14 +94,14 @@ object RequestStreams {
     * Also obeys ratelimits. If it encounters a ratelimit it will backpressure.
     * @param credentials The credentials to use when sending the requests.
     */
-  def requestFlowWithRatelimit[Data, Ctx](
+  def requestFlow[Data, Ctx](
       credentials: HttpCredentials,
       bufferSize: Int = 100,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes,
-      parallelism: Int = 4
+      parallelism: Int = 4,
+      rateLimitActor: ActorRef
   )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
-    val uriRatelimiterActor = uriRateLimitActor(system)
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
@@ -120,7 +112,7 @@ object RequestStreams {
       val globalMain        = FlowShape(globalRateLimiter.in0, globalRateLimiter.out)
       val globalSecondary   = globalRateLimiter.in1
       val uri =
-        builder.add(requestsWithRouteRatelimit[Data, Ctx](uriRatelimiterActor, maxAllowedWait, parallelism))
+        builder.add(requestFlowWithRouteRatelimit[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
 
       val partition = builder.add(Partition[MaybeRequest[Data, Ctx]](2, {
         case _: RequestDropped[_] => 1
@@ -129,7 +121,7 @@ object RequestStreams {
       val requests = partition.out(0).collect { case request: Request[Data, Ctx]  => request }
       val dropped  = partition.out(1).collect { case dropped: RequestDropped[Ctx] => dropped }
 
-      val network      = builder.add(requestFlow[Data, Ctx](credentials, parallelism))
+      val network      = builder.add(requestFlowWithoutRatelimit[Data, Ctx](credentials, parallelism, rateLimitActor))
       val answerFanout = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
       val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
@@ -153,7 +145,7 @@ object RequestStreams {
   /**
     * A request flow which obeys route specific rate limits, but not global ones.
     */
-  def requestsWithRouteRatelimit[Data, Ctx](
+  def requestFlowWithRouteRatelimit[Data, Ctx](
       ratelimiter: ActorRef,
       maxAllowedWait: FiniteDuration,
       parallelism: Int = 4
@@ -266,15 +258,15 @@ object RequestStreams {
       .flatMapMerge(breadth, identity)
   }.named("RequestParser")
 
-  private def sendRatelimitUpdates[Data, Ctx]: Sink[RequestAnswer[Data, Ctx], Future[Done]] =
+  private def sendRatelimitUpdates[Data, Ctx](rateLimitActor: ActorRef): Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink
       .foreach[RequestAnswer[Data, Ctx]] { answer =>
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
         val requestLimit      = answer.uriRequestLimit
         val uri               = answer.uri
-        if (_uriRatelimitActor != null && tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
-          _uriRatelimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests, requestLimit)
+        if (rateLimitActor != null && tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
+          rateLimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests, requestLimit)
         }
       }
       .async
@@ -286,81 +278,35 @@ object RequestStreams {
     }
 
   /**
-    * A simple reasonable request flow using a bot token for short lived streams.
-    * @param token The bot token.
-    */
-  def simpleRequestFlow[Data, Ctx](
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
-    RequestStreams.requestFlowWithRatelimit[Data, Ctx](
-      bufferSize = 32,
-      overflowStrategy = OverflowStrategy.backpressure,
-      maxAllowedWait = 2.minutes,
-      credentials = BotAuthentication(token)
-    )
-  }
-
-  /**
-    * A simple reasonable request flow using a bot token for short lived
-    * streams that only returns successful responses.
-    * @param token The bot token.
-    */
-  def simpleRequestFlowSuccess[Data, Ctx](
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
-    simpleRequestFlow[Data, Ctx](token).collect {
-      case RequestResponse(data, ctx, _, _, _, _) => data -> ctx
-    }
-
-  /**
-    * Sends a single request.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def singleRequest[Data, Ctx](
-      token: String,
-      request: Request[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source.single(request).via(simpleRequestFlow(token))
-
-  /**
-    * Sends a single request and gets the response as a future.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def singleRequestFuture[Data, Ctx](
-      token: String,
-      request: Request[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Future[RequestAnswer[Data, Ctx]] =
-    singleRequest(token, request).runWith(Sink.head)
-
-  /**
-    * Sends a single request and ignores the result.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def singleRequestIgnore[Data, Ctx](token: String, request: Request[Data, Ctx])(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): Unit = singleRequest(token, request).runWith(Sink.ignore)
-
-  /**
     * A request flow that will failed requests.
-    * @param token The bot token.
     */
   def retryRequestFlow[Data, Ctx](
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
+      credentials: HttpCredentials,
+      bufferSize: Int = 100,
+      overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
+      maxAllowedWait: FiniteDuration = 2.minutes,
+      parallelism: Int = 4,
+      rateLimitActor: ActorRef
+  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
       val addContext = builder.add(Flow[Request[Data, Ctx]].map(request => request.withContext(request)))
-      val requestFlow = builder.add(RequestStreams.simpleRequestFlow[Data, Request[Data, Ctx]](token))
+      val requestFlow = builder.add(
+        RequestStreams.requestFlow[Data, Request[Data, Ctx]](
+          credentials,
+          bufferSize,
+          overflowStrategy,
+          maxAllowedWait,
+          parallelism,
+          rateLimitActor
+        )
+      )
       val allRequests = builder.add(MergePreferred[RequestAnswer[Data, Request[Data, Ctx]]](2))
 
       val partitioner = builder.add(Partition[RequestAnswer[Data, Request[Data, Ctx]]](2, {
         case _: RequestResponse[Data, Request[Data, Ctx]] => 0
-        case _: FailedRequest[Request[Data, Ctx]]   => 1
+        case _: FailedRequest[Request[Data, Ctx]]         => 1
       }))
 
       val successful = partitioner.out(0)
@@ -386,36 +332,4 @@ object RequestStreams {
 
     Flow.fromGraph(graph)
   }
-
-  /**
-    * Sends a single request with retries if it fails.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def retryRequest[Data, Ctx](
-      token: String,
-      request: Request[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Source[RequestResponse[Data, Ctx], NotUsed] =
-    Source.single(request).via(retryRequestFlow(token))
-
-  /**
-    * Sends a single request with retries if it fails, and gets the response as a future.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def retryRequestFuture[Data, Ctx](
-      token: String,
-      request: Request[Data, Ctx]
-  )(implicit system: ActorSystem, mat: Materializer): Future[RequestResponse[Data, Ctx]] =
-    retryRequest(token, request).runWith(Sink.head)
-
-  /**
-    * Sends a single request with retries if it fails, and ignores the result.
-    * @param token The bot token.
-    * @param request The request to send.
-    */
-  def retryRequestIgnore[Data, Ctx](token: String, request: Request[Data, Ctx])(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): Unit = retryRequest(token, request).runWith(Sink.ignore)
 }

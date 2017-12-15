@@ -28,12 +28,11 @@ import java.util.Locale
 import scala.concurrent.Future
 
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.stream.{Graph, Materializer, SourceShape}
 import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.{Graph, SourceShape}
 import net.katsstuff.ackcord.RequestDSL
 import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.http.requests.RequestStreams
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -83,7 +82,7 @@ trait CmdFactory[A, +Mat] {
   /**
     * A sink which defines the behavior of this command.
     */
-  def sink: (String, ActorSystem, Materializer) => Sink[A, Mat]
+  def sink: RequestHelper => Sink[A, Mat]
 
   /**
     * A description of this command.
@@ -104,7 +103,7 @@ trait CmdFactory[A, +Mat] {
 case class BaseCmdFactory[+Mat](
     category: CmdCategory,
     aliases: Seq[String],
-    sink: (String, ActorSystem, Materializer) => Sink[Cmd, Mat],
+    sink: RequestHelper => Sink[Cmd, Mat],
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 ) extends CmdFactory[Cmd, Mat]
@@ -116,11 +115,8 @@ object BaseCmdFactory {
       filters: Seq[CmdFilter] = Seq.empty,
       description: Option[CmdDescription] = None,
   ): BaseCmdFactory[NotUsed] = {
-    val sink: (String, ActorSystem, Materializer) => Sink[Cmd, NotUsed] =
-      (token, system, mat) =>
-        flow
-          .flatMapConcat(dsl => RequestDSL(RequestStreams.simpleRequestFlow(token)(system, mat))(dsl))
-          .to(Sink.ignore)
+    val sink: RequestHelper => Sink[Cmd, NotUsed] = requests =>
+      flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
 
     BaseCmdFactory(category, aliases, sink, filters, description)
   }
@@ -137,7 +133,7 @@ object BaseCmdFactory {
 case class ParsedCmdFactory[A, +Mat](
     category: CmdCategory,
     aliases: Seq[String],
-    sink: (String, ActorSystem, Materializer) => Sink[ParsedCmd[A], Mat],
+    sink: RequestHelper => Sink[ParsedCmd[A], Mat],
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
@@ -150,11 +146,8 @@ object ParsedCmdFactory {
       filters: Seq[CmdFilter] = Seq.empty,
       description: Option[CmdDescription] = None,
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[A, NotUsed] = {
-    val sink: (String, ActorSystem, Materializer) => Sink[ParsedCmd[A], NotUsed] =
-      (token, system, mat) =>
-        flow
-          .flatMapConcat(dsl => RequestDSL(RequestStreams.simpleRequestFlow(token)(system, mat))(dsl))
-          .to(Sink.ignore)
+    val sink: RequestHelper => Sink[ParsedCmd[A], NotUsed] = requests =>
+      flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
 
     new ParsedCmdFactory(category, aliases, sink, filters, description)
   }

@@ -32,7 +32,7 @@ import akka.stream.{FlowShape, Materializer}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.http.RawMessage
-import net.katsstuff.ackcord.http.requests.{Request, RequestStreams}
+import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -75,15 +75,14 @@ object CmdStreams {
   /**
     * Handle command errors.
     */
-  def handleErrors[A <: AllCmdMessages](
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[A, A, NotUsed] = {
+  def handleErrors[A <: AllCmdMessages](requests: RequestHelper): Flow[A, A, NotUsed] = {
+
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
       val in          = builder.add(Flow[A])
       val broadcast   = builder.add(Broadcast[A](2))
       val mkWrapper   = builder.add(sendCmdErrorMsg[A])
-      val requestFlow = builder.add(RequestStreams.simpleRequestFlow[RawMessage, NotUsed](token))
+      val requestFlow = builder.add(requests.flow[RawMessage, NotUsed])
 
       // format: OFF
       
@@ -101,20 +100,16 @@ object CmdStreams {
   /**
     * Handle all the errors for a parsed command.
     */
-  def handleErrorsParsed[A](
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[ParsedCmdMessage[A], ParsedCmd[A], NotUsed] =
-    handleErrors[ParsedCmdMessage[A]](token).collect {
+  def handleErrorsParsed[A](requests: RequestHelper): Flow[ParsedCmdMessage[A], ParsedCmd[A], NotUsed] =
+    handleErrors[ParsedCmdMessage[A]](requests).collect {
       case msg: ParsedCmd[A] => msg
     }
 
   /**
     * Handle all the errors for a unparsed command.
     */
-  def handleErrorsUnparsed(
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Flow[CmdMessage, Cmd, NotUsed] =
-    handleErrors[CmdMessage](token).collect {
+  def handleErrorsUnparsed(requests: RequestHelper): Flow[CmdMessage, Cmd, NotUsed] =
+    handleErrors[CmdMessage](requests).collect {
       case msg: Cmd => msg
     }
 

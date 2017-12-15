@@ -32,6 +32,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordClient.ClientActor
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.example.music._
+import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordClient}
 
@@ -66,6 +67,8 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
     with ActorLogging {
   implicit val system: ActorSystem = context.system
 
+  val requests = RequestHelper(BotAuthentication(settings.token))
+
   val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
     import commands._
     Seq(
@@ -77,7 +80,7 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
       KillCmdFactory(system.actorOf(KillCmd.props(self), "KillCmd")) //We use system.actorOf to keep the actor alive when this actor shuts down
     )
   }
-  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(settings.token), "HelpCmd")
+  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
   val helpCmd = ExampleHelpCmdFactory(helpCmdActor)
 
   //We set up a commands object, which parses potential commands
@@ -86,7 +89,7 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
       needMention = true,
       categories = Set(ExampleCmdCategories.!, ExampleCmdCategories.&),
       cache,
-      settings.token
+      requests
     )
 
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
@@ -97,7 +100,7 @@ class ExampleMain(settings: ClientSettings, cache: Cache, var client: ClientActo
 
   var guildRouterMusic: ActorRef =
     context.actorOf(
-      GuildRouter.props(MusicHandler.props(client, settings.token, cmdObj, helpCmdActor) _, None),
+      GuildRouter.props(MusicHandler.props(client, requests, cmdObj, helpCmdActor), None),
       "MusicHandler"
     )
 

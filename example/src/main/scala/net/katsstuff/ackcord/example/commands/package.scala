@@ -33,7 +33,7 @@ import akka.stream.scaladsl.{Flow, Sink}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RESTRequests._
-import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestResponse, RequestStreams}
+import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{DiscordClient, RequestDSL}
 
@@ -42,12 +42,11 @@ package object commands {
   val PingCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("ping"),
-    sink = (token, system, mat) =>
+    sink = requests =>
       //Completely manual
       ParsedCmdFlow[NotUsed]
         .map(_ => cmd => CreateMessage.mkContent(cmd.msg.channelId, "Pong"))
-        .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-        .to(Sink.ignore),
+        .to(requests.sinkIgnore),
     description =
       Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
   )
@@ -55,7 +54,7 @@ package object commands {
   val SendFileCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("sendFile"),
-    sink = (token, system, mat) => {
+    sink = requests => {
       val embed = OutgoingEmbed(
         title = Some("This is an embed"),
         description = Some("This embed is sent together with a file"),
@@ -69,8 +68,7 @@ package object commands {
             tChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
           }.toList
         }
-        .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-        .to(Sink.ignore)
+        .to(requests.sinkIgnore)
     },
     description =
       Some(CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing"))
@@ -80,14 +78,14 @@ package object commands {
   val InfoChannelCmdFactory: ParsedCmdFactory[GuildChannel, NotUsed] = ParsedCmdFactory[GuildChannel, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("infoChannel"),
-    sink = (token, system, mat) => {
+    sink = requests => {
       //Using the context
       ParsedCmdFlow[GuildChannel]
         .map { implicit c => cmd =>
           implicit val cache: CacheSnapshot = c
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
-        .via(RequestStreams.simpleRequestFlow(token)(system, mat))
+        .via(requests.flow)
         .mapConcat {
           case RequestResponse(res, GetChannelInfo(guildId, senderChannelId, c), _, _, _, _) =>
             implicit val cache: CacheSnapshot = c
@@ -97,8 +95,7 @@ package object commands {
             implicit val cache: CacheSnapshot = c
             senderChannelId.tResolve(guildId).map(_.sendMessage("Error encountered")).toList
         }
-        .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-        .to(Sink.ignore)
+        .to(requests.sinkIgnore)
     },
     description = Some(
       CmdDescription(
@@ -127,7 +124,7 @@ package object commands {
   def KillCmdFactory(actorCmd: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("kill", "die"),
-    sink = (_, _, _) => Sink.actorRef(actorCmd, PoisonPill),
+    sink = _ => Sink.actorRef(actorCmd, PoisonPill),
     description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
   )
 
@@ -155,15 +152,14 @@ package object commands {
   val RatelimitTestCmdFactory: ParsedCmdFactory[Int, NotUsed] = ParsedCmdFactory[Int, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("ratelimitTest"),
-    sink = (token, system, mat) =>
+    sink = requests =>
       ParsedCmdFlow[Int]
         .mapConcat { implicit c => cmd =>
           cmd.msg.tChannel.toList.flatMap { ch =>
             (1 to cmd.args).map(num => ch.sendMessage(s"Msg$num"))
           }
         }
-        .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-        .to(Sink.ignore),
+        .to(requests.sinkIgnore),
     description = Some(
       CmdDescription(
         name = "Ratelimit test",
@@ -174,7 +170,7 @@ package object commands {
   )
 
   def ComplainErrorHandler(
-      token: String,
+      requests: RequestHelper,
       allCmds: Map[CmdCategory, Set[String]]
   )(implicit system: ActorSystem, mat: Materializer): Sink[AllCmdMessages, NotUsed] =
     Flow[AllCmdMessages]
@@ -186,6 +182,5 @@ package object commands {
         case unknown: RawCmd if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
           CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
       }
-      .via(RequestStreams.simpleRequestFlow(token)(system, mat))
-      .to(Sink.ignore)
+      .to(requests.sinkIgnore)
 }

@@ -25,13 +25,12 @@ package net.katsstuff.ackcord.commands
 
 import scala.concurrent.Future
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.{APIMessage, Cache}
 import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.{APIMessage, Cache}
 
 /**
   * Represents a command handler, which will try to parse commands with
@@ -39,9 +38,10 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param subscribe A source that represents the parsed commands. Can be
   *                  materialized as many times as needed.
   * @param categories The categories this handler knows about.
-  * @param token The bot token.
+  * @param requests A request helper object which will be passed to handlers.
   */
-case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[CmdCategory], token: String) {
+case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[CmdCategory], requests: RequestHelper) {
+  import requests.mat
 
   /**
     * Subscribe to a specific command using a category, aliases, and filters.
@@ -80,25 +80,21 @@ case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[C
   /**
     * Subscribe to a command using a unparsed command factory.
     */
-  def subscribe[Mat, Mat2](
-      factory: BaseCmdFactory[Mat]
-  )(combine: (Future[Done], Mat) => Mat2)(implicit system: ActorSystem, mat: Materializer): Mat2 =
+  def subscribe[Mat, Mat2](factory: BaseCmdFactory[Mat])(combine: (Future[Done], Mat) => Mat2): Mat2 =
     subscribeCmd(factory.category, factory.lowercaseAliases, factory.filters)
-      .via(CmdStreams.handleErrorsUnparsed(token))
+      .via(CmdStreams.handleErrorsUnparsed(requests))
       .watchTermination()(Keep.right)
-      .toMat(factory.sink(token, system, mat))(combine)
+      .toMat(factory.sink(requests))(combine)
       .run()
 
   /**
     * Subscribe to a command using a parsed command factory.
     */
-  def subscribe[A, Mat, Mat2](
-      factory: ParsedCmdFactory[A, Mat]
-  )(combine: (Future[Done], Mat) => Mat2)(implicit system: ActorSystem, mat: Materializer): Mat2 =
+  def subscribe[A, Mat, Mat2](factory: ParsedCmdFactory[A, Mat])(combine: (Future[Done], Mat) => Mat2): Mat2 =
     subscribeCmdParsed(factory.category, factory.lowercaseAliases, factory.filters)(factory.parser)
-      .via(CmdStreams.handleErrorsParsed(token))
+      .via(CmdStreams.handleErrorsParsed(requests))
       .watchTermination()(Keep.right)
-      .toMat(factory.sink(token, system, mat))(combine)
+      .toMat(factory.sink(requests))(combine)
       .run()
 }
 object Commands {
@@ -109,12 +105,12 @@ object Commands {
     *                    the commands.
     * @param categories The categories this handler should know about.
     * @param cache The cache to use for subscribing to created messages.
-    * @param token The bot token.
+    * @param requests A request helper object which will be passed to handlers.
     */
-  def create(needMention: Boolean, categories: Set[CmdCategory], cache: Cache, token: String)(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ) = Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI), categories, token)
+  def create(needMention: Boolean, categories: Set[CmdCategory], cache: Cache, requests: RequestHelper): Commands = {
+    import requests.{mat, system}
+    Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI), categories, requests)
+  }
 
   /**
     * Create a new command handler using an [[APIMessage]] source.
@@ -122,13 +118,15 @@ object Commands {
     *                    the commands.
     * @param categories The categories this handler should know about.
     * @param apiMessages The source of [[APIMessage]]s.
-    * @param token The bot token.
+    * @param requests A request helper object which will be passed to handlers.
     */
   def create(
       needMention: Boolean,
       categories: Set[CmdCategory],
       apiMessages: Source[APIMessage, NotUsed],
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer) =
-    Commands(CmdStreams.cmdStreams(needMention, categories, apiMessages), categories, token)
+      requests: RequestHelper
+  ): Commands = {
+    import requests.{mat, system}
+    Commands(CmdStreams.cmdStreams(needMention, categories, apiMessages), categories, requests)
+  }
 }

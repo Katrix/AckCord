@@ -25,14 +25,13 @@ package net.katsstuff.ackcord.example
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
-import akka.stream.Materializer
 import akka.stream.scaladsl.Sink
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.RESTRequests.CreateMessageData
-import net.katsstuff.ackcord.http.requests.{Request, RequestStreams}
+import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
 
-class ExampleHelpCmd(token: String)(implicit mat: Materializer) extends HelpCmd {
+class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
   implicit val system: ActorSystem = context.system
 
@@ -68,18 +67,17 @@ class ExampleHelpCmd(token: String)(implicit mat: Materializer) extends HelpCmd 
     builder.mkString
   }
 
-  override def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit =
-    RequestStreams.singleRequestIgnore(token, request)
+  override def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit = requests.singleIgnore(request)
 }
 object ExampleHelpCmd {
-  def props(token: String)(implicit mat: Materializer): Props = Props(new ExampleHelpCmd(token))
+  def props(requests: RequestHelper): Props = Props(new ExampleHelpCmd(requests))
 }
 
 class ExampleHelpCmdFactory(helpCmdActor: ActorRef)
     extends ParsedCmdFactory[HelpCmd.Args, NotUsed](
       category = ExampleCmdCategories.!,
       aliases = Seq("help"),
-      sink = (_, _, _) => Sink.actorRef(helpCmdActor, PoisonPill),
+      sink = _ => Sink.actorRef(helpCmdActor, PoisonPill),
       description =
         Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
     )
