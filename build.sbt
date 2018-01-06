@@ -56,11 +56,10 @@ lazy val example = project
     commonSettings,
     name := "ackcord-example",
     version := "1.0",
-    libraryDependencies += "com.sedmelluq"     % "lavaplayer"      % "1.2.42",
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
-  .dependsOn(ackCord, ackCordCommands)
+  .dependsOn(ackCord, ackCordCommands, ackCordLavaplayer)
 
 lazy val ackCordCommands = project
   .settings(
@@ -71,6 +70,28 @@ lazy val ackCordCommands = project
     description := "AckCord-commands is an extension to AckCord to allow one to easily define commands"
   )
   .dependsOn(ackCord)
+
+lazy val ackCordLavaplayer = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-lavaplayer",
+    version := "0.7",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
+    description := "AckCord-lavaplayer an extension to AckCord to help you integrate with lavaplayer"
+  )
+  .dependsOn(ackCord)
+
+lazy val ackCordHighLvl = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-highlvl",
+    version := "0.7",
+    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    description := "AckCord-highlvl is a higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
+  )
+  .dependsOn(ackCord, ackCordCommands, ackCordLavaplayer)
 
 lazy val benchmark = project
   .settings(
