@@ -73,7 +73,6 @@ class DiscordShard(gatewayUri: Uri, settings: ClientSettings, cache: Cache)
       gatewayHandler.forward(AbstractWsHandler.Logout)
     case DiscordShard.StartShard =>
       gatewayHandler.forward(AbstractWsHandler.Login)
-    case request: GatewayMessage[_] => gatewayHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)

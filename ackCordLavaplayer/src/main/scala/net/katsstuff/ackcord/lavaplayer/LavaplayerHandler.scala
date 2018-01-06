@@ -31,10 +31,10 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
 
 import akka.actor.{ActorLogging, ActorRef, FSM, PoisonPill, Props, Status}
-import net.katsstuff.ackcord.DiscordShard.ShardActor
+import akka.stream.scaladsl.Source
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
-import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
+import net.katsstuff.ackcord.http.websocket.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.lavaplayer.AudioSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
@@ -45,13 +45,8 @@ import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, Cache, DiscordShard}
   * @param player The player to use. Is not destroyed when the actor shuts down.
   * @param useBursting If a bursting audio sender should be used. Recommended.
   */
-class LavaplayerHandler(
-    shard: ShardActor,
-    player: AudioPlayer,
-    guildId: GuildId,
-    useBursting: Boolean = true,
-    cache: Cache
-) extends FSM[MusicState, StateData]
+class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, useBursting: Boolean = true, cache: Cache)
+    extends FSM[MusicState, StateData]
     with ActorLogging {
   import cache.mat
 
@@ -67,42 +62,51 @@ class LavaplayerHandler(
 
   when(Inactive) {
     case Event(ConnectVChannel(vChannelId, _), Idle) =>
-      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+      Source
+        .single(
+          VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+            .asInstanceOf[GatewayMessage[Any]]
+        )
+        .runWith(cache.gatewayPublish)
       log.debug("Connecting to new voice channel")
-      stay using Connecting(None, None, None, vChannelId)
-    case Event(ConnectVChannel(vChannelId, force), Connecting(_, _, _, inVChannelId)) =>
+      stay using Connecting(None, None, None, vChannelId, sender())
+    case Event(ConnectVChannel(vChannelId, force), Connecting(_, _, _, inVChannelId, firstSender)) =>
       if (vChannelId != inVChannelId) {
         if (force) {
-          stay using Connecting(None, None, None, vChannelId)
+          firstSender ! Status.Failure(new ForcedConnectedException(inVChannelId))
+          stay using Connecting(None, None, None, vChannelId, sender())
         } else {
           sender() ! Status.Failure(new AlreadyConnectedException(inVChannelId))
           stay()
         }
       } else stay() //Ignored
-    case Event(ConnectVChannel(vChannelId, force), HasVoiceWs(voiceWs, inVChannelId, _)) =>
+    case Event(ConnectVChannel(vChannelId, force), HasVoiceWs(voiceWs, inVChannelId, firstSender)) =>
       if (vChannelId != inVChannelId) {
         if (force) {
           voiceWs ! Logout
-          stay using Connecting(None, None, None, vChannelId)
+          firstSender ! Status.Failure(new ForcedConnectedException(inVChannelId))
+          stay using Connecting(None, None, None, vChannelId, sender())
         } else {
           sender() ! Status.Failure(new AlreadyConnectedException(inVChannelId))
           stay()
         }
       } else stay() //Ignored
-    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(vToken), vChannelId))
+    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(vToken), vChannelId, sender))
         if state.userId == c.current.botUser.id =>
       log.debug("Received session id")
-      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, vToken)
+      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, vToken, sender)
     case Event(APIMessage.VoiceStateUpdate(state, c), con: Connecting)
         if state.userId == c.current.botUser.id => //We did not have an endPoint and token
       log.debug("Received session id")
       stay using con.copy(sessionId = Some(state.sessionId))
 
-    case Event(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c), Connecting(_, Some(sessionId), _, vChannelId))
-        if guild.id == guildId =>
+    case Event(
+        APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c),
+        Connecting(_, Some(sessionId), _, vChannelId, sender)
+        ) if guild.id == guildId =>
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
       log.debug("Got token and endpoint")
-      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, vToken)
+      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, vToken, sender)
     case Event(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, _), con: Connecting)
         if guild.id == guildId => //We did not have a sessionId
       log.debug("Got token and endpoint")
@@ -116,6 +120,7 @@ class LavaplayerHandler(
           context.actorOf(BurstingAudioSender.props(player, udpHandler, voiceWs), "BurstingDataSender")
         else context.actorOf(AudioSender.props(player, udpHandler, voiceWs), "DataSender")
       audioSender ! StartSendAudio
+      sender ! MusicReady
       goto(Active) using CanSendAudio(voiceWs, audioSender, vChannelId)
 
     case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _, _)) =>
@@ -138,7 +143,12 @@ class LavaplayerHandler(
       voiceWs ! Logout
       dataSender ! PoisonPill
 
-      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      Source
+        .single(
+          VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+            .asInstanceOf[GatewayMessage[Any]]
+        )
+        .runWith(cache.gatewayPublish)
 
       log.debug("Left voice channel")
       goto(Inactive) using Idle
@@ -149,10 +159,15 @@ class LavaplayerHandler(
           voiceWs ! Logout
           dataSender ! PoisonPill
 
-          shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+          Source
+            .single(
+              VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+                .asInstanceOf[GatewayMessage[Any]]
+            )
+            .runWith(cache.gatewayPublish)
 
           log.debug("Moving to new vChannel")
-          goto(Inactive) using Connecting(None, None, None, vChannelId)
+          goto(Inactive) using Connecting(None, None, None, vChannelId, sender())
         } else {
           sender() ! Status.Failure(new AlreadyConnectedException(inVChannelId))
           stay()
@@ -170,7 +185,14 @@ class LavaplayerHandler(
 
   initialize()
 
-  def connect(vChannelId: ChannelId, endPoint: String, clientId: UserId, sessionId: String, token: String): State = {
+  def connect(
+      vChannelId: ChannelId,
+      endPoint: String,
+      clientId: UserId,
+      sessionId: String,
+      token: String,
+      sender: ActorRef
+  ): State = {
     val voiceWs =
       context.actorOf(
         VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None),
@@ -178,18 +200,12 @@ class LavaplayerHandler(
       )
     voiceWs ! Login
     log.debug("Music Connected")
-    stay using HasVoiceWs(voiceWs, vChannelId, sender())
+    stay using HasVoiceWs(voiceWs, vChannelId, sender)
   }
 }
 object LavaplayerHandler {
-  def props(
-      shard: ShardActor,
-      player: AudioPlayer,
-      guildId: GuildId,
-      useBursting: Boolean = true,
-      cache: Cache
-  ): Props =
-    Props(new LavaplayerHandler(shard, player, guildId, useBursting, cache))
+  def props(player: AudioPlayer, guildId: GuildId, useBursting: Boolean = true, cache: Cache): Props =
+    Props(new LavaplayerHandler(player, guildId, useBursting, cache))
 
   sealed trait MusicState
   private case object Inactive extends MusicState
@@ -201,7 +217,8 @@ object LavaplayerHandler {
       endPoint: Option[String],
       sessionId: Option[String],
       token: Option[String],
-      vChannelId: ChannelId
+      vChannelId: ChannelId,
+      sender: ActorRef
   ) extends StateData
   private case class HasVoiceWs(voiceWs: ActorRef, vChannelId: ChannelId, sender: ActorRef)        extends StateData
   private case class CanSendAudio(voiceWs: ActorRef, audioSender: ActorRef, vChannelId: ChannelId) extends StateData
@@ -248,4 +265,6 @@ object LavaplayerHandler {
 
   class AlreadyConnectedException(inChannel: ChannelId)
       extends Exception("The client is already connected to a channel in this guild")
+
+  class ForcedConnectedException(inChannel: ChannelId) extends Exception("Connection was forced to another channel")
 }

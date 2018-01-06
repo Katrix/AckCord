@@ -36,7 +36,6 @@ import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.pattern.pipe
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
-import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.example.ExampleMain
@@ -47,7 +46,6 @@ import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 class MusicHandler(
-    shard: ShardActor,
     requests: RequestHelper,
     commands: Commands,
     helpCmdActor: ActorRef,
@@ -68,7 +66,7 @@ class MusicHandler(
 
   val msgActor: ActorRef = requests.flow.runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
   val lavaplayerHandler: ActorRef = context.actorOf(
-    LavaplayerHandler.props(shard, player, guildId, MusicHandler.UseBurstingSender, cache),
+    LavaplayerHandler.props(player, guildId, MusicHandler.UseBurstingSender, cache),
     "LavaplayerHandler"
   )
 
@@ -97,9 +95,10 @@ class MusicHandler(
       //Startup
       stay()
     case Event(MusicReady, _) =>
+      log.debug("MusicReady")
       nextTrack()
       goto(Active)
-    case Event(QueueUrl(url, tChannel, vChannelId), _) if inVChannel == null =>
+    case Event(QueueUrl(url, tChannel, vChannelId), _) if inVChannel == ChannelId(0) =>
       lavaplayerHandler ! ConnectVChannel(vChannelId)
       log.info("Received queue item in Inactive")
       lastTChannel = tChannel
@@ -108,7 +107,7 @@ class MusicHandler(
       stay()
     case Event(QueueUrl(url, tChannel, vChannelId), _) =>
       if (vChannelId == inVChannel) loadItem(MusicHandler.playerManager, url).pipeTo(self)
-      else tChannel.sendMessage("Currently joining different channel")
+      else msgActor ! tChannel.sendMessage("Currently joining different channel")
       stay()
     case Event(e: MusicHandlerEvents, _) =>
       msgActor ! e.tChannel.sendMessage("Currently not playing music")
@@ -125,6 +124,7 @@ class MusicHandler(
           .foreach(queueTrack)
       } else queueTracks(playlist.getTracks.asScala: _*)
       stay()
+    case Event(_: AudioEvent, _) => stay() //Ignore
   }
 
   when(Active) {
@@ -133,6 +133,7 @@ class MusicHandler(
       stop()
     case Event(StopMusic(tChannel), _) =>
       lastTChannel = tChannel
+      inVChannel = ChannelId(0)
       player.stopTrack()
       lavaplayerHandler ! DisconnectVChannel
 
@@ -145,7 +146,7 @@ class MusicHandler(
         LavaplayerHandler.loadItem(MusicHandler.playerManager, url).pipeTo(self)
         stay()
       } else {
-        tChannel.sendMessage("Currently playing music for different channel")
+        msgActor ! tChannel.sendMessage("Currently playing music for different channel")
         stay()
       }
     case Event(NextTrack(tChannel), _) =>
@@ -239,13 +240,12 @@ class MusicHandler(
 }
 object MusicHandler {
   def props(
-      shard: ShardActor,
       requests: RequestHelper,
       commands: Commands,
       helpCmdActor: ActorRef,
       cache: Cache
   ): GuildId => Props =
-    guildId => Props(new MusicHandler(shard, requests, commands, helpCmdActor, guildId, cache))
+    guildId => Props(new MusicHandler(requests, commands, helpCmdActor, guildId, cache))
 
   final val UseBurstingSender = true
 

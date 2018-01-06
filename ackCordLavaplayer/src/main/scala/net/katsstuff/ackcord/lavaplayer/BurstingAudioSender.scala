@@ -62,6 +62,7 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
       setSpeaking(true)
       if (!hasEnabledBurstMode) {
         udpHandler ! BeginBurstMode
+        hasEnabledBurstMode = true
       }
 
       if (awaitingPackets != 0) {

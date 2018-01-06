@@ -33,13 +33,13 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
-import akka.http.scaladsl.model.ws.{BinaryMessage, InvalidUpgradeResponse, Message, TextMessage, ValidUpgrade, WebSocketUpgradeResponse}
+import akka.http.scaladsl.model.ws._
 import akka.stream.scaladsl.{Compression, Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{Attributes, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import io.circe
 import io.circe.syntax._
-import io.circe.{Error, parser}
+import io.circe.{parser, Error}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}
@@ -77,12 +77,10 @@ class VoiceWsHandler(
 
   private var ssrc:            Int         = -1
   private var previousNonce:   Option[Int] = None
-  private var localAddress:    String      = _
-  private var localPort:       Int         = -1
   private var connectionActor: ActorRef    = _
 
-  private var sendFirstSinkAck: Option[ActorRef] = None
-  var queue: SourceQueueWithComplete[VoiceMessage[_]] = _
+  private var sendFirstSinkAck: Option[ActorRef]                         = None
+  var queue:                    SourceQueueWithComplete[VoiceMessage[_]] = _
 
   var receivedAck = true
 
@@ -106,12 +104,14 @@ class VoiceWsHandler(
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
 
-  def createMessage: Flow[VoiceMessage[_], Message, NotUsed] = Flow[VoiceMessage[_]].map { msg =>
-    val payload = msg.asJson.noSpaces
-    if (AckCordSettings().LogSentWs) {
-      log.debug("Sending payload: {}", payload)
-    }
-    TextMessage(payload)
+  def createMessage: Flow[VoiceMessage[_], Message, NotUsed] = {
+    val baseFlow = Flow[VoiceMessage[_]].map(_.asJson.noSpaces)
+
+    val withLogging = if (AckCordSettings().LogSentWs) {
+      baseFlow.log("Sending payload")
+    } else baseFlow
+
+    withLogging.map(TextMessage.apply)
   }
 
   override def wsUri: Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
@@ -122,16 +122,19 @@ class VoiceWsHandler(
   def wsFlow: Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
     Http().webSocketClientFlow(wsUri)
 
-  override def preStart(): Unit = {
-    self ! SendIdentify
-  }
-
   override def postStop(): Unit =
     if (queue != null) queue.complete()
 
   def becomeActive(): Unit = {
     context.become(active)
-    self ! SendIdentify //We act first here
+
+    //Send identify
+    val msg = resume match {
+      case Some(resumeData) => Resume(resumeData)
+      case None             => Identify(IdentifyData(serverId, userId, sessionId, token))
+    }
+    queue.offer(msg)
+    resume = Some(ResumeData(serverId, sessionId, token))
   }
 
   def becomeInactive(): Unit = {
@@ -144,13 +147,15 @@ class VoiceWsHandler(
   def inactive: Receive = {
     case Login =>
       log.info("Logging in")
-      val src = Source.queue[VoiceMessage[_]](64, OverflowStrategy.backpressure).named("GatewayQueue")
-      val sink = Sink.actorRefWithAck[Either[Error, VoiceMessage[_]]](
-        ref = self,
-        onInitMessage = InitSink,
-        ackMessage = AckSink,
-        onCompleteMessage = CompletedSink
-      ).named("GatewaySink")
+      val src = Source.queue[VoiceMessage[_]](64, OverflowStrategy.fail).named("GatewayQueue")
+      val sink = Sink
+        .actorRefWithAck[Either[Error, VoiceMessage[_]]](
+          ref = self,
+          onInitMessage = InitSink,
+          ackMessage = AckSink,
+          onCompleteMessage = CompletedSink
+        )
+        .named("GatewaySink")
       val flow = createMessage.viaMat(wsFlow)(Keep.right).viaMat(parseMessage)(Keep.left).named("Gateway")
 
       log.debug("WS uri: {}", wsUri)
@@ -173,6 +178,7 @@ class VoiceWsHandler(
       sendFirstSinkAck.foreach { act =>
         act ! AckSink
       }
+      sendFirstSinkAck = null
 
       becomeActive()
     case InitSink => sendFirstSinkAck = Some(sender())
@@ -230,20 +236,6 @@ class VoiceWsHandler(
       case Left(NonFatal(e)) =>
         log.error(e, "Encountered websocket parsing error")
         self ! Restart(fresh = false, 1.seconds)
-      case SendIdentify =>
-        val msg = resume match {
-          case Some(resumeData) => Resume(resumeData)
-          case None => Identify(IdentifyData(serverId, userId, sessionId, token))
-        }
-        queue.offer(msg)
-        resume = Some(ResumeData(serverId, sessionId, token))
-      case SendSelectProtocol =>
-        require(localPort != -1)
-
-        val data = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, localPort, "xsalsa20_poly1305"))
-        queue.offer(SelectProtocol(data))
-        localAddress = null
-        localPort = -1
       case SendHeartbeat =>
         if (receivedAck) {
           val nonce = System.currentTimeMillis().toInt
@@ -257,10 +249,11 @@ class VoiceWsHandler(
           log.warning("Did not receive HeartbeatACK between heartbeats. Restarting.")
           self ! Restart(fresh = false, 0.millis)
         }
-      case FoundIP(foundLocalAddress, foundPort) =>
-        self ! SendSelectProtocol
-        localAddress = foundLocalAddress
-        localPort = foundPort
+      case FoundIP(localAddress, localPort) =>
+        log.info("Found IP and port")
+
+        val data = SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, localPort, "xsalsa20_poly1305"))
+        queue.offer(SelectProtocol(data))
       case SetSpeaking(speaking) =>
         if (queue != null && ssrc != -1) {
           queue.offer(Speaking(SpeakingData(speaking, None, ssrc, Some(userId))))
@@ -272,7 +265,9 @@ class VoiceWsHandler(
         shuttingDown = true
       case Restart(fresh, waitDur) =>
         queue.complete()
-        connectionActor ! Disconnect
+        if (connectionActor != null) {
+          connectionActor ! Disconnect
+        }
         timers.startSingleTimer(restartLoginKey, Login, waitDur)
         log.info("Restarting")
         if (fresh) {
@@ -290,6 +285,7 @@ class VoiceWsHandler(
     */
   def handleWsMessages: Receive = {
     case Right(Ready(ReadyData(readySsrc, port, _, _))) =>
+      log.debug("Received ready")
       ssrc = readySsrc
       connectionActor = context.actorOf(
         VoiceUDPHandler.props(address, port, ssrc, sendTo, sendSoundTo, serverId, userId),
@@ -314,13 +310,18 @@ class VoiceWsHandler(
         log.warning("Did not receive correct nonce in HeartbeatACK. Restarting.")
         self ! Restart(fresh = false, 500.millis)
       }
+
+      sender() ! AckSink
     case Right(SessionDescription(SessionDescriptionData(_, secretKey))) =>
+      log.debug("Received session description")
       connectionActor ! StartConnection(secretKey)
+      sender() ! AckSink
     case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, Some(speakingUserId)))) =>
       sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, userSsrc, isSpeaking, delay, serverId, userId))
-    case Right(Resumed) => //NO-OP
-    case Right(IgnoreMessage12)        => //NO-OP
-    case Right(IgnoreClientDisconnect) => //NO-OP
+      sender() ! AckSink
+    case Right(Resumed)                => sender() ! AckSink //NO-OP
+    case Right(IgnoreMessage12)        => sender() ! AckSink //NO-OP
+    case Right(IgnoreClientDisconnect) => sender() ! AckSink //NO-OP
   }
 }
 object VoiceWsHandler {
@@ -341,8 +342,6 @@ object VoiceWsHandler {
 
   case object SendHeartbeat
 
-  private case object SendIdentify
-  private case object SendSelectProtocol
   private case object ConnectionDied
 
   /**

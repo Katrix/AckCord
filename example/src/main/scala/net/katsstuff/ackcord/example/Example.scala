@@ -99,17 +99,11 @@ class ExampleMain(settings: ClientSettings, cache: Cache, shard: ShardActor) ext
 
   var guildRouterMusic: ActorRef =
     context.actorOf(
-      GuildRouter.props(MusicHandler.props(shard, requests, cmdObj, helpCmdActor, cache), None),
+      GuildRouter.props(MusicHandler.props(requests, cmdObj, helpCmdActor, cache), None),
       "MusicHandler"
     )
 
-  cache.subscribeAPIActor(
-    guildRouterMusic,
-    DiscordShard.StopShard,
-    classOf[APIMessage.Ready],
-    classOf[APIMessage.VoiceServerUpdate],
-    classOf[APIMessage.VoiceStateUpdate]
-  )
+  cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard, classOf[APIMessage.Ready])
   shard ! DiscordShard.StartShard
 
   private var shutdownCount  = 0

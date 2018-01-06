@@ -170,9 +170,9 @@ class VoiceUDPHandler(
 
     val maxSize = AckCordSettings().UDPMaxPacketsBeforeDrop
 
-    if (queue.size == 1) {
+    if (queue.lengthCompare(1) == 0) {
       socket ! UdpConnected.Send(payload, UDPAck)
-    } else if (queue.size > maxSize) {
+    } else if (queue.lengthCompare(maxSize) > 0) {
       val toDrop = queue.size - maxSize
       for (_ <- 0 until toDrop) queue.dequeue()
 
@@ -186,7 +186,7 @@ class VoiceUDPHandler(
   }
 
   def sendDataRequest(): Unit = {
-    if (burstSender != null && !hasSentRequest && queue.size <= AckCordSettings().UDPSendRequestAmount) {
+    if (burstSender != null && !hasSentRequest && queue.lengthCompare(AckCordSettings().UDPSendRequestAmount) <= 0) {
       burstSender ! DataRequest(AckCordSettings().UDPMaxBurstAmount - queue.size)
       hasSentRequest = true
     }
