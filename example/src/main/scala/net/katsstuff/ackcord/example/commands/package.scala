@@ -35,7 +35,7 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RESTRequests._
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{DiscordClient, RequestDSL}
+import net.katsstuff.ackcord.{DiscordShard, RequestDSL}
 
 package object commands {
 
@@ -110,7 +110,7 @@ package object commands {
     override def receive: Receive = {
       case ParsedCmd(_, _, _, _) =>
         log.info("Received shutdown command")
-        main ! DiscordClient.ShutdownClient
+        main ! DiscordShard.StopShard
         context.watch(main)
       case Terminated(_) =>
         log.info("Everything shut down")

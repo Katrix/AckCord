@@ -30,11 +30,11 @@ import akka.actor.{ActorSystem, Props, Status}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
-import akka.pattern.pipe
+import akka.pattern.{Backoff, pipe}
 import akka.stream.scaladsl._
 import akka.stream.{KillSwitches, Materializer, SharedKillSwitch}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler.SetResumeData
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler.ConnectionDied
 import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSettings}
 
 /**
@@ -74,7 +74,7 @@ class GatewayHandler(
       val (wsUpgrade, newResumeData) =
         source.viaMat(wsFlow)(Keep.right).via(killSwitch.flow).toMat(sink)(Keep.left).run()
 
-      newResumeData.map(SetResumeData).pipeTo(self)
+      newResumeData.map(ConnectionDied).pipeTo(self)
 
       wsUpgrade.foreach {
         case InvalidUpgradeResponse(response, cause) =>
@@ -93,7 +93,7 @@ class GatewayHandler(
   }
 
   def active: Receive = {
-    case SetResumeData(newResume) =>
+    case ConnectionDied(newResume) =>
       resume = newResume
       killSwitch.shutdown()
       killSwitch = null
@@ -138,5 +138,5 @@ object GatewayHandler {
     Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)(cache.mat))
   }
 
-  case class SetResumeData(resume: Option[ResumeData])
+  case class ConnectionDied(resume: Option[ResumeData])
 }

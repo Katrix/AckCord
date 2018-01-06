@@ -37,7 +37,7 @@ import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.pattern.pipe
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
-import net.katsstuff.ackcord.DiscordClient.ClientActor
+import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
 import net.katsstuff.ackcord.example.ExampleMain
@@ -48,10 +48,10 @@ import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStat
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordClient}
+import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordShard}
 
 class MusicHandler(
-    client: ClientActor,
+    shard: ShardActor,
     requests: RequestHelper,
     commands: Commands,
     helpCmdActor: ActorRef,
@@ -88,10 +88,10 @@ class MusicHandler(
   startWith(Inactive, Connecting(None, None, None, None))
 
   when(Inactive) {
-    case Event(DiscordClient.ShutdownClient, HasVoiceWs(voiceWs, _)) =>
+    case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _)) =>
       voiceWs ! Logout
       stop()
-    case Event(DiscordClient.ShutdownClient, _) =>
+    case Event(DiscordShard.StopShard, _) =>
       stop()
     case Event(APIMessage.Ready(_), _) =>
       //Startup
@@ -126,7 +126,7 @@ class MusicHandler(
       nextTrack(dataSender)
       goto(Active) using CanSendAudio(voiceWs, dataSender, vChannelId)
     case Event(QueueUrl(url, tChannel, vChannelId), con @ Connecting(_, _, _, None)) =>
-      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
       log.info("Received queue item in Inactive")
       lastTChannel = tChannel
       MusicHandler.loadItem(url).pipeTo(self)
@@ -161,7 +161,7 @@ class MusicHandler(
   }
 
   when(Active) {
-    case Event(DiscordClient.ShutdownClient, CanSendAudio(voiceWs, dataSender, _)) =>
+    case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, dataSender, _)) =>
       voiceWs ! Logout
       dataSender ! StopSendAudio
       stop()
@@ -174,7 +174,7 @@ class MusicHandler(
       voiceWs ! Logout
       context.stop(dataSender)
 
-      client ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
 
       log.info("Stopped and left")
       goto(Inactive) using Connecting(None, None, None, None)
@@ -291,11 +291,11 @@ class MusicHandler(
 }
 object MusicHandler {
   def props(
-      client: ClientActor,
+      shard: ShardActor,
       requests: RequestHelper,
       commands: Commands,
       helpCmdActor: ActorRef
-  ): GuildId => Props = guildId => Props(new MusicHandler(client, requests, commands, helpCmdActor, guildId))
+  ): GuildId => Props = guildId => Props(new MusicHandler(shard, requests, commands, helpCmdActor, guildId))
 
   final val UseBurstingSender = true
 

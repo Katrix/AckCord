@@ -29,12 +29,12 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
-import net.katsstuff.ackcord.DiscordClient.ClientActor
+import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.example.music._
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordClient}
+import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordShard}
 
 object Example {
 
@@ -52,9 +52,9 @@ object Example {
     val token = args.head
 
     val settings = ClientSettings(token = token)
-    DiscordClient.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
-      case Success(clientActor) =>
-        system.actorOf(ExampleMain.props(settings, cache, clientActor), "Main")
+    DiscordShard.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
+      case Success(shardActor) =>
+        system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
       case Failure(e) =>
         println("Could not connect to Discord")
         throw e
@@ -62,7 +62,7 @@ object Example {
   }
 }
 
-class ExampleMain(settings: ClientSettings, cache: Cache, client: ClientActor) extends Actor with ActorLogging {
+class ExampleMain(settings: ClientSettings, cache: Cache, shard: ShardActor) extends Actor with ActorLogging {
   import cache.mat
   implicit val system: ActorSystem = context.system
 
@@ -98,29 +98,29 @@ class ExampleMain(settings: ClientSettings, cache: Cache, client: ClientActor) e
   registerCmd(helpCmd)
 
   var guildRouterMusic: ActorRef =
-    context.actorOf(GuildRouter.props(MusicHandler.props(client, requests, cmdObj, helpCmdActor), None), "MusicHandler")
+    context.actorOf(GuildRouter.props(MusicHandler.props(shard, requests, cmdObj, helpCmdActor), None), "MusicHandler")
 
   cache.subscribeAPIActor(
     guildRouterMusic,
-    DiscordClient.ShutdownClient,
+    DiscordShard.StopShard,
     classOf[APIMessage.Ready],
     classOf[APIMessage.VoiceServerUpdate],
     classOf[APIMessage.VoiceStateUpdate]
   )
-  client ! DiscordClient.StartClient
+  shard ! DiscordShard.StartShard
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
 
   override def receive: Receive = {
-    case DiscordClient.ShutdownClient =>
+    case DiscordShard.StopShard =>
       isShuttingDown = true
 
-      context.watch(client)
+      context.watch(shard)
       context.watch(guildRouterMusic)
 
-      client ! DiscordClient.ShutdownClient
-      guildRouterMusic ! DiscordClient.ShutdownClient
+      shard ! DiscordShard.StopShard
+      guildRouterMusic ! DiscordShard.StopShard
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
@@ -130,8 +130,8 @@ class ExampleMain(settings: ClientSettings, cache: Cache, client: ClientActor) e
   }
 }
 object ExampleMain {
-  def props(settings: ClientSettings, cache: Cache, client: ClientActor): Props =
-    Props(new ExampleMain(settings, cache, client))
+  def props(settings: ClientSettings, cache: Cache, shard: ShardActor): Props =
+    Props(new ExampleMain(settings, cache, shard))
 
   def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)

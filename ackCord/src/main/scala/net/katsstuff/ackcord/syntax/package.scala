@@ -1204,7 +1204,7 @@ package object syntax {
     def createDMChannel[Ctx](context: Ctx = NotUsed: NotUsed) = CreateDm(CreateDMData(user.id), context)
   }
 
-  implicit class DiscordClientSyntax(private val client: ActorRef @@ DiscordClient) extends AnyVal {
+  implicit class DiscordShardSyntax(private val shard: ActorRef @@ DiscordShard) extends AnyVal {
 
     /**
       * Fetch a channel by id.

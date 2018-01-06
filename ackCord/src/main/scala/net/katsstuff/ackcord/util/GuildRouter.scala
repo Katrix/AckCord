@@ -33,7 +33,7 @@ import akka.routing.Broadcast
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.util.GuildRouter._
-import net.katsstuff.ackcord.{APIMessage, DiscordClient}
+import net.katsstuff.ackcord.{APIMessage, DiscordShard}
 
 /**
   * Will send all [[APIMessage]]s with the same guild
@@ -53,7 +53,7 @@ import net.katsstuff.ackcord.{APIMessage, DiscordClient}
   * Global events like [[APIMessage.Ready]], [[APIMessage.Resumed]] and
   * [[APIMessage.UserUpdate]] are send to all actors.
   *
-  * It also respects [[DiscordClient.ShutdownClient]].
+  * It also respects [[DiscordShard.StopShard]].
   * It sends the shutdown to all it's children, and when all the children have
   * stopped, it stops itself. The child actors will not receive any further
   * events once a shutdown has been started.
@@ -107,9 +107,9 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
     case GetGuildActor(guildId)         => if (!isShuttingDown) sender() ! ResponseGetGuild(getGuild(guildId))
     case SendToGuildActor(guildId, msg) => sendToGuild(guildId, msg)
     case Broadcast(msg)                 => sendToAll(msg)
-    case DiscordClient.ShutdownClient =>
+    case DiscordShard.StopShard =>
       isShuttingDown = true
-      sendToAll(DiscordClient.ShutdownClient)
+      sendToAll(DiscordShard.StopShard)
       if(handlers.isEmpty) context.stop(self)
     case TerminatedGuild(guildId) =>
       handlers.remove(guildId)

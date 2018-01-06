@@ -36,7 +36,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.ackcord.DiscordClient.{ClientActor, CreateGateway}
+import net.katsstuff.ackcord.DiscordShard.{CreateGateway, ShardActor}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
@@ -46,17 +46,17 @@ import shapeless.tag.@@
 
 /**
   * The core actor that controls all the other used actors of AckCord
-  * @param gatewayWsUri The gateway websocket uri
+  * @param gatewayUri The gateway websocket uri
   * @param settings The settings to use
   */
-class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)
+class DiscordShard(gatewayUri: Uri, settings: ClientSettings, cache: Cache)
     extends Actor
     with ActorLogging
     with Timers {
   private implicit val system: ActorSystem = context.system
 
   private var gatewayHandler =
-    context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
+    context.actorOf(GatewayHandler.cacheProps(gatewayUri, settings, cache), "GatewayHandler")
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -68,10 +68,10 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)
     OneForOneStrategy(5, 3.minutes)(SupervisorStrategy.defaultDecider)
 
   override def receive: Receive = {
-    case DiscordClient.ShutdownClient =>
+    case DiscordShard.StopShard =>
       isShuttingDown = true
       gatewayHandler.forward(AbstractWsHandler.Logout)
-    case DiscordClient.StartClient =>
+    case DiscordShard.StartShard =>
       gatewayHandler.forward(AbstractWsHandler.Login)
     case request: GatewayMessage[_] => gatewayHandler.forward(request)
     case Terminated(act) if isShuttingDown =>
@@ -86,44 +86,57 @@ class DiscordClient(gatewayWsUri: Uri, settings: ClientSettings, cache: Cache)
         timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
       }
     case CreateGateway =>
-      gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayWsUri, settings, cache), "GatewayHandler")
+      gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayUri, settings, cache), "GatewayHandler")
   }
 }
-object DiscordClient extends FailFastCirceSupport {
+object DiscordShard extends FailFastCirceSupport {
   def props(wsUri: Uri, settings: ClientSettings, cache: Cache): Props =
-    Props(new DiscordClient(wsUri, settings, cache))
+    Props(new DiscordShard(wsUri, settings, cache))
   def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, ClientSettings(token), cache)
 
-  def tagClient(actor: ActorRef): ActorRef @@ DiscordClient = shapeless.tag[DiscordClient](actor)
-  type ClientActor = ActorRef @@ DiscordClient
+  def tagClient(actor: ActorRef): ActorRef @@ DiscordShard = shapeless.tag[DiscordShard](actor)
+  type ShardActor = ActorRef @@ DiscordShard
 
   /**
-    * Create a client actor given the needed arguments
+    * Create a shard actor given the needed arguments
     * @param wsUri The websocket gateway uri
     * @param token The bot token to use for authentication
     * @param system The actor system to use for creating the client actor
     */
-  def connect(wsUri: Uri, token: String, cache: Cache)(implicit system: ActorSystem): ClientActor =
-    tagClient(system.actorOf(props(wsUri, token, cache), "DiscordClient"))
+  def connect(wsUri: Uri, token: String, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+    tagClient(system.actorOf(props(wsUri, token, cache), actorName))
 
   /**
-    * Create a client actor given the needed arguments
+    * Create a shard actor given the needed arguments
     * @param wsUri The websocket gateway uri
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
     */
-  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache)(implicit system: ActorSystem): ClientActor =
-    tagClient(system.actorOf(props(wsUri, settings, cache), "DiscordClient"))
+  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+    tagClient(system.actorOf(props(wsUri, settings, cache), actorName))
+
+  /**
+    * Create as multiple shard actors, given the needed arguments
+    * @param wsUri The websocket gateway uri
+    * @param shardTotal The amount of shards to create
+    * @param settings The settings to use
+    * @param system The actor system to use for creating the client actor
+    */
+  def connectShards(wsUri: Uri, shardTotal: Int, settings: ClientSettings, cache: Cache, actorName: String)(
+      implicit system: ActorSystem
+  ): Seq[ShardActor] = for (i <- 0 until shardTotal) yield {
+    connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
+  }
 
   /**
     * Send this to the client to log out and stop gracefully
     */
-  case object ShutdownClient
+  case object StopShard
 
   /**
     * Send this to the client to log in
     */
-  case object StartClient
+  case object StartShard
 
   private case object CreateGateway
 
@@ -224,6 +237,6 @@ case class ClientSettings(
     * @param system The actor system to use
     * @return The discord client actor
     */
-  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem): ClientActor =
-    DiscordClient.connect(wsUri, this, cache)
+  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem): ShardActor =
+    DiscordShard.connect(wsUri, this, cache)
 }
