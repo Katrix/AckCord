@@ -234,7 +234,9 @@ object GatewayHandlerGraphStage {
 
   def createMessage(implicit system: ActorSystem): Flow[GatewayMessage[_], Message, NotUsed] = {
     val flow = Flow[GatewayMessage[_]].map { msg =>
-      TextMessage(msg.asJson.noSpaces)
+      val json = msg.asJson.noSpaces
+      require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
+      TextMessage(json)
     }
 
     if (AckCordSettings().LogSentWs) flow.log("Sending payload", _.text) else flow
