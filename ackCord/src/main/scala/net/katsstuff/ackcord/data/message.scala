@@ -196,7 +196,7 @@ case class Message(
     nonce: Option[RawSnowflake],
     pinned: Boolean,
     messageType: MessageType
-) extends GetChannel {
+) extends GetTChannel {
 
   def authorUserId: Option[UserId] = if(isAuthorUser) Some(UserId(authorId)) else None
 

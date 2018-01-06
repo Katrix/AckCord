@@ -42,8 +42,16 @@ case class Webhook(
     name: Option[String],
     avatar: Option[String],
     token: String
-) extends GetGuildOpt
-    with GetChannel {
+) extends GetGuildOpt {
 
   override def guild(implicit snapshot: CacheSnapshot): Option[Guild] = super[GetGuildOpt].guild
+
+  /**
+    * Resolve the channel of this webhook as a guild channel
+    */
+  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TChannel] = {
+    guildId.flatMap(g => snapshot.getGuildChannel(g, channelId)).orElse(snapshot.getGuildChannel(channelId)).collect {
+      case gChannel: TGuildChannel => gChannel
+    }
+  }
 }

@@ -53,7 +53,7 @@ object GuildStreams {
         case msg: APIMessage.ChannelMessage =>
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>
-          msg.message.channel(msg.cache.current).flatMap(_.asGuildChannel).map(_.guildId)
+          msg.message.tGuildChannel(msg.cache.current).map(_.guildId)
         case _ @APIMessage.VoiceStateUpdate(state, _) => state.guildId
         case msg: GatewayEvent.GuildCreate =>
           msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))

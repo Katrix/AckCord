@@ -237,6 +237,6 @@ case class ClientSettings(
     * @param system The actor system to use
     * @return The discord client actor
     */
-  def connect(wsUri: Uri, cache: Cache)(implicit system: ActorSystem): ShardActor =
-    DiscordShard.connect(wsUri, this, cache)
+  def connect(wsUri: Uri, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+    DiscordShard.connect(wsUri, this, cache, actorName)
 }

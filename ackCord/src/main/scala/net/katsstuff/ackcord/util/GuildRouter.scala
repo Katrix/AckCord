@@ -80,7 +80,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
         case _                => sendToNotGuild(msg)
       }
     case msg: APIMessage.MessageMessage =>
-      msg.message.channel(msg.cache.current) match {
+      msg.message.channelId.resolve(msg.cache.current) match {
         case Some(gchannel: GuildChannel) => sendToGuild(gchannel.guildId, msg)
         case _                            => sendToNotGuild(msg)
       }
