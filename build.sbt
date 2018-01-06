@@ -1,6 +1,6 @@
-lazy val akkaVersion     = "2.5.7"
-lazy val akkaHttpVersion = "10.0.10"
-val circeVersion         = "0.8.0"
+lazy val akkaVersion     = "2.5.8"
+lazy val akkaHttpVersion = "10.0.11"
+val circeVersion         = "0.9.0"
 
 lazy val commonSettings = Seq(scalaVersion := "2.12.4", organization := "net.katsstuff")
 
@@ -40,7 +40,7 @@ lazy val ackCord = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.18.1",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.19.0",
     libraryDependencies ++= Seq(
       "io.circe" %% "circe-core",
       "io.circe" %% "circe-generic-extras",
@@ -57,7 +57,7 @@ lazy val example = project
     name := "ackcord-example",
     version := "1.0",
     libraryDependencies += "com.sedmelluq"     % "lavaplayer"      % "1.2.42",
-    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % "2.5.6",
+    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
   .dependsOn(ackCord, ackCordCommands)
@@ -81,7 +81,7 @@ lazy val benchmark = project
     resolvers += JCenterRepository,
     libraryDependencies += "org.openjdk.jol"      % "jol-core"  % "0.9",
     libraryDependencies += "com.github.austinv11" % "Discord4j" % "dev-SNAPSHOT",
-    libraryDependencies += "net.dv8tion" % "JDA" % "3.3.0_260"
+    libraryDependencies += "net.dv8tion"          % "JDA"       % "3.3.0_260"
   )
   .dependsOn(ackCord)
 
