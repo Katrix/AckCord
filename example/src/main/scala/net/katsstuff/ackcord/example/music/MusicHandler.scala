@@ -25,13 +25,12 @@ package net.katsstuff.ackcord.example.music
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.concurrent.{Future, Promise}
 
 import com.sedmelluq.discord.lavaplayer.player._
 import com.sedmelluq.discord.lavaplayer.player.event._
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}
+import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack, AudioTrackEndReason}
 
 import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.pattern.pipe
@@ -39,23 +38,21 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
-import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, TChannel, UserId}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.example.ExampleMain
-import net.katsstuff.ackcord.example.music.DataSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.http.requests.RequestHelper
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
-import net.katsstuff.ackcord.http.websocket.gateway.{VoiceStateUpdate, VoiceStateUpdateData}
-import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler
-import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
+import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
+import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, DiscordShard}
+import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 class MusicHandler(
     shard: ShardActor,
     requests: RequestHelper,
     commands: Commands,
     helpCmdActor: ActorRef,
-    guildId: GuildId
+    guildId: GuildId,
+    cache: Cache
 ) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
@@ -66,7 +63,14 @@ class MusicHandler(
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
     ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
+  val player: AudioPlayer = MusicHandler.playerManager.createPlayer()
+  player.addListener(new AudioEventSender(self))
+
   val msgActor: ActorRef = requests.flow.runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
+  val lavaplayerHandler: ActorRef = context.actorOf(
+    LavaplayerHandler.props(shard, player, guildId, MusicHandler.UseBurstingSender, cache),
+    "LavaplayerHandler"
+  )
 
   {
     val cmds = new commands(guildId, self)
@@ -76,75 +80,41 @@ class MusicHandler(
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
 
-  val player: AudioPlayer = MusicHandler.playerManager.createPlayer()
-  player.addListener(new AudioEventSender(self))
-
-  var lastTChannel: TChannel = _
+  var inVChannel:   ChannelId = _
+  var lastTChannel: TChannel  = _
 
   onTermination {
     case StopEvent(_, _, _) if player != null => player.destroy()
   }
 
-  startWith(Inactive, Connecting(None, None, None, None))
+  startWith(Inactive, NoData)
 
   when(Inactive) {
-    case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _)) =>
-      voiceWs ! Logout
-      stop()
     case Event(DiscordShard.StopShard, _) =>
+      lavaplayerHandler.forward(DiscordShard.StopShard)
       stop()
     case Event(APIMessage.Ready(_), _) =>
       //Startup
       stay()
-    case Event(APIMessage.VoiceStateUpdate(state, c), Connecting(Some(endPoint), _, Some(vToken), Some(vChannelId)))
-        if state.userId == c.current.botUser.id =>
-      log.info("Received session id")
-      connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, vToken)
-    case Event(APIMessage.VoiceStateUpdate(state, c), con: Connecting)
-        if state.userId == c.current.botUser.id => //We did not have an endPoint and token
-      log.info("Received session id")
-      stay using con.copy(sessionId = Some(state.sessionId))
-    case Event(
-        APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c),
-        Connecting(_, Some(sessionId), _, Some(vChannelId))
-        ) if guild.id == guildId =>
-      val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
-      log.info("Got token and endpoint")
-      connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, vToken)
-    case Event(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, _), con: Connecting)
-        if guild.id == guildId => //We did not have a sessionId
-      log.info("Got token and endpoint")
-      val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
-      stay using con.copy(endPoint = Some(usedEndpoint), token = Some(vToken))
-    case Event(AudioAPIMessage.Ready(udpHandler, _, _), HasVoiceWs(voiceWs, vChannelId)) =>
-      log.info("Audio ready")
-      voiceWs ! SetSpeaking(true)
-      val dataSender =
-        if (MusicHandler.UseBurstingSender)
-          context.actorOf(BurstingDataSender.props(player, udpHandler, voiceWs), "BurstingDataSender")
-        else context.actorOf(DataSender.props(player, udpHandler, voiceWs), "DataSender")
-      nextTrack(dataSender)
-      goto(Active) using CanSendAudio(voiceWs, dataSender, vChannelId)
-    case Event(QueueUrl(url, tChannel, vChannelId), con @ Connecting(_, _, _, None)) =>
-      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+    case Event(MusicReady, _) =>
+      nextTrack()
+      goto(Active)
+    case Event(QueueUrl(url, tChannel, vChannelId), _) if inVChannel == null =>
+      lavaplayerHandler ! ConnectVChannel(vChannelId)
       log.info("Received queue item in Inactive")
       lastTChannel = tChannel
-      MusicHandler.loadItem(url).pipeTo(self)
-      stay using con.copy(vChannelId = Some(vChannelId))
-    case Event(QueueUrl(url, tChannel, vChannelId), Connecting(_, _, _, Some(inVChannelId))) =>
-      if (vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
-      else tChannel.sendMessage("Currently joining different channel")
+      inVChannel = vChannelId
+      loadItem(MusicHandler.playerManager, url).pipeTo(self)
       stay()
-      stay()
-    case Event(QueueUrl(url, tChannel, vChannelId), HasVoiceWs(_, inVChannelId)) =>
-      if (vChannelId == inVChannelId) MusicHandler.loadItem(url).pipeTo(self)
+    case Event(QueueUrl(url, tChannel, vChannelId), _) =>
+      if (vChannelId == inVChannel) loadItem(MusicHandler.playerManager, url).pipeTo(self)
       else tChannel.sendMessage("Currently joining different channel")
       stay()
     case Event(e: MusicHandlerEvents, _) =>
       msgActor ! e.tChannel.sendMessage("Currently not playing music")
       stay()
     case Event(track: AudioTrack, _) =>
-      queueTrack(None, track)
+      queueTrack(track)
       log.info("Received track")
       stay()
     case Event(playlist: AudioPlaylist, _) =>
@@ -152,62 +122,52 @@ class MusicHandler(
       if (playlist.isSearchResult) {
         Option(playlist.getSelectedTrack)
           .orElse(playlist.getTracks.asScala.headOption)
-          .foreach(queueTrack(None, _))
-      } else queueTracks(None, playlist.getTracks.asScala: _*)
+          .foreach(queueTrack)
+      } else queueTracks(playlist.getTracks.asScala: _*)
       stay()
-    case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
-    case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
-    case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _)       => stay() //NO-OP
   }
 
   when(Active) {
-    case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, dataSender, _)) =>
-      voiceWs ! Logout
-      dataSender ! StopSendAudio
+    case Event(DiscordShard.StopShard, _) =>
+      lavaplayerHandler.forward(DiscordShard.StopShard)
       stop()
-    case Event(APIMessage.VoiceStateUpdate(_, _), _)        => stay() //NO-OP
-    case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _) => stay() //NO-OP
-    case Event(StopMusic(tChannel), CanSendAudio(voiceWs, dataSender, _)) =>
+    case Event(StopMusic(tChannel), _) =>
       lastTChannel = tChannel
       player.stopTrack()
-      voiceWs ! SetSpeaking(false)
-      voiceWs ! Logout
-      context.stop(dataSender)
-
-      shard ! VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+      lavaplayerHandler ! DisconnectVChannel
 
       log.info("Stopped and left")
-      goto(Inactive) using Connecting(None, None, None, None)
-    case Event(QueueUrl(url, tChannel, vChannelId), CanSendAudio(_, _, inVChannelId)) =>
+      goto(Inactive)
+    case Event(QueueUrl(url, tChannel, vChannelId), _) =>
       log.info("Received queue item")
-      if (vChannelId == inVChannelId) {
+      if (vChannelId == inVChannel) {
         lastTChannel = tChannel
-        MusicHandler.loadItem(url).pipeTo(self)
+        LavaplayerHandler.loadItem(MusicHandler.playerManager, url).pipeTo(self)
         stay()
       } else {
         tChannel.sendMessage("Currently playing music for different channel")
         stay()
       }
-    case Event(NextTrack(tChannel), CanSendAudio(_, dataSender, _)) =>
+    case Event(NextTrack(tChannel), _) =>
       lastTChannel = tChannel
-      nextTrack(dataSender)
+      nextTrack()
       stay()
     case Event(TogglePause(tChannel), _) =>
       lastTChannel = tChannel
       player.setPaused(!player.isPaused)
       stay()
     case Event(e: FriendlyException, _) => handleFriendlyException(e, None)
-    case Event(track: AudioTrack, CanSendAudio(_, dataSender, _)) =>
-      queueTrack(Some(dataSender), track)
+    case Event(track: AudioTrack, _) =>
+      queueTrack(track)
       log.info("Received track")
       stay()
-    case Event(playlist: AudioPlaylist, CanSendAudio(_, dataSender, _)) =>
+    case Event(playlist: AudioPlaylist, _) =>
       log.info("Received playlist")
       if (playlist.isSearchResult) {
         Option(playlist.getSelectedTrack)
           .orElse(playlist.getTracks.asScala.headOption)
-          .foreach(queueTrack(Some(dataSender), _))
-      } else queueTracks(Some(dataSender), playlist.getTracks.asScala: _*)
+          .foreach(queueTrack)
+      } else queueTracks(playlist.getTracks.asScala: _*)
       stay()
     case Event(_: PlayerPauseEvent, _) =>
       log.info("Paused")
@@ -218,7 +178,7 @@ class MusicHandler(
     case Event(e: TrackStartEvent, _) =>
       msgActor ! lastTChannel.sendMessage(s"Playing: ${trackName(e.track)}")
       stay()
-    case Event(e: TrackEndEvent, CanSendAudio(_, dataSender, _)) =>
+    case Event(e: TrackEndEvent, _) =>
       val msg = e.endReason match {
         case AudioTrackEndReason.FINISHED    => s"Finished: ${trackName(e.track)}"
         case AudioTrackEndReason.LOAD_FAILED => s"Failed to load: ${trackName(e.track)}"
@@ -229,33 +189,21 @@ class MusicHandler(
 
       msgActor ! lastTChannel.sendMessage(msg)
 
-      if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack(dataSender)
+      if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack()
       else if (e.endReason != AudioTrackEndReason.REPLACED) self ! StopMusic(lastTChannel)
 
       stay()
     case Event(e: TrackExceptionEvent, _) =>
       handleFriendlyException(e.exception, Some(e.track))
-    case Event(e: TrackStuckEvent, CanSendAudio(_, dataSender, _)) =>
+    case Event(e: TrackStuckEvent, _) =>
       msgActor ! lastTChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track")
-      nextTrack(dataSender)
+      nextTrack()
       stay()
-    case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
   }
 
   initialize()
 
   def trackName(track: AudioTrack): String = track.getInfo.title
-
-  def connect(vChannelId: ChannelId, endPoint: String, clientId: UserId, sessionId: String, token: String): State = {
-    val voiceWs =
-      context.actorOf(
-        VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None),
-        "VoiceWS"
-      )
-    voiceWs ! Login
-    log.info("Connected")
-    stay using HasVoiceWs(voiceWs, vChannelId)
-  }
 
   def handleFriendlyException(e: FriendlyException, track: Option[AudioTrack]): State = {
     e.severity match {
@@ -271,22 +219,22 @@ class MusicHandler(
     }
   }
 
-  def queueTrack(dataSenderOpt: Option[ActorRef], track: AudioTrack): Unit = {
-    dataSenderOpt match {
-      case Some(dataSender) if player.startTrack(track, true) =>
-        dataSender ! StartSendAudio
-      case _ => queue.enqueue(track)
+  def queueTrack(track: AudioTrack): Unit = {
+    if (stateName == Active && player.startTrack(track, true)) {
+      lavaplayerHandler ! SetPlaying(true)
+    } else {
+      queue.enqueue(track)
     }
   }
 
-  def queueTracks(dataSenderOpt: Option[ActorRef], track: AudioTrack*): Unit = {
-    queueTrack(dataSenderOpt, track.head)
+  def queueTracks(track: AudioTrack*): Unit = {
+    queueTrack(track.head)
     queue.enqueue(track.tail: _*)
   }
 
-  def nextTrack(dataSender: ActorRef): Unit = if (queue.nonEmpty) {
+  def nextTrack(): Unit = if (queue.nonEmpty) {
     player.playTrack(queue.dequeue())
-    dataSender ! StartSendAudio
+    lavaplayerHandler ! SetPlaying(true)
   }
 }
 object MusicHandler {
@@ -294,24 +242,19 @@ object MusicHandler {
       shard: ShardActor,
       requests: RequestHelper,
       commands: Commands,
-      helpCmdActor: ActorRef
-  ): GuildId => Props = guildId => Props(new MusicHandler(shard, requests, commands, helpCmdActor, guildId))
+      helpCmdActor: ActorRef,
+      cache: Cache
+  ): GuildId => Props =
+    guildId => Props(new MusicHandler(shard, requests, commands, helpCmdActor, guildId, cache))
 
   final val UseBurstingSender = true
 
   sealed trait MusicState
-  case object Inactive extends MusicState
-  case object Active   extends MusicState
+  private case object Inactive extends MusicState
+  private case object Active   extends MusicState
 
   sealed trait StateData
-  case class Connecting(
-      endPoint: Option[String],
-      sessionId: Option[String],
-      token: Option[String],
-      vChannelId: Option[ChannelId]
-  ) extends StateData
-  case class HasVoiceWs(voiceWs: ActorRef, vChannelId: ChannelId)                         extends StateData
-  case class CanSendAudio(voiceWs: ActorRef, dataSender: ActorRef, vChannelId: ChannelId) extends StateData
+  case object NoData extends StateData
 
   sealed trait MusicHandlerEvents {
     def tChannel: TChannel
@@ -328,26 +271,4 @@ object MusicHandler {
     man.getConfiguration.setResamplingQuality(AudioConfiguration.ResamplingQuality.MEDIUM)
     man
   }
-
-  def loadItem(identifier: String): Future[AudioItem] = {
-    val promise = Promise[AudioItem]
-
-    playerManager.loadItem(identifier, new AudioLoadResultHandler {
-      override def loadFailed(e: FriendlyException): Unit = promise.failure(e)
-
-      override def playlistLoaded(playlist: AudioPlaylist): Unit = promise.success(playlist)
-
-      override def noMatches(): Unit = promise.failure(new NoMatchException)
-
-      override def trackLoaded(track: AudioTrack): Unit = promise.success(track)
-    })
-
-    promise.future
-  }
-
-  class AudioEventSender(sendTo: ActorRef) extends AudioEventListener {
-    override def onEvent(event: AudioEvent): Unit = sendTo ! event
-  }
-
-  class NoMatchException extends Exception
 }
