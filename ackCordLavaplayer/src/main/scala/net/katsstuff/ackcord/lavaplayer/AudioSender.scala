@@ -21,19 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example.music
+package net.katsstuff.ackcord.lavaplayer
 
 import java.util.concurrent.{Executors, ScheduledExecutorService, ScheduledFuture, TimeUnit}
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.util.ByteString
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{SendData, SendDataBurst, silence}
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
 
-class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor with ActorLogging {
-  import DataSender._
+class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor {
+  import AudioSender._
 
   implicit val system: ActorSystem = context.system
 
@@ -62,13 +62,11 @@ class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
     case StartSendAudio =>
       if (future == null) {
         setSpeaking(true)
-        log.info("Starting to send audio")
         future = threadScheduler.scheduleAtFixedRate(() => self ! SendAudio, 20, 20, TimeUnit.MILLISECONDS)
       }
     case StopSendAudio =>
       if (future != null) {
         setSpeaking(false)
-        log.info("Stopping to send audio")
         udpHandler ! SendDataBurst(Seq.fill(5)(silence))
 
         future.cancel(false)
@@ -79,14 +77,13 @@ class DataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
   def setSpeaking(speaking: Boolean): Unit = {
     if (speaking != isSpeaking) {
       wsHandler ! SetSpeaking(speaking)
-      log.debug("Set speaking {}", speaking)
       isSpeaking = speaking
     }
   }
 }
-object DataSender {
+object AudioSender {
   def props(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef): Props =
-    Props(new DataSender(player, udpHandler, wsHandler)).withDispatcher("akka.io.pinned-dispatcher")
+    Props(new AudioSender(player, udpHandler, wsHandler)).withDispatcher("akka.io.pinned-dispatcher")
   case object SendAudio
   case object StartSendAudio
   case object StopSendAudio

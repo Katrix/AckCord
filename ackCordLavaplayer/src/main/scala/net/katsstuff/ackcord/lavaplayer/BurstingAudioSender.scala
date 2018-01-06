@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example.music
+package net.katsstuff.ackcord.lavaplayer
 
 import scala.concurrent.duration._
 
@@ -29,14 +29,14 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{BeginBurstMode, DataRequest, SendDataBurst, StopBurstMode, silence}
+import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler._
 import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
+import net.katsstuff.ackcord.lavaplayer.AudioSender.{SendAudio, StartSendAudio, StopSendAudio}
 
-class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
+class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
     extends Actor
     with ActorLogging
     with Timers {
-  import DataSender._
 
   final val BehindLimit = -40
   final val AheadLimit  = 150
@@ -60,7 +60,6 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
       if (isSpeaking) calculateAndSendPackets(awaitingPackets)
     case StartSendAudio =>
       setSpeaking(true)
-      log.info("Starting to send audio")
       if (!hasEnabledBurstMode) {
         udpHandler ! BeginBurstMode
       }
@@ -71,14 +70,12 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
       expectedTime = 0
     case StopSendAudio =>
       setSpeaking(false)
-      log.info("Stopping to send audio")
       udpHandler ! SendDataBurst(Seq.fill(5)(silence))
   }
 
   def setSpeaking(speaking: Boolean): Unit = {
     if (speaking != isSpeaking) {
       wsHandler ! SetSpeaking(speaking)
-      log.debug("Set speaking {}", speaking)
       isSpeaking = speaking
     }
   }
@@ -121,7 +118,6 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
         20
       } else {
         val notSentTime = notSent * 20
-        log.info("Did not manage to send all packets, will retry in {} millis", notSentTime)
         expectedTime += notSentTime
         notSentTime
       }
@@ -131,7 +127,7 @@ class BurstingDataSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: A
     }
   }
 }
-object BurstingDataSender {
+object BurstingAudioSender {
   def props(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef): Props =
-    Props(new BurstingDataSender(player, udpHandler, wsHandler))
+    Props(new BurstingAudioSender(player, udpHandler, wsHandler))
 }
