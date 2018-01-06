@@ -27,12 +27,12 @@ import java.time.{Instant, OffsetDateTime}
 
 import akka.NotUsed
 import io.circe.{Encoder, Json}
-import net.katsstuff.ackcord.{APIMessage, CacheState}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
 import net.katsstuff.ackcord.http._
 import net.katsstuff.ackcord.http.websocket.WsMessage
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayProtocol._
+import net.katsstuff.ackcord.{APIMessage, CacheState}
 import shapeless._
 import shapeless.labelled.FieldType
 

@@ -30,7 +30,7 @@ import akka.actor.{ActorSystem, Props, Status}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
-import akka.pattern.{Backoff, pipe}
+import akka.pattern.pipe
 import akka.stream.scaladsl._
 import akka.stream.{KillSwitches, Materializer, SharedKillSwitch}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler

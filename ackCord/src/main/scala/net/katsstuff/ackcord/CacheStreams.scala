@@ -24,9 +24,8 @@
 package net.katsstuff.ackcord
 
 import scala.collection.mutable
-import scala.concurrent.Future
 
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}

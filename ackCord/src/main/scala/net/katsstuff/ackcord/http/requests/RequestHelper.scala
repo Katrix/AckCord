@@ -26,11 +26,11 @@ package net.katsstuff.ackcord.http.requests
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy}
+import akka.{Done, NotUsed}
 
 /**
   * A class holding all the relevant information to create a request stream.

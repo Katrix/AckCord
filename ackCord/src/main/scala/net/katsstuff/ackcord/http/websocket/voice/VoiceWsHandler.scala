@@ -38,8 +38,8 @@ import akka.stream.scaladsl.{Compression, Flow, Keep, Sink, Source, SourceQueueW
 import akka.stream.{Attributes, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import io.circe
-import io.circe.{Error, parser}
 import io.circe.syntax._
+import io.circe.{Error, parser}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{Disconnect, DoIPDiscovery, FoundIP, StartConnection}

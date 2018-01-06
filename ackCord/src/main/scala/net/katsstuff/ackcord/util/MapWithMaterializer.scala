@@ -24,9 +24,9 @@
 package net.katsstuff.ackcord.util
 
 import akka.NotUsed
-import akka.stream.{Attributes, FlowShape, Inlet, Materializer, Outlet}
 import akka.stream.scaladsl.Flow
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
+import akka.stream.{Attributes, FlowShape, Inlet, Materializer, Outlet}
 
 class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphStage[FlowShape[In, Out]] {
   val in:  Inlet[In]   = Inlet("MapWithMaterializer.in")

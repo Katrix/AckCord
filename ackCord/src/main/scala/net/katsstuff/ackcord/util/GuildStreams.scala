@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.util
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Flow, Sink, SubFlow}
+import akka.stream.scaladsl.Flow
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}

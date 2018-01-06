@@ -25,8 +25,8 @@ package net.katsstuff.ackcord.util
 
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 
 class RepeatLast[A] extends GraphStage[FlowShape[A, A]] {
   val in : Inlet[A]   = Inlet("RepeatLast.in")

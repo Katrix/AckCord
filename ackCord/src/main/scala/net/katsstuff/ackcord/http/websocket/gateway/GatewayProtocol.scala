@@ -31,7 +31,6 @@ import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http._
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 
 object GatewayProtocol extends DiscordProtocol {
 

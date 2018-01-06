@@ -35,19 +35,19 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, Respon
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import io.circe._
-import io.circe.syntax._
 import io.circe.generic.extras.semiauto._
-import net.katsstuff.ackcord.{CacheState, SnowflakeMap}
+import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.handlers._
-import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEmojisUpdateData
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawRole, Routes}
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
+import net.katsstuff.ackcord.{CacheState, SnowflakeMap}
 
 object RESTRequests {
-  import net.katsstuff.ackcord.http.DiscordProtocol._
   import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+  import net.katsstuff.ackcord.http.DiscordProtocol._
 
   /**
     * Base trait for all REST requests in AckCord. If you feel an endpoint is
