@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord.commands
 
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.syntax._
 
 /**
   * A command filter is something used to limit the scope in which a command
@@ -49,7 +50,7 @@ object CmdFilter {
     * Only allow this command to be used in a specific context
     */
   case class InContext(context: Context) extends CmdFilter {
-    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = msg.channel.exists {
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = msg.channelId.resolve.exists {
       case _: GuildChannel   => context == Context.Guild
       case _: DMChannel      => context == Context.DM
       case _: GroupDMChannel => context == Context.DM //We consider group DMs to be DMs
@@ -72,8 +73,7 @@ object CmdFilter {
     * A command that can only be used in a single guild.
     */
   case class InOneGuild(guildId: GuildId) extends CmdFilter {
-    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.channel.flatMap(_.asGuildChannel).exists(_.guildId == guildId)
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot):    Boolean        = msg.tGuildChannel(guildId).nonEmpty
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
   }
 
@@ -84,7 +84,7 @@ object CmdFilter {
   case class NeedPermission(neededPermission: Permission) extends CmdFilter {
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val res = for {
-        channel      <- msg.channel
+        channel      <- msg.channelId.tResolve
         guildChannel <- channel.asGuildChannel
         guild        <- guildChannel.guild
         member       <- guild.members.get(UserId(msg.authorId))

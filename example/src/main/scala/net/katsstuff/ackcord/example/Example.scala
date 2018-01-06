@@ -52,7 +52,7 @@ object Example {
     val token = args.head
 
     val settings = ClientSettings(token = token)
-    DiscordShard.fetchWsGateway.map(settings.connect(_, cache)).onComplete {
+    DiscordShard.fetchWsGateway.map(settings.connect(_, cache, "DiscordShard")).onComplete {
       case Success(shardActor) =>
         system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
       case Failure(e) =>
@@ -98,7 +98,10 @@ class ExampleMain(settings: ClientSettings, cache: Cache, shard: ShardActor) ext
   registerCmd(helpCmd)
 
   var guildRouterMusic: ActorRef =
-    context.actorOf(GuildRouter.props(MusicHandler.props(shard, requests, cmdObj, helpCmdActor), None), "MusicHandler")
+    context.actorOf(
+      GuildRouter.props(MusicHandler.props(shard, requests, cmdObj, helpCmdActor, cache), None),
+      "MusicHandler"
+    )
 
   cache.subscribeAPIActor(
     guildRouterMusic,

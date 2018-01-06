@@ -64,7 +64,7 @@ package object commands {
       //Use channel to construct request
       ParsedCmdFlow[NotUsed]
         .mapConcat { implicit c => cmd =>
-          cmd.msg.tChannel.map { tChannel =>
+          cmd.msg.channelId.tResolve.map { tChannel =>
             tChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
           }.toList
         }
@@ -136,7 +136,7 @@ package object commands {
       //Using request dsl
       import RequestDSL._
       for {
-        channel <- maybePure(cmd.msg.tChannel)
+        channel <- maybePure(cmd.msg.channelId.tResolve)
         sentMsg <- channel.sendMessage("Msg")
         between = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
         _ <- channel.sendMessage(s"$between ms between command and response")
@@ -156,7 +156,7 @@ package object commands {
     sink = requests =>
       ParsedCmdFlow[Int]
         .mapConcat { implicit c => cmd =>
-          cmd.msg.tChannel.toList.flatMap { ch =>
+          cmd.msg.channelId.tResolve.toList.flatMap { ch =>
             (1 to cmd.args).map(num => ch.sendMessage(s"Msg$num"))
           }
         }

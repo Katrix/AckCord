@@ -27,7 +27,7 @@ import scala.language.implicitConversions
 
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Source}
-import cats.MonadFilter
+import cats.Monad
 import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
 
 sealed trait RequestDSL[+A] {
@@ -53,10 +53,9 @@ object RequestDSL {
       dsl: RequestDSL[B]
   ): Source[B, NotUsed] = dsl.toSource(flow)
 
-  implicit val monad: MonadFilter[RequestDSL] = new MonadFilter[RequestDSL] {
+  implicit val monad: Monad[RequestDSL] = new Monad[RequestDSL] {
     override def map[A, B](fa: RequestDSL[A])(f: A => B):                 RequestDSL[B] = fa.map(f)
     override def flatMap[A, B](fa: RequestDSL[A])(f: A => RequestDSL[B]): RequestDSL[B] = fa.flatMap(f)
-    override def filter[A](fa: RequestDSL[A])(f: A => Boolean):           RequestDSL[A] = fa.filter(f)
 
     override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] = {
       f(a).flatMap {
@@ -66,7 +65,6 @@ object RequestDSL {
     }
 
     override def pure[A](x: A) = Pure(x)
-    override def empty[A]: RequestDSL[A] = NoRequest
   }
 
   private case class Pure[+A](a: A) extends RequestDSL[A] {

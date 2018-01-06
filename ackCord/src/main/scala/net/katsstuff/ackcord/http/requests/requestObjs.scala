@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpMethod, RequestEntity, ResponseEntity, Uri}
 import akka.stream.scaladsl.Flow
-import cats.{CoflatMap, FunctorFilter}
+import cats.CoflatMap
 
 /**
   * Used by requests for specifying an uri to send to,
@@ -117,15 +117,10 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   def collect[B](f: PartialFunction[Data, B]): Request[B, Ctx] = transformResponse(_.collect(f))
 }
 object Request {
-  implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] with FunctorFilter[
-    ({ type L[A] = Request[A, Ctx] })#L
-  ] =
-    new CoflatMap[({ type L[A] = Request[A, Ctx] })#L] with FunctorFilter[({ type L[A] = Request[A, Ctx] })#L] {
+  implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] =
+    new CoflatMap[({ type L[A] = Request[A, Ctx] })#L] {
       override def map[A, B](fa: Request[A, Ctx])(f: A => B):                     Request[B, Ctx] = fa.map(f)
       override def coflatMap[A, B](fa: Request[A, Ctx])(f: Request[A, Ctx] => B): Request[B, Ctx] = fa.map(_ => f(fa))
-      override def mapFilter[A, B](fa: Request[A, Ctx])(f: A => Option[B]): Request[B, Ctx] =
-        fa.transformResponse(_.mapConcat(a => f(a).toList))
-      override def filter[A](fa: Request[A, Ctx])(f: A => Boolean): Request[A, Ctx] = fa.filter(f)
     }
 }
 

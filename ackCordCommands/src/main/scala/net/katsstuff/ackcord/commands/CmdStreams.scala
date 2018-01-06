@@ -33,6 +33,7 @@ import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
 import net.katsstuff.ackcord.http.RawMessage
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
 object CmdStreams {
@@ -121,9 +122,10 @@ object CmdStreams {
         case filtered: FilteredCmd =>
           val errors = filtered.failedFilters.flatMap(_.errorMessage(filtered.cmd.msg)(filtered.cmd.c))
           if (errors.nonEmpty) {
-            filtered.cmd.msg.tChannel(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
+            filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
           } else None
-        case parseError: CmdParseError => parseError.msg.tChannel(parseError.cache).map(_.sendMessage(parseError.error))
+        case parseError: CmdParseError =>
+          parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
       }
       .mapConcat(_.toList)
 

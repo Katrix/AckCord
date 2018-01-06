@@ -35,6 +35,7 @@ import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.http.requests.RESTRequests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.http.requests._
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -50,7 +51,7 @@ abstract class HelpCmd extends Actor {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: CacheSnapshot = c
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
-      msg.tChannel.foreach { channel =>
+      msg.channelId.tResolve.foreach { channel =>
         val res = for {
           cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
           descMap <- commands.get(cat)
@@ -75,7 +76,7 @@ abstract class HelpCmd extends Actor {
       if (page > 0) {
         sendMsg(CreateMessage(msg.channelId, createReplyAll(page - 1)))
       } else {
-        msg.tChannel.foreach { channel =>
+        msg.channelId.tResolve.foreach { channel =>
           sendMsg(channel.sendMessage(s"Invalid page $page"))
         }
       }

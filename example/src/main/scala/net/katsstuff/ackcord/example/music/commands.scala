@@ -70,7 +70,7 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
     aliases = Seq("s", "stop"),
     sink = _ =>
       ParsedCmdFlow[NotUsed]
-        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! StopMusic(_)))
+        .map(implicit c => cmd => cmd.msg.tGuildChannel(guildId).foreach(musicHandler ! StopMusic(_)))
         .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description =
@@ -82,7 +82,7 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
     aliases = Seq("n", "next"),
     sink = _ =>
       ParsedCmdFlow[NotUsed]
-        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! NextTrack(_)))
+        .map(implicit c => cmd => cmd.msg.tGuildChannel(guildId).foreach(musicHandler ! NextTrack(_)))
         .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description = Some(CmdDescription(name = "Next track", description = "Skip to the next track")),
@@ -93,7 +93,7 @@ class commands(guildId: GuildId, musicHandler: ActorRef) {
     aliases = Seq("p", "pause"),
     sink = _ =>
       ParsedCmdFlow[NotUsed]
-        .map(implicit c => cmd => cmd.msg.tChannel.foreach(musicHandler ! TogglePause(_)))
+        .map(implicit c => cmd => cmd.msg.tGuildChannel(guildId).foreach(musicHandler ! TogglePause(_)))
         .toMat(Sink.ignore)(Keep.right),
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description = Some(CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")),
