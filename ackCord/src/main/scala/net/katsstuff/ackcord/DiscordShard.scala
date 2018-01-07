@@ -28,19 +28,22 @@ import java.time.Instant
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+import akka.Done
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.Materializer
+import akka.stream.scaladsl.Source
+import akka.stream.{Materializer, ThrottleMode}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.{CreateGateway, ShardActor}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.gateway.{GatewayHandler, GatewayMessage}
+import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Login
+import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
 import shapeless.tag.@@
 
@@ -125,6 +128,16 @@ object DiscordShard extends FailFastCirceSupport {
       implicit system: ActorSystem
   ): Seq[ShardActor] = for (i <- 0 until shardTotal) yield {
     connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
+  }
+
+  /**
+    * Sends a login message to all the shards in the sequence, while obeying
+    * IDENTIFY ratelimits.
+    */
+  def loginShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] = {
+    Source(shards.toIndexedSeq).throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping).runForeach { shard =>
+      shard ! Login
+    }
   }
 
   /**
