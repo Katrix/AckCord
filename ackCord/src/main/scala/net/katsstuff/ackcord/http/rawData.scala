@@ -465,8 +465,9 @@ case class RawEmoji(
     roles: Seq[RoleId],
     user: Option[User],
     requireColons: Boolean,
-    managed: Boolean
+    managed: Boolean,
+    animated: Boolean
 ) {
 
-  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed)
+  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed, animated)
 }

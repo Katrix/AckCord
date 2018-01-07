@@ -75,11 +75,14 @@ object ImageRequests {
   /**
     * Get the image of a custom emoji. Always returns a PNG.
     */
-  case class GetCustomEmojiImage[Ctx](desiredSize: Int, emojiId: EmojiId, context: Ctx = NotUsed: NotUsed)
-      extends ImageRequest[Ctx] {
+  case class GetCustomEmojiImage[Ctx](
+      desiredSize: Int,
+      format: ImageFormat,
+      emojiId: EmojiId,
+      context: Ctx = NotUsed: NotUsed
+  ) extends ImageRequest[Ctx] {
     override def route:          RequestRoute     = Routes.emojiImage(emojiId, format, desiredSize)
-    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
-    override def format:         ImageFormat      = ImageFormat.PNG
+    override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.GIF)
   }
 
   /**

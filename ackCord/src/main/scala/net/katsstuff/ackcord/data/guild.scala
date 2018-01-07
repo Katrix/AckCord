@@ -400,7 +400,8 @@ case class Emoji(
     roles: Seq[RoleId],
     userId: Option[UserId],
     requireColons: Boolean,
-    managed: Boolean
+    managed: Boolean,
+    animated: Boolean
 ) {
 
   /**
