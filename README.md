@@ -147,4 +147,8 @@ commands.subscribe(GetUsernameCmdFactory)(Keep.left)
 AckCord also provides the basics for a help command if you want something like that in the form of the abstract actor `HelpCmd`. You use it by sending `HelpCmd.AddCmd` with the factory for the command, and the lifetime of the command. You get the lifetime of the command as a result of registering the command.
 
 # More information
-You can find more info in the examples, and the wiki. Or you can look through the project and read the ScalaDoc.
+You can find more info in the examples, the wiki and the ScalaDoc.
+
+Or you can just join the Discord server (we got cookies).
+
+[![](https://discordapp.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/fdKBnT) 
