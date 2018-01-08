@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.highlvl
+package net.katsstuff.ackcord
 
 import akka.actor.{Actor, Props, Terminated}
 import net.katsstuff.ackcord.DiscordShard.ShardActor

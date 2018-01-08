@@ -42,7 +42,6 @@ import net.katsstuff.ackcord.DiscordShard.{CreateGateway, ShardActor}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Login
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
 import shapeless.tag.@@
@@ -134,9 +133,9 @@ object DiscordShard extends FailFastCirceSupport {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def loginShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] = {
+  def startShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] = {
     Source(shards.toIndexedSeq).throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping).runForeach { shard =>
-      shard ! Login
+      shard ! StartShard
     }
   }
 

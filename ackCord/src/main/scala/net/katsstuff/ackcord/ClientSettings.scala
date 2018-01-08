@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.highlvl
+package net.katsstuff.ackcord
 
 import java.time.Instant
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
@@ -34,7 +34,6 @@ import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.RawPresenceGame
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
-import net.katsstuff.ackcord.{Cache, CoreClientSettings, DiscordShard}
 
 class ClientSettings(
     token: String,

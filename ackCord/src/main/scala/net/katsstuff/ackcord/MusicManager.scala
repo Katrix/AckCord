@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.highlvl
+package net.katsstuff.ackcord
 
 import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
@@ -32,9 +32,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import akka.actor.{Actor, ActorRef, Props, Status}
 import akka.pattern.ask
 import akka.util.Timeout
-import net.katsstuff.ackcord.Cache
+import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
-import net.katsstuff.ackcord.highlvl.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler.{ConnectVChannel, DisconnectVChannel, SetPlaying}
 
@@ -50,11 +49,12 @@ class MusicManager(cache: Cache) extends Actor {
         val player = createPlayer()
         (player, context.actorOf(LavaplayerHandler.props(player, guildId, cache), guildId.asString))
       })
+      val replyTo = sender()
 
       //Status.Failure should be routed to failure
       actor.ask(ConnectVChannel(channelId, force)).onComplete {
-        case Success(_) => sender() ! usedPlayer
-        case Failure(e) => sender() ! Status.Failure(e)
+        case Success(_) => replyTo ! usedPlayer
+        case Failure(e) => replyTo ! Status.Failure(e)
       }
     case DisconnectFromChannel(guildId, destroyPlayer) =>
       players.remove(guildId).foreach {

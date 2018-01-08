@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.highlvl
+package net.katsstuff.ackcord
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
@@ -29,21 +29,20 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, Terminated}
 import akka.pattern.{ask, gracefulStop}
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.DiscordShard.ShardActor
+import net.katsstuff.ackcord.DiscordShard.{ShardActor, StartShard}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
-import net.katsstuff.ackcord.highlvl.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
+import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.util.MessageParser
-import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard, RequestDSL}
 
 case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Commands, requests: RequestHelper) {
   import requests.{mat, system}
@@ -56,22 +55,29 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
   def login(): Future[Done] = {
+    require(shardShutdownManager == null, "Already logged in")
     shardShutdownManager = system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
 
-    if (shards.lengthCompare(1) > 0) DiscordShard.loginShards(shards)
+    if (shards.lengthCompare(1) > 0) DiscordShard.startShards(shards)
     else
       Future {
-        shards.head ! Login
+        shards.head ! StartShard
         Done
       }
   }
 
   def logout(timeout: FiniteDuration): Future[Boolean] = {
     require(shardShutdownManager != null, "Logout before login")
-    gracefulStop(shardShutdownManager, timeout, Logout)
+    val res = gracefulStop(shardShutdownManager, timeout, Logout)
+    shardShutdownManager = null
+    res
   }
 
-  def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
+  def shutdown(timeout: FiniteDuration): Future[Terminated] = {
+    logout(timeout).flatMap(_ => system.terminate())
+  }
+
+  private def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
     source
       .viaMat(KillSwitches.single)(Keep.right)
       .flatMapConcat(_.toSource(requests.flow))
