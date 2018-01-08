@@ -33,10 +33,10 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream.{FlowShape, Materializer, OverflowStrategy}
 import net.katsstuff.ackcord.data.{UnavailableGuild, User}
 import net.katsstuff.ackcord.http.websocket.gateway._
-import net.katsstuff.ackcord.{APIMessageCacheUpdate, Cache, ClientSettings}
+import net.katsstuff.ackcord.{APIMessageCacheUpdate, Cache, CoreClientSettings}
 
 class MockedGatewayHandler(
-    settings: ClientSettings,
+    settings: CoreClientSettings,
     readyUser: User,
     readyGuilds: Seq[UnavailableGuild],
     gateway: Source[Int => Dispatch[_], Future[WebSocketUpgradeResponse]],
@@ -81,7 +81,7 @@ class MockedGatewayHandler(
 }
 object MockedGatewayHandler {
   def props(
-      settings: ClientSettings,
+      settings: CoreClientSettings,
       readyUser: User,
       readyGuilds: Seq[UnavailableGuild],
       gateway: Source[Int => Dispatch[_], Future[WebSocketUpgradeResponse]],
@@ -90,7 +90,7 @@ object MockedGatewayHandler {
   )(implicit mat: Materializer): Props = Props(new MockedGatewayHandler(settings, readyUser, readyGuilds, gateway, source, sink))
 
   def cacheProps(
-      settings: ClientSettings,
+      settings: CoreClientSettings,
       readyUser: User,
       readyGuilds: Seq[UnavailableGuild],
       gateway: Source[Int => Dispatch[_], Future[WebSocketUpgradeResponse]],

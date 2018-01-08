@@ -28,7 +28,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, ParsedCmd, RawCmd}
-import net.katsstuff.ackcord.highlvl.{CommandSettings, SimpleClientSettings}
+import net.katsstuff.ackcord.highlvl.{CommandSettings, ClientSettings}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, RequestDSL}
 
@@ -40,7 +40,7 @@ object MyBot extends App {
   require(args.nonEmpty)
   val token = args.head
   val settings =
-    SimpleClientSettings(token, commandSettings = CommandSettings(categories = Set(GeneralCommands, MusicCommands)))
+    ClientSettings(token, commandSettings = CommandSettings(categories = Set(GeneralCommands, MusicCommands)))
   import settings.executionContext
 
   settings

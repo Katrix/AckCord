@@ -52,7 +52,7 @@ import shapeless.tag.@@
   * @param gatewayUri The gateway websocket uri
   * @param settings The settings to use
   */
-class DiscordShard(gatewayUri: Uri, settings: ClientSettings, cache: Cache)
+class DiscordShard(gatewayUri: Uri, settings: CoreClientSettings, cache: Cache)
     extends Actor
     with ActorLogging
     with Timers {
@@ -92,9 +92,9 @@ class DiscordShard(gatewayUri: Uri, settings: ClientSettings, cache: Cache)
   }
 }
 object DiscordShard extends FailFastCirceSupport {
-  def props(wsUri: Uri, settings: ClientSettings, cache: Cache): Props =
+  def props(wsUri: Uri, settings: CoreClientSettings, cache: Cache): Props =
     Props(new DiscordShard(wsUri, settings, cache))
-  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, ClientSettings(token), cache)
+  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, CoreClientSettings(token), cache)
 
   def tagClient(actor: ActorRef): ActorRef @@ DiscordShard = shapeless.tag[DiscordShard](actor)
   type ShardActor = ActorRef @@ DiscordShard
@@ -114,7 +114,7 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
     */
-  def connect(wsUri: Uri, settings: ClientSettings, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+  def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
     tagClient(system.actorOf(props(wsUri, settings, cache), actorName))
 
   /**
@@ -124,7 +124,7 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
     */
-  def connectShards(wsUri: Uri, shardTotal: Int, settings: ClientSettings, cache: Cache, actorName: String)(
+  def connectShards(wsUri: Uri, shardTotal: Int, settings: CoreClientSettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
   ): Seq[ShardActor] = for (i <- 0 until shardTotal) yield {
     connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
@@ -232,7 +232,7 @@ object DiscordShard extends FailFastCirceSupport {
   * @param status The status to use when connecting
   * @param afk If the bot should be afk when connecting
   */
-case class ClientSettings(
+case class CoreClientSettings(
     token: String,
     largeThreshold: Int = 100,
     shardNum: Int = 0,

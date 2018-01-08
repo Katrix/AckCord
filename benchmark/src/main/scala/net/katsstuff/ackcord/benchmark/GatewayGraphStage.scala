@@ -34,14 +34,14 @@ import akka.stream.{Attributes, FanInShape2, Inlet, Outlet}
 import akka.util.ByteString
 import io.circe.parser
 import io.circe.syntax._
-import net.katsstuff.ackcord.ClientSettings
+import net.katsstuff.ackcord.CoreClientSettings
 import net.katsstuff.ackcord.benchmark.GatewayGraphStage.{ExpectingIdentify, First, NormalRun}
 import net.katsstuff.ackcord.data.{UnavailableGuild, User}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.{Ready, ReadyData, Resumed, ResumedData}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayProtocol._
 import net.katsstuff.ackcord.http.websocket.gateway._
 
-class GatewayGraphStage(settings: ClientSettings, readyUser: User, readyGuilds: Seq[UnavailableGuild])
+class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuilds: Seq[UnavailableGuild])
     extends GraphStage[FanInShape2[Message, Int => Dispatch[_], Message]] {
   val in:         Inlet[Message]            = Inlet("GatewayGraphStage.in")
   val dispatchIn: Inlet[Int => Dispatch[_]] = Inlet("GatewayGraphStage.dispatchIn")

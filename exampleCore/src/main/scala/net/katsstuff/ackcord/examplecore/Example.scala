@@ -35,7 +35,7 @@ import net.katsstuff.ackcord.examplecore.music._
 import net.katsstuff.ackcord.examplecore.music.MusicHandler
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordShard}
+import net.katsstuff.ackcord.{APIMessage, Cache, CoreClientSettings, DiscordShard}
 
 object Example {
 
@@ -52,7 +52,7 @@ object Example {
     val cache = Cache.create
     val token = args.head
 
-    val settings = ClientSettings(token = token)
+    val settings = CoreClientSettings(token = token)
     DiscordShard.fetchWsGateway.map(settings.connect(_, cache, "DiscordShard")).onComplete {
       case Success(shardActor) =>
         system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
@@ -63,7 +63,7 @@ object Example {
   }
 }
 
-class ExampleMain(settings: ClientSettings, cache: Cache, shard: ShardActor) extends Actor with ActorLogging {
+class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ShardActor) extends Actor with ActorLogging {
   import cache.mat
   implicit val system: ActorSystem = context.system
 
@@ -128,7 +128,7 @@ class ExampleMain(settings: ClientSettings, cache: Cache, shard: ShardActor) ext
   }
 }
 object ExampleMain {
-  def props(settings: ClientSettings, cache: Cache, shard: ShardActor): Props =
+  def props(settings: CoreClientSettings, cache: Cache, shard: ShardActor): Props =
     Props(new ExampleMain(settings, cache, shard))
 
   def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {

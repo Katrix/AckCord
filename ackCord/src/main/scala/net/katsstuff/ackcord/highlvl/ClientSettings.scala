@@ -34,9 +34,9 @@ import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.RawPresenceGame
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
-import net.katsstuff.ackcord.{Cache, ClientSettings, DiscordShard}
+import net.katsstuff.ackcord.{Cache, CoreClientSettings, DiscordShard}
 
-class SimpleClientSettings(
+class ClientSettings(
     token: String,
     largeThreshold: Int = 100,
     shardNum: Int = 0,
@@ -48,7 +48,7 @@ class SimpleClientSettings(
     system: ActorSystem = ActorSystem("AckCord"),
     commandSettings: CommandSettings = CommandSettings(),
     requestSettings: RequestSettings = RequestSettings()
-) extends ClientSettings(token, largeThreshold, shardNum, shardTotal, idleSince, gameStatus, status, afk) {
+) extends CoreClientSettings(token, largeThreshold, shardNum, shardTotal, idleSince, gameStatus, status, afk) {
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
@@ -90,7 +90,7 @@ class SimpleClientSettings(
     }
   }
 }
-object SimpleClientSettings {
+object ClientSettings {
   def apply(
       token: String,
       largeThreshold: Int = 100,
@@ -103,8 +103,8 @@ object SimpleClientSettings {
       system: ActorSystem = ActorSystem("AckCord"),
       commandSettings: CommandSettings = CommandSettings(),
       requestSettings: RequestSettings = RequestSettings()
-  ): SimpleClientSettings =
-    new SimpleClientSettings(
+  ): ClientSettings =
+    new ClientSettings(
       token,
       largeThreshold,
       shardNum,

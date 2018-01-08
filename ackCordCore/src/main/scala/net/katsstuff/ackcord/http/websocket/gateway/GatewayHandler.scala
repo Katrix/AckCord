@@ -35,7 +35,7 @@ import akka.stream.scaladsl._
 import akka.stream.{KillSwitches, Materializer, SharedKillSwitch}
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler.ConnectionDied
-import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSettings}
+import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, CoreClientSettings}
 
 /**
   * Responsible for normal websocket communication with Discord.
@@ -48,7 +48,7 @@ import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, ClientSetti
   */
 class GatewayHandler(
     rawWsUri: Uri,
-    settings: ClientSettings,
+    settings: CoreClientSettings,
     source: Source[GatewayMessage[_], NotUsed],
     sink: Sink[Dispatch[_], NotUsed]
 )(implicit val mat: Materializer)
@@ -124,12 +124,12 @@ object GatewayHandler {
 
   def props(
       rawWsUri: Uri,
-      settings: ClientSettings,
+      settings: CoreClientSettings,
       source: Source[GatewayMessage[_], NotUsed],
       sink: Sink[Dispatch[_], NotUsed]
   )(implicit mat: Materializer): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
 
-  def cacheProps(wsUri: Uri, settings: ClientSettings, cache: Cache): Props = {
+  def cacheProps(wsUri: Uri, settings: CoreClientSettings, cache: Cache): Props = {
     val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
       APIMessageCacheUpdate(event.handlerData, event.createEvent, event.cacheHandler)

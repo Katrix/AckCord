@@ -39,12 +39,12 @@ import akka.util.ByteString
 import io.circe
 import io.circe.parser
 import io.circe.syntax._
-import net.katsstuff.ackcord.ClientSettings
+import net.katsstuff.ackcord.CoreClientSettings
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandlerGraphStage.Restart
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayProtocol._
 import net.katsstuff.ackcord.util.AckCordSettings
 
-class GatewayHandlerGraphStage(settings: ClientSettings, prevResume: Option[ResumeData])
+class GatewayHandlerGraphStage(settings: CoreClientSettings, prevResume: Option[ResumeData])
     extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
       Option[ResumeData]
     ]] {
@@ -181,7 +181,7 @@ class GatewayHandlerGraphStage(settings: ClientSettings, prevResume: Option[Resu
 object GatewayHandlerGraphStage {
   private case class Restart(resumable: Boolean)
 
-  def flow(wsUri: Uri, settings: ClientSettings, prevResume: Option[ResumeData])(
+  def flow(wsUri: Uri, settings: CoreClientSettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem
   ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val msgFlow =

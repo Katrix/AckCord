@@ -58,7 +58,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   var gatewayNameNum = 0
   var handlerNameNum = 0
 
-  val settings = ClientSettings(token = "token123Abc")
+  val settings = CoreClientSettings(token = "token123Abc")
   def mkGateway: ActorRef = {
     val a = system.actorOf(MockedGateway.props(testActor), s"Gateway$gatewayNameNum")
     gatewayNameNum += 1
@@ -228,7 +228,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   }
 }
 
-class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(implicit mat: Materializer)
+class MockedGatewayHandler(settings: CoreClientSettings, gateway: ActorRef)(implicit mat: Materializer)
     extends GatewayHandler(
       Uri./,
       settings,
@@ -282,7 +282,7 @@ class MockedGatewayHandler(settings: ClientSettings, gateway: ActorRef)(implicit
   }
 }
 object MockedGatewayHandler {
-  def props(settings: ClientSettings, gateway: ActorRef)(implicit mat: Materializer): Props =
+  def props(settings: CoreClientSettings, gateway: ActorRef)(implicit mat: Materializer): Props =
     Props(new MockedGatewayHandler(settings, gateway))
 }
 
