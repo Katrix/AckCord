@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example.music
+package net.katsstuff.ackcord.examplecore.music
 
 import scala.concurrent.Future
 
@@ -30,8 +30,8 @@ import akka.stream.scaladsl.{Keep, Sink}
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdFactory, ParsedCmdFlow}
 import net.katsstuff.ackcord.data.{GuildId, UserId, VoiceState}
-import net.katsstuff.ackcord.example.ExampleCmdCategories
-import net.katsstuff.ackcord.example.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
+import net.katsstuff.ackcord.examplecore.ExampleCmdCategories
+import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.RequestDSL
 

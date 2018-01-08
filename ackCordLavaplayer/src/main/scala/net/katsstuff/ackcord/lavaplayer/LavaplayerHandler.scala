@@ -45,7 +45,7 @@ import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, Cache, DiscordShard}
   * @param player The player to use. Is not destroyed when the actor shuts down.
   * @param useBursting If a bursting audio sender should be used. Recommended.
   */
-class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, useBursting: Boolean = true, cache: Cache)
+class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, useBursting: Boolean = true)
     extends FSM[MusicState, StateData]
     with ActorLogging {
   import cache.mat
@@ -204,8 +204,8 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, useBursting: Bool
   }
 }
 object LavaplayerHandler {
-  def props(player: AudioPlayer, guildId: GuildId, useBursting: Boolean = true, cache: Cache): Props =
-    Props(new LavaplayerHandler(player, guildId, useBursting, cache))
+  def props(player: AudioPlayer, guildId: GuildId, cache: Cache, useBursting: Boolean = true): Props =
+    Props(new LavaplayerHandler(player, guildId, cache, useBursting))
 
   sealed trait MusicState
   private case object Inactive extends MusicState

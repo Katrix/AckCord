@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example.music
+package net.katsstuff.ackcord.examplecore.music
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -38,7 +38,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
-import net.katsstuff.ackcord.example.ExampleMain
+import net.katsstuff.ackcord.examplecore.ExampleMain
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
@@ -66,7 +66,7 @@ class MusicHandler(
 
   val msgActor: ActorRef = requests.flow.runWith(Source.actorRef(32, OverflowStrategy.dropHead), Sink.ignore)._1
   val lavaplayerHandler: ActorRef = context.actorOf(
-    LavaplayerHandler.props(player, guildId, MusicHandler.UseBurstingSender, cache),
+    LavaplayerHandler.props(player, guildId, cache, MusicHandler.UseBurstingSender),
     "LavaplayerHandler"
   )
 

@@ -1,5 +1,5 @@
 /*
- * This file is part of AkkaCord, licensed under the MIT License (MIT).
+ * This file is part of AckCord, licensed under the MIT License (MIT).
  *
  * Copyright (c) 2017 Katrix
  *
@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example
+package net.katsstuff.ackcord.examplecore
 
 import scala.util.{Failure, Success}
 
@@ -31,7 +31,8 @@ import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
-import net.katsstuff.ackcord.example.music._
+import net.katsstuff.ackcord.examplecore.music._
+import net.katsstuff.ackcord.examplecore.music.MusicHandler
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, Cache, ClientSettings, DiscordShard}

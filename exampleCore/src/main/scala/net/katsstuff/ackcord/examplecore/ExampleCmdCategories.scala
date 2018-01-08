@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.example
+package net.katsstuff.ackcord.examplecore
 
 import net.katsstuff.ackcord.commands.CmdCategory
 
