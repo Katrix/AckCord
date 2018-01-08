@@ -30,6 +30,11 @@ import akka.stream.scaladsl.{Flow, Source}
 import cats.Monad
 import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
 
+/**
+  * Base trait for a RequestDSL object. An RequestDSL object is a program
+  * that will evaluate to a value gotten by running requests, while hiding the
+  * streaming implementation.
+  */
 sealed trait RequestDSL[+A] {
 
   def map[B](f: A => B):                    RequestDSL[B]
@@ -37,18 +42,49 @@ sealed trait RequestDSL[+A] {
   def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B]
   def collect[B](f: PartialFunction[A, B]): RequestDSL[B]
 
+  /**
+    * Run this request using the given flow.
+    */
   def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed]
 }
 object RequestDSL {
 
-  def init:                                     RequestDSL[Unit] = Pure(())
-  implicit def wrap[A](request: Request[A, _]): RequestDSL[A]    = SingleRequest(request)
+  implicit def wrap[A](request: Request[A, _]): RequestDSL[A] = SingleRequest(request)
 
-  def pure[A](a: A):                RequestDSL[A] = Pure(a)
-  def maybePure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
+  /**
+    * Lift a pure value into the dsl.
+    */
+  def pure[A](a: A): RequestDSL[A] = Pure(a)
+
+  /**
+    * Alias for [[pure]].
+    */
+  def lift[A](a: A): RequestDSL[A] = pure(a)
+
+  /**
+    * Lift a an optional pure value into the dsl.
+    */
+  def maybePure[A](opt: Option[A]):  RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
+
+  /**
+    * Alias for [[maybePure]]
+    */
+  def liftOption[A](opt: Option[A]): RequestDSL[A] = maybePure(opt)
+
+  /**
+    * Lift a an optional request into the dsl.
+    */
   def maybeRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] =
     opt.fold[RequestDSL[A]](NoRequest)(SingleRequest.apply)
 
+  /**
+    * Alias for [[maybeRequest]]
+    */
+  def liftOptionalRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] = maybeRequest(opt)
+
+  /**
+    * Run a RequestDSL using the specified flow.
+    */
   def apply[Data, Ctx, B](flow: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed])(
       dsl: RequestDSL[B]
   ): Source[B, NotUsed] = dsl.toSource(flow)
