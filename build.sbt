@@ -2,7 +2,19 @@ lazy val akkaVersion     = "2.5.8"
 lazy val akkaHttpVersion = "10.0.11"
 val circeVersion         = "0.9.0"
 
-lazy val commonSettings = Seq(scalaVersion := "2.12.4", organization := "net.katsstuff")
+lazy val commonSettings = Seq(
+  scalaVersion := "2.12.4",
+  organization := "net.katsstuff",
+  scalacOptions ++= Seq(
+    "-deprecation",
+    "-feature",
+    "-unchecked",
+    "-Xlint",
+    "-Yno-adapted-args",
+    "-Ywarn-dead-code",
+    "-Ywarn-unused-import"
+  )
+)
 
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
@@ -98,7 +110,7 @@ lazy val example = project
     commonSettings,
     name := "ackcord-example",
     version := "1.0",
-    libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
   )
   .dependsOn(ackCord)
 

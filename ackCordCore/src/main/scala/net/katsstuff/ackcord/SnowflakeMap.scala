@@ -50,7 +50,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   override final def foreach[U](f: ((Key, V)) => U): Unit =
     inner.foreach {
-      case (k, v) => f(keyToSnowflake(k), v)
+      case (k, v) => f((keyToSnowflake(k), v))
     }
 
   override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
@@ -79,7 +79,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   override def filter(p: ((Key, V)) => Boolean): SnowflakeMap[K, V] =
     new SnowflakeMap(inner.filter {
-      case (k, v) => p(keyToSnowflake(k), v)
+      case (k, v) => p((keyToSnowflake(k), v))
     })
 
   def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =

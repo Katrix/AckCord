@@ -21,18 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.http.websocket
+package net.katsstuff.ackcord.data
 
-import io.circe.Encoder
-
-/**
-  * Represents a message sent by websocket handlers
-  * @tparam D The data in this message
-  * @tparam OpCode The opcode used by this websocket
-  */
-private[websocket] trait WsMessage[D, OpCode] {
-  def op: OpCode
-  def d:  D
-  def s: Option[Int] = None
-  def dEncoder: Encoder[D]
-}
+sealed trait SnowflakeTag[+A]
+sealed trait RawSnowflakeTag
+sealed trait UserOrRoleTag

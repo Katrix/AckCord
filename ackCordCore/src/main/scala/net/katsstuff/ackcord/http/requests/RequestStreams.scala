@@ -35,9 +35,9 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{AskTimeoutException, ask}
+import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
-import akka.stream.{Attributes, FlowShape, Materializer, OverflowStrategy}
+import akka.stream.{Attributes, FlowShape, OverflowStrategy}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.AckCord
@@ -82,7 +82,7 @@ object RequestStreams {
       credentials: HttpCredentials,
       parallelism: Int = 4,
       rateLimitActor: ActorRef
-  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
     createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
       .via(requestParser(parallelism))
@@ -101,7 +101,7 @@ object RequestStreams {
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4,
       rateLimitActor: ActorRef
-  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
@@ -185,13 +185,12 @@ object RequestStreams {
   }.named("CreateRequest")
 
   private def requestHttpFlow[Data, Ctx](
-      implicit mat: Materializer,
-      system: ActorSystem
+      implicit system: ActorSystem
   ): Flow[(HttpRequest, Request[Data, Ctx]), (Try[HttpResponse], Request[Data, Ctx]), NotUsed] =
     Http().superPool[Request[Data, Ctx]]()
 
   private def requestParser[Data, Ctx](
-      breadth: Int = 4
+      breadth: Int
   )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
     MapWithMaterializer
       .flow[(Try[HttpResponse], Request[Data, Ctx]), Source[RequestAnswer[Data, Ctx], NotUsed]] { implicit mat =>
@@ -287,7 +286,7 @@ object RequestStreams {
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4,
       rateLimitActor: ActorRef
-  )(implicit mat: Materializer, system: ActorSystem): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 

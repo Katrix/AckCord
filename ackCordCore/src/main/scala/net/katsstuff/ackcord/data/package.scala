@@ -35,7 +35,6 @@ package object data {
   private object SharedTagger extends Tagger[Nothing]
   private def tagS[U]: Tagger[U] = SharedTagger.asInstanceOf[Tagger[U]]
 
-  sealed trait SnowflakeTag[+A]
   type SnowflakeType[A] = Long @@ SnowflakeTag[A]
   object SnowflakeType {
     def apply[A](long: Long):      Long @@ SnowflakeTag[A] = tagS[SnowflakeTag[A]](long)
@@ -48,7 +47,6 @@ package object data {
     def asString:     String  = JLong.toUnsignedString(snowflake)
   }
 
-  sealed trait RawSnowflakeTag
   type RawSnowflake = SnowflakeType[RawSnowflakeTag]
   object RawSnowflake {
     def apply(content: String): RawSnowflake = RawSnowflake(JLong.parseUnsignedLong(content))
@@ -169,7 +167,6 @@ package object data {
       c.getRole(guildId, roleId)
   }
 
-  sealed trait UserOrRoleTag
   type UserOrRoleId = SnowflakeType[UserOrRoleTag]
   object UserOrRoleId {
     def apply(s: Long): UserOrRoleId = SnowflakeType[UserOrRoleTag](s)

@@ -48,12 +48,12 @@ sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
   * @param sequence The seq number.
   * @param event The sent event.
   */
-case class Dispatch[Data](sequence: Int, event: ComplexGatewayEvent[Data, _])(implicit val dEncoder: Encoder[Data])
-    extends GatewayMessage[Data] {
-  override val s:  Some[Int]                          = Some(sequence)
-  override val t:  Some[ComplexGatewayEvent[Data, _]] = Some(event)
-  override def op: GatewayOpCode                      = GatewayOpCode.Dispatch
-  override def d:  Data                               = event.data
+case class Dispatch[D](sequence: Int, event: ComplexGatewayEvent[D, _])(implicit val dEncoder: Encoder[D])
+    extends GatewayMessage[D] {
+  override val s:  Some[Int]                       = Some(sequence)
+  override val t:  Some[ComplexGatewayEvent[D, _]] = Some(event)
+  override def op: GatewayOpCode                   = GatewayOpCode.Dispatch
+  override def d:  D                               = event.data
 }
 
 /**
@@ -243,10 +243,10 @@ object GatewayOpCode {
 
 /**
   * Base trait for all gateway events.
-  * @tparam Data The data this event carries.
+  * @tparam D The data this event carries.
   * @tparam HandlerType The type the cache handler takes.
   */
-sealed trait ComplexGatewayEvent[Data, HandlerType] {
+sealed trait ComplexGatewayEvent[D, HandlerType] {
 
   /**
     * The name of this event.
@@ -256,7 +256,7 @@ sealed trait ComplexGatewayEvent[Data, HandlerType] {
   /**
     * The data carried by this event.
     */
-  def data: Data
+  def data: D
 
   /**
     * The cache handler used to handle this event.
@@ -277,8 +277,8 @@ sealed trait ComplexGatewayEvent[Data, HandlerType] {
 /**
   * A simpler gateway event where the data type and the handler type are the same.
   */
-sealed trait SimpleGatewayEvent[Data] extends ComplexGatewayEvent[Data, Data] {
-  override def handlerData: Data = data
+sealed trait SimpleGatewayEvent[D] extends ComplexGatewayEvent[D, D] {
+  override def handlerData: D = data
 }
 
 object GatewayEvent {
@@ -322,7 +322,7 @@ object GatewayEvent {
       Some(APIMessage.Resumed(state))
   }
 
-  sealed trait OptGuildEvent[Data] extends SimpleGatewayEvent[Data] {
+  sealed trait OptGuildEvent[D] extends SimpleGatewayEvent[D] {
     def guildId: Option[GuildId]
   }
 
@@ -370,7 +370,7 @@ object GatewayEvent {
     */
   case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: Option[OffsetDateTime])
 
-  sealed trait ChannelEvent[Data] extends SimpleGatewayEvent[Data] {
+  sealed trait ChannelEvent[D] extends SimpleGatewayEvent[D] {
     def channelId: ChannelId
   }
 
@@ -387,7 +387,7 @@ object GatewayEvent {
     override def channelId: ChannelId = data.channelId
   }
 
-  sealed trait GuildEvent[Data] extends SimpleGatewayEvent[Data] {
+  sealed trait GuildEvent[D] extends SimpleGatewayEvent[D] {
     def guildId: GuildId
   }
 
@@ -433,7 +433,7 @@ object GatewayEvent {
   val userGen = LabelledGeneric[User]
   type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
 
-  sealed trait ComplexGuildEvent[Data, HandlerType] extends ComplexGatewayEvent[Data, HandlerType] {
+  sealed trait ComplexGuildEvent[D, HandlerType] extends ComplexGatewayEvent[D, HandlerType] {
     def guildId: GuildId
   }
 

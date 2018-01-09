@@ -55,7 +55,6 @@ class DiscordShard(gatewayUri: Uri, settings: CoreClientSettings, cache: Cache)
     extends Actor
     with ActorLogging
     with Timers {
-  private implicit val system: ActorSystem = context.system
 
   private var gatewayHandler =
     context.actorOf(GatewayHandler.cacheProps(gatewayUri, settings, cache), "GatewayHandler")
@@ -113,7 +112,9 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use
     * @param system The actor system to use for creating the client actor
     */
-  def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+  def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(
+      implicit system: ActorSystem
+  ): ShardActor =
     tagClient(system.actorOf(props(wsUri, settings, cache), actorName))
 
   /**
@@ -133,11 +134,10 @@ object DiscordShard extends FailFastCirceSupport {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] = {
+  def startShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] =
     Source(shards.toIndexedSeq).throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping).runForeach { shard =>
       shard ! StartShard
     }
-  }
 
   /**
     * Send this to the client to log out and stop gracefully

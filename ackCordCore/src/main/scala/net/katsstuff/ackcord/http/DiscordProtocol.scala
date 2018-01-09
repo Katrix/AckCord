@@ -36,7 +36,7 @@ import net.katsstuff.ackcord.data._
 
 trait DiscordProtocol {
 
-  implicit val config: Configuration = Configuration.default.withSnakeCaseKeys.withDefaults
+  implicit val config: Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
 
   implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[Int].contramap(ChannelType.idFor)
   implicit val channelTypeDecoder: Decoder[ChannelType] =
@@ -152,7 +152,7 @@ trait DiscordProtocol {
     }
   }
   implicit val rawMessageDecoder: Decoder[RawMessage] = (c: HCursor) => {
-    val isWebhook = c.fields.exists(_.contains("webhook_id"))
+    val isWebhook = c.keys.exists(_.toSeq.contains("webhook_id"))
 
     for {
       id              <- c.get[MessageId]("id")

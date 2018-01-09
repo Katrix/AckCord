@@ -44,14 +44,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val resumedDataEncoder: Encoder[GatewayEvent.ResumedData] = deriveEncoder
   implicit val resumedDataDecoder: Decoder[GatewayEvent.ResumedData] = deriveDecoder
 
-  implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] = {
-    import io.circe.generic.extras.auto._
-    deriveEncoder
-  }
-  implicit val guildEmojisUpdateDataDecoder: Decoder[GatewayEvent.GuildEmojisUpdateData] = {
-    import io.circe.generic.extras.auto._
-    deriveDecoder
-  }
+  implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] = deriveEncoder
+  implicit val guildEmojisUpdateDataDecoder: Decoder[GatewayEvent.GuildEmojisUpdateData] = deriveDecoder
 
   implicit val guildIntegrationsUpdateDataEncoder: Encoder[GatewayEvent.GuildIntegrationsUpdateData] = deriveEncoder
   implicit val guildIntegrationsUpdateDataDecoder: Decoder[GatewayEvent.GuildIntegrationsUpdateData] = deriveDecoder
@@ -162,7 +156,7 @@ object GatewayProtocol extends DiscordProtocol {
     }
 
   implicit val rawPartialMessageDecoder: Decoder[GatewayEvent.RawPartialMessage] = (c: HCursor) => {
-    val isWebhook = c.fields.exists(_.contains("webhook_id"))
+    val isWebhook = c.keys.exists(_.toSeq.contains("webhook_id"))
 
     for {
       id        <- c.downField("id").as[MessageId]

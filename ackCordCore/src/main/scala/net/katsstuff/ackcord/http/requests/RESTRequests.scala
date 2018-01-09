@@ -1104,11 +1104,8 @@ object RESTRequests {
     */
   case class CreateGuildChannel[Ctx](guildId: GuildId, params: CreateGuildChannelData, context: Ctx = NotUsed: NotUsed)
       extends SimpleRESTRequest[CreateGuildChannelData, RawChannel, Channel, Ctx] {
-    override def route: RequestRoute = Routes.createGuildChannel(guildId)
-    override def paramsEncoder: Encoder[CreateGuildChannelData] = {
-      import io.circe.generic.extras.auto._
-      deriveEncoder[CreateGuildChannelData]
-    }
+    override def route:         RequestRoute                    = Routes.createGuildChannel(guildId)
+    override def paramsEncoder: Encoder[CreateGuildChannelData] = deriveEncoder[CreateGuildChannelData]
 
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler

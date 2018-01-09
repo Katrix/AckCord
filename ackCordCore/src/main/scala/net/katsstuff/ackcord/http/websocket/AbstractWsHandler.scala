@@ -23,23 +23,16 @@
  */
 package net.katsstuff.ackcord.http.websocket
 
-import scala.language.higherKinds
-
-import akka.actor.{Actor, ActorLogging, ActorSystem, Timers}
+import akka.actor.{Actor, ActorLogging, Timers}
 import akka.http.scaladsl.model.Uri
-import akka.stream.Materializer
 
 /**
   * An abstract websocket handler. Handles going from inactive to active, and termination
-  * @tparam WsMessage The type of the websocket messages
+  * @tparam WsMessageTpe The type of the websocket messages
   * @tparam Resume The resume data type
   */
-abstract class AbstractWsHandler[WsMessage, Resume](implicit mat: Materializer)
-    extends Actor
-    with Timers
-    with ActorLogging {
+abstract class AbstractWsHandler[WsMessageTpe, Resume] extends Actor with Timers with ActorLogging {
 
-  private implicit val system: ActorSystem = context.system
   var shuttingDown = false
   var resume: Option[Resume] = None
 
