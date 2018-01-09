@@ -1,6 +1,7 @@
 lazy val akkaVersion     = "2.5.8"
 lazy val akkaHttpVersion = "10.0.11"
 val circeVersion         = "0.9.0"
+val ackCordVersion       = "0.8.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.4",
@@ -13,7 +14,13 @@ lazy val commonSettings = Seq(
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-unused-import"
-  )
+  ),
+  //Fixes repository not specified error
+  publishTo := {
+    val nexus = "https://oss.sonatype.org/"
+    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+  }
 )
 
 lazy val publishSettings = Seq(
@@ -21,11 +28,6 @@ lazy val publishSettings = Seq(
   publishArtifact in Test := false,
   pomIncludeRepository := { _ =>
     false
-  },
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
   scmInfo := Some(
@@ -40,12 +42,19 @@ lazy val publishSettings = Seq(
   autoAPIMappings := true
 )
 
+
+lazy val noPublishSettings = Seq(
+  publish := {},
+  publishLocal := {},
+  publishArtifact := false,
+)
+
 lazy val ackCordCore = project
   .settings(
     commonSettings,
     publishSettings,
     name := "ackcord-core",
-    version := "0.7",
+    version := ackCordVersion,
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
@@ -69,7 +78,7 @@ lazy val ackCordCommands = project
     commonSettings,
     publishSettings,
     name := "ackcord-commands",
-    version := "0.7",
+    version := ackCordVersion,
     description := "AckCord-commands is an extension to AckCord to allow one to easily define commands"
   )
   .dependsOn(ackCordCore)
@@ -79,7 +88,7 @@ lazy val ackCordLavaplayer = project
     commonSettings,
     publishSettings,
     name := "ackcord-lavaplayer",
-    version := "0.7",
+    version := ackCordVersion,
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
     description := "AckCord-lavaplayer an extension to AckCord to help you integrate with lavaplayer"
   )
@@ -89,8 +98,8 @@ lazy val ackCord = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-highlvl",
-    version := "0.7",
+    name := "ackcord",
+    version := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     description := "AckCord-highlvl is a higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
   )
@@ -99,6 +108,7 @@ lazy val ackCord = project
 lazy val exampleCore = project
   .settings(
     commonSettings,
+    noPublishSettings,
     name := "ackcord-exampleCore",
     version := "1.0",
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
@@ -109,6 +119,7 @@ lazy val exampleCore = project
 lazy val example = project
   .settings(
     commonSettings,
+    noPublishSettings,
     name := "ackcord-example",
     version := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
@@ -118,6 +129,7 @@ lazy val example = project
 lazy val benchmark = project
   .settings(
     commonSettings,
+    noPublishSettings,
     name := "ackcord-benchmark",
     version := "1.0",
     resolvers += "JitPack" at "https://jitpack.io",
@@ -132,9 +144,13 @@ lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(ackCordCore, ackCordCommands, ackCordLavaplayer, ackCord, exampleCore, example, benchmark)
   .settings(
-    publish := {},
-    publishLocal := {},
-    publishArtifact := false,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore, benchmark)
+    noPublishSettings,
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore, benchmark),
+    //Fixes repository not specified error
+    publishTo := {
+      val nexus = "https://oss.sonatype.org/"
+      if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+      else Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    }
   )
   .enablePlugins(ScalaUnidocPlugin)

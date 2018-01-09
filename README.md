@@ -5,10 +5,10 @@ AckCord is a Scala library for Discord, using Akka. While it does give you a hig
 
 While AckCord is still in active development, you can try AckCord by adding some of these to your `build.sbt` file.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord" % "0.7" //For high level API, includes all the other modules
-libraryDependencies += "net.katsstuff" %% "ackcord-core" % "0.7" //Low level core API
-libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.7" //Low level commands API
-libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer" % "0.7" //Low level lavaplayer API
+libraryDependencies += "net.katsstuff" %% "ackcord"            % "0.8" //For high level API, includes all the other modules
+libraryDependencies += "net.katsstuff" %% "ackcord-core"       % "0.8" //Low level core API
+libraryDependencies += "net.katsstuff" %% "ackcord-commands"   % "0.8" //Low level commands API
+libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer" % "0.8" //Low level lavaplayer API
 ```
 
 # Usage
