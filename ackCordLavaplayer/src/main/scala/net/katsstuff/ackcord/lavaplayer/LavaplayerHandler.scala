@@ -223,10 +223,31 @@ object LavaplayerHandler {
   private case class HasVoiceWs(voiceWs: ActorRef, vChannelId: ChannelId, sender: ActorRef)        extends StateData
   private case class CanSendAudio(voiceWs: ActorRef, audioSender: ActorRef, vChannelId: ChannelId) extends StateData
 
+  /**
+    * Connect to a voice channel.
+    * @param channelId The channel to connect to
+    * @param force If it should connect even if it's already connecting, or is connected to another channel(move)
+    */
   case class ConnectVChannel(channelId: ChannelId, force: Boolean = false)
+
+  /**
+    * Disconnect from a voice channel
+    */
   case object DisconnectVChannel
+
+  /**
+    * Cancel the connection to a voice channel
+    */
   case object CancelConnection
+
+  /**
+    * Sent as a response to [[ConnectVChannel]] when everything is ready.
+    */
   case object MusicReady
+
+  /**
+    * Set if the bot should be playing(speaking) or not. This is required to send sound.
+    */
   case class SetPlaying(speaking: Boolean)
 
   /**
