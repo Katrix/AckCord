@@ -256,7 +256,7 @@ object RawHandlers extends Handlers {
     builder.messages.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, message)
     handleUpdateLog(builder, users, log)
     obj.author match {
-      case user: User => handleUpdateLog(builder, users, log)
+      case user: User => handleUpdateLog(builder, user, log)
       case _          =>
     }
   }
@@ -289,7 +289,7 @@ object RawHandlers extends Handlers {
       handleUpdateLog(builder, newUsers, log)
   }
 
-  implicit val lastTypedHandler: CacheUpdateHandler[TypingStartData] = updateHandler { (builder, obj, log) =>
+  implicit val lastTypedHandler: CacheUpdateHandler[TypingStartData] = updateHandler { (builder, obj, _) =>
     builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
   }
 

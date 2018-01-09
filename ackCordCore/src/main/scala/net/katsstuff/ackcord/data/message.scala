@@ -420,7 +420,7 @@ case class OutgoingEmbed(
 ) {
   require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
   require(description.forall(_.length <= 2048), "The description of an embed can't be longer than 2048 characters")
-  require(fields.length <= 25, "An embed can't have more than 25 fields")
+  require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
   require({
     val fromTitle = title.fold(0)(_.length)
     val fromDescription = description.fold(0)(_.length)

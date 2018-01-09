@@ -55,7 +55,7 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
       var prevSeq:   Int                     = -1
       var seq:       Int                     = -1
       var sessionId: String                  = _
-      var compress = false
+      val compress = false
 
       val HeartbeatFailTimerKey: String = "HeartbeatTimer"
 
@@ -93,7 +93,7 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
               log.error("Wrong resume")
               failStage(new IllegalArgumentException("Wrong resume"))
             }
-          case other =>
+          case _ =>
             println("Got ignored event")
         }
 
@@ -158,7 +158,7 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
       override protected def onTimer(timerKey: Any): Unit =
         if (timerKey == HeartbeatFailTimerKey) {
           log.error("Did not receive heartbeat")
-          failStage(new IllegalStateException("Did not receive hearbeat"))
+          failStage(new IllegalStateException("Did not receive heartbeat"))
         }
     }
 }

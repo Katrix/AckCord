@@ -72,7 +72,7 @@ object JDAConverter {
     g.channels.foreachValue {
       case ch: TGuildChannel => gObj.getTextChannelsMap.put(ch.id, convert(ch, gObj, members, roles))
       case ch: VGuildChannel => gObj.getVoiceChannelMap.put(ch.id, convert(ch, gObj, members, roles))
-      case ch: GuildCategory => //ignore
+      case _: GuildCategory => //ignore
     }
 
     members.foreach { case (id, mem) =>

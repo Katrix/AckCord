@@ -98,7 +98,7 @@ class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ShardActor)
   genericCmds.foreach(registerCmd)
   registerCmd(helpCmd)
 
-  var guildRouterMusic: ActorRef =
+  val guildRouterMusic: ActorRef =
     context.actorOf(
       GuildRouter.props(MusicHandler.props(requests, cmdObj, helpCmdActor, cache), None),
       "MusicHandler"

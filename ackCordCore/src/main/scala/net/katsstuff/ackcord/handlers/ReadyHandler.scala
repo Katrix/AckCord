@@ -29,7 +29,7 @@ import net.katsstuff.ackcord.data.{ChannelType, DMChannel, GroupDMChannel}
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
 import shapeless._
 
-//We handle this one seperately is it's kind of special
+//We handle this one separately as is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
     val ReadyData(_, botUser, rawChannels, unavailableGuilds, _, _) = obj
@@ -48,7 +48,7 @@ object ReadyHandler extends CacheHandler[ReadyData] {
     val (groupDmChannels, users2) = rawChannels
       .collect {
         case rawChannel if rawChannel.`type` == ChannelType.GroupDm =>
-          val users   = rawChannel.recipients.toSeq.flatMap(_.map(user => user.id -> user)).toSeq
+          val users   = rawChannel.recipients.toSeq.flatMap(_.map(user => user.id -> user))
           val userIds = users.map(_._1)
 
           for {

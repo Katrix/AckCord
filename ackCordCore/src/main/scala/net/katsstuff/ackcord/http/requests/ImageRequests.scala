@@ -114,7 +114,7 @@ object ImageRequests {
   }
 
   /**
-    * Geth the default avatar of a user. Always returns a PNG.
+    * Get the default avatar of a user. Always returns a PNG.
     */
   case class GetDefaultUserAvatarImage[Ctx](desiredSize: Int, discriminator: Int, context: Ctx = NotUsed: NotUsed)
       extends ImageRequest[Ctx] {

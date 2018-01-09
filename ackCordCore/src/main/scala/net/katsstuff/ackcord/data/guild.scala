@@ -486,7 +486,7 @@ case class Presence(userId: UserId, content: Option[PresenceContent], status: Pr
 
 /**
   * A server integration
-  * @param id The id of the ingration
+  * @param id The id of the integration
   * @param name The integration name
   * @param `type` The type of the integration
   * @param enabled If the integration is enabled

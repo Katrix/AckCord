@@ -427,7 +427,7 @@ object RESTRequests {
   ) {
     files.foreach(path => require(Files.isRegularFile(path)))
     require(
-      files.map(_.getFileName.toString).distinct.length == files.length,
+      files.map(_.getFileName.toString).distinct.lengthCompare(files.length) == 0,
       "Please use unique filenames for all files"
     )
     require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
@@ -642,7 +642,7 @@ object RESTRequests {
     * @param messages All the messages to delete.
     */
   case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
-    require(messages.length >= 2 && messages.length <= 100, "Can only delete between 2 and 100 messages at a time")
+    require(messages.lengthCompare(2) >= 0 && messages.lengthCompare(100) <= 0, "Can only delete between 2 and 100 messages at a time")
   }
 
   /**
@@ -840,7 +840,7 @@ object RESTRequests {
    */
 
   /**
-    * Get all the emijis for this guild.
+    * Get all the emojis for this guild.
     */
   case class ListGuildEmojis[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
       extends ComplexRESTRequest[NotUsed, Seq[RawEmoji], GuildEmojisUpdateData, Seq[Emoji], Ctx] {
@@ -971,7 +971,7 @@ object RESTRequests {
       verificationLevel: VerificationLevel,
       defaultMessageNotifications: NotificationLevel,
       roles: Seq[Role],
-      channels: Seq[CreateGuildChannelData] //Techically this should be partial channels, but I think this works too
+      channels: Seq[CreateGuildChannelData] //Technically this should be partial channels, but I think this works too
   ) {
     require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
   }
@@ -1084,7 +1084,7 @@ object RESTRequests {
     * @param bitrate The bitrate for the channel if it's a voice channel.
     * @param userLimit The user limit for the channel if it's a voice channel.
     * @param permissionOverwrites The permission overwrites for the channel.
-    * @param parentId The categori id for the channel.
+    * @param parentId The category id for the channel.
     * @param nsfw If the channel is NSFW.
     */
   case class CreateGuildChannelData(
@@ -1575,7 +1575,7 @@ object RESTRequests {
   case class GuildPruneData(days: Int)
 
   /**
-    * @param pruned The number of membres that would be removed.
+    * @param pruned The number of members that would be removed.
     */
   case class GuildPruneResponse(pruned: Int)
 
@@ -1662,7 +1662,7 @@ object RESTRequests {
   case class CreateGuildIntegrationData(`type`: String /*TODO: Enum here*/, id: IntegrationId)
 
   /**
-    * Attach an itegration to a guild.
+    * Attach an integration to a guild.
     */
   case class CreateGuildIntegration[Ctx](
       guildId: GuildId,
@@ -1886,9 +1886,9 @@ object RESTRequests {
   }
 
   /**
-    * @param recipentId User to send a DM to.
+    * @param recipientId User to send a DM to.
     */
-  case class CreateDMData(recipentId: UserId)
+  case class CreateDMData(recipientId: UserId)
 
   /**
     * Create a new DM channel.
@@ -1912,7 +1912,7 @@ object RESTRequests {
   /**
     * @param accessTokens The access tokens of users that have granted the bot
     *                     the `gdm.join` scope.
-    * @param nicks A map specifying the nicnames for the users in this group DM.
+    * @param nicks A map specifying the nicknames for the users in this group DM.
     */
   case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User, String])
 

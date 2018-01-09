@@ -27,7 +27,7 @@ import akka.actor.{Actor, Props, Terminated}
 import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Logout
 
-class ShardShutdownManager(shards: Seq[ShardActor]) extends Actor {
+private[ackcord] class ShardShutdownManager(shards: Seq[ShardActor]) extends Actor {
   var shardNum: Int = shards.size
 
   override def receive: Receive = {
@@ -44,5 +44,5 @@ class ShardShutdownManager(shards: Seq[ShardActor]) extends Actor {
   }
 }
 object ShardShutdownManager {
-  def props(shards: Seq[ShardActor]): Props = Props(new ShardShutdownManager(shards))
+  private[ackcord] def props(shards: Seq[ShardActor]): Props = Props(new ShardShutdownManager(shards))
 }

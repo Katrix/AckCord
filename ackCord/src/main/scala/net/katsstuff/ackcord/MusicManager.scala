@@ -37,7 +37,7 @@ import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler.{ConnectVChannel, DisconnectVChannel, SetPlaying}
 
-class MusicManager(cache: Cache) extends Actor {
+private[ackcord] class MusicManager(cache: Cache) extends Actor {
   import context.dispatcher
 
   private val players = mutable.HashMap.empty[GuildId, (AudioPlayer, ActorRef)]
@@ -72,7 +72,7 @@ class MusicManager(cache: Cache) extends Actor {
   }
 }
 object MusicManager {
-  def props(cache: Cache): Props = Props(new MusicManager(cache))
+  private[ackcord] def props(cache: Cache): Props = Props(new MusicManager(cache))
 
   private[ackcord] case class ConnectToChannel(
       guildId: GuildId,

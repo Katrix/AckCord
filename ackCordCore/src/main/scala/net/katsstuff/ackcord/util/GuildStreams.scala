@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.util
 
 import akka.NotUsed
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Flow, Sink, SubFlow}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
@@ -163,7 +163,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId a message belongs to.
     */
-  def apiMessageGroupByGuildId[Msg <: APIMessage] = {
+  def apiMessageGroupByGuildId[Msg <: APIMessage]: SubFlow[Msg, NotUsed, Flow[Msg, _, NotUsed], Sink[Msg, NotUsed]] = {
     withGuildInfoApiMessage[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId
@@ -175,7 +175,12 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId an event belongs to.
     */
-  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]] =
+  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]]: SubFlow[
+    Msg,
+    NotUsed,
+    Flow[Msg, _, NotUsed],
+    Sink[Msg, NotUsed]
+  ] =
     withGuildInfoGatewayEvent[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId

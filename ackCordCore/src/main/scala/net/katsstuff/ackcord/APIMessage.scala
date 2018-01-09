@@ -145,7 +145,7 @@ object APIMessage {
   /**
     * Sent to the client when the emojis of a guild have been updated. If you
     * need the old emojis, you can find them in [[cache.previous]].
-    * @param guild The guild where the update occoured.
+    * @param guild The guild where the update occurred.
     * @param emojis The new emojis.
     */
   case class GuildEmojiUpdate(guild: Guild, emojis: Seq[Emoji], cache: CacheState) extends GuildMessage

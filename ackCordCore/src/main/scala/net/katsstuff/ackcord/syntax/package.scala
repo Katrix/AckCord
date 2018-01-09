@@ -630,7 +630,7 @@ package object syntax {
 
     /**
       * Modify the positions of several channels.
-      * @param newPositions A map betweem the channelId and the new positions.
+      * @param newPositions A map between the channelId and the new positions.
       */
     def modifyChannelPositions[Ctx](newPositions: SnowflakeMap[Channel, Int], context: Ctx = NotUsed: NotUsed) =
       ModifyGuildChannelPositions(
@@ -753,7 +753,7 @@ package object syntax {
 
     /**
       * Modify an existing integration for this guild.
-      * @param id The id of the ingration
+      * @param id The id of the integration
       * @param expireBehavior The behavior of expiring subscribers.
       * @param expireGracePeriod The grace period before expiring subscribers.
       * @param enableEmoticons If emojis should be synced for this integration.
@@ -1241,7 +1241,7 @@ package object syntax {
       * Create a group DM to a few users.
       * @param accessTokens The access tokens of users that have granted the bot
       *                     the `gdm.join` scope.
-      * @param nicks A map specifying the nicnames for the users in this group DM.
+      * @param nicks A map specifying the nicknames for the users in this group DM.
       */
     def createGroupDM[Ctx](
         accessTokens: Seq[String],
@@ -1256,7 +1256,7 @@ package object syntax {
     def fetchInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed) = GetInvite(inviteCode, context)
 
     /**
-      * Fetcha list of voice regions that can be used when creating a guild.
+      * Fetch a list of voice regions that can be used when creating a guild.
       */
     def fetchVoiceRegions[Ctx](context: Ctx = NotUsed: NotUsed) = ListVoiceRegions(context)
 

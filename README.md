@@ -110,7 +110,7 @@ There are a few more helpers that you can use when writing commands. The first o
 ### Putting it all together
 So now that we know what all the different things to, let's create our factories.
 ```scala
-//Normal unparsec command doing the request sending itself
+//Normal unparsed command doing the request sending itself
 val EchoCmdFactory = BaseCmdFactory(
   category = OurCategories.!,
   aliases = Seq("echo"),

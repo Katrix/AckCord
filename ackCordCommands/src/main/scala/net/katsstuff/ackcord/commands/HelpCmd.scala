@@ -51,24 +51,22 @@ abstract class HelpCmd extends Actor {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: CacheSnapshot = c
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
-      msg.channelId.tResolve.foreach { channel =>
-        val res = for {
-          cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
-          descMap <- commands.get(cat)
-          command = lowercaseCommand.substring(cat.prefix.length)
-          req <- descMap.get(command) match {
-            case Some(desc) => Some(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)))
-            case None       => unknownCommand(cat, command).map(data => CreateMessage(msg.channelId, data))
-          }
-        } yield req
-
-        res match {
-          case Some(req) => sendMsg(req)
-          case None =>
-            unknownCategory(lowercaseCommand).foreach { data =>
-              sendMsg(CreateMessage(msg.channelId, data))
-            }
+      val res = for {
+        cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
+        descMap <- commands.get(cat)
+        command = lowercaseCommand.substring(cat.prefix.length)
+        req <- descMap.get(command) match {
+          case Some(desc) => Some(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)))
+          case None       => unknownCommand(cat, command).map(data => CreateMessage(msg.channelId, data))
         }
+      } yield req
+
+      res match {
+        case Some(req) => sendMsg(req)
+        case None =>
+          unknownCategory(lowercaseCommand).foreach { data =>
+            sendMsg(CreateMessage(msg.channelId, data))
+          }
       }
 
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>

@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.benchmark
 
+import java.lang.reflect.Field
+
 import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data.{ChannelType, Guild, MFALevel, NotificationLevel, PermissionOverwriteType, PresenceGame, PresenceStatus, PresenceStreaming, User, UserId, VerificationLevel}
 import net.katsstuff.ackcord.syntax._
@@ -33,8 +35,8 @@ import sx.blah.discord.util.cache.Cache
 
 object D4JConverter {
 
-  val guildChaceField = classOf[ShardImpl].getDeclaredField("guildCache")
-  guildChaceField.setAccessible(true)
+  val guildCacheField: Field = classOf[ShardImpl].getDeclaredField("guildCache")
+  guildCacheField.setAccessible(true)
 
   def convert(g: Guild, users: SnowflakeMap[User, User], shard: ShardImpl): IGuild = {
     val gObj = new GuildObject
@@ -142,7 +144,7 @@ object D4JConverter {
     }.toArray
 
     val res = DiscordUtils.getGuildFromJSON(shard, gObj)
-    guildChaceField.get(shard).asInstanceOf[Cache[IGuild]].put(res)
+    guildCacheField.get(shard).asInstanceOf[Cache[IGuild]].put(res)
     res
   }
 
