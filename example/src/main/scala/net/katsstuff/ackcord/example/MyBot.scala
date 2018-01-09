@@ -43,7 +43,7 @@ object MyBot extends App {
   import settings.executionContext
 
   settings
-    .connect()
+    .build()
     .foreach { client =>
       client.onEvent {
         case APIMessage.Ready(_) => println("Now ready")

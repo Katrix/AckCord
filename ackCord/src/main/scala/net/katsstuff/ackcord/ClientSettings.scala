@@ -35,6 +35,20 @@ import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.RawPresenceGame
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 
+/**
+  * Settings used when connecting to Discord.
+  * @param token The token for the bot.
+  * @param largeThreshold The large threshold.
+  * @param shardNum The shard index of this shard.
+  * @param shardTotal The amount of shards.
+  * @param idleSince If the bot has been idle, set the time since.
+  * @param gameStatus Send some presence when connecting.
+  * @param status The status to use when connecting.
+  * @param afk If the bot should be afk when connecting.
+  * @param system The actor system to use.
+  * @param commandSettings The command settings to use.
+  * @param requestSettings The request settings to use.
+  */
 class ClientSettings(
     token: String,
     largeThreshold: Int = 100,
@@ -51,7 +65,10 @@ class ClientSettings(
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  def connect(): Future[DiscordClient] = {
+  /**
+    * Create a [[DiscordClient]] from these settings.
+    */
+  def build(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
     val requests = RequestHelper.apply(
@@ -69,7 +86,11 @@ class ClientSettings(
     )
   }
 
-  def connectAutoShards(): Future[DiscordClient] = {
+  /**
+    * Create a [[DiscordClient]] from these settings while letting Discord
+    * set the shard amount.
+    */
+  def buildAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
     val requests = RequestHelper.apply(
@@ -90,6 +111,21 @@ class ClientSettings(
   }
 }
 object ClientSettings {
+
+  /**
+    * Settings used when connecting to Discord.
+    * @param token The token for the bot.
+    * @param largeThreshold The large threshold.
+    * @param shardNum The shard index of this shard.
+    * @param shardTotal The amount of shards.
+    * @param idleSince If the bot has been idle, set the time since.
+    * @param gameStatus Send some presence when connecting.
+    * @param status The status to use when connecting.
+    * @param afk If the bot should be afk when connecting.
+    * @param system The actor system to use.
+    * @param commandSettings The command settings to use.
+    * @param requestSettings The request settings to use.
+    */
   def apply(
       token: String,
       largeThreshold: Int = 100,
@@ -118,6 +154,12 @@ object ClientSettings {
     )
 }
 
+/**
+  * @param parallelism Parallelism to use for requests.
+  * @param bufferSize The buffer size to use for waiting requests.
+  * @param overflowStrategy The overflow strategy to use when the buffer is full.
+  * @param maxAllowedWait The max allowed wait time before giving up on a request.
+  */
 case class RequestSettings(
     parallelism: Int = 4,
     bufferSize: Int = 32,
@@ -125,4 +167,8 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 )
 
+/**
+  * @param needMention If a mention is needed before the category when using a prefix.
+  * @param categories The valid command categories AckCord should keep a lookout for.
+  */
 case class CommandSettings(needMention: Boolean = true, categories: Set[CmdCategory] = Set.empty)

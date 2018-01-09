@@ -24,17 +24,16 @@
 package net.katsstuff.ackcord
 
 import akka.actor.{Actor, Props, Terminated}
-import net.katsstuff.ackcord.DiscordShard.ShardActor
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.Logout
+import net.katsstuff.ackcord.DiscordShard.{ShardActor, StopShard}
 
 private[ackcord] class ShardShutdownManager(shards: Seq[ShardActor]) extends Actor {
   var shardNum: Int = shards.size
 
   override def receive: Receive = {
-    case Logout =>
+    case StopShard =>
       shards.foreach { shard =>
         context.watch(shard)
-        shard ! Logout
+        shard ! StopShard
       }
     case Terminated(_) =>
       shardNum -= 1

@@ -35,15 +35,21 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.DiscordShard.{ShardActor, StartShard}
+import net.katsstuff.ackcord.DiscordShard.{ShardActor, StartShard, StopShard}
+import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
-import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.http.requests.RequestHelper
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.util.MessageParser
 
+/**
+  * Core class used to interface with Discord stuff from high level.
+  * @param shards The shards of this client
+  * @param cache The cache used by the client
+  * @param commands The commands object used by the client
+  * @param requests The requests object used by the client
+  */
 case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Commands, requests: RequestHelper) {
   import requests.{mat, system}
 
@@ -54,6 +60,9 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  /**
+    * Login the shards of this client.
+    */
   def login(): Future[Done] = {
     require(shardShutdownManager == null, "Already logged in")
     shardShutdownManager = system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
@@ -66,16 +75,23 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
       }
   }
 
-  def logout(timeout: FiniteDuration): Future[Boolean] = {
+  /**
+    * Logout the shards of this client
+    * @param timeout The amount of time to wait before forcing logout.
+    */
+  def logout(timeout: FiniteDuration = 1.minute): Future[Boolean] = {
     require(shardShutdownManager != null, "Logout before login")
-    val res = gracefulStop(shardShutdownManager, timeout, Logout)
+    val res = gracefulStop(shardShutdownManager, timeout, StopShard)
     shardShutdownManager = null
     res
   }
 
-  def shutdown(timeout: FiniteDuration): Future[Terminated] = {
+  /**
+    * Logs out the shards of this client, and then shuts down the actor system.
+    * @param timeout The amount of time to wait before forcing shutdown.
+    */
+  def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
     logout(timeout).flatMap(_ => system.terminate())
-  }
 
   private def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
     source
@@ -87,6 +103,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
 
   //Event handling
 
+  /**
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onEventDSLC(
       handler: CacheSnapshot => PartialFunction[APIMessage, RequestDSL[Unit]]
   ): (UniqueKillSwitch, Future[Done]) = runDSL {
@@ -95,6 +116,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
   }
 
+  /**
+    * Run a [[RequestDSL]] when an event happens.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onEventDSL(handler: PartialFunction[APIMessage, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { _ =>
       {
@@ -102,6 +128,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
       }
     }
 
+  /**
+    * Run some code with a [[CacheSnapshot]] when an event happens.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onEventC(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { c =>
       {
@@ -109,6 +140,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
       }
     }
 
+  /**
+    * Run some code when an event happens.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onEvent(handler: PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
     onEventC { _ =>
       {
@@ -119,6 +155,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
 
   //Command handling
 
+  /**
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onRawCommandDSLC(
       handler: CacheSnapshot => PartialFunction[RawCmd, RequestDSL[Unit]]
   ): (UniqueKillSwitch, Future[Done]) = {
@@ -129,6 +170,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
   }
 
+  /**
+    * Run a [[RequestDSL]] when raw command arrives.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onRawCommandDSL(handler: PartialFunction[RawCmd, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
     onRawCommandDSLC { _ =>
       {
@@ -136,6 +182,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
       }
     }
 
+  /**
+    * Run some code with a [[CacheSnapshot]] when raw command arrives.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onRawCommandC(handler: CacheSnapshot => PartialFunction[RawCmd, Unit]): (UniqueKillSwitch, Future[Done]) = {
     onRawCommandDSLC { c =>
       {
@@ -144,6 +195,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
   }
 
+  /**
+    * Run some code when raw command arrives.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def onRawCommand(handler: PartialFunction[RawCmd, Unit]): (UniqueKillSwitch, Future[Done]) =
     onRawCommandC { _ =>
       {
@@ -151,6 +207,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
       }
     }
 
+  /**
+    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def registerCommandDSLC[A](
       category: CmdCategory,
       aliases: Seq[String],
@@ -172,6 +233,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     commands.subscribe(factory)(Keep.both).swap
   }
 
+  /**
+    * Register a command which runs a [[RequestDSL]].
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def registerCommandDSL[A](
       category: CmdCategory,
       aliases: Seq[String],
@@ -191,6 +257,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     commands.subscribe(factory)(Keep.both).swap
   }
 
+  /**
+    * Register a command which runs some code with a [[CacheSnapshot]].
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def registerCommandC[A](
       category: CmdCategory,
       aliases: Seq[String],
@@ -211,6 +282,11 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     commands.subscribe(factory)(Keep.both).swap
   }
 
+  /**
+    * Register a command which runs some code.
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
   def registerCommand[A](
       category: CmdCategory,
       aliases: Seq[String],
@@ -229,6 +305,17 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     commands.subscribe(factory)(Keep.both).swap
   }
 
+  /**
+    * Join a voice channel.
+    * @param guildId The guildId of the voice channel.
+    * @param channelId The channelId of the voice channel.
+    * @param createPlayer A named argument to create a player if one doesn't
+    *                     already exist.
+    * @param force The the join should be force even if already connected to
+    *              somewhere else (move channel).
+    * @param timeoutDur The timeout duration before giving up,
+    * @return A future containing the used player.
+    */
   def joinChannel(
       guildId: GuildId,
       channelId: ChannelId,
@@ -240,12 +327,24 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     musicManager.ask(ConnectToChannel(guildId, channelId, force, () => createPlayer, timeoutDur)).mapTo[AudioPlayer]
   }
 
+  /**
+    * Leave a voice channel.
+    * @param guildId The guildId to leave the voice channel in.
+    * @param destroyPlayer If the player used for this guild should be destroyed.
+    */
   def leaveChannel(guildId: GuildId, destroyPlayer: Boolean = false): Unit =
     musicManager ! DisconnectFromChannel(guildId, destroyPlayer)
 
+  /**
+    * Set a bot as speaking/playing in a channel. This is required before
+    * sending any sound.
+    */
   def setPlaying(guildId: GuildId, playing: Boolean): Unit =
     musicManager ! SetChannelPlaying(guildId, playing)
 
+  /**
+    * Load a track using LavaPlayer.
+    */
   def loadTrack(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] =
     LavaplayerHandler.loadItem(playerManager, identifier)
 }
