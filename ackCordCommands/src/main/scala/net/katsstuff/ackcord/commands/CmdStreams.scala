@@ -26,7 +26,6 @@ package net.katsstuff.ackcord.commands
 import java.util.Locale
 
 import akka.NotUsed
-import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Sink, Source}
 import akka.stream.{FlowShape, Materializer}
 import net.katsstuff.ackcord.APIMessage
@@ -46,8 +45,7 @@ object CmdStreams {
     * @param apiMessages A source of [[APIMessage]]s.
     */
   def cmdStreams(needMention: Boolean, categories: Set[CmdCategory], apiMessages: Source[APIMessage, NotUsed])(
-      implicit system: ActorSystem,
-      mat: Materializer
+      implicit mat: Materializer
   ): Source[RawCmdMessage, NotUsed] = {
     apiMessages
       .collect { case msg: APIMessage.MessageCreate => msg }

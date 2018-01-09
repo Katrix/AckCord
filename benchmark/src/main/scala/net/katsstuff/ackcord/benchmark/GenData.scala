@@ -173,7 +173,8 @@ object GenData {
     roles = randomElements(roles, rand.nextInt(roles.length)),
     userId = Some(users(rand.nextInt(users.length)).id),
     requireColons = true,
-    managed = false
+    managed = false,
+    animated = false
   )
 
   def randomGuildMember(userId: UserId, guildId: GuildId, roles: Seq[RoleId]) =

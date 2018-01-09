@@ -60,13 +60,13 @@ case class Cache(
   def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages[Any])
 
   /**
-    * Subscribe an actor to this cache using [[Sink.actorRef]].
+    * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
     */
   def subscribeAPIActor(actor: ActorRef, completeMessage: Any, specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI.filter(msg => specificEvent.exists(_.isInstance(msg))).runWith(Sink.actorRef(actor, completeMessage))
 
   /**
-    * Subscribe an actor to this cache using [[Sink.actorRefWithAck]].
+    * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]].
     */
   def subscribeAPIActorWithAck(
       actor: ActorRef,

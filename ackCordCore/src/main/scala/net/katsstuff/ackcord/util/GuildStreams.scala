@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.util
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Flow, Sink, SubFlow}
+import akka.stream.scaladsl.Flow
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.http.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
@@ -80,9 +80,9 @@ object GuildStreams {
     * A flow which tries to find out which guild a given GatewayEvent event belongs to.
     *
     * Handles
-    * - [[GatewayEvent.GuildEvent]]
-    * - [[GatewayEvent.OptGuildEvent]]
-    * - [[GatewayEvent.ChannelEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ChannelEvent]]
     */
   def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] = {
     val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
@@ -144,12 +144,13 @@ object GuildStreams {
     * specific guild.
     *
     * Handles
-    * - [[GatewayEvent.GuildEvent]]
-    * - [[GatewayEvent.OptGuildEvent]]
-    * - [[GatewayEvent.ChannelEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ChannelEvent]]
     *
-    * Global events like [[GatewayEvent.Ready]], [[GatewayEvent.Resumed]] and
-    * [[GatewayEvent.UserUpdate]] are sent no matter what.
+    * Global events like [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.Ready]],
+    * [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.Resumed]] and
+    * [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.UserUpdate]] are sent no matter what.
     *
     * @param guildId The only guildID to allow through.
     */
@@ -163,7 +164,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId a message belongs to.
     */
-  def apiMessageGroupByGuildId[Msg <: APIMessage]: SubFlow[Msg, NotUsed, Flow[Msg, _, NotUsed], Sink[Msg, NotUsed]] = {
+  def apiMessageGroupByGuildId[Msg <: APIMessage] = {
     withGuildInfoApiMessage[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId
@@ -175,12 +176,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId an event belongs to.
     */
-  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]]: SubFlow[
-    Msg,
-    NotUsed,
-    Flow[Msg, _, NotUsed],
-    Sink[Msg, NotUsed]
-  ] =
+  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]] =
     withGuildInfoGatewayEvent[Msg]
       .collect {
         case (msg, Some(guildId)) => msg -> guildId

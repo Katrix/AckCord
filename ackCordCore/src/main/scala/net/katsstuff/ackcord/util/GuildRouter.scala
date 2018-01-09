@@ -37,15 +37,15 @@ import net.katsstuff.ackcord.{APIMessage, DiscordShard}
 
 /**
   * Will send all [[APIMessage]]s with the same guild
-  * to the same actor. Also obeys [[Broadcast]].
+  * to the same actor. Also obeys [[https://doc.akka.io/api/akka/current/akka/routing/Broadcast.htmlBroadcast]].
   *
   * Handles
   * - [[APIMessage.ChannelMessage]]
   * - [[APIMessage.GuildMessage]]
   * - [[APIMessage.MessageMessage]]
   * - [[APIMessage.VoiceStateUpdate]]
-  * - [[GatewayEvent.GuildEvent]]
-  * - [[GatewayEvent.OptGuildEvent]]
+  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
+  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
   *
   * This actor has a small cache for figuring out what actor to send messages
   * to for the gateway channel events.

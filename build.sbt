@@ -36,7 +36,8 @@ lazy val publishSettings = Seq(
     )
   ),
   homepage := Some(url("https://github.com/Katrix-/AckCord")),
-  developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/")))
+  developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
+  autoAPIMappings := true
 )
 
 lazy val ackCordCore = project
@@ -129,5 +130,11 @@ lazy val benchmark = project
 
 lazy val ackCordRoot = project
   .in(file("."))
-  .aggregate(ackCordCore, ackCordCommands, ackCordLavaplayer, ackCord, exampleCore, example)
-  .settings(publish := {}, publishLocal := {}, publishArtifact := false)
+  .aggregate(ackCordCore, ackCordCommands, ackCordLavaplayer, ackCord, exampleCore, example, benchmark)
+  .settings(
+    publish := {},
+    publishLocal := {},
+    publishArtifact := false,
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore, benchmark)
+  )
+  .enablePlugins(ScalaUnidocPlugin)

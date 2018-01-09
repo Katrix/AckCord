@@ -129,6 +129,8 @@ object JDAConverter {
     mObj.setGame(presence.content.map {
       case PresenceGame(name)           => jda.Game.of(name)
       case PresenceStreaming(name, uri) => jda.Game.of(name, uri)
+      case PresenceListening(_) => ???
+      case PresenceWatching(_) => ???
     }.orNull)
     mObj.setOnlineStatus(OnlineStatus.fromKey(PresenceStatus.nameOf(presence.status)))
     mObj.getRoleSet.addAll(roles.values.filter(r => mem.roleIds.contains(r.getIdLong)).toSeq.asJava)

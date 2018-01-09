@@ -28,7 +28,7 @@ import java.time.{Instant, OffsetDateTime}
 import net.katsstuff.ackcord.data._
 
 /**
-  * Base trait for all messages sent from [[SnowflakeCache]]. All descendants
+  * Base trait for all messages sent from [[Cache]]. All descendants
   * of this trait are published to the event stream passed in with
   * [[CoreClientSettings]].
   */

@@ -42,7 +42,7 @@ import net.katsstuff.ackcord.{APIMessageCacheUpdate, AckCord, Cache, CoreClientS
   * Some REST messages can't be sent until this has authenticated.
   * @param rawWsUri The raw uri to connect to without params
   * @param settings The settings to use.
-  * @param mat The [[Materializer]] to use.
+  * @param mat The [[https://doc.akka.io/api/akka/current/akka/stream/Materializer.html Materializer]] to use.
   * @param source A source of gateway messages.
   * @param sink A sink which will be sent all the dispatches of the gateway.
   */

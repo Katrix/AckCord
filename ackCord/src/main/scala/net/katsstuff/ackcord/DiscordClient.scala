@@ -104,7 +104,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
   //Event handling
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
+    * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
@@ -129,7 +129,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
 
   /**
-    * Run some code with a [[CacheSnapshot]] when an event happens.
+    * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
@@ -156,7 +156,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
   //Command handling
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
+    * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
@@ -183,7 +183,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
 
   /**
-    * Run some code with a [[CacheSnapshot]] when raw command arrives.
+    * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
@@ -208,7 +208,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
     }
 
   /**
-    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
+    * Register a command which runs a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
@@ -258,7 +258,7 @@ case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Comman
   }
 
   /**
-    * Register a command which runs some code with a [[CacheSnapshot]].
+    * Register a command which runs some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */

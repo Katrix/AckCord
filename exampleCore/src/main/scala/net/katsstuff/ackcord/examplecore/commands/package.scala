@@ -27,15 +27,14 @@ import java.nio.file.Paths
 import java.time.temporal.ChronoUnit
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props, Terminated}
-import akka.stream.Materializer
+import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.{Flow, Sink}
+import net.katsstuff.ackcord.RequestDSL
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.RESTRequests._
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.{DiscordShard, RequestDSL}
 
 package object commands {
 
@@ -74,7 +73,6 @@ package object commands {
       Some(CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing"))
   )
 
-  case class GetChannelInfo(guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot)
   val InfoChannelCmdFactory: ParsedCmdFactory[GuildChannel, NotUsed] = ParsedCmdFactory[GuildChannel, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("infoChannel"),
@@ -82,7 +80,6 @@ package object commands {
       //Using the context
       ParsedCmdFlow[GuildChannel]
         .map { implicit c => cmd =>
-          implicit val cache: CacheSnapshot = c
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
         .via(requests.flow)
@@ -104,22 +101,6 @@ package object commands {
       )
     )
   )
-
-  class KillCmd(main: ActorRef) extends Actor with ActorLogging {
-
-    override def receive: Receive = {
-      case ParsedCmd(_, _, _, _) =>
-        log.info("Received shutdown command")
-        main ! DiscordShard.StopShard
-        context.watch(main)
-      case Terminated(_) =>
-        log.info("Everything shut down")
-        context.system.terminate()
-    }
-  }
-  object KillCmd {
-    def props(main: ActorRef): Props = Props(new KillCmd(main))
-  }
 
   def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
@@ -173,7 +154,7 @@ package object commands {
   def ComplainErrorHandler(
       requests: RequestHelper,
       allCmds: Map[CmdCategory, Set[String]]
-  )(implicit system: ActorSystem, mat: Materializer): Sink[AllCmdMessages, NotUsed] =
+  ): Sink[AllCmdMessages, NotUsed] =
     Flow[AllCmdMessages]
       .collect {
         case noCmd: NoCmd =>

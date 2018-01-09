@@ -69,10 +69,7 @@ object CacheStreams {
   def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] = {
     var state: CacheState = null
 
-    /**
-      * We only handle events when we are ready to, and we have received
-      * the ready event.
-      */
+    //We only handle events when we are ready to, and we have received the ready event.
     def isReady: Boolean = state != null
 
     Flow[CacheUpdate[D]].statefulMapConcat { () => update =>

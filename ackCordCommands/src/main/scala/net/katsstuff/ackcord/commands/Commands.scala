@@ -108,7 +108,7 @@ object Commands {
     * @param requests A request helper object which will be passed to handlers.
     */
   def create(needMention: Boolean, categories: Set[CmdCategory], cache: Cache, requests: RequestHelper): Commands = {
-    import requests.{mat, system}
+    import requests.mat
     Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI), categories, requests)
   }
 
@@ -126,7 +126,7 @@ object Commands {
       apiMessages: Source[APIMessage, NotUsed],
       requests: RequestHelper
   ): Commands = {
-    import requests.{mat, system}
+    import requests.mat
     Commands(CmdStreams.cmdStreams(needMention, categories, apiMessages), categories, requests)
   }
 }

@@ -55,7 +55,7 @@ import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
   * @param token The token received in [[net.katsstuff.ackcord.APIMessage.VoiceServerUpdate]]
   * @param sendTo The actor to send all [[AudioAPIMessage]]s to unless noted otherwise
   * @param sendSoundTo The actor to send [[AudioAPIMessage.ReceivedData]] to.
-  * @param mat The [[Materializer]] to use
+  * @param mat The [[https://doc.akka.io/api/akka/current/akka/stream/Materializer.html Materializer]] to use
   */
 class VoiceWsHandler(
     address: String,

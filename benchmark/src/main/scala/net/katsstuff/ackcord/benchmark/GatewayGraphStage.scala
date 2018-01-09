@@ -52,7 +52,6 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
   override def createLogic(inheritedAttributes: Attributes): TimerGraphStageLogic =
     new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var state:     GatewayGraphStage.State = First
-      var prevSeq:   Int                     = -1
       var seq:       Int                     = -1
       var sessionId: String                  = _
       val compress = false
@@ -116,7 +115,6 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
       setHandler(dispatchIn, new InHandler {
 
         override def onPush(): Unit = {
-          prevSeq = seq
           seq += 1
           pushMsg(grab(dispatchIn)(seq))
           pull(dispatchIn)
