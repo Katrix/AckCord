@@ -315,7 +315,6 @@ case class RawGuild(
     */
   def toGuild: Option[Guild] = {
     import cats.implicits._
-    import net.katsstuff.ackcord.syntax._
 
     for {
       joinedAt    <- joinedAt
@@ -324,8 +323,14 @@ case class RawGuild(
       voiceStates <- voiceStates
       members     <- members
       rawChannels <- channels
-      channels    <- Traverse[List].sequence(rawChannels.map(_.toChannel.flatMap(_.asGuildChannel)).toList)
-      presences   <- presences
+      channels <- Traverse[List].sequence(
+        rawChannels
+          .map(_.toChannel.collect {
+            case ch: GuildChannel => ch
+          })
+          .toList
+      )
+      presences <- presences
     } yield {
 
       Guild(
