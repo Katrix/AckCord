@@ -38,7 +38,7 @@ import akka.{Done, NotUsed}
   *
   * This should be instantiated once per bot, and shared between shards.
   */
-class RequestHelper(
+case class RequestHelper(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef,
     parallelism: Int = 4,
