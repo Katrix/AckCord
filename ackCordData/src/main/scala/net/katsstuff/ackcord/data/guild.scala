@@ -280,11 +280,9 @@ case class GuildMember(
     * Calculate the permissions of this user
     */
   def permissions(guild: Guild): Permission = {
-    import net.katsstuff.ackcord.syntax._
-
     if (guild.ownerId == userId) Permission.All
     else {
-      val userPermissions = this.rolesForUser(guild).map(_.permissions)
+      val userPermissions = roleIds.flatMap(guild.roles.get).map(_.permissions)
       val everyonePerms   = guild.everyoneRole.permissions
 
       val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
@@ -299,13 +297,11 @@ case class GuildMember(
   def permissionsWithOverrides(guildPermissions: Permission, channelId: ChannelId)(
       implicit c: CacheSnapshot
   ): Permission = {
-    import net.katsstuff.ackcord.syntax._
-
     if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
     else {
       val res = for {
         guild   <- guildId.resolve
-        channel <- guild.channelById(channelId)
+        channel <- guild.channels.get(channelId)
       } yield {
         if (guild.ownerId == userId) Permission.All
         else {
@@ -313,7 +309,8 @@ case class GuildMember(
           val everyoneAllow     = everyoneOverwrite.map(_.allow)
           val everyoneDeny      = everyoneOverwrite.map(_.deny)
 
-          val roleOverwrites = this.rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+          val rolesForUser   = roleIds.flatMap(guild.roles.get)
+          val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
           val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
           val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
 

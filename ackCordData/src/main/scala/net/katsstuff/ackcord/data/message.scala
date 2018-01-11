@@ -28,8 +28,6 @@ import java.util.Base64
 
 import scala.util.Try
 
-import net.katsstuff.ackcord.util.MessageParser
-
 //TODO
 class ImageData(val rawData: String) extends AnyVal
 object ImageData {
@@ -200,8 +198,10 @@ case class Message(
 
   def authorUserId: Option[UserId] = if(isAuthorUser) Some(UserId(authorId)) else None
 
+  private val channelRegex = """<#(\d+)>""".r
+
   def channelMentions: Seq[ChannelId] = {
-    MessageParser.channelRegex
+    channelRegex
       .findAllMatchIn(content)
       .flatMap { m =>
         Try {

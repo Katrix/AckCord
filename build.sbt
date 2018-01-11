@@ -1,3 +1,5 @@
+import sbtcrossproject.{crossProject, CrossType}
+
 lazy val akkaVersion     = "2.5.8"
 lazy val akkaHttpVersion = "10.0.11"
 val circeVersion         = "0.9.0"
@@ -42,12 +44,21 @@ lazy val publishSettings = Seq(
   autoAPIMappings := true
 )
 
+lazy val noPublishSettings = Seq(publish := {}, publishLocal := {}, publishArtifact := false)
 
-lazy val noPublishSettings = Seq(
-  publish := {},
-  publishLocal := {},
-  publishArtifact := false,
-)
+lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-data",
+    version := ackCordVersion,
+    libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
+    description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
+  )
+
+lazy val ackCordDataJVM = ackCordData.jvm
+lazy val ackCordDataJS  = ackCordData.js
 
 lazy val ackCordCore = project
   .settings(
@@ -72,6 +83,7 @@ lazy val ackCordCore = project
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % Test,
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
+  .dependsOn(ackCordDataJVM)
 
 lazy val ackCordCommands = project
   .settings(
@@ -142,7 +154,17 @@ lazy val benchmark = project
 
 lazy val ackCordRoot = project
   .in(file("."))
-  .aggregate(ackCordCore, ackCordCommands, ackCordLavaplayer, ackCord, exampleCore, example, benchmark)
+  .aggregate(
+    ackCordDataJVM,
+    ackCordDataJS,
+    ackCordCore,
+    ackCordCommands,
+    ackCordLavaplayer,
+    ackCord,
+    exampleCore,
+    example,
+    benchmark
+  )
   .settings(
     noPublishSettings,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore, benchmark),
