@@ -38,13 +38,14 @@ import akka.{Done, NotUsed}
   *
   * This should be instantiated once per bot, and shared between shards.
   */
-case class RequestHelper(
-    credentials: HttpCredentials,
-    ratelimitActor: ActorRef,
-    parallelism: Int = 4,
-    bufferSize: Int = 32,
-    overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    maxAllowedWait: FiniteDuration = 2.minutes
+//TODO: Make this a case class with a method name create to create a RequestHelper in 0.9
+class RequestHelper(
+    val credentials: HttpCredentials,
+    val ratelimitActor: ActorRef,
+    val parallelism: Int = 4,
+    val bufferSize: Int = 32,
+    val overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
+    val maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem, val mat: Materializer) {
 
   /**
