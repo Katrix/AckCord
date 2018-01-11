@@ -2,8 +2,8 @@ import sbtcrossproject.{crossProject, CrossType}
 
 lazy val akkaVersion     = "2.5.8"
 lazy val akkaHttpVersion = "10.0.11"
-val circeVersion         = "0.9.0"
-val ackCordVersion       = "0.8.0"
+lazy val circeVersion    = "0.9.0"
+lazy val ackCordVersion  = "0.8.1"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.4",
