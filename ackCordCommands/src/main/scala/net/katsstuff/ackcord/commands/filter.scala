@@ -34,6 +34,14 @@ import net.katsstuff.ackcord.syntax._
 trait CmdFilter {
 
   /**
+    * Check if a command can be used by a user. While this is not used
+    * directly in AckCord, it can be used when implementing help commands
+    * and similar. If it's not possible to determine if the command can be
+    * used, then this method should be optimistic.
+    */
+  def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean
+
+  /**
     * Check if the message can be executed.
     */
   def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean
@@ -50,11 +58,14 @@ object CmdFilter {
     * Only allow this command to be used in a specific context
     */
   case class InContext(context: Context) extends CmdFilter {
+    override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean = true
+
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = msg.channelId.resolve.exists {
       case _: GuildChannel   => context == Context.Guild
       case _: DMChannel      => context == Context.DM
       case _: GroupDMChannel => context == Context.DM //We consider group DMs to be DMs
     }
+
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
       Some(s"This command can only be used in a $context")
   }
@@ -73,6 +84,8 @@ object CmdFilter {
     * A command that can only be used in a single guild.
     */
   case class InOneGuild(guildId: GuildId) extends CmdFilter {
+    override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
+      c.getGuild(guildId).map(_.members).exists(_.contains(userId))
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot):    Boolean        = msg.tGuildChannel(guildId).nonEmpty
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
   }
@@ -82,6 +95,10 @@ object CmdFilter {
     * If this command is not used in a guild, it will always pass this filter.
     */
   case class NeedPermission(neededPermission: Permission) extends CmdFilter {
+    override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
+      c.getGuild(guildId)
+        .exists(guild => guild.members.get(userId).exists(_.permissions(guild).hasPermissions(neededPermission)))
+
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val res = for {
         channel      <- msg.channelId.tResolve
@@ -101,6 +118,8 @@ object CmdFilter {
     * A filter that only allows non bot users.
     */
   case object NonBot extends CmdFilter {
+    override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
+      c.getUser(userId).exists(_.bot.getOrElse(false))
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
       msg.isAuthorUser && c.getUser(UserId(msg.authorId)).exists(u => !u.bot.getOrElse(false))
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
