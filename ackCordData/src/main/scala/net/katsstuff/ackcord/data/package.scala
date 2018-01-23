@@ -314,7 +314,7 @@ package object data {
       * Check if this permission has a permission.
       * @param other The permission to check against.
       */
-    def hasPermissions(other: Permission): Boolean = (permission & other) != 0
+    def hasPermissions(other: Permission): Boolean = (permission & other) == other
 
     /**
       * Check if this permission grants any permissions.
