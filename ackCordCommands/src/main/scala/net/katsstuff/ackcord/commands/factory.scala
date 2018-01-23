@@ -61,7 +61,7 @@ case class CmdCategory(prefix: String, description: String) {
   * @param description The description of what a command does.
   * @param usage How to use the command. Does not include the name or prefix.
   */
-case class CmdDescription(name: String, description: String, usage: String = "")
+case class CmdDescription(name: String, description: String, usage: String = "", extra: Map[String, String] = Map.empty)
 
 /**
   * A factory for a command, that also includes other information about
