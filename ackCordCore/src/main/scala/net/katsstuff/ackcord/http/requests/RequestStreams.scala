@@ -126,7 +126,7 @@ object RequestStreams {
       val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
       val ratelimited = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case req @ RequestRatelimited(_, true, _, _, _) => req
+        case req: RequestRatelimited[Ctx] if req.global => req
       })
 
       // format: OFF
@@ -153,10 +153,10 @@ object RequestStreams {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
     Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
       import system.dispatcher
-      val future = ratelimiter ? Ratelimiter.WantToPass(request.route.uri, request)
+      val future = ratelimiter ? Ratelimiter.WantToPass(request.route.rawRoute, request)
 
       future.mapTo[Request[Data, Ctx]].recover {
-        case _: AskTimeoutException => RequestDropped(request.context, request.route.uri)
+        case _: AskTimeoutException => RequestDropped(request.context, request.route.uri, request.route.rawRoute)
       }
     }
   }.addAttributes(Attributes.name("UriRatelimiter"))
@@ -211,7 +211,8 @@ object RequestStreams {
                         isGlobalRatelimit(httpResponse),
                         tilReset,
                         requestLimit,
-                        request.route.uri
+                        request.route.uri,
+                        request.route.rawRoute
                       )
                     )
                   case e if e.isFailure() =>
@@ -230,7 +231,8 @@ object RequestStreams {
                             remainingReq,
                             tilReset,
                             requestLimit,
-                            request.route.uri
+                            request.route.uri,
+                            request.route.rawRoute
                         )
                       )
                   case _ => //Should be success
@@ -245,7 +247,8 @@ object RequestStreams {
                             remainingReq,
                             tilReset,
                             requestLimit,
-                            request.route.uri
+                            request.route.uri,
+                            request.route.rawRoute
                         )
                       )
                 }
@@ -263,9 +266,9 @@ object RequestStreams {
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
         val requestLimit      = answer.uriRequestLimit
-        val uri               = answer.uri
+        val rawRoute          = answer.rawRoute
         if (rateLimitActor != null && tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
-          rateLimitActor ! Ratelimiter.UpdateRatelimits(uri, tilReset, remainingRequests, requestLimit)
+          rateLimitActor ! Ratelimiter.UpdateRatelimits(rawRoute, tilReset, remainingRequests, requestLimit)
         }
       }
       .async

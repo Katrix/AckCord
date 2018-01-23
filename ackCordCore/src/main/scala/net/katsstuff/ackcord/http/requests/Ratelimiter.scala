@@ -27,20 +27,19 @@ import scala.collection.mutable
 import scala.concurrent.duration._
 
 import akka.actor.{Actor, ActorRef, Props, Status, Timers}
-import akka.http.scaladsl.model.Uri
 
 class Ratelimiter extends Actor with Timers {
   import Ratelimiter._
 
-  private val uriLimits         = new mutable.HashMap[Uri, Int]
-  private val remainingRequests = new mutable.HashMap[Uri, Int]
-  private val rateLimits        = new mutable.HashMap[Uri, mutable.Queue[(ActorRef, Any)]]
+  private val uriLimits         = new mutable.HashMap[String, Int]
+  private val remainingRequests = new mutable.HashMap[String, Int]
+  private val rateLimits        = new mutable.HashMap[String, mutable.Queue[(ActorRef, Any)]]
 
   def receive: Receive = {
     case ResetRatelimit(uri) =>
       uriLimits.get(uri) match {
         case Some(limit) => remainingRequests.put(uri, limit)
-        case None => remainingRequests.remove(uri)
+        case None        => remainingRequests.remove(uri)
       }
       releaseWaiting(uri)
     case WantToPass(uri, ret) =>
@@ -60,10 +59,10 @@ class Ratelimiter extends Actor with Timers {
       rateLimits.get(uri).foreach(_.dequeueFirst(_._1 == actorRef))
   }
 
-  def releaseWaiting(uri: Uri): Unit = {
+  def releaseWaiting(uri: String): Unit = {
     rateLimits.get(uri).foreach { queue =>
       def release(remaining: Int): Int = {
-        if(remaining <= 0 || queue.isEmpty) remaining
+        if (remaining <= 0 || queue.isEmpty) remaining
         else {
           val (sender, response) = queue.dequeue()
           sender ! response
@@ -84,9 +83,9 @@ object Ratelimiter {
   //TODO: Custom dispatcher
   def props: Props = Props(new Ratelimiter())
 
-  case class WantToPass[A](uri: Uri, ret: A)
-  case class ResetRatelimit(uri: Uri)
-  case class UpdateRatelimits(uri: Uri, timeTilReset: FiniteDuration, remainingRequests: Int, requestLimit: Int)
+  case class WantToPass[A](route: String, ret: A)
+  case class ResetRatelimit(uri: String)
+  case class UpdateRatelimits(uri: String, timeTilReset: FiniteDuration, remainingRequests: Int, requestLimit: Int)
 
-  case class TimedOut(uri: Uri, actorRef: ActorRef)
+  case class TimedOut(uri: String, actorRef: ActorRef)
 }

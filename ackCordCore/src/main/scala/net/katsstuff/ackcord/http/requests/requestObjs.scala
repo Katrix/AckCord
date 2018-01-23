@@ -30,14 +30,19 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpMethod, RequestEntity, ResponseEntity, Uri}
 import akka.stream.scaladsl.Flow
 import cats.CoflatMap
+import net.katsstuff.ackcord.http.Routes.Route
 
 /**
   * Used by requests for specifying an uri to send to,
   * together with a method to use.
+  * @param rawRoute A string containing the route without any minor parameters filled in
   * @param uri The uri to send to
   * @param method The method to use
   */
-case class RequestRoute(uri: Uri, method: HttpMethod)
+case class RequestRoute(rawRoute: String, uri: Uri, method: HttpMethod)
+object RequestRoute {
+  def apply(route: Route, method: HttpMethod): RequestRoute = RequestRoute(route.rawRoute, route.applied, method)
+}
 
 sealed trait MaybeRequest[+Data, Ctx] {
 
@@ -158,7 +163,15 @@ sealed trait RequestAnswer[+Data, Ctx] {
     */
   def uriRequestLimit: Int
 
+  /**
+    * The uri for this request.
+    */
   def uri: Uri
+
+  /**
+    * The raw route for this request without any minor parameters applied.
+    */
+  def rawRoute: String
 
   /**
     * An option that contains the response data if this is a success, or None if it's a failure.
@@ -191,7 +204,8 @@ case class RequestResponse[+Data, Ctx](
     remainingRequests: Int,
     tilReset: FiniteDuration,
     uriRequestLimit: Int,
-    uri: Uri
+    uri: Uri,
+    rawRoute: String
 ) extends RequestAnswer[Data, Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestResponse[Data, NewCtx] = copy(context = context)
@@ -199,7 +213,7 @@ case class RequestResponse[+Data, Ctx](
   override def optData:              Option[Data]            = Some(data)
   override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
   override def filter(f: Data => Boolean): RequestAnswer[Data, Ctx] =
-    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), uri)
+    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), uri, rawRoute)
   override def flatMap[B](f: Data => RequestAnswer[B, Ctx]): RequestAnswer[B, Ctx] = f(data)
 }
 
@@ -219,7 +233,8 @@ case class RequestRatelimited[Ctx](
     global: Boolean,
     tilReset: FiniteDuration,
     uriRequestLimit: Int,
-    uri: Uri
+    uri: Uri,
+    rawRoute: String
 ) extends FailedRequest[Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
@@ -236,7 +251,7 @@ case class RequestRatelimited[Ctx](
 /**
   * A request that failed for some other reason.
   */
-case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri) extends FailedRequest[Ctx] {
+case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: String) extends FailedRequest[Ctx] {
   override def asException: Throwable = e
 
   override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
@@ -251,7 +266,7 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri) extends Faile
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestError[Ctx] = this
 }
 
-case class RequestDropped[Ctx](context: Ctx, uri: Uri) extends MaybeRequest[Nothing, Ctx] with FailedRequest[Ctx] {
+case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String) extends MaybeRequest[Nothing, Ctx] with FailedRequest[Ctx] {
   override def asException = new DroppedRequestException(uri)
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
