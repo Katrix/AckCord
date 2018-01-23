@@ -570,9 +570,9 @@ package object syntax {
       */
     def createTextChannel[Ctx](
         name: String,
-        permissionOverwrites: Option[Seq[PermissionOverwrite]],
-        category: Option[ChannelId],
-        nsfw: Option[Boolean],
+        permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
+        category: Option[ChannelId] = None,
+        nsfw: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
@@ -591,11 +591,11 @@ package object syntax {
       */
     def createVoiceChannel[Ctx](
         name: String,
-        bitrate: Option[Int],
-        userLimit: Option[Int],
-        permissionOverwrites: Option[Seq[PermissionOverwrite]],
-        category: Option[ChannelId],
-        nsfw: Option[Boolean],
+        bitrate: Option[Int] = None,
+        userLimit: Option[Int] = None,
+        permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
+        category: Option[ChannelId] = None,
+        nsfw: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
@@ -619,8 +619,8 @@ package object syntax {
       */
     def createCategory[Ctx](
         name: String,
-        permissionOverwrites: Option[Seq[PermissionOverwrite]],
-        nsfw: Option[Boolean],
+        permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
+        nsfw: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
@@ -678,10 +678,10 @@ package object syntax {
     def addGuildMember[Ctx](
         userId: UserId,
         accessToken: String,
-        nick: Option[String],
-        roles: Option[Seq[RoleId]],
-        mute: Option[Boolean],
-        deaf: Option[Boolean],
+        nick: Option[String] = None,
+        roles: Option[Seq[RoleId]] = None,
+        mute: Option[Boolean] = None,
+        deaf: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) = AddGuildMember(guild.id, userId, AddGuildMemberData(accessToken, nick, roles, mute, deaf), context)
 
@@ -699,11 +699,11 @@ package object syntax {
       * @param mentionable If this role is mentionable.
       */
     def createRole[Ctx](
-        name: Option[String],
-        permissions: Option[Permission],
-        color: Option[Int],
-        hoist: Option[Boolean],
-        mentionable: Option[Boolean],
+        name: Option[String] = None,
+        permissions: Option[Permission] = None,
+        color: Option[Int] = None,
+        hoist: Option[Boolean] = None,
+        mentionable: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable), context)
 
@@ -994,10 +994,10 @@ package object syntax {
       * @param channelId The id of the channel to move the user to.
       */
     def modify[Ctx](
-        nick: Option[String],
-        roles: Option[Seq[RoleId]],
-        mute: Option[Boolean],
-        deaf: Option[Boolean],
+        nick: Option[String] = guildMember.nick,
+        roles: Option[Seq[RoleId]] = None,
+        mute: Option[Boolean] = None,
+        deaf: Option[Boolean] = None,
         channelId: Option[ChannelId] = None,
         context: Ctx = NotUsed: NotUsed
     ) =
@@ -1069,11 +1069,11 @@ package object syntax {
       * @param mentionable If this role is mentionable.
       */
     def modify[Ctx](
-        name: Option[String],
-        permissions: Option[Permission],
-        color: Option[Int],
-        hoist: Option[Boolean],
-        mentionable: Option[Boolean],
+        name: Option[String] = None,
+        permissions: Option[Permission] = None,
+        color: Option[Int] = None,
+        hoist: Option[Boolean] = None,
+        mentionable: Option[Boolean] = None,
         context: Ctx = NotUsed: NotUsed
     ) =
       ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable), context)
