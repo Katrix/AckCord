@@ -282,7 +282,7 @@ object LavaplayerHandler {
   /**
     * An exception signaling that a [[AudioPlayerManager]] find a track.
     */
-  class NoMatchException(identifier: String) extends Exception(s"No match for identifier $identifier")
+  class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
 
   class AlreadyConnectedException(inChannel: ChannelId)
       extends Exception("The client is already connected to a channel in this guild")
