@@ -421,15 +421,20 @@ case class OutgoingEmbed(
   require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
   require(description.forall(_.length <= 2048), "The description of an embed can't be longer than 2048 characters")
   require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
-  require({
+  require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
+
+  /**
+    * The total amount of characters in this embed so far.
+    */
+  def totalCharAmount: Int = {
     val fromTitle = title.fold(0)(_.length)
     val fromDescription = description.fold(0)(_.length)
     val fromFooter = footer.fold(0)(_.text.length)
     val fromAuthor = author.fold(0)(_.name.length)
     val fromFields = fields.map(f => f.name.length + f.value.length).sum
 
-    fromTitle + fromDescription + fromFooter + fromAuthor + fromFields <= 6000
-  }, "An embed can't have more than 6000 characters in total")
+    fromTitle + fromDescription + fromFooter + fromAuthor + fromFields
+  }
 }
 
 /**
