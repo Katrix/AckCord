@@ -36,7 +36,7 @@ import net.katsstuff.ackcord.data._
 
 trait DiscordProtocol {
 
-  implicit val config: Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
+  implicit val circeConfiguration: Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
 
   implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[Int].contramap(ChannelType.idFor)
   implicit val channelTypeDecoder: Decoder[ChannelType] =
