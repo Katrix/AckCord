@@ -1136,7 +1136,7 @@ package object syntax {
         content: Option[String] = Some(message.content),
         embed: Option[OutgoingEmbed] = message.embeds.headOption.map(_.toOutgoing),
         context: Ctx = NotUsed: NotUsed
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed), content)
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed), context)
 
     /**
       * Delete this message.
