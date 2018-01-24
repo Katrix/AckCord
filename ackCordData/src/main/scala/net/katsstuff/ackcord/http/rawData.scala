@@ -279,16 +279,16 @@ case class RawMessage(
 case class RawGuild(
     id: GuildId,
     name: String,
-    icon: Option[String], //Icon can be null
-    splash: Option[String], //Splash can be null
+    icon: Option[String],
+    splash: Option[String],
     owner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
     afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
-    embedEnabled: Option[Boolean], //embedEnabled can be missing
-    embedChannelId: Option[ChannelId], //embedChannelId can be missing
+    embedEnabled: Option[Boolean],
+    embedChannelId: Option[ChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -297,8 +297,8 @@ case class RawGuild(
     features: Seq[String],
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
-    widgetEnabled: Option[Boolean], //Can be missing
-    widgetChannelId: Option[ChannelId], //Can be missing
+    widgetEnabled: Option[Boolean],
+    widgetChannelId: Option[ChannelId],
     systemChannelId: Option[ChannelId],
     joinedAt: Option[OffsetDateTime],
     large: Option[Boolean],

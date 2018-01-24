@@ -120,7 +120,7 @@ case class User(
     id: UserId,
     username: String,
     discriminator: String,
-    avatar: Option[String], //avatar can be null
+    avatar: Option[String],
     bot: Option[Boolean],
     mfaEnabled: Option[Boolean],
     verified: Option[Boolean],

@@ -201,16 +201,16 @@ object MFALevel {
 case class Guild(
     id: GuildId,
     name: String,
-    icon: Option[String], ////Icon can be null
-    splash: Option[String], //Splash can be null
+    icon: Option[String],
+    splash: Option[String],
     owner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
     afkChannelId: Option[ChannelId], //AfkChannelId can be null
     afkTimeout: Int,
-    embedEnabled: Option[Boolean], //embedEnabled can be missing
-    embedChannelId: Option[ChannelId], //embedChannelId can be missing
+    embedEnabled: Option[Boolean],
+    embedChannelId: Option[ChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -219,8 +219,8 @@ case class Guild(
     features: Seq[String], //TODO: What is a feature?
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
-    widgetEnabled: Option[Boolean], //Can me missing
-    widgetChannelId: Option[ChannelId], //Can be missing
+    widgetEnabled: Option[Boolean],
+    widgetChannelId: Option[ChannelId],
     systemChannelId: Option[ChannelId],
     joinedAt: OffsetDateTime,
     large: Boolean,
