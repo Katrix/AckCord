@@ -57,7 +57,7 @@ object Routes {
 
   case class Route(rawRoute: String, applied: Uri) {
     require(
-      rawRoute.count(_ == '/') == applied.toString().count(_ == "/"),
+      rawRoute.count(_ == '/') == applied.toString().count(_ == '/'),
       "Raw route and applied route are unbalanced"
     )
 
