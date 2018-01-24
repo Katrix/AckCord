@@ -1032,8 +1032,8 @@ package object syntax {
       * @param deleteMessageDays The number of days to delete messages for
       *                              this banned user.
       */
-    def ban[Ctx](deleteMessageDays: Int, context: Ctx = NotUsed: NotUsed) =
-      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays), context)
+    def ban[Ctx](deleteMessageDays: Int, reason: String, context: Ctx = NotUsed: NotUsed) =
+      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays, reason), context)
 
     /**
       * Unban this user.

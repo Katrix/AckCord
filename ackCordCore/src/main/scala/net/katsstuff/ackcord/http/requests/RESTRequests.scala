@@ -1531,8 +1531,9 @@ object RESTRequests {
   /**
     * @param `delete-message-days` The number of days to delete messages for
     *                              this banned user.
+    * @param reason The reason for the ban.
     */
-  case class CreateGuildBanData(`delete-message-days`: Int)
+  case class CreateGuildBanData(`delete-message-days`: Int, reason: String)
 
   /**
     * Ban a user from a guild.
@@ -1557,8 +1558,9 @@ object RESTRequests {
         guildId: GuildId,
         userId: UserId,
         deleteMessageDays: Int,
+        reason: String,
         context: Ctx = NotUsed: NotUsed
-    ): CreateGuildBan[Ctx] = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays), context)
+    ): CreateGuildBan[Ctx] = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays, reason), context)
   }
 
   /**
