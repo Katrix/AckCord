@@ -935,8 +935,8 @@ package object syntax {
       * @param name The name of the emoji.
       * @param image The image for the emoji.
       */
-    def createEmoji[Ctx](name: String, image: ImageData, context: Ctx = NotUsed: NotUsed) =
-      CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image), context)
+    def createEmoji[Ctx](name: String, image: ImageData, roles: Seq[RoleId], context: Ctx = NotUsed: NotUsed) =
+      CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image, roles), context)
 
     /**
       * Get a voice state for a user.
@@ -1048,8 +1048,8 @@ package object syntax {
       * @param name The new name of the emoji.
       * @param guildId The guildId of this emoji.
       */
-    def modify[Ctx](name: String, guildId: GuildId, context: Ctx = NotUsed: NotUsed) =
-      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name), context)
+    def modify[Ctx](name: String, roles: Seq[RoleId], guildId: GuildId, context: Ctx = NotUsed: NotUsed) =
+      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, roles), context)
 
     /**
       * Delete this emoji.

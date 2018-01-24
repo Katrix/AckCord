@@ -955,12 +955,12 @@ object RESTRequests {
       Some(response.map(_.toEmoji))
   }
 
-  //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
   /**
     * @param name The name of the emoji.
     * @param image The image data for the emoji.
+    * @param roles Whitelist of roles that can use this emoji.
     */
-  case class CreateGuildEmojiData(name: String, image: ImageData)
+  case class CreateGuildEmojiData(name: String, image: ImageData, roles: Seq[RoleId])
 
   /**
     * Create a new emoji for a guild.
@@ -990,8 +990,9 @@ object RESTRequests {
         guildId: GuildId,
         name: String,
         image: ImageData,
+        roles: Seq[RoleId],
         context: Ctx = NotUsed: NotUsed
-    ): CreateGuildEmoji[Ctx] = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image), context)
+    ): CreateGuildEmoji[Ctx] = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image, roles), context)
   }
 
   /**
@@ -1008,11 +1009,11 @@ object RESTRequests {
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
   }
 
-  //Can take an array of role snowflakes, but it's only read for some bots, Ignored for now
   /**
     * @param name The new emoji name.
+    * @param roles Whitelist of roles that can use this emoji.
     */
-  case class ModifyGuildEmojiData(name: String)
+  case class ModifyGuildEmojiData(name: String, roles: Seq[RoleId])
 
   /**
     * Modify an existing emoji.
@@ -1043,8 +1044,9 @@ object RESTRequests {
         emojiId: EmojiId,
         guildId: GuildId,
         name: String,
+        roles: Seq[RoleId],
         context: Ctx = NotUsed: NotUsed
-    ): ModifyGuildEmoji[Ctx] = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name), context)
+    ): ModifyGuildEmoji[Ctx] = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, roles), context)
   }
 
   /**
