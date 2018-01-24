@@ -27,7 +27,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.Uri
 import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.requests.ImageRequests.ImageFormat
+import net.katsstuff.ackcord.data.ImageFormat
 import net.katsstuff.ackcord.http.requests.RequestRoute
 
 /**
