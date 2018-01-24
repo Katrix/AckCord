@@ -1205,12 +1205,22 @@ package object syntax {
         icon: Option[ImageData],
         verificationLevel: VerificationLevel,
         defaultMessageNotifications: NotificationLevel,
+        explicitContentFilter: FilterLevel,
         roles: Seq[Role],
         channels: Seq[CreateGuildChannelData],
         context: Ctx = NotUsed: NotUsed
     ) =
       CreateGuild(
-        CreateGuildData(name, region, icon, verificationLevel, defaultMessageNotifications, roles, channels),
+        CreateGuildData(
+          name,
+          region,
+          icon,
+          verificationLevel,
+          defaultMessageNotifications,
+          explicitContentFilter,
+          roles,
+          channels
+        ),
         context
       )
 

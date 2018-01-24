@@ -1084,6 +1084,7 @@ object RESTRequests {
       icon: Option[ImageData],
       verificationLevel: VerificationLevel,
       defaultMessageNotifications: NotificationLevel,
+      explicitContentFilter: FilterLevel,
       roles: Seq[Role],
       channels: Seq[CreateGuildChannelData] //Technically this should be partial channels, but I think this works too
   ) {
@@ -1142,6 +1143,7 @@ object RESTRequests {
       region: Option[String] = None,
       verificationLevel: Option[VerificationLevel] = None,
       defaultMessageNotifications: Option[NotificationLevel] = None,
+      explicitContentFilter: Option[FilterLevel] = None,
       afkChannelId: Option[ChannelId] = None,
       afkTimeout: Option[Int] = None,
       icon: Option[ImageData] = None,
