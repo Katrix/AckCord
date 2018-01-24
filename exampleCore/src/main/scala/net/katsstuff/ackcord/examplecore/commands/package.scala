@@ -84,7 +84,7 @@ package object commands {
         }
         .via(requests.flow)
         .mapConcat {
-          case RequestResponse(res, GetChannelInfo(guildId, senderChannelId, c), _, _, _, _) =>
+          case RequestResponse(res, GetChannelInfo(guildId, senderChannelId, c), _, _, _, _, _) =>
             implicit val cache: CacheSnapshot = c
             senderChannelId.tResolve(guildId).map(_.sendMessage(s"Info for ${res.name}:\n$res")).toList
           case error: FailedRequest[_] =>
