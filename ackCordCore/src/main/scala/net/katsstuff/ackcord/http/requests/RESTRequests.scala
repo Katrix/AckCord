@@ -1254,8 +1254,11 @@ object RESTRequests {
   case class ModifyGuildChannelPositions[Ctx](
       guildId: GuildId,
       params: Seq[ModifyGuildChannelPositionsData],
-      context: Ctx = NotUsed: NotUsed
-  ) extends SimpleRESTRequest[Seq[ModifyGuildChannelPositionsData], Seq[RawChannel], Seq[Channel], Ctx] {
+      context: Ctx = NotUsed: NotUsed,
+      reason: Option[String] = None
+  ) extends SimpleReasonRequest[ModifyGuildChannelPositions[Ctx], Seq[ModifyGuildChannelPositionsData], Seq[
+        RawChannel
+      ], Seq[Channel], Ctx] {
     override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
       implicit val enc: Encoder[ModifyGuildChannelPositionsData] = deriveEncoder[ModifyGuildChannelPositionsData]
@@ -1272,6 +1275,8 @@ object RESTRequests {
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawChannel])(cache: CacheState): Option[Seq[Channel]] =
       cache.current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.channels.get))
+
+    override def withReason(reason: String): ModifyGuildChannelPositions[Ctx] = copy(reason = Some(reason))
   }
 
   trait GuildMemberRequest[Params, Ctx]
@@ -1423,8 +1428,12 @@ object RESTRequests {
   /**
     * Modify the clients nickname.
     */
-  case class ModifyBotUsersNick[Ctx](guildId: GuildId, params: ModifyBotUsersNickData, context: Ctx = NotUsed: NotUsed)
-      extends NoNiceResponseRequest[ModifyBotUsersNickData, String, Ctx] {
+  case class ModifyBotUsersNick[Ctx](
+      guildId: GuildId,
+      params: ModifyBotUsersNickData,
+      context: Ctx = NotUsed: NotUsed,
+      reason: Option[String] = None
+  ) extends NoNiceResponseReasonRequest[ModifyBotUsersNick[Ctx], ModifyBotUsersNickData, String, Ctx] {
     override def route:         RequestRoute                    = Routes.modifyCurrentNick(guildId)
     override def paramsEncoder: Encoder[ModifyBotUsersNickData] = deriveEncoder[ModifyBotUsersNickData]
 
@@ -1443,6 +1452,8 @@ object RESTRequests {
 
     override def requiredPermissions:                        Permission = Permission.ChangeNickname
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+
+    override def withReason(reason: String): ModifyBotUsersNick[Ctx] = copy(reason = Some(reason))
   }
   object ModifyBotUsersNick {
     def mk[Ctx](guildId: GuildId, nick: String, context: Ctx = NotUsed: NotUsed): ModifyBotUsersNick[Ctx] =
@@ -1640,10 +1651,11 @@ object RESTRequests {
   case class ModifyGuildRolePositions[Ctx](
       guildId: GuildId,
       params: Seq[ModifyGuildRolePositionsData],
-      context: Ctx = NotUsed: NotUsed
-  ) extends ComplexRESTRequest[Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[GatewayEvent.GuildRoleModifyData], Seq[
-        Role
-      ], Ctx] {
+      context: Ctx = NotUsed: NotUsed,
+      reason: Option[String] = None
+  ) extends ComplexReasonRequest[ModifyGuildRolePositions[Ctx], Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[
+        GatewayEvent.GuildRoleModifyData
+      ], Seq[Role], Ctx] {
     override def route: RequestRoute = Routes.modifyGuildRolePositions(guildId)
     override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
       implicit val enc: Encoder[ModifyGuildRolePositionsData] = deriveEncoder[ModifyGuildRolePositionsData]
@@ -1662,6 +1674,8 @@ object RESTRequests {
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawRole])(cache: CacheState): Option[Seq[Role]] =
       cache.current.getGuild(guildId).map(g => params.map(_.id).flatMap(g.roles.get))
+
+    override def withReason(reason: String): ModifyGuildRolePositions[Ctx] = copy(reason = Some(reason))
   }
 
   /**
