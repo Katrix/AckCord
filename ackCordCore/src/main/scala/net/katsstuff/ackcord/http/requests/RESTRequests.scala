@@ -1947,17 +1947,6 @@ object RESTRequests {
   }
 
   /**
-    * Accept invite.
-    */
-  case class AcceptInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed)
-      extends NoParamsNiceResponseRequest[Invite, Ctx] {
-    override def route: RequestRoute = Routes.acceptInvite(inviteCode)
-
-    override def responseDecoder: Decoder[Invite]      = Decoder[Invite]
-    override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
-  }
-
-  /**
     * Fet the client user.
     */
   case class GetCurrentUser[Ctx](context: Ctx = NotUsed: NotUsed) extends NoParamsNiceResponseRequest[User, Ctx] {

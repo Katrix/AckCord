@@ -1278,11 +1278,6 @@ package object syntax {
       * Delete this invite.
       */
     def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteInvite(invite.code, context)
-
-    /**
-      * Accept this invite.
-      */
-    def accept[Ctx](context: Ctx = NotUsed: NotUsed) = AcceptInvite(invite.code, context)
   }
 
   implicit class WebhookSyntax(private val webhook: Webhook) extends AnyVal {
