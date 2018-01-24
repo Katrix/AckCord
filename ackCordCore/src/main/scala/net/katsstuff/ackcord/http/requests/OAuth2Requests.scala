@@ -115,7 +115,7 @@ object OAuth2Requests extends FailFastCirceSupport {
   }
 
   def baseGrant(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String, responseType: String): Uri =
-    Routes.oAuth2Authorize.withQuery(
+    Routes.oAuth2Authorize.applied.withQuery(
       Uri.Query(
         "response_type" -> responseType,
         "client_id"     -> clientId,
@@ -149,7 +149,7 @@ object OAuth2Requests extends FailFastCirceSupport {
 
     Http()
       .singleRequest(
-        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token, headers = headers, entity = entity)
+        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token.applied, headers = headers, entity = entity)
       )
       .flatMap(Unmarshal(_).to[AccessToken])
   }
@@ -166,7 +166,7 @@ object OAuth2Requests extends FailFastCirceSupport {
 
     Http()
       .singleRequest(
-        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token, headers = headers, entity = entity)
+        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token.applied, headers = headers, entity = entity)
       )
       .flatMap(Unmarshal(_).to[ClientAccessToken])
   }

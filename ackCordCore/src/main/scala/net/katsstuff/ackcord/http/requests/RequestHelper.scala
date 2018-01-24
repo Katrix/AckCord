@@ -81,7 +81,7 @@ class RequestHelper(
     */
   def flowSuccess[Data, Ctx]: Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
     flow[Data, Ctx].collect {
-      case RequestResponse(data, ctx, _, _, _, _) => data -> ctx
+      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
     }
 
   /**

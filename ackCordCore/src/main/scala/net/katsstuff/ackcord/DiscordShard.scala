@@ -161,7 +161,7 @@ object DiscordShard extends FailFastCirceSupport {
   def fetchWsGateway(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Uri] = {
     val http = Http()
     http
-      .singleRequest(HttpRequest(uri = Routes.gateway))
+      .singleRequest(HttpRequest(uri = Routes.gateway.applied))
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
         case HttpResponse(code, headers, entity, _) =>
@@ -195,7 +195,7 @@ object DiscordShard extends FailFastCirceSupport {
     val http = Http()
     val auth = Authorization(BotAuthentication(token))
     http
-      .singleRequest(HttpRequest(uri = Routes.botGateway, headers = List(auth)))
+      .singleRequest(HttpRequest(uri = Routes.botGateway.applied, headers = List(auth)))
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
         case HttpResponse(code, headers, entity, _) =>
