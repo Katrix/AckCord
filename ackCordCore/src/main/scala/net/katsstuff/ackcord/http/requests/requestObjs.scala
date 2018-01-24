@@ -27,7 +27,7 @@ import scala.concurrent.duration._
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.http.scaladsl.model.{HttpMethod, RequestEntity, ResponseEntity, Uri}
+import akka.http.scaladsl.model.{HttpHeader, HttpMethod, RequestEntity, ResponseEntity, Uri}
 import akka.stream.scaladsl.Flow
 import cats.CoflatMap
 import net.katsstuff.ackcord.http.Routes.Route
@@ -84,6 +84,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     * The body of the request to send.
     */
   def requestBody: RequestEntity
+
+  def extraHeaders: Seq[HttpHeader] = Nil
 
   /**
     * A flow that can be used to parse the responses from this request.

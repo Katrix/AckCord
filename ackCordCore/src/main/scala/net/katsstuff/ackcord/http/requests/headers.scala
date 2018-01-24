@@ -98,3 +98,15 @@ object `Retry-After` extends ModeledCustomHeaderCompanion[`Retry-After`] {
   override def name:                 String             = "Retry-After"
   override def parse(value: String): Try[`Retry-After`] = Try(new `Retry-After`(value.toLong.millis))
 }
+
+final class `X-Audit-Log-Reason`(val reason: String) extends ModeledCustomHeader[`X-Audit-Log-Reason`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] = `X-Audit-Log-Reason`
+
+  override def value: String = reason
+  override def renderInRequests()  = false
+  override def renderInResponses() = true
+}
+object `X-Audit-Log-Reason` extends ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] {
+  override def name:                 String                    = "Retry-After"
+  override def parse(value: String): Try[`X-Audit-Log-Reason`] = Try(new `X-Audit-Log-Reason`(value))
+}

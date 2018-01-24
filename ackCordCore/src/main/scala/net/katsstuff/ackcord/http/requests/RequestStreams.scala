@@ -180,7 +180,15 @@ object RequestStreams {
         val route = request.route
         val auth  = Authorization(credentials)
 
-        (HttpRequest(route.method, route.uri, immutable.Seq(auth, userAgent), request.requestBody), request)
+        (
+          HttpRequest(
+            route.method,
+            route.uri,
+            immutable.Seq(auth, userAgent) ++ request.extraHeaders,
+            request.requestBody
+          ),
+          request
+        )
       }
   }.named("CreateRequest")
 
