@@ -28,13 +28,36 @@ import java.util.Base64
 
 import scala.util.Try
 
-//TODO
+sealed trait ImageFormat {
+  def extensions: Seq[String]
+  def extension: String = extensions.head
+  def base64Name: String
+}
+object ImageFormat {
+  case object JPEG extends ImageFormat {
+    override def extensions: Seq[String] = Seq("jpg", "jpeg")
+    override def base64Name: String = "image/jpeg"
+  }
+  case object PNG extends ImageFormat {
+    override def extensions: Seq[String] = Seq("png")
+    override def base64Name: String = "image/png"
+  }
+  case object WebP extends ImageFormat {
+    override def extensions: Seq[String] = Seq("webp")
+    override def base64Name: String = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
+  }
+  case object GIF extends ImageFormat {
+    override def extensions: Seq[String] = Seq("gif")
+    override def base64Name: String = "image/gif"
+  }
+}
+
 class ImageData(val rawData: String) extends AnyVal
 object ImageData {
 
-  def forData(imageType: String, data: Array[Byte]): ImageData = {
+  def forData(imageType: ImageFormat, data: Array[Byte]): ImageData = {
     val base64Data = Base64.getEncoder.encodeToString(data)
-    new ImageData(s"data:image/$imageType;base64,$base64Data")
+    new ImageData(s"data:${imageType.base64Name};base64,$base64Data")
   }
 }
 

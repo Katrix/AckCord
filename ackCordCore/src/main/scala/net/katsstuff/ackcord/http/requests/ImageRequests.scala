@@ -29,7 +29,7 @@ import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
-import net.katsstuff.ackcord.data.{EmojiId, GuildId, RawSnowflake, UserId}
+import net.katsstuff.ackcord.data.{EmojiId, GuildId, ImageFormat, RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.util.MapWithMaterializer
 
@@ -154,23 +154,4 @@ object ImageRequests {
 
   //https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
   private def isPowerOf2(num: Int): Boolean = (num & (num - 1)) == 0
-
-  sealed trait ImageFormat {
-    def extensions: Seq[String]
-    def extension: String = extensions.head
-  }
-  object ImageFormat {
-    case object JPEG extends ImageFormat {
-      override def extensions: Seq[String] = Seq("jpg", "jpeg")
-    }
-    case object PNG extends ImageFormat {
-      override def extensions: Seq[String] = Seq("png")
-    }
-    case object WebP extends ImageFormat {
-      override def extensions: Seq[String] = Seq("webp")
-    }
-    case object GIF extends ImageFormat {
-      override def extensions: Seq[String] = Seq("gif")
-    }
-  }
 }
