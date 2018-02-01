@@ -437,6 +437,7 @@ case class OutgoingEmbed(
     color: Option[Int] = None,
     footer: Option[OutgoingEmbedFooter] = None,
     image: Option[OutgoingEmbedImage] = None,
+    video: Option[OutgoingEmbedVideo] = None,
     thumbnail: Option[OutgoingEmbedThumbnail] = None,
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
@@ -471,6 +472,12 @@ case class OutgoingEmbedThumbnail(url: String)
   * @param url The url to the image.
   */
 case class OutgoingEmbedImage(url: String)
+
+/**
+  * The video part of an outgoing embed.
+  * @param url The url to the video.
+  */
+case class OutgoingEmbedVideo(url: String)
 
 /**
   * The author part of an outgoing embed
