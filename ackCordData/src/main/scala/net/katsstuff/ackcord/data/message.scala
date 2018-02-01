@@ -314,6 +314,7 @@ case class ReceivedEmbed(
     color = color,
     footer = footer.map(_.toOutgoing),
     image = image.map(_.toOutgoing),
+    video = video.map(_.toOutgoing),
     thumbnail = thumbnail.map(_.toOutgoing),
     author = author.map(_.toOutgoing),
     fields = fields.getOrElse(Seq.empty)
@@ -338,7 +339,9 @@ case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, wi
   * @param height The height of the video.
   * @param width The width of the video.
   */
-case class ReceivedEmbedVideo(url: String, height: Int, width: Int)
+case class ReceivedEmbedVideo(url: String, height: Int, width: Int) {
+  def toOutgoing: OutgoingEmbedVideo = OutgoingEmbedVideo(url)
+}
 
 /**
   * The image part of a received embed.
@@ -437,6 +440,7 @@ case class OutgoingEmbed(
     color: Option[Int] = None,
     footer: Option[OutgoingEmbedFooter] = None,
     image: Option[OutgoingEmbedImage] = None,
+    video: Option[OutgoingEmbedVideo] = None,
     thumbnail: Option[OutgoingEmbedThumbnail] = None,
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
@@ -471,6 +475,12 @@ case class OutgoingEmbedThumbnail(url: String)
   * @param url The url to the image.
   */
 case class OutgoingEmbedImage(url: String)
+
+/**
+  * The video part of an outgoing embed.
+  * @param url The url to the video.
+  */
+case class OutgoingEmbedVideo(url: String)
 
 /**
   * The author part of an outgoing embed
