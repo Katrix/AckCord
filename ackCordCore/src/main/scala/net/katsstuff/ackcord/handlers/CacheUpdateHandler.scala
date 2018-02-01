@@ -39,14 +39,7 @@ object CacheUpdateHandler {
   implicit def seqHandler[Obj](implicit objHandler: CacheUpdateHandler[Obj]): CacheUpdateHandler[Seq[Obj]] =
     updateHandler((builder, obj, log) => obj.foreach(objHandler.handle(builder, _)(log)))
 
-  def handleUpdate[Obj](
-      builder: CacheSnapshotBuilder,
-      obj: Obj
-  )(implicit handler: CacheUpdateHandler[Obj], log: LoggingAdapter): Unit =
-    handler.handle(builder, obj)
-
   def handleUpdateLog[Obj](builder: CacheSnapshotBuilder, obj: Obj, log: LoggingAdapter)(
       implicit handler: CacheUpdateHandler[Obj]
-  ): Unit =
-    handler.handle(builder, obj)(log)
+  ): Unit = handler.handle(builder, obj)(log)
 }

@@ -28,7 +28,8 @@ import scala.collection.mutable
 import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent._
-import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage}
+import net.katsstuff.ackcord.http.{RawBan, RawChannel, RawEmoji, RawGuild, RawMessage}
+import net.katsstuff.ackcord.syntax._
 
 object RawHandlers extends Handlers {
 
@@ -37,110 +38,35 @@ object RawHandlers extends Handlers {
 
   implicit val rawChannelUpdateHandler: CacheUpdateHandler[RawChannel] = updateHandler {
     case (builder, rawChannel: RawChannel, log) =>
-      rawChannel.`type` match {
-        case ChannelType.GuildText =>
-          for {
-            guildId              <- rawChannel.guildId
-            name                 <- rawChannel.name
-            position             <- rawChannel.position
-            permissionOverwrites <- rawChannel.permissionOverwrites
-          } {
-            val c: GuildChannel = TGuildChannel(
-              rawChannel.id,
-              guildId,
-              name,
-              position,
-              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-              rawChannel.topic,
-              rawChannel.lastMessageId,
-              rawChannel.nsfw.getOrElse(false),
-              rawChannel.parentId,
-              rawChannel.lastPinTimestamp
-            )
-            handleUpdateLog(builder, c, log)
+      rawChannel.toChannel.foreach {
+        case guildChannel: GuildChannel =>
+          builder.guilds.get(guildChannel.guildId) match {
+            case Some(guild) =>
+              val newChannels = guild.channels.updated(guildChannel.id, guildChannel)
+              builder.guilds.put(guild.id, guild.copy(channels = newChannels))
+            case None => log.warning(s"No guild for channel update $guildChannel")
           }
-        case ChannelType.GuildVoice =>
-          for {
-            guildId              <- rawChannel.guildId
-            name                 <- rawChannel.name
-            position             <- rawChannel.position
-            permissionOverwrites <- rawChannel.permissionOverwrites
-            bitRate              <- rawChannel.bitrate
-            userLimit            <- rawChannel.userLimit
-          } {
-            val c: GuildChannel = VGuildChannel(
-              rawChannel.id,
-              guildId,
-              name,
-              position,
-              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-              bitRate,
-              userLimit,
-              rawChannel.nsfw.getOrElse(false),
-              rawChannel.parentId
-            )
-            handleUpdateLog(builder, c, log)
-          }
-        case ChannelType.GuildCategory =>
-          for {
-            guildId              <- rawChannel.guildId
-            name                 <- rawChannel.name
-            position             <- rawChannel.position
-            permissionOverwrites <- rawChannel.permissionOverwrites
-          } {
-            val c: GuildChannel =
-              GuildCategory(
-                rawChannel.id,
-                guildId,
-                name,
-                position,
-                SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-                rawChannel.nsfw.getOrElse(false),
-                rawChannel.parentId
-              )
-            handleUpdateLog(builder, c, log)
-          }
-        case ChannelType.DM =>
-          rawChannel.recipients
-            .flatMap(_.headOption)
-            .foreach(user => handleUpdateLog(builder, DMChannel(rawChannel.id, rawChannel.lastMessageId, user.id), log))
-        case ChannelType.GroupDm =>
-          for {
-            name    <- rawChannel.name
-            ownerId <- rawChannel.ownerId
-            users   <- rawChannel.recipients
-          } {
-            val c = GroupDMChannel(
-              rawChannel.id,
-              name,
-              users.map(_.id),
-              rawChannel.lastMessageId,
-              ownerId,
-              rawChannel.applicationId,
-              rawChannel.icon
-            )
-            handleUpdateLog(builder, c, log)
-          }
+        case dmChannel: DMChannel           => builder.dmChannels.put(dmChannel.id, dmChannel)
+        case groupDmChannel: GroupDMChannel => builder.groupDmChannels.put(groupDmChannel.id, groupDmChannel)
       }
   }
 
   implicit val rawGuildUpdateHandler: CacheUpdateHandler[RawGuild] = updateHandler { (builder, obj, log) =>
-    val rawMembers  = obj.members.getOrElse(Seq.empty)
-    val rawChannels = obj.channels.getOrElse(Seq.empty)
+    val rawMembers   = obj.members.getOrElse(Seq.empty)
+    val rawChannels  = obj.channels.getOrElse(Seq.empty)
+    val rawPresences = obj.presences.getOrElse(Seq.empty)
 
-    val (users, members) = rawMembers.map {
-      case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) =>
-        user -> (user.id -> GuildMember(user.id, obj.id, nick, roles, joinedAt, deaf, mute))
+    //We use unzip here to get away with a single traversal instead of 2
+    val (users, members) = rawMembers.map { rawMember =>
+      rawMember.user -> rawMember.toGuildMember(obj.id)
     }.unzip
 
-    val presences = obj.presences.getOrElse(Seq.empty).flatMap { pres =>
-      val content = pres.game.map(_.toContent)
-      pres.status.map(s => Presence(pres.user.id, content, s))
-    }
+    val presences = rawPresences.map(_.toPresence)
+    val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id))
 
     val oldGuild = builder.getGuild(obj.id)
 
-    //Gets here are because everything should be sent here
+    //Get on Option here are because everything should be sent here
     val guild = Guild(
       id = obj.id,
       name = obj.name,
@@ -157,8 +83,8 @@ object RawHandlers extends Handlers {
       verificationLevel = obj.verificationLevel,
       defaultMessageNotifications = obj.defaultMessageNotifications,
       explicitContentFilter = obj.explicitContentFilter,
-      roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.toRole(obj.id)): _*),
-      emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e.toEmoji): _*),
+      roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.toRole(obj.id))),
+      emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e.toEmoji)),
       features = obj.features,
       mfaLevel = obj.mfaLevel,
       applicationId = obj.applicationId,
@@ -169,16 +95,15 @@ object RawHandlers extends Handlers {
       large = obj.large.orElse(oldGuild.map(_.large)).get,
       memberCount = obj.memberCount.orElse(oldGuild.map(_.memberCount)).get,
       voiceStates = obj.voiceStates
-        .map(seq => SnowflakeMap(seq.map(v => v.userId -> v): _*))
+        .map(seq => SnowflakeMap.withKey(seq)(_.userId))
         .orElse(oldGuild.map(_.voiceStates))
         .get,
-      members = SnowflakeMap(members: _*),
-      channels = SnowflakeMap.empty,
-      presences = SnowflakeMap(presences.map(p => p.userId -> p): _*)
+      members = SnowflakeMap.withKey(members)(_.userId),
+      channels = SnowflakeMap.withKey(channels)(_.id),
+      presences = SnowflakeMap.withKey(presences)(_.userId)
     )
 
-    handleUpdateLog(builder, guild, log)
-    handleUpdateLog(builder, rawChannels.map(_.copy(guildId = Some(guild.id))), log)
+    builder.guilds.put(guild.id, guild)
     handleUpdateLog(builder, users, log)
   }
 
@@ -186,34 +111,33 @@ object RawHandlers extends Handlers {
     case (builder, obj @ GuildEmojisUpdateData(guildId, emojis), log) =>
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          builder.guilds.put(guildId, guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e.toEmoji): _*)))
+          val newGuild = guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e.toEmoji)))
+          builder.guilds.put(guildId, newGuild)
         case None => log.warning(s"Can't find guild for emojis update $obj")
       }
   }
 
   implicit val rawGuildMemberWithGuildUpdateHandler: CacheUpdateHandler[RawGuildMemberWithGuild] = updateHandler {
-    (builder, obj, log) =>
-      val RawGuildMemberWithGuild(guildId, user, nick, roles, joinedAt, deaf, mute) = obj
-      val member                                                                    = GuildMember(user.id, obj.guildId, nick, roles, joinedAt, deaf, mute)
+    case (builder, obj, log) =>
+      val member = obj.toRawGuildMember.toGuildMember(obj.guildId)
 
-      builder.getGuild(guildId) match {
-        case Some(guild) => builder.guilds.put(guildId, guild.copy(members = guild.members + ((user.id, member))))
-        case None        => log.warning(s"Can't find guild for guildMember update $obj")
+      builder.getGuild(obj.guildId) match {
+        case Some(guild) =>
+          val newGuild = guild.copy(members = guild.members.updated(obj.user.id, member))
+          builder.guilds.put(obj.guildId, newGuild)
+        case None => log.warning(s"Can't find guild for guildMember update $obj")
       }
 
-      handleUpdateLog(builder, user, log)
+      handleUpdateLog(builder, obj.user, log)
   }
 
   implicit val rawGuildMemberChunkHandler: CacheUpdateHandler[GuildMemberChunkData] = updateHandler {
     case (builder, obj @ GuildMemberChunkData(guildId, newRawMembers), log) =>
-      val (newUsers, newMembers) = newRawMembers.map {
-        case RawGuildMember(user, nick, roles, joinedAt, deaf, mute) =>
-          user -> GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
-      }.unzip
+      val (newUsers, newMembers) = newRawMembers.map(member => member.user -> member.toGuildMember(guildId)).unzip
 
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          val newGuild = guild.copy(members = guild.members ++ SnowflakeMap(newMembers.map(m => m.userId -> m): _*))
+          val newGuild = guild.copy(members = guild.members ++ SnowflakeMap.withKey(newMembers)(_.userId))
           builder.guilds.put(guildId, newGuild)
         case None => log.warning(s"Can't find guild for guildMember update $obj")
       }
@@ -223,18 +147,17 @@ object RawHandlers extends Handlers {
 
   implicit val rawGuildMemberUpdateHandler: CacheUpdateHandler[GuildMemberUpdateData] = updateHandler {
     case (builder, obj @ GuildMemberUpdateData(guildId, roles, user, nick), log) =>
-      builder.getGuild(guildId) match {
-        case Some(guild) =>
-          guild.members.get(user.id) match {
-            case Some(guildMember) =>
-              builder.guilds.put(
-                guildId,
-                guild.copy(members = guild.members + ((user.id, guildMember.copy(nick = nick, roleIds = roles))))
-              )
-            case None =>
-              log.warning(s"Can't find user for user update $obj")
-          }
-        case None => log.warning(s"Can't find guild for user update $obj")
+      val newGuildEither = for {
+        guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj")
+        guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj")
+      } yield {
+        val newGuildMember = guildMember.copy(nick = nick, roleIds = roles)
+        guild.copy(members = guild.members.updated(user.id, newGuildMember))
+      }
+
+      newGuildEither match {
+        case Right(newGuild) => builder.guilds.put(guildId, newGuild)
+        case Left(e)         => log.warning(e)
       }
 
       handleUpdateLog(builder, user, log)
@@ -244,7 +167,8 @@ object RawHandlers extends Handlers {
     case (builder, obj @ GuildRoleModifyData(guildId, role), log) =>
       builder.getGuild(guildId) match {
         case Some(guild) =>
-          builder.guilds.put(guildId, guild.copy(roles = guild.roles + ((role.id, role.toRole(guildId)))))
+          val newGuild = guild.copy(roles = guild.roles.updated(role.id, role.toRole(guildId)))
+          builder.guilds.put(guildId, newGuild)
         case None => log.warning(s"No guild found for role update $obj")
       }
   }
@@ -257,7 +181,7 @@ object RawHandlers extends Handlers {
     handleUpdateLog(builder, users, log)
     obj.author match {
       case user: User => handleUpdateLog(builder, user, log)
-      case _          =>
+      case _          => //Ignore
     }
   }
 
@@ -297,116 +221,41 @@ object RawHandlers extends Handlers {
     (builder, obj, _) =>
       builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
         val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
-        val changed = toChange.map { e =>
-          e.copy(count = e.count + 1, me = if (builder.botUser.id == obj.userId) true else e.me)
+        val changed = toChange.map { emoji =>
+          val isMe = if (builder.botUser.id == obj.userId) true else emoji.me
+          emoji.copy(count = emoji.count + 1, me = isMe)
         }
 
         val newMessage = message.copy(reactions = toNotChange ++ changed)
-
         builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
       }
   }
 
   implicit val rawBanUpdateHandler: CacheUpdateHandler[(GuildId, RawBan)] = updateHandler {
     case (builder, (guildId, obj), log) =>
-      builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, Ban(obj.reason, obj.user.id))
+      builder.bans.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, obj.toBan)
       handleUpdateLog(builder, obj.user, log)
   }
 
   implicit val rawEmojiUpdateHandler: GuildId => CacheUpdateHandler[RawEmoji] = guildId =>
     updateHandler { (builder, obj, log) =>
       builder.guilds.get(guildId) match {
-        case Some(guild) => builder.guilds.put(guildId, guild.copy(emojis = guild.emojis + ((obj.id, obj.toEmoji))))
-        case None        => log.warning(s"No guild for emoji $obj")
+        case Some(guild) =>
+          val newGuild = guild.copy(emojis = guild.emojis.updated(obj.id, obj.toEmoji))
+          builder.guilds.put(guildId, newGuild)
+        case None => log.warning(s"No guild for emoji $obj")
       }
   }
 
   //Delete
-  implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, log) =>
+  implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, _) =>
     rawChannel.`type` match {
-      case ChannelType.GuildText =>
-        for {
-          guildId              <- rawChannel.guildId
-          name                 <- rawChannel.name
-          position             <- rawChannel.position
-          permissionOverwrites <- rawChannel.permissionOverwrites
-        } {
-          val c: GuildChannel = TGuildChannel(
-            rawChannel.id,
-            guildId,
-            name,
-            position,
-            SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-            rawChannel.topic,
-            rawChannel.lastMessageId,
-            rawChannel.nsfw.getOrElse(false),
-            rawChannel.parentId,
-            rawChannel.lastPinTimestamp
-          )
-          handleDeleteLog(builder, c, log)
+      case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory =>
+        rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
+          builder.guilds.put(guild.id, guild.copy(channels = guild.channels - rawChannel.id))
         }
-      case ChannelType.GuildVoice =>
-        for {
-          guildId              <- rawChannel.guildId
-          name                 <- rawChannel.name
-          position             <- rawChannel.position
-          permissionOverwrites <- rawChannel.permissionOverwrites
-          bitRate              <- rawChannel.bitrate
-          userLimit            <- rawChannel.userLimit
-        } {
-          val c: GuildChannel = VGuildChannel(
-            rawChannel.id,
-            guildId,
-            name,
-            position,
-            SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-            bitRate,
-            userLimit,
-            rawChannel.nsfw.getOrElse(false),
-            rawChannel.parentId
-          )
-          handleDeleteLog(builder, c, log)
-        }
-      case ChannelType.GuildCategory =>
-        for {
-          guildId              <- rawChannel.guildId
-          name                 <- rawChannel.name
-          position             <- rawChannel.position
-          permissionOverwrites <- rawChannel.permissionOverwrites
-        } {
-          val c: GuildChannel =
-            GuildCategory(
-              rawChannel.id,
-              guildId,
-              name,
-              position,
-              SnowflakeMap(permissionOverwrites.map(v => v.id -> v): _*),
-              rawChannel.nsfw.getOrElse(false),
-              rawChannel.parentId
-            )
-          handleDeleteLog(builder, c, log)
-        }
-      case ChannelType.DM =>
-        rawChannel.recipients
-          .flatMap(_.headOption)
-          .foreach(user => handleDeleteLog(builder, DMChannel(rawChannel.id, rawChannel.lastMessageId, user.id), log))
-      case ChannelType.GroupDm =>
-        for {
-          name    <- rawChannel.name
-          ownerId <- rawChannel.ownerId
-          users   <- rawChannel.recipients
-        } {
-          val c = GroupDMChannel(
-            rawChannel.id,
-            name,
-            users.map(_.id),
-            rawChannel.lastMessageId,
-            ownerId,
-            rawChannel.applicationId,
-            rawChannel.icon
-          )
-          handleDeleteLog(builder, c, log)
-        }
+      case ChannelType.DM      => builder.dmChannels.remove(rawChannel.id)
+      case ChannelType.GroupDm => builder.groupDmChannels.remove(rawChannel.id)
     }
   }
 
@@ -449,12 +298,12 @@ object RawHandlers extends Handlers {
     (builder, obj, _) =>
       builder.getMessage(obj.channelId, obj.messageId).foreach { message =>
         val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
-        val changed = toChange.map { e =>
-          e.copy(count = e.count - 1, me = if (builder.botUser.id == obj.userId) false else e.me)
+        val changed = toChange.map { emoji =>
+          val isMe = if (builder.botUser.id == obj.userId) false else emoji.me
+          emoji.copy(count = emoji.count - 1, me = isMe)
         }
 
         val newMessage = message.copy(reactions = toNotChange ++ changed)
-
         builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
       }
   }
@@ -467,8 +316,8 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawBanDeleteHandler: CacheDeleteHandler[(GuildId, User)] = deleteHandler {
-    case (builder, (guildId, obj), log) =>
-      builder.bans.get(guildId).foreach(_.remove(obj.id))
-      handleUpdateLog(builder, obj, log)
+    case (builder, (guildId, user), log) =>
+      builder.bans.get(guildId).foreach(_.remove(user.id))
+      handleUpdateLog(builder, user, log)
   }
 }

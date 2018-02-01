@@ -28,37 +28,9 @@ import net.katsstuff.ackcord.data._
 import shapeless.tag
 
 trait Handlers {
-  import CacheDeleteHandler._
   import CacheUpdateHandler._
 
   //Update
-  implicit val dmChannelUpdateHandler: CacheUpdateHandler[DMChannel] = updateHandler(
-    (builder, obj, _) => builder.dmChannels.put(obj.id, obj)
-  )
-  implicit val groupDmChannelUpdateHandler: CacheUpdateHandler[GroupDMChannel] = updateHandler(
-    (builder, obj, _) => builder.groupDmChannels.put(obj.id, obj)
-  )
-  implicit val guildChannelUpdateHandler: CacheUpdateHandler[GuildChannel] = updateHandler { (builder, obj, log) =>
-    builder
-      .getGuild(obj.guildId)
-      .toRight(s"No guild for update $obj")
-      .map(g => g.copy(channels = g.channels + ((obj.id, obj)))) match {
-      case Right(guild) => builder.guilds.put(guild.id, guild)
-      case Left(e)      => log.warning(e)
-    }
-  }
-
-  implicit val channelUpdateHandler: CacheUpdateHandler[Channel] = updateHandler { (builder, obj, log) =>
-    obj match {
-      case dmChannel: DMChannel           => handleUpdateLog(builder, dmChannel, log)(dmChannelUpdateHandler)
-      case groupDmChannel: GroupDMChannel => handleUpdateLog(builder, groupDmChannel, log)(groupDmChannelUpdateHandler)
-      case guildChannel: GuildChannel     => handleUpdateLog(builder, guildChannel, log)(guildChannelUpdateHandler)
-    }
-  }
-
-  implicit val guildUpdateHandler: CacheUpdateHandler[Guild] = updateHandler { (builder, obj, _) =>
-    builder.guilds.put(obj.id, obj)
-  }
 
   implicit val userUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
     builder.users.put(obj.id, obj)
@@ -75,35 +47,10 @@ trait Handlers {
 
     optGuild match {
       case Right(guild) =>
-        val newVoiceStates =
-          obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates + ((obj.userId, obj)))
+        val newVoiceStates = obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
         builder.guilds.put(guild.id, guild.copy(voiceStates = newVoiceStates))
       case Left(e) => log.warning(e)
     }
   }
-
-  //Delete
-  implicit val dmChannelDeleteHandler: CacheDeleteHandler[DMChannel] = deleteHandler(
-    (builder, obj, _) => builder.dmChannels.remove(obj.id)
-  )
-  implicit val groupDmChannelDeleteHandler: CacheDeleteHandler[GroupDMChannel] = deleteHandler(
-    (builder, obj, _) => builder.groupDmChannels.remove(obj.id)
-  )
-  implicit val guildChannelDeleteHandler: CacheDeleteHandler[GuildChannel] = deleteHandler { (builder, obj, log) =>
-    builder.getGuild(obj.guildId) match {
-      case Some(guild) => builder.guilds.put(guild.id, guild.copy(channels = guild.channels - obj.id))
-      case None        => log.warning(s"No guild for delete $obj")
-    }
-  }
-
-  implicit val guildDeleteHandler: CacheDeleteHandler[UnknownStatusGuild] = deleteHandler(
-    (builder, obj, _) => builder.guilds.remove(obj.id)
-  )
-  implicit val messageDeleteHandler: CacheDeleteHandler[Message] = deleteHandler(
-    (builder, obj, _) => builder.getChannelMessages(obj.channelId).remove(obj.id)
-  )
-  implicit val userDeleteHandler: CacheDeleteHandler[User] = deleteHandler(
-    (builder, obj, _) => builder.users.remove(obj.id)
-  )
 }
 object Handlers extends Handlers

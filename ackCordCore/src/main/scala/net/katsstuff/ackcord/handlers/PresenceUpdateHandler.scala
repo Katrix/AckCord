@@ -30,7 +30,8 @@ import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.PresenceUpdateD
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
     val PresenceUpdateData(partialUser, roles, game, guildId, status) = obj
-    if (builder.guilds.contains(guildId)) {
+
+    builder.guilds.get(guildId).foreach { oldGuild =>
       //Add the user
       builder.getUser(partialUser.id) match {
         case Some(existingUser) =>
@@ -52,14 +53,14 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
             discriminator <- partialUser.discriminator
           } {
             val newUser = User(
-              partialUser.id,
-              username,
-              discriminator,
-              partialUser.avatar,
-              partialUser.bot,
-              partialUser.mfaEnabled,
-              partialUser.verified,
-              partialUser.email
+              id = partialUser.id,
+              username = username,
+              discriminator = discriminator,
+              avatar = partialUser.avatar,
+              bot = partialUser.bot,
+              mfaEnabled = partialUser.mfaEnabled,
+              verified = partialUser.verified,
+              email = partialUser.email
             )
 
             builder.users.put(partialUser.id, newUser)
@@ -68,18 +69,17 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
 
       val newPresence = Presence(partialUser.id, game.map(_.toContent), status)
 
-      val oldGuild = builder.guilds(guildId)
-
-      //Add the presence
-      val withPresence = oldGuild.copy(presences = oldGuild.presences + (partialUser.id -> newPresence))
-
-      //Update roles
-      val withRoles = withPresence.members
+      val oldMembers = oldGuild.members
+      val newMembers = oldMembers
         .get(partialUser.id)
-        .map(m => withPresence.copy(members = withPresence.members + (partialUser.id -> m.copy(roleIds = roles))))
-        .getOrElse(withPresence)
+        .map(mem => oldMembers.updated(partialUser.id, mem.copy(roleIds = roles)))
 
-      builder.guilds.put(guildId, withRoles)
+      val newGuild = oldGuild.copy(
+        presences = oldGuild.presences.updated(partialUser.id, newPresence),
+        members = newMembers.getOrElse(oldMembers)
+      )
+
+      builder.guilds.put(guildId, newGuild)
     }
   }
 }
