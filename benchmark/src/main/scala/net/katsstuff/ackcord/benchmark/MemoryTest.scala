@@ -57,11 +57,15 @@ object MemoryTest extends App {
   ctor.setAccessible(true)
   val shard = ctor.newInstance(client, null, null, null)
 
-  guilds.values.foreach(g => D4JConverter.convert(g, users.filter(t => guilds.exists(_._2.members.contains(t._1))), shard))
+  guilds.values.foreach(
+    g => D4JConverter.convert(g, users.filter(t => guilds.exists(_._2.members.contains(t._1))), shard)
+  )
 
   val jdaImpl = new JDAImpl(AccountType.BOT, new OkHttpClient.Builder, null, false, false, false, false, 2, 900)
 
-  guilds.values.foreach(g => JDAConverter.convert(g, users.filter(t => guilds.exists(_._2.members.contains(t._1))), jdaImpl))
+  guilds.values.foreach(
+    g => JDAConverter.convert(g, users.filter(t => guilds.exists(_._2.members.contains(t._1))), jdaImpl)
+  )
   println("Done")
   Console.in.readLine()
 

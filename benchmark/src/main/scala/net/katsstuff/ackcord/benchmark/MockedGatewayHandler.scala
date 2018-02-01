@@ -87,7 +87,8 @@ object MockedGatewayHandler {
       gateway: Source[Int => Dispatch[_], Future[WebSocketUpgradeResponse]],
       source: Source[GatewayMessage[_], NotUsed],
       sink: Sink[Dispatch[_], NotUsed]
-  )(implicit mat: Materializer): Props = Props(new MockedGatewayHandler(settings, readyUser, readyGuilds, gateway, source, sink))
+  )(implicit mat: Materializer): Props =
+    Props(new MockedGatewayHandler(settings, readyUser, readyGuilds, gateway, source, sink))
 
   def cacheProps(
       settings: CoreClientSettings,

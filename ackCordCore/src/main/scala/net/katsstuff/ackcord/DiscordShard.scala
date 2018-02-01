@@ -93,7 +93,6 @@ object DiscordShard extends FailFastCirceSupport {
     Props(new DiscordShard(wsUri, settings, cache))
   def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, CoreClientSettings(token), cache)
 
-
   /**
     * Create a shard actor given the needed arguments
     * @param wsUri The websocket gateway uri

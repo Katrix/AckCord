@@ -280,7 +280,6 @@ trait DeriveMessageParser {
       val head      = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
       lazy val tail = tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
 
-
       head.left.map(_ => tail).joinLeft
     }
   }

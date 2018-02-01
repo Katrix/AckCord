@@ -37,7 +37,7 @@ private[ackcord] class ShardShutdownManager(shards: Seq[ActorRef]) extends Actor
       }
     case Terminated(_) =>
       shardNum -= 1
-      if(shardNum == 0) {
+      if (shardNum == 0) {
         context.stop(self)
       }
   }

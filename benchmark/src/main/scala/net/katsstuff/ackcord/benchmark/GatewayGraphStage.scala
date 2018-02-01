@@ -86,7 +86,7 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
             log.info("Received Resume")
             if (resumeData.token == settings.token && resumeData.sessionId == sessionId) {
               pushMsg(Dispatch(seq, Resumed(ResumedData(Seq.empty))))
-              if(!hasBeenPulled(dispatchIn)) pull(dispatchIn)
+              if (!hasBeenPulled(dispatchIn)) pull(dispatchIn)
               state = NormalRun
             } else {
               log.error("Wrong resume")
@@ -112,24 +112,27 @@ class GatewayGraphStage(settings: CoreClientSettings, readyUser: User, readyGuil
 
       setHandlers(in, out, this)
 
-      setHandler(dispatchIn, new InHandler {
+      setHandler(
+        dispatchIn,
+        new InHandler {
 
-        override def onPush(): Unit = {
-          seq += 1
-          pushMsg(grab(dispatchIn)(seq))
-          pull(dispatchIn)
-        }
+          override def onPush(): Unit = {
+            seq += 1
+            pushMsg(grab(dispatchIn)(seq))
+            pull(dispatchIn)
+          }
 
-        override def onUpstreamFinish(): Unit = {
-          log.info("Upstream finished")
-          super.onUpstreamFinish()
-        }
+          override def onUpstreamFinish(): Unit = {
+            log.info("Upstream finished")
+            super.onUpstreamFinish()
+          }
 
-        override def onUpstreamFailure(ex: Throwable): Unit = {
-          log.error(ex, "Upstream failure")
-          super.onUpstreamFailure(ex)
+          override def onUpstreamFailure(ex: Throwable): Unit = {
+            log.error(ex, "Upstream failure")
+            super.onUpstreamFailure(ex)
+          }
         }
-      })
+      )
 
       override def onUpstreamFinish(): Unit = {
         log.info("Upstream finished")

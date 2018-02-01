@@ -40,7 +40,7 @@ private[websocket] trait WsMessage[D, OpCode] {
   /**
     * The data for the message.
     */
-  def d:  D
+  def d: D
 
   /**
     * A sequence number for the message if there is one.

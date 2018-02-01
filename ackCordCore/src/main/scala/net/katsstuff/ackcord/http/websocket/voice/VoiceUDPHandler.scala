@@ -54,7 +54,8 @@ class VoiceUDPHandler(
     sendSoundTo: Option[ActorRef],
     serverId: RawSnowflake,
     userId: UserId
-) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] with Stash {
+) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data]
+    with Stash {
   import VoiceUDPHandler._
 
   implicit val system: ActorSystem = context.system
@@ -79,7 +80,7 @@ class VoiceUDPHandler(
     case Event(UdpConnected.Connected, NoSocket) =>
       unstashAll()
       stay using WithSocket(sender())
-    case Event(_: DoIPDiscovery, NoSocket)      =>
+    case Event(_: DoIPDiscovery, NoSocket) =>
       //We received the request a bit early, stash it
       stash()
       stay

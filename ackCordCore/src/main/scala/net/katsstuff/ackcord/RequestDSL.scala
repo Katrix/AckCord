@@ -64,7 +64,7 @@ object RequestDSL {
   /**
     * Lift a an optional pure value into the dsl.
     */
-  def maybePure[A](opt: Option[A]):  RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
+  def maybePure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
 
   /**
     * Alias for [[maybePure]]

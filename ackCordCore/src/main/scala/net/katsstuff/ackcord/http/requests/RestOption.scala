@@ -11,8 +11,8 @@ object RestOption {
 
   def removeUndefined[A](seq: Seq[(String, RestOption[Json])]): Seq[(String, Json)] = seq.flatMap {
     case (name, RestSome(json)) => Some(name -> json)
-    case (name, RestNull) => Some(name -> Json.Null)
-    case (_, RestUndefined) => None
+    case (name, RestNull)       => Some(name -> Json.Null)
+    case (_, RestUndefined)     => None
   }
 
   def removeUndefinedToObj(seq: (String, RestOption[Json])*): Json = Json.obj(removeUndefined(seq): _*)

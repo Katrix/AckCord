@@ -26,7 +26,21 @@ package net.katsstuff.ackcord.benchmark
 import java.lang.reflect.Field
 
 import net.katsstuff.ackcord.SnowflakeMap
-import net.katsstuff.ackcord.data.{ChannelType, Guild, MFALevel, NotificationLevel, PermissionOverwriteType, PresenceGame, PresenceListening, PresenceStatus, PresenceStreaming, PresenceWatching, User, UserId, VerificationLevel}
+import net.katsstuff.ackcord.data.{
+  ChannelType,
+  Guild,
+  MFALevel,
+  NotificationLevel,
+  PermissionOverwriteType,
+  PresenceGame,
+  PresenceListening,
+  PresenceStatus,
+  PresenceStreaming,
+  PresenceWatching,
+  User,
+  UserId,
+  VerificationLevel
+}
 import net.katsstuff.ackcord.syntax._
 import sx.blah.discord.api.internal.{DiscordUtils, ShardImpl}
 import sx.blah.discord.api.internal.json.objects._
@@ -136,10 +150,10 @@ object D4JConverter {
         pObj.user = userObj
         pObj.status = PresenceStatus.nameOf(pres.status)
         pObj.game = pres.content.map {
-          case PresenceGame(name) => new GameObject(name, null)
+          case PresenceGame(name)           => new GameObject(name, null)
           case PresenceStreaming(name, uri) => new GameObject(name, uri)
-          case PresenceListening(name) => new GameObject(name, 2)
-          case PresenceWatching(name) => new GameObject(name, 3)
+          case PresenceListening(name)      => new GameObject(name, 2)
+          case PresenceWatching(name)       => new GameObject(name, 3)
         }.orNull
         pObj
       }

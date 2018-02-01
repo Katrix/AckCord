@@ -64,7 +64,6 @@ class Ratelimiter extends Actor with Timers {
 
   def releaseWaiting(uri: String): Unit = {
     rateLimits.get(uri).foreach { queue =>
-
       @tailrec
       def release(remaining: Int): Int = {
         if (remaining <= 0 || queue.isEmpty) remaining
@@ -81,11 +80,11 @@ class Ratelimiter extends Actor with Timers {
     }
   }
 
-  override def postStop(): Unit = {
-    rateLimits.values.flatten.foreach { case (actor, _) =>
-      actor ! Status.Failure(new IllegalStateException("Ratelimiter stopped"))
+  override def postStop(): Unit =
+    rateLimits.values.flatten.foreach {
+      case (actor, _) =>
+        actor ! Status.Failure(new IllegalStateException("Ratelimiter stopped"))
     }
-  }
 }
 object Ratelimiter {
   //TODO: Custom dispatcher

@@ -47,7 +47,8 @@ trait Handlers {
 
     optGuild match {
       case Right(guild) =>
-        val newVoiceStates = obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
+        val newVoiceStates =
+          obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
         builder.guilds.put(guild.id, guild.copy(voiceStates = newVoiceStates))
       case Left(e) => log.warning(e)
     }

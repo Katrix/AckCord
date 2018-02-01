@@ -445,15 +445,16 @@ object RESTRequests {
     )
     require(limit.forall(c => c >= 1 && c <= 100), "Count must be between 1 and 100")
 
-    def toMap: Map[String, String] = Map(
-      "around" -> around.map(_.asString),
-      "before" -> before.map(_.asString),
-      "after" -> after.map(_.asString),
-      "limit" -> limit.map(_.toString),
-    ).flatMap {
-      case (name, Some(value)) => Some(name -> value)
-      case (_, None) => None
-    }
+    def toMap: Map[String, String] =
+      Map(
+        "around" -> around.map(_.asString),
+        "before" -> before.map(_.asString),
+        "after"  -> after.map(_.asString),
+        "limit"  -> limit.map(_.toString),
+      ).flatMap {
+        case (name, Some(value)) => Some(name -> value)
+        case (_, None)           => None
+      }
   }
 
   /**

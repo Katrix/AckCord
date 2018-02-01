@@ -35,10 +35,10 @@ object ReadyHandler extends CacheHandler[ReadyData] {
     val ReadyData(_, botUser, rawChannels, unavailableGuilds, _, _) = obj
 
     //This should only contain DM and group DM channels
-    val channels = rawChannels.flatMap(_.toChannel)
+    val channels   = rawChannels.flatMap(_.toChannel)
     val recipients = rawChannels.flatMap(_.recipients.toSeq.flatten).map(u => u.id -> u)
 
-    val dmChannels = channels.flatMap(_.asDMChannel).map(ch => ch.id -> ch)
+    val dmChannels      = channels.flatMap(_.asDMChannel).map(ch => ch.id      -> ch)
     val groupDmChannels = channels.flatMap(_.asGroupDMChannel).map(ch => ch.id -> ch)
 
     val guilds = unavailableGuilds.map(g => g.id -> g)

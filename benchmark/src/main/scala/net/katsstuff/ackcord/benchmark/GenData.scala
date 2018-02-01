@@ -57,8 +57,8 @@ object GenData {
       Seq.tabulate(rand.nextInt(32) + 1)(pos => randomTGuildChannel(guildId, pos, categories.map(_.id)))
     val vChannels =
       Seq.tabulate(rand.nextInt(32) + 1)(pos => randomVGuildChannel(guildId, pos, categories.map(_.id)))
-    val channels    = categories ++ tChannels ++ vChannels
-    val guildUsers  = randomElements(users, memberCount)
+    val channels   = categories ++ tChannels ++ vChannels
+    val guildUsers = randomElements(users, memberCount)
 
     Guild(
       id = guildId,
@@ -219,9 +219,9 @@ object GenData {
   def randomElements[A](xs: Seq[A], amount: Int): Seq[A] = {
 
     def randElem(xs: mutable.Buffer[A], amount: Int, acc: mutable.Buffer[A]): Seq[A] = {
-      if(amount <= 0 || xs.isEmpty) acc
+      if (amount <= 0 || xs.isEmpty) acc
       else {
-        val idx = rand.nextInt(xs.size)
+        val idx  = rand.nextInt(xs.size)
         val elem = xs.remove(idx)
         randElem(xs, amount - 1, acc += elem)
       }
@@ -233,11 +233,11 @@ object GenData {
   def firstRandomElements[A](xs: Seq[A], pred: A => Boolean): Option[A] = {
 
     def randElem(xs: mutable.Buffer[A]): Option[A] = {
-      if(xs.isEmpty) None
+      if (xs.isEmpty) None
       else {
-        val idx = rand.nextInt(xs.size)
+        val idx  = rand.nextInt(xs.size)
         val elem = xs.remove(idx)
-        if(pred(elem)) Some(elem)
+        if (pred(elem)) Some(elem)
         else randElem(xs)
       }
     }

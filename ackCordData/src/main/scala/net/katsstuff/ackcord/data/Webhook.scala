@@ -49,9 +49,8 @@ case class Webhook(
   /**
     * Resolve the channel of this webhook as a guild channel
     */
-  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TChannel] = {
+  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TChannel] =
     guildId.flatMap(g => snapshot.getGuildChannel(g, channelId)).orElse(snapshot.getGuildChannel(channelId)).collect {
       case gChannel: TGuildChannel => gChannel
     }
-  }
 }

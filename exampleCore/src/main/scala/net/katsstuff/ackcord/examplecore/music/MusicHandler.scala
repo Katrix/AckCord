@@ -45,13 +45,8 @@ import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
-class MusicHandler(
-    requests: RequestHelper,
-    commands: Commands,
-    helpCmdActor: ActorRef,
-    guildId: GuildId,
-    cache: Cache
-) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
+class MusicHandler(requests: RequestHelper, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId, cache: Cache)
+    extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
@@ -239,12 +234,7 @@ class MusicHandler(
   }
 }
 object MusicHandler {
-  def props(
-      requests: RequestHelper,
-      commands: Commands,
-      helpCmdActor: ActorRef,
-      cache: Cache
-  ): GuildId => Props =
+  def props(requests: RequestHelper, commands: Commands, helpCmdActor: ActorRef, cache: Cache): GuildId => Props =
     guildId => Props(new MusicHandler(requests, commands, helpCmdActor, guildId, cache))
 
   final val UseBurstingSender = true

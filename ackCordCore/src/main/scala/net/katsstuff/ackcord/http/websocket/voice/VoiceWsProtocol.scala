@@ -69,7 +69,7 @@ object VoiceWsProtocol extends DiscordProtocol {
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
     c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>
-      val dC  = c.downField("d")
+      val dC = c.downField("d")
 
       val op = c.get[VoiceOpCode]("op")
 

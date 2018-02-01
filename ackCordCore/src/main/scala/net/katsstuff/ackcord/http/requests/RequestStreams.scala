@@ -196,13 +196,6 @@ object RequestStreams {
         val route = request.route
         val auth  = Authorization(credentials)
 
-        println(HttpRequest(
-          route.method,
-          route.uri,
-          immutable.Seq(auth, userAgent) ++ request.extraHeaders,
-          request.requestBody
-        ).toString())
-
         (
           HttpRequest(
             route.method,

@@ -192,7 +192,8 @@ trait CacheSnapshotLike {
   /**
     * Get the presence of a user for a specific guild
     */
-  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] = getGuild(guildId).flatMap(_.presences.get(userId))
+  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] =
+    getGuild(guildId).flatMap(_.presences.get(userId))
 }
 
 object CacheSnapshotLike {

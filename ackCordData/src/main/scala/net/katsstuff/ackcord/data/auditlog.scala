@@ -226,7 +226,8 @@ object AuditLogChange {
   /**
     * MFA level changed
     */
-  case class MfaLevel(oldValue: Option[data.MFALevel], newValue: Option[data.MFALevel]) extends AuditLogChange[data.MFALevel]
+  case class MfaLevel(oldValue: Option[data.MFALevel], newValue: Option[data.MFALevel])
+      extends AuditLogChange[data.MFALevel]
 
   /**
     * Required verification level changed
@@ -243,8 +244,10 @@ object AuditLogChange {
   /**
     * Default message notification level changed
     */
-  case class DefaultMessageNotification(oldValue: Option[data.NotificationLevel], newValue: Option[data.NotificationLevel])
-      extends AuditLogChange[data.NotificationLevel]
+  case class DefaultMessageNotification(
+      oldValue: Option[data.NotificationLevel],
+      newValue: Option[data.NotificationLevel]
+  ) extends AuditLogChange[data.NotificationLevel]
 
   /**
     * Guild invite vanity url changed
@@ -294,8 +297,10 @@ object AuditLogChange {
   /**
     * Permission overwrites for channel changed
     */
-  case class PermissionOverwrites(oldValue: Option[Seq[PermissionOverwrite]], newValue: Option[Seq[PermissionOverwrite]])
-      extends AuditLogChange[Seq[PermissionOverwrite]]
+  case class PermissionOverwrites(
+      oldValue: Option[Seq[PermissionOverwrite]],
+      newValue: Option[Seq[PermissionOverwrite]]
+  ) extends AuditLogChange[Seq[PermissionOverwrite]]
 
   /**
     * NSFW for channel changed
@@ -305,7 +310,8 @@ object AuditLogChange {
   /**
     * ApplicationId of webhook or bot
     */
-  case class ApplicationId(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake]) extends AuditLogChange[RawSnowflake]
+  case class ApplicationId(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake])
+      extends AuditLogChange[RawSnowflake]
 
   /**
     * Permissions of role changed

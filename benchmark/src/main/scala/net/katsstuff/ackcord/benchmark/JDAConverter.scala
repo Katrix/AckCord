@@ -38,7 +38,7 @@ object JDAConverter {
   def convert(g: Guild, users: SnowflakeMap[User, User], api: JDAImpl): jda.Guild = {
     val gObj = new GuildImpl(api, g.id)
 
-    val roles = g.roles.values.map(r => r.id -> convert(r, gObj)).toMap
+    val roles   = g.roles.values.map(r => r.id       -> convert(r, gObj)).toMap
     val members = g.members.values.map(m => m.userId -> convert(m, g, users, gObj, api, roles)).toMap
 
     gObj.setAvailable(true)
@@ -72,15 +72,17 @@ object JDAConverter {
     g.channels.foreachValue {
       case ch: TGuildChannel => gObj.getTextChannelsMap.put(ch.id, convert(ch, gObj, members, roles))
       case ch: VGuildChannel => gObj.getVoiceChannelMap.put(ch.id, convert(ch, gObj, members, roles))
-      case _: GuildCategory => //ignore
+      case _: GuildCategory  => //ignore
     }
 
-    members.foreach { case (id, mem) =>
-      gObj.getMembersMap.put(id, mem)
+    members.foreach {
+      case (id, mem) =>
+        gObj.getMembersMap.put(id, mem)
     }
 
-    roles.foreach { case (id, role) =>
-      gObj.getRolesMap.put(id, role)
+    roles.foreach {
+      case (id, role) =>
+        gObj.getRolesMap.put(id, role)
     }
 
     g.emojis.values.foreach { e =>
@@ -115,7 +117,7 @@ object JDAConverter {
       roles: Map[RoleId, jda.Role]
   ): jda.Member = {
     var userObj = api.getUserById(mem.userId)
-    if(userObj == null) {
+    if (userObj == null) {
       userObj = convert(users(mem.userId), api)
       api.getUserMap.put(mem.userId, userObj)
     }
@@ -129,8 +131,8 @@ object JDAConverter {
     mObj.setGame(presence.content.map {
       case PresenceGame(name)           => jda.Game.of(name)
       case PresenceStreaming(name, uri) => jda.Game.of(name, uri)
-      case PresenceListening(_) => ???
-      case PresenceWatching(_) => ???
+      case PresenceListening(_)         => ???
+      case PresenceWatching(_)          => ???
     }.orNull)
     mObj.setOnlineStatus(OnlineStatus.fromKey(PresenceStatus.nameOf(presence.status)))
     mObj.getRoleSet.addAll(roles.values.filter(r => mem.roleIds.contains(r.getIdLong)).toSeq.asJava)
