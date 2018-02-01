@@ -30,7 +30,8 @@ import akka.http.scaladsl.model.{StatusCode, Uri}
 /**
   * An exception for Http errors.
   */
-class HttpException(statusCode: StatusCode) extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}")
+class HttpException(statusCode: StatusCode, extraInfo: Option[String])
+    extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}${extraInfo.fold("")(e => s" $e")}")
 
 /**
   * An exception that signals than an endpoint is ratelimited.
