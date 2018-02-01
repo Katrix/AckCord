@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
     "-deprecation",
     "-feature",
     "-unchecked",
-    "-Xlint",
+    //"-Xlint", //TODO: Enable again when Position.point on NoPosition is fixed
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-unused-import"
