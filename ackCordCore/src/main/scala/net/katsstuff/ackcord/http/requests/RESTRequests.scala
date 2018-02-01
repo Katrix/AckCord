@@ -31,7 +31,7 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Multipart.FormData
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, RequestEntity, ResponseEntity}
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, RequestEntity, ResponseEntity, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import io.circe._
@@ -148,9 +148,11 @@ object RESTRequests {
       */
     def jsonParams: Json = paramsEncoder(params)
 
+    def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
+
     def requestBody: RequestEntity =
       if (params == NotUsed) HttpEntity.Empty
-      else HttpEntity(ContentTypes.`application/json`, jsonParams.noSpaces)
+      else HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter))
   }
 
   /**
@@ -343,19 +345,33 @@ object RESTRequests {
     * @param parentId The new category id of the channel.
     */
   case class ModifyChannelData(
-      name: Option[String] = None,
-      position: Option[Int] = None,
-      topic: Option[String] = None,
-      nsfw: Option[Boolean] = None,
-      bitrate: Option[Int] = None,
-      userLimit: Option[Int] = None,
-      permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
-      parentId: Option[ChannelId] = None
+      name: RestOption[String] = RestUndefined,
+      position: RestOption[Int] = RestUndefined,
+      topic: RestOption[String] = RestUndefined,
+      nsfw: RestOption[Boolean] = RestUndefined,
+      bitrate: RestOption[Int] = RestUndefined,
+      userLimit: RestOption[Int] = RestUndefined,
+      permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
+      parentId: RestOption[ChannelId] = RestUndefined
   ) {
     require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
     require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
     require(bitrate.forall(b => b >= 8000 && b <= 128000), "Bitrate must be between 8000 and 128000 bits")
     require(userLimit.forall(b => b >= 0 && b <= 99), "User limit must be between 0 and 99 users")
+  }
+  object ModifyChannelData {
+    implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
+      RestOption.removeUndefinedToObj(
+        "name"                  -> a.name.map(_.asJson),
+        "position"              -> a.position.map(_.asJson),
+        "topic"                 -> a.topic.map(_.asJson),
+        "nsfw"                  -> a.nsfw.map(_.asJson),
+        "bitrate"               -> a.bitrate.map(_.asJson),
+        "user_limit"            -> a.userLimit.map(_.asJson),
+        "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
+        "parent_id"             -> a.parentId.map(_.asJson)
+      )
+    }
   }
 
   /**
@@ -369,7 +385,9 @@ object RESTRequests {
       reason: Option[String] = None
   ) extends SimpleReasonRequest[ModifyChannel[Ctx], ModifyChannelData, RawChannel, Channel, Ctx] {
     override def route:         RequestRoute               = Routes.modifyChannelPut(channelId)
-    override def paramsEncoder: Encoder[ModifyChannelData] = deriveEncoder[ModifyChannelData]
+    override def paramsEncoder: Encoder[ModifyChannelData] = ModifyChannelData.encoder
+
+    override def jsonPrinter: Printer = Printer.noSpaces
 
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
@@ -530,8 +548,10 @@ object RESTRequests {
             FormData.BodyPart.fromPath(f.getFileName.toString, ContentTypes.`application/octet-stream`, f)
           }
 
-          val jsonPart =
-            FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, jsonParams.noSpaces))
+          val jsonPart = FormData.BodyPart(
+            "payload_json",
+            HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter))
+          )
 
           FormData(fileParts :+ jsonPart: _*).toEntity()
         case _ => super.requestBody
@@ -666,8 +686,15 @@ object RESTRequests {
     * @param content The content of the new message
     * @param embed The embed of the new message
     */
-  case class EditMessageData(content: Option[String] = None, embed: Option[OutgoingEmbed] = None) {
+  case class EditMessageData(
+      content: RestOption[String] = RestUndefined,
+      embed: RestOption[OutgoingEmbed] = RestUndefined
+  ) {
     require(content.forall(_.length < 2000))
+  }
+  object EditMessageData {
+    implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
+      RestOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "content" -> a.embed.map(_.asJson))
   }
 
   /**
@@ -680,7 +707,9 @@ object RESTRequests {
       context: Ctx = NotUsed: NotUsed
   ) extends SimpleRESTRequest[EditMessageData, RawMessage, Message, Ctx] {
     override def route:         RequestRoute             = Routes.editMessage(messageId, channelId)
-    override def paramsEncoder: Encoder[EditMessageData] = deriveEncoder[EditMessageData]
+    override def paramsEncoder: Encoder[EditMessageData] = EditMessageData.encoder
+
+    override def jsonPrinter: Printer = Printer.noSpaces
 
     override def responseDecoder: Decoder[RawMessage]      = Decoder[RawMessage]
     override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
@@ -695,14 +724,14 @@ object RESTRequests {
         messageId: MessageId,
         content: String,
         context: Ctx = NotUsed: NotUsed
-    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(Some(content)), context)
+    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(RestSome(content)), context)
 
     def mkEmbed[Ctx](
         channelId: ChannelId,
         messageId: MessageId,
         embed: OutgoingEmbed,
         context: Ctx = NotUsed: NotUsed
-    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = Some(embed)), context)
+    ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = RestSome(embed)), context)
   }
 
   /**
@@ -1211,14 +1240,26 @@ object RESTRequests {
     */
   case class CreateGuildChannelData(
       name: String,
-      `type`: Option[ChannelType] = None,
-      bitrate: Option[Int] = None,
-      userLimit: Option[Int] = None,
-      permissionOverwrites: Option[Seq[PermissionOverwrite]] = None,
-      parentId: Option[ChannelId] = None,
-      nsfw: Option[Boolean] = None
+      `type`: RestOption[ChannelType] = RestUndefined,
+      bitrate: RestOption[Int] = RestUndefined,
+      userLimit: RestOption[Int] = RestUndefined,
+      permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
+      parentId: RestOption[ChannelId] = RestUndefined,
+      nsfw: RestOption[Boolean] = RestUndefined
   ) {
     require(name.length >= 2 && name.length <= 100, "A channel name has to be between 2 and 100 characters")
+  }
+  object CreateGuildChannelData {
+    implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
+      RestOption.removeUndefinedToObj(
+        "name"                  -> RestSome(a.name.asJson),
+        "type"                  -> a.`type`.map(_.asJson),
+        "bitrate"               -> a.bitrate.map(_.asJson),
+        "user_limit"            -> a.userLimit.map(_.asJson),
+        "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
+        "parent_id"             -> a.parentId.map(_.asJson),
+        "nsfw"                  -> a.nsfw.map(_.asJson)
+    )
   }
 
   /**
@@ -1231,7 +1272,9 @@ object RESTRequests {
       reason: Option[String] = None
   ) extends SimpleReasonRequest[CreateGuildChannel[Ctx], CreateGuildChannelData, RawChannel, Channel, Ctx] {
     override def route:         RequestRoute                    = Routes.createGuildChannel(guildId)
-    override def paramsEncoder: Encoder[CreateGuildChannelData] = deriveEncoder[CreateGuildChannelData]
+    override def paramsEncoder: Encoder[CreateGuildChannelData] = CreateGuildChannelData.encoder
+
+    override def jsonPrinter: Printer = Printer.noSpaces
 
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
@@ -1393,12 +1436,22 @@ object RESTRequests {
     * @param channelId The id of the channel to move the user to.
     */
   case class ModifyGuildMemberData(
-      nick: Option[String] = None,
-      roles: Option[Seq[RoleId]] = None,
-      mute: Option[Boolean] = None,
-      deaf: Option[Boolean] = None,
-      channelId: Option[ChannelId] = None
+      nick: RestOption[String] = RestUndefined,
+      roles: RestOption[Seq[RoleId]] = RestUndefined,
+      mute: RestOption[Boolean] = RestUndefined,
+      deaf: RestOption[Boolean] = RestUndefined,
+      channelId: RestOption[ChannelId] = RestUndefined
   )
+  object ModifyGuildMemberData {
+    implicit val encoder: Encoder[ModifyGuildMemberData] = (a: ModifyGuildMemberData) =>
+      RestOption.removeUndefinedToObj(
+        "nick"       -> a.nick.map(_.asJson),
+        "roles"      -> a.roles.map(_.asJson),
+        "mute"       -> a.mute.map(_.asJson),
+        "deaf"       -> a.deaf.map(_.asJson),
+        "channel_id" -> a.channelId.map(_.asJson)
+    )
+  }
 
   /**
     * Modify a guild member.
@@ -1410,11 +1463,13 @@ object RESTRequests {
       context: Ctx = NotUsed: NotUsed,
       reason: Option[String] = None
   ) extends NoResponseReasonRequest[ModifyGuildMember[Ctx], ModifyGuildMemberData, Ctx] {
+    override def jsonPrinter: Printer = Printer.noSpaces
+
     override def route:         RequestRoute                   = Routes.modifyGuildMember(userId, guildId)
-    override def paramsEncoder: Encoder[ModifyGuildMemberData] = deriveEncoder[ModifyGuildMemberData]
+    override def paramsEncoder: Encoder[ModifyGuildMemberData] = ModifyGuildMemberData.encoder
 
     override def requiredPermissions: Permission = {
-      def ifDefined(opt: Option[_], perm: Permission): Permission = if (opt.isDefined) perm else Permission.None
+      def ifDefined(opt: RestOption[_], perm: Permission): Permission = if (opt.nonEmpty) perm else Permission.None
       Permission(
         Permission.CreateInstantInvite,
         ifDefined(params.nick, Permission.ManageNicknames),
@@ -1448,7 +1503,8 @@ object RESTRequests {
           guild     <- builder.getGuild(guildId)
           botMember <- guild.members.get(builder.botUser.id)
         } {
-          val newGuild = guild.copy(members = guild.members + (builder.botUser.id -> botMember.copy(nick = Some(obj))))
+          val newMembers = guild.members.updated(builder.botUser.id, botMember.copy(nick = Some(obj)))
+          val newGuild   = guild.copy(members = newMembers)
           builder.guilds.put(guildId, newGuild)
         }
       }
@@ -1967,7 +2023,7 @@ object RESTRequests {
   }
 
   /**
-    * Fet the client user.
+    * Fetch the client user.
     */
   case class GetCurrentUser[Ctx](context: Ctx = NotUsed: NotUsed) extends NoParamsNiceResponseRequest[User, Ctx] {
     override def route: RequestRoute = Routes.getCurrentUser
