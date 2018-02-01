@@ -314,6 +314,7 @@ case class ReceivedEmbed(
     color = color,
     footer = footer.map(_.toOutgoing),
     image = image.map(_.toOutgoing),
+    video = video.map(_.toOutgoing),
     thumbnail = thumbnail.map(_.toOutgoing),
     author = author.map(_.toOutgoing),
     fields = fields.getOrElse(Seq.empty)
@@ -338,7 +339,9 @@ case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, wi
   * @param height The height of the video.
   * @param width The width of the video.
   */
-case class ReceivedEmbedVideo(url: String, height: Int, width: Int)
+case class ReceivedEmbedVideo(url: String, height: Int, width: Int) {
+  def toOutgoing: OutgoingEmbedVideo = OutgoingEmbedVideo(url)
+}
 
 /**
   * The image part of a received embed.
