@@ -35,7 +35,7 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.DiscordShard.{ShardActor, StartShard, StopShard}
+import net.katsstuff.ackcord.DiscordShard.{StartShard, StopShard}
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
@@ -50,7 +50,7 @@ import net.katsstuff.ackcord.util.MessageParser
   * @param commands The commands object used by the client
   * @param requests The requests object used by the client
   */
-case class DiscordClient(shards: Seq[ShardActor], cache: Cache, commands: Commands, requests: RequestHelper) {
+case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper) {
   import requests.{mat, system}
 
   require(shards.nonEmpty, "No shards")

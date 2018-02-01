@@ -58,6 +58,14 @@ package object syntax {
     }
 
     /**
+      * If this is a group DM channel, convert it to one.
+      */
+    def asGroupDMChannel: Option[GroupDMChannel] = channel match {
+      case gChannel: GroupDMChannel => Some(gChannel)
+      case _                        => None
+    }
+
+    /**
       * If this is a guild channel, convert it to one.
       */
     def asGuildChannel: Option[GuildChannel] = channel match {

@@ -29,7 +29,6 @@ import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
-import net.katsstuff.ackcord.DiscordShard.ShardActor
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.examplecore.music._
 import net.katsstuff.ackcord.examplecore.music.MusicHandler
@@ -63,11 +62,11 @@ object Example {
   }
 }
 
-class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ShardActor) extends Actor with ActorLogging {
+class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
   import cache.mat
   implicit val system: ActorSystem = context.system
 
-  val requests = RequestHelper(BotAuthentication(settings.token))
+  val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token))
 
   val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
     import commands._
@@ -128,7 +127,7 @@ class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ShardActor)
   }
 }
 object ExampleMain {
-  def props(settings: CoreClientSettings, cache: Cache, shard: ShardActor): Props =
+  def props(settings: CoreClientSettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
   def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {

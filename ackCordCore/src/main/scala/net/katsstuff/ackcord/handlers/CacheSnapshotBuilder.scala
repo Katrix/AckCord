@@ -47,42 +47,54 @@ class CacheSnapshotBuilder(
     var bans: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A, B] = mutable.Map[SnowflakeType[A], B]
+  override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
 
-  def toImmutable: CacheSnapshot = CacheSnapshot(
-    botUser = botUser,
-    dmChannels = SnowflakeMap(dmChannels.toSeq: _*),
-    groupDmChannels = SnowflakeMap(groupDmChannels.toSeq: _*),
-    unavailableGuilds = SnowflakeMap(unavailableGuilds.toSeq: _*),
-    guilds = SnowflakeMap(guilds.toSeq: _*),
-    messages = SnowflakeMap(messages.map { case (k, v)   => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
-    lastTyped = SnowflakeMap(lastTyped.map { case (k, v) => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*),
-    users = SnowflakeMap(users.toSeq: _*),
-    bans = SnowflakeMap(bans.map { case (k, v)           => k -> SnowflakeMap(v.toSeq: _*) }.toSeq: _*)
-  )
+  def toImmutable: CacheSnapshot = {
+    def convertNested[K1, K2, V](
+        map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]
+    ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap(map.map { case (k, v) => k -> SnowflakeMap(v) })
+
+    CacheSnapshot(
+      botUser = botUser,
+      dmChannels = SnowflakeMap(dmChannels),
+      groupDmChannels = SnowflakeMap(groupDmChannels),
+      unavailableGuilds = SnowflakeMap(unavailableGuilds),
+      guilds = SnowflakeMap(guilds),
+      messages = convertNested(messages),
+      lastTyped = convertNested(lastTyped),
+      users = SnowflakeMap(users),
+      bans = convertNested(bans)
+    )
+  }
+
   override def getChannelMessages(channelId: ChannelId): mutable.Map[MessageId, Message] =
     messages.getOrElse(channelId, mutable.Map.empty)
+
   override def getChannelLastTyped(channelId: ChannelId): mutable.Map[UserId, Instant] =
     lastTyped.getOrElse(channelId, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
-  import scala.collection.breakOut
-  def apply(snapshot: CacheSnapshot): CacheSnapshotBuilder = new CacheSnapshotBuilder(
-    botUser = snapshot.botUser,
-    dmChannels = toMutableMap(snapshot.dmChannels),
-    groupDmChannels = toMutableMap(snapshot.groupDmChannels),
-    unavailableGuilds = toMutableMap(snapshot.unavailableGuilds),
-    guilds = toMutableMap(snapshot.guilds),
-    messages = toMutableMap(snapshot.messages.map { case (k, v) => k -> toMutableMap(v) }),
-    lastTyped = snapshot.lastTyped.map { case (k, v)            => k -> toMutableMap(v) }(breakOut),
-    users = toMutableMap(snapshot.users),
-    bans = snapshot.bans.map { case (k, v)           => k -> toMutableMap(v) }(breakOut)
-  )
+  def apply(snapshot: CacheSnapshot): CacheSnapshotBuilder = {
+    def toMutableMap[K, V](map: SnowflakeMap[K, V]): mutable.Map[SnowflakeType[K], V] = {
+      val builder = mutable.Map.newBuilder[SnowflakeType[K], V]
+      builder.sizeHint(map)
+      builder ++= map
+      builder.result()
+    }
 
-  private def toMutableMap[A, B](map: Map[A, B]): mutable.Map[A, B] = {
-    val builder = mutable.Map.newBuilder[A, B]
-    builder.sizeHint(map)
-    builder ++= map
-    builder.result()
+    def toMutableMapNested[K1, K2, V](map: SnowflakeMap[K1, SnowflakeMap[K2, V]]) =
+      toMutableMap(map.map { case (k, v) => k -> toMutableMap(v) })
+
+    new CacheSnapshotBuilder(
+      botUser = snapshot.botUser,
+      dmChannels = toMutableMap(snapshot.dmChannels),
+      groupDmChannels = toMutableMap(snapshot.groupDmChannels),
+      unavailableGuilds = toMutableMap(snapshot.unavailableGuilds),
+      guilds = toMutableMap(snapshot.guilds),
+      messages = toMutableMapNested(snapshot.messages),
+      lastTyped = toMutableMapNested(snapshot.lastTyped),
+      users = toMutableMap(snapshot.users),
+      bans = toMutableMapNested(snapshot.bans)
+    )
   }
 }

@@ -28,6 +28,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import akka.NotUsed
+import akka.pattern.pipe
 import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.event.Logging
 import akka.http.scaladsl.Http
@@ -148,6 +149,7 @@ class VoiceWsHandler(
     case Login =>
       log.info("Logging in")
       val src = Source.queue[VoiceMessage[_]](64, OverflowStrategy.fail).named("GatewayQueue")
+
       val sink = Sink
         .actorRefWithAck[Either[Error, VoiceMessage[_]]](
           ref = self,
@@ -156,28 +158,31 @@ class VoiceWsHandler(
           onCompleteMessage = CompletedSink
         )
         .named("GatewaySink")
-      val flow = createMessage.viaMat(wsFlow)(Keep.right).viaMat(parseMessage)(Keep.left).named("Gateway")
+
+      val flow = createMessage
+        .viaMat(wsFlow)(Keep.right)
+        .viaMat(parseMessage)(Keep.left)
+        .named("Gateway")
 
       log.debug("WS uri: {}", wsUri)
-      val (sourceQueue, future) = src.viaMat(flow)(Keep.both).toMat(sink)(Keep.left).run()
+      val (sourceQueue, future) = src
+        .viaMat(flow)(Keep.both)
+        .toMat(sink)(Keep.left)
+        .run()
 
-      future.foreach {
-        case InvalidUpgradeResponse(response, cause) =>
-          response.discardEntityBytes()
-          sourceQueue.complete()
-          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
-        case ValidUpgrade(response, _) =>
-          log.debug("Valid login: {}", response.entity.toString)
-          response.discardEntityBytes()
-          self ! ValidWsUpgrade
-      }
+      future.pipeTo(self)
 
       queue = sourceQueue
-    case ValidWsUpgrade =>
-      log.info("Logged in, going to Active")
-      sendFirstSinkAck.foreach { act =>
-        act ! AckSink
-      }
+
+    case InvalidUpgradeResponse(response, cause) =>
+      response.discardEntityBytes()
+      queue.complete()
+      throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
+    case ValidUpgrade(response, _) =>
+      log.debug("Valid login: {}\nGoing to active", response.entity.toString)
+      response.discardEntityBytes()
+
+      sendFirstSinkAck.foreach(act => act ! AckSink)
       sendFirstSinkAck = null
 
       becomeActive()
@@ -199,16 +204,7 @@ class VoiceWsHandler(
         timers.cancel(heartbeatTimerKey)
 
         if (connectionActor == null) {
-          if (shuttingDown) {
-            log.info("Websocket and UDP connection completed when shutting down. Stopping.")
-            context.stop(self)
-          } else {
-            log.info("Websocket and UDP connection completed. Logging in again.")
-            if (!timers.isTimerActive(restartLoginKey)) {
-              self ! Login
-            }
-            becomeInactive()
-          }
+          stopOrGotoInactive()
         } else {
           log.info("Websocket connection completed. Waiting for UDP connection.")
         }
@@ -216,16 +212,7 @@ class VoiceWsHandler(
         connectionActor = null
 
         if (queue == null) {
-          if (shuttingDown) {
-            log.info("Websocket and UDP connection completed when shutting down. Stopping.")
-            context.stop(self)
-          } else {
-            log.info("Websocket and UDP connection completed. Logging in again.")
-            if (!timers.isTimerActive(restartLoginKey)) {
-              self ! Login
-            }
-            becomeInactive()
-          }
+          stopOrGotoInactive()
         } else {
           log.info("UDP connection completed. Waiting for websocket connection.")
         }
@@ -279,6 +266,19 @@ class VoiceWsHandler(
   }
 
   override def receive: Receive = inactive
+
+  def stopOrGotoInactive(): Unit = {
+    if (shuttingDown) {
+      log.info("Websocket and UDP connection completed when shutting down. Stopping.")
+      context.stop(self)
+    } else {
+      log.info("Websocket and UDP connection died. Logging in again.")
+      if (!timers.isTimerActive(restartLoginKey)) {
+        self ! Login
+      }
+      becomeInactive()
+    }
+  }
 
   /**
     * Handles all websocket messages received
@@ -336,9 +336,9 @@ object VoiceWsHandler {
   )(implicit mat: Materializer): Props =
     Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, sendSoundTo))
 
-  case object InitSink
-  case object AckSink
-  case object CompletedSink
+  private case object InitSink
+  private case object AckSink
+  private case object CompletedSink
 
   case object SendHeartbeat
 

@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord.http.requests
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.duration._
 
@@ -31,28 +32,30 @@ import akka.actor.{Actor, ActorRef, Props, Status, Timers}
 class Ratelimiter extends Actor with Timers {
   import Ratelimiter._
 
-  private val uriLimits         = new mutable.HashMap[String, Int]
+  private val routeLimits       = new mutable.HashMap[String, Int]
   private val remainingRequests = new mutable.HashMap[String, Int]
   private val rateLimits        = new mutable.HashMap[String, mutable.Queue[(ActorRef, Any)]]
 
   def receive: Receive = {
     case ResetRatelimit(uri) =>
-      uriLimits.get(uri) match {
+      routeLimits.get(uri) match {
         case Some(limit) => remainingRequests.put(uri, limit)
         case None        => remainingRequests.remove(uri)
       }
       releaseWaiting(uri)
-    case WantToPass(uri, ret) =>
-      if (remainingRequests.get(uri).forall(_ > 0)) {
-        remainingRequests.get(uri).foreach(remaining => remainingRequests.put(uri, remaining - 1))
-        sender() ! ret
+    case WantToPass(uri, responseObj) =>
+      val remainingOpt = remainingRequests.get(uri)
+
+      if (remainingOpt.forall(_ > 0)) {
+        remainingOpt.foreach(remaining => remainingRequests.put(uri, remaining - 1))
+        sender() ! responseObj
       } else {
-        val actor = sender()
-        context.watchWith(actor, TimedOut(uri, actor))
-        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue((actor, ret))
+        val sendResponseTo = sender()
+        context.watchWith(sendResponseTo, TimedOut(uri, sendResponseTo))
+        rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue(sendResponseTo -> responseObj)
       }
     case UpdateRatelimits(uri, timeTilReset, remainingRequestsAmount, requestLimit) =>
-      uriLimits.put(uri, requestLimit)
+      routeLimits.put(uri, requestLimit)
       remainingRequests.put(uri, remainingRequestsAmount)
       timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset)
     case TimedOut(uri, actorRef) =>
@@ -61,6 +64,8 @@ class Ratelimiter extends Actor with Timers {
 
   def releaseWaiting(uri: String): Unit = {
     rateLimits.get(uri).foreach { queue =>
+
+      @tailrec
       def release(remaining: Int): Int = {
         if (remaining <= 0 || queue.isEmpty) remaining
         else {
@@ -76,8 +81,11 @@ class Ratelimiter extends Actor with Timers {
     }
   }
 
-  override def postStop(): Unit =
-    rateLimits.values.flatten.foreach(_._1 ! Status.Failure(new IllegalStateException("Ratelimiter stopped")))
+  override def postStop(): Unit = {
+    rateLimits.values.flatten.foreach { case (actor, _) =>
+      actor ! Status.Failure(new IllegalStateException("Ratelimiter stopped"))
+    }
+  }
 }
 object Ratelimiter {
   //TODO: Custom dispatcher

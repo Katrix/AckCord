@@ -71,25 +71,23 @@ class GatewayHandler(
     case Login =>
       log.info("Logging in")
       killSwitch = KillSwitches.shared("GatewayComplete")
-      val (wsUpgrade, newResumeData) =
-        source.viaMat(wsFlow)(Keep.right).via(killSwitch.flow).toMat(sink)(Keep.left).run()
+      val (wsUpgrade, newResumeData) = source
+        .viaMat(wsFlow)(Keep.right)
+        .via(killSwitch.flow)
+        .toMat(sink)(Keep.left)
+        .run()
 
       newResumeData.map(ConnectionDied).pipeTo(self)
+      wsUpgrade.pipeTo(self)
 
-      wsUpgrade.foreach {
-        case InvalidUpgradeResponse(response, cause) =>
-          response.discardEntityBytes()
-          killSwitch.shutdown()
-          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
-        case ValidUpgrade(response, _) =>
-          log.debug("Valid login: {}", response.entity.toString)
-          response.discardEntityBytes()
-          self ! ValidWsUpgrade
-      }
-
-    case ValidWsUpgrade =>
-      log.info("Logged in, going to Active")
+    case ValidUpgrade(response, _) =>
+      log.debug("Valid login: {}\nGoing to active", response.entity.toString)
+      response.discardEntityBytes()
       context.become(active)
+    case InvalidUpgradeResponse(response, cause) =>
+      response.discardEntityBytes()
+      killSwitch.shutdown()
+      throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
   }
 
   def active: Receive = {
@@ -102,7 +100,8 @@ class GatewayHandler(
         log.info("Websocket connection completed. Stopping.")
         context.stop(self)
       } else {
-        log.info("Websocket connection completed. Logging in again.")
+        //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
+        log.info("Websocket connection died. Logging in again.")
         self ! Login
         context.become(inactive)
       }
@@ -111,6 +110,7 @@ class GatewayHandler(
       killSwitch.shutdown()
       killSwitch = null
       context.become(inactive)
+      //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
       self ! Login
     case Logout =>
       log.info("Shutting down")
@@ -130,13 +130,15 @@ object GatewayHandler {
   )(implicit mat: Materializer): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
 
   def cacheProps(wsUri: Uri, settings: CoreClientSettings, cache: Cache): Props = {
+    import cache.mat
+
     val sink = cache.publish.contramap { (dispatch: Dispatch[_]) =>
       val event = dispatch.event.asInstanceOf[ComplexGatewayEvent[Any, Any]] //Makes stuff compile
       APIMessageCacheUpdate(event.handlerData, event.createEvent, event.cacheHandler)
     }
 
-    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)(cache.mat))
+    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink))
   }
 
-  case class ConnectionDied(resume: Option[ResumeData])
+  private case class ConnectionDied(resume: Option[ResumeData])
 }

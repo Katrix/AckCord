@@ -43,6 +43,9 @@ class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphSt
 }
 object MapWithMaterializer {
 
+  /**
+    * Map a flow with a materializer from inside the graph.
+    */
   def flow[In, Out](f: => Materializer => In => Out): Flow[In, Out, NotUsed] =
     Flow.fromGraph(new MapWithMaterializer(f))
 }

@@ -81,6 +81,10 @@ case class Cache(
       .runWith(Sink.actorRefWithAck(actor, initMessage, ackMessage, completeMessage, failureMessage))
 }
 object Cache {
+
+  /**
+    * Creates a cache for a bot. This should be shared for the whole bot.
+    */
   def create(implicit system: ActorSystem, mat: Materializer): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams[Any]
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]

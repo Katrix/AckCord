@@ -52,10 +52,12 @@ object CmdStreams {
       .mapConcat {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: CacheSnapshot = c.current
+
           val res = isValidCommand(needMention, msg).map { args =>
             if (args == Nil) NoCmd(msg, c.current)
             else {
               val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
+
               categories
                 .find(cat => lowercaseCommand.startsWith(cat.prefix))
                 .fold[RawCmdMessage](NoCmdCategory(msg, lowercaseCommand, args.tail, cache)) { cat =>

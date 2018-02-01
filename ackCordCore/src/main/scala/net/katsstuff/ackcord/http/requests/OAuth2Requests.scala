@@ -86,6 +86,7 @@ object OAuth2Requests extends FailFastCirceSupport {
         "refresh_token" -> a.refreshToken.asJson,
         "scope"         -> a.scopes.map(_.name).mkString(" ").asJson,
     )
+
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
       for {
         accessToken  <- c.get[String]("access_token")
@@ -105,6 +106,7 @@ object OAuth2Requests extends FailFastCirceSupport {
         "expires_in"   -> a.expiresIn.asJson,
         "scope"        -> a.scopes.map(_.name).mkString(" ").asJson,
     )
+
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
       for {
         accessToken <- c.get[String]("access_token")
@@ -143,14 +145,17 @@ object OAuth2Requests extends FailFastCirceSupport {
       mat: Materializer
   ): Future[AccessToken] = {
     import system.dispatcher
-    val entity = FormData("grant_type" -> grantType.name, "code" -> code, "redirect_uri" -> redirectUri).toEntity
+    val formData = FormData("grant_type" -> grantType.name, "code" -> code, "redirect_uri" -> redirectUri)
 
-    val headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret)))
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = Routes.oAuth2Token.applied,
+      headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
+      entity = formData.toEntity
+    )
 
     Http()
-      .singleRequest(
-        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token.applied, headers = headers, entity = entity)
-      )
+      .singleRequest(request)
       .flatMap(Unmarshal(_).to[AccessToken])
   }
 
@@ -159,15 +164,18 @@ object OAuth2Requests extends FailFastCirceSupport {
       mat: Materializer
   ): Future[ClientAccessToken] = {
     import system.dispatcher
-    val entity =
-      FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.name).mkString(" ")).toEntity
+    val formData =
+      FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.name).mkString(" "))
 
-    val headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret)))
+    val request = HttpRequest(
+      method = HttpMethods.POST,
+      uri = Routes.oAuth2Token.applied,
+      headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
+      entity = formData.toEntity
+    )
 
     Http()
-      .singleRequest(
-        HttpRequest(method = HttpMethods.POST, uri = Routes.oAuth2Token.applied, headers = headers, entity = entity)
-      )
+      .singleRequest(request)
       .flatMap(Unmarshal(_).to[ClientAccessToken])
   }
 

@@ -27,11 +27,10 @@ import java.net.InetSocketAddress
 import java.nio.ByteOrder
 
 import scala.collection.mutable
-import scala.concurrent.duration._
 
 import com.iwebpp.crypto.TweetNaclFast
 
-import akka.actor.{ActorRef, ActorSystem, FSM, Props}
+import akka.actor.{ActorRef, ActorSystem, FSM, Props, Stash}
 import akka.io.{IO, UdpConnected}
 import akka.util.ByteString
 import net.katsstuff.ackcord.AudioAPIMessage
@@ -55,7 +54,7 @@ class VoiceUDPHandler(
     sendSoundTo: Option[ActorRef],
     serverId: RawSnowflake,
     userId: UserId
-) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] {
+) extends FSM[VoiceUDPHandler.State, VoiceUDPHandler.Data] with Stash {
   import VoiceUDPHandler._
 
   implicit val system: ActorSystem = context.system
@@ -77,11 +76,12 @@ class VoiceUDPHandler(
   val queue: mutable.Queue[ByteString] = mutable.Queue.empty[ByteString]
 
   when(Inactive) {
-    case Event(UdpConnected.Connected, NoSocket) => stay using WithSocket(sender())
-    case Event(ip: DoIPDiscovery, NoSocket)      =>
-      //We received the request a bit early, resend it
-      setTimer("ResendIPDiscovery", ip, 50.millis)
-      log.debug("Resending DoIPDiscovery request")
+    case Event(UdpConnected.Connected, NoSocket) =>
+      unstashAll()
+      stay using WithSocket(sender())
+    case Event(_: DoIPDiscovery, NoSocket)      =>
+      //We received the request a bit early, stash it
+      stash()
       stay
     case Event(ip: DoIPDiscovery, WithSocket(socket)) =>
       val payload = ByteString(ssrc).padTo(70, 0.toByte)

@@ -41,79 +41,85 @@ object GuildStreams {
     * - [[APIMessage.MessageMessage]]
     * - [[APIMessage.VoiceStateUpdate]]
     */
-  def withGuildInfoApiMessage[Msg <: APIMessage]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] = {
-    val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
+  def withGuildInfoApiMessage[Msg <: APIMessage]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
+    Flow[Msg].statefulMapConcat { () =>
+      val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
 
-    Flow[Msg].statefulMapConcat { () => msg =>
-      val optGuildId = msg match {
-        case _ @(_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
-          None
-        case msg: APIMessage.GuildMessage =>
-          Some(msg.guild.id)
-        case msg: APIMessage.ChannelMessage =>
-          msg.channel.asGuildChannel.map(_.guildId)
-        case msg: APIMessage.MessageMessage =>
-          msg.message.tGuildChannel(msg.cache.current).map(_.guildId)
-        case _ @APIMessage.VoiceStateUpdate(state, _) => state.guildId
-        case msg: GatewayEvent.GuildCreate =>
-          msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
-          Some(msg.guildId)
-        case msg: GatewayEvent.ChannelCreate =>
-          msg.guildId.foreach { guildId =>
-            channelToGuild.put(msg.data.id, guildId)
+      msg =>
+        {
+          val optGuildId = msg match {
+            case _ @(_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
+              None
+            case msg: APIMessage.GuildMessage =>
+              Some(msg.guild.id)
+            case msg: APIMessage.ChannelMessage =>
+              msg.channel.asGuildChannel.map(_.guildId)
+            case msg: APIMessage.MessageMessage =>
+              msg.message.tGuildChannel(msg.cache.current).map(_.guildId)
+            case APIMessage.VoiceStateUpdate(state, _) => state.guildId
+            case msg: GatewayEvent.GuildCreate =>
+              msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
+              Some(msg.guildId)
+            case msg: GatewayEvent.ChannelCreate =>
+              msg.guildId.foreach { guildId =>
+                channelToGuild.put(msg.data.id, guildId)
+              }
+              msg.guildId
+            case msg: GatewayEvent.ChannelDelete =>
+              channelToGuild.remove(msg.data.id)
+              msg.guildId
+            case msg: GatewayEvent.GuildEvent[_]    => Some(msg.guildId)
+            case msg: GatewayEvent.OptGuildEvent[_] => msg.guildId
+            case msg: GatewayEvent.ChannelEvent[_]  => channelToGuild.get(msg.channelId)
           }
-          msg.guildId
-        case msg: GatewayEvent.ChannelDelete =>
-          channelToGuild.remove(msg.data.id)
-          msg.guildId
-        case msg: GatewayEvent.GuildEvent[_]    => Some(msg.guildId)
-        case msg: GatewayEvent.OptGuildEvent[_] => msg.guildId
-        case msg: GatewayEvent.ChannelEvent[_] =>
-          channelToGuild.get(msg.channelId)
-      }
 
-      List(msg -> optGuildId)
+          List(msg -> optGuildId)
+        }
     }
-  }
 
   /**
     * A flow which tries to find out which guild a given GatewayEvent event belongs to.
     *
     * Handles
     * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
+    * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ComplexGuildEvent]]
     * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
     * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ChannelEvent]]
     */
-  def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] = {
-    val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
+  def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
+    Flow[Msg].statefulMapConcat { () =>
+      val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
 
-    Flow[Msg].statefulMapConcat { () => msg =>
-      val optGuildId = msg match {
-        case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
-          None
-        case msg: GatewayEvent.GuildCreate =>
-          msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
-          Some(msg.guildId)
-        case msg: GatewayEvent.ChannelCreate =>
-          msg.guildId.foreach { guildId =>
-            channelToGuild.put(msg.data.id, guildId)
+      msg =>
+        {
+          val optGuildId = msg match {
+            case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
+              None
+            case msg: GatewayEvent.GuildCreate =>
+              msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
+              Some(msg.guildId)
+            case msg: GatewayEvent.ChannelCreate =>
+              msg.guildId.foreach { guildId =>
+                channelToGuild.put(msg.data.id, guildId)
+              }
+
+              msg.guildId
+            case msg: GatewayEvent.ChannelDelete =>
+              channelToGuild.remove(msg.data.id)
+              msg.guildId
+            case msg: GatewayEvent.GuildEvent[_] =>
+              Some(msg.guildId)
+            case msg: GatewayEvent.ComplexGuildEvent[_, _] =>
+              Some(msg.guildId)
+            case msg: GatewayEvent.OptGuildEvent[_] =>
+              msg.guildId
+            case msg: GatewayEvent.ChannelEvent[_] =>
+              channelToGuild.get(msg.channelId)
           }
 
-          msg.guildId
-        case msg: GatewayEvent.ChannelDelete =>
-          channelToGuild.remove(msg.data.id)
-          msg.guildId
-        case msg: GatewayEvent.GuildEvent[_] =>
-          Some(msg.guildId)
-        case msg: GatewayEvent.OptGuildEvent[_] =>
-          msg.guildId
-        case msg: GatewayEvent.ChannelEvent[_] =>
-          channelToGuild.get(msg.channelId)
-      }
-
-      List(msg -> optGuildId)
+          List(msg -> optGuildId)
+        }
     }
-  }
 
   /**
     * Serves the opposite function of [[GuildRouter]]. The job of

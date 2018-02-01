@@ -23,10 +23,10 @@
  */
 package net.katsstuff.ackcord
 
-import akka.actor.{Actor, Props, Terminated}
-import net.katsstuff.ackcord.DiscordShard.{ShardActor, StopShard}
+import akka.actor.{Actor, ActorRef, Props, Terminated}
+import net.katsstuff.ackcord.DiscordShard.StopShard
 
-private[ackcord] class ShardShutdownManager(shards: Seq[ShardActor]) extends Actor {
+private[ackcord] class ShardShutdownManager(shards: Seq[ActorRef]) extends Actor {
   var shardNum: Int = shards.size
 
   override def receive: Receive = {
@@ -43,5 +43,5 @@ private[ackcord] class ShardShutdownManager(shards: Seq[ShardActor]) extends Act
   }
 }
 object ShardShutdownManager {
-  private[ackcord] def props(shards: Seq[ShardActor]): Props = Props(new ShardShutdownManager(shards))
+  private[ackcord] def props(shards: Seq[ActorRef]): Props = Props(new ShardShutdownManager(shards))
 }

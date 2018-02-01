@@ -41,11 +41,24 @@ import net.katsstuff.ackcord.http.Routes.Route
   */
 case class RequestRoute(rawRoute: String, uri: Uri, method: HttpMethod)
 object RequestRoute {
+
+  /**
+    * Create a [[RequestRoute]] from a [[Route]] using the raw and applied
+    * values for the this route.
+    */
   def apply(route: Route, method: HttpMethod): RequestRoute = RequestRoute(route.rawRoute, route.applied, method)
 }
 
+/**
+  * Base trait for all requests before they enter the network flow.
+  * @tparam Data The response type for the request.
+  * @tparam Ctx The type of the context to send with this request.
+  */
 sealed trait MaybeRequest[+Data, Ctx] {
 
+  /**
+    * The context to send with this request.
+    */
   def context: Ctx
 }
 
@@ -55,9 +68,6 @@ sealed trait MaybeRequest[+Data, Ctx] {
   */
 trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
-  /**
-    * The context to send with this request.
-    */
   def context: Ctx
 
   /**
@@ -70,6 +80,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def route: RequestRoute = self.route
 
     override def requestBody: RequestEntity = self.requestBody
+
+    override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
@@ -104,6 +116,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def route: RequestRoute = self.route
 
     override def requestBody: RequestEntity = self.requestBody
+
+    override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem) = f(self.parseResponse(parallelism))
   }
@@ -224,6 +238,10 @@ case class RequestResponse[+Data, Ctx](
   */
 sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
 
+  /**
+    * Get the exception associated with this failed request, or makes one
+    * if one does not exist.
+    */
   def asException: Throwable
 }
 
@@ -268,7 +286,13 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestError[Ctx] = this
 }
 
-case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String) extends MaybeRequest[Nothing, Ctx] with FailedRequest[Ctx] {
+/**
+  * A request that was dropped before it entered the network, most likely
+  * because of timing out while waiting for ratelimits.
+  */
+case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String)
+    extends MaybeRequest[Nothing, Ctx]
+    with FailedRequest[Ctx] {
   override def asException = new DroppedRequestException(uri)
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)

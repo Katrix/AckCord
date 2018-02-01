@@ -38,13 +38,12 @@ import akka.stream.scaladsl.Source
 import akka.stream.{Materializer, ThrottleMode}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.ackcord.DiscordShard.{CreateGateway, ShardActor}
+import net.katsstuff.ackcord.DiscordShard.CreateGateway
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler
 import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
-import shapeless.tag.@@
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -94,8 +93,6 @@ object DiscordShard extends FailFastCirceSupport {
     Props(new DiscordShard(wsUri, settings, cache))
   def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, CoreClientSettings(token), cache)
 
-  def tagClient(actor: ActorRef): ActorRef @@ DiscordShard = shapeless.tag[DiscordShard](actor)
-  type ShardActor = ActorRef @@ DiscordShard
 
   /**
     * Create a shard actor given the needed arguments
@@ -103,8 +100,8 @@ object DiscordShard extends FailFastCirceSupport {
     * @param token The bot token to use for authentication
     * @param system The actor system to use for creating the client actor
     */
-  def connect(wsUri: Uri, token: String, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
-    tagClient(system.actorOf(props(wsUri, token, cache), actorName))
+  def connect(wsUri: Uri, token: String, cache: Cache, actorName: String)(implicit system: ActorSystem): ActorRef =
+    system.actorOf(props(wsUri, token, cache), actorName)
 
   /**
     * Create a shard actor given the needed arguments
@@ -114,8 +111,7 @@ object DiscordShard extends FailFastCirceSupport {
     */
   def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
-  ): ShardActor =
-    tagClient(system.actorOf(props(wsUri, settings, cache), actorName))
+  ): ActorRef = system.actorOf(props(wsUri, settings, cache), actorName)
 
   /**
     * Create as multiple shard actors, given the needed arguments
@@ -126,7 +122,7 @@ object DiscordShard extends FailFastCirceSupport {
     */
   def connectShards(wsUri: Uri, shardTotal: Int, settings: CoreClientSettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
-  ): Seq[ShardActor] = for (i <- 0 until shardTotal) yield {
+  ): Seq[ActorRef] = for (i <- 0 until shardTotal) yield {
     connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
   }
 
@@ -134,7 +130,7 @@ object DiscordShard extends FailFastCirceSupport {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(shards: Seq[ShardActor])(implicit mat: Materializer): Future[Done] =
+  def startShards(shards: Seq[ActorRef])(implicit mat: Materializer): Future[Done] =
     Source(shards.toIndexedSeq).throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping).runForeach { shard =>
       shard ! StartShard
     }
@@ -248,6 +244,6 @@ case class CoreClientSettings(
     * @param system The actor system to use
     * @return The discord client actor
     */
-  def connect(wsUri: Uri, cache: Cache, actorName: String)(implicit system: ActorSystem): ShardActor =
+  def connect(wsUri: Uri, cache: Cache, actorName: String)(implicit system: ActorSystem): ActorRef =
     DiscordShard.connect(wsUri, this, cache, actorName)
 }

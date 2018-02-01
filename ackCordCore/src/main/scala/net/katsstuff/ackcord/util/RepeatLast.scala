@@ -51,5 +51,9 @@ class RepeatLast[A] extends GraphStage[FlowShape[A, A]] {
     }
 }
 object RepeatLast {
+
+  /**
+    * A flow which will repeat the last element it saw.
+    */
   def flow[A]: Flow[A, A, NotUsed] = Flow.fromGraph(new RepeatLast[A])
 }

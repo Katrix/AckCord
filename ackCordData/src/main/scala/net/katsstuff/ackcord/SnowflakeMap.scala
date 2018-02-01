@@ -179,11 +179,34 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 }
 object SnowflakeMap {
 
-  def empty[A, B]: SnowflakeMap[A, B] = new SnowflakeMap(LongMap.empty)
-  def singleton[A, B](key: SnowflakeType[A], value: B): SnowflakeMap[A, B] =
+  /**
+    * Create an empty snowflake map.
+    */
+  def empty[K, V]: SnowflakeMap[K, V] = new SnowflakeMap(LongMap.empty)
+
+  /**
+    * Create a snowflake map with a single value.
+    */
+  def singleton[K, V](key: SnowflakeType[K], value: V): SnowflakeMap[K, V] =
     new SnowflakeMap(LongMap.singleton(key, value))
-  def apply[A, B](elems: (SnowflakeType[A], B)*): SnowflakeMap[A, B] =
+
+  /**
+    * Create a snowflake map from multiple values.
+    */
+  def apply[K, V](elems: (SnowflakeType[K], V)*): SnowflakeMap[K, V] =
     new SnowflakeMap(LongMap.apply(elems: _*))
+
+  /**
+    * Create a snowflake map from an iterable of snowflakes and values.
+    */
+  def apply[K, V](iterable: Iterable[(SnowflakeType[K], V)]): SnowflakeMap[K, V] = apply(iterable.toSeq: _*)
+
+  /**
+    * Create a snowflake map from an iterable of values while using a provided
+    * function to get the key.
+    */
+  def withKey[K, V](iterable: Iterable[V])(f: V => SnowflakeType[K]): SnowflakeMap[K, V] =
+    apply(iterable.map(v => f(v) -> v).toSeq: _*)
 
   implicit def canBuildFrom[S, A, B]: CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] =
     new CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] {

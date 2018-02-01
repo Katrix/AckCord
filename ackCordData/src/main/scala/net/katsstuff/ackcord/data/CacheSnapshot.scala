@@ -44,7 +44,7 @@ case class CacheSnapshot(
     bans: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
 ) extends CacheSnapshotLike {
 
-  override type MapType[A, B] = SnowflakeMap[A, B]
+  override type MapType[K, V] = SnowflakeMap[K, V]
 
   override def getChannelMessages(channelId: ChannelId): SnowflakeMap[Message, Message] =
     messages.getOrElse(channelId, SnowflakeMap.empty)

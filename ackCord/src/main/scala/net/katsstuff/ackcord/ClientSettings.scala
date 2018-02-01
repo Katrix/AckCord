@@ -71,7 +71,7 @@ class ClientSettings(
   def build(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
-    val requests = RequestHelper.apply(
+    val requests = RequestHelper.create(
       BotAuthentication(token),
       requestSettings.parallelism,
       requestSettings.bufferSize,
@@ -93,7 +93,7 @@ class ClientSettings(
   def buildAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
-    val requests = RequestHelper.apply(
+    val requests = RequestHelper.create(
       BotAuthentication(token),
       requestSettings.parallelism,
       requestSettings.bufferSize,

@@ -50,6 +50,7 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
     Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
   }
+
   implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] = (c: HCursor) => {
     for {
       mode      <- c.get[String]("mode")
@@ -64,14 +65,13 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
-    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.dEncoder(a.d), "s" -> a.s.asJson)
+    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.dataEncoder(a.d), "s" -> a.s.asJson)
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
     c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>
-      val opC = c.downField("op")
       val dC  = c.downField("d")
 
-      val op = opC.as[VoiceOpCode]
+      val op = c.get[VoiceOpCode]("op")
 
       def mkMsg[Data: Decoder, B](create: Data => B): Either[DecodingFailure, B] =
         dC.as[Data].map(create)

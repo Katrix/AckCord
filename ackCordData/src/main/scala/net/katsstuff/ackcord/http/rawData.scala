@@ -88,7 +88,7 @@ case class RawChannel(
             guildId,
             name,
             position,
-            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
             topic,
             lastMessageId,
             nsfw.getOrElse(false),
@@ -117,7 +117,7 @@ case class RawChannel(
             guildId,
             name,
             position,
-            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
             bitrate,
             userLimit,
             nsfw.getOrElse(false),
@@ -144,7 +144,69 @@ case class RawChannel(
             guildId,
             name,
             position,
-            SnowflakeMap(permissionOverwrites.map(p => p.id -> p): _*),
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+    }
+  }
+
+  def toGuildChannel(guildId: GuildId): Option[GuildChannel] = {
+    `type` match {
+      case ChannelType.GuildText =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          TGuildChannel(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            topic,
+            lastMessageId,
+            nsfw.getOrElse(false),
+            parentId,
+            lastPinTimestamp
+          )
+        }
+      case ChannelType.DM => throw new IllegalStateException("Not a guild channel")
+      case ChannelType.GuildVoice =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+          bitrate              <- bitrate
+          userLimit            <- userLimit
+        } yield {
+          VGuildChannel(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            bitrate,
+            userLimit,
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+      case ChannelType.GroupDm => throw new IllegalStateException("Not a guild channel")
+      case ChannelType.GuildCategory =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          GuildCategory(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
             nsfw.getOrElse(false),
             parentId
           )
@@ -323,14 +385,8 @@ case class RawGuild(
       voiceStates <- voiceStates
       members     <- members
       rawChannels <- channels
-      channels <- Traverse[List].sequence(
-        rawChannels
-          .map(_.toChannel.collect {
-            case ch: GuildChannel => ch
-          })
-          .toList
-      )
-      presences <- presences
+      channels    <- Traverse[List].sequence(rawChannels.map(_.toGuildChannel(id)).toList)
+      presences   <- presences
     } yield {
 
       Guild(
@@ -349,8 +405,8 @@ case class RawGuild(
         verificationLevel,
         defaultMessageNotifications,
         explicitContentFilter,
-        SnowflakeMap(roles.map(r => r.id  -> r.toRole(id)): _*),
-        SnowflakeMap(emojis.map(e => e.id -> e.toEmoji): _*),
+        SnowflakeMap(roles.map(r => r.id  -> r.toRole(id))),
+        SnowflakeMap(emojis.map(e => e.id -> e.toEmoji)),
         features,
         mfaLevel,
         applicationId,
@@ -360,10 +416,10 @@ case class RawGuild(
         joinedAt,
         large,
         memberCount,
-        SnowflakeMap(voiceStates.map(v => v.userId  -> v): _*),
-        SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id)): _*),
-        SnowflakeMap(channels.map(ch => ch.id       -> ch): _*),
-        SnowflakeMap(presences.map(p => p.user.id   -> p.toPresence): _*)
+        SnowflakeMap.withKey(voiceStates)(_.userId),
+        SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+        SnowflakeMap.withKey(channels)(_.id),
+        SnowflakeMap(presences.map(p => p.user.id -> p.toPresence))
       )
     }
   }

@@ -38,7 +38,7 @@ import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCo
 import akka.pattern.{ask, AskTimeoutException}
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{Attributes, FlowShape, OverflowStrategy}
-import akka.util.Timeout
+import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.http.requests.RESTRequests.ComplexRESTRequest
@@ -63,9 +63,11 @@ object RequestStreams {
   private def timeTilReset(response: HttpResponse): FiniteDuration =
     findCustomHeader(`Retry-After`, response)
       .map(_.tilReset)
-      .orElse(findCustomHeader(`X-RateLimit-Reset`, response).map { h =>
-        Instant.now().until(h.resetAt, ChronoUnit.MILLIS).millis
-      })
+      .orElse {
+        findCustomHeader(`X-RateLimit-Reset`, response).map { header =>
+          Instant.now().until(header.resetAt, ChronoUnit.MILLIS).millis
+        }
+      }
       .getOrElse(-1.millis)
 
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
@@ -75,7 +77,8 @@ object RequestStreams {
 
   /**
     * A basic request flow which will send requests to Discord, and
-    * receive responses.
+    * receive responses. This flow does not account for ratelimits. Only
+    * use it if you know what you're doing.
     * @param credentials The credentials to use when sending the requests.
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
@@ -91,8 +94,15 @@ object RequestStreams {
 
   /**
     * A request flow which will send requests to Discord, and receive responses.
-    * Also obeys ratelimits. If it encounters a ratelimit it will backpressure.
+    * If it encounters a ratelimit it will backpressure.
     * @param credentials The credentials to use when sending the requests.
+    * @param bufferSize The size of the internal buffer used before messages
+    *                   are sent.
+    * @param overflowStrategy The strategy to use if the buffer overflows.
+    * @param maxAllowedWait The maximum allowed wait time for the route
+    *                       specific ratelimits.
+    * @param parallelism The amount of requests to run at the same time.
+    * @param rateLimitActor An actor responsible for keeping track of ratelimits.
     */
   def requestFlow[Data, Ctx](
       credentials: HttpCredentials,
@@ -144,6 +154,10 @@ object RequestStreams {
 
   /**
     * A request flow which obeys route specific rate limits, but not global ones.
+    * @param ratelimiter An actor responsible for keeping track of ratelimits.
+    * @param maxAllowedWait The maximum allowed wait time for the route
+    *                       specific ratelimits.
+    * @param parallelism The amount of requests to run at the same time.
     */
   def requestFlowWithRouteRatelimit[Data, Ctx](
       ratelimiter: ActorRef,
@@ -168,17 +182,26 @@ object RequestStreams {
 
     val withLogging =
       if (AckCordSettings().LogSentREST)
-        baseFlow.log("Sent REST request", {
-          case request: ComplexRESTRequest[_, _, _, _, _] =>
-            s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.noSpaces}"
-          case request => s"to ${request.route.uri} with method ${request.route.method}"
-        })
+        baseFlow.log(
+          "Sent REST request", {
+            case request: ComplexRESTRequest[_, _, _, _, _] =>
+              s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.pretty(request.jsonPrinter)}"
+            case request => s"to ${request.route.uri} with method ${request.route.method}"
+          }
+        )
       else baseFlow
 
     withLogging
       .map { request =>
         val route = request.route
         val auth  = Authorization(credentials)
+
+        println(HttpRequest(
+          route.method,
+          route.uri,
+          immutable.Seq(auth, userAgent) ++ request.extraHeaders,
+          request.requestBody
+        ).toString())
 
         (
           HttpRequest(
@@ -224,8 +247,12 @@ object RequestStreams {
                       )
                     )
                   case e if e.isFailure() =>
-                    httpResponse.discardEntityBytes()
-                    Source.failed(new HttpException(e))
+                    httpResponse.entity.dataBytes
+                      .fold(ByteString.empty)(_ ++ _)
+                      .flatMapConcat { eBytes =>
+                        Source.failed(new HttpException(e, Some(eBytes.utf8String)))
+                      }
+                      .mapMaterializedValue(_ => NotUsed)
                   case StatusCodes.NoContent =>
                     httpResponse.discardEntityBytes()
                     Source
@@ -282,13 +309,24 @@ object RequestStreams {
       .async
       .named("SendAnswersToRatelimiter")
 
+  /**
+    * A flow that only returns successful responses.
+    */
   def onlyResponses[Data, Ctx]: Flow[RequestAnswer[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
     Flow[RequestAnswer[Data, Ctx]].collect {
       case response: RequestResponse[Data, Ctx] => response
     }
 
   /**
-    * A request flow that will failed requests.
+    * A request flow that will retry failed requests.
+    * @param credentials The credentials to use when sending the requests.
+    * @param bufferSize The size of the internal buffer used before messages
+    *                   are sent.
+    * @param overflowStrategy The strategy to use if the buffer overflows.
+    * @param maxAllowedWait The maximum allowed wait time for the route
+    *                       specific ratelimits.
+    * @param parallelism The amount of requests to run at the same time.
+    * @param rateLimitActor An actor responsible for keeping track of ratelimits.
     */
   def retryRequestFlow[Data, Ctx](
       credentials: HttpCredentials,

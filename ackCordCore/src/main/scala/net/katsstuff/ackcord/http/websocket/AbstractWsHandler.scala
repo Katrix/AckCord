@@ -43,7 +43,6 @@ abstract class AbstractWsHandler[WsMessageTpe, Resume] extends Actor with Timers
 }
 
 object AbstractWsHandler {
-  case object ValidWsUpgrade
 
   /**
     * Send this to an [[AbstractWsHandler]] to make it go from inactive to active

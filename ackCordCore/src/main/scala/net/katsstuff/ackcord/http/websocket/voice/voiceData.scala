@@ -49,8 +49,8 @@ case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: Strin
   * Discord responds with [[Ready]]
   */
 case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
-  override def op:       VoiceOpCode           = VoiceOpCode.Identify
-  override def dEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
+  override def op:          VoiceOpCode           = VoiceOpCode.Identify
+  override def dataEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
 }
 
 /**
@@ -73,8 +73,8 @@ case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionDa
   * Discord responds with [[SessionDescription]]
   */
 case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
-  override def op:       VoiceOpCode                 = VoiceOpCode.SelectProtocol
-  override def dEncoder: Encoder[SelectProtocolData] = Encoder[SelectProtocolData]
+  override def op:          VoiceOpCode                 = VoiceOpCode.SelectProtocol
+  override def dataEncoder: Encoder[SelectProtocolData] = Encoder[SelectProtocolData]
 }
 
 /**
@@ -90,8 +90,8 @@ case class ReadyData(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval
   * Sent by Discord following [[Identify]]
   */
 case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
-  override def op:       VoiceOpCode        = VoiceOpCode.Ready
-  override def dEncoder: Encoder[ReadyData] = Encoder[ReadyData]
+  override def op:          VoiceOpCode        = VoiceOpCode.Ready
+  override def dataEncoder: Encoder[ReadyData] = Encoder[ReadyData]
 }
 
 /**
@@ -99,8 +99,8 @@ case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
   * @param d Nonce
   */
 case class Heartbeat(d: Int) extends VoiceMessage[Int] {
-  override def op:       VoiceOpCode  = VoiceOpCode.Heartbeat
-  override def dEncoder: Encoder[Int] = Encoder[Int]
+  override def op:          VoiceOpCode  = VoiceOpCode.Heartbeat
+  override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
 /**
@@ -114,8 +114,8 @@ case class SessionDescriptionData(mode: String, secretKey: ByteString)
   * Sent by Discord in response to [[SelectProtocol]]
   */
 case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
-  override def op:       VoiceOpCode                     = VoiceOpCode.SessionDescription
-  override def dEncoder: Encoder[SessionDescriptionData] = Encoder[SessionDescriptionData]
+  override def op:          VoiceOpCode                     = VoiceOpCode.SessionDescription
+  override def dataEncoder: Encoder[SessionDescriptionData] = Encoder[SessionDescriptionData]
 }
 
 /**
@@ -132,8 +132,8 @@ case class SpeakingData(speaking: Boolean, delay: Option[Int], ssrc: Int, userId
   * set the bot as speaking. This is required before sending voice data.
   */
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
-  override def op:       VoiceOpCode           = VoiceOpCode.Speaking
-  override def dEncoder: Encoder[SpeakingData] = Encoder[SpeakingData]
+  override def op:          VoiceOpCode           = VoiceOpCode.Speaking
+  override def dataEncoder: Encoder[SpeakingData] = Encoder[SpeakingData]
 }
 
 /**
@@ -141,8 +141,8 @@ case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   * @param d The nonce we sent
   */
 case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
-  override def op:       VoiceOpCode  = VoiceOpCode.HeartbeatACK
-  override def dEncoder: Encoder[Int] = Encoder[Int]
+  override def op:          VoiceOpCode  = VoiceOpCode.HeartbeatACK
+  override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
 /**
@@ -158,44 +158,44 @@ case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
   * disconnected.
   */
 case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
-  override def op:       VoiceOpCode         = VoiceOpCode.Resume
-  override def dEncoder: Encoder[ResumeData] = Encoder[ResumeData]
+  override def op:          VoiceOpCode         = VoiceOpCode.Resume
+  override def dataEncoder: Encoder[ResumeData] = Encoder[ResumeData]
 }
 
 /**
   * Sent by Discord to tell us what heartbeat interval we should use.
   */
 case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
-  override def op:       VoiceOpCode      = VoiceOpCode.Hello
-  override def d:        NotUsed          = NotUsed
-  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op:          VoiceOpCode      = VoiceOpCode.Hello
+  override def d:           NotUsed          = NotUsed
+  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
   * Send by Discord when we successfully resume a connection
   */
 case object Resumed extends VoiceMessage[NotUsed] {
-  override def op:       VoiceOpCode      = VoiceOpCode.Resumed
-  override def d:        NotUsed          = NotUsed
-  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op:          VoiceOpCode      = VoiceOpCode.Resumed
+  override def d:           NotUsed          = NotUsed
+  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
   * Message for OpCode 12, should be ignored
   */
 case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
-  override def op:       VoiceOpCode      = VoiceOpCode.Op12Ignore
-  override def d:        NotUsed          = NotUsed
-  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op:          VoiceOpCode      = VoiceOpCode.Op12Ignore
+  override def d:           NotUsed          = NotUsed
+  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
   * Message for OpCode 13, should be ignored
   */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
-  override def op:       VoiceOpCode      = VoiceOpCode.ClientDisconnect
-  override def d:        NotUsed          = NotUsed
-  override def dEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op:          VoiceOpCode      = VoiceOpCode.ClientDisconnect
+  override def d:           NotUsed          = NotUsed
+  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**

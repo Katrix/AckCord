@@ -35,6 +35,9 @@ import net.katsstuff.ackcord.http.websocket.gateway.GatewayMessage
 
 object CacheStreams {
 
+  /**
+    * Creates a set of publish subscribe streams that go through the cache updated.
+    */
   def cacheStreams[D](
       implicit system: ActorSystem,
       mat: Materializer
@@ -48,6 +51,9 @@ object CacheStreams {
     (sink, source)
   }
 
+  /**
+    * Creates a set of publish subscribe streams for gateway events.
+    */
   def gatewayEvents[D](
       implicit
       mat: Materializer
@@ -58,6 +64,9 @@ object CacheStreams {
       .run()
   }
 
+  /**
+    * A flow that creates [[APIMessage]]s from update events.
+    */
   def createApiMessages[D]: Flow[(CacheUpdate[D], CacheState), APIMessage, NotUsed] = {
     Flow[(CacheUpdate[D], CacheState)]
       .collect {
@@ -66,44 +75,50 @@ object CacheStreams {
       .mapConcat(_.toList)
   }
 
-  def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] = {
-    var state: CacheState = null
+  /**
+    * A flow that keeps track of the current cache state, and updates it
+    * from cache update events.
+    */
+  def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] =
+    Flow[CacheUpdate[D]].statefulMapConcat { () =>
+      var state: CacheState = null
 
-    //We only handle events when we are ready to, and we have received the ready event.
-    def isReady: Boolean = state != null
+      //We only handle events when we are ready to, and we have received the ready event.
+      def isReady: Boolean = state != null
 
-    Flow[CacheUpdate[D]].statefulMapConcat { () => update =>
-      val newState = update match {
-        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
-          val builder = new CacheSnapshotBuilder(
-            null, //The event will populate this,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-          )
+      update =>
+        {
+          val newState = update match {
+            case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
+              val builder = new CacheSnapshotBuilder(
+                null, //The event will populate this,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+                mutable.Map.empty,
+              )
 
-          readyEvent.handle(builder)(system.log)
+              readyEvent.handle(builder)(system.log)
 
-          val snapshot = builder.toImmutable
-          CacheState(snapshot, snapshot)
-        case handlerEvent: CacheUpdate[_] if isReady =>
-          val builder = CacheSnapshotBuilder(state.current)
-          handlerEvent.handle(builder)(system.log)
+              val snapshot = builder.toImmutable
+              CacheState(snapshot, snapshot)
+            case handlerEvent: CacheUpdate[_] if isReady =>
+              val builder = CacheSnapshotBuilder(state.current)
+              handlerEvent.handle(builder)(system.log)
 
-          state.update(builder.toImmutable)
-        case _ if !isReady =>
-          system.log.error("Received event before ready")
-          state
-      }
+              state.update(builder.toImmutable)
+            case _ if !isReady =>
+              system.log.error("Received event before ready")
+              state
+          }
 
-      state = newState
+          state = newState
 
-      List(update -> newState)
+          List(update -> newState)
+        }
     }
-  }
 }

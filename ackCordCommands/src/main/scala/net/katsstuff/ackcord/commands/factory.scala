@@ -158,40 +158,28 @@ object ParsedCmdFactory {
   */
 class ParsedCmdFlow[A] {
   def map[B](f: CacheSnapshot => ParsedCmd[A] => B): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].map {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    }
+    Flow[ParsedCmd[A]].map(parsed => f(parsed.cache)(parsed))
 
   def mapConcat[B](f: CacheSnapshot => ParsedCmd[A] => List[B]): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].mapConcat {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    }
+    Flow[ParsedCmd[A]].mapConcat(parsed => f(parsed.cache)(parsed))
 
   def mapAsync[B](parallelism: Int)(f: CacheSnapshot => ParsedCmd[A] => Future[B]): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].mapAsync(parallelism) {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    }
+    Flow[ParsedCmd[A]].mapAsync(parallelism)(parsed => f(parsed.cache)(parsed))
 
   def mapAsyncUnordered[B](
       parallelism: Int
   )(f: CacheSnapshot => ParsedCmd[A] => Future[B]): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].mapAsyncUnordered(parallelism) {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    }
+    Flow[ParsedCmd[A]].mapAsyncUnordered(parallelism)(parsed => f(parsed.cache)(parsed))
 
   def flatMapConcat[B](
       f: CacheSnapshot => ParsedCmd[A] => Graph[SourceShape[B], NotUsed]
   ): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].flatMapConcat {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    }
+    Flow[ParsedCmd[A]].flatMapConcat(parsed => f(parsed.cache)(parsed))
 
   def flatMapMerge[B](
       breadth: Int
   )(f: CacheSnapshot => ParsedCmd[A] => Graph[SourceShape[B], NotUsed]): Flow[ParsedCmd[A], B, NotUsed] =
-    Flow[ParsedCmd[A]].flatMapMerge(breadth, {
-      case parsed @ ParsedCmd(_, _, _, c) => f(c)(parsed)
-    })
+    Flow[ParsedCmd[A]].flatMapMerge(breadth, parsed => f(parsed.cache)(parsed))
 }
 object ParsedCmdFlow {
   def apply[A] = new ParsedCmdFlow[A]
@@ -202,32 +190,20 @@ object ParsedCmdFlow {
   */
 object CmdFlow {
   def map[B](f: CacheSnapshot => Cmd => B): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].map {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    }
+    Flow[Cmd].map(cmd => f(cmd.cache)(cmd))
 
   def mapConcat[B](f: CacheSnapshot => Cmd => List[B]): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].mapConcat {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    }
+    Flow[Cmd].mapConcat(cmd => f(cmd.cache)(cmd))
 
   def mapAsync[B](parallelism: Int)(f: CacheSnapshot => Cmd => Future[B]): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].mapAsync(parallelism) {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    }
+    Flow[Cmd].mapAsync(parallelism)(cmd => f(cmd.cache)(cmd))
 
   def mapAsyncUnordered[B](parallelism: Int)(f: CacheSnapshot => Cmd => Future[B]): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].mapAsyncUnordered(parallelism) {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    }
+    Flow[Cmd].mapAsyncUnordered(parallelism)(cmd => f(cmd.cache)(cmd))
 
   def flatMapConcat[B](f: CacheSnapshot => Cmd => Graph[SourceShape[B], NotUsed]): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].flatMapConcat {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    }
+    Flow[Cmd].flatMapConcat(cmd => f(cmd.cache)(cmd))
 
   def flatMapMerge[B](breadth: Int)(f: CacheSnapshot => Cmd => Graph[SourceShape[B], NotUsed]): Flow[Cmd, B, NotUsed] =
-    Flow[Cmd].flatMapMerge(breadth, {
-      case parsed @ Cmd(_, _, c) => f(c)(parsed)
-    })
+    Flow[Cmd].flatMapMerge(breadth, cmd => f(cmd.cache)(cmd))
 }

@@ -34,6 +34,7 @@ class GlobalRatelimiter[Data, Ctx]
   val in:       Inlet[Request[Data, Ctx]]      = Inlet("GlobalRatelimiter.in")
   val answerIn: Inlet[RequestRatelimited[Ctx]] = Inlet("GlobalRatelimiter.answerIn")
   val out:      Outlet[Request[Data, Ctx]]     = Outlet("GlobalRatelimiter.out")
+
   override def shape = new FanInShape2(in, answerIn, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =

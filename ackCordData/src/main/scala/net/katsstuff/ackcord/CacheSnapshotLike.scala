@@ -39,7 +39,7 @@ trait CacheSnapshotLike {
   /**
     * The map type to use. Mutable for builder, immutable otherwise
     */
-  type MapType[A, B] <: collection.Map[SnowflakeType[A], B]
+  type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
 
   /**
     * Our bot user. Tagged to allow special syntax

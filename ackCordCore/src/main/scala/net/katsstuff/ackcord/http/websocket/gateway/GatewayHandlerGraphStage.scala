@@ -75,33 +75,34 @@ class GatewayHandlerGraphStage(settings: CoreClientSettings, prevResume: Option[
         scheduleOnce(restartTimerKey(resumable), time)
       }
 
+      def handleHello(data: HelloData): Unit = {
+        val message = prevResume match {
+          case Some(resumeData) =>
+            resume = resumeData
+            Resume(resumeData)
+          case None =>
+            val identifyObject = IdentifyData(
+              token = settings.token,
+              properties = IdentifyData.createProperties,
+              compress = true,
+              largeThreshold = settings.largeThreshold,
+              shard = Seq(settings.shardNum, settings.shardTotal),
+              presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
+            )
+
+            Identify(identifyObject)
+        }
+
+        push(out, message)
+
+        receivedAck = true
+        onTimer(HeartbeatTimerKey)
+        schedulePeriodically(HeartbeatTimerKey, data.heartbeatInterval.millis)
+      }
+
       override def onPush(): Unit = {
-        val elem = grab(in)
-
-        elem match {
-          case Hello(data) =>
-            val message = prevResume match {
-              case Some(resumeData) =>
-                resume = resumeData
-                Resume(resumeData)
-              case None =>
-                val identifyObject = IdentifyData(
-                  token = settings.token,
-                  properties = IdentifyData.createProperties,
-                  compress = true,
-                  largeThreshold = settings.largeThreshold,
-                  shard = Seq(settings.shardNum, settings.shardTotal),
-                  presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
-                )
-
-                Identify(identifyObject)
-            }
-
-            push(out, message)
-
-            receivedAck = true
-            onTimer(HeartbeatTimerKey)
-            schedulePeriodically(HeartbeatTimerKey, data.heartbeatInterval.millis)
+        grab(in) match {
+          case Hello(data) => handleHello(data)
           case dispatch @ Dispatch(seq, event) =>
             resume = event match {
               case GatewayEvent.Ready(readyData) => ResumeData(settings.token, readyData.sessionId, seq)
@@ -112,16 +113,13 @@ class GatewayHandlerGraphStage(settings: CoreClientSettings, prevResume: Option[
             }
 
             emit(dispatchOut, dispatch)
-          case Heartbeat(_) =>
-            onTimer(HeartbeatTimerKey)
+          case Heartbeat(_) => onTimer(HeartbeatTimerKey)
           case HeartbeatACK =>
             log.debug("Received HeartbeatACK")
             receivedAck = true
-          case Reconnect =>
-            restart(resumable = true, 100.millis)
-          case InvalidSession(resumable) =>
-            restart(resumable, 5.seconds)
-          case _ => //Ignore
+          case Reconnect                 => restart(resumable = true, 100.millis)
+          case InvalidSession(resumable) => restart(resumable, 5.seconds)
+          case _                         => //Ignore
         }
 
         if (!hasBeenPulled(in)) pull(in)
@@ -196,26 +194,32 @@ object GatewayHandlerGraphStage {
 
     val wsGraphStage = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
 
-    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsHandlerGraph) =>
-      import GraphDSL.Implicits._
+    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) {
+      implicit builder => (msgFlowShape, wsHandlerShape) =>
+        import GraphDSL.Implicits._
 
-      val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
-      val buffer     = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
+        val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
 
-      // format: OFF
+        //TODO: Make overflow strategy configurable
+        val buffer = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
+
+        // format: OFF
       
-      msgFlowG.out ~> buffer ~> wsHandlerGraph.in
-                                wsHandlerGraph.out0 ~> wsMessages.in(1)
-      msgFlowG.in                                   <~ wsMessages.out
+        msgFlowShape.out ~> buffer ~> wsHandlerShape.in
+                                      wsHandlerShape.out0 ~> wsMessages.in(1)
+        msgFlowShape.in                                   <~ wsMessages.out
       
-      // format: ON
+        // format: ON
 
-      FlowShape(wsMessages.in(0), wsHandlerGraph.out1)
+        FlowShape(wsMessages.in(0), wsHandlerShape.out1)
     }
 
     Flow.fromGraph(graph)
   }
 
+  /**
+    * Turn a websocket [[Message]] into a [[GatewayMessage]].
+    */
   def parseMessage(implicit system: ActorSystem): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
@@ -232,6 +236,9 @@ object GatewayHandlerGraphStage {
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 
+  /**
+    * Turn a [[GatewayMessage]] into a websocket [[Message]].
+    */
   def createMessage(implicit system: ActorSystem): Flow[GatewayMessage[_], Message, NotUsed] = {
     val flow = Flow[GatewayMessage[_]].map { msg =>
       val json = msg.asJson.noSpaces
@@ -242,6 +249,8 @@ object GatewayHandlerGraphStage {
     if (AckCordSettings().LogSentWs) flow.log("Sending payload", _.text) else flow
   }
 
-  def wsFlow(wsUri: Uri)(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
+  private def wsFlow(
+      wsUri: Uri
+  )(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
     Http().webSocketClientFlow(wsUri)
 }

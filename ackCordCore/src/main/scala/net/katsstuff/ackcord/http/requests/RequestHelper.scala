@@ -38,46 +38,46 @@ import akka.{Done, NotUsed}
   *
   * This should be instantiated once per bot, and shared between shards.
   */
-//TODO: Make this a case class with a method name create to create a RequestHelper in 0.9
-class RequestHelper(
-    val credentials: HttpCredentials,
-    val ratelimitActor: ActorRef,
-    val parallelism: Int = 4,
-    val bufferSize: Int = 32,
-    val overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    val maxAllowedWait: FiniteDuration = 2.minutes
+case class RequestHelper(
+    credentials: HttpCredentials,
+    ratelimitActor: ActorRef,
+    parallelism: Int = 4,
+    bufferSize: Int = 32,
+    overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
+    maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem, val mat: Materializer) {
 
   /**
     * A basic request flow which will send requests to Discord, and
-    * receive responses.
+    * receive responses. Don't use this if you don't know what you're doing.
     */
   def flowWithoutRateLimits[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
     RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
 
   /**
     * A request flow which obeys route specific rate limits, but not global ones.
+    * Don't use this if you don't know what you're doing.
     */
   def flowWithRouteRatelimit[Data, Ctx]: Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] =
     RequestStreams.requestFlowWithRouteRatelimit[Data, Ctx](ratelimitActor, maxAllowedWait, parallelism)
 
   /**
-    * A request flow which will send requests to Discord, and receive responses.
-    * Also obeys ratelimits. If it encounters a ratelimit it will backpressure.
+    * A generic flow for making requests. You should use this one most of
+    * the time. Backpressures before it hits a ratelimit.
     */
   def flow[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
     RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
 
   /**
-    * A request flow which will send requests to Discord, and discard the responses.
-    * Also obeys ratelimits. If it encounters a ratelimit it will backpressure.
+    * A generic sink for making requests and ignoring the results.
+    * Backpressures before it hits a ratelimit.
     */
   def sinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
     flow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
 
   /**
-    * A simple reasonable request flow using a bot token for short lived
-    * streams that only returns successful responses.
+    * A generic flow for making requests. Only returns successful requests.
+    * Backpressures before it hits a ratelimit.
     */
   def flowSuccess[Data, Ctx]: Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
     flow[Data, Ctx].collect {
@@ -87,6 +87,7 @@ class RequestHelper(
   /**
     * Sends a single request.
     * @param request The request to send.
+    * @return A source of the single request.
     */
   def single[Data, Ctx](request: Request[Data, Ctx]): Source[RequestAnswer[Data, Ctx], NotUsed] =
     Source.single(request).via(flow)
@@ -106,7 +107,7 @@ class RequestHelper(
     single(request).runWith(Sink.ignore)
 
   /**
-    * A request flow that will failed requests.
+    * A request flow that will retry failed requests.
     */
   def retryFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
     RequestStreams.retryRequestFlow(
@@ -119,8 +120,9 @@ class RequestHelper(
     )
 
   /**
-    * Sends a single request with retries if it fails.
+    * Sends a single request which will retry if it fails.
     * @param request The request to send.
+    * @return A source of the retried request.
     */
   def retry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
     Source.single(request).via(retryFlow)
@@ -140,7 +142,7 @@ class RequestHelper(
 }
 object RequestHelper {
 
-  def apply(
+  def create(
       credentials: HttpCredentials,
       parallelism: Int = 4,
       bufferSize: Int = 32,

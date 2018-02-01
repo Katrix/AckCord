@@ -45,6 +45,7 @@ import net.katsstuff.ackcord.{APIMessage, DiscordShard}
   * - [[APIMessage.MessageMessage]]
   * - [[APIMessage.VoiceStateUpdate]]
   * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
+  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ComplexGuildEvent]]
   * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
   *
   * This actor has a small cache for figuring out what actor to send messages
@@ -81,8 +82,8 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
       }
     case msg: APIMessage.MessageMessage =>
       msg.message.channelId.resolve(msg.cache.current) match {
-        case Some(gchannel: GuildChannel) => sendToGuild(gchannel.guildId, msg)
-        case _                            => sendToNotGuild(msg)
+        case Some(guildChannel: GuildChannel) => sendToGuild(guildChannel.guildId, msg)
+        case _                                => sendToNotGuild(msg)
       }
     case msg @ APIMessage.VoiceStateUpdate(state, _) =>
       state.guildId match {
@@ -100,8 +101,9 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
     case msg: GatewayEvent.ChannelDelete =>
       msg.guildId.foreach(sendToGuild(_, msg))
       channelToGuild.remove(msg.data.id)
-    case msg: GatewayEvent.GuildEvent[_]    => sendToGuild(msg.guildId, msg)
-    case msg: GatewayEvent.OptGuildEvent[_] => msg.guildId.fold(sendToNotGuild(msg))(sendToGuild(_, msg))
+    case msg: GatewayEvent.GuildEvent[_]           => sendToGuild(msg.guildId, msg)
+    case msg: GatewayEvent.ComplexGuildEvent[_, _] => sendToGuild(msg.guildId, msg)
+    case msg: GatewayEvent.OptGuildEvent[_]        => msg.guildId.fold(sendToNotGuild(msg))(sendToGuild(_, msg))
     case msg: GatewayEvent.ChannelEvent[_] =>
       channelToGuild.get(msg.channelId).fold(sendToNotGuild(msg))(sendToGuild(_, msg))
     case GetGuildActor(guildId)         => if (!isShuttingDown) sender() ! ResponseGetGuild(getGuild(guildId))
@@ -110,7 +112,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
     case DiscordShard.StopShard =>
       isShuttingDown = true
       sendToAll(DiscordShard.StopShard)
-      if(handlers.isEmpty) context.stop(self)
+      if (handlers.isEmpty) context.stop(self)
     case TerminatedGuild(guildId) =>
       handlers.remove(guildId)
       val level = if (isShuttingDown) Logging.DebugLevel else Logging.WarningLevel
@@ -126,7 +128,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
         context.watchWith(add.tieToLifecycle, RemoveCreateMsg(uuid))
       }
 
-      if(sendToExisting) {
+      if (sendToExisting) {
         handlers.values.foreach(_ ! msg)
       }
     case RemoveCreateMsg(uuid) =>
