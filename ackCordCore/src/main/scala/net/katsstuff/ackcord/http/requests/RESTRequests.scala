@@ -444,6 +444,16 @@ object RESTRequests {
       "The around, before, after fields are mutually exclusive"
     )
     require(limit.forall(c => c >= 1 && c <= 100), "Count must be between 1 and 100")
+
+    def toMap: Map[String, String] = Map(
+      "around" -> around.map(_.asString),
+      "before" -> before.map(_.asString),
+      "after" -> after.map(_.asString),
+      "limit" -> limit.map(_.toString),
+    ).flatMap {
+      case (name, Some(value)) => Some(name -> value)
+      case (_, None) => None
+    }
   }
 
   /**
@@ -451,11 +461,13 @@ object RESTRequests {
     */
   case class GetChannelMessages[Ctx](
       channelId: ChannelId,
-      params: GetChannelMessagesData,
+      query: GetChannelMessagesData,
       context: Ctx = NotUsed: NotUsed
-  ) extends SimpleRESTRequest[GetChannelMessagesData, Seq[RawMessage], Seq[Message], Ctx] {
-    override def route:         RequestRoute                    = Routes.getChannelMessages(channelId)
-    override def paramsEncoder: Encoder[GetChannelMessagesData] = deriveEncoder[GetChannelMessagesData]
+  ) extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
+    override def route: RequestRoute = {
+      val base = Routes.getChannelMessages(channelId)
+      base.copy(uri = base.uri.withQuery(Uri.Query(query.toMap)))
+    }
 
     override def responseDecoder: Decoder[Seq[RawMessage]] = Decoder[Seq[RawMessage]]
     override def cacheHandler: CacheHandler[Seq[RawMessage]] =
