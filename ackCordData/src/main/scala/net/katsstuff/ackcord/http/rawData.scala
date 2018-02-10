@@ -241,6 +241,18 @@ case class RawGuildMember(
 }
 
 /**
+  * @param type Activity type.
+  * @param partyId Party id from rich presence.
+  */
+case class RawMessageActivity(
+    `type`: MessageActivityType,
+    partyId: Option[String]
+) {
+
+  def toMessageActivity: MessageActivity = MessageActivity(`type`, partyId)
+}
+
+/**
   * A raw message before going through the cache.
   * @param id The id of the message.
   * @param channelId The channel this message was sent to.
@@ -259,6 +271,7 @@ case class RawGuildMember(
   * @param pinned If this message is pinned.
   * @param `type` The message type
   */
+//Remember to automatic derivation for encoder and decoder here
 case class RawMessage(
     id: MessageId,
     channelId: ChannelId,
@@ -275,7 +288,9 @@ case class RawMessage(
     reactions: Option[Seq[Reaction]], //reactions can be missing
     nonce: Option[RawSnowflake],
     pinned: Boolean,
-    `type`: MessageType
+    `type`: MessageType,
+    activity: Option[RawMessageActivity],
+    application: Option[MessageApplication]
 ) {
 
   /**
@@ -299,7 +314,9 @@ case class RawMessage(
       reactions.getOrElse(Seq.empty),
       nonce,
       pinned,
-      `type`
+      `type`,
+      activity.map(_.toMessageActivity),
+      application
     )
 }
 

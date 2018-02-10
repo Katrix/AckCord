@@ -179,6 +179,53 @@ case class Connection(
     integrations: Seq[Integration] //TODO: Partial
 )
 
+sealed trait MessageActivityType
+object MessageActivityType {
+  case object Join extends MessageActivityType
+  case object Spectate extends MessageActivityType
+  case object Listen extends MessageActivityType
+  case object JoinRequest extends MessageActivityType
+
+  def fromId(id: Int): Option[MessageActivityType] = id match {
+    case 1 => Some(Join)
+    case 2 => Some(Spectate)
+    case 3 => Some(Listen)
+    case 5 => Some(JoinRequest)
+    case _ => None
+  }
+
+  def idOf(tpe: MessageActivityType): Int = tpe match {
+    case Join        => 1
+    case Spectate    => 2
+    case Listen      => 3
+    case JoinRequest => 5
+  }
+}
+
+/**
+  * @param activityType Activity type.
+  * @param partyId Party id from rich presence.
+  */
+case class MessageActivity(
+    activityType: MessageActivityType,
+    partyId: Option[String]
+)
+
+/**
+  * @param id Id of the application
+  * @param coverImage Id of the embeds image asset
+  * @param description Description of the application
+  * @param icon Id of icon of the application
+  * @param name Name of the application
+  */
+case class MessageApplication(
+    id: RawSnowflake,
+    coverImage: String,
+    description: String,
+    icon: String,
+    name: String
+)
+
 /**
   * A message sent to a channel.
   * @param id The id of the message.
@@ -216,7 +263,9 @@ case class Message(
     reactions: Seq[Reaction],
     nonce: Option[RawSnowflake],
     pinned: Boolean,
-    messageType: MessageType
+    messageType: MessageType,
+    activity: Option[MessageActivity],
+    application: Option[MessageApplication]
 ) extends GetTChannel {
 
   def authorUserId: Option[UserId] = if(isAuthorUser) Some(UserId(authorId)) else None

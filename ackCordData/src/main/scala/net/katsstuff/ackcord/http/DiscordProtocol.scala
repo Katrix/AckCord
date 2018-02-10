@@ -91,6 +91,11 @@ trait DiscordProtocol {
   implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
   implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
 
+  implicit val messageActivityTypeEncoder: Encoder[MessageActivityType] =
+    Encoder[Int].contramap(MessageActivityType.idOf)
+  implicit val messageActivityTypeDecoder: Decoder[MessageActivityType] =
+    Decoder[Int].emap(MessageActivityType.fromId(_).toRight("Not a valid MFA level"))
+
   implicit val rawChannelEncoder: Encoder[RawChannel] = deriveEncoder
   implicit val rawChannelDecoder: Decoder[RawChannel] = deriveDecoder
 
@@ -142,7 +147,9 @@ trait DiscordProtocol {
       "reactions"        -> a.reactions.asJson,
       "nonce"            -> a.nonce.asJson,
       "pinned"           -> a.pinned.asJson,
-      "type"             -> a.`type`.asJson
+      "type"             -> a.`type`.asJson,
+      "activity"         -> a.activity.asJson,
+      "application"      -> a.application.asJson
     )
 
     a.author match {
@@ -171,6 +178,8 @@ trait DiscordProtocol {
       nonce           <- c.get[Option[RawSnowflake]]("nonce")
       pinned          <- c.get[Boolean]("pinned")
       tpe             <- c.get[MessageType]("type")
+      activity        <- c.get[Option[RawMessageActivity]]("activity")
+      application     <- c.get[Option[MessageApplication]]("application")
     } yield
       RawMessage(
         id,
@@ -188,7 +197,9 @@ trait DiscordProtocol {
         reactions,
         nonce,
         pinned,
-        tpe
+        tpe,
+        activity,
+        application
       )
   }
 
