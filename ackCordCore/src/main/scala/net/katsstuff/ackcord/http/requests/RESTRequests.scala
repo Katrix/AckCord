@@ -2009,6 +2009,22 @@ object RESTRequests {
     override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
   }
 
+  case class VanityUrlResponse(code: String)
+
+  /**
+    * Get a partial invite object for guilds with that feature enabled.
+    */
+  case class GetGuildVanityUrl[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
+      extends NoParamsNiceResponseRequest[VanityUrlResponse, Ctx] {
+    override def route: RequestRoute = Routes.getGuildVanityUrl(guildId)
+
+    override def responseDecoder: Decoder[VanityUrlResponse]      = deriveDecoder[VanityUrlResponse]
+    override def cacheHandler:    CacheHandler[VanityUrlResponse] = NOOPHandler
+
+    override def requiredPermissions:                        Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+  }
+
   /**
     * Get an invite for a given invite code
     */

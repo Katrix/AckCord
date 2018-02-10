@@ -257,9 +257,10 @@ object Routes {
   val syncGuildIntegration: (IntegrationId, GuildId) => RequestRoute =
     guildIntegration.andThen(route => RequestRoute(route / "sync", PATCH))
 
-  val guildEmbed:       GuildId => Route        = guild.andThen(_ / "embed")
-  val getGuildEmbed:    GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, GET))
-  val modifyGuildEmbed: GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, PATCH))
+  val guildEmbed:        GuildId => Route        = guild.andThen(_ / "embed")
+  val getGuildEmbed:     GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, GET))
+  val modifyGuildEmbed:  GuildId => RequestRoute = guildEmbed.andThen(RequestRoute(_, PATCH))
+  val getGuildVanityUrl: GuildId => RequestRoute = guild.andThen(route => RequestRoute(route / "vanity-url", GET))
 
   //Invites
   val invites:      Route                      = base / "invites"
