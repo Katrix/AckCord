@@ -107,7 +107,7 @@ case class Identify(d: IdentifyData) extends GatewayMessage[IdentifyData] {
   * @param status The status of the user.
   * @param afk If the user is AFK.
   */
-case class StatusData(since: Option[Instant], game: Option[RawPresenceGame], status: PresenceStatus, afk: Boolean)
+case class StatusData(since: Option[Instant], game: Option[RawActivity], status: PresenceStatus, afk: Boolean)
 
 /**
   * Sent when a presence or status changes.
@@ -871,7 +871,7 @@ object GatewayEvent {
   case class PresenceUpdateData(
       user: PartialUser,
       roles: Seq[RoleId],
-      game: Option[RawPresenceGame],
+      game: Option[RawActivity],
       guildId: GuildId,
       status: PresenceStatus
   )

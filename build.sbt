@@ -138,20 +138,6 @@ lazy val example = project
   )
   .dependsOn(ackCord)
 
-lazy val benchmark = project
-  .settings(
-    commonSettings,
-    noPublishSettings,
-    name := "ackcord-benchmark",
-    version := "1.0",
-    resolvers += "JitPack" at "https://jitpack.io",
-    resolvers += JCenterRepository,
-    libraryDependencies += "org.openjdk.jol"      % "jol-core"  % "0.9",
-    libraryDependencies += "com.github.austinv11" % "Discord4j" % "dev-SNAPSHOT",
-    libraryDependencies += "net.dv8tion"          % "JDA"       % "3.3.0_260"
-  )
-  .dependsOn(ackCordCore)
-
 lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(
@@ -162,12 +148,11 @@ lazy val ackCordRoot = project
     ackCordLavaplayer,
     ackCord,
     exampleCore,
-    example,
-    benchmark
+    example
   )
   .settings(
     noPublishSettings,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore, benchmark),
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore),
     //Fixes repository not specified error
     publishTo := {
       val nexus = "https://oss.sonatype.org/"

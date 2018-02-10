@@ -43,7 +43,7 @@ import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.http.requests._
 import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler
-import net.katsstuff.ackcord.http.{RawPresenceGame, Routes}
+import net.katsstuff.ackcord.http.{RawActivity, Routes}
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -222,7 +222,7 @@ object DiscordShard extends FailFastCirceSupport {
   * @param shardNum The shard index of this
   * @param shardTotal The amount of shards
   * @param idleSince If the bot has been idle, set the time since
-  * @param gameStatus Send some presence when connecting
+  * @param activity Send an activity when connecting
   * @param status The status to use when connecting
   * @param afk If the bot should be afk when connecting
   */
@@ -232,10 +232,11 @@ case class CoreClientSettings(
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,
-    gameStatus: Option[RawPresenceGame] = None,
+    activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false
 ) {
+  activity.foreach(_.requireCanSend())
 
   /**
     * Connect to discord using these settings

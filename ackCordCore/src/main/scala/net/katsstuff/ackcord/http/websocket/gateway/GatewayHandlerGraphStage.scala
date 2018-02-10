@@ -87,7 +87,7 @@ class GatewayHandlerGraphStage(settings: CoreClientSettings, prevResume: Option[
               compress = true,
               largeThreshold = settings.largeThreshold,
               shard = Seq(settings.shardNum, settings.shardTotal),
-              presence = StatusData(settings.idleSince, settings.gameStatus, settings.status, afk = settings.afk)
+              presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk)
             )
 
             Identify(identifyObject)
@@ -241,6 +241,11 @@ object GatewayHandlerGraphStage {
     */
   def createMessage(implicit system: ActorSystem): Flow[GatewayMessage[_], Message, NotUsed] = {
     val flow = Flow[GatewayMessage[_]].map { msg =>
+      msg match {
+        case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
+        case _ =>
+      }
+
       val json = msg.asJson.noSpaces
       require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
       TextMessage(json)

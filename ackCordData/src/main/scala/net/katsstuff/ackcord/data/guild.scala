@@ -23,7 +23,7 @@
  */
 package net.katsstuff.ackcord.data
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 import net.katsstuff.ackcord.SnowflakeMap
 
@@ -413,36 +413,104 @@ case class Emoji(
 }
 
 /**
+  * @param start When the activity started.
+  * @param end When the activity will end.
+  */
+case class ActivityTimestamps(start: Option[Instant], end: Option[Instant])
+
+/**
+  * @param largeImage Id for the large asset. Usually a snowflake.
+  * @param largeText Text displayed when hovering over the large image.
+  * @param smallImage Id for the small asset. Usually a snowflake.
+  * @param smallText Text displayed when hovering over the small image.
+  */
+case class ActivityAsset(
+    largeImage: Option[String],
+    largeText: Option[String],
+    smallImage: Option[String],
+    smallText: Option[String],
+)
+
+/**
+  * @param id The id of the party
+  * @param currentSize The current size of the party.
+  * @param maxSize The max size of the party.
+  */
+case class ActivityParty(
+    id: Option[String],
+    currentSize: Int,
+    maxSize: Int
+)
+
+/**
   * The text in a presence
   */
-sealed trait PresenceContent {
+sealed trait Activity {
 
   /**
     * The text shown
     */
   def name: String
+
+  /**
+    * Timestamps for start and end of activity.
+    */
+  def timestamps: Option[ActivityTimestamps]
+
+  /**
+    * What the player is doing.
+    */
+  def details: Option[String]
+
+  /**
+    * Images for the presence and hover texts.
+    */
+  def assets: Option[ActivityAsset]
 }
 
 /**
   * The presence of someone playing a game
+  * @param applicationId Application id of the game.
+  * @param state The user's party status.
+  * @param party Info about the user's party.
   */
-case class PresenceGame(name: String) extends PresenceContent
+case class PresenceGame(
+    name: String,
+    timestamps: Option[ActivityTimestamps],
+    applicationId: Option[RawSnowflake],
+    details: Option[String],
+    state: Option[String],
+    party: Option[ActivityParty],
+    assets: Option[ActivityAsset]
+) extends Activity
 
 /**
   * The presence of someone streaming
   * @param uri The uri of the stream
+  * @param applicationId Application id of the game.
+  * @param state The user's party status.
+  * @param party Info about the user's party.
   */
-case class PresenceStreaming(name: String, uri: String) extends PresenceContent
+case class PresenceStreaming(
+    name: String,
+    uri: String,
+    timestamps: Option[ActivityTimestamps],
+    applicationId: Option[RawSnowflake],
+    details: Option[String],
+    state: Option[String],
+    party: Option[ActivityParty],
+    assets: Option[ActivityAsset]
+) extends Activity
 
 /**
   * The presence of someone listening to music
   */
-case class PresenceListening(name: String) extends PresenceContent
-
-/**
-  * The presence of someone watching something
-  */
-case class PresenceWatching(name: String) extends PresenceContent
+case class PresenceListening(
+    name: String,
+    timestamps: Option[ActivityTimestamps],
+    details: Option[String],
+    assets: Option[ActivityAsset]
+) extends Activity
 
 /**
   * The different statuses a user can have
@@ -476,10 +544,10 @@ object PresenceStatus {
 /**
   * The presence for a user
   * @param userId The user id
-  * @param content The content of the presence
+  * @param activity The activity of the presence
   * @param status The status of the user
   */
-case class Presence(userId: UserId, content: Option[PresenceContent], status: PresenceStatus) extends GetUser
+case class Presence(userId: UserId, activity: Option[Activity], status: PresenceStatus) extends GetUser
 
 /**
   * A server integration

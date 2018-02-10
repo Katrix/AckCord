@@ -452,18 +452,48 @@ case class RawRole(
 }
 
 /**
+  * @param id The id of the party.
+  * @param size Sequence of two integers, the current size, and the max size.
+  */
+case class RawActivityParty(id: Option[String], size: Seq[Int]) {
+
+  def toParty: ActivityParty = ActivityParty(id, size.head, size(1))
+}
+
+/**
   * The content of a presence.
   * @param name The text show.
   * @param `type` The type of the presence.
   * @param url A uri if the type is streaming.
+  * @param timestamps Timestamps for start and end of activity.
+  * @param applicationId Application id of the game.
+  * @param details What the player is doing.
+  * @param state The user's party status.
+  * @param party Info about the user's party.
+  * @param assets Images for the presence and hover texts.
   */
-case class RawPresenceGame(name: String, `type`: Int, url: Option[String]) {
+case class RawActivity(
+    name: String,
+    `type`: Int,
+    url: Option[String],
+    timestamps: Option[ActivityTimestamps],
+    applicationId: Option[RawSnowflake],
+    details: Option[String],
+    state: Option[String],
+    party: Option[RawActivityParty],
+    assets: Option[ActivityAsset]
+) {
 
-  def toContent: PresenceContent = `type` match {
-    case 0 => PresenceGame(name)
-    case 1 => PresenceStreaming(name, url.get)
-    case 2 => PresenceListening(name)
-    case 3 => PresenceWatching(name)
+  def requireCanSend(): Unit =
+    require(
+      Seq(timestamps, applicationId, details, state, party, assets).forall(_.isEmpty),
+      "Unsupported field sent to Discord in activity"
+    )
+
+  def toContent: Activity = `type` match {
+    case 0 => PresenceGame(name, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+    case 1 => PresenceStreaming(name, url.get, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+    case 2 => PresenceListening(name, timestamps, details, assets)
   }
 }
 
@@ -473,7 +503,7 @@ case class RawPresenceGame(name: String, `type`: Int, url: Option[String]) {
   * @param game The content of the presence.
   * @param status The presence status.
   */
-case class RawPresence(user: PartialUser, game: Option[RawPresenceGame], status: Option[PresenceStatus]) {
+case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Option[PresenceStatus]) {
 
   def toPresence: Presence = Presence(user.id, game.map(_.toContent), status.getOrElse(PresenceStatus.Online))
 }
