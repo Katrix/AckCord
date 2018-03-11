@@ -42,6 +42,7 @@ package object data {
   }
 
   private val DiscordEpoch = 1420070400000L
+
   implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
     def creationDate: Instant = Instant.ofEpochMilli(DiscordEpoch + (snowflake >> 22))
     def asString:     String  = JLong.toUnsignedString(snowflake)
@@ -58,6 +59,7 @@ package object data {
   object GuildId {
     def apply(s: Long): GuildId = SnowflakeType[Guild](s)
   }
+
   implicit class GuildIdSyntax(private val guildId: GuildId) extends AnyVal {
 
     /**
@@ -70,6 +72,7 @@ package object data {
   object ChannelId {
     def apply(s: Long): ChannelId = SnowflakeType[Channel](s)
   }
+
   implicit class ChannelIdSyntax(private val channelId: ChannelId) extends AnyVal {
 
     /**
@@ -115,6 +118,7 @@ package object data {
   object MessageId {
     def apply(s: Long): MessageId = SnowflakeType[Message](s)
   }
+
   implicit class MessageIdSyntax(private val messageId: MessageId) extends AnyVal {
 
     /**
@@ -133,6 +137,7 @@ package object data {
   object UserId {
     def apply(s: Long): UserId = SnowflakeType[User](s)
   }
+
   implicit class UserIdSyntax(private val userId: UserId) extends AnyVal {
 
     /**
@@ -152,6 +157,7 @@ package object data {
   object RoleId {
     def apply(s: Long): RoleId = SnowflakeType[Role](s)
   }
+
   implicit class RoleIdSyntax(private val roleId: RoleId) extends AnyVal {
 
     /**
@@ -171,6 +177,7 @@ package object data {
   object UserOrRoleId {
     def apply(s: Long): UserOrRoleId = SnowflakeType[UserOrRoleTag](s)
   }
+
   implicit def liftUser(userId: UserId): UserOrRoleId = UserOrRoleId(userId)
   implicit def liftRole(userId: RoleId): UserOrRoleId = UserOrRoleId(userId)
 
@@ -178,6 +185,7 @@ package object data {
   object EmojiId {
     def apply(s: Long): EmojiId = SnowflakeType[Emoji](s)
   }
+
   implicit class EmojiIdSyntax(private val emojiId: EmojiId) extends AnyVal {
 
     /**

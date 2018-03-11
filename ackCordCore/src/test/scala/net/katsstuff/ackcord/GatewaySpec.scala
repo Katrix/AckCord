@@ -42,8 +42,8 @@ import akka.util.ByteString
 import io.circe.{parser, Encoder, Json}
 import net.katsstuff.ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler.{Login, Logout}
-import net.katsstuff.ackcord.http.websocket.gateway._
+import net.katsstuff.ackcord.network.websocket.AbstractWsHandler.{Login, Logout}
+import net.katsstuff.ackcord.network.websocket.gateway._
 
 class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseString("""
     |akka {

@@ -203,7 +203,10 @@ trait MessageParserInstances {
         for {
           m   <- regex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
           _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-          obj <- getObj(c, SnowflakeType[A](RawSnowflake(m.group(1)))).toRight(s"${name.capitalize} not found")
+          obj <- {
+            val snowflake = SnowflakeType[A](RawSnowflake(m.group(1)))
+            getObj(c, snowflake).toRight(s"${name.capitalize} not found")
+          }
         } yield strings.tail -> obj
       } else Left("No more arguments left")
     }

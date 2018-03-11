@@ -357,9 +357,8 @@ case class GuildMember(
       if (this.userId == ownerId) true
       else {
         def maxRolesPosition(roles: Seq[RoleId]): Int = {
-          val poses = roles.flatMap(_.resolve(this.guildId)).map(_.position)
-          if (poses.isEmpty) 0
-          else poses.max
+          val positions = roles.flatMap(_.resolve(this.guildId)).map(_.position)
+          if (positions.isEmpty) 0 else positions.max
         }
 
         maxRolesPosition(this.roleIds) > maxRolesPosition(others)
@@ -372,12 +371,7 @@ case class GuildMember(
     */
   def hasRoleAbove(other: GuildMember)(implicit c: CacheSnapshot): Boolean = {
     guild.exists { guild =>
-      val ownerId = guild.ownerId
-      if (this.userId == ownerId) true
-      else if (other.userId == ownerId) false
-      else {
-        hasRoleAbove(other.roleIds)
-      }
+      if (other.userId == guild.ownerId) false else hasRoleAbove(other.roleIds)
     }
   }
 }
@@ -583,7 +577,7 @@ case class Integration(
   */
 case class IntegrationAccount(id: String, name: String)
 
-case class GuildEmbed(enabled: Boolean, channelId: ChannelId)
+case class GuildEmbed(enabled: Boolean, channelId: Option[ChannelId])
 
 /**
   * Represents a banned user.

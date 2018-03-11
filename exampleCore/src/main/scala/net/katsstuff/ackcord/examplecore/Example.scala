@@ -32,7 +32,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.examplecore.music._
 import net.katsstuff.ackcord.examplecore.music.MusicHandler
-import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.network.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.{APIMessage, Cache, CoreClientSettings, DiscordShard}
 

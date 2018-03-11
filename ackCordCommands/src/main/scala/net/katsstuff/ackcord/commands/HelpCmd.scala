@@ -33,8 +33,8 @@ import akka.actor.Actor
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.http.requests.RESTRequests.{CreateMessage, CreateMessageData}
-import net.katsstuff.ackcord.http.requests._
+import net.katsstuff.ackcord.network.requests.RESTRequests.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.network.requests._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -51,7 +51,8 @@ abstract class HelpCmd extends Actor {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: CacheSnapshot = c
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
-      val res = for {
+
+      val response = for {
         cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
         descMap <- commands.get(cat)
         command = lowercaseCommand.substring(cat.prefix.length)
@@ -61,7 +62,7 @@ abstract class HelpCmd extends Actor {
         }
       } yield req
 
-      res match {
+      response match {
         case Some(req) => sendMsg(req)
         case None =>
           unknownCategory(lowercaseCommand).foreach { data =>
@@ -71,6 +72,7 @@ abstract class HelpCmd extends Actor {
 
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
       implicit val cache: CacheSnapshot = c
+
       if (page > 0) {
         sendMsg(CreateMessage(msg.channelId, createReplyAll(page - 1)))
       } else {
@@ -82,13 +84,16 @@ abstract class HelpCmd extends Actor {
     case ParsedCmd(msg, None, _, c) =>
       implicit val cache: CacheSnapshot = c
       sendMsg(CreateMessage(msg.channelId, createReplyAll(0)))
-    case AddCmd(factory, complete) =>
+
+    case AddCmd(factory, commandEnd) =>
       factory.description.foreach { desc =>
         commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
-        complete.onComplete { _ =>
+
+        commandEnd.onComplete { _ =>
           self ! TerminatedCmd(factory)
         }
       }
+
     case TerminatedCmd(factory) =>
       commands.get(factory.category).foreach(_ --= factory.lowercaseAliases)
   }
@@ -117,7 +122,9 @@ abstract class HelpCmd extends Actor {
     */
   def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
 
-  def unknownCategory(command: String): Option[CreateMessageData] = Some(CreateMessageData("Unknown category"))
+  def unknownCategory(command: String): Option[CreateMessageData] =
+    Some(CreateMessageData("Unknown category"))
+
   def unknownCommand(category: CmdCategory, command: String): Option[CreateMessageData] =
     Some(CreateMessageData("Unknown command"))
 }
@@ -145,9 +152,9 @@ object HelpCmd {
   /**
     * Register a new help entry for a command.
     * @param factory The factory for the command.
-    * @param complete A future that is completed when the command is removed.
+    * @param commandEnd A future that is completed when the command is removed.
     */
-  case class AddCmd(factory: CmdFactory[_, _], complete: Future[Done])
+  case class AddCmd(factory: CmdFactory[_, _], commandEnd: Future[Done])
 
   private case class TerminatedCmd(factory: CmdFactory[_, _])
 }

@@ -32,8 +32,8 @@ import akka.stream.scaladsl.{Flow, Sink}
 import net.katsstuff.ackcord.RequestDSL
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.requests.RESTRequests._
-import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
+import net.katsstuff.ackcord.network.requests.RESTRequests._
+import net.katsstuff.ackcord.network.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.syntax._
 
 package object commands {

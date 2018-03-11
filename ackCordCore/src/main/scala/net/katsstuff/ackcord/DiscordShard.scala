@@ -40,10 +40,10 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.CreateGateway
 import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.http.requests._
-import net.katsstuff.ackcord.http.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayHandler
-import net.katsstuff.ackcord.http.{RawActivity, Routes}
+import net.katsstuff.ackcord.network.requests._
+import net.katsstuff.ackcord.network.websocket.AbstractWsHandler
+import net.katsstuff.ackcord.network.websocket.gateway.GatewayHandler
+import net.katsstuff.ackcord.network.{RawActivity, Routes}
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -89,37 +89,39 @@ class DiscordShard(gatewayUri: Uri, settings: CoreClientSettings, cache: Cache)
   }
 }
 object DiscordShard extends FailFastCirceSupport {
+
   def props(wsUri: Uri, settings: CoreClientSettings, cache: Cache): Props =
     Props(new DiscordShard(wsUri, settings, cache))
+
   def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, CoreClientSettings(token), cache)
 
   /**
-    * Create a shard actor given the needed arguments
-    * @param wsUri The websocket gateway uri
-    * @param token The bot token to use for authentication
-    * @param system The actor system to use for creating the client actor
+    * Create a shard actor given the needed arguments.
+    * @param wsUri The websocket gateway uri.
+    * @param token The bot token to use for authentication.
+    * @param system The actor system to use for creating the client actor.
     */
   def connect(wsUri: Uri, token: String, cache: Cache, actorName: String)(implicit system: ActorSystem): ActorRef =
     system.actorOf(props(wsUri, token, cache), actorName)
 
   /**
-    * Create a shard actor given the needed arguments
-    * @param wsUri The websocket gateway uri
-    * @param settings The settings to use
-    * @param system The actor system to use for creating the client actor
+    * Create a shard actor given the needed arguments.
+    * @param wsUri The websocket gateway uri.
+    * @param settings The settings to use.
+    * @param system The actor system to use for creating the client actor.
     */
   def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
   ): ActorRef = system.actorOf(props(wsUri, settings, cache), actorName)
 
   /**
-    * Create as multiple shard actors, given the needed arguments
-    * @param wsUri The websocket gateway uri
-    * @param shardTotal The amount of shards to create
-    * @param settings The settings to use
-    * @param system The actor system to use for creating the client actor
+    * Create as multiple shard actors, given the needed arguments.
+    * @param wsUri The websocket gateway uri.
+    * @param shardTotal The amount of shards to create.
+    * @param settings The settings to use.
+    * @param system The actor system to use for creating the client actor.
     */
-  def connectShards(wsUri: Uri, shardTotal: Int, settings: CoreClientSettings, cache: Cache, actorName: String)(
+  def connectMultiple(wsUri: Uri, shardTotal: Int, settings: CoreClientSettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
   ): Seq[ActorRef] = for (i <- 0 until shardTotal) yield {
     connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
@@ -130,31 +132,32 @@ object DiscordShard extends FailFastCirceSupport {
     * IDENTIFY ratelimits.
     */
   def startShards(shards: Seq[ActorRef])(implicit mat: Materializer): Future[Done] =
-    Source(shards.toIndexedSeq).throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping).runForeach { shard =>
-      shard ! StartShard
-    }
+    Source(shards.toIndexedSeq)
+      .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
+      .runForeach(shard => shard ! StartShard)
 
   /**
-    * Send this to the client to log out and stop gracefully
+    * Send this to the client to log out and stop gracefully.
     */
   case object StopShard
 
   /**
-    * Send this to the client to log in
+    * Send this to the client to log in.
     */
   case object StartShard
 
   private case object CreateGateway
 
   /**
-    * Fetch the websocket gateway
-    * @param system The actor system to use
-    * @param mat The materializer to use
-    * @param ec The execution context to use
-    * @return An URI with the websocket gateway uri
+    * Fetch the websocket gateway.
+    * @param system The actor system to use.
+    * @param mat The materializer to use.
+    * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGateway(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[Uri] = {
+  def fetchWsGateway(implicit system: ActorSystem, mat: Materializer): Future[Uri] = {
+    import system.dispatcher
     val http = Http()
+
     http
       .singleRequest(HttpRequest(uri = Routes.gateway.applied))
       .flatMap {
@@ -179,16 +182,17 @@ object DiscordShard extends FailFastCirceSupport {
 
   /**
     * Fetch the websocket gateway with information about how many shards should be used.
-    * @param system The actor system to use
-    * @param mat The materializer to use
-    * @param ec The execution context to use
-    * @return An URI with the websocket gateway uri
+    * @param system The actor system to use.
+    * @param mat The materializer to use.
+    * @return An URI with the websocket gateway uri.
     */
   def fetchWsGatewayWithShards(
       token: String
-  )(implicit system: ActorSystem, mat: Materializer, ec: ExecutionContext): Future[(Uri, Int)] = {
+  )(implicit system: ActorSystem, mat: Materializer): Future[(Uri, Int)] = {
+    import system.dispatcher
     val http = Http()
     val auth = Authorization(BotAuthentication(token))
+
     http
       .singleRequest(HttpRequest(uri = Routes.botGateway.applied, headers = List(auth)))
       .flatMap {
@@ -210,7 +214,7 @@ object DiscordShard extends FailFastCirceSupport {
           (gateway: Uri, shards)
         }
 
-        res.fold(Future.failed, Future.successful)
+        Future.fromTry(res.toTry)
       }
   }
 }

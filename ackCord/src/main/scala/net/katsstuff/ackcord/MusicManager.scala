@@ -56,14 +56,17 @@ private[ackcord] class MusicManager(cache: Cache) extends Actor {
         case Success(_) => replyTo ! usedPlayer
         case Failure(e) => replyTo ! Status.Failure(e)
       }
+
     case DisconnectFromChannel(guildId, destroyPlayer) =>
       players.remove(guildId).foreach {
         case (player, actor) =>
           actor ! DisconnectVChannel
+
           if (destroyPlayer) {
             player.destroy()
           }
       }
+
     case SetChannelPlaying(guildId, playing) =>
       players.get(guildId).foreach {
         case (_, actor) =>

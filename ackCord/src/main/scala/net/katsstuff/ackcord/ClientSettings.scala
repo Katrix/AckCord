@@ -32,8 +32,8 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
 import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.http.RawActivity
-import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.network.RawActivity
+import net.katsstuff.ackcord.network.requests.{BotAuthentication, RequestHelper}
 
 /**
   * Settings used when connecting to Discord.
@@ -71,6 +71,7 @@ class ClientSettings(
   def build(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
+
     val requests = RequestHelper.create(
       BotAuthentication(token),
       requestSettings.parallelism,
@@ -93,6 +94,7 @@ class ClientSettings(
   def buildAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
+
     val requests = RequestHelper.create(
       BotAuthentication(token),
       requestSettings.parallelism,
@@ -105,7 +107,7 @@ class ClientSettings(
 
     DiscordShard.fetchWsGatewayWithShards(token).map {
       case (uri, receivedShardTotal) =>
-        val shards = DiscordShard.connectShards(uri, receivedShardTotal, this, cache, "DiscordClient")
+        val shards = DiscordShard.connectMultiple(uri, receivedShardTotal, this, cache, "DiscordClient")
         DiscordClient(shards, cache, commands, requests)
     }
   }

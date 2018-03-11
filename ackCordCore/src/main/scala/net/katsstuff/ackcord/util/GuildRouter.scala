@@ -31,7 +31,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.Logging
 import akka.routing.Broadcast
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent
+import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.util.GuildRouter._
 import net.katsstuff.ackcord.{APIMessage, DiscordShard}
 
@@ -44,9 +44,9 @@ import net.katsstuff.ackcord.{APIMessage, DiscordShard}
   * - [[APIMessage.GuildMessage]]
   * - [[APIMessage.MessageMessage]]
   * - [[APIMessage.VoiceStateUpdate]]
-  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.GuildEvent]]
-  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ComplexGuildEvent]]
-  * - [[net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.OptGuildEvent]]
+  * - [[net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.GuildEvent]]
+  * - [[net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.ComplexGuildEvent]]
+  * - [[net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.OptGuildEvent]]
   *
   * This actor has a small cache for figuring out what actor to send messages
   * to for the gateway channel events.

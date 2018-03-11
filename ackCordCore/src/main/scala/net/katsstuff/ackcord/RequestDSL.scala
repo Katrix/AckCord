@@ -28,7 +28,7 @@ import scala.language.implicitConversions
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Source}
 import cats.Monad
-import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
+import net.katsstuff.ackcord.network.requests.{Request, RequestAnswer, RequestResponse}
 
 /**
   * Base trait for a RequestDSL object. An RequestDSL object is a program
@@ -90,7 +90,8 @@ object RequestDSL {
   ): Source[B, NotUsed] = dsl.toSource(flow)
 
   implicit val monad: Monad[RequestDSL] = new Monad[RequestDSL] {
-    override def map[A, B](fa: RequestDSL[A])(f: A => B):                 RequestDSL[B] = fa.map(f)
+    override def map[A, B](fa: RequestDSL[A])(f: A => B): RequestDSL[B] = fa.map(f)
+
     override def flatMap[A, B](fa: RequestDSL[A])(f: A => RequestDSL[B]): RequestDSL[B] = fa.flatMap(f)
 
     override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] = {
@@ -121,8 +122,7 @@ object RequestDSL {
 
     override def toSource[B, Ctx](
         flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]
-    ): Source[Nothing, NotUsed] =
-      Source.empty[Nothing]
+    ): Source[Nothing, NotUsed] = Source.empty[Nothing]
   }
 
   private case class SingleRequest[A](request: Request[A, _]) extends RequestDSL[A] {

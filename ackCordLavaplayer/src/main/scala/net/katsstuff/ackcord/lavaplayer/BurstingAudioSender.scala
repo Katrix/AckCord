@@ -29,8 +29,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler._
-import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
+import net.katsstuff.ackcord.network.websocket.voice.VoiceUDPHandler._
+import net.katsstuff.ackcord.network.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.lavaplayer.AudioSender.{SendAudio, StartSendAudio, StopSendAudio}
 
 class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
@@ -56,8 +56,10 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
     case DataRequest(numOfPackets) =>
       if (isSpeaking) calculateAndSendPackets(numOfPackets + awaitingPackets)
       else awaitingPackets += numOfPackets
+
     case SendAudio =>
       if (isSpeaking) calculateAndSendPackets(awaitingPackets)
+
     case StartSendAudio =>
       setSpeaking(true)
       if (!hasEnabledBurstMode) {
@@ -69,6 +71,7 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
         calculateAndSendPackets(awaitingPackets)
       }
       expectedTime = 0
+
     case StopSendAudio =>
       setSpeaking(false)
       udpHandler ! SendDataBurst(Seq.fill(5)(silence))
@@ -84,7 +87,9 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
   def calculateAndSendPackets(num: Int): Unit = {
     //We try to keep track of how much audio we have sent time wise, and check if it's too early to send another burst
     val currentTime = System.currentTimeMillis()
+
     if (expectedTime == 0) expectedTime = currentTime
+
     val expectedDiff = expectedTime - currentTime
 
     if (expectedDiff < AheadLimit && expectedDiff > BehindLimit) {
@@ -94,7 +99,7 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
       val extra = expectedDiff.toInt.abs / 20
       sendPackets(num + extra)
     } else {
-      awaitingPackets = num
+      awaitingPackets += num
       timers.startSingleTimer("EarlyRequest", SendAudio, expectedDiff.millis)
     }
   }
@@ -111,8 +116,8 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
     val notSent = num - sentNum
 
     udpHandler ! SendDataBurst(data)
-    awaitingPackets = notSent
 
+    awaitingPackets += notSent
     if (awaitingPackets > 0) {
       val untilRetry = if (sentNum == 0) {
         expectedTime = 0 //If we did not manage to send any packets we reset everything

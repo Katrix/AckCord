@@ -35,11 +35,11 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.DiscordShard.{StartShard, StopShard}
+import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
-import net.katsstuff.ackcord.http.requests.RequestHelper
+import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -67,12 +67,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     require(shardShutdownManager == null, "Already logged in")
     shardShutdownManager = system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
 
-    if (shards.lengthCompare(1) > 0) DiscordShard.startShards(shards)
-    else
-      Future {
-        shards.head ! StartShard
-        Done
-      }
+    DiscordShard.startShards(shards)
   }
 
   /**

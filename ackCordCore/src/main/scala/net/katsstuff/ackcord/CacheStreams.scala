@@ -27,11 +27,12 @@ import scala.collection.mutable
 
 import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
-import net.katsstuff.ackcord.handlers.CacheSnapshotBuilder
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayEvent.ReadyData
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayMessage
+import net.katsstuff.ackcord.cachehandlers.CacheSnapshotBuilder
+import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.ReadyData
+import net.katsstuff.ackcord.network.websocket.gateway.GatewayMessage
 
 object CacheStreams {
 
@@ -82,6 +83,7 @@ object CacheStreams {
   def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] =
     Flow[CacheUpdate[D]].statefulMapConcat { () =>
       var state: CacheState = null
+      implicit val log: LoggingAdapter = system.log
 
       //We only handle events when we are ready to, and we have received the ready event.
       def isReady: Boolean = state != null
@@ -102,17 +104,17 @@ object CacheStreams {
                 mutable.Map.empty,
               )
 
-              readyEvent.handle(builder)(system.log)
+              readyEvent.handle(builder)
 
               val snapshot = builder.toImmutable
               CacheState(snapshot, snapshot)
             case handlerEvent: CacheUpdate[_] if isReady =>
               val builder = CacheSnapshotBuilder(state.current)
-              handlerEvent.handle(builder)(system.log)
+              handlerEvent.handle(builder)
 
               state.update(builder.toImmutable)
             case _ if !isReady =>
-              system.log.error("Received event before ready")
+              log.error("Received event before ready")
               state
           }
 

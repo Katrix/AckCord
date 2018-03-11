@@ -29,8 +29,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.util.ByteString
-import net.katsstuff.ackcord.http.websocket.voice.VoiceUDPHandler.{silence, SendData, SendDataBurst}
-import net.katsstuff.ackcord.http.websocket.voice.VoiceWsHandler.SetSpeaking
+import net.katsstuff.ackcord.network.websocket.voice.VoiceUDPHandler.{silence, SendData, SendDataBurst}
+import net.katsstuff.ackcord.network.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef) extends Actor {
   import AudioSender._
@@ -47,6 +47,7 @@ class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef
     if (future != null) {
       future.cancel(false)
     }
+
     threadScheduler.shutdownNow()
   }
 
@@ -54,19 +55,26 @@ class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef
     case SendAudio =>
       if (future != null) {
         setSpeaking(true)
+
         val frame = player.provide()
         if (frame != null) {
           udpHandler ! SendData(ByteString.fromArray(frame.data))
         }
-      } else setSpeaking(false)
+      } else {
+        setSpeaking(false)
+      }
+
     case StartSendAudio =>
       if (future == null) {
         setSpeaking(true)
+
         future = threadScheduler.scheduleAtFixedRate(() => self ! SendAudio, 20, 20, TimeUnit.MILLISECONDS)
       }
+
     case StopSendAudio =>
       if (future != null) {
         setSpeaking(false)
+
         udpHandler ! SendDataBurst(Seq.fill(5)(silence))
 
         future.cancel(false)

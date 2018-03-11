@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
-import net.katsstuff.ackcord.http.websocket.gateway.GatewayMessage
+import net.katsstuff.ackcord.network.websocket.gateway.GatewayMessage
 
 /**
   * Represents a cache that can be published and subscribed to.
@@ -47,7 +47,7 @@ case class Cache(
   /**
     * Publish a single element to this cache.
     */
-  def publishSingle(elem: CacheUpdate[Any]): Unit = publish.runWith(Source.single(elem))
+  def publish(elem: CacheUpdate[Any]): Unit = publish.runWith(Source.single(elem))
 
   /**
     * Publish many elements to this cache.
@@ -62,7 +62,7 @@ case class Cache(
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
     */
-  def subscribeAPIActor(actor: ActorRef, completeMessage: Any, specificEvent: Class[_ <: APIMessage]*): Unit =
+  def subscribeAPIActor(actor: ActorRef, completeMessage: Any)(specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI.filter(msg => specificEvent.exists(_.isInstance(msg))).runWith(Sink.actorRef(actor, completeMessage))
 
   /**
@@ -73,11 +73,10 @@ case class Cache(
       initMessage: Any,
       ackMessage: Any,
       completeMessage: Any,
-      specificEvent: Class[_ <: APIMessage],
       failureMessage: Throwable => Any = Status.Failure
-  ): Unit =
+  )(specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI
-      .filter(specificEvent.isInstance(_))
+      .filter(msg => specificEvent.exists(_.isInstance(msg)))
       .runWith(Sink.actorRefWithAck(actor, initMessage, ackMessage, completeMessage, failureMessage))
 }
 object Cache {

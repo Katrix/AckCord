@@ -85,8 +85,11 @@ object CmdFilter {
     */
   case class InOneGuild(guildId: GuildId) extends CmdFilter {
     override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
-      c.getGuild(guildId).map(_.members).exists(_.contains(userId))
-    override def isAllowed(msg: Message)(implicit c: CacheSnapshot):    Boolean        = msg.tGuildChannel(guildId).nonEmpty
+      guildId.resolve.map(_.members).exists(_.contains(userId))
+
+    override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
+      msg.tGuildChannel(guildId).nonEmpty
+
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
   }
 
@@ -96,11 +99,11 @@ object CmdFilter {
     */
   case class NeedPermission(neededPermission: Permission) extends CmdFilter {
     override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
-      c.getGuild(guildId)
+      guildId.resolve
         .exists(guild => guild.members.get(userId).exists(_.permissions(guild).hasPermissions(neededPermission)))
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
-      val res = for {
+      val allowed = for {
         channel      <- msg.channelId.tResolve
         guildChannel <- channel.asGuildChannel
         guild        <- guildChannel.guild
@@ -108,8 +111,9 @@ object CmdFilter {
         if member.channelPermissions(msg.channelId).hasPermissions(neededPermission)
       } yield true
 
-      res.exists(identity)
+      allowed.getOrElse(false)
     }
+
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
       Some("You don't have permission to use this command")
   }
@@ -120,8 +124,10 @@ object CmdFilter {
   case object NonBot extends CmdFilter {
     override def isAllowed(userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot): Boolean =
       c.getUser(userId).exists(_.bot.getOrElse(false))
+
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.isAuthorUser && c.getUser(UserId(msg.authorId)).exists(u => !u.bot.getOrElse(false))
+      msg.isAuthorUser && UserId(msg.authorId).resolve.exists(u => !u.bot.getOrElse(false))
+
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
   }
 }

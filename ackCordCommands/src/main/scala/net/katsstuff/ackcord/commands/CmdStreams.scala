@@ -30,8 +30,8 @@ import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Sink, Sour
 import akka.stream.{FlowShape, Materializer}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
-import net.katsstuff.ackcord.http.RawMessage
-import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.network.RawMessage
+import net.katsstuff.ackcord.network.requests.{Request, RequestHelper}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -48,8 +48,7 @@ object CmdStreams {
       implicit mat: Materializer
   ): Source[RawCmdMessage, NotUsed] = {
     apiMessages
-      .collect { case msg: APIMessage.MessageCreate => msg }
-      .mapConcat {
+      .collect {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: CacheSnapshot = c.current
 
@@ -69,6 +68,7 @@ object CmdStreams {
 
           res.toList
       }
+      .mapConcat(identity)
       .runWith(BroadcastHub.sink(bufferSize = 256))
   }
 
@@ -82,12 +82,12 @@ object CmdStreams {
       val in          = builder.add(Flow[A])
       val broadcast   = builder.add(Broadcast[A](2))
       val mkWrapper   = builder.add(sendCmdErrorMsg[A])
-      val requestFlow = builder.add(requests.flow[RawMessage, NotUsed])
+      val requestSink = builder.add(requests.sinkIgnore[RawMessage, NotUsed])
 
       // format: OFF
       
       in ~> broadcast
-            broadcast.out(0) ~> mkWrapper ~> requestFlow ~> Sink.ignore
+            broadcast.out(0) ~> mkWrapper ~> requestSink
             
       // format: ON
 
@@ -121,9 +121,11 @@ object CmdStreams {
       .collect {
         case filtered: FilteredCmd =>
           val errors = filtered.failedFilters.flatMap(_.errorMessage(filtered.cmd.msg)(filtered.cmd.c))
+
           if (errors.nonEmpty) {
             filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
           } else None
+
         case parseError: CmdParseError =>
           parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
       }
@@ -142,9 +144,8 @@ object CmdStreams {
           .parse(args)
           .toOption
           .flatMap {
-            case (remaining, user) =>
-              if (user.id == c.botUser.id) Some(remaining)
-              else None
+            case (remaining, user) if user.id == c.botUser.id => Some(remaining)
+            case (_, _)                                       => None
           }
       }
     } else Some(msg.content.split(" ").toList)

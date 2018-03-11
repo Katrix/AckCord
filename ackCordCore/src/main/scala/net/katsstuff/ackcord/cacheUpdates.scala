@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord
 
 import akka.event.LoggingAdapter
-import net.katsstuff.ackcord.handlers.{CacheHandler, CacheSnapshotBuilder}
+import net.katsstuff.ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder}
 
 /**
   * Represents some sort of event handled by the cache
@@ -44,7 +44,7 @@ sealed trait CacheUpdate[Data] {
   def handler: CacheHandler[Data]
 
   /**
-    * Updates a [[net.katsstuff.ackcord.handlers.CacheSnapshotBuilder]] with the data in this object.
+    * Updates a [[net.katsstuff.ackcord.cachehandlers.CacheSnapshotBuilder]] with the data in this object.
     */
   def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
     handler.handle(builder, data)

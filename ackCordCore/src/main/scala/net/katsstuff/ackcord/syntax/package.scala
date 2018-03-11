@@ -28,8 +28,8 @@ import java.nio.file.Path
 import akka.NotUsed
 import akka.actor.ActorRef
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.requests.RESTRequests._
-import net.katsstuff.ackcord.http.requests.{RestOption, RestSome, RestUndefined}
+import net.katsstuff.ackcord.network.requests.RESTRequests._
+import net.katsstuff.ackcord.network.requests.{RestOption, RestSome, RestUndefined}
 import shapeless.tag.@@
 
 package object syntax {
