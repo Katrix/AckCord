@@ -23,8 +23,10 @@
  */
 package net.katsstuff.ackcord
 
+import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.reflect.ClassTag
 
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
@@ -41,16 +43,16 @@ import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
 import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
-import net.katsstuff.ackcord.util.MessageParser
 
 /**
   * Core class used to interface with Discord stuff from high level.
   * @param shards The shards of this client
   * @param cache The cache used by the client
-  * @param commands The commands object used by the client
+  * @param commands The global commands object used by the client
   * @param requests The requests object used by the client
   */
-case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper) {
+case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper)
+    extends CommandsHelper {
   import requests.{mat, system}
 
   require(shards.nonEmpty, "No shards")
@@ -88,24 +90,30 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
     logout(timeout).flatMap(_ => system.terminate())
 
-  private def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
+  private def runDSL[A](source: Source[RequestDSL[A], NotUsed]): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     source
       .viaMat(KillSwitches.single)(Keep.right)
       .flatMapConcat(_.toSource(requests.flow))
-      .toMat(Sink.ignore)(Keep.both)
+      .toMat(Sink.seq)(Keep.both)
       .run()
   }
+
+  /**
+    * Runs a [[RequestDSL]] once, and returns the result.
+    */
+  def runDSL[A](dsl: RequestDSL[A]): Future[A] =
+    dsl.toSource(requests.flow).toMat(Sink.head)(Keep.right).run()
 
   //Event handling
 
   /**
     * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onEventDSLC(
-      handler: CacheSnapshot => PartialFunction[APIMessage, RequestDSL[Unit]]
-  ): (UniqueKillSwitch, Future[Done]) = runDSL {
+  def onEventDSLC[A](
+      handler: CacheSnapshot => PartialFunction[APIMessage, RequestDSL[A]]
+  ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = runDSL {
     cache.subscribeAPI.collect {
       case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
     }
@@ -114,9 +122,9 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   /**
     * Run a [[RequestDSL]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onEventDSL(handler: PartialFunction[APIMessage, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
+  def onEventDSL[A](handler: PartialFunction[APIMessage, RequestDSL[A]]): (UniqueKillSwitch, Future[immutable.Seq[A]]) =
     onEventDSLC { _ =>
       {
         case msg if handler.isDefinedAt(msg) => handler(msg)
@@ -126,21 +134,24 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   /**
     * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onEventC(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) =
+  def onEventC[A](
+      handler: CacheSnapshot => PartialFunction[APIMessage, A]
+  ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onEventDSLC { c =>
       {
         case msg if handler(c).isDefinedAt(msg) => RequestDSL.pure(handler(c)(msg))
       }
     }
+  }
 
   /**
     * Run some code when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onEvent(handler: PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
+  def onEvent[A](handler: PartialFunction[APIMessage, A]): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onEventC { _ =>
       {
         case msg if handler.isDefinedAt(msg) => handler(msg)
@@ -148,156 +159,48 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     }
   }
 
-  //Command handling
-
   /**
-    * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
+    * Registers an [[EventHandler]] that will be called when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onRawCommandDSLC(
-      handler: CacheSnapshot => PartialFunction[RawCmd, RequestDSL[Unit]]
-  ): (UniqueKillSwitch, Future[Done]) = {
-    runDSL {
-      commands.subscribe.collect {
-        case cmd: RawCmd if handler(cmd.c).isDefinedAt(cmd) => handler(cmd.c)(cmd)
-      }
-    }
-  }
-
-  /**
-    * Run a [[RequestDSL]] when raw command arrives.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  def onRawCommandDSL(handler: PartialFunction[RawCmd, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
-    onRawCommandDSLC { _ =>
+  def registerHandler[A <: APIMessage, B](
+      handler: EventHandler[A, B]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+    onEventC { implicit c =>
       {
-        case cmd if handler.isDefinedAt(cmd) => handler(cmd)
+        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
       }
     }
 
   /**
-    * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
+    * Registers an [[EventHandlerDSL]] that will be run when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    *         when it's done and all the values it computed.
     */
-  def onRawCommandC(handler: CacheSnapshot => PartialFunction[RawCmd, Unit]): (UniqueKillSwitch, Future[Done]) = {
-    onRawCommandDSLC { c =>
+  def registerHandler[A <: APIMessage, B](
+      handler: EventHandlerDSL[A, B]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+    onEventDSLC { implicit c =>
       {
-        case msg if handler(c).isDefinedAt(msg) => RequestDSL.pure(handler(c)(msg))
-      }
-    }
-  }
-
-  /**
-    * Run some code when raw command arrives.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  def onRawCommand(handler: PartialFunction[RawCmd, Unit]): (UniqueKillSwitch, Future[Done]) =
-    onRawCommandC { _ =>
-      {
-        case msg if handler.isDefinedAt(msg) => handler(msg)
+        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
       }
     }
 
   /**
-    * Register a command which runs a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    * Creates a new commands object to handle commands if the global settings are unfitting.
+    * @param settings The settings to use for the commands object
+    * @return A killswitch to stop this command helper, together with the command helper.
     */
-  def registerCommandDSLC[A](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot => ParsedCmd[A] => RequestDSL[Unit]
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[Done]) = {
-    val sink: RequestHelper => Sink[ParsedCmd[A], UniqueKillSwitch] = requests => {
-      ParsedCmdFlow[A]
-        .map(handler)
-        .flatMapConcat(_.toSource(requests.flow))
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.left)
-    }
+  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
+    val (killSwitch, newCommands) = Commands.create(
+      settings.needMention,
+      settings.categories,
+      cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
+      requests
+    )
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.both).swap
-  }
-
-  /**
-    * Register a command which runs a [[RequestDSL]].
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  def registerCommandDSL[A](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(handler: ParsedCmd[A] => RequestDSL[Unit])(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[Done]) = {
-    val sink: RequestHelper => Sink[ParsedCmd[A], UniqueKillSwitch] = requests => {
-      ParsedCmdFlow[A]
-        .map(_ => handler)
-        .flatMapConcat(_.toSource(requests.flow))
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.left)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.both).swap
-  }
-
-  /**
-    * Register a command which runs some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  def registerCommandC[A](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot => ParsedCmd[A] => Unit
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[Done]) = {
-    val sink: RequestHelper => Sink[ParsedCmd[A], UniqueKillSwitch] = _ => {
-      ParsedCmdFlow[A]
-        .map(handler)
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.left)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.both).swap
-  }
-
-  /**
-    * Register a command which runs some code.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  def registerCommand[A](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(handler: ParsedCmd[A] => Unit)(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[Done]) = {
-    val sink: RequestHelper => Sink[ParsedCmd[A], UniqueKillSwitch] = _ => {
-      ParsedCmdFlow[A]
-        .map(_ => handler)
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.left)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.both).swap
+    killSwitch -> SeperateCommandsHelper(newCommands, requests)
   }
 
   /**
