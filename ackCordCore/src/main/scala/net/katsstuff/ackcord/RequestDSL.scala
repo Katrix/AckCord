@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord
 
+import scala.concurrent.Future
 import scala.language.implicitConversions
 
 import akka.NotUsed
@@ -41,6 +42,8 @@ sealed trait RequestDSL[+A] {
   def filter(f: A => Boolean):              RequestDSL[A]
   def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B]
   def collect[B](f: PartialFunction[A, B]): RequestDSL[B]
+
+  def flatten[B](implicit ev: A <:< RequestDSL[B]): RequestDSL[B] = flatMap(ev)
 
   /**
     * Run this request using the given flow.
@@ -81,6 +84,16 @@ object RequestDSL {
     * Alias for [[maybeRequest]]
     */
   def liftOptionalRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] = maybeRequest(opt)
+
+  /**
+    * Lifts a [[Future]] into the dsl.
+    */
+  def fromFuture[A](future: Future[A]): RequestDSL[A] = FutureRequest(future)
+
+  /**
+    * Lifts a future request into the dsl.
+    */
+  def futureRequest[A](futureRequest: Future[RequestDSL[A]]): RequestDSL[A] = fromFuture(futureRequest).flatten
 
   /**
     * Run a RequestDSL using the specified flow.
@@ -149,5 +162,15 @@ object RequestDSL {
 
     override def toSource[C, Ctx](flow: Flow[Request[C, Ctx], RequestAnswer[C, Ctx], NotUsed]): Source[B, NotUsed] =
       request.toSource(flow).flatMapConcat(s => f(s).toSource(flow))
+  }
+
+  private case class FutureRequest[A](future: Future[A]) extends RequestDSL[A] {
+    override def map[B](f: A => B):                    RequestDSL[B] = FutureRequest(future.map(f))
+    override def filter(f: A => Boolean):              RequestDSL[A] = FutureRequest(future.filter(f))
+    override def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B] = AndThenRequestDSL(this, f)
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = FutureRequest(future.collect(f))
+
+    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
+      Source.fromFuture(future)
   }
 }
