@@ -23,7 +23,7 @@
  */
 package net.katsstuff.ackcord.examplecore.music
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 import akka.actor.ActorRef
 import akka.stream.scaladsl.{Keep, Sink}
@@ -37,7 +37,7 @@ import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.RequestDSL
 
-class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeout) {
+class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeout, ec: ExecutionContext) {
 
   val QueueCmdFactory: ParsedCmdFactory[String, NotUsed] = ParsedCmdFactory.requestDSL(
     category = ExampleCmdCategories.&,

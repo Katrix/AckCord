@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.examplecore.music
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.concurrent.duration._
 
 import com.sedmelluq.discord.lavaplayer.player._
 import com.sedmelluq.discord.lavaplayer.player.event._
@@ -36,6 +37,7 @@ import akka.NotUsed
 import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
+import akka.util.Timeout
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.examplecore.ExampleMain
@@ -69,6 +71,7 @@ class MusicHandler(requests: RequestHelper, commands: Commands, helpCmdActor: Ac
   )
 
   {
+    implicit val timeout = Timeout(30.seconds)
     val cmds = new commands(guildId, self)
     import cmds._
     Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd)

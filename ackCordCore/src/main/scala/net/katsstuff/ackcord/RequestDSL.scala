@@ -23,7 +23,7 @@
  */
 package net.katsstuff.ackcord
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 import akka.NotUsed
@@ -88,12 +88,13 @@ object RequestDSL {
   /**
     * Lifts a [[Future]] into the dsl.
     */
-  def fromFuture[A](future: Future[A]): RequestDSL[A] = FutureRequest(future)
+  def fromFuture[A](future: Future[A])(implicit ec: ExecutionContext): RequestDSL[A] = FutureRequest(future)
 
   /**
     * Lifts a future request into the dsl.
     */
-  def futureRequest[A](futureRequest: Future[RequestDSL[A]]): RequestDSL[A] = fromFuture(futureRequest).flatten
+  def futureRequest[A](futureRequest: Future[RequestDSL[A]])(implicit ec: ExecutionContext): RequestDSL[A] =
+    fromFuture(futureRequest).flatten
 
   /**
     * Run a RequestDSL using the specified flow.
@@ -164,7 +165,7 @@ object RequestDSL {
       request.toSource(flow).flatMapConcat(s => f(s).toSource(flow))
   }
 
-  private case class FutureRequest[A](future: Future[A]) extends RequestDSL[A] {
+  private case class FutureRequest[A](future: Future[A])(implicit ec: ExecutionContext) extends RequestDSL[A] {
     override def map[B](f: A => B):                    RequestDSL[B] = FutureRequest(future.map(f))
     override def filter(f: A => Boolean):              RequestDSL[A] = FutureRequest(future.filter(f))
     override def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B] = AndThenRequestDSL(this, f)

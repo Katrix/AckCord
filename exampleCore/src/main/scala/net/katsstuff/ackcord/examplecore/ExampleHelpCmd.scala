@@ -37,6 +37,7 @@ class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
   implicit val system: ActorSystem = context.system
   import requests.mat
+  import context.dispatcher
 
   private val msgQueue =
     Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()

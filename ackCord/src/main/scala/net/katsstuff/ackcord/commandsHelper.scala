@@ -98,14 +98,12 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerCommandDSLC[A, B](
+  def registerCommandDSLC[A: MessageParser, B](
       category: CmdCategory,
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot => ParsedCmd[A] => RequestDSL[B]
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: CacheSnapshot => ParsedCmd[A] => RequestDSL[B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (requests: RequestHelper) => {
       ParsedCmdFlow[A]
         .map(handler)
@@ -124,14 +122,12 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerCommandDSL[A, B](
+  def registerCommandDSL[A: MessageParser, B](
       category: CmdCategory,
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(
-      handler: ParsedCmd[A] => RequestDSL[B]
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: ParsedCmd[A] => RequestDSL[B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (requests: RequestHelper) => {
       ParsedCmdFlow[A]
         .map(_ => handler)
@@ -150,14 +146,12 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerCommandC[A, B](
+  def registerCommandC[A: MessageParser, B](
       category: CmdCategory,
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot => ParsedCmd[A] => B
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: CacheSnapshot => ParsedCmd[A] => B): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (_: RequestHelper) => {
       ParsedCmdFlow[A]
         .map(handler)
@@ -175,14 +169,12 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerCommand[A](
+  def registerCommand[A: MessageParser](
       category: CmdCategory,
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(
-      handler: ParsedCmd[A] => Unit
-  )(implicit parser: MessageParser[A]): (UniqueKillSwitch, Future[immutable.Seq[Unit]]) = {
+  )(handler: ParsedCmd[A] => Unit): (UniqueKillSwitch, Future[immutable.Seq[Unit]]) = {
     val sink = (_: RequestHelper) => {
       ParsedCmdFlow[A]
         .map(_ => handler)
@@ -200,7 +192,9 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerHandler[A, B](handler: CommandHandler[A, B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+  def registerHandler[A: MessageParser, B](
+      handler: CommandHandler[A, B]
+  ): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
     registerCommandC[A, B](handler.category, handler.aliases, handler.filters, handler.description) {
       implicit c => parsed =>
         handler.handle(parsed.msg, parsed.args, parsed.remaining)
@@ -211,7 +205,9 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerHandler[A, B](handler: CommandHandlerDSL[A, B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+  def registerHandler[A: MessageParser, B](
+      handler: CommandHandlerDSL[A, B]
+  ): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
     registerCommandDSLC[A, B](handler.category, handler.aliases, handler.filters, handler.description) {
       implicit c => parsed =>
         handler.handle(parsed.msg, parsed.args, parsed.remaining)
