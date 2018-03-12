@@ -26,7 +26,7 @@ package net.katsstuff.ackcord.commands
 import java.util.Locale
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Keep, Source}
 import akka.stream.{FlowShape, Materializer}
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
@@ -44,9 +44,9 @@ object CmdStreams {
     * @param categories The categories this handler should know about.
     * @param apiMessages A source of [[APIMessage]]s.
     */
-  def cmdStreams(needMention: Boolean, categories: Set[CmdCategory], apiMessages: Source[APIMessage, NotUsed])(
+  def cmdStreams[A](needMention: Boolean, categories: Set[CmdCategory], apiMessages: Source[APIMessage, A])(
       implicit mat: Materializer
-  ): Source[RawCmdMessage, NotUsed] = {
+  ): (A, Source[RawCmdMessage, NotUsed]) = {
     apiMessages
       .collect {
         case APIMessage.MessageCreate(msg, c) =>
@@ -69,7 +69,8 @@ object CmdStreams {
           res.toList
       }
       .mapConcat(identity)
-      .runWith(BroadcastHub.sink(bufferSize = 256))
+      .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+      .run()
   }
 
   /**

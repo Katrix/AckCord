@@ -109,7 +109,7 @@ object Commands {
     */
   def create(needMention: Boolean, categories: Set[CmdCategory], cache: Cache, requests: RequestHelper): Commands = {
     import requests.mat
-    Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI), categories, requests)
+    Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI)._2, categories, requests)
   }
 
   /**
@@ -120,13 +120,14 @@ object Commands {
     * @param apiMessages The source of [[APIMessage]]s.
     * @param requests A request helper object which will be passed to handlers.
     */
-  def create(
+  def create[A](
       needMention: Boolean,
       categories: Set[CmdCategory],
-      apiMessages: Source[APIMessage, NotUsed],
+      apiMessages: Source[APIMessage, A],
       requests: RequestHelper
-  ): Commands = {
+  ): (A, Commands) = {
     import requests.mat
-    Commands(CmdStreams.cmdStreams(needMention, categories, apiMessages), categories, requests)
+    val (materialized, streams) = CmdStreams.cmdStreams(needMention, categories, apiMessages)
+    materialized -> Commands(streams, categories, requests)
   }
 }
