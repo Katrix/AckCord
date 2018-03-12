@@ -25,13 +25,9 @@ package net.katsstuff.ackcord.commands
 
 import java.util.Locale
 
-import scala.concurrent.Future
-
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
-import akka.stream.{Graph, SourceShape}
 import net.katsstuff.ackcord.RequestDSL
-import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 

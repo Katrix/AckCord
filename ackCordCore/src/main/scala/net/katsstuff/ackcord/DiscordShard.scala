@@ -25,8 +25,8 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
 
 import akka.Done
 import akka.actor._

@@ -29,7 +29,6 @@ import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent._
 import net.katsstuff.ackcord.network.{RawBan, RawChannel, RawEmoji, RawGuild, RawMessage}
-import net.katsstuff.ackcord.syntax._
 
 object RawHandlers extends Handlers {
 

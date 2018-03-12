@@ -223,9 +223,9 @@ object RequestStreams {
             val rawRoute = route.rawRoute
             response match {
               case Success(httpResponse) =>
-                val tilReset          = timeTilReset(httpResponse)
-                val remainingRequests = remainingRequests(httpResponse)
-                val requestLimit      = requestsForUri(httpResponse)
+                val tilReset     = timeTilReset(httpResponse)
+                val tilRatelimit = remainingRequests(httpResponse)
+                val requestLimit = requestsForUri(httpResponse)
 
                 httpResponse.status match {
                   case StatusCodes.TooManyRequests =>
@@ -255,14 +255,14 @@ object RequestStreams {
                       .single(HttpEntity.Empty)
                       .via(request.parseResponse(breadth))
                       .map { data =>
-                        RequestResponse(data, request.context, remainingRequests, tilReset, requestLimit, uri, rawRoute)
+                        RequestResponse(data, request.context, tilRatelimit, tilReset, requestLimit, uri, rawRoute)
                       }
                   case _ => //Should be success
                     Source
                       .single(httpResponse.entity)
                       .via(request.parseResponse(breadth))
                       .map { data =>
-                        RequestResponse(data, request.context, remainingRequests, tilReset, requestLimit, uri, rawRoute)
+                        RequestResponse(data, request.context, tilRatelimit, tilReset, requestLimit, uri, rawRoute)
                       }
                 }
 
