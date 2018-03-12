@@ -29,7 +29,7 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 import akka.Done
-import akka.actor.Actor
+import akka.actor.{Actor, ActorRef}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.CacheSnapshot
@@ -58,32 +58,32 @@ abstract class HelpCmd extends Actor {
         command = lowercaseCommand.substring(cat.prefix.length)
         req <- descMap.get(command) match {
           case Some(desc) => Some(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)))
-          case None       => unknownCommand(cat, command).map(data => CreateMessage(msg.channelId, data))
+          case None       => unknownCmd(cat, command).map(CreateMessage(msg.channelId, _))
         }
       } yield req
 
-      response match {
-        case Some(req) => sendMsg(req)
-        case None =>
-          unknownCategory(lowercaseCommand).foreach { data =>
-            sendMsg(CreateMessage(msg.channelId, data))
-          }
+      val withUnknownCategory = response.orElse(unknownCategory(lowercaseCommand).map(CreateMessage(msg.channelId, _)))
+
+      withUnknownCategory match {
+        case Some(req) => sendMessageAndAck(sender(), req)
+        case None      => sendAck(sender())
       }
 
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
       implicit val cache: CacheSnapshot = c
 
       if (page > 0) {
-        sendMsg(CreateMessage(msg.channelId, createReplyAll(page - 1)))
+        sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
       } else {
-        msg.channelId.tResolve.foreach { channel =>
-          sendMsg(channel.sendMessage(s"Invalid page $page"))
+        msg.channelId.tResolve match {
+          case Some(channel) => sendMessageAndAck(sender(), channel.sendMessage(s"Invalid page $page"))
+          case None          => sendAck(sender())
         }
       }
 
     case ParsedCmd(msg, None, _, c) =>
       implicit val cache: CacheSnapshot = c
-      sendMsg(CreateMessage(msg.channelId, createReplyAll(0)))
+      sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(0)))
 
     case AddCmd(factory, commandEnd) =>
       factory.description.foreach { desc =>
@@ -99,9 +99,15 @@ abstract class HelpCmd extends Actor {
   }
 
   /**
-    * Send a request.
+    * Sends an ack once the processing of a command is done.
+    * @param sender The actor to send the ack to.
     */
-  def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit
+  def sendAck(sender: ActorRef): Unit
+
+  /**
+    * Send a request, and acks the sender.
+    */
+  def sendMessageAndAck[Data, Ctx](sender: ActorRef, request: Request[Data, Ctx]): Unit
 
   /**
     * Create a reply for a single command
@@ -125,7 +131,7 @@ abstract class HelpCmd extends Actor {
   def unknownCategory(command: String): Option[CreateMessageData] =
     Some(CreateMessageData("Unknown category"))
 
-  def unknownCommand(category: CmdCategory, command: String): Option[CreateMessageData] =
+  def unknownCmd(category: CmdCategory, command: String): Option[CreateMessageData] =
     Some(CreateMessageData("Unknown command"))
 }
 object HelpCmd {
