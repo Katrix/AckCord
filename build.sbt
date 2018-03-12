@@ -79,7 +79,7 @@ lazy val ackCordCore = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.19.0",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.20.0",
     libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.0.4" % Test,
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )

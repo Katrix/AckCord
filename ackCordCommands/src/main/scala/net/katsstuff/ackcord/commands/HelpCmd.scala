@@ -28,11 +28,12 @@ import java.util.Locale
 import scala.collection.mutable
 import scala.concurrent.Future
 
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.network.RawMessage
 import net.katsstuff.ackcord.network.requests.RESTRequests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.network.requests._
 import net.katsstuff.ackcord.syntax._
@@ -107,7 +108,7 @@ abstract class HelpCmd extends Actor {
   /**
     * Send a request, and acks the sender.
     */
-  def sendMessageAndAck[Data, Ctx](sender: ActorRef, request: Request[Data, Ctx]): Unit
+  def sendMessageAndAck(sender: ActorRef, request: Request[RawMessage, NotUsed]): Unit
 
   /**
     * Create a reply for a single command

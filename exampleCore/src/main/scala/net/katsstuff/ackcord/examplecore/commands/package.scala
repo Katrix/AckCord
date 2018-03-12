@@ -32,6 +32,7 @@ import akka.stream.scaladsl.{Flow, Sink}
 import net.katsstuff.ackcord.RequestDSL
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.network.RawChannel
 import net.katsstuff.ackcord.network.requests.RESTRequests._
 import net.katsstuff.ackcord.network.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.syntax._
@@ -60,13 +61,10 @@ package object commands {
         fields = Seq(EmbedField("FileName", "theFile.txt"))
       )
 
-      //Use channel to construct request
+      //Using mapConcat for optional values
       ParsedCmdFlow[NotUsed]
-        .mapConcat { implicit c => cmd =>
-          cmd.msg.channelId.tResolve.map { tChannel =>
-            tChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
-          }.toList
-        }
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.toList)
+        .map(_.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed)))
         .to(requests.sinkIgnore)
     },
     description =
@@ -83,14 +81,17 @@ package object commands {
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
         .via(requests.flow)
-        .mapConcat {
-          case RequestResponse(res, GetChannelInfo(guildId, senderChannelId, c), _, _, _, _, _) =>
-            implicit val cache: CacheSnapshot = c
-            senderChannelId.tResolve(guildId).map(_.sendMessage(s"Info for ${res.name}:\n$res")).toList
-          case error: FailedRequest[_] =>
-            val GetChannelInfo(guildId, senderChannelId, c) = error.context
-            implicit val cache: CacheSnapshot = c
-            senderChannelId.tResolve(guildId).map(_.sendMessage("Error encountered")).toList
+        .mapConcat { answer =>
+          val GetChannelInfo(guildId, senderChannelId, c) = answer.context
+          implicit val cache: CacheSnapshot = c
+          val content = answer match {
+            case response: RequestResponse[RawChannel, _] =>
+              val data = response.data
+              s"Info for ${data.name}:\n$data"
+            case _: FailedRequest[_] => "Error encountered"
+          }
+
+          senderChannelId.tResolve(guildId).map(_.sendMessage(content)).toList
         }
         .to(requests.sinkIgnore)
     },
@@ -119,14 +120,14 @@ package object commands {
       for {
         channel <- maybePure(cmd.msg.channelId.tResolve)
         sentMsg <- channel.sendMessage("Msg")
-        between = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
-        _ <- channel.sendMessage(s"$between ms between command and response")
+        time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
+        _ <- channel.sendMessage(s"$time ms between command and response")
       } yield ()
     },
     description = Some(
       CmdDescription(
         name = "Time diff",
-        description = "Check the about of time between a command being used. And a response being sent."
+        description = "Check the about of time between a command being used, and a response being sent."
       )
     )
   )
@@ -136,11 +137,8 @@ package object commands {
     aliases = Seq("ratelimitTest"),
     sink = requests =>
       ParsedCmdFlow[Int]
-        .mapConcat { implicit c => cmd =>
-          cmd.msg.channelId.tResolve.toList.flatMap { ch =>
-            (1 to cmd.args).map(num => ch.sendMessage(s"Msg$num"))
-          }
-        }
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.map(_ -> cmd.args).toList)
+        .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
         .to(requests.sinkIgnore),
     description = Some(
       CmdDescription(

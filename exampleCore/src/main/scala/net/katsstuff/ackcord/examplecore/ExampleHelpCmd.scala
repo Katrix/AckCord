@@ -25,15 +25,29 @@ package net.katsstuff.ackcord.examplecore
 
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
-import akka.stream.scaladsl.Sink
+import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.network.RawMessage
 import net.katsstuff.ackcord.network.requests.RESTRequests.CreateMessageData
 import net.katsstuff.ackcord.network.requests.{Request, RequestHelper}
 
 class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
   implicit val system: ActorSystem = context.system
+  import requests.mat
+
+  private val msgQueue =
+    Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
+
+  override def receive: Receive = {
+    val withInit: Receive = {
+      case ExampleHelpCmd.InitAck => sender() ! ExampleHelpCmd.Ack
+    }
+
+    withInit.orElse(super.receive)
+  }
 
   override def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
       implicit c: CacheSnapshot
@@ -41,46 +55,55 @@ class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
   override def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData = {
     val groupedCommands = commands.grouped(10).toSeq
-    if (page > groupedCommands.length) {
+    if (!groupedCommands.isDefinedAt(page)) {
       CreateMessageData(s"Max pages: ${groupedCommands.length}")
     } else {
-      val strings = groupedCommands(page).map {
-        case (cat, innerMap) =>
-          val res = innerMap.groupBy(_._2.name).map {
-            case (_, map) =>
-              createContent(cat, printCategory = false, map.keys.toSeq, map.head._2)
+      val lines = groupedCommands(page).map {
+        case (cat, pageCommands) =>
+          val categoryLines = pageCommands.groupBy(_._2.name).map {
+            case (_, command) =>
+              createContent(cat, printCategory = false, command.keys.toSeq, command.head._2)
           }
 
-          s"Category: ${cat.prefix}   ${cat.description}\n" + res.mkString("\n")
+          s"Category: ${cat.prefix}   ${cat.description}\n${categoryLines.mkString("\n")}"
       }
-      CreateMessageData(s"Page: ${page + 1} of ${groupedCommands.length}\n" + strings.mkString("\n"))
+
+      CreateMessageData(s"Page: ${page + 1} of ${groupedCommands.length}\n${lines.mkString("\n")}")
     }
   }
 
-  def createContent(cat: CmdCategory, printCategory: Boolean, names: Seq[String], desc: CmdDescription): String = {
+  def createContent(
+      cat: CmdCategory,
+      printCategory: Boolean,
+      names: Seq[String],
+      description: CmdDescription
+  ): String = {
     val builder = StringBuilder.newBuilder
-    builder.append(s"Name: ${desc.name}\n")
+    builder.append(s"Name: ${description.name}\n")
     if (printCategory) builder.append(s"Category: ${cat.prefix}   ${cat.description}\n")
-    builder.append(s"Description: ${desc.description}\n")
-    builder.append(s"Usage: ${cat.prefix}${names.mkString("|")} ${desc.usage}\n")
+    builder.append(s"Description: ${description.description}\n")
+    builder.append(s"Usage: ${cat.prefix}${names.mkString("|")} ${description.usage}\n")
 
     builder.mkString
   }
 
-  override def sendMsg[Data, Ctx](request: Request[Data, Ctx]): Unit = requests.singleIgnore(request)
+  override def sendMessageAndAck(sender: ActorRef, request: Request[RawMessage, NotUsed]): Unit =
+    msgQueue.offer(request).onComplete(_ => sendAck(sender))
+
+  override def sendAck(sender: ActorRef): Unit = sender ! ExampleHelpCmd.Ack
 }
 object ExampleHelpCmd {
+  case object InitAck
+  case object Ack
+
   def props(requests: RequestHelper): Props = Props(new ExampleHelpCmd(requests))
 }
 
-class ExampleHelpCmdFactory(helpCmdActor: ActorRef)
-    extends ParsedCmdFactory[HelpCmd.Args, NotUsed](
-      category = ExampleCmdCategories.!,
-      aliases = Seq("help"),
-      sink = _ => Sink.actorRef(helpCmdActor, PoisonPill),
-      description =
-        Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
-    )
 object ExampleHelpCmdFactory {
-  def apply(helpCmdActor: ActorRef): ExampleHelpCmdFactory = new ExampleHelpCmdFactory(helpCmdActor)
+  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[HelpCmd.Args, NotUsed] = ParsedCmdFactory(
+    category = ExampleCmdCategories.!,
+    aliases = Seq("help"),
+    sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
+    description = Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
+  )
 }
