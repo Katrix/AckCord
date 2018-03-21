@@ -29,6 +29,7 @@ import akka.NotUsed
 import io.circe.{Encoder, Json}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.cachehandlers._
+import net.katsstuff.ackcord.data.raw.{PartialUser, RawActivity, RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawRole}
 import net.katsstuff.ackcord.network._
 import net.katsstuff.ackcord.network.websocket.WsMessage
 import net.katsstuff.ackcord.network.websocket.gateway.GatewayProtocol._

@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.data
 
+import net.katsstuff.ackcord.CacheSnapshotLike
+
 /**
   * A webhook
   * @param id The webhook id
@@ -44,12 +46,12 @@ case class Webhook(
     token: String
 ) extends GetGuildOpt {
 
-  override def guild(implicit snapshot: CacheSnapshot): Option[Guild] = super[GetGuildOpt].guild
+  override def guild(implicit snapshot: CacheSnapshotLike): Option[Guild] = super[GetGuildOpt].guild
 
   /**
     * Resolve the channel of this webhook as a guild channel
     */
-  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TChannel] =
+  def tGuildChannel(implicit snapshot: CacheSnapshotLike): Option[TChannel] =
     guildId.flatMap(g => snapshot.getGuildChannel(g, channelId)).orElse(snapshot.getGuildChannel(channelId)).collect {
       case gChannel: TGuildChannel => gChannel
     }

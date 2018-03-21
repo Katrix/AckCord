@@ -163,7 +163,7 @@ package object syntax {
     /**
       * Get the category of this channel.
       */
-    def category(implicit snapshot: CacheSnapshot): Option[GuildCategory] =
+    def category(implicit snapshot: CacheSnapshotLike): Option[GuildCategory] =
       for {
         guild <- channel.guild
         cat   <- category(guild)
@@ -348,7 +348,7 @@ package object syntax {
     /**
       * Get the users connected to this voice channel.
       */
-    def connectedUsers(implicit c: CacheSnapshot): Seq[User] =
+    def connectedUsers(implicit c: CacheSnapshotLike): Seq[User] =
       c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolve)).getOrElse(Seq.empty)
 
     /**
@@ -360,7 +360,7 @@ package object syntax {
     /**
       * Get the guild members connected to this voice channel.
       */
-    def connectedMembers(implicit c: CacheSnapshot): Seq[GuildMember] =
+    def connectedMembers(implicit c: CacheSnapshotLike): Seq[GuildMember] =
       c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolveMember(g.id))).getOrElse(Seq.empty)
   }
 
@@ -369,7 +369,7 @@ package object syntax {
     /**
       * Get all the channels in this category.
       */
-    def channels(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
+    def channels(implicit snapshot: CacheSnapshotLike): Seq[GuildChannel] =
       category.guild
         .map { g =>
           g.channels.collect {
@@ -387,7 +387,7 @@ package object syntax {
     /**
       * Get all the text channels in this category.
       */
-    def tChannels(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
+    def tChannels(implicit snapshot: CacheSnapshotLike): Seq[TGuildChannel] =
       channels.collect { case tChannel: TGuildChannel => tChannel }
 
     /**
@@ -399,7 +399,7 @@ package object syntax {
     /**
       * Get all the voice channels in this category.
       */
-    def vChannels(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
+    def vChannels(implicit snapshot: CacheSnapshotLike): Seq[VGuildChannel] =
       channels.collect { case tChannel: VGuildChannel => tChannel }
 
     /**
@@ -412,7 +412,7 @@ package object syntax {
       * Get a channel by id in this category.
       * @param id The id of the channel.
       */
-    def channelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] = channels.find(_.id == id)
+    def channelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[GuildChannel] = channels.find(_.id == id)
 
     /**
       * Get a channel by id in this category using an preexisting guild.
@@ -424,9 +424,10 @@ package object syntax {
       * Get a text channel by id in this category.
       * @param id The id of the channel.
       */
-    def tChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[TGuildChannel] = channelById(id).collect {
-      case tChannel: TGuildChannel => tChannel
-    }
+    def tChannelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[TGuildChannel] =
+      channelById(id).collect {
+        case tChannel: TGuildChannel => tChannel
+      }
 
     /**
       * Get a text channel by id in this category using an preexisting guild.
@@ -440,9 +441,10 @@ package object syntax {
       * Get a voice channel by id in this category.
       * @param id The id of the channel.
       */
-    def vChannelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[VGuildChannel] = channelById(id).collect {
-      case vChannel: VGuildChannel => vChannel
-    }
+    def vChannelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[VGuildChannel] =
+      channelById(id).collect {
+        case vChannel: VGuildChannel => vChannel
+      }
 
     /**
       * Get a voice channel by id in this category using an preexisting guild.
@@ -456,7 +458,7 @@ package object syntax {
       * Get all the channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def channelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
+    def channelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[GuildChannel] =
       channels.filter(_.name == name)
 
     /**
@@ -470,7 +472,7 @@ package object syntax {
       * Get all the text channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def tChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[TGuildChannel] =
+    def tChannelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[TGuildChannel] =
       tChannels.filter(_.name == name)
 
     /**
@@ -484,7 +486,7 @@ package object syntax {
       * Get all the voice channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def vChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[VGuildChannel] =
+    def vChannelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[VGuildChannel] =
       vChannels.filter(_.name == name)
 
     /**
@@ -523,7 +525,7 @@ package object syntax {
     /**
       * Get the owner of this guild.
       */
-    def owner(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(guild.ownerId)
+    def owner(implicit snapshot: CacheSnapshotLike): Option[User] = snapshot.getUser(guild.ownerId)
 
     /**
       * Modify this guild.
@@ -1001,7 +1003,7 @@ package object syntax {
     /**
       * Get all the roles for this guild member.
       */
-    def rolesForUser(implicit snapshot: CacheSnapshot): Seq[Role] =
+    def rolesForUser(implicit snapshot: CacheSnapshotLike): Seq[Role] =
       guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).toSeq.flatten
 
     /**
@@ -1185,7 +1187,7 @@ package object syntax {
     /**
       * Get an existing DM channel for this user.
       */
-    def getDMChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.dmChannels.collectFirst {
+    def getDMChannel(implicit snapshot: CacheSnapshotLike): Option[DMChannel] = snapshot.dmChannels.collectFirst {
       case (_, ch) if ch.userId == user.id => ch
     }
 

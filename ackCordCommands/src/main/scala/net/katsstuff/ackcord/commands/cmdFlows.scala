@@ -5,7 +5,7 @@ import scala.concurrent.Future
 import akka.NotUsed
 import akka.stream.{Graph, SourceShape}
 import akka.stream.scaladsl.Flow
-import net.katsstuff.ackcord.data.CacheSnapshot
+import net.katsstuff.ackcord.CacheSnapshot
 
 /**
   * A class to extract the cache from a parsed cmd object.

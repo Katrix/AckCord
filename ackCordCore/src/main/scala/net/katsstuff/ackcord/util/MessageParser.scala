@@ -28,6 +28,7 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 import akka.NotUsed
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._

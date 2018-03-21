@@ -23,8 +23,6 @@
  */
 package net.katsstuff.ackcord
 
-import net.katsstuff.ackcord.data.CacheSnapshot
-
 /**
   * Represents the state of the cache for a single point.
   * @param current The current values in the cache.

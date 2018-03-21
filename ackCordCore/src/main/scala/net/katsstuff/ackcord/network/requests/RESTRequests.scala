@@ -39,24 +39,16 @@ import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.cachehandlers._
+import net.katsstuff.ackcord.data.raw.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawRole}
+import net.katsstuff.ackcord.network.Routes
 import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.GuildEmojisUpdateData
-import net.katsstuff.ackcord.network.{
-  RawBan,
-  RawChannel,
-  RawEmoji,
-  RawGuild,
-  RawGuildMember,
-  RawMessage,
-  RawRole,
-  Routes
-}
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
-import net.katsstuff.ackcord.{CacheState, SnowflakeMap}
+import net.katsstuff.ackcord.{CacheSnapshotLike, CacheState, SnowflakeMap}
 
 object RESTRequests {
   import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
-  import net.katsstuff.ackcord.network.DiscordProtocol._
+  import net.katsstuff.ackcord.data.DiscordProtocol._
 
   /**
     * Base trait for all REST requests in AckCord. If you feel an endpoint is
@@ -122,13 +114,13 @@ object RESTRequests {
     /**
       * Check if a client has the needed permissions to execute this request.
       */
-    def havePermissions(implicit c: CacheSnapshot): Boolean = true
+    def havePermissions(implicit c: CacheSnapshotLike): Boolean = true
 
     /**
       * Throw an exception if the client doesn't have the needed permissions to
       * execute this request.
       */
-    def requirePerms(implicit c: CacheSnapshot): this.type = {
+    def requirePerms(implicit c: CacheSnapshotLike): this.type = {
       require(havePermissions, "Did not have sufficient permissions to complete that action")
       this
     }
@@ -283,7 +275,7 @@ object RESTRequests {
     * @param permissions The needed permissions
     * @param c The cache
     */
-  def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
+  def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit c: CacheSnapshotLike): Boolean = {
     c.getGuild(guildId).forall { g =>
       g.members.get(c.botUser.id).forall { mem =>
         mem.permissions.hasPermissions(permissions)
@@ -297,7 +289,7 @@ object RESTRequests {
     * @param permissions The needed permissions
     * @param c The cache
     */
-  def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
+  def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshotLike): Boolean = {
     c.getGuildChannel(channelId).forall { gChannel =>
       gChannel.guild.forall { g =>
         g.members.get(c.botUser.id).forall { mem =>
@@ -319,8 +311,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[AuditLog]      = Decoder[AuditLog]
     override def cacheHandler:    CacheHandler[AuditLog] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ViewAuditLog
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ViewAuditLog
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   //Channels
@@ -334,7 +327,7 @@ object RESTRequests {
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
 
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -401,7 +394,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
 
     override def requiredPermissions: Permission = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -425,7 +418,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelDeleteHandler
 
     override def requiredPermissions: Permission = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -483,7 +476,7 @@ object RESTRequests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawMessageUpdateHandler)
 
     override def requiredPermissions: Permission = Permission.ReadMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -520,7 +513,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[RawMessage] = RawHandlers.rawMessageUpdateHandler
 
     override def requiredPermissions: Permission = Permission.ReadMessageHistory
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -584,7 +577,7 @@ object RESTRequests {
 
     override def requiredPermissions: Permission =
       if (params.tts) Permission(Permission.SendMessages, Permission.SendTtsMessages) else Permission.SendMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
@@ -611,7 +604,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.createReaction(emoji, messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ReadMessageHistory
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -640,7 +633,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.deleteUserReaction(userId, emoji, messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -699,7 +692,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.deleteAllReactions(messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -767,7 +760,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.deleteMessage(messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def withReason(reason: String): DeleteMessage[Ctx] = copy(reason = Some(reason))
@@ -795,7 +788,7 @@ object RESTRequests {
     override def paramsEncoder: Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
   object BulkDeleteMessages {
@@ -827,7 +820,7 @@ object RESTRequests {
     override def paramsEncoder: Encoder[EditChannelPermissionsData] = deriveEncoder[EditChannelPermissionsData]
 
     override def requiredPermissions: Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def withReason(reason: String): EditChannelPermissions[Ctx] = copy(reason = Some(reason))
@@ -871,7 +864,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
 
     override def requiredPermissions: Permission = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -905,7 +898,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[Invite] = NOOPHandler
 
     override def requiredPermissions: Permission = Permission.CreateInstantInvite
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def withReason(reason: String): CreateChannelInvite[Ctx] = copy(reason = Some(reason))
@@ -954,7 +947,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.addPinnedChannelMessage(messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -969,7 +962,7 @@ object RESTRequests {
     override def route: RequestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
 
     override def requiredPermissions: Permission = Permission.ManageMessages
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -1027,8 +1020,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[RawEmoji]      = Decoder[RawEmoji]
     override def cacheHandler:    CacheHandler[RawEmoji] = RawHandlers.rawEmojiUpdateHandler(guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageEmojis
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageEmojis
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData:                           Boolean       = true
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
@@ -1081,8 +1075,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[RawEmoji]      = Decoder[RawEmoji]
     override def cacheHandler:    CacheHandler[RawEmoji] = RawHandlers.rawEmojiUpdateHandler(guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageEmojis
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageEmojis
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData:                           Boolean       = true
     override def findData(response: RawEmoji)(cache: CacheState): Option[Emoji] = Some(response.toEmoji)
@@ -1110,8 +1105,9 @@ object RESTRequests {
   ) extends NoParamsResponseReasonRequest[DeleteGuildEmoji[Ctx], Ctx] {
     override def route: RequestRoute = Routes.deleteGuildEmoji(emojiId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageEmojis
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageEmojis
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): DeleteGuildEmoji[Ctx] = copy(reason = Some(reason))
   }
@@ -1217,8 +1213,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[RawGuild]      = Decoder[RawGuild]
     override def cacheHandler:    CacheHandler[RawGuild] = RawHandlers.rawGuildUpdateHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: RawGuild)(cache: CacheState): Option[Guild] =
@@ -1300,8 +1297,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[RawChannel]      = Decoder[RawChannel]
     override def cacheHandler:    CacheHandler[RawChannel] = RawHandlers.rawChannelUpdateHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageChannels
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: RawChannel)(cache: CacheState): Option[Channel] =
@@ -1337,8 +1335,9 @@ object RESTRequests {
     override def cacheHandler: CacheHandler[Seq[RawChannel]] =
       CacheUpdateHandler.seqHandler(RawHandlers.rawChannelUpdateHandler)
 
-    override def requiredPermissions:                        Permission = Permission.ManageChannels
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageChannels
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawChannel])(cache: CacheState): Option[Seq[Channel]] =
@@ -1446,7 +1445,8 @@ object RESTRequests {
         ifDefined(params.deaf, Permission.DeafenMembers)
       )
     }
-    override def havePermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1499,8 +1499,9 @@ object RESTRequests {
         ifDefined(params.deaf, Permission.DeafenMembers)
       )
     }
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                = hasPermissionsGuild(guildId, requiredPermissions)
-    override def withReason(reason: String):                 ModifyGuildMember[Ctx] = copy(reason = Some(reason))
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
+    override def withReason(reason: String): ModifyGuildMember[Ctx] = copy(reason = Some(reason))
   }
 
   case class ModifyBotUsersNickData(nick: String)
@@ -1531,8 +1532,9 @@ object RESTRequests {
       }
     }
 
-    override def requiredPermissions:                        Permission = Permission.ChangeNickname
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ChangeNickname
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): ModifyBotUsersNick[Ctx] = copy(reason = Some(reason))
   }
@@ -1548,8 +1550,9 @@ object RESTRequests {
       extends NoParamsResponseRequest[Ctx] {
     override def route: RequestRoute = Routes.addGuildMemberRole(roleId, userId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1563,8 +1566,9 @@ object RESTRequests {
   ) extends NoParamsResponseRequest[Ctx] {
     override def route: RequestRoute = Routes.removeGuildMemberRole(roleId, userId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1578,9 +1582,10 @@ object RESTRequests {
   ) extends NoParamsResponseReasonRequest[RemoveGuildMember[Ctx], Ctx] {
     override def route: RequestRoute = Routes.removeGuildMember(userId, guildId)
 
-    override def requiredPermissions:                        Permission             = Permission.KickMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean                = hasPermissionsGuild(guildId, requiredPermissions)
-    override def withReason(reason: String):                 RemoveGuildMember[Ctx] = copy(reason = Some(reason))
+    override def requiredPermissions: Permission = Permission.KickMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
+    override def withReason(reason: String): RemoveGuildMember[Ctx] = copy(reason = Some(reason))
   }
 
   /**
@@ -1597,8 +1602,9 @@ object RESTRequests {
       CacheUpdateHandler.seqHandler(RawHandlers.rawBanUpdateHandler)
     override def convertToCacheHandlerType(response: Seq[RawBan]): Seq[(GuildId, RawBan)] = response.map(guildId -> _)
 
-    override def requiredPermissions:                        Permission = Permission.BanMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.BanMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawBan])(cache: CacheState): Option[Seq[Ban]] =
@@ -1625,8 +1631,9 @@ object RESTRequests {
     override def route:         RequestRoute                = Routes.createGuildMemberBan(userId, guildId)
     override def paramsEncoder: Encoder[CreateGuildBanData] = deriveEncoder[CreateGuildBanData]
 
-    override def requiredPermissions:                        Permission = Permission.BanMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.BanMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): CreateGuildBan[Ctx] = copy(reason = Some(reason))
   }
@@ -1651,8 +1658,9 @@ object RESTRequests {
   ) extends NoParamsResponseReasonRequest[RemoveGuildBan[Ctx], Ctx] {
     override def route: RequestRoute = Routes.removeGuildMemberBan(userId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.BanMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.BanMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): RemoveGuildBan[Ctx] = copy(reason = Some(reason))
   }
@@ -1672,8 +1680,9 @@ object RESTRequests {
     override def convertToCacheHandlerType(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
       response.map(GatewayEvent.GuildRoleModifyData(guildId, _))
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawRole])(cache: CacheState): Option[Seq[Role]] =
@@ -1712,8 +1721,9 @@ object RESTRequests {
     override def convertToCacheHandlerType(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: RawRole)(cache: CacheState): Option[Role] =
@@ -1751,8 +1761,9 @@ object RESTRequests {
     override def convertToCacheHandlerType(response: Seq[RawRole]): Seq[GatewayEvent.GuildRoleModifyData] =
       response.map(GatewayEvent.GuildRoleModifyData(guildId, _))
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: Seq[RawRole])(cache: CacheState): Option[Seq[Role]] =
@@ -1794,8 +1805,9 @@ object RESTRequests {
     override def convertToCacheHandlerType(response: RawRole): GatewayEvent.GuildRoleModifyData =
       GatewayEvent.GuildRoleModifyData(guildId, response)
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def hasCustomResponseData: Boolean = true
     override def findData(response: RawRole)(cache: CacheState): Option[Role] =
@@ -1815,8 +1827,9 @@ object RESTRequests {
   ) extends NoParamsResponseReasonRequest[DeleteGuildRole[Ctx], Ctx] {
     override def route: RequestRoute = Routes.deleteGuildRole(roleId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageRoles
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageRoles
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): DeleteGuildRole[Ctx] = copy(reason = Some(reason))
   }
@@ -1845,8 +1858,9 @@ object RESTRequests {
       extends GuildPrune[Ctx] {
     override def route: RequestRoute = Routes.getGuildPruneCount(guildId)
 
-    override def requiredPermissions:                        Permission = Permission.KickMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.KickMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
   object GetGuildPruneCount {
     def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
@@ -1865,8 +1879,9 @@ object RESTRequests {
       with NoNiceResponseReasonRequest[BeginGuildPrune[Ctx], GuildPruneData, GuildPruneResponse, Ctx] {
     override def route: RequestRoute = Routes.beginGuildPrune(guildId)
 
-    override def requiredPermissions:                        Permission = Permission.KickMembers
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.KickMembers
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
 
     override def withReason(reason: String): BeginGuildPrune[Ctx] = copy(reason = Some(reason))
   }
@@ -1896,8 +1911,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[Seq[InviteWithMetadata]]      = Decoder[Seq[InviteWithMetadata]]
     override def cacheHandler:    CacheHandler[Seq[InviteWithMetadata]] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1910,8 +1926,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[Seq[Integration]]      = Decoder[Seq[Integration]]
     override def cacheHandler:    CacheHandler[Seq[Integration]] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1931,8 +1948,9 @@ object RESTRequests {
     override def route:         RequestRoute                        = Routes.createGuildIntegrations(guildId)
     override def paramsEncoder: Encoder[CreateGuildIntegrationData] = deriveEncoder[CreateGuildIntegrationData]
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1959,8 +1977,9 @@ object RESTRequests {
     override def route:         RequestRoute                        = Routes.modifyGuildIntegration(integrationId, guildId)
     override def paramsEncoder: Encoder[ModifyGuildIntegrationData] = deriveEncoder[ModifyGuildIntegrationData]
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1973,8 +1992,9 @@ object RESTRequests {
   ) extends NoParamsResponseRequest[Ctx] {
     override def route: RequestRoute = Routes.deleteGuildIntegration(integrationId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1984,8 +2004,9 @@ object RESTRequests {
       extends NoParamsResponseRequest[Ctx] {
     override def route: RequestRoute = Routes.syncGuildIntegration(integrationId, guildId)
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -1998,8 +2019,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[GuildEmbed]      = Decoder[GuildEmbed]
     override def cacheHandler:    CacheHandler[GuildEmbed] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -2013,8 +2035,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[GuildEmbed]      = Decoder[GuildEmbed]
     override def cacheHandler:    CacheHandler[GuildEmbed] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   case class VanityUrlResponse(code: String)
@@ -2029,8 +2052,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[VanityUrlResponse]      = deriveDecoder[VanityUrlResponse]
     override def cacheHandler:    CacheHandler[VanityUrlResponse] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageGuild
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageGuild
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**
@@ -2249,7 +2273,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[Webhook] = NOOPHandler
 
     override def requiredPermissions: Permission = Permission.ManageWebhooks
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
 
     override def withReason(reason: String): CreateWebhook[Ctx] = copy(reason = Some(reason))
@@ -2266,7 +2290,7 @@ object RESTRequests {
     override def cacheHandler:    CacheHandler[Seq[Webhook]] = NOOPHandler
 
     override def requiredPermissions: Permission = Permission.ManageWebhooks
-    override def havePermissions(implicit c: CacheSnapshot): Boolean =
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
       hasPermissionsChannel(channelId, requiredPermissions)
   }
 
@@ -2280,8 +2304,9 @@ object RESTRequests {
     override def responseDecoder: Decoder[Seq[Webhook]]      = Decoder[Seq[Webhook]]
     override def cacheHandler:    CacheHandler[Seq[Webhook]] = NOOPHandler
 
-    override def requiredPermissions:                        Permission = Permission.ManageWebhooks
-    override def havePermissions(implicit c: CacheSnapshot): Boolean    = hasPermissionsGuild(guildId, requiredPermissions)
+    override def requiredPermissions: Permission = Permission.ManageWebhooks
+    override def havePermissions(implicit c: CacheSnapshotLike): Boolean =
+      hasPermissionsGuild(guildId, requiredPermissions)
   }
 
   /**

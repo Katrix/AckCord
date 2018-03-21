@@ -24,9 +24,9 @@
 package net.katsstuff.ackcord.examplecore.commands
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
-import net.katsstuff.ackcord.DiscordShard
+import net.katsstuff.ackcord.{CacheSnapshot, DiscordShard}
 import net.katsstuff.ackcord.commands.ParsedCmd
-import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 
 class KillCmd(main: ActorRef) extends Actor with ActorLogging {
 

@@ -1,7 +1,5 @@
 package net.katsstuff.ackcord
 
-import net.katsstuff.ackcord.data.CacheSnapshot
-
 /**
   * A handler for a specific event type.
   * @tparam A The API message type

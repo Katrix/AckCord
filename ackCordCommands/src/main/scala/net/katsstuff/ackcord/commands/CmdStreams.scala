@@ -28,9 +28,9 @@ import java.util.Locale
 import akka.NotUsed
 import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Keep, Source}
 import akka.stream.{FlowShape, Materializer}
-import net.katsstuff.ackcord.APIMessage
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message, User}
-import net.katsstuff.ackcord.network.RawMessage
+import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
+import net.katsstuff.ackcord.data.raw.RawMessage
+import net.katsstuff.ackcord.data.{Message, User}
 import net.katsstuff.ackcord.network.requests.{Request, RequestHelper}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser

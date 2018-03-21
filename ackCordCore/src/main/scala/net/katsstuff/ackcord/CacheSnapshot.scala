@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.data
+package net.katsstuff.ackcord
 
 import java.time.Instant
 
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
-import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
+import net.katsstuff.ackcord.data.{Ban, Channel, ChannelId, DMChannel, GroupDMChannel, Guild, Message, UnavailableGuild, User}
 import shapeless.tag._
 
 /**

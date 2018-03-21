@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord.commands
 
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 

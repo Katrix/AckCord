@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.data
 
 import java.time.{Instant, OffsetDateTime}
 
-import net.katsstuff.ackcord.SnowflakeMap
+import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 
 /**
   * A guild which that status of is unknown.
@@ -274,7 +274,8 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user
     */
-  def permissions(implicit c: CacheSnapshot): Permission = guildId.resolve.map(permissions).getOrElse(Permission.None)
+  def permissions(implicit c: CacheSnapshotLike): Permission =
+    guildId.resolve.map(permissions).getOrElse(Permission.None)
 
   /**
     * Calculate the permissions of this user
@@ -295,7 +296,7 @@ case class GuildMember(
     * Calculate the permissions of this user in a channel.
     */
   def permissionsWithOverrides(guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshot
+      implicit c: CacheSnapshotLike
   ): Permission = {
     if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
     else {
@@ -345,13 +346,13 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshot): Permission =
+  def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshotLike): Permission =
     permissionsWithOverrides(permissions, channelId)
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove(others: Seq[RoleId])(implicit c: CacheSnapshot): Boolean = {
+  def hasRoleAbove(others: Seq[RoleId])(implicit c: CacheSnapshotLike): Boolean = {
     guild.exists { guild =>
       val ownerId = guild.ownerId
       if (this.userId == ownerId) true
@@ -369,7 +370,7 @@ case class GuildMember(
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove(other: GuildMember)(implicit c: CacheSnapshot): Boolean = {
+  def hasRoleAbove(other: GuildMember)(implicit c: CacheSnapshotLike): Boolean = {
     guild.exists { guild =>
       if (other.userId == guild.ownerId) false else hasRoleAbove(other.roleIds)
     }

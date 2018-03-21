@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.network
+package net.katsstuff.ackcord.data
 
 import java.time.{Instant, OffsetDateTime}
 
@@ -32,7 +32,7 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
-import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.data.raw.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawMessageActivity, RawRole}
 
 trait DiscordProtocol {
 

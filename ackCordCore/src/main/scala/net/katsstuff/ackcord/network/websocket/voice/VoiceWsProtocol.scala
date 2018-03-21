@@ -27,7 +27,7 @@ import akka.util.ByteString
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
-import net.katsstuff.ackcord.network.DiscordProtocol
+import net.katsstuff.ackcord.data.DiscordProtocol
 
 object VoiceWsProtocol extends DiscordProtocol {
 

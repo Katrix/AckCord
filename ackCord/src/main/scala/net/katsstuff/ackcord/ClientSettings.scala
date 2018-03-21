@@ -32,7 +32,7 @@ import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
 import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.network.RawActivity
+import net.katsstuff.ackcord.data.raw.RawActivity
 import net.katsstuff.ackcord.network.requests.{BotAuthentication, RequestHelper}
 
 /**

@@ -23,7 +23,8 @@
  */
 package net.katsstuff.ackcord.commands
 
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.CacheSnapshot
+import net.katsstuff.ackcord.data.Message
 
 /**
   * Top trait for all command messages.

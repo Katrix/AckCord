@@ -30,7 +30,7 @@ import net.katsstuff.ackcord.network.websocket.voice.VoiceUDPHandler.RTPHeader
 
 /**
   * The base trait for all audio events. Note that the audio API does not
-  * have any connections to any [[net.katsstuff.ackcord.data.CacheSnapshot]]s.
+  * have any connections to any [[CacheSnapshot]]s.
   * As such you have to find the objects for the IDs yourself.
   */
 sealed trait AudioAPIMessage {

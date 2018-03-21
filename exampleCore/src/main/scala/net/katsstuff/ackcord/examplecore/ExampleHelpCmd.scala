@@ -27,9 +27,9 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
-import net.katsstuff.ackcord.data.CacheSnapshot
-import net.katsstuff.ackcord.network.RawMessage
+import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.network.requests.RESTRequests.CreateMessageData
 import net.katsstuff.ackcord.network.requests.{Request, RequestHelper}
 

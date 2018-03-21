@@ -28,6 +28,8 @@ import java.util.Base64
 
 import scala.util.Try
 
+import net.katsstuff.ackcord.CacheSnapshotLike
+
 sealed trait ImageFormat {
   def extensions: Seq[String]
   def extension: String = extensions.head
@@ -286,7 +288,7 @@ case class Message(
   /**
     * Formats mentions in this message to their normal syntax with names.
     */
-  def formatMentions(implicit c: CacheSnapshot): String = {
+  def formatMentions(implicit c: CacheSnapshotLike): String = {
     val withUsers = mentions
       .flatMap(_.resolve)
       .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))

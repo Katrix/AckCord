@@ -7,7 +7,6 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.data.CacheSnapshot
 import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 
@@ -38,7 +37,8 @@ trait CommandsHelper {
   }
 
   /**
-    * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -67,7 +67,8 @@ trait CommandsHelper {
     }
 
   /**
-    * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when raw command arrives.
+    * Run some code with a [[CacheSnapshot]] when raw command arrives.
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -94,7 +95,8 @@ trait CommandsHelper {
     }
 
   /**
-    * Register a command which runs a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
+    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -142,7 +144,8 @@ trait CommandsHelper {
   }
 
   /**
-    * Register a command which runs some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]].
+    * Register a command which runs some code with a [[CacheSnapshot]].
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */

@@ -40,7 +40,7 @@ import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.data.{CacheSnapshot, ChannelId, GuildId}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 
@@ -107,7 +107,8 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   //Event handling
 
   /**
-    * Run a [[RequestDSL]] with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -132,7 +133,8 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     }
 
   /**
-    * Run some code with a [[net.katsstuff.ackcord.data.CacheSnapshot]] when an event happens.
+    * Run some code with a [[CacheSnapshot]] when an event happens.
+ *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */

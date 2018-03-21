@@ -1,7 +1,7 @@
 package net.katsstuff.ackcord
 
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter}
-import net.katsstuff.ackcord.data.{CacheSnapshot, Message}
+import net.katsstuff.ackcord.data.Message
 
 /**
   * A handler for a specific command.

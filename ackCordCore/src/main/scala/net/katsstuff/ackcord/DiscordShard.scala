@@ -40,10 +40,11 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.CreateGateway
 import net.katsstuff.ackcord.data.PresenceStatus
+import net.katsstuff.ackcord.data.raw.RawActivity
 import net.katsstuff.ackcord.network.requests._
 import net.katsstuff.ackcord.network.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.network.websocket.gateway.GatewayHandler
-import net.katsstuff.ackcord.network.{RawActivity, Routes}
+import net.katsstuff.ackcord.network.Routes
 
 /**
   * The core actor that controls all the other used actors of AckCord
