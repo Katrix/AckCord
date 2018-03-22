@@ -30,7 +30,6 @@ import io.circe.generic.extras.semiauto._
 import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.network._
 
 object GatewayProtocol extends DiscordProtocol {
 

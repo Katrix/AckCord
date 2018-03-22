@@ -41,7 +41,7 @@ import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
 import net.katsstuff.ackcord.AckCord
-import net.katsstuff.ackcord.network.requests.RESTRequests.ComplexRESTRequest
+import net.katsstuff.ackcord.network.requests.RESTRequests.RESTRequest
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
 
 object RequestStreams {
@@ -184,7 +184,7 @@ object RequestStreams {
       if (AckCordSettings().LogSentREST)
         baseFlow.log(
           "Sent REST request", {
-            case request: ComplexRESTRequest[_, _, _, _, _] =>
+            case request: RESTRequest[_, _, _, _] =>
               s"to ${request.route.uri} with method ${request.route.method} and content ${request.jsonParams.pretty(request.jsonPrinter)}"
             case request => s"to ${request.route.uri} with method ${request.route.method}"
           }
