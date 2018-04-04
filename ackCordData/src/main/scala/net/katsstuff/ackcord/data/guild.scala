@@ -25,6 +25,9 @@ package net.katsstuff.ackcord.data
 
 import java.time.{Instant, OffsetDateTime}
 
+import scala.language.higherKinds
+
+import cats.{Applicative, Functor, Monad, Traverse}
 import net.katsstuff.ackcord.{CacheSnapshotLike, SnowflakeMap}
 
 /**
@@ -274,7 +277,7 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user
     */
-  def permissions(implicit c: CacheSnapshotLike): Permission =
+  def permissions[F[_]: Functor](implicit c: CacheSnapshotLike[F]): F[Permission] =
     guildId.resolve.map(permissions).getOrElse(Permission.None)
 
   /**
@@ -295,47 +298,47 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def permissionsWithOverrides(guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshotLike
-  ): Permission = {
-    if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+  def permissionsWithOverrides[F[_]: Functor: Applicative](guildPermissions: Permission, channelId: ChannelId)(
+      implicit c: CacheSnapshotLike[F]
+  ): F[Permission] = {
+    if (guildPermissions.hasPermissions(Permission.Administrator)) Applicative[F].pure(Permission.All)
     else {
-      val res = for {
-        guild   <- guildId.resolve
-        channel <- guild.channels.get(channelId)
-      } yield {
-        if (guild.ownerId == userId) Permission.All
-        else {
-          val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
-          val everyoneAllow     = everyoneOverwrite.map(_.allow)
-          val everyoneDeny      = everyoneOverwrite.map(_.deny)
 
-          val rolesForUser   = roleIds.flatMap(guild.roles.get)
-          val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
-          val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
-          val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
+      val res = guildId.resolve.subflatMap { guild =>
+        guild.channels.get(channelId).map { channel =>
+          if (guild.ownerId == userId) Permission.All
+          else {
+            val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
+            val everyoneAllow     = everyoneOverwrite.map(_.allow)
+            val everyoneDeny      = everyoneOverwrite.map(_.deny)
 
-          val userOverwrite = channel.permissionOverwrites.get(userId)
-          val userAllow     = userOverwrite.map(_.allow)
-          val userDeny      = userOverwrite.map(_.deny)
+            val rolesForUser   = roleIds.flatMap(guild.roles.get)
+            val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+            val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
+            val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
 
-          def mapOrElse(
-              permission: Permission,
-              opt: Option[Permission],
-              f: (Permission, Permission) => Permission
-          ): Permission =
-            opt.map(f(permission, _)).getOrElse(permission)
+            val userOverwrite = channel.permissionOverwrites.get(userId)
+            val userAllow     = userOverwrite.map(_.allow)
+            val userDeny      = userOverwrite.map(_.deny)
 
-          def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
-            mapOrElse(permission, opt, _.addPermissions(_))
-          def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
-            mapOrElse(permission, opt, _.removePermissions(_))
+            def mapOrElse(
+                permission: Permission,
+                opt: Option[Permission],
+                f: (Permission, Permission) => Permission
+            ): Permission =
+              opt.map(f(permission, _)).getOrElse(permission)
 
-          val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
-          val withRole     = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
-          val withUser     = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
+            def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
+              mapOrElse(permission, opt, _.addPermissions(_))
+            def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
+              mapOrElse(permission, opt, _.removePermissions(_))
 
-          withUser
+            val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
+            val withRole     = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
+            val withUser     = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
+
+            withUser
+          }
         }
       }
 
@@ -346,34 +349,40 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def channelPermissions(channelId: ChannelId)(implicit c: CacheSnapshotLike): Permission =
-    permissionsWithOverrides(permissions, channelId)
+  def channelPermissions[F[_]: Monad](channelId: ChannelId)(implicit c: CacheSnapshotLike[F]): F[Permission] =
+    Monad[F].flatMap(permissions)(perms => permissionsWithOverrides(perms, channelId))
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove(others: Seq[RoleId])(implicit c: CacheSnapshotLike): Boolean = {
-    guild.exists { guild =>
+  def hasRoleAbove[F[_]: Monad](others: Seq[RoleId])(implicit c: CacheSnapshotLike[F]): F[Boolean] = {
+    guild.semiflatMap { guild =>
       val ownerId = guild.ownerId
-      if (this.userId == ownerId) true
+      if (this.userId == ownerId) Monad[F].pure(true)
       else {
-        def maxRolesPosition(roles: Seq[RoleId]): Int = {
-          val positions = roles.flatMap(_.resolve(this.guildId)).map(_.position)
-          if (positions.isEmpty) 0 else positions.max
+        def maxRolesPosition(roles: Seq[RoleId]): F[Int] = {
+          val seq = {
+            import cats.instances.list._
+            Traverse[List].traverse(roles.toList)(_.resolve(guildId).map(_.position).value)
+          }
+          Monad[F].map(seq) { optList =>
+            val positions = optList.flatten
+            if(positions.isEmpty) 0 else positions.max
+          }
         }
 
-        maxRolesPosition(this.roleIds) > maxRolesPosition(others)
+        Monad[F].map2(maxRolesPosition(this.roleIds), maxRolesPosition(others))(_ > _)
       }
-    }
+    }.exists(identity)
   }
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove(other: GuildMember)(implicit c: CacheSnapshotLike): Boolean = {
-    guild.exists { guild =>
-      if (other.userId == guild.ownerId) false else hasRoleAbove(other.roleIds)
-    }
+  def hasRoleAbove[F[_]: Monad](other: GuildMember)(implicit c: CacheSnapshotLike[F]): F[Boolean] = {
+    guild.semiflatMap { guild =>
+      if (other.userId == guild.ownerId) Monad[F].pure(false) else hasRoleAbove(other.roleIds)
+    }.exists(identity)
   }
 }
 

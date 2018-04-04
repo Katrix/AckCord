@@ -26,7 +26,7 @@ package net.katsstuff.ackcord
 import java.time.Instant
 
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
-import net.katsstuff.ackcord.data.{Ban, Channel, ChannelId, DMChannel, GroupDMChannel, Guild, Message, UnavailableGuild, User}
+import net.katsstuff.ackcord.data._
 import shapeless.tag._
 
 /**
@@ -34,21 +34,24 @@ import shapeless.tag._
   */
 case class CacheSnapshot(
     botUser: User @@ BotUser,
-    dmChannels: SnowflakeMap[Channel, DMChannel],
-    groupDmChannels: SnowflakeMap[Channel, GroupDMChannel],
-    unavailableGuilds: SnowflakeMap[Guild, UnavailableGuild],
-    guilds: SnowflakeMap[Guild, Guild],
-    messages: SnowflakeMap[Channel, SnowflakeMap[Message, Message]],
-    lastTyped: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
-    users: SnowflakeMap[User, User],
-    bans: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
-) extends CacheSnapshotLike {
+    dmChannelMap: SnowflakeMap[Channel, DMChannel],
+    groupDmChannelMap: SnowflakeMap[Channel, GroupDMChannel],
+    unavailableGuildMap: SnowflakeMap[Guild, UnavailableGuild],
+    guildMap: SnowflakeMap[Guild, Guild],
+    messageMap: SnowflakeMap[Channel, SnowflakeMap[Message, Message]],
+    lastTypedMap: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
+    userMap: SnowflakeMap[User, User],
+    banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
+) extends CacheSnapshotLikeId {
 
   override type MapType[K, V] = SnowflakeMap[K, V]
 
   override def getChannelMessages(channelId: ChannelId): SnowflakeMap[Message, Message] =
-    messages.getOrElse(channelId, SnowflakeMap.empty)
+    messageMap.getOrElse(channelId, SnowflakeMap.empty)
 
   override def getChannelLastTyped(channelId: ChannelId): SnowflakeMap[User, Instant] =
-    lastTyped.getOrElse(channelId, SnowflakeMap.empty)
+    lastTypedMap.getOrElse(channelId, SnowflakeMap.empty)
+
+  override def getGuildBans(id: GuildId): SnowflakeMap[User, Ban] =
+    banMap.getOrElse(id, SnowflakeMap.empty)
 }

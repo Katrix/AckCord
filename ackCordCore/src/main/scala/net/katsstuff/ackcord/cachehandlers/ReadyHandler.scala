@@ -25,8 +25,10 @@ package net.katsstuff.ackcord.cachehandlers
 
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
 import shapeless._
+
 
 //We handle this one separately as is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
@@ -43,9 +45,9 @@ object ReadyHandler extends CacheHandler[ReadyData] {
     val guilds = unavailableGuilds.map(g => g.id -> g)
 
     builder.botUser = tag[BotUser](botUser)
-    builder.dmChannels ++= dmChannels
-    builder.groupDmChannels ++= groupDmChannels
-    builder.unavailableGuilds ++= guilds
-    builder.users ++= recipients
+    builder.dmChannelMap ++= dmChannels
+    builder.groupDmChannelMap ++= groupDmChannels
+    builder.unavailableGuildMap ++= guilds
+    builder.userMap ++= recipients
   }
 }

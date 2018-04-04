@@ -25,8 +25,9 @@ package net.katsstuff.ackcord.util
 
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
-import net.katsstuff.ackcord.APIMessage
+import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
 
 object GuildStreams {
@@ -54,7 +55,8 @@ object GuildStreams {
             case msg: APIMessage.ChannelMessage =>
               msg.channel.asGuildChannel.map(_.guildId)
             case msg: APIMessage.MessageMessage =>
-              msg.message.tGuildChannel(msg.cache.current).map(_.guildId)
+              implicit val c: CacheSnapshot = msg.cache.current
+              msg.message.tGuildChannel.value.map(_.guildId)
             case APIMessage.VoiceStateUpdate(state, _) => state.guildId
             case msg: GatewayEvent.GuildCreate =>
               msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))

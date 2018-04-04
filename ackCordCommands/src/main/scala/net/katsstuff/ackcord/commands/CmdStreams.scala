@@ -32,6 +32,7 @@ import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{Message, User}
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
 object CmdStreams {
@@ -123,11 +124,11 @@ object CmdStreams {
           val errors = filtered.failedFilters.flatMap(_.errorMessage(filtered.cmd.msg)(filtered.cmd.c))
 
           if (errors.nonEmpty) {
-            filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
+            filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).value.map(_.sendMessage(errors.mkString("\n")))
           } else None
 
         case parseError: CmdParseError =>
-          parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
+          parseError.msg.channelId.tResolve(parseError.cache).value.map(_.sendMessage(parseError.error))
       }
       .mapConcat(_.toList)
 
@@ -141,7 +142,7 @@ object CmdStreams {
 
       quickCheck.flatMap { args =>
         MessageParser[User]
-          .parse(args)
+          .parse(args).value
           .toOption
           .flatMap {
             case (remaining, user) if user.id == c.botUser.id => Some(remaining)

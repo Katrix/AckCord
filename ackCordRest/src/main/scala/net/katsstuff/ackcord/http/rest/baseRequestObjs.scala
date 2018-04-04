@@ -1,17 +1,19 @@
 package net.katsstuff.ackcord.http.rest
 
 import scala.concurrent.Future
+import scala.language.higherKinds
 
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
+import cats.{Monad, MonadError}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe._
 import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.requests.{Request, `X-Audit-Log-Reason`}
+import net.katsstuff.ackcord.http.requests.{`X-Audit-Log-Reason`, Request}
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
 
 /**
@@ -63,15 +65,23 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
   /**
     * Check if a client has the needed permissions to execute this request.
     */
-  def hasPermissions(implicit c: CacheSnapshotLike): Boolean = true
+  def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] = Monad[F].pure(true)
 
   /**
     * Throw an exception if the client doesn't have the needed permissions to
     * execute this request.
     */
-  def requirePerms(implicit c: CacheSnapshotLike): this.type = {
-    require(hasPermissions, "Did not have sufficient permissions to complete that action")
-    this
+  def requirePerms[F[_]](
+      implicit c: CacheSnapshotLike[F],
+      F: MonadError[F, Throwable]
+  ): F[BaseRESTRequest[RawResponse, NiceResponse, Ctx]] = {
+    F.flatMap(hasPermissions) { hasPerms =>
+      if (!hasPerms)
+        F.raiseError[BaseRESTRequest[RawResponse, NiceResponse, Ctx]](
+          new IllegalStateException(s"Did not have required permissions for $toString")
+        )
+      else F.pure(this)
+    }
   }
 }
 
@@ -109,7 +119,7 @@ trait RESTRequest[Params, RawResponse, NiceResponse, Ctx] extends BaseRESTReques
   * A complex REST request with an audit log reason.
   */
 trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceResponse, Ctx], Params, RawResponse, NiceResponse, Ctx]
-  extends RESTRequest[Params, RawResponse, NiceResponse, Ctx] {
+    extends RESTRequest[Params, RawResponse, NiceResponse, Ctx] {
 
   /**
     * A reason to add to the audit log entry.
@@ -134,7 +144,7 @@ trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUse
   * A request that takes no params with an audit log reason.
   */
 trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, NiceResponse, Ctx], RawResponse, NiceResponse, Ctx]
-  extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx] {
+    extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params:        NotUsed          = NotUsed
 }
@@ -151,7 +161,7 @@ trait NoNiceResponseRequest[Params, Response, Ctx] extends RESTRequest[Params, R
   * the nice response type are the same.
   */
 trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Params, Response, Ctx], Params, Response, Ctx]
-  extends ReasonRequest[Self, Params, Response, Response, Ctx] {
+    extends ReasonRequest[Self, Params, Response, Response, Ctx] {
   override def toNiceResponse(response: Response): Response = response
 }
 
@@ -160,7 +170,7 @@ trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Para
   * nice response type are the same.
   */
 trait NoParamsNiceResponseRequest[Response, Ctx]
-  extends NoParamsRequest[Response, Response, Ctx]
+    extends NoParamsRequest[Response, Response, Ctx]
     with NoNiceResponseRequest[NotUsed, Response, Ctx]
 
 /**
@@ -168,7 +178,7 @@ trait NoParamsNiceResponseRequest[Response, Ctx]
   * nice response type are the same.
   */
 trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonRequest[Self, Response, Ctx], Response, Ctx]
-  extends NoParamsReasonRequest[Self, Response, Response, Ctx]
+    extends NoParamsReasonRequest[Self, Response, Response, Ctx]
     with NoNiceResponseReasonRequest[Self, NotUsed, Response, Ctx]
 
 /**
@@ -182,7 +192,7 @@ trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUs
   * A request, with an audit log reason, that doesn't have a response.
   */
 trait NoResponseReasonRequest[Self <: NoResponseReasonRequest[Self, Params, Ctx], Params, Ctx]
-  extends NoNiceResponseReasonRequest[Self, Params, NotUsed, Ctx] {
+    extends NoNiceResponseReasonRequest[Self, Params, NotUsed, Ctx] {
   override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
 }
 
@@ -195,5 +205,5 @@ trait NoParamsResponseRequest[Ctx] extends NoParamsRequest[NotUsed, NotUsed, Ctx
   * A request that has neither params nor a response with a reason.
   */
 trait NoParamsResponseReasonRequest[Self <: NoParamsResponseReasonRequest[Self, Ctx], Ctx]
-  extends NoParamsReasonRequest[Self, NotUsed, NotUsed, Ctx]
+    extends NoParamsReasonRequest[Self, NotUsed, NotUsed, Ctx]
     with NoResponseReasonRequest[Self, NotUsed, Ctx]

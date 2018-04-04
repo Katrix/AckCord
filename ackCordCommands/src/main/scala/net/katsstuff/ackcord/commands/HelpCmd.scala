@@ -27,15 +27,19 @@ import java.util.Locale
 
 import scala.collection.mutable
 import scala.concurrent.Future
+import scala.language.higherKinds
 
 import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef}
-import net.katsstuff.ackcord.CacheSnapshot
+import cats.Monad
+import cats.data.EitherT
+import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.requests.Request
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
@@ -75,7 +79,7 @@ abstract class HelpCmd extends Actor {
       if (page > 0) {
         sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
       } else {
-        msg.channelId.tResolve match {
+        msg.channelId.tResolve.value match {
           case Some(channel) => sendMessageAndAck(sender(), channel.sendMessage(s"Invalid page $page"))
           case None          => sendAck(sender())
         }
@@ -142,15 +146,14 @@ object HelpCmd {
 
     //We write out the parser ourself as string parses any string
     implicit val parser: MessageParser[Args] = new MessageParser[Args] {
-      override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], Args)] = {
+      override def parse[F[_] : Monad](strings: List[String])(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], Args)] = {
         if (strings.nonEmpty) {
           val head :: tail = strings
           MessageParser.intParser
             .parse(strings)
             .map(t => t._1 -> PageArgs(t._2))
-            .left
-            .flatMap(_ => Right((tail, CommandArgs(head))))
-        } else Left("Not enough arguments")
+            .leftFlatMap(_ => EitherT.rightT[F, String]((tail, CommandArgs(head))))
+        } else EitherT.leftT[F, (List[String], Args)]("Not enough arguments")
       }
     }
   }

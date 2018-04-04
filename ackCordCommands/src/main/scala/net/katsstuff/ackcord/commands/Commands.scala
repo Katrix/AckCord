@@ -69,8 +69,9 @@ case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[C
       implicit parser: MessageParser[A]
   ): Source[ParsedCmdMessage[A], NotUsed] = subscribeCmd(category, aliases, filters).collect {
     case cmd: Cmd =>
+      implicit val c: CacheSnapshot = cmd.cache
       parser
-        .parse(cmd.args)(cmd.cache)
+        .parse(cmd.args).value
         .fold(e => CmdParseError(cmd.msg, e, cmd.cache), res => ParsedCmd(cmd.msg, res._2, res._1, cmd.cache))
 
     case filtered: FilteredCmd => filtered

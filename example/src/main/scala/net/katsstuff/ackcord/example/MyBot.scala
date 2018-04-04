@@ -27,8 +27,10 @@ import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudio
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, ParsedCmd, RawCmd}
-import net.katsstuff.ackcord.{APIMessage, ClientSettings, CommandSettings, RequestDSL}
+import cats.Id
+import net.katsstuff.ackcord.commands._
+import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.syntax._
 
 object MyBot extends App {
 
@@ -59,7 +61,7 @@ object MyBot extends App {
           case APIMessage.ChannelDelete(channel, _) =>
             for {
               guildChannel <- maybePure(channel.asGuildChannel)
-              guild        <- maybePure(guildChannel.guild)
+              guild        <- maybePure(guildChannel.guild.value)
               _            <- maybeRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
             } yield ()
         }
@@ -79,7 +81,7 @@ object MyBot extends App {
         {
           case RawCmd(message, GeneralCommands, "echo", args, _) =>
             for {
-              channel <- maybePure(message.tGuildChannel)
+              channel <- maybePure(message.tGuildChannel[Id].value)
               _       <- channel.sendMessage(s"ECHO: ${args.mkString(" ")}")
             } yield ()
         }
@@ -104,9 +106,9 @@ object MyBot extends App {
         description = Some(CmdDescription("Queue", "Queue a track"))
       ) { implicit c => cmd: ParsedCmd[String] =>
         for {
-          channel    <- cmd.msg.tGuildChannel
+          channel    <- cmd.msg.tGuildChannel[Id].value
           authorId   <- cmd.msg.authorUserId
-          guild      <- channel.guild
+          guild      <- channel.guild[Id].value
           vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
         } {
           val guildId     = guild.id

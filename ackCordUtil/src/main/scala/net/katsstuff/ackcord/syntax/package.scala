@@ -25,7 +25,11 @@ package net.katsstuff.ackcord
 
 import java.nio.file.Path
 
+import scala.language.higherKinds
+
 import akka.NotUsed
+import cats.{Functor, Monad, Traverse}
+import cats.data.OptionT
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.rest._
 import net.katsstuff.ackcord.http.rest.{RestOption, RestSome, RestUndefined}
@@ -161,10 +165,10 @@ package object syntax {
     /**
       * Get the category of this channel.
       */
-    def category(implicit snapshot: CacheSnapshotLike): Option[GuildCategory] =
+    def category[F[_]: Monad](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, GuildCategory] =
       for {
         guild <- channel.guild
-        cat   <- category(guild)
+        cat   <- OptionT.fromOption[F](category(guild))
       } yield cat
 
     /**
@@ -346,8 +350,12 @@ package object syntax {
     /**
       * Get the users connected to this voice channel.
       */
-    def connectedUsers(implicit c: CacheSnapshotLike): Seq[User] =
-      c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolve)).getOrElse(Seq.empty)
+    def connectedUsers[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Seq[User]] = {
+      c.getGuild(channel.guildId).semiflatMap { g =>
+        import cats.instances.list._
+        Traverse[List].traverse(connectedUsers(g).toList)(_.resolve[F].value)
+      }.cata(Nil, _.flatten.toSeq)
+    }
 
     /**
       * Get the users connected to this voice channel using an preexisting guild.
@@ -358,8 +366,12 @@ package object syntax {
     /**
       * Get the guild members connected to this voice channel.
       */
-    def connectedMembers(implicit c: CacheSnapshotLike): Seq[GuildMember] =
-      c.getGuild(channel.guildId).map(g => connectedUsers(g).flatMap(_.resolveMember(g.id))).getOrElse(Seq.empty)
+    def connectedMembers[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Seq[GuildMember]] = {
+      c.getGuild(channel.guildId).semiflatMap { g =>
+        import cats.instances.list._
+        Traverse[List].traverse(connectedUsers(g).toList)(_.resolveMember[F](g.id).value)
+      }.cata(Nil, _.flatten.toSeq)
+    }
   }
 
   implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
@@ -367,7 +379,7 @@ package object syntax {
     /**
       * Get all the channels in this category.
       */
-    def channels(implicit snapshot: CacheSnapshotLike): Seq[GuildChannel] =
+    def channels[F[_]: Functor](implicit snapshot: CacheSnapshotLike[F]): F[Seq[GuildChannel]] =
       category.guild
         .map { g =>
           g.channels.collect {
@@ -385,8 +397,8 @@ package object syntax {
     /**
       * Get all the text channels in this category.
       */
-    def tChannels(implicit snapshot: CacheSnapshotLike): Seq[TGuildChannel] =
-      channels.collect { case tChannel: TGuildChannel => tChannel }
+    def tChannels[F[_]: Functor](implicit snapshot: CacheSnapshotLike[F]): F[Seq[TGuildChannel]] =
+      Functor[F].map(channels)(_.collect { case tChannel: TGuildChannel => tChannel })
 
     /**
       * Get all the text channels in this category using an preexisting guild.
@@ -397,8 +409,8 @@ package object syntax {
     /**
       * Get all the voice channels in this category.
       */
-    def vChannels(implicit snapshot: CacheSnapshotLike): Seq[VGuildChannel] =
-      channels.collect { case tChannel: VGuildChannel => tChannel }
+    def vChannels[F[_]: Functor](implicit snapshot: CacheSnapshotLike[F]): F[Seq[VGuildChannel]] =
+      Functor[F].map(channels)(_.collect { case tChannel: VGuildChannel => tChannel })
 
     /**
       * Get all the voice channels in this category using an preexisting guild.
@@ -410,7 +422,8 @@ package object syntax {
       * Get a channel by id in this category.
       * @param id The id of the channel.
       */
-    def channelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[GuildChannel] = channels.find(_.id == id)
+    def channelById[F[_]: Functor](id: ChannelId)(implicit snapshot: CacheSnapshotLike[F]): OptionT[F, GuildChannel] =
+      OptionT(Functor[F].map(channels)(_.find(_.id == id)))
 
     /**
       * Get a channel by id in this category using an preexisting guild.
@@ -422,7 +435,7 @@ package object syntax {
       * Get a text channel by id in this category.
       * @param id The id of the channel.
       */
-    def tChannelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[TGuildChannel] =
+    def tChannelById[F[_]: Functor](id: ChannelId)(implicit snapshot: CacheSnapshotLike[F]): OptionT[F, TGuildChannel] =
       channelById(id).collect {
         case tChannel: TGuildChannel => tChannel
       }
@@ -439,7 +452,7 @@ package object syntax {
       * Get a voice channel by id in this category.
       * @param id The id of the channel.
       */
-    def vChannelById(id: ChannelId)(implicit snapshot: CacheSnapshotLike): Option[VGuildChannel] =
+    def vChannelById[F[_]: Functor](id: ChannelId)(implicit snapshot: CacheSnapshotLike[F]): OptionT[F, VGuildChannel] =
       channelById(id).collect {
         case vChannel: VGuildChannel => vChannel
       }
@@ -456,8 +469,8 @@ package object syntax {
       * Get all the channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def channelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[GuildChannel] =
-      channels.filter(_.name == name)
+    def channelsByName[F[_]: Functor](name: String)(implicit snapshot: CacheSnapshotLike[F]): F[Seq[GuildChannel]] =
+      Functor[F].map(channels)(_.filter(_.name == name))
 
     /**
       * Get all the channels with a name in this category using an preexisting guild.
@@ -470,8 +483,8 @@ package object syntax {
       * Get all the text channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def tChannelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[TGuildChannel] =
-      tChannels.filter(_.name == name)
+    def tChannelsByName[F[_]: Functor](name: String)(implicit snapshot: CacheSnapshotLike[F]): F[Seq[TGuildChannel]] =
+      Functor[F].map(tChannels)(_.filter(_.name == name))
 
     /**
       * Get all the text channels with a name in this category using an preexisting guild.
@@ -484,8 +497,8 @@ package object syntax {
       * Get all the voice channels with a name in this category.
       * @param name The name of the guilds.
       */
-    def vChannelsByName(name: String)(implicit snapshot: CacheSnapshotLike): Seq[VGuildChannel] =
-      vChannels.filter(_.name == name)
+    def vChannelsByName[F[_]: Functor](name: String)(implicit snapshot: CacheSnapshotLike[F]): F[Seq[VGuildChannel]] =
+      Functor[F].map(vChannels)(_.filter(_.name == name))
 
     /**
       * Get all the voice channels with a name in this category using an preexisting guild.
@@ -523,7 +536,7 @@ package object syntax {
     /**
       * Get the owner of this guild.
       */
-    def owner(implicit snapshot: CacheSnapshotLike): Option[User] = snapshot.getUser(guild.ownerId)
+    def owner[F[_]](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, User] = snapshot.getUser(guild.ownerId)
 
     /**
       * Modify this guild.
@@ -1001,8 +1014,8 @@ package object syntax {
     /**
       * Get all the roles for this guild member.
       */
-    def rolesForUser(implicit snapshot: CacheSnapshotLike): Seq[Role] =
-      guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).toSeq.flatten
+    def rolesForUser[F[_]: Functor](implicit snapshot: CacheSnapshotLike[F]): F[Seq[Role]] =
+      guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).getOrElse(Seq.empty)
 
     /**
       * Get all the roles for this guild member given a preexisting guild.
@@ -1185,9 +1198,8 @@ package object syntax {
     /**
       * Get an existing DM channel for this user.
       */
-    def getDMChannel(implicit snapshot: CacheSnapshotLike): Option[DMChannel] = snapshot.dmChannels.collectFirst {
-      case (_, ch) if ch.userId == user.id => ch
-    }
+    def getDMChannel[F[_]](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, DMChannel] =
+      snapshot.getUserDmChannel(user.id)
 
     /**
       * Create a new dm channel for this user.

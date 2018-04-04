@@ -1,6 +1,9 @@
 package net.katsstuff.ackcord.http.rest
 
+import scala.language.higherKinds
+
 import akka.NotUsed
+import cats.Monad
 import io.circe.Decoder
 import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.data.DiscordProtocol._
@@ -20,6 +23,6 @@ case class GetGuildAuditLog[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
   override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
 
   override def requiredPermissions: Permission = Permission.ViewAuditLog
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
 }

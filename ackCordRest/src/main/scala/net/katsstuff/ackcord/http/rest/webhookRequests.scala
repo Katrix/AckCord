@@ -1,13 +1,15 @@
 package net.katsstuff.ackcord.http.rest
 
+import scala.language.higherKinds
+
 import akka.NotUsed
+import cats.Monad
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.RequestRoute
 import net.katsstuff.ackcord.CacheSnapshotLike
-
 import net.katsstuff.ackcord.data.DiscordProtocol._
 
 /**
@@ -33,7 +35,7 @@ case class CreateWebhook[Ctx](
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): CreateWebhook[Ctx] = copy(reason = Some(reason))
@@ -49,7 +51,7 @@ case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed:
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -63,7 +65,7 @@ case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 

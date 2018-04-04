@@ -27,173 +27,175 @@ import java.time.Instant
 
 import scala.language.higherKinds
 
+import cats.data.OptionT
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data._
 import shapeless.tag._
 
 /**
-  * A representation of the cache
+  * A representation of the cache.
   */
-trait CacheSnapshotLike {
+trait CacheSnapshotLike[F[_]] {
 
   /**
-    * The map type to use. Mutable for builder, immutable otherwise
+    * The map type to use. Mutable for builder, immutable otherwise.
     */
   type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
 
   /**
-    * Our bot user. Tagged to allow special syntax
+    * Our bot user. Tagged to allow special syntax.
     */
-  def botUser: User @@ BotUser
+  def botUser: F[User @@ BotUser]
 
   /**
-    * The current dm channels
+    * The current dm channels.
     */
-  def dmChannels: MapType[Channel, DMChannel]
+  def dmChannelMap: F[MapType[Channel, DMChannel]]
 
   /**
-    * The current group dm channels
+    * The current group dm channels.
     */
-  def groupDmChannels: MapType[Channel, GroupDMChannel]
+  def groupDmChannelMap: F[MapType[Channel, GroupDMChannel]]
 
   /**
-    * The guilds currently not available
+    * The guilds currently not available.
     */
-  def unavailableGuilds: MapType[Guild, UnavailableGuild]
+  def unavailableGuildMap: F[MapType[Guild, UnavailableGuild]]
 
   /**
-    * The currently joined guilds
+    * The currently joined guilds.
     */
-  def guilds: MapType[Guild, Guild]
+  def guildMap: F[MapType[Guild, Guild]]
 
   /**
-    * All messages, organized by channelId, and then messageId
+    * All messages, organized by channelId, and then messageId.
     */
-  def messages: MapType[Channel, MapType[Message, Message]]
+  def messageMap: F[MapType[Channel, MapType[Message, Message]]]
 
   /**
-    * The point each user typed for each channel
+    * The point each user typed for each channel.
     */
-  def lastTyped: MapType[Channel, MapType[User, Instant]]
+  def lastTypedMap: F[MapType[Channel, MapType[User, Instant]]]
 
   /**
-    * All the users currently tracked
+    * All the users currently tracked.
     */
-  def users: MapType[User, User]
+  def userMap: F[MapType[User, User]]
 
   /**
     * The bans received this session. NOTE: This is not all the bans that exists,
     * only the ones received during this session. If you want all the bans,
-    * use [[net.katsstuff.ackcord.network.requests.RESTRequests.GetGuildBans]].
+    * use [[net.katsstuff.ackcord.http.rest.GetGuildBans]].
     */
-  def bans: MapType[Guild, MapType[User, Ban]]
+  def banMap: F[MapType[Guild, MapType[User, Ban]]]
 
   /**
-    * Get a dm channel by id
+    * Get a dm channel by id.
     */
-  def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannels.get(id)
+  def getDmChannel(id: ChannelId): OptionT[F, DMChannel]
 
   /**
-    * Get a group dm channel by id
+    * Get the dm channel for a specific user.
     */
-  def getGroupDmChannel(id: ChannelId): Option[GroupDMChannel] = groupDmChannels.get(id)
+  def getUserDmChannel(id: UserId): OptionT[F, DMChannel]
 
   /**
-    * Get a guild by id
+    * Get a group dm channel by id.
     */
-  def getGuild(id: GuildId): Option[Guild] = guilds.get(id)
+  def getGroupDmChannel(id: ChannelId): OptionT[F, GroupDMChannel]
 
   /**
-    * Get guild by id, also including unavailable guilds
+    * Get a guild by id.
     */
-  def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] =
-    guilds.get(id).orElse(unavailableGuilds.get(id))
+  def getGuild(id: GuildId): OptionT[F, Guild]
 
   /**
-    * Get a guild channel
+    * Get guild by id, also including unavailable guilds.
+    */
+  def getGuildWithUnavailable(id: GuildId): OptionT[F, UnknownStatusGuild]
+
+  /**
+    * Gets all the messages for a specific channel.
+    */
+  def getChannelMessages(channelId: ChannelId): F[MapType[Message, Message]]
+
+  /**
+    * Get a message, specifying both the channel, and message id.
+    */
+  def getMessage(channelId: ChannelId, messageId: MessageId): OptionT[F, Message]
+
+  /**
+    * Get a message by id without knowing the channel it belongs to.
+    */
+  def getMessage(messageId: MessageId): OptionT[F, Message]
+
+  /**
+    * Get a guild channel.
     * @param guildId The guild id
     * @param id The channel id
     */
-  def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] =
-    guilds.get(guildId).flatMap(_.channels.get(id))
+  def getGuildChannel(guildId: GuildId, id: ChannelId): OptionT[F, GuildChannel]
 
   /**
-    * Get a guild channel by id without knowing the guild it belongs to
+    * Get a guild channel by id without knowing the guild it belongs to.
     */
-  def getGuildChannel(id: ChannelId): Option[GuildChannel] = guilds.values.collectFirst {
-    case guild if guild.channels.contains(id) => guild.channels(id)
-  }
+  def getGuildChannel(id: ChannelId): OptionT[F, GuildChannel]
 
   /**
-    * Get a channel by id, ignoring if it's a dm or guild channel
+    * Get a channel by id, ignoring if it's a dm or guild channel.
     */
-  def getChannel(id: ChannelId): Option[Channel] = getDmChannel(id).orElse(getGuildChannel(id))
+  def getChannel(id: ChannelId): OptionT[F, Channel]
 
   /**
-    * Get a text channel by id, ignoring if it's a dm or guild channel
+    * Get a text channel by id, ignoring if it's a dm or guild channel.
     */
-  def getTChannel(id: ChannelId): Option[TChannel] = getChannel(id).collect { case tc: TChannel => tc }
+  def getTChannel(id: ChannelId): OptionT[F, TChannel]
 
   /**
-    * Get a role by id without knowing the guild it belongs to
+    * Get a role by id without knowing the guild it belongs to.
     */
-  def getRole(id: RoleId): Option[Role] = guilds.values.collectFirst {
-    case guild if guild.roles.contains(id) => guild.roles(id)
-  }
+  def getRole(id: RoleId): OptionT[F, Role]
 
   /**
     * Get a role by a guildId and a roleID.
     */
-  def getRole(guildId: GuildId, roleId: RoleId): Option[Role] = getGuild(guildId).flatMap(_.roles.get(roleId))
+  def getRole(guildId: GuildId, roleId: RoleId): OptionT[F, Role]
 
   /**
-    * Get an emoji by id without knowing the guild it belongs to
+    * Get an emoji by id without knowing the guild it belongs to.
     */
-  def getEmoji(id: EmojiId): Option[Emoji] = guilds.values.collectFirst {
-    case guild if guild.emojis.contains(id) => guild.emojis(id)
-  }
+  def getEmoji(id: EmojiId): OptionT[F, Emoji]
 
   /**
-    * Get all the messages for a certain channel
+    * Get a map of when users last typed in a channel.
     */
-  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
+  def getChannelLastTyped(channelId: ChannelId): F[MapType[User, Instant]]
 
   /**
-    * Get a message, specifying both the channel, and message id
+    * Get the instant a user last typed in a channel.
     */
-  def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message] =
-    messages.get(channelId).flatMap(_.get(messageId))
+  def getLastTyped(channelId: ChannelId, userId: UserId): OptionT[F, Instant]
+
+  //For implementers, remember to check if the user to return is the bot user
+  /**
+    * Get a user by id.
+    */
+  def getUser(id: UserId): OptionT[F, User]
 
   /**
-    * Get a message by id without knowing the channel it belongs to
+    * Gets all the bans for a specific guild.
     */
-  def getMessage(messageId: MessageId): Option[Message] = messages.values.collectFirst {
-    case channelMap if channelMap.contains(messageId) => channelMap(messageId)
-  }
+  def getGuildBans(id: GuildId): F[MapType[User, Ban]]
 
   /**
-    * Get a map of when users last typed in a channel
+    * Gets the ban for a specific user.
     */
-  def getChannelLastTyped(channelId: ChannelId): MapType[User, Instant]
-
-  /**
-    * Get the instant a user last typed in a channel
-    */
-  def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant] =
-    lastTyped.get(channelId).flatMap(_.get(userId))
-
-  /**
-    * Get a user by id
-    */
-  def getUser(id: UserId): Option[User] =
-    if (id == botUser.id) Some(botUser)
-    else users.get(id)
+  def getBan(guildId: GuildId, userId: UserId): OptionT[F, Ban]
 
   /**
     * Get the presence of a user for a specific guild
     */
-  def getPresence(guildId: GuildId, userId: UserId): Option[Presence] =
-    getGuild(guildId).flatMap(_.presences.get(userId))
+  def getPresence(guildId: GuildId, userId: UserId): OptionT[F, Presence]
 }
 
 object CacheSnapshotLike {

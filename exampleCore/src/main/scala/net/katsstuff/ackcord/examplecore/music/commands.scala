@@ -34,6 +34,7 @@ import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdFacto
 import net.katsstuff.ackcord.data.{GuildId, TChannel, UserId, VoiceState}
 import net.katsstuff.ackcord.examplecore.ExampleCmdCategories
 import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
+import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.RequestDSL
 
 class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeout, ec: ExecutionContext) {
@@ -44,7 +45,7 @@ class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeo
     flow = ParsedCmdFlow[String].map { implicit c => cmd =>
       import RequestDSL._
       for {
-        guild   <- maybePure(guildId.resolve)
+        guild   <- maybePure(guildId.resolve.value)
         channel <- maybePure(guild.tChannelById(cmd.msg.channelId))
         _ <- {
           fromFuture {
@@ -67,7 +68,7 @@ class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeo
       aliases = aliases,
       sink = requests =>
         ParsedCmdFlow[NotUsed]
-          .mapConcat(implicit c => cmd => cmd.msg.tGuildChannel(guildId).map(mapper).toList)
+          .mapConcat(implicit c => cmd => cmd.msg.tGuildChannel(guildId).value.map(mapper).toList)
           .ask[MusicHandler.CommandAck.type](requests.parallelism)(musicHandler)
           .toMat(Sink.ignore)(Keep.right),
       filters = Seq(CmdFilter.InOneGuild(guildId)),

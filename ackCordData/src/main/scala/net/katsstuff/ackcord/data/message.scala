@@ -26,8 +26,14 @@ package net.katsstuff.ackcord.data
 import java.time.OffsetDateTime
 import java.util.Base64
 
+import scala.language.higherKinds
 import scala.util.Try
 
+import cats.instances.list._
+import cats.syntax.flatMap._
+import cats.syntax.functor._
+import cats.syntax.traverse._
+import cats.{Applicative, Monad}
 import net.katsstuff.ackcord.CacheSnapshotLike
 
 sealed trait ImageFormat {
@@ -38,19 +44,19 @@ sealed trait ImageFormat {
 object ImageFormat {
   case object JPEG extends ImageFormat {
     override def extensions: Seq[String] = Seq("jpg", "jpeg")
-    override def base64Name: String = "image/jpeg"
+    override def base64Name: String      = "image/jpeg"
   }
   case object PNG extends ImageFormat {
     override def extensions: Seq[String] = Seq("png")
-    override def base64Name: String = "image/png"
+    override def base64Name: String      = "image/png"
   }
   case object WebP extends ImageFormat {
     override def extensions: Seq[String] = Seq("webp")
-    override def base64Name: String = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
+    override def base64Name: String      = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
   }
   case object GIF extends ImageFormat {
     override def extensions: Seq[String] = Seq("gif")
-    override def base64Name: String = "image/gif"
+    override def base64Name: String      = "image/gif"
   }
 }
 
@@ -183,9 +189,9 @@ case class Connection(
 
 sealed trait MessageActivityType
 object MessageActivityType {
-  case object Join extends MessageActivityType
-  case object Spectate extends MessageActivityType
-  case object Listen extends MessageActivityType
+  case object Join        extends MessageActivityType
+  case object Spectate    extends MessageActivityType
+  case object Listen      extends MessageActivityType
   case object JoinRequest extends MessageActivityType
 
   def fromId(id: Int): Option[MessageActivityType] = id match {
@@ -208,10 +214,7 @@ object MessageActivityType {
   * @param activityType Activity type.
   * @param partyId Party id from rich presence.
   */
-case class MessageActivity(
-    activityType: MessageActivityType,
-    partyId: Option[String]
-)
+case class MessageActivity(activityType: MessageActivityType, partyId: Option[String])
 
 /**
   * @param id Id of the application
@@ -220,13 +223,7 @@ case class MessageActivity(
   * @param icon Id of icon of the application
   * @param name Name of the application
   */
-case class MessageApplication(
-    id: RawSnowflake,
-    coverImage: String,
-    description: String,
-    icon: String,
-    name: String
-)
+case class MessageApplication(id: RawSnowflake, coverImage: String, description: String, icon: String, name: String)
 
 /**
   * A message sent to a channel.
@@ -270,7 +267,7 @@ case class Message(
     application: Option[MessageApplication]
 ) extends GetTChannel {
 
-  def authorUserId: Option[UserId] = if(isAuthorUser) Some(UserId(authorId)) else None
+  def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
   private val channelRegex = """<#(\d+)>""".r
 
@@ -288,21 +285,22 @@ case class Message(
   /**
     * Formats mentions in this message to their normal syntax with names.
     */
-  def formatMentions(implicit c: CacheSnapshotLike): String = {
-    val withUsers = mentions
-      .flatMap(_.resolve)
-      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
-    val withRoles = mentionRoles
-      .flatMap(_.resolve)
-      .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
-
-    val optGuildId = channelId.resolve.collect {
-      case channel: GuildChannel => channel.guildId
-    }
-
-    optGuildId.fold(withRoles) { guildId =>
-      val withChannels = channelMentions
-        .flatMap(_.guildResolve(guildId))
+  def formatMentions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[String] = {
+    for {
+      userList <- mentions.toList.traverse(_.resolve.value)
+      roleList <- mentionRoles.toList.traverse(_.resolve.value)
+      optGuildId <- channelId.resolve.collect {
+        case channel: GuildChannel => channel.guildId
+      }.value
+      channelList <- optGuildId.fold[F[List[Option[GuildChannel]]]](Applicative[F].pure(Nil))(
+        guildId => channelMentions.toList.traverse(_.guildResolve(guildId).value)
+      )
+    } yield {
+      val withUsers = userList.flatten
+        .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
+      val withRoles = roleList.flatten
+        .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
+      val withChannels = channelList.flatten
         .foldRight(withRoles)((channel, content) => content.replace(channel.mention, s"@${channel.name}"))
 
       withChannels
@@ -445,7 +443,7 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
   * @param value The value or text of the field
   * @param inline If the field is rendered inline.
   */
-case class EmbedField(name: String, value: String, inline: Option[Boolean] = None) {
+case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = None) {
   require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
   require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
 }
@@ -505,11 +503,11 @@ case class OutgoingEmbed(
     * The total amount of characters in this embed so far.
     */
   def totalCharAmount: Int = {
-    val fromTitle = title.fold(0)(_.length)
+    val fromTitle       = title.fold(0)(_.length)
     val fromDescription = description.fold(0)(_.length)
-    val fromFooter = footer.fold(0)(_.text.length)
-    val fromAuthor = author.fold(0)(_.name.length)
-    val fromFields = fields.map(f => f.name.length + f.value.length).sum
+    val fromFooter      = footer.fold(0)(_.text.length)
+    val fromAuthor      = author.fold(0)(_.name.length)
+    val fromFields      = fields.map(f => f.name.length + f.value.length).sum
 
     fromTitle + fromDescription + fromFooter + fromAuthor + fromFields
   }

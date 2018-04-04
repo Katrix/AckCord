@@ -35,6 +35,7 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.http.rest._
+import net.katsstuff.ackcord.syntax._
 
 package object commands {
 
@@ -62,7 +63,7 @@ package object commands {
 
       //Using mapConcat for optional values
       ParsedCmdFlow[NotUsed]
-        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.toList)
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.toList)
         .map(_.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed)))
         .to(requests.sinkIgnore)
     },
@@ -84,13 +85,13 @@ package object commands {
           val GetChannelInfo(guildId, senderChannelId, c) = answer.context
           implicit val cache: CacheSnapshot = c
           val content = answer match {
-            case response: RequestResponse[RawChannel, _] =>
+            case response: RequestResponse[RawChannel, GetChannelInfo] =>
               val data = response.data
               s"Info for ${data.name}:\n$data"
             case _: FailedRequest[_] => "Error encountered"
           }
 
-          senderChannelId.tResolve(guildId).map(_.sendMessage(content)).toList
+          senderChannelId.tResolve(guildId).value.map(_.sendMessage(content)).toList
         }
         .to(requests.sinkIgnore)
     },
@@ -117,7 +118,7 @@ package object commands {
       //Using request dsl
       import RequestDSL._
       for {
-        channel <- maybePure(cmd.msg.channelId.tResolve)
+        channel <- maybePure(cmd.msg.channelId.tResolve.value)
         sentMsg <- channel.sendMessage("Msg")
         time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
         _ <- channel.sendMessage(s"$time ms between command and response")
@@ -136,7 +137,7 @@ package object commands {
     aliases = Seq("ratelimitTest"),
     sink = requests =>
       ParsedCmdFlow[Int]
-        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.map(_ -> cmd.args).toList)
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.map(_ -> cmd.args).toList)
         .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
         .to(requests.sinkIgnore),
     description = Some(

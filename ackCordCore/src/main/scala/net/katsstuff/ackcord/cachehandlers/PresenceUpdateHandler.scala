@@ -31,9 +31,9 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
     val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status) = obj
 
-    builder.guilds.get(guildId).foreach { oldGuild =>
+    builder.guildMap.get(guildId).foreach { oldGuild =>
       //Add the user
-      builder.getUser(partialUser.id) match {
+      builder.getUser(partialUser.id).value match {
         case Some(existingUser) =>
           val newUser = existingUser.copy(
             username = partialUser.username.getOrElse(existingUser.username),
@@ -44,7 +44,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
             verified = partialUser.verified.orElse(existingUser.verified),
             email = partialUser.email.orElse(existingUser.email)
           )
-          builder.users.put(newUser.id, newUser)
+          builder.userMap.put(newUser.id, newUser)
 
         case None =>
           //Let's try to create a user
@@ -63,7 +63,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
               email = partialUser.email
             )
 
-            builder.users.put(newUser.id, newUser)
+            builder.userMap.put(newUser.id, newUser)
           }
       }
 
@@ -80,7 +80,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
         members = newMembers
       )
 
-      builder.guilds.put(guildId, newGuild)
+      builder.guildMap.put(guildId, newGuild)
     }
   }
 }

@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.commands
 
 import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.syntax._
 
 /**
   * A command filter is something used to limit the scope in which a command
@@ -88,7 +89,7 @@ object CmdFilter {
       guildId.resolve.map(_.members).exists(_.contains(userId))
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.tGuildChannel(guildId).nonEmpty
+      msg.tGuildChannel(guildId).value.nonEmpty
 
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] = None
   }
@@ -104,9 +105,9 @@ object CmdFilter {
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val allowed = for {
-        channel      <- msg.channelId.tResolve
+        channel      <- msg.channelId.tResolve.value
         guildChannel <- channel.asGuildChannel
-        guild        <- guildChannel.guild
+        guild        <- guildChannel.guild.value
         member       <- guild.members.get(UserId(msg.authorId))
         if member.channelPermissions(msg.channelId).hasPermissions(neededPermission)
       } yield true

@@ -23,11 +23,13 @@
  */
 package net.katsstuff.ackcord.util
 
-import scala.language.implicitConversions
+import scala.language.{higherKinds, implicitConversions}
 import scala.util.Try
 import scala.util.matching.Regex
 
 import akka.NotUsed
+import cats.Monad
+import cats.data.{EitherT, OptionT}
 import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
@@ -48,7 +50,7 @@ trait MessageParser[A] { self =>
     * @return Left with an error message if it failed to parse, or Right with
     *         the remaining arguments, and the parsed value.
     */
-  def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)]
+  def parse[F[_]: Monad](strings: List[String])(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)]
 
   /**
     * Parse a message into the needed types, tossing away the remaining string.
@@ -58,7 +60,7 @@ trait MessageParser[A] { self =>
     * @return Left with an error message if it failed to parse, or Right with
     *         the parsed value.
     */
-  def parseResult(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, A] =
+  def parseResult[F[_]: Monad](strings: List[String])(implicit c: CacheSnapshotLike[F]): EitherT[F, String, A] =
     parse(strings).map(_._2)
 
   /**
@@ -67,8 +69,10 @@ trait MessageParser[A] { self =>
     * @param error The error message if the value does not match the predicate.
     */
   def filterWithError(f: A => Boolean, error: String): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
-      self.parse(strings)(c).filterOrElse({ case (_, obj) => f(obj) }, error)
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)] =
+      self.parse(strings).ensure(error) { case (_, obj) => f(obj) }
   }
 
   /**
@@ -77,8 +81,10 @@ trait MessageParser[A] { self =>
     * @tparam B The new parser type
     */
   def map[B](f: A => B): MessageParser[B] = new MessageParser[B] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], B)] =
-      self.parse(strings)(c).map { case (tail, obj) => tail -> f(obj) }
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], B)] =
+      self.parse(strings).map { case (tail, obj) => tail -> f(obj) }
   }
 
   /**
@@ -89,10 +95,10 @@ trait MessageParser[A] { self =>
     * @tparam B The new parser type.
     */
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], B)] = {
-      val base = self.parse(strings)(c)
-
-      base.flatMap {
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], B)] = {
+      self.parse(strings).subflatMap {
         case (tail, obj) if pf.isDefinedAt(obj) => Right(tail -> pf(obj))
         case (_, _)                             => Left(error)
       }
@@ -115,7 +121,9 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
     * @tparam A The type to parse the message as
     * @return Left with an error message if it failed to parse, or Right with the parsed type
     */
-  def parseResult[A](message: String)(implicit parser: MessageParser[A], c: CacheSnapshotLike): Either[String, A] =
+  def parseResult[F[_]: Monad, A](
+      message: String
+  )(implicit parser: MessageParser[A], c: CacheSnapshotLike[F]): EitherT[F, String, A] =
     parser.parseResult(message.split(" ").toList)
 
 }
@@ -128,9 +136,11 @@ trait MessageParserInstances {
     * @tparam A The type to parse
     */
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
-      if (strings.nonEmpty) Right(strings.tail -> f(strings.head))
-      else Left("No more arguments left")
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)] =
+      if (strings.nonEmpty) EitherT.rightT[F, String](strings.tail -> f(strings.head))
+      else EitherT.leftT[F, (List[String], A)]("No more arguments left")
   }
 
   /**
@@ -146,13 +156,14 @@ trait MessageParserInstances {
     * @tparam A The type to parse
     */
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
-    import cats.syntax.either._
 
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)] =
       if (strings.nonEmpty)
-        f(strings.head).toEither.bimap(_.getMessage, strings.tail -> _)
+        EitherT.fromEither[F](f(strings.head).toEither).bimap(_.getMessage, strings.tail -> _)
       else
-        Left("No more arguments left")
+        EitherT.leftT[F, (List[String], A)]("No more arguments left")
   }
 
   /**
@@ -162,20 +173,21 @@ trait MessageParserInstances {
     * @tparam A The type to parse
     */
   def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
-    import cats.syntax.either._
-
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)] =
       if (strings.nonEmpty)
-        f(strings.head).toEither.bimap(_ => errorMessage, strings.tail -> _)
+        EitherT.fromEither[F](f(strings.head).toEither).bimap(_ => errorMessage, strings.tail -> _)
       else
-        Left("No more arguments left")
+        EitherT.leftT[F, (List[String], A)]("No more arguments left")
   }
 
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {
-      override def parse(strings: List[String])(
-          implicit c: CacheSnapshotLike
-      ): Either[String, (List[String], RemainingAsString)] = Right(Nil -> RemainingAsString(strings.mkString(" ")))
+      override def parse[F[_]: Monad](
+          strings: List[String]
+      )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], RemainingAsString)] =
+        EitherT.rightT[F, String](Nil -> RemainingAsString(strings.mkString(" ")))
     }
 
   implicit val stringParser:  MessageParser[String]  = fromString(identity)
@@ -192,31 +204,48 @@ trait MessageParserInstances {
   val roleRegex:    Regex = """<@&(\d+)>""".r
   val emojiRegex:   Regex = """<:\w+:(\d+)>""".r
 
-  private def snowflakeParser[A](
+  trait HighFunc[F[_[_]], G[_[_]]] {
+    def apply[A[_]](fa: F[A]): G[A]
+  }
+
+  private def snowflakeParser[C](
       name: String,
       regex: Regex,
-      getObj: (CacheSnapshotLike, SnowflakeType[A]) => Option[A]
-  ): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] = {
+      getObj: SnowflakeType[C] => HighFunc[CacheSnapshotLike, OptionT[?[_], C]]
+  ): MessageParser[C] = new MessageParser[C] {
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], C)] = {
       if (strings.nonEmpty) {
         val head = strings.head
-
         for {
-          m   <- regex.findFirstMatchIn(head).toRight(s"Invalid $name specified")
-          _   <- Either.cond(m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
+          m <- EitherT.fromOption[F](regex.findFirstMatchIn(head), s"Invalid $name specified")
+          _ <- EitherT.cond[F](m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
           obj <- {
-            val snowflake = SnowflakeType[A](RawSnowflake(m.group(1)))
-            getObj(c, snowflake).toRight(s"${name.capitalize} not found")
+            val snowflake = SnowflakeType[C](RawSnowflake(m.group(1)))
+            getObj(snowflake)(c).toRight(s"${name.capitalize} not found")
           }
         } yield strings.tail -> obj
-      } else Left("No more arguments left")
+      } else EitherT.leftT[F, (List[String], C)]("No more arguments left")
     }
   }
 
-  implicit val userParser:    MessageParser[User]    = snowflakeParser("user", userRegex, _.getUser(_))
-  implicit val channelParser: MessageParser[Channel] = snowflakeParser("channel", channelRegex, _.getChannel(_))
-  implicit val roleParser:    MessageParser[Role]    = snowflakeParser("role", roleRegex, _.getRole(_))
-  implicit val emojiParser:   MessageParser[Emoji]   = snowflakeParser("emoji", emojiRegex, _.getEmoji(_))
+  implicit val userParser: MessageParser[User] =
+    snowflakeParser("user", userRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], User]] {
+      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, User] = fa.getUser(id)
+    })
+  implicit val channelParser: MessageParser[Channel] =
+    snowflakeParser("channel", channelRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Channel]] {
+      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Channel] = fa.getChannel(id)
+    })
+  implicit val roleParser: MessageParser[Role] =
+    snowflakeParser("role", roleRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Role]] {
+        override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Role] = fa.getRole(id)
+    })
+  implicit val emojiParser: MessageParser[Emoji] =
+    snowflakeParser("emoji", emojiRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Emoji]] {
+      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Emoji] = fa.getEmoji(id)
+    })
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {
@@ -237,23 +266,30 @@ trait MessageParserInstances {
     * A parser that will return all the strings passed to it.
     */
   val allStringsParser: MessageParser[List[String]] = new MessageParser[List[String]] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], List[String])] =
-      Right(Nil -> strings)
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], List[String])] =
+      EitherT.rightT[F, String](Nil -> strings)
   }
 
   /**
     * A parser that will only succeed if there are no strings left.
     */
   implicit val notUsedParser: MessageParser[NotUsed] = new MessageParser[NotUsed] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], NotUsed)] =
-      if (strings.isEmpty) Right(Nil -> NotUsed) else Left(s"Found dangling arguments: ${strings.mkString(", ")}")
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], NotUsed)] =
+      if (strings.isEmpty) EitherT.rightT[F, String](Nil -> NotUsed)
+      else EitherT.leftT[F, (List[String], NotUsed)](s"Found dangling arguments: ${strings.mkString(", ")}")
   }
 }
 
 trait DeriveMessageParser {
   implicit val hNilParser: MessageParser[HNil] = new MessageParser[HNil] {
-    override def parse(string: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], HNil)] =
-      Right(string -> HNil)
+    override def parse[F[_]: Monad](
+        string: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], HNil)] =
+      EitherT.rightT[F, String](string -> HNil)
   }
 
   implicit def hListParser[Head, Tail <: HList](
@@ -261,7 +297,9 @@ trait DeriveMessageParser {
       headParser: Lazy[MessageParser[Head]],
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :: Tail] = new MessageParser[Head :: Tail] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], Head :: Tail)] =
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], Head :: Tail)] =
       for {
         t1 <- headParser.value.parse(strings)
         t2 <- tailParser.value.parse(t1._1)
@@ -269,7 +307,9 @@ trait DeriveMessageParser {
   }
 
   implicit val cNilParser: MessageParser[CNil] = new MessageParser[CNil] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], CNil)] =
+    override def parse[F[_]: Monad](
+        strings: List[String]
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], CNil)] =
       throw new IllegalStateException("Tried to parse CNil")
   }
 
@@ -278,13 +318,16 @@ trait DeriveMessageParser {
       headParser: Lazy[MessageParser[Head]],
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :+: Tail] = new MessageParser[Head :+: Tail] {
-    override def parse(
+    override def parse[F[_]: Monad](
         strings: List[String]
-    )(implicit c: CacheSnapshotLike): Either[String, (List[String], Head :+: Tail)] = {
-      val head      = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
-      lazy val tail = tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
+    )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], Head :+: Tail)] = {
+      //TODO: Check if we can remove the type annotations here
+      val head: EitherT[F, String, (List[String], Head :+: Tail)] =
+        headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
+      lazy val tail: EitherT[F, String, (List[String], Head :+: Tail)] =
+        tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
 
-      head.left.map(_ => tail).joinLeft
+      head.orElse(tail)
     }
   }
 
@@ -293,7 +336,9 @@ trait DeriveMessageParser {
       ser: Lazy[MessageParser[Repr]]
   ): MessageParser[A] =
     new MessageParser[A] {
-      override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
+      override def parse[F[_]: Monad](
+          strings: List[String]
+      )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], A)] =
         ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }
     }
 }

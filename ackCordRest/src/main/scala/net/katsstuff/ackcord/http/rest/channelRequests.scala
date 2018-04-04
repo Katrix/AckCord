@@ -2,9 +2,12 @@ package net.katsstuff.ackcord.http.rest
 
 import java.nio.file.{Files, Path}
 
+import scala.language.higherKinds
+
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, Uri}
+import cats.Monad
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
@@ -13,7 +16,6 @@ import net.katsstuff.ackcord.data.raw._
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.RequestRoute
 import net.katsstuff.ackcord.CacheSnapshotLike
-
 import net.katsstuff.ackcord.data.DiscordProtocol._
 
 /**
@@ -26,7 +28,7 @@ case class GetChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed
   override def responseDecoder:                      Decoder[RawChannel] = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[Channel]     = response.toChannel
 
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -88,7 +90,7 @@ case class ModifyChannel[Ctx](
   override def toNiceResponse(response: RawChannel): Option[Channel]     = response.toChannel
 
   override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): ModifyChannel[Ctx] = copy(reason = Some(reason))
@@ -108,7 +110,7 @@ case class DeleteCloseChannel[Ctx](
   override def toNiceResponse(response: RawChannel): Option[Channel]     = response.toChannel
 
   override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): DeleteCloseChannel[Ctx] = copy(reason = Some(reason))
@@ -161,7 +163,7 @@ case class GetChannelMessages[Ctx](
   override def toNiceResponse(response: Seq[RawMessage]): Seq[Message]             = response.map(_.toMessage)
 
   override def requiredPermissions: Permission = Permission.ReadMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object GetChannelMessages {
@@ -194,7 +196,7 @@ case class GetChannelMessage[Ctx](channelId: ChannelId, messageId: MessageId, co
   override def toNiceResponse(response: RawMessage): Message             = response.toMessage
 
   override def requiredPermissions: Permission = Permission.ReadMessageHistory
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -256,7 +258,7 @@ case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, c
 
   override def requiredPermissions: Permission =
     if (params.tts) Permission(Permission.SendMessages, Permission.SendTtsMessages) else Permission.SendMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object CreateMessage {
@@ -279,7 +281,7 @@ case class CreateReaction[Ctx](
   override def route: RequestRoute = Routes.createReaction(emoji, messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ReadMessageHistory
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -308,7 +310,7 @@ case class DeleteUserReaction[Ctx](
   override def route: RequestRoute = Routes.deleteUserReaction(userId, emoji, messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -366,7 +368,7 @@ case class DeleteAllReactions[Ctx](channelId: ChannelId, messageId: MessageId, c
   override def route: RequestRoute = Routes.deleteAllReactions(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -429,7 +431,7 @@ case class DeleteMessage[Ctx](
   override def route: RequestRoute = Routes.deleteMessage(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): DeleteMessage[Ctx] = copy(reason = Some(reason))
@@ -457,7 +459,7 @@ case class BulkDeleteMessages[Ctx](
   override def paramsEncoder: Encoder[BulkDeleteMessagesData] = deriveEncoder[BulkDeleteMessagesData]
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object BulkDeleteMessages {
@@ -489,7 +491,7 @@ case class EditChannelPermissions[Ctx](
   override def paramsEncoder: Encoder[EditChannelPermissionsData] = deriveEncoder[EditChannelPermissionsData]
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): EditChannelPermissions[Ctx] = copy(reason = Some(reason))
@@ -532,7 +534,7 @@ case class GetChannelInvites[Ctx](channelId: ChannelId, context: Ctx = NotUsed: 
   override def responseDecoder: Decoder[Seq[InviteWithMetadata]] = Decoder[Seq[InviteWithMetadata]]
 
   override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -565,7 +567,7 @@ case class CreateChannelInvite[Ctx](
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 
   override def requiredPermissions: Permission = Permission.CreateInstantInvite
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): CreateChannelInvite[Ctx] = copy(reason = Some(reason))
@@ -609,7 +611,7 @@ case class AddPinnedChannelMessages[Ctx](channelId: ChannelId, messageId: Messag
   override def route: RequestRoute = Routes.addPinnedChannelMessage(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -624,7 +626,7 @@ case class DeletePinnedChannelMessages[Ctx](
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -677,7 +679,7 @@ case class CreateGuildEmoji[Ctx](
   override def toNiceResponse(response: RawEmoji): Emoji             = response.toEmoji
 
   override def requiredPermissions: Permission = Permission.ManageEmojis
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): CreateGuildEmoji[Ctx] = copy(reason = Some(reason))
@@ -726,7 +728,7 @@ case class ModifyGuildEmoji[Ctx](
   override def toNiceResponse(response: RawEmoji): Emoji             = response.toEmoji
 
   override def requiredPermissions: Permission = Permission.ManageEmojis
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyGuildEmoji[Ctx] = copy(reason = Some(reason))
@@ -753,7 +755,7 @@ case class DeleteGuildEmoji[Ctx](
   override def route: RequestRoute = Routes.deleteGuildEmoji(emojiId, guildId)
 
   override def requiredPermissions: Permission = Permission.ManageEmojis
-  override def hasPermissions(implicit c: CacheSnapshotLike): Boolean =
+  override def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): DeleteGuildEmoji[Ctx] = copy(reason = Some(reason))

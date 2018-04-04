@@ -27,9 +27,10 @@ import java.time.Instant
 
 import scala.collection.mutable
 
+import cats.Id
 import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike, SnowflakeMap}
+import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLikeId, SnowflakeMap}
 import shapeless.tag._
 
 /**
@@ -37,17 +38,18 @@ import shapeless.tag._
   */
 class CacheSnapshotBuilder(
     var botUser: User @@ BotUser,
-    var dmChannels: mutable.Map[ChannelId, DMChannel],
-    var groupDmChannels: mutable.Map[ChannelId, GroupDMChannel],
-    var unavailableGuilds: mutable.Map[GuildId, UnavailableGuild],
-    var guilds: mutable.Map[GuildId, Guild],
-    var messages: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
-    var lastTyped: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
-    var users: mutable.Map[UserId, User],
-    var bans: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
-) extends CacheSnapshotLike {
+    var dmChannelMap: mutable.Map[ChannelId, DMChannel],
+    var groupDmChannelMap: mutable.Map[ChannelId, GroupDMChannel],
+    var unavailableGuildMap: mutable.Map[GuildId, UnavailableGuild],
+    var guildMap: mutable.Map[GuildId, Guild],
+    var messageMap: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
+    var lastTypedMap: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
+    var userMap: mutable.Map[UserId, User],
+    var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
+) extends CacheSnapshotLikeId {
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
+
 
   def toImmutable: CacheSnapshot = {
     def convertNested[K1, K2, V](
@@ -56,22 +58,24 @@ class CacheSnapshotBuilder(
 
     CacheSnapshot(
       botUser = botUser,
-      dmChannels = SnowflakeMap(dmChannels),
-      groupDmChannels = SnowflakeMap(groupDmChannels),
-      unavailableGuilds = SnowflakeMap(unavailableGuilds),
-      guilds = SnowflakeMap(guilds),
-      messages = convertNested(messages),
-      lastTyped = convertNested(lastTyped),
-      users = SnowflakeMap(users),
-      bans = convertNested(bans)
+      dmChannelMap = SnowflakeMap(dmChannelMap),
+      groupDmChannelMap = SnowflakeMap(groupDmChannelMap),
+      unavailableGuildMap = SnowflakeMap(unavailableGuildMap),
+      guildMap = SnowflakeMap(guildMap),
+      messageMap = convertNested(messageMap),
+      lastTypedMap = convertNested(lastTypedMap),
+      userMap = SnowflakeMap(userMap),
+      banMap = convertNested(banMap)
     )
   }
+  override def getChannelMessages(channelId: ChannelId): Id[mutable.Map[SnowflakeType[Message], Message]] =
+    messageMap.getOrElse(channelId, mutable.Map.empty)
 
-  override def getChannelMessages(channelId: ChannelId): mutable.Map[MessageId, Message] =
-    messages.getOrElse(channelId, mutable.Map.empty)
+  override def getChannelLastTyped(channelId: ChannelId): Id[mutable.Map[SnowflakeType[User], Instant]] =
+    lastTypedMap.getOrElse(channelId, mutable.Map.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[UserId, Instant] =
-    lastTyped.getOrElse(channelId, mutable.Map.empty)
+  override def getGuildBans(id: GuildId): Id[mutable.Map[SnowflakeType[User], Ban]] =
+    banMap.getOrElse(id, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
   def apply(snapshot: CacheSnapshot): CacheSnapshotBuilder = {
@@ -87,14 +91,14 @@ object CacheSnapshotBuilder {
 
     new CacheSnapshotBuilder(
       botUser = snapshot.botUser,
-      dmChannels = toMutableMap(snapshot.dmChannels),
-      groupDmChannels = toMutableMap(snapshot.groupDmChannels),
-      unavailableGuilds = toMutableMap(snapshot.unavailableGuilds),
-      guilds = toMutableMap(snapshot.guilds),
-      messages = toMutableMapNested(snapshot.messages),
-      lastTyped = toMutableMapNested(snapshot.lastTyped),
-      users = toMutableMap(snapshot.users),
-      bans = toMutableMapNested(snapshot.bans)
+      dmChannelMap = toMutableMap(snapshot.dmChannelMap),
+      groupDmChannelMap = toMutableMap(snapshot.groupDmChannelMap),
+      unavailableGuildMap = toMutableMap(snapshot.unavailableGuildMap),
+      guildMap = toMutableMap(snapshot.guildMap),
+      messageMap = toMutableMapNested(snapshot.messageMap),
+      lastTypedMap = toMutableMapNested(snapshot.lastTypedMap),
+      userMap = toMutableMap(snapshot.userMap),
+      banMap = toMutableMapNested(snapshot.banMap)
     )
   }
 }

@@ -72,7 +72,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
 
   override def receive: Receive = {
     case msg: APIMessage.Ready =>
-      msg.cache.current.unavailableGuilds.keys.foreach(sendToGuild(_, msg))
+      msg.cache.current.unavailableGuildMap.keys.foreach(sendToGuild(_, msg))
     case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg)
     case msg: APIMessage.GuildMessage                             => sendToGuild(msg.guild.id, msg)
     case msg: APIMessage.ChannelMessage =>
@@ -81,7 +81,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
         case _                => sendToNotGuild(msg)
       }
     case msg: APIMessage.MessageMessage =>
-      msg.message.channelId.resolve(msg.cache.current) match {
+      msg.message.channelId.resolve(msg.cache.current).value match {
         case Some(guildChannel: GuildChannel) => sendToGuild(guildChannel.guildId, msg)
         case _                                => sendToNotGuild(msg)
       }

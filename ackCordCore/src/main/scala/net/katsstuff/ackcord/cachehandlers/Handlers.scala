@@ -33,7 +33,7 @@ trait Handlers {
   //Update
 
   implicit val userUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
-    builder.users.put(obj.id, obj)
+    builder.userMap.put(obj.id, obj)
   }
 
   val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
@@ -43,13 +43,13 @@ trait Handlers {
   implicit val voiceStateUpdateHandler: CacheUpdateHandler[VoiceState] = updateHandler { (builder, obj, log) =>
     val optGuild = obj.guildId
       .toRight("Can't handle VoiceState update with missing guild")
-      .flatMap(builder.getGuild(_).toRight(s"No guild found for voice state $obj"))
+      .flatMap(builder.getGuild(_).value.toRight(s"No guild found for voice state $obj"))
 
     optGuild match {
       case Right(guild) =>
         val newVoiceStates =
           obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
-        builder.guilds.put(guild.id, guild.copy(voiceStates = newVoiceStates))
+        builder.guildMap.put(guild.id, guild.copy(voiceStates = newVoiceStates))
       case Left(e) => log.warning(e)
     }
   }

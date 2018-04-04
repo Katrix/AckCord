@@ -26,8 +26,10 @@ package net.katsstuff.ackcord
 import java.lang.{Long => JLong}
 import java.time.Instant
 
-import scala.language.implicitConversions
+import scala.language.{higherKinds, implicitConversions}
 
+import cats.Functor
+import cats.data.OptionT
 import shapeless.tag._
 
 package object data {
@@ -65,7 +67,7 @@ package object data {
     /**
       * Resolve the guild represented by this id.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[Guild] = c.getGuild(guildId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Guild] = c.getGuild(guildId)
   }
 
   type ChannelId = SnowflakeType[Channel]
@@ -79,38 +81,38 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer one of the guildResolve methods instead.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[Channel] = c.getChannel(channelId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Channel] = c.getChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a guild channel. If a
       * guild id is know, prefer one of the other guildResolve methods instead.
       */
-    def guildResolve(implicit c: CacheSnapshotLike): Option[GuildChannel] = c.getGuildChannel(channelId)
+    def guildResolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, GuildChannel] = c.getGuildChannel(channelId)
 
     /**
       * Resolve the channel represented by this id relative to a guild id.
       */
-    def guildResolve(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[GuildChannel] =
+    def guildResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, GuildChannel] =
       c.getGuildChannel(guildId, channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel. If a
       * guild id is know, prefer the other tResolve method instead.
       */
-    def tResolve(implicit c: CacheSnapshotLike): Option[TChannel] = c.getTChannel(channelId)
+    def tResolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, TChannel] = c.getTChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[TGuildChannel] =
+    def tResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, TGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
 
     /**
       * Resolve the channel represented by this id as a voice channel relative
       * to a guild id.
       */
-    def vResolve(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[VGuildChannel] =
+    def vResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, VGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
@@ -125,12 +127,12 @@ package object data {
       * Resolve the message represented by this id. If a channel id is known,
       * prefer the method that takes a channel id.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[Message] = c.getMessage(messageId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Message] = c.getMessage(messageId)
 
     /**
       * Resolves the message represented by this id relative to a channel id.
       */
-    def resolve(channelId: ChannelId)(implicit c: CacheSnapshotLike): Option[Message] = c.getMessage(channelId, messageId)
+    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Message] = c.getMessage(channelId, messageId)
   }
 
   type UserId = SnowflakeType[User]
@@ -143,14 +145,14 @@ package object data {
     /**
       * Resolve the user represented by this id.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[User] = c.getUser(userId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, User] = c.getUser(userId)
 
     /**
       * Resolve the guild member represented by this id.
       * @param guildId The guild to find the guild member in
       */
-    def resolveMember(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[GuildMember] =
-      c.getGuild(guildId).flatMap(_.members.get(userId))
+    def resolveMember[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, GuildMember] =
+      c.getGuild(guildId).subflatMap(_.members.get(userId))
   }
 
   type RoleId = SnowflakeType[Role]
@@ -164,12 +166,12 @@ package object data {
       * Resolve the role this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[Role] = c.getRole(roleId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Role] = c.getRole(roleId)
 
     /**
       * Resolve the role this id represents relative to a guild id.
       */
-    def resolve(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[Role] =
+    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Role] =
       c.getRole(guildId, roleId)
   }
 
@@ -192,13 +194,13 @@ package object data {
       * Resolve the emoji this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve(implicit c: CacheSnapshotLike): Option[Emoji] = c.getEmoji(emojiId)
+    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Emoji] = c.getEmoji(emojiId)
 
     /**
       * Resolve the emoji this id represents relative to a guild id.
       */
-    def resolve(guildId: GuildId)(implicit c: CacheSnapshotLike): Option[Emoji] =
-      c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
+    def resolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Emoji] =
+      c.getGuild(guildId).subflatMap(_.emojis.get(emojiId))
   }
 
   type IntegrationId = SnowflakeType[Integration]
