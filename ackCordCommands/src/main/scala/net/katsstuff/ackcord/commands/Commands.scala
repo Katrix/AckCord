@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
-import net.katsstuff.ackcord.network.requests.RequestHelper
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 import net.katsstuff.ackcord.{APIMessage, Cache, CacheSnapshot}
 

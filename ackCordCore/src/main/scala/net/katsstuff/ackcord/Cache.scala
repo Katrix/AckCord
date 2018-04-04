@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Status}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
-import net.katsstuff.ackcord.network.websocket.gateway.GatewayMessage
+import net.katsstuff.ackcord.websocket.gateway.GatewayMessage
 
 /**
   * Represents a cache that can be published and subscribed to.

@@ -33,7 +33,8 @@ import akka.stream.{ActorMaterializer, OverflowStrategy}
 import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity
-import net.katsstuff.ackcord.network.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 
 /**
   * Settings used when connecting to Discord.
@@ -61,7 +62,7 @@ class ClientSettings(
     system: ActorSystem = ActorSystem("AckCord"),
     commandSettings: CommandSettings = CommandSettings(),
     requestSettings: RequestSettings = RequestSettings()
-) extends CoreClientSettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
+) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
@@ -83,7 +84,8 @@ class ClientSettings(
     val commands = Commands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
 
     DiscordShard.fetchWsGateway.map(
-      uri => DiscordClient(Seq(this.connect(uri, cache, "DiscordClient")), cache, commands, requests)
+      uri =>
+        DiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
     )
   }
 

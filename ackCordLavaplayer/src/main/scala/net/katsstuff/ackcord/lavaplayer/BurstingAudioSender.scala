@@ -29,9 +29,9 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Timers}
 import akka.util.ByteString
-import net.katsstuff.ackcord.network.websocket.voice.VoiceUDPHandler._
-import net.katsstuff.ackcord.network.websocket.voice.VoiceWsHandler.SetSpeaking
 import net.katsstuff.ackcord.lavaplayer.AudioSender.{SendAudio, StartSendAudio, StopSendAudio}
+import net.katsstuff.ackcord.websocket.voice.VoiceUDPHandler._
+import net.katsstuff.ackcord.websocket.voice.VoiceWsHandler.SetSpeaking
 
 class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef)
     extends Actor

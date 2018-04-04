@@ -2,7 +2,7 @@ import sbtcrossproject.{crossProject, CrossType}
 
 lazy val akkaVersion     = "2.5.11"
 lazy val akkaHttpVersion = "10.1.0"
-lazy val circeVersion    = "0.9.1"
+lazy val circeVersion    = "0.9.3"
 lazy val ackCordVersion  = "0.9.0"
 
 lazy val commonSettings = Seq(
@@ -66,6 +66,78 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
 lazy val ackCordDataJVM = ackCordData.jvm
 lazy val ackCordDataJS  = ackCordData.js
 
+lazy val ackCordNetwork = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-network",
+    version := ackCordVersion,
+    resolvers += JCenterRepository,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-testkit"   % akkaVersion % Test,
+      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+    ),
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.20.0",
+    libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.0.4" % Test,
+    description := "The base network module of AckCord"
+  ).dependsOn(ackCordDataJVM)
+
+lazy val ackCordRest = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-rest",
+    version := ackCordVersion,
+    description := "The REST module of AckCord"
+  ).dependsOn(ackCordNetwork)
+
+lazy val ackCordImages = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-rest",
+    version := ackCordVersion,
+    description := "The image requests module of AckCord"
+  ).dependsOn(ackCordNetwork)
+
+lazy val ackCordOAuth = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-rest",
+    version := ackCordVersion,
+    description := "The OAuth requests module of AckCord"
+  ).dependsOn(ackCordNetwork)
+
+lazy val ackCordWebsocket = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-websockets",
+    version := ackCordVersion,
+    description := "The base websockets module of AckCord"
+  ).dependsOn(ackCordNetwork)
+
+lazy val ackCordGateway = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-gateway",
+    version := ackCordVersion,
+    description := "The gateway module of AckCord"
+  ).dependsOn(ackCordWebsocket)
+
+lazy val ackCordVoice = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-Voice",
+    version := ackCordVersion,
+    description := "The voice websocket module of AckCord"
+  ).dependsOn(ackCordWebsocket)
+
 lazy val ackCordCore = project
   .settings(
     commonSettings,
@@ -83,7 +155,7 @@ lazy val ackCordCore = project
     libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.0.4" % Test,
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
-  .dependsOn(ackCordDataJVM)
+  .dependsOn(ackCordRest, ackCordImages, ackCordOAuth, ackCordGateway, ackCordVoice)
 
 lazy val ackCordCommands = project
   .settings(
@@ -143,6 +215,13 @@ lazy val ackCordRoot = project
   .aggregate(
     ackCordDataJVM,
     ackCordDataJS,
+    ackCordNetwork,
+    ackCordRest,
+    ackCordImages,
+    ackCordOAuth,
+    ackCordWebsocket,
+    ackCordGateway,
+    ackCordVoice,
     ackCordCore,
     ackCordCommands,
     ackCordLavaplayer,

@@ -30,8 +30,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.raw.RawMessage
-import net.katsstuff.ackcord.network.requests.RESTRequests.CreateMessageData
-import net.katsstuff.ackcord.network.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.http.rest.CreateMessageData
 
 class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 

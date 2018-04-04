@@ -31,8 +31,8 @@ import akka.event.LoggingAdapter
 import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import net.katsstuff.ackcord.cachehandlers.CacheSnapshotBuilder
-import net.katsstuff.ackcord.network.websocket.gateway.GatewayEvent.ReadyData
-import net.katsstuff.ackcord.network.websocket.gateway.GatewayMessage
+import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
+import net.katsstuff.ackcord.websocket.gateway.GatewayMessage
 
 object CacheStreams {
 

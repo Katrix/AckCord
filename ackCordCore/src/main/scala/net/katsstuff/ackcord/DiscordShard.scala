@@ -23,8 +23,6 @@
  */
 package net.katsstuff.ackcord
 
-import java.time.Instant
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -39,25 +37,23 @@ import akka.stream.{Materializer, ThrottleMode}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.CreateGateway
-import net.katsstuff.ackcord.data.PresenceStatus
-import net.katsstuff.ackcord.data.raw.RawActivity
-import net.katsstuff.ackcord.network.requests._
-import net.katsstuff.ackcord.network.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.network.websocket.gateway.GatewayHandler
-import net.katsstuff.ackcord.network.Routes
+import net.katsstuff.ackcord.http.Routes
+import net.katsstuff.ackcord.http.requests.BotAuthentication
+import net.katsstuff.ackcord.websocket.AbstractWsHandler
+import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 
 /**
   * The core actor that controls all the other used actors of AckCord
   * @param gatewayUri The gateway websocket uri
   * @param settings The settings to use
   */
-class DiscordShard(gatewayUri: Uri, settings: CoreClientSettings, cache: Cache)
+class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
     extends Actor
     with ActorLogging
     with Timers {
 
   private var gatewayHandler =
-    context.actorOf(GatewayHandler.cacheProps(gatewayUri, settings, cache), "GatewayHandler")
+    context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache), "GatewayHandler")
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -86,15 +82,15 @@ class DiscordShard(gatewayUri: Uri, settings: CoreClientSettings, cache: Cache)
         timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
       }
     case CreateGateway =>
-      gatewayHandler = context.actorOf(GatewayHandler.cacheProps(gatewayUri, settings, cache), "GatewayHandler")
+      gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache), "GatewayHandler")
   }
 }
 object DiscordShard extends FailFastCirceSupport {
 
-  def props(wsUri: Uri, settings: CoreClientSettings, cache: Cache): Props =
+  def props(wsUri: Uri, settings: GatewaySettings, cache: Cache): Props =
     Props(new DiscordShard(wsUri, settings, cache))
 
-  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, CoreClientSettings(token), cache)
+  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, GatewaySettings(token), cache)
 
   /**
     * Create a shard actor given the needed arguments.
@@ -111,7 +107,7 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use.
     * @param system The actor system to use for creating the client actor.
     */
-  def connect(wsUri: Uri, settings: CoreClientSettings, cache: Cache, actorName: String)(
+  def connect(wsUri: Uri, settings: GatewaySettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
   ): ActorRef = system.actorOf(props(wsUri, settings, cache), actorName)
 
@@ -122,7 +118,7 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use.
     * @param system The actor system to use for creating the client actor.
     */
-  def connectMultiple(wsUri: Uri, shardTotal: Int, settings: CoreClientSettings, cache: Cache, actorName: String)(
+  def connectMultiple(wsUri: Uri, shardTotal: Int, settings: GatewaySettings, cache: Cache, actorName: String)(
       implicit system: ActorSystem
   ): Seq[ActorRef] = for (i <- 0 until shardTotal) yield {
     connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
@@ -218,37 +214,4 @@ object DiscordShard extends FailFastCirceSupport {
         Future.fromTry(res.toTry)
       }
   }
-}
-
-/**
-  * All the settings used by AckCord when connecting and similar
-  * @param token The token for the bot
-  * @param largeThreshold The large threshold
-  * @param shardNum The shard index of this
-  * @param shardTotal The amount of shards
-  * @param idleSince If the bot has been idle, set the time since
-  * @param activity Send an activity when connecting
-  * @param status The status to use when connecting
-  * @param afk If the bot should be afk when connecting
-  */
-case class CoreClientSettings(
-    token: String,
-    largeThreshold: Int = 100,
-    shardNum: Int = 0,
-    shardTotal: Int = 1,
-    idleSince: Option[Instant] = None,
-    activity: Option[RawActivity] = None,
-    status: PresenceStatus = PresenceStatus.Online,
-    afk: Boolean = false
-) {
-  activity.foreach(_.requireCanSend())
-
-  /**
-    * Connect to discord using these settings
-    * @param wsUri The websocket uri to use
-    * @param system The actor system to use
-    * @return The discord client actor
-    */
-  def connect(wsUri: Uri, cache: Cache, actorName: String)(implicit system: ActorSystem): ActorRef =
-    DiscordShard.connect(wsUri, this, cache, actorName)
 }

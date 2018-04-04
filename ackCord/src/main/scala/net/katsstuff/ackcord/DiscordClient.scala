@@ -41,7 +41,7 @@ import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
-import net.katsstuff.ackcord.network.requests.RequestHelper
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 
 /**

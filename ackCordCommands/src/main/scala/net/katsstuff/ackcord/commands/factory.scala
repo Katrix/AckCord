@@ -28,7 +28,7 @@ import java.util.Locale
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 import net.katsstuff.ackcord.RequestDSL
-import net.katsstuff.ackcord.network.requests.RequestHelper
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 
 /**

@@ -32,9 +32,10 @@ import akka.stream.{ActorMaterializer, Materializer}
 import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.examplecore.music._
 import net.katsstuff.ackcord.examplecore.music.MusicHandler
-import net.katsstuff.ackcord.network.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.{APIMessage, Cache, CoreClientSettings, DiscordShard}
+import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
+import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 object Example {
 
@@ -51,8 +52,8 @@ object Example {
     val cache = Cache.create
     val token = args.head
 
-    val settings = CoreClientSettings(token = token)
-    DiscordShard.fetchWsGateway.map(settings.connect(_, cache, "DiscordShard")).onComplete {
+    val settings = GatewaySettings(token = token)
+    DiscordShard.fetchWsGateway.map(DiscordShard.connect(_, settings, cache, "DiscordShard")).onComplete {
       case Success(shardActor) =>
         system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
       case Failure(e) =>
@@ -62,7 +63,7 @@ object Example {
   }
 }
 
-class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
+class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
   import cache.mat
   implicit val system: ActorSystem = context.system
 
@@ -124,7 +125,7 @@ class ExampleMain(settings: CoreClientSettings, cache: Cache, shard: ActorRef) e
   }
 }
 object ExampleMain {
-  def props(settings: CoreClientSettings, cache: Cache, shard: ActorRef): Props =
+  def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
   def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {

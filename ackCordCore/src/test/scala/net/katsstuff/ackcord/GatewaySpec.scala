@@ -39,11 +39,12 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream.{ActorMaterializer, FlowShape, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
 import akka.util.ByteString
-import io.circe.{parser, Encoder, Json}
+import io.circe.{Encoder, Json, parser}
 import net.katsstuff.ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.network.websocket.AbstractWsHandler.{Login, Logout}
-import net.katsstuff.ackcord.network.websocket.gateway._
+import net.katsstuff.ackcord.websocket.AbstractWsHandler.{Login, Logout}
+import net.katsstuff.ackcord.websocket.gateway._
+import net.katsstuff.ackcord.websocket.gateway.GatewayHandler
 
 class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseString("""
     |akka {
@@ -58,7 +59,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   var gatewayNameNum = 0
   var handlerNameNum = 0
 
-  val settings = CoreClientSettings(token = "token123Abc")
+  val settings = GatewaySettings(token = "token123Abc")
   def mkGateway: ActorRef = {
     val a = system.actorOf(MockedGateway.props(testActor), s"Gateway$gatewayNameNum")
     gatewayNameNum += 1
@@ -228,7 +229,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
   }
 }
 
-class MockedGatewayHandler(settings: CoreClientSettings, gateway: ActorRef)(implicit mat: Materializer)
+class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)(implicit mat: Materializer)
     extends GatewayHandler(
       Uri./,
       settings,
@@ -282,7 +283,7 @@ class MockedGatewayHandler(settings: CoreClientSettings, gateway: ActorRef)(impl
   }
 }
 object MockedGatewayHandler {
-  def props(settings: CoreClientSettings, gateway: ActorRef)(implicit mat: Materializer): Props =
+  def props(settings: GatewaySettings, gateway: ActorRef)(implicit mat: Materializer): Props =
     Props(new MockedGatewayHandler(settings, gateway))
 }
 

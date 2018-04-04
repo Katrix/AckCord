@@ -29,7 +29,7 @@ import scala.language.implicitConversions
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Source}
 import cats.Monad
-import net.katsstuff.ackcord.network.requests.{Request, RequestAnswer, RequestResponse}
+import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
 
 /**
   * Base trait for a RequestDSL object. An RequestDSL object is a program

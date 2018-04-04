@@ -42,9 +42,9 @@ import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.examplecore.ExampleMain
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
-import net.katsstuff.ackcord.network.requests.RequestHelper
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 

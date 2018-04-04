@@ -33,8 +33,8 @@ import net.katsstuff.ackcord.{CacheSnapshot, RequestDSL}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw.RawChannel
-import net.katsstuff.ackcord.network.requests.RESTRequests._
-import net.katsstuff.ackcord.network.requests.{FailedRequest, RequestHelper, RequestResponse}
+import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
+import net.katsstuff.ackcord.http.rest._
 import net.katsstuff.ackcord.syntax._
 
 package object commands {

@@ -7,7 +7,7 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.network.requests.RequestHelper
+import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 
 /**
