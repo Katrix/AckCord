@@ -6,13 +6,13 @@ lazy val circeVersion    = "0.9.3"
 lazy val ackCordVersion  = "0.9.0"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.5",
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature",
     "-unchecked",
-    //"-Xlint", //TODO: Enable again when Position.point on NoPosition is fixed
+    "-Xlint",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
     "-Ywarn-unused-import"
