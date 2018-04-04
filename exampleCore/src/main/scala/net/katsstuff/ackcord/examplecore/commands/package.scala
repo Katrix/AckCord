@@ -35,7 +35,6 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.http.rest._
-import net.katsstuff.ackcord.syntax._
 
 package object commands {
 

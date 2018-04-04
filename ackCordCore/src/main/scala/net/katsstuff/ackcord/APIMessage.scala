@@ -30,7 +30,7 @@ import net.katsstuff.ackcord.data._
 /**
   * Base trait for all messages sent from [[Cache]]. All descendants
   * of this trait are published to the event stream passed in with
-  * [[CoreClientSettings]].
+  * [[net.katsstuff.ackcord.websocket.gateway.GatewaySettings]].
   */
 sealed trait APIMessage {
 

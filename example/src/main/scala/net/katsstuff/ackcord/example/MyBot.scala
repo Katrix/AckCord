@@ -28,7 +28,6 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, ParsedCmd, RawCmd}
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, ClientSettings, CommandSettings, RequestDSL}
 
 object MyBot extends App {

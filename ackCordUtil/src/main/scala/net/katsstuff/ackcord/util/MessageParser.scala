@@ -28,7 +28,7 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 import akka.NotUsed
-import net.katsstuff.ackcord.CacheSnapshot
+import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.MessageParser.RemainingAsString
 import shapeless._
@@ -48,7 +48,7 @@ trait MessageParser[A] { self =>
     * @return Left with an error message if it failed to parse, or Right with
     *         the remaining arguments, and the parsed value.
     */
-  def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)]
+  def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)]
 
   /**
     * Parse a message into the needed types, tossing away the remaining string.
@@ -58,7 +58,7 @@ trait MessageParser[A] { self =>
     * @return Left with an error message if it failed to parse, or Right with
     *         the parsed value.
     */
-  def parseResult(strings: List[String])(implicit c: CacheSnapshot): Either[String, A] =
+  def parseResult(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, A] =
     parse(strings).map(_._2)
 
   /**
@@ -67,7 +67,7 @@ trait MessageParser[A] { self =>
     * @param error The error message if the value does not match the predicate.
     */
   def filterWithError(f: A => Boolean, error: String): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
       self.parse(strings)(c).filterOrElse({ case (_, obj) => f(obj) }, error)
   }
 
@@ -77,7 +77,7 @@ trait MessageParser[A] { self =>
     * @tparam B The new parser type
     */
   def map[B](f: A => B): MessageParser[B] = new MessageParser[B] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], B)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], B)] =
       self.parse(strings)(c).map { case (tail, obj) => tail -> f(obj) }
   }
 
@@ -89,7 +89,7 @@ trait MessageParser[A] { self =>
     * @tparam B The new parser type.
     */
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], B)] = {
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], B)] = {
       val base = self.parse(strings)(c)
 
       base.flatMap {
@@ -115,7 +115,7 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
     * @tparam A The type to parse the message as
     * @return Left with an error message if it failed to parse, or Right with the parsed type
     */
-  def parseResult[A](message: String)(implicit parser: MessageParser[A], c: CacheSnapshot): Either[String, A] =
+  def parseResult[A](message: String)(implicit parser: MessageParser[A], c: CacheSnapshotLike): Either[String, A] =
     parser.parseResult(message.split(" ").toList)
 
 }
@@ -128,7 +128,7 @@ trait MessageParserInstances {
     * @tparam A The type to parse
     */
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
       if (strings.nonEmpty) Right(strings.tail -> f(strings.head))
       else Left("No more arguments left")
   }
@@ -148,7 +148,7 @@ trait MessageParserInstances {
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     import cats.syntax.either._
 
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
       if (strings.nonEmpty)
         f(strings.head).toEither.bimap(_.getMessage, strings.tail -> _)
       else
@@ -164,7 +164,7 @@ trait MessageParserInstances {
   def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     import cats.syntax.either._
 
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
       if (strings.nonEmpty)
         f(strings.head).toEither.bimap(_ => errorMessage, strings.tail -> _)
       else
@@ -174,7 +174,7 @@ trait MessageParserInstances {
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {
       override def parse(strings: List[String])(
-          implicit c: CacheSnapshot
+          implicit c: CacheSnapshotLike
       ): Either[String, (List[String], RemainingAsString)] = Right(Nil -> RemainingAsString(strings.mkString(" ")))
     }
 
@@ -195,9 +195,9 @@ trait MessageParserInstances {
   private def snowflakeParser[A](
       name: String,
       regex: Regex,
-      getObj: (CacheSnapshot, SnowflakeType[A]) => Option[A]
+      getObj: (CacheSnapshotLike, SnowflakeType[A]) => Option[A]
   ): MessageParser[A] = new MessageParser[A] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] = {
       if (strings.nonEmpty) {
         val head = strings.head
 
@@ -237,7 +237,7 @@ trait MessageParserInstances {
     * A parser that will return all the strings passed to it.
     */
   val allStringsParser: MessageParser[List[String]] = new MessageParser[List[String]] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], List[String])] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], List[String])] =
       Right(Nil -> strings)
   }
 
@@ -245,14 +245,14 @@ trait MessageParserInstances {
     * A parser that will only succeed if there are no strings left.
     */
   implicit val notUsedParser: MessageParser[NotUsed] = new MessageParser[NotUsed] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], NotUsed)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], NotUsed)] =
       if (strings.isEmpty) Right(Nil -> NotUsed) else Left(s"Found dangling arguments: ${strings.mkString(", ")}")
   }
 }
 
 trait DeriveMessageParser {
   implicit val hNilParser: MessageParser[HNil] = new MessageParser[HNil] {
-    override def parse(string: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], HNil)] =
+    override def parse(string: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], HNil)] =
       Right(string -> HNil)
   }
 
@@ -261,7 +261,7 @@ trait DeriveMessageParser {
       headParser: Lazy[MessageParser[Head]],
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :: Tail] = new MessageParser[Head :: Tail] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], Head :: Tail)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], Head :: Tail)] =
       for {
         t1 <- headParser.value.parse(strings)
         t2 <- tailParser.value.parse(t1._1)
@@ -269,7 +269,7 @@ trait DeriveMessageParser {
   }
 
   implicit val cNilParser: MessageParser[CNil] = new MessageParser[CNil] {
-    override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], CNil)] =
+    override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], CNil)] =
       throw new IllegalStateException("Tried to parse CNil")
   }
 
@@ -280,7 +280,7 @@ trait DeriveMessageParser {
   ): MessageParser[Head :+: Tail] = new MessageParser[Head :+: Tail] {
     override def parse(
         strings: List[String]
-    )(implicit c: CacheSnapshot): Either[String, (List[String], Head :+: Tail)] = {
+    )(implicit c: CacheSnapshotLike): Either[String, (List[String], Head :+: Tail)] = {
       val head      = headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
       lazy val tail = tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
 
@@ -293,7 +293,7 @@ trait DeriveMessageParser {
       ser: Lazy[MessageParser[Repr]]
   ): MessageParser[A] =
     new MessageParser[A] {
-      override def parse(strings: List[String])(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
+      override def parse(strings: List[String])(implicit c: CacheSnapshotLike): Either[String, (List[String], A)] =
         ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }
     }
 }

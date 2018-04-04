@@ -34,7 +34,6 @@ import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdFacto
 import net.katsstuff.ackcord.data.{GuildId, TChannel, UserId, VoiceState}
 import net.katsstuff.ackcord.examplecore.ExampleCmdCategories
 import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.RequestDSL
 
 class commands(guildId: GuildId, musicHandler: ActorRef)(implicit timeout: Timeout, ec: ExecutionContext) {

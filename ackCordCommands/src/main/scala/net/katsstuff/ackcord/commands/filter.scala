@@ -25,7 +25,6 @@ package net.katsstuff.ackcord.commands
 
 import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.syntax._
 
 /**
   * A command filter is something used to limit the scope in which a command

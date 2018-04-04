@@ -4,7 +4,6 @@ import akka.actor.Props
 import akka.http.scaladsl.model.Uri
 import net.katsstuff.ackcord.cachehandlers.{Handlers, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
 import net.katsstuff.ackcord.data.raw.RawBan
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler, GatewaySettings}
 
 object GatewayHandlerCache {

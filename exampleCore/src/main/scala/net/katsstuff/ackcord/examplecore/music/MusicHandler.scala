@@ -45,7 +45,6 @@ import net.katsstuff.ackcord.examplecore.ExampleMain
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 class MusicHandler(requests: RequestHelper, commands: Commands, helpCmdActor: ActorRef, guildId: GuildId, cache: Cache)

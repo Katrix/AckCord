@@ -28,7 +28,6 @@ import akka.stream.scaladsl.Flow
 import net.katsstuff.ackcord.APIMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
-import net.katsstuff.ackcord.syntax._
 
 object GuildStreams {
 
