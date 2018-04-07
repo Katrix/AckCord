@@ -66,23 +66,6 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
     * Check if a client has the needed permissions to execute this request.
     */
   def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] = Monad[F].pure(true)
-
-  /**
-    * Throw an exception if the client doesn't have the needed permissions to
-    * execute this request.
-    */
-  def requirePerms[F[_]](
-      implicit c: CacheSnapshotLike[F],
-      F: MonadError[F, Throwable]
-  ): F[BaseRESTRequest[RawResponse, NiceResponse, Ctx]] = {
-    F.flatMap(hasPermissions) { hasPerms =>
-      if (!hasPerms)
-        F.raiseError[BaseRESTRequest[RawResponse, NiceResponse, Ctx]](
-          new IllegalStateException(s"Did not have required permissions for $toString")
-        )
-      else F.pure(this)
-    }
-  }
 }
 
 /**
