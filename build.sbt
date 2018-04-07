@@ -146,6 +146,27 @@ lazy val ackCordUtil = project
     description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
   ).dependsOn(ackCordRest, ackCordImages, ackCordOAuth, ackCordGateway, ackCordVoice)
 
+lazy val ackCordCommands = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-commands",
+    version := ackCordVersion,
+    description := "ackCord-commands provides the basic code used for commands in AckCord"
+  )
+  .dependsOn(ackCordUtil)
+
+lazy val ackCordLavaplayer = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "ackcord-lavaplayer",
+    version := ackCordVersion,
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
+    description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
+  )
+  .dependsOn(ackCordVoice)
+
 lazy val ackCordCore = project
   .settings(
     commonSettings,
@@ -160,26 +181,25 @@ lazy val ackCordCore = project
   )
   .dependsOn(ackCordUtil)
 
-lazy val ackCordCommands = project
+lazy val ackCordCommandsCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-commands",
+    name := "ackcord-commands-core",
     version := ackCordVersion,
-    description := "AckCord-commands is an extension to AckCord to allow one to easily define commands"
+    description := "ackCord-commands-core provides the glue code between ackcord-core and ackcord-commands"
   )
-  .dependsOn(ackCordCore)
+  .dependsOn(ackCordCore, ackCordCommands)
 
-lazy val ackCordLavaplayer = project
+lazy val ackCordLavaplayerCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-lavaplayer",
+    name := "ackcord-lavaplayer-core",
     version := ackCordVersion,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
-    description := "AckCord-lavaplayer an extension to AckCord to help you integrate with lavaplayer"
+    description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
-  .dependsOn(ackCordCore)
+  .dependsOn(ackCordCore, ackCordLavaplayer)
 
 lazy val ackCord = project
   .settings(
@@ -190,7 +210,7 @@ lazy val ackCord = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     description := "AckCord-highlvl is a higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
   )
-  .dependsOn(ackCordCore, ackCordCommands, ackCordLavaplayer)
+  .dependsOn(ackCordCore, ackCordCommandsCore, ackCordLavaplayerCore)
 
 lazy val exampleCore = project
   .settings(
@@ -225,9 +245,12 @@ lazy val ackCordRoot = project
     ackCordWebsocket,
     ackCordGateway,
     ackCordVoice,
-    ackCordCore,
+    ackCordUtil,
     ackCordCommands,
     ackCordLavaplayer,
+    ackCordCore,
+    ackCordCommandsCore,
+    ackCordLavaplayerCore,
     ackCord,
     exampleCore,
     example

@@ -28,12 +28,10 @@ import java.util.Locale
 import akka.NotUsed
 import akka.stream.scaladsl.{Broadcast, BroadcastHub, Flow, GraphDSL, Keep, Source}
 import akka.stream.{FlowShape, Materializer}
-import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
 import net.katsstuff.ackcord.data.raw.RawMessage
-import net.katsstuff.ackcord.data.{Message, User}
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
 
 object CmdStreams {
 
@@ -52,7 +50,7 @@ object CmdStreams {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: CacheSnapshot = c.current
 
-          val res = isValidCommand(needMention, msg).map { args =>
+          val res = CmdHelper.isValidCommand(needMention, msg).value.map { args =>
             if (args == Nil) NoCmd(msg, c.current)
             else {
               val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
@@ -121,7 +119,8 @@ object CmdStreams {
     Flow[A]
       .collect {
         case filtered: FilteredCmd =>
-          val errors = filtered.failedFilters.flatMap(_.errorMessage(filtered.cmd.msg)(filtered.cmd.c))
+          implicit val c: CacheSnapshot = filtered.cmd.c
+          val errors = filtered.failedFilters.flatMap(_.errorMessage(filtered.cmd.msg).value)
 
           if (errors.nonEmpty) {
             filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).value.map(_.sendMessage(errors.mkString("\n")))
@@ -131,24 +130,4 @@ object CmdStreams {
           parseError.msg.channelId.tResolve(parseError.cache).value.map(_.sendMessage(parseError.error))
       }
       .mapConcat(_.toList)
-
-  /**
-    * Check if a message is a valid command.
-    */
-  def isValidCommand(needMention: Boolean, msg: Message)(implicit c: CacheSnapshot): Option[List[String]] = {
-    if (needMention) {
-      //We do a quick check first before parsing the message
-      val quickCheck = if (msg.mentions.contains(c.botUser.id)) Some(msg.content.split(" ").toList) else None
-
-      quickCheck.flatMap { args =>
-        MessageParser[User]
-          .parse(args).value
-          .toOption
-          .flatMap {
-            case (remaining, user) if user.id == c.botUser.id => Some(remaining)
-            case (_, _)                                       => None
-          }
-      }
-    } else Some(msg.content.split(" ").toList)
-  }
 }

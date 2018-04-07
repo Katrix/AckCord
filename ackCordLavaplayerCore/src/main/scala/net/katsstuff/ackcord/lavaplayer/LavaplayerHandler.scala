@@ -33,10 +33,10 @@ import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTr
 import akka.actor.{ActorLogging, ActorRef, FSM, PoisonPill, Props, Status}
 import akka.stream.scaladsl.Source
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, RawSnowflake, UserId}
-import net.katsstuff.ackcord.websocket.AbstractWsHandler.{Login, Logout}
-import net.katsstuff.ackcord.websocket.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.lavaplayer.AudioSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
+import net.katsstuff.ackcord.websocket.AbstractWsHandler.{Login, Logout}
+import net.katsstuff.ackcord.websocket.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord.websocket.voice.VoiceWsHandler
 import net.katsstuff.ackcord.{APIMessage, AudioAPIMessage, Cache, DiscordShard}
 

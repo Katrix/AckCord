@@ -29,18 +29,18 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.language.higherKinds
 
-import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorRef}
+import akka.{Done, NotUsed}
 import cats.Monad
 import cats.data.EitherT
-import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike}
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.requests.Request
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
-import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike}
+import net.katsstuff.ackcord.syntax._
 
 /**
   * A base for help commands. Commands need to be registered manually
