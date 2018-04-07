@@ -1,6 +1,7 @@
 package net.katsstuff.ackcord.websocket
 
-import io.circe.Encoder
+import cats.Eval
+import io.circe.{Decoder, Encoder}
 
 /**
   * Represents a message sent by websocket handlers
@@ -18,7 +19,7 @@ private[websocket] trait WsMessage[D, OpCode] {
   /**
     * The data for the message.
     */
-  def d: D
+  def d: Eval[Decoder.Result[D]]
 
   /**
     * A sequence number for the message if there is one.

@@ -30,6 +30,8 @@ import scala.collection.mutable
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.event.Logging
 import akka.routing.Broadcast
+import cats.Eval
+import io.circe.Decoder
 import net.katsstuff.ackcord.data.{ChannelId, GuildChannel, GuildId}
 import net.katsstuff.ackcord.websocket.gateway.GatewayEvent
 import net.katsstuff.ackcord.util.GuildRouter._
@@ -70,6 +72,28 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   val createMsgs     = mutable.HashMap.empty[UUID, Any]
   var isShuttingDown = false
 
+  def handleLazy[A, B](
+      later: Eval[Decoder.Result[A]]
+  )(f: A => B): Option[B] = {
+    later.value match {
+      case Right(value) => Some(f(value))
+      case Left(e) =>
+        log.error(e, "Failed to parse payload")
+        None
+    }
+  }
+
+  def handleLazyOpt[A, B](
+      later: Eval[Decoder.Result[Option[A]]]
+  )(f: A => B): Option[B] = {
+    later.value match {
+      case Right(value) => value.map(f)
+      case Left(e) =>
+        log.error(e, "Failed to parse payload")
+        None
+    }
+  }
+
   override def receive: Receive = {
     case msg: APIMessage.Ready =>
       msg.cache.current.unavailableGuildMap.keys.foreach(sendToGuild(_, msg))
@@ -91,21 +115,27 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
         case None          => sendToNotGuild(msg)
       }
     case msg: GatewayEvent.GuildCreate =>
-      sendToGuild(msg.guildId, msg)
-      msg.data.channels.foreach(channelToGuild ++= _.map(_.id -> msg.guildId))
+      handleLazy(msg.guildId)(guildId => sendToGuild(guildId, msg))
+      handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id -> data.id)))
     case msg: GatewayEvent.ChannelCreate =>
-      msg.guildId.foreach { guildId =>
+      handleLazyOpt(msg.guildId) { guildId =>
         sendToGuild(guildId, msg)
-        channelToGuild.put(msg.data.id, guildId)
+        handleLazy(msg.channelId)(channelId => channelToGuild.put(channelId, guildId))
       }
     case msg: GatewayEvent.ChannelDelete =>
-      msg.guildId.foreach(sendToGuild(_, msg))
-      channelToGuild.remove(msg.data.id)
-    case msg: GatewayEvent.GuildEvent[_]           => sendToGuild(msg.guildId, msg)
-    case msg: GatewayEvent.ComplexGuildEvent[_, _] => sendToGuild(msg.guildId, msg)
-    case msg: GatewayEvent.OptGuildEvent[_]        => msg.guildId.fold(sendToNotGuild(msg))(sendToGuild(_, msg))
+      handleLazyOpt(msg.guildId)(sendToGuild(_, msg))
+      handleLazy(msg.channelId)(channelToGuild.remove)
+    case msg: GatewayEvent.GuildEvent[_]           => handleLazy(msg.guildId)(sendToGuild(_, msg))
+    case msg: GatewayEvent.ComplexGuildEvent[_, _] => handleLazy(msg.guildId)(sendToGuild(_, msg))
+    case msg: GatewayEvent.OptGuildEvent[_]        =>
+      handleLazy(msg.guildId) {
+        case None => sendToNotGuild(msg)
+        case Some(guildId) => sendToGuild(guildId, msg)
+      }
     case msg: GatewayEvent.ChannelEvent[_] =>
-      channelToGuild.get(msg.channelId).fold(sendToNotGuild(msg))(sendToGuild(_, msg))
+      handleLazy(msg.channelId) { channelId =>
+        channelToGuild.get(channelId).fold(sendToNotGuild(msg))(sendToGuild(_, msg))
+      }
     case GetGuildActor(guildId)         => if (!isShuttingDown) sender() ! ResponseGetGuild(getGuild(guildId))
     case SendToGuildActor(guildId, msg) => sendToGuild(guildId, msg)
     case Broadcast(msg)                 => sendToAll(msg)

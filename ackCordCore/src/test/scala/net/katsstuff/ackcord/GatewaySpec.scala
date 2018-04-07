@@ -39,6 +39,7 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream.{ActorMaterializer, FlowShape, Materializer, OverflowStrategy}
 import akka.testkit.TestKit
 import akka.util.ByteString
+import cats.Later
 import io.circe.{Encoder, Json, parser}
 import net.katsstuff.ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import net.katsstuff.ackcord.data._
@@ -82,24 +83,28 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
     Dispatch(
       seq,
       GatewayEvent.Ready(
-        GatewayEvent.ReadyData(
-          v = 6,
-          user = User(
-            id = UserId(RawSnowflake("12345")),
-            username = "TestBot",
-            discriminator = "1234",
-            avatar = None,
-            bot = Some(true),
-            mfaEnabled = None,
-            verified = None,
-            email = None
-          ),
-          privateChannels = Seq.empty,
-          guilds = Seq.empty,
-          sessionId = sessionId,
-          _trace = Seq.empty
+        Later(
+          Right(
+            GatewayEvent.ReadyData(
+              v = 6,
+              user = User(
+                id = UserId(RawSnowflake("12345")),
+                username = "TestBot",
+                discriminator = "1234",
+                avatar = None,
+                bot = Some(true),
+                mfaEnabled = None,
+                verified = None,
+                email = None
+              ),
+              privateChannels = Seq.empty,
+              guilds = Seq.empty,
+              sessionId = sessionId,
+              _trace = Seq.empty
+            )
+          )
         )
-      ),
+      )
     )
   }
 
@@ -147,7 +152,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
     expectMsg(HasSetClient)
     expectNoMessage(50.millis)
     gateway ! SendMessage(Hello(HelloData(100, Seq.empty)))
-    val identifyData = expectMsgType[Identify].d
+    val identifyData = expectMsgType[Identify].nowD
     handler ! Logout
     assert(identifyData.token == settings.token)
     expectMsgType[Heartbeat]
@@ -192,7 +197,7 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
     expectNoMessage(50.millis)
 
     gateway ! SendMessage(Hello(HelloData(200, Seq.empty)))
-    val resume = expectMsgType[Resume].d
+    val resume = expectMsgType[Resume].nowD
 
     assert(resume.seq == seq)
     assert(resume.sessionId == sessionId)

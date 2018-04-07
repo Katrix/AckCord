@@ -104,7 +104,14 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case Hello(data) => handleHello(data)
           case dispatch @ Dispatch(seq, event) =>
             resume = event match {
-              case GatewayEvent.Ready(readyData) => ResumeData(settings.token, readyData.sessionId, seq)
+              case GatewayEvent.Ready(readyData) =>
+                readyData.value match {
+                  case Right(ready) => ResumeData(settings.token, ready.sessionId, seq)
+                  case Left(e) =>
+                    log.error(e, "Failed to decode ready event. Stuff will probably break on resume")
+                    null
+                }
+
               case _ =>
                 if (resume != null) {
                   resume.copy(seq = seq)

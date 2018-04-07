@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.websocket.gateway
 
 import java.time.OffsetDateTime
 
+import cats.Later
 import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.shapes._
@@ -200,10 +201,15 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit def wsMessageEncoder[D]: Encoder[GatewayMessage[D]] =
     (a: GatewayMessage[D]) =>
-      Json.obj("op" -> a.op.asJson, "d" -> a.dataEncoder(a.d), "s" -> a.s.asJson, "t" -> a.t.map(_.name).asJson)
+      Json.obj(
+        "op" -> a.op.asJson,
+        "d"  -> a.dataEncoder(a.d.value.toTry.get),
+        "s"  -> a.s.asJson,
+        "t"  -> a.t.map(_.name).asJson
+    )
 
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
-    val dCursor  = c.downField("d")
+    val dCursor = c.downField("d")
 
     val op = c.get[GatewayOpCode]("op")
 
@@ -231,9 +237,8 @@ object GatewayProtocol extends DiscordProtocol {
       .flatMap { seq =>
         //We use the apply method on the companion object here
         def createDispatch[Data: Decoder: Encoder](
-            create: Data => ComplexGatewayEvent[Data, _]
-        ): Either[DecodingFailure, Dispatch[Data]] =
-          dC.as[Data].map(data => Dispatch(seq, create(data)))
+            create: Later[Decoder.Result[Data]] => ComplexGatewayEvent[Data, _]
+        ): Either[DecodingFailure, Dispatch[Data]] = Right(Dispatch(seq, create(Later(dC.as[Data]))))
 
         c.get[String]("t")
           .flatMap {

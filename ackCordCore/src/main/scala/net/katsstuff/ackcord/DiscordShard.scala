@@ -53,7 +53,7 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
     with Timers {
 
   private var gatewayHandler =
-    context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache), "GatewayHandler")
+    context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log), "GatewayHandler")
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -82,7 +82,7 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
         timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
       }
     case CreateGateway =>
-      gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache), "GatewayHandler")
+      gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log), "GatewayHandler")
   }
 }
 object DiscordShard extends FailFastCirceSupport {

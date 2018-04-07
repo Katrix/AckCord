@@ -76,12 +76,10 @@ lazy val ackCordNetwork = project
     resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
-      "com.typesafe.akka" %% "akka-testkit"   % akkaVersion % Test,
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.20.0",
-    libraryDependencies += "org.scalatest"     %% "scalatest"       % "3.0.4" % Test,
     description := "The base network module of AckCord"
   ).dependsOn(ackCordDataJVM)
 
@@ -154,6 +152,10 @@ lazy val ackCordCore = project
     publishSettings,
     name := "ackcord-core",
     version := ackCordVersion,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-testkit"   % akkaVersion % Test,
+      "org.scalatest"     %% "scalatest"      % "3.0.4"     % Test
+    ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
   .dependsOn(ackCordUtil)
