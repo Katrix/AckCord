@@ -35,13 +35,7 @@ object Scope {
   }
 }
 
-case class AccessToken(
-    accessToken: String,
-    tokenType: String,
-    expiresIn: Int,
-    refreshToken: String,
-    scopes: Seq[Scope]
-)
+case class AccessToken(accessToken: String, tokenType: String, expiresIn: Int, refreshToken: String, scopes: Seq[Scope])
 object AccessToken {
   implicit val encoder: Encoder[AccessToken] = (a: AccessToken) =>
     Json.obj(
@@ -50,7 +44,7 @@ object AccessToken {
       "expires_in"    -> a.expiresIn.asJson,
       "refresh_token" -> a.refreshToken.asJson,
       "scope"         -> a.scopes.map(_.name).mkString(" ").asJson,
-    )
+  )
 
   implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
     for {
@@ -70,7 +64,7 @@ object ClientAccessToken {
       "token_type"   -> a.tokenType.asJson,
       "expires_in"   -> a.expiresIn.asJson,
       "scope"        -> a.scopes.map(_.name).mkString(" ").asJson,
-    )
+  )
 
   implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
     for {

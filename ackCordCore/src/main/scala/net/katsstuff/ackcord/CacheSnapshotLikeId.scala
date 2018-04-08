@@ -53,7 +53,7 @@ trait CacheSnapshotLikeId extends CacheSnapshotLike[Id] {
     OptionT.fromOption[Id](lastTypedMap.get(channelId).flatMap(_.get(userId)))
 
   override def getUser(id: UserId): OptionT[Id, User] =
-    if(id == botUser.id) OptionT.pure[Id](botUser)
+    if (id == botUser.id) OptionT.pure[Id](botUser)
     else OptionT.fromOption[Id](userMap.get(id))
 
   override def getBan(guildId: GuildId, userId: UserId): OptionT[Id, Ban] =

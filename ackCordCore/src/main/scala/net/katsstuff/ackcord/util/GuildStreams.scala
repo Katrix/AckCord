@@ -71,13 +71,13 @@ object GuildStreams {
     * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent]]
     * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent]]
     */
-  def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](log: LoggingAdapter): Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
+  def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](
+      log: LoggingAdapter
+  ): Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
     Flow[Msg].statefulMapConcat { () =>
       val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
 
-      def handleLazy[A, B](
-          later: Eval[Decoder.Result[A]]
-      )(f: A => B): Option[B] = {
+      def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
         later.value match {
           case Right(value) => Some(f(value))
           case Left(e) =>
@@ -86,9 +86,7 @@ object GuildStreams {
         }
       }
 
-      def handleLazyOpt[A, B](
-          later: Eval[Decoder.Result[Option[A]]]
-      )(f: A => B): Option[B] = {
+      def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
         later.value match {
           case Right(value) => value.map(f)
           case Left(e) =>
@@ -99,7 +97,8 @@ object GuildStreams {
 
       def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] = handleLazy(later)(identity)
 
-      def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] = handleLazyOpt(later)(identity)
+      def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] =
+        handleLazyOpt(later)(identity)
 
       msg =>
         {
@@ -174,7 +173,10 @@ object GuildStreams {
     *
     * @param guildId The only guildID to allow through.
     */
-  def guildFilterGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](guildId: GuildId, log: LoggingAdapter): Flow[Msg, Msg, NotUsed] = {
+  def guildFilterGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](
+      guildId: GuildId,
+      log: LoggingAdapter
+  ): Flow[Msg, Msg, NotUsed] = {
     withGuildInfoGatewayEvent[Msg](log).collect {
       case (msg @ (_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate), _) => msg
       case (msg, Some(`guildId`))                                                                    => msg

@@ -351,10 +351,12 @@ package object syntax {
       * Get the users connected to this voice channel.
       */
     def connectedUsers[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Seq[User]] = {
-      c.getGuild(channel.guildId).semiflatMap { g =>
-        import cats.instances.list._
-        Traverse[List].traverse(connectedUsers(g).toList)(_.resolve[F].value)
-      }.cata(Nil, _.flatten.toSeq)
+      c.getGuild(channel.guildId)
+        .semiflatMap { g =>
+          import cats.instances.list._
+          Traverse[List].traverse(connectedUsers(g).toList)(_.resolve[F].value)
+        }
+        .cata(Nil, _.flatten.toSeq)
     }
 
     /**
@@ -367,10 +369,12 @@ package object syntax {
       * Get the guild members connected to this voice channel.
       */
     def connectedMembers[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Seq[GuildMember]] = {
-      c.getGuild(channel.guildId).semiflatMap { g =>
-        import cats.instances.list._
-        Traverse[List].traverse(connectedUsers(g).toList)(_.resolveMember[F](g.id).value)
-      }.cata(Nil, _.flatten.toSeq)
+      c.getGuild(channel.guildId)
+        .semiflatMap { g =>
+          import cats.instances.list._
+          Traverse[List].traverse(connectedUsers(g).toList)(_.resolveMember[F](g.id).value)
+        }
+        .cata(Nil, _.flatten.toSeq)
     }
   }
 

@@ -45,7 +45,7 @@ trait GetGuildOpt {
     * The guild for this object
     */
   def guild[F[_]: Monad](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, Guild] =
-    OptionT.fromOption[F](guildId).flatMap(snapshot.getGuild)
+    OptionT.fromOption(guildId).flatMap(snapshot.getGuild)
 }
 
 trait GetUser {
@@ -91,7 +91,7 @@ trait GetVChannelOpt {
     * Resolve the channelId of this object as a voice channel.
     */
   def vChannel[F[_]: Monad](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, Channel] =
-    OptionT.fromOption[F](channelId).flatMap(snapshot.getChannel).collect {
+    OptionT.fromOption(channelId).flatMap(snapshot.getChannel).collect {
       case vChannel: VGuildChannel => vChannel
     }
 }

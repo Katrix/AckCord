@@ -54,7 +54,7 @@ final class `X-RateLimit-Reset`(val resetAt: Instant) extends ModeledCustomHeade
   override def renderInResponses: Boolean = true
 }
 object `X-RateLimit-Reset` extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] {
-  override def name:            String              = "X-RateLimit-Reset"
+  override def name: String = "X-RateLimit-Reset"
   override def parse(value: String): Try[`X-RateLimit-Reset`] =
     Try(new `X-RateLimit-Reset`(Instant.ofEpochSecond(value.toLong)))
 }
@@ -67,7 +67,7 @@ final class `X-Ratelimit-Global`(val isGlobal: Boolean) extends ModeledCustomHea
   override def renderInResponses: Boolean = true
 }
 object `X-Ratelimit-Global` extends ModeledCustomHeaderCompanion[`X-Ratelimit-Global`] {
-  override def name:            String               = "X-Ratelimit-Global"
+  override def name: String = "X-Ratelimit-Global"
   override def parse(value: String) = Try(new `X-Ratelimit-Global`(value.toBoolean))
 }
 

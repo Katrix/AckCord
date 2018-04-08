@@ -50,7 +50,6 @@ class CacheSnapshotBuilder(
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
 
-
   def toImmutable: CacheSnapshot = {
     def convertNested[K1, K2, V](
         map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]

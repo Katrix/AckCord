@@ -27,6 +27,7 @@ import scala.concurrent.Future
 
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
+import cats.Id
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
 import net.katsstuff.ackcord.{APIMessage, Cache, CacheSnapshot}
@@ -55,7 +56,7 @@ case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[C
     subscribe.collect {
       case cmd @ RawCmd(msg, `category`, command, args, c) if aliases.contains(command) =>
         implicit val cache: CacheSnapshot = c
-        val filtersNotPassed = filters.filterNot(_.isAllowed(msg))
+        val filtersNotPassed = filters.filterNot(_.isAllowed[Id](msg))
         if (filtersNotPassed.isEmpty) Cmd(msg, args, c) else FilteredCmd(filtersNotPassed, cmd)
     }
   }
@@ -71,7 +72,8 @@ case class Commands(subscribe: Source[RawCmdMessage, NotUsed], categories: Set[C
     case cmd: Cmd =>
       implicit val c: CacheSnapshot = cmd.cache
       parser
-        .parse(cmd.args).value
+        .parse(cmd.args)
+        .value
         .fold(e => CmdParseError(cmd.msg, e, cmd.cache), res => ParsedCmd(cmd.msg, res._2, res._1, cmd.cache))
 
     case filtered: FilteredCmd => filtered

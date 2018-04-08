@@ -72,9 +72,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
   val createMsgs     = mutable.HashMap.empty[UUID, Any]
   var isShuttingDown = false
 
-  def handleLazy[A, B](
-      later: Eval[Decoder.Result[A]]
-  )(f: A => B): Option[B] = {
+  def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
     later.value match {
       case Right(value) => Some(f(value))
       case Left(e) =>
@@ -83,9 +81,7 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
     }
   }
 
-  def handleLazyOpt[A, B](
-      later: Eval[Decoder.Result[Option[A]]]
-  )(f: A => B): Option[B] = {
+  def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
     later.value match {
       case Right(value) => value.map(f)
       case Left(e) =>
@@ -127,9 +123,9 @@ class GuildRouter(props: GuildId => Props, notGuildHandler: Option[ActorRef]) ex
       handleLazy(msg.channelId)(channelToGuild.remove)
     case msg: GatewayEvent.GuildEvent[_]           => handleLazy(msg.guildId)(sendToGuild(_, msg))
     case msg: GatewayEvent.ComplexGuildEvent[_, _] => handleLazy(msg.guildId)(sendToGuild(_, msg))
-    case msg: GatewayEvent.OptGuildEvent[_]        =>
+    case msg: GatewayEvent.OptGuildEvent[_] =>
       handleLazy(msg.guildId) {
-        case None => sendToNotGuild(msg)
+        case None          => sendToNotGuild(msg)
         case Some(guildId) => sendToGuild(guildId, msg)
       }
     case msg: GatewayEvent.ChannelEvent[_] =>

@@ -52,7 +52,7 @@ class GatewayHandler(
     source: Source[GatewayMessage[_], NotUsed],
     sink: Sink[Dispatch[_], NotUsed]
 )(implicit val mat: Materializer)
-  extends AbstractWsHandler[GatewayMessage[_], ResumeData] {
+    extends AbstractWsHandler[GatewayMessage[_], ResumeData] {
   import AbstractWsHandler._
   import context.dispatcher
 

@@ -72,7 +72,7 @@ class MusicHandler(requests: RequestHelper, commands: Commands, helpCmdActor: Ac
 
   {
     implicit val timeout = Timeout(30.seconds)
-    val cmds = new commands(guildId, self)
+    val cmds             = new commands(guildId, self)
     import cmds._
     Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd)
   }

@@ -55,7 +55,7 @@ case class Webhook(
     */
   def tGuildChannel[F[_]: Monad](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, TChannel] =
     OptionT
-      .fromOption[F](guildId)
+      .fromOption(guildId)
       .flatMap(g => snapshot.getGuildChannel(g, channelId))
       .orElse(snapshot.getGuildChannel(channelId))
       .collect {

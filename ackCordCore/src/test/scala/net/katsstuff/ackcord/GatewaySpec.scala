@@ -40,7 +40,7 @@ import akka.stream.{ActorMaterializer, FlowShape, Materializer, OverflowStrategy
 import akka.testkit.TestKit
 import akka.util.ByteString
 import cats.Later
-import io.circe.{Encoder, Json, parser}
+import io.circe.{parser, Encoder, Json}
 import net.katsstuff.ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.websocket.AbstractWsHandler.{Login, Logout}

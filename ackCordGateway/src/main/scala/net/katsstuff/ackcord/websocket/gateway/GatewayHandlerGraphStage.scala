@@ -44,8 +44,8 @@ import net.katsstuff.ackcord.websocket.gateway.GatewayProtocol._
 import net.katsstuff.ackcord.util.AckCordSettings
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
-  extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
-    Option[ResumeData]
+    extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
+      Option[ResumeData]
     ]] {
   val in:          Inlet[GatewayMessage[_]] = Inlet("GatewayHandlerGraphStage.in")
   val dispatchOut: Outlet[Dispatch[_]]      = Outlet("GatewayHandlerGraphStage.dispatchOut")
@@ -252,7 +252,7 @@ object GatewayHandlerGraphStage {
     val flow = Flow[GatewayMessage[_]].map { msg =>
       msg match {
         case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
-        case _ =>
+        case _                  =>
       }
 
       val json = msg.asJson.noSpaces

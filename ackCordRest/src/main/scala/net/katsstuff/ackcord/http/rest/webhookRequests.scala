@@ -45,7 +45,7 @@ case class CreateWebhook[Ctx](
   * Get the webhooks in a channel.
   */
 case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
+    extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
   override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -59,7 +59,7 @@ case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed:
   * Get the webhooks in a guild.
   */
 case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
+    extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
   override def route: RequestRoute = Routes.getGuildWebhooks(guildId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -73,7 +73,7 @@ case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
   * Get a webhook by id.
   */
 case class GetWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[Webhook, Ctx] {
+    extends NoParamsNiceResponseRequest[Webhook, Ctx] {
   override def route: RequestRoute = Routes.getWebhook(id)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -85,7 +85,7 @@ case class GetWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: N
   * Get a webhook by id with a token. Doesn't require authentication.
   */
 case class GetWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[Webhook, Ctx] {
+    extends NoParamsNiceResponseRequest[Webhook, Ctx] {
   override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -179,4 +179,4 @@ TODO
 case class ExecuteWebhook[Ctx](id: Snowflake, token: String, params: Nothing, context: Ctx = NotUsed: NotUsed) extends SimpleRESTRequest[Nothing, Nothing, Ctx] {
   override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
 }
-*/
+ */

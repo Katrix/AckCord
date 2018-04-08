@@ -244,10 +244,7 @@ case class RawGuildMember(
   * @param type Activity type.
   * @param partyId Party id from rich presence.
   */
-case class RawMessageActivity(
-    `type`: MessageActivityType,
-    partyId: Option[String]
-) {
+case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[String]) {
 
   def toMessageActivity: MessageActivity = MessageActivity(`type`, partyId)
 }

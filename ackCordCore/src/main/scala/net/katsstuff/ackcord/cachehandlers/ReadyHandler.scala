@@ -29,7 +29,6 @@ import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
 import shapeless._
 
-
 //We handle this one separately as is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {

@@ -32,7 +32,16 @@ import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
-import net.katsstuff.ackcord.data.raw.{RawBan, RawChannel, RawEmoji, RawGuild, RawGuildMember, RawMessage, RawMessageActivity, RawRole}
+import net.katsstuff.ackcord.data.raw.{
+  RawBan,
+  RawChannel,
+  RawEmoji,
+  RawGuild,
+  RawGuildMember,
+  RawMessage,
+  RawMessageActivity,
+  RawRole
+}
 
 trait DiscordProtocol {
 

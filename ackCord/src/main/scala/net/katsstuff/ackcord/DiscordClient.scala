@@ -108,7 +108,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
 
   /**
     * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -134,7 +134,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
 
   /**
     * Run some code with a [[CacheSnapshot]] when an event happens.
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */

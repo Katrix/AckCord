@@ -17,7 +17,7 @@ import net.katsstuff.ackcord.http.requests.RequestRoute
   * Get an audit log for a given guild.
   */
 case class GetGuildAuditLog[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[AuditLog, Ctx] {
+    extends NoParamsNiceResponseRequest[AuditLog, Ctx] {
   override def route: RequestRoute = Routes.getGuildAuditLogs(guildId)
 
   override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]

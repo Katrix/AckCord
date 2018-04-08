@@ -9,9 +9,9 @@ import akka.stream.scaladsl.Flow
 import net.katsstuff.ackcord.CacheSnapshotLike
 
 trait CmdFlowBase[A, Snapshot <: CacheSnapshotLike[F], F[_]] {
-  
+
   def getCache(a: A): Snapshot
-  
+
   def map[B](f: Snapshot => A => B): Flow[A, B, NotUsed] =
     Flow[A].map(a => f(getCache(a))(a))
 
@@ -21,18 +21,12 @@ trait CmdFlowBase[A, Snapshot <: CacheSnapshotLike[F], F[_]] {
   def mapAsync[B](parallelism: Int)(f: Snapshot => A => Future[B]): Flow[A, B, NotUsed] =
     Flow[A].mapAsync(parallelism)(a => f(getCache(a))(a))
 
-  def mapAsyncUnordered[B](
-      parallelism: Int
-  )(f: Snapshot => A => Future[B]): Flow[A, B, NotUsed] =
+  def mapAsyncUnordered[B](parallelism: Int)(f: Snapshot => A => Future[B]): Flow[A, B, NotUsed] =
     Flow[A].mapAsyncUnordered(parallelism)(a => f(getCache(a))(a))
 
-  def flatMapConcat[B](
-      f: Snapshot => A => Graph[SourceShape[B], NotUsed]
-  ): Flow[A, B, NotUsed] =
+  def flatMapConcat[B](f: Snapshot => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
     Flow[A].flatMapConcat(a => f(getCache(a))(a))
 
-  def flatMapMerge[B](
-      breadth: Int
-  )(f: Snapshot => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
+  def flatMapMerge[B](breadth: Int)(f: Snapshot => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
     Flow[A].flatMapMerge(breadth, a => f(getCache(a))(a))
 }

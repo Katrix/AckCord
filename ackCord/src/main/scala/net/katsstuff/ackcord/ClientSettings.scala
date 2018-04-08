@@ -84,8 +84,7 @@ class ClientSettings(
     val commands = Commands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
 
     DiscordShard.fetchWsGateway.map(
-      uri =>
-        DiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
+      uri => DiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
     )
   }
 

@@ -8,7 +8,7 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpHeader, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
-import cats.{Monad, MonadError}
+import cats.Monad
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe._
 import net.katsstuff.ackcord.CacheSnapshotLike

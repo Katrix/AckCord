@@ -38,7 +38,7 @@ trait CommandsHelper {
 
   /**
     * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -68,7 +68,7 @@ trait CommandsHelper {
 
   /**
     * Run some code with a [[CacheSnapshot]] when raw command arrives.
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -96,7 +96,7 @@ trait CommandsHelper {
 
   /**
     * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
@@ -145,7 +145,7 @@ trait CommandsHelper {
 
   /**
     * Register a command which runs some code with a [[CacheSnapshot]].
- *
+    *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */

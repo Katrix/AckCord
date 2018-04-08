@@ -356,34 +356,37 @@ case class GuildMember(
     * Check if this user has any roles above the passed in roles.
     */
   def hasRoleAbove[F[_]: Monad](others: Seq[RoleId])(implicit c: CacheSnapshotLike[F]): F[Boolean] = {
-    guild.semiflatMap { guild =>
-      val ownerId = guild.ownerId
-      if (this.userId == ownerId) Monad[F].pure(true)
-      else {
-        def maxRolesPosition(roles: Seq[RoleId]): F[Int] = {
-          val seq = {
-            import cats.instances.list._
-            Traverse[List].traverse(roles.toList)(_.resolve(guildId).map(_.position).value)
+    guild
+      .semiflatMap { guild =>
+        val ownerId = guild.ownerId
+        if (this.userId == ownerId) Monad[F].pure(true)
+        else {
+          def maxRolesPosition(roles: Seq[RoleId]): F[Int] = {
+            val seq = {
+              import cats.instances.list._
+              Traverse[List].traverse(roles.toList)(_.resolve(guildId).map(_.position).value)
+            }
+            Monad[F].map(seq) { optList =>
+              val positions = optList.flatten
+              if (positions.isEmpty) 0 else positions.max
+            }
           }
-          Monad[F].map(seq) { optList =>
-            val positions = optList.flatten
-            if(positions.isEmpty) 0 else positions.max
-          }
-        }
 
-        Monad[F].map2(maxRolesPosition(this.roleIds), maxRolesPosition(others))(_ > _)
+          Monad[F].map2(maxRolesPosition(this.roleIds), maxRolesPosition(others))(_ > _)
+        }
       }
-    }.exists(identity)
+      .exists(identity)
   }
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove[F[_]: Monad](other: GuildMember)(implicit c: CacheSnapshotLike[F]): F[Boolean] = {
-    guild.semiflatMap { guild =>
-      if (other.userId == guild.ownerId) Monad[F].pure(false) else hasRoleAbove(other.roleIds)
-    }.exists(identity)
-  }
+  def hasRoleAbove[F[_]: Monad](other: GuildMember)(implicit c: CacheSnapshotLike[F]): F[Boolean] =
+    guild
+      .semiflatMap { guild =>
+        if (other.userId == guild.ownerId) Monad[F].pure(false) else hasRoleAbove(other.roleIds)
+      }
+      .exists(identity)
 }
 
 /**
@@ -440,11 +443,7 @@ case class ActivityAsset(
   * @param currentSize The current size of the party.
   * @param maxSize The max size of the party.
   */
-case class ActivityParty(
-    id: Option[String],
-    currentSize: Int,
-    maxSize: Int
-)
+case class ActivityParty(id: Option[String], currentSize: Int, maxSize: Int)
 
 /**
   * The text in a presence

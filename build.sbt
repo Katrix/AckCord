@@ -81,7 +81,8 @@ lazy val ackCordNetwork = project
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.20.0",
     description := "The base network module of AckCord"
-  ).dependsOn(ackCordDataJVM)
+  )
+  .dependsOn(ackCordDataJVM)
 
 lazy val ackCordRest = project
   .settings(
@@ -90,7 +91,8 @@ lazy val ackCordRest = project
     name := "ackcord-rest",
     version := ackCordVersion,
     description := "The REST module of AckCord"
-  ).dependsOn(ackCordNetwork)
+  )
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordImages = project
   .settings(
@@ -99,7 +101,8 @@ lazy val ackCordImages = project
     name := "ackcord-rest",
     version := ackCordVersion,
     description := "The image requests module of AckCord"
-  ).dependsOn(ackCordNetwork)
+  )
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordOAuth = project
   .settings(
@@ -108,7 +111,8 @@ lazy val ackCordOAuth = project
     name := "ackcord-rest",
     version := ackCordVersion,
     description := "The OAuth requests module of AckCord"
-  ).dependsOn(ackCordNetwork)
+  )
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordWebsocket = project
   .settings(
@@ -117,7 +121,8 @@ lazy val ackCordWebsocket = project
     name := "ackcord-websockets",
     version := ackCordVersion,
     description := "The base websockets module of AckCord"
-  ).dependsOn(ackCordNetwork)
+  )
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordGateway = project
   .settings(
@@ -126,7 +131,8 @@ lazy val ackCordGateway = project
     name := "ackcord-gateway",
     version := ackCordVersion,
     description := "The gateway module of AckCord"
-  ).dependsOn(ackCordWebsocket)
+  )
+  .dependsOn(ackCordWebsocket)
 
 lazy val ackCordVoice = project
   .settings(
@@ -135,7 +141,8 @@ lazy val ackCordVoice = project
     name := "ackcord-Voice",
     version := ackCordVersion,
     description := "The voice websocket module of AckCord"
-  ).dependsOn(ackCordWebsocket)
+  )
+  .dependsOn(ackCordWebsocket)
 
 lazy val ackCordUtil = project
   .settings(
@@ -144,7 +151,8 @@ lazy val ackCordUtil = project
     name := "ackcord-util",
     version := ackCordVersion,
     description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
-  ).dependsOn(ackCordRest, ackCordImages, ackCordOAuth, ackCordGateway, ackCordVoice)
+  )
+  .dependsOn(ackCordRest, ackCordImages, ackCordOAuth, ackCordGateway, ackCordVoice)
 
 lazy val ackCordCommands = project
   .settings(
@@ -174,8 +182,8 @@ lazy val ackCordCore = project
     name := "ackcord-core",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-testkit"   % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"      % "3.0.4"     % Test
+      "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
+      "org.scalatest"     %% "scalatest"    % "3.0.4"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -221,7 +229,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
-  .dependsOn(ackCordCore, ackCordCommands, ackCordLavaplayer)
+  .dependsOn(ackCordCore, ackCordCommandsCore, ackCordLavaplayerCore)
 
 lazy val example = project
   .settings(

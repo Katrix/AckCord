@@ -231,21 +231,41 @@ trait MessageParserInstances {
   }
 
   implicit val userParser: MessageParser[User] =
-    snowflakeParser("user", userRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], User]] {
-      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, User] = fa.getUser(id)
-    })
+    snowflakeParser(
+      "user",
+      userRegex,
+      id =>
+        new HighFunc[CacheSnapshotLike, OptionT[?[_], User]] {
+          override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, User] = fa.getUser(id)
+      }
+    )
   implicit val channelParser: MessageParser[Channel] =
-    snowflakeParser("channel", channelRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Channel]] {
-      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Channel] = fa.getChannel(id)
-    })
+    snowflakeParser(
+      "channel",
+      channelRegex,
+      id =>
+        new HighFunc[CacheSnapshotLike, OptionT[?[_], Channel]] {
+          override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Channel] = fa.getChannel(id)
+      }
+    )
   implicit val roleParser: MessageParser[Role] =
-    snowflakeParser("role", roleRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Role]] {
-        override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Role] = fa.getRole(id)
-    })
+    snowflakeParser(
+      "role",
+      roleRegex,
+      id =>
+        new HighFunc[CacheSnapshotLike, OptionT[?[_], Role]] {
+          override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Role] = fa.getRole(id)
+      }
+    )
   implicit val emojiParser: MessageParser[Emoji] =
-    snowflakeParser("emoji", emojiRegex, id => new HighFunc[CacheSnapshotLike, OptionT[?[_], Emoji]] {
-      override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Emoji] = fa.getEmoji(id)
-    })
+    snowflakeParser(
+      "emoji",
+      emojiRegex,
+      id =>
+        new HighFunc[CacheSnapshotLike, OptionT[?[_], Emoji]] {
+          override def apply[A[_]](fa: CacheSnapshotLike[A]): OptionT[A, Emoji] = fa.getEmoji(id)
+      }
+    )
 
   implicit val tChannelParser: MessageParser[TChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {

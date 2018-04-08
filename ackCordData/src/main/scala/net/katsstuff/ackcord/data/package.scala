@@ -132,7 +132,8 @@ package object data {
     /**
       * Resolves the message represented by this id relative to a channel id.
       */
-    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Message] = c.getMessage(channelId, messageId)
+    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Message] =
+      c.getMessage(channelId, messageId)
   }
 
   type UserId = SnowflakeType[User]

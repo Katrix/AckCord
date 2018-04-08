@@ -5,7 +5,7 @@ import io.circe.{Decoder, Encoder}
 
 /**
   * Represents a message sent by websocket handlers
- *
+  *
   * @tparam D The data in this message
   * @tparam OpCode The opcode used by this websocket
   */

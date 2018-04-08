@@ -183,9 +183,7 @@ object DiscordShard extends FailFastCirceSupport {
     * @param mat The materializer to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(
-      token: String
-  )(implicit system: ActorSystem, mat: Materializer): Future[(Uri, Int)] = {
+  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem, mat: Materializer): Future[(Uri, Int)] = {
     import system.dispatcher
     val http = Http()
     val auth = Authorization(BotAuthentication(token))

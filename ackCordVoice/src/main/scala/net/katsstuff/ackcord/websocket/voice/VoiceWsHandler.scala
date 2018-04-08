@@ -40,7 +40,7 @@ import akka.stream.{Attributes, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import io.circe
 import io.circe.syntax._
-import io.circe.{Error, parser}
+import io.circe.{parser, Error}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.util.AckCordSettings
 import net.katsstuff.ackcord.websocket.AbstractWsHandler

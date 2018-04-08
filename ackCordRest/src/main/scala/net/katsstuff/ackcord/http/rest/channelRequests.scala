@@ -22,7 +22,7 @@ import net.katsstuff.ackcord.data.DiscordProtocol._
   * Get a channel by id.
   */
 case class GetChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsRequest[RawChannel, Option[Channel], Ctx] {
+    extends NoParamsRequest[RawChannel, Option[Channel], Ctx] {
   override def route: RequestRoute = Routes.getChannel(channelId)
 
   override def responseDecoder:                      Decoder[RawChannel] = Decoder[RawChannel]
@@ -99,11 +99,8 @@ case class ModifyChannel[Ctx](
 /**
   * Delete a guild channel, or close a DM channel.
   */
-case class DeleteCloseChannel[Ctx](
-    channelId: ChannelId,
-    context: Ctx = NotUsed: NotUsed,
-    reason: Option[String] = None
-) extends NoParamsReasonRequest[DeleteCloseChannel[Ctx], RawChannel, Option[Channel], Ctx] {
+case class DeleteCloseChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed, reason: Option[String] = None)
+    extends NoParamsReasonRequest[DeleteCloseChannel[Ctx], RawChannel, Option[Channel], Ctx] {
   override def route: RequestRoute = Routes.deleteCloseChannel(channelId)
 
   override def responseDecoder:                      Decoder[RawChannel] = Decoder[RawChannel]
@@ -128,10 +125,7 @@ case class GetChannelMessagesData(
     after: Option[MessageId] = None,
     limit: Option[Int] = None
 ) {
-  require(
-    Seq(around, before, after).count(_.isDefined) <= 1,
-    "The around, before, after fields are mutually exclusive"
-  )
+  require(Seq(around, before, after).count(_.isDefined) <= 1, "The around, before, after fields are mutually exclusive")
   require(limit.forall(c => c >= 1 && c <= 100), "Count must be between 1 and 100")
 
   def toMap: Map[String, String] =
@@ -149,11 +143,8 @@ case class GetChannelMessagesData(
 /**
   * Get the messages in a channel.
   */
-case class GetChannelMessages[Ctx](
-    channelId: ChannelId,
-    query: GetChannelMessagesData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
+case class GetChannelMessages[Ctx](channelId: ChannelId, query: GetChannelMessagesData, context: Ctx = NotUsed: NotUsed)
+    extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
   override def route: RequestRoute = {
     val base = Routes.getChannelMessages(channelId)
     base.copy(uri = base.uri.withQuery(Uri.Query(query.toMap)))
@@ -167,19 +158,11 @@ case class GetChannelMessages[Ctx](
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object GetChannelMessages {
-  def around[Ctx](
-      channelId: ChannelId,
-      around: MessageId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ) = new GetChannelMessages(channelId, GetChannelMessagesData(around = Some(around), limit = limit), context)
+  def around[Ctx](channelId: ChannelId, around: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
+    new GetChannelMessages(channelId, GetChannelMessagesData(around = Some(around), limit = limit), context)
 
-  def before[Ctx](
-      channelId: ChannelId,
-      before: MessageId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ) = new GetChannelMessages(channelId, GetChannelMessagesData(before = Some(before), limit = limit), context)
+  def before[Ctx](channelId: ChannelId, before: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
+    new GetChannelMessages(channelId, GetChannelMessagesData(before = Some(before), limit = limit), context)
 
   def after[Ctx](channelId: ChannelId, after: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
     new GetChannelMessages(channelId, GetChannelMessagesData(after = Some(after), limit = limit), context)
@@ -189,7 +172,7 @@ object GetChannelMessages {
   * Get a specific message in a channel.
   */
 case class GetChannelMessage[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsRequest[RawMessage, Message, Ctx] {
+    extends NoParamsRequest[RawMessage, Message, Ctx] {
   override def route: RequestRoute = Routes.getChannelMessage(messageId, channelId)
 
   override def responseDecoder:                      Decoder[RawMessage] = Decoder[RawMessage]
@@ -233,7 +216,7 @@ object CreateMessageData {
   * Create a message in a channel.
   */
 case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, context: Ctx = NotUsed: NotUsed)
-  extends RESTRequest[CreateMessageData, RawMessage, Message, Ctx] {
+    extends RESTRequest[CreateMessageData, RawMessage, Message, Ctx] {
   override def route:         RequestRoute               = Routes.createMessage(channelId)
   override def paramsEncoder: Encoder[CreateMessageData] = CreateMessageData.encoder
   override def requestBody: RequestEntity = {
@@ -243,10 +226,8 @@ case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, c
           FormData.BodyPart.fromPath(f.getFileName.toString, ContentTypes.`application/octet-stream`, f)
         }
 
-        val jsonPart = FormData.BodyPart(
-          "payload_json",
-          HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter))
-        )
+        val jsonPart =
+          FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter)))
 
         FormData(fileParts :+ jsonPart: _*).toEntity()
       case _ => super.requestBody
@@ -364,7 +345,7 @@ object GetReactions {
   * Clear all reactions from a message.
   */
 case class DeleteAllReactions[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsResponseRequest[Ctx] {
+    extends NoParamsResponseRequest[Ctx] {
   override def route: RequestRoute = Routes.deleteAllReactions(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -528,7 +509,7 @@ case class DeleteChannelPermission[Ctx](
   * Get all invites for this channel. Can only be used on guild channels.
   */
 case class GetChannelInvites[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata], Ctx] {
+    extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata], Ctx] {
   override def route: RequestRoute = Routes.getChannelInvites(channelId)
 
   override def responseDecoder: Decoder[Seq[InviteWithMetadata]] = Decoder[Seq[InviteWithMetadata]]
@@ -588,7 +569,7 @@ object CreateChannelInvite {
   * Triggers a typing indicator in a channel.
   */
 case class TriggerTypingIndicator[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsResponseRequest[Ctx] {
+    extends NoParamsResponseRequest[Ctx] {
   override def route: RequestRoute = Routes.triggerTyping(channelId)
 }
 
@@ -596,7 +577,7 @@ case class TriggerTypingIndicator[Ctx](channelId: ChannelId, context: Ctx = NotU
   * Get all the pinned messages in a channel.
   */
 case class GetPinnedMessages[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
+    extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
   override def route: RequestRoute = Routes.getPinnedMessage(channelId)
 
   override def responseDecoder:                           Decoder[Seq[RawMessage]] = Decoder[Seq[RawMessage]]
@@ -607,7 +588,7 @@ case class GetPinnedMessages[Ctx](channelId: ChannelId, context: Ctx = NotUsed: 
   * Add a new pinned message to a channel.
   */
 case class AddPinnedChannelMessages[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsResponseRequest[Ctx] {
+    extends NoParamsResponseRequest[Ctx] {
   override def route: RequestRoute = Routes.addPinnedChannelMessage(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -618,11 +599,8 @@ case class AddPinnedChannelMessages[Ctx](channelId: ChannelId, messageId: Messag
 /**
   * Delete a pinned message in a channel.
   */
-case class DeletePinnedChannelMessages[Ctx](
-    channelId: ChannelId,
-    messageId: MessageId,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsResponseRequest[Ctx] {
+case class DeletePinnedChannelMessages[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
+    extends NoParamsResponseRequest[Ctx] {
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(messageId, channelId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -647,7 +625,7 @@ case class GroupDMRemoveRecipient[Ctx](channelId: Snowflake, userId: Snowflake, 
   * Get all the emojis for this guild.
   */
 case class ListGuildEmojis[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-  extends RESTRequest[NotUsed, Seq[RawEmoji], Seq[Emoji], Ctx] {
+    extends RESTRequest[NotUsed, Seq[RawEmoji], Seq[Emoji], Ctx] {
   override def route:         RequestRoute     = Routes.listGuildEmojis(guildId)
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params:        NotUsed          = NotUsed
@@ -698,7 +676,7 @@ object CreateGuildEmoji {
   * Get an emoji in a guild by id.
   */
 case class GetGuildEmoji[Ctx](emojiId: EmojiId, guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-  extends NoParamsRequest[RawEmoji, Emoji, Ctx] {
+    extends NoParamsRequest[RawEmoji, Emoji, Ctx] {
   override def route: RequestRoute = Routes.getGuildEmoji(emojiId, guildId)
 
   override def responseDecoder:                    Decoder[RawEmoji] = Decoder[RawEmoji]

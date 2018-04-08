@@ -52,5 +52,5 @@ object AudioAPIMessage {
     *               To get the userId of the speaker, use [[UserSpeaking]].
     */
   case class ReceivedData(data: ByteString, header: RTPHeader, serverId: RawSnowflake, userId: UserId)
-    extends AudioAPIMessage
+      extends AudioAPIMessage
 }

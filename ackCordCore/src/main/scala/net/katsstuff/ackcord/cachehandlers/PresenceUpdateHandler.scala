@@ -75,10 +75,8 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
         .map(member => oldMembers.updated(partialUser.id, member.copy(roleIds = roles)))
         .getOrElse(oldMembers)
 
-      val newGuild = oldGuild.copy(
-        presences = oldGuild.presences.updated(partialUser.id, newPresence),
-        members = newMembers
-      )
+      val newGuild =
+        oldGuild.copy(presences = oldGuild.presences.updated(partialUser.id, newPresence), members = newMembers)
 
       builder.guildMap.put(guildId, newGuild)
     }
