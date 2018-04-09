@@ -23,13 +23,14 @@
  */
 package net.katsstuff.ackcord
 
-import scala.concurrent.{ExecutionContext, Future}
-import scala.language.implicitConversions
+import scala.language.{higherKinds, implicitConversions}
 
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Source}
 import cats.Monad
+import cats.data.OptionT
 import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
+import net.katsstuff.ackcord.util.Streamable
 
 /**
   * Base trait for a RequestDSL object. An RequestDSL object is a program
@@ -57,44 +58,39 @@ object RequestDSL {
   /**
     * Lift a pure value into the dsl.
     */
-  def pure[A](a: A): RequestDSL[A] = Pure(a)
-
-  /**
-    * Alias for [[pure]].
-    */
-  def lift[A](a: A): RequestDSL[A] = pure(a)
+  def pure[A](a: A): RequestDSL[A] = SourceRequest(Source.single(a))
 
   /**
     * Lift a an optional pure value into the dsl.
     */
-  def maybePure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](NoRequest)(Pure.apply)
-
-  /**
-    * Alias for [[maybePure]]
-    */
-  def liftOption[A](opt: Option[A]): RequestDSL[A] = maybePure(opt)
+  def optionPure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](SourceRequest(Source.empty))(pure)
 
   /**
     * Lift a an optional request into the dsl.
     */
-  def maybeRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] =
-    opt.fold[RequestDSL[A]](NoRequest)(SingleRequest.apply)
+  def optionRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] =
+    opt.fold[RequestDSL[A]](SourceRequest(Source.empty))(SingleRequest.apply)
 
   /**
-    * Alias for [[maybeRequest]]
+    * Lifts a [[Source]] into the dsl.
     */
-  def liftOptionalRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] = maybeRequest(opt)
+  def fromSource[A](source: Source[A, NotUsed]): RequestDSL[A] = SourceRequest(source)
 
   /**
-    * Lifts a [[Future]] into the dsl.
+    * Converts an F into a [[Source]] ad lifts it into the dsl.
     */
-  def fromFuture[A](future: Future[A])(implicit ec: ExecutionContext): RequestDSL[A] = FutureRequest(future)
+  def liftF[F[_]: Streamable, A](fa: F[A]): RequestDSL[A] = fromSource(Streamable[F].toSource(fa))
+
+  /**
+    * Lifts an [[OptionT]] into a [[Source]] and lifts it into the dsl.
+    */
+  def liftOptionT[F[_]: Streamable, A](opt: OptionT[F, A]): RequestDSL[A] = fromSource(Streamable[F].optionToSource(opt))
 
   /**
     * Lifts a future request into the dsl.
     */
-  def futureRequest[A](futureRequest: Future[RequestDSL[A]])(implicit ec: ExecutionContext): RequestDSL[A] =
-    fromFuture(futureRequest).flatten
+  def liftRequest[F[_]: Streamable, A](fRequest: F[RequestDSL[A]]): RequestDSL[A] =
+    liftF(fRequest).flatten
 
   /**
     * Run a RequestDSL using the specified flow.
@@ -111,32 +107,11 @@ object RequestDSL {
     override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] = {
       f(a).flatMap {
         case Left(_)  => tailRecM(a)(f) //Think this is the best we can do as flatMap is a separate object.
-        case Right(v) => Pure(v)
+        case Right(v) => RequestDSL.pure(v)
       }
     }
 
-    override def pure[A](x: A) = Pure(x)
-  }
-
-  private case class Pure[+A](a: A) extends RequestDSL[A] {
-    override def map[B](f: A => B):                    RequestDSL[B] = Pure(f(a))
-    override def filter(f: A => Boolean):              RequestDSL[A] = if (f(a)) this else NoRequest
-    override def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B] = f(a)
-    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = maybePure(f.lift(a))
-
-    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
-      Source.single(a)
-  }
-
-  private case object NoRequest extends RequestDSL[Nothing] {
-    override def map[B](f: Nothing => B):                    RequestDSL[B]       = this
-    override def filter(f: Nothing => Boolean):              RequestDSL[Nothing] = this
-    override def flatMap[B](f: Nothing => RequestDSL[B]):    RequestDSL[B]       = this
-    override def collect[B](f: PartialFunction[Nothing, B]): RequestDSL[B]       = this
-
-    override def toSource[B, Ctx](
-        flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]
-    ): Source[Nothing, NotUsed] = Source.empty[Nothing]
+    override def pure[A](x: A): RequestDSL[A] = RequestDSL.pure(x)
   }
 
   private case class SingleRequest[A](request: Request[A, _]) extends RequestDSL[A] {
@@ -165,13 +140,13 @@ object RequestDSL {
       request.toSource(flow).flatMapConcat(s => f(s).toSource(flow))
   }
 
-  private case class FutureRequest[A](future: Future[A])(implicit ec: ExecutionContext) extends RequestDSL[A] {
-    override def map[B](f: A => B):                    RequestDSL[B] = FutureRequest(future.map(f))
-    override def filter(f: A => Boolean):              RequestDSL[A] = FutureRequest(future.filter(f))
+  private case class SourceRequest[A](source: Source[A, NotUsed]) extends RequestDSL[A] {
+    override def map[B](f: A => B):                    RequestDSL[B] = SourceRequest(source.map(f))
+    override def filter(f: A => Boolean):              RequestDSL[A] = SourceRequest(source.filter(f))
     override def flatMap[B](f: A => RequestDSL[B]):    RequestDSL[B] = AndThenRequestDSL(this, f)
-    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = FutureRequest(future.collect(f))
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = SourceRequest(source.collect(f))
 
     override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
-      Source.fromFuture(future)
+      source
   }
 }
