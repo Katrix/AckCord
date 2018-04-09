@@ -32,7 +32,7 @@ import cats.syntax.functor._
 import cats.{Monad, Traverse}
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.{MessageParser, Streamable}
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 
 /**
   * Represents a command handler, which will try to parse commands with
@@ -62,7 +62,7 @@ case class Commands[F[_]](
       .collect {
         case cmd @ RawCmd(msg, `category`, command, args, c) if aliases.contains(command) =>
           import cats.instances.list._
-          implicit val cache: CacheSnapshotLike[F] = c
+          implicit val cache: CacheSnapshot[F] = c
           Traverse[List].traverse(filters.toList)(filter => filter.isAllowed[F](msg).map(_ -> filter)).map {
             processedFilters =>
               val filtersNotPassed = processedFilters.collect {
@@ -87,7 +87,7 @@ case class Commands[F[_]](
     subscribeCmd(category, aliases, filters)
       .collect[F[ParsedCmdMessage[F, A]]] {
         case cmd: Cmd[F] =>
-          implicit val c: CacheSnapshotLike[F] = cmd.cache
+          implicit val c: CacheSnapshot[F] = cmd.cache
           parser
             .parse(cmd.args)
             .fold(e => CmdParseError(cmd.msg, e, cmd.cache), res => ParsedCmd(cmd.msg, res._2, res._1, cmd.cache))

@@ -61,13 +61,13 @@ trait CommandsHelper {
   }
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshotLike]] when raw command arrives.
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onRawCommandDSLC[A](
-      handler: CacheSnapshotLike[Id] => PartialFunction[RawCmd[Id], RequestDSL[A]]
+      handler: CacheSnapshot[Id] => PartialFunction[RawCmd[Id], RequestDSL[A]]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     runDSL {
       commands.subscribe.collect {
@@ -91,13 +91,13 @@ trait CommandsHelper {
     }
 
   /**
-    * Run some code with a [[CacheSnapshotLike]] when raw command arrives.
+    * Run some code with a [[CacheSnapshot]] when raw command arrives.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onRawCommandC[A](
-      handler: CacheSnapshotLike[Id] => PartialFunction[RawCmd[Id], A]
+      handler: CacheSnapshot[Id] => PartialFunction[RawCmd[Id], A]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onRawCommandDSLC { c =>
       {
@@ -119,7 +119,7 @@ trait CommandsHelper {
     }
 
   /**
-    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshotLike]].
+    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
@@ -130,7 +130,7 @@ trait CommandsHelper {
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
   )(
-      handler: CacheSnapshotLike[Id] => ParsedCmd[Id, A] => RequestDSL[B]
+      handler: CacheSnapshot[Id] => ParsedCmd[Id, A] => RequestDSL[B]
   ): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (requests: RequestHelper) => {
       ParsedCmdFlow[Id, A]
@@ -182,7 +182,7 @@ trait CommandsHelper {
   }
 
   /**
-    * Register a command which runs some code with a [[CacheSnapshotLike]].
+    * Register a command which runs some code with a [[CacheSnapshot]].
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
@@ -192,7 +192,7 @@ trait CommandsHelper {
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(handler: CacheSnapshotLike[Id] => ParsedCmd[Id, A] => B): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: CacheSnapshot[Id] => ParsedCmd[Id, A] => B): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (_: RequestHelper) => {
       ParsedCmdFlow[Id, A]
         .map(handler)

@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.commands
 
 import scala.language.higherKinds
 
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.Message
 
 /**
@@ -61,18 +61,18 @@ sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
   * @param args The arguments of this command.
   * @param c The cache for this command.
   */
-case class RawCmd[F[_]](msg: Message, category: CmdCategory, cmd: String, args: List[String], c: CacheSnapshotLike[F])
+case class RawCmd[F[_]](msg: Message, category: CmdCategory, cmd: String, args: List[String], c: CacheSnapshot[F])
     extends RawCmdMessage[F]
 
 /**
   * Bot was mentioned, but no command was used.
   */
-case class NoCmd[F[_]](msg: Message, c: CacheSnapshotLike[F]) extends RawCmdMessage[F] with CmdError[F]
+case class NoCmd[F[_]](msg: Message, c: CacheSnapshot[F]) extends RawCmdMessage[F] with CmdError[F]
 
 /**
   * An unknown category was used.
   */
-case class NoCmdCategory[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshotLike[F])
+case class NoCmdCategory[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshot[F])
     extends RawCmdMessage[F]
     with CmdError[F]
 
@@ -82,7 +82,7 @@ case class NoCmdCategory[F[_]](msg: Message, command: String, args: List[String]
   * @param args The args for this command.
   * @param cache The cache for this command.
   */
-case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshotLike[F]) extends CmdMessage[F]
+case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshot[F]) extends CmdMessage[F]
 
 /**
   * A parsed specific command.
@@ -91,7 +91,7 @@ case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshotLike[
   * @param remaining The remaining arguments after the parser did it's thing.
   * @param cache The cache for this command.
   */
-case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshotLike[F])
+case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshot[F])
     extends ParsedCmdMessage[F, A]
 
 /**
@@ -100,7 +100,7 @@ case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], ca
   * @param error The error message.
   * @param cache The cache for this command.
   */
-case class CmdParseError[F[_]](msg: Message, error: String, cache: CacheSnapshotLike[F])
+case class CmdParseError[F[_]](msg: Message, error: String, cache: CacheSnapshot[F])
     extends ParsedCmdMessage[F, Nothing]
     with CmdError[F]
 

@@ -30,7 +30,7 @@ import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import cats.Id
 import net.katsstuff.ackcord.commands.CmdHelper.isValidCommand
-import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
+import net.katsstuff.ackcord.{APIMessage, MemoryCacheSnapshot}
 
 object CmdStreams {
 
@@ -49,7 +49,7 @@ object CmdStreams {
     apiMessages
       .collect {
         case APIMessage.MessageCreate(msg, c) =>
-          implicit val cache: CacheSnapshot = c.current
+          implicit val cache: MemoryCacheSnapshot = c.current
 
           isValidCommand(needMention, msg).value.map { args =>
             if (args == Nil) NoCmd(msg, c.current)

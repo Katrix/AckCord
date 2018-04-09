@@ -28,8 +28,8 @@ package net.katsstuff.ackcord
   * @param current The current values in the cache.
   * @param previous The previous values in the cache.
   */
-case class CacheState(current: CacheSnapshot, previous: CacheSnapshot) {
-  def update(newSnapshot: CacheSnapshot): CacheState =
+case class CacheState(current: MemoryCacheSnapshot, previous: MemoryCacheSnapshot) {
+  def update(newSnapshot: MemoryCacheSnapshot): CacheState =
     //If there is no change we don't need to update. We don't do a value comparision because of how complex the cache is
     if (newSnapshot ne current) CacheState(newSnapshot, current)
     else this

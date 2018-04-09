@@ -25,14 +25,14 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
-import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.CacheSnapshot.BotUser
 import net.katsstuff.ackcord.data._
 import shapeless.tag._
 
 /**
   * Represents the cache at some point in time
   */
-case class CacheSnapshot(
+case class MemoryCacheSnapshot(
     botUser: User @@ BotUser,
     dmChannelMap: SnowflakeMap[Channel, DMChannel],
     groupDmChannelMap: SnowflakeMap[Channel, GroupDMChannel],
@@ -42,7 +42,7 @@ case class CacheSnapshot(
     lastTypedMap: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
     userMap: SnowflakeMap[User, User],
     banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
-) extends CacheSnapshotLikeId {
+) extends CacheSnapshotId {
 
   override type MapType[K, V] = SnowflakeMap[K, V]
 

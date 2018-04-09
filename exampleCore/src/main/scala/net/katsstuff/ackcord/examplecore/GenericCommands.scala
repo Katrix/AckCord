@@ -39,7 +39,7 @@ import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, Reques
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData, GetChannel}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.Streamable
-import net.katsstuff.ackcord.{CacheSnapshotLike, RequestDSL}
+import net.katsstuff.ackcord.{CacheSnapshot, RequestDSL}
 
 class GenericCommands[F[_]: Streamable: Functor] {
 
@@ -88,7 +88,7 @@ class GenericCommands[F[_]: Streamable: Functor] {
         .flatMapConcat {
           answer =>
             val GetChannelInfo(guildId, senderChannelId, c) = answer.context
-            implicit val cache: CacheSnapshotLike[F] = c
+            implicit val cache: CacheSnapshot[F] = c
             val content = answer match {
               case response: RequestResponse[RawChannel, GetChannelInfo[F]] =>
                 val data = response.data

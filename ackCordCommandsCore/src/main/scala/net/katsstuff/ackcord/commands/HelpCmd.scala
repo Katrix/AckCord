@@ -40,7 +40,7 @@ import net.katsstuff.ackcord.http.requests.Request
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.MessageParser
-import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike}
+import net.katsstuff.ackcord.{MemoryCacheSnapshot, CacheSnapshot}
 
 /**
   * A base for help commands. Commands need to be registered manually
@@ -55,7 +55,7 @@ abstract class HelpCmd extends Actor {
 
   override def receive: Receive = {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
-      implicit val cache: CacheSnapshot = c.asInstanceOf[CacheSnapshot]
+      implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
 
       val response = for {
@@ -76,7 +76,7 @@ abstract class HelpCmd extends Actor {
       }
 
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
-      implicit val cache: CacheSnapshot = c.asInstanceOf[CacheSnapshot]
+      implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
 
       if (page > 0) {
         sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
@@ -88,7 +88,7 @@ abstract class HelpCmd extends Actor {
       }
 
     case ParsedCmd(msg, None, _, c) =>
-      implicit val cache: CacheSnapshot = c.asInstanceOf[CacheSnapshot]
+      implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
       sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(0)))
 
     case AddCmd(factory, commandEnd) =>
@@ -123,7 +123,7 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the command
     */
   def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
-      implicit c: CacheSnapshot
+      implicit c: MemoryCacheSnapshot
   ): CreateMessageData
 
   /**
@@ -132,7 +132,7 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
+  def createReplyAll(page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData
 
   def unknownCategory(command: String): Option[CreateMessageData] =
     Some(CreateMessageData("Unknown category"))
@@ -150,7 +150,7 @@ object HelpCmd {
     implicit val parser: MessageParser[Args] = new MessageParser[Args] {
       override def parse[F[_]: Monad](
           strings: List[String]
-      )(implicit c: CacheSnapshotLike[F]): EitherT[F, String, (List[String], Args)] = {
+      )(implicit c: CacheSnapshot[F]): EitherT[F, String, (List[String], Args)] = {
         if (strings.nonEmpty) {
           val head :: tail = strings
           MessageParser.intParser

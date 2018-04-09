@@ -29,7 +29,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
-import net.katsstuff.ackcord.CacheSnapshot
+import net.katsstuff.ackcord.MemoryCacheSnapshot
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
@@ -53,10 +53,10 @@ class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
   }
 
   override def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
-      implicit c: CacheSnapshot
+      implicit c: MemoryCacheSnapshot
   ): CreateMessageData = CreateMessageData(createContent(category, printCategory = true, Seq(name), desc))
 
-  override def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData = {
+  override def createReplyAll(page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData = {
     val groupedCommands = commands.grouped(10).toSeq
     if (!groupedCommands.isDefinedAt(page)) {
       CreateMessageData(s"Max pages: ${groupedCommands.length}")

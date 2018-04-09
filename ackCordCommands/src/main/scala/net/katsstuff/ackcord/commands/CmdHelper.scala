@@ -31,7 +31,7 @@ import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
 import cats.data.OptionT
 import cats.syntax.flatMap._
 import cats.{Monad, Traverse}
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{Message, User}
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
@@ -91,7 +91,7 @@ object CmdHelper {
     Flow[A]
       .collect {
         case filtered: FilteredCmd[F] =>
-          implicit val c: CacheSnapshotLike[F] = filtered.cmd.c
+          implicit val c: CacheSnapshot[F] = filtered.cmd.c
           import cats.instances.list._
           OptionT(
             Traverse[List].traverse(filtered.failedFilters.toList)(_.errorMessage[F](filtered.cmd.msg).value).flatMap {
@@ -112,7 +112,7 @@ object CmdHelper {
     * Check if a message is a valid command.
     */
   def isValidCommand[F[_]: Monad](needMention: Boolean, msg: Message)(
-      implicit c: CacheSnapshotLike[F]
+      implicit c: CacheSnapshot[F]
   ): OptionT[F, List[String]] = {
     if (needMention) {
       OptionT.liftF(c.botUser).flatMap { botUser =>

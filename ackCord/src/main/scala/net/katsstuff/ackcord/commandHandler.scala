@@ -44,7 +44,7 @@ abstract class CommandHandler[A, B](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshotLike[Id]): B
+  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[Id]): B
 }
 
 /**
@@ -64,5 +64,5 @@ abstract class CommandHandlerDSL[A, B](
     * Runs the [[RequestDSL]] whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshotLike[Id]): RequestDSL[B]
+  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[Id]): RequestDSL[B]
 }

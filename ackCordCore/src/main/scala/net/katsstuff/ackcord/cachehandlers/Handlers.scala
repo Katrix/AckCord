@@ -23,7 +23,7 @@
  */
 package net.katsstuff.ackcord.cachehandlers
 
-import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.CacheSnapshot.BotUser
 import net.katsstuff.ackcord.data._
 import shapeless.tag
 

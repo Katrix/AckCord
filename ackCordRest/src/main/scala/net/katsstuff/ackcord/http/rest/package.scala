@@ -27,7 +27,7 @@ import scala.language.higherKinds
 
 import cats.Monad
 import cats.data.OptionT
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, Permission}
 
 package object rest {
@@ -39,7 +39,7 @@ package object rest {
     * @param c The cache
     */
   def hasPermissionsGuild[F[_]: Monad](guildId: GuildId, permissions: Permission)(
-      implicit c: CacheSnapshotLike[F]
+      implicit c: CacheSnapshot[F]
   ): F[Boolean] = {
     val res = for {
       guild         <- c.getGuild(guildId)
@@ -57,7 +57,7 @@ package object rest {
     * @param c The cache
     */
   def hasPermissionsChannel[F[_]: Monad](channelId: ChannelId, permissions: Permission)(
-      implicit c: CacheSnapshotLike[F]
+      implicit c: CacheSnapshot[F]
   ): F[Boolean] = {
     val opt = for {
       gChannel      <- c.getGuildChannel(channelId)

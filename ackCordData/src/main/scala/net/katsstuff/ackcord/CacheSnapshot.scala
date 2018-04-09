@@ -28,14 +28,14 @@ import java.time.Instant
 import scala.language.higherKinds
 
 import cats.data.OptionT
-import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.CacheSnapshot.BotUser
 import net.katsstuff.ackcord.data._
 import shapeless.tag._
 
 /**
   * A representation of the cache.
   */
-trait CacheSnapshotLike[F[_]] {
+trait CacheSnapshot[F[_]] {
 
   /**
     * The map type to use. Mutable for builder, immutable otherwise.
@@ -198,7 +198,7 @@ trait CacheSnapshotLike[F[_]] {
   def getPresence(guildId: GuildId, userId: UserId): OptionT[F, Presence]
 }
 
-object CacheSnapshotLike {
+object CacheSnapshot {
 
   /**
     * Phantom type for the bot (client) user. Used for syntax.

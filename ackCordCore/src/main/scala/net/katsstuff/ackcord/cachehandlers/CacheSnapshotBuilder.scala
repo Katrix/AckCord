@@ -28,9 +28,9 @@ import java.time.Instant
 import scala.collection.mutable
 
 import cats.Id
-import net.katsstuff.ackcord.CacheSnapshotLike.BotUser
+import net.katsstuff.ackcord.CacheSnapshot.BotUser
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLikeId, SnowflakeMap}
+import net.katsstuff.ackcord.{MemoryCacheSnapshot, CacheSnapshotId, SnowflakeMap}
 import shapeless.tag._
 
 /**
@@ -46,16 +46,16 @@ class CacheSnapshotBuilder(
     var lastTypedMap: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
     var userMap: mutable.Map[UserId, User],
     var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
-) extends CacheSnapshotLikeId {
+) extends CacheSnapshotId {
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
 
-  def toImmutable: CacheSnapshot = {
+  def toImmutable: MemoryCacheSnapshot = {
     def convertNested[K1, K2, V](
         map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]
     ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap(map.map { case (k, v) => k -> SnowflakeMap(v) })
 
-    CacheSnapshot(
+    MemoryCacheSnapshot(
       botUser = botUser,
       dmChannelMap = SnowflakeMap(dmChannelMap),
       groupDmChannelMap = SnowflakeMap(groupDmChannelMap),
@@ -77,7 +77,7 @@ class CacheSnapshotBuilder(
     banMap.getOrElse(id, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
-  def apply(snapshot: CacheSnapshot): CacheSnapshotBuilder = {
+  def apply(snapshot: MemoryCacheSnapshot): CacheSnapshotBuilder = {
     def toMutableMap[K, V](map: SnowflakeMap[K, V]): mutable.Map[SnowflakeType[K], V] = {
       val builder = mutable.Map.newBuilder[SnowflakeType[K], V]
       builder.sizeHint(map)

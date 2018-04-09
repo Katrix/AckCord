@@ -34,7 +34,7 @@ import akka.stream.scaladsl.Flow
 import cats.Monad
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe._
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.requests.{`X-Audit-Log-Reason`, Request}
 import net.katsstuff.ackcord.util.{AckCordSettings, MapWithMaterializer}
@@ -88,7 +88,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
   /**
     * Check if a client has the needed permissions to execute this request.
     */
-  def hasPermissions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[Boolean] = Monad[F].pure(true)
+  def hasPermissions[F[_]: Monad](implicit c: CacheSnapshot[F]): F[Boolean] = Monad[F].pure(true)
 }
 
 /**

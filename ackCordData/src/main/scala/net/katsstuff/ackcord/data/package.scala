@@ -67,7 +67,7 @@ package object data {
     /**
       * Resolve the guild represented by this id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Guild] = c.getGuild(guildId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Guild] = c.getGuild(guildId)
   }
 
   type ChannelId = SnowflakeType[Channel]
@@ -81,38 +81,38 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer one of the guildResolve methods instead.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Channel] = c.getChannel(channelId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Channel] = c.getChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a guild channel. If a
       * guild id is know, prefer one of the other guildResolve methods instead.
       */
-    def guildResolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, GuildChannel] = c.getGuildChannel(channelId)
+    def guildResolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, GuildChannel] = c.getGuildChannel(channelId)
 
     /**
       * Resolve the channel represented by this id relative to a guild id.
       */
-    def guildResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, GuildChannel] =
+    def guildResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, GuildChannel] =
       c.getGuildChannel(guildId, channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel. If a
       * guild id is know, prefer the other tResolve method instead.
       */
-    def tResolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, TChannel] = c.getTChannel(channelId)
+    def tResolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, TChannel] = c.getTChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, TGuildChannel] =
+    def tResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, TGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
 
     /**
       * Resolve the channel represented by this id as a voice channel relative
       * to a guild id.
       */
-    def vResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, VGuildChannel] =
+    def vResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, VGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
@@ -127,12 +127,12 @@ package object data {
       * Resolve the message represented by this id. If a channel id is known,
       * prefer the method that takes a channel id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Message] = c.getMessage(messageId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Message] = c.getMessage(messageId)
 
     /**
       * Resolves the message represented by this id relative to a channel id.
       */
-    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Message] =
+    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshot[F]): OptionT[F, Message] =
       c.getMessage(channelId, messageId)
   }
 
@@ -146,13 +146,13 @@ package object data {
     /**
       * Resolve the user represented by this id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, User] = c.getUser(userId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(userId)
 
     /**
       * Resolve the guild member represented by this id.
       * @param guildId The guild to find the guild member in
       */
-    def resolveMember[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, GuildMember] =
+    def resolveMember[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, GuildMember] =
       c.getGuild(guildId).subflatMap(_.members.get(userId))
   }
 
@@ -167,12 +167,12 @@ package object data {
       * Resolve the role this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Role] = c.getRole(roleId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Role] = c.getRole(roleId)
 
     /**
       * Resolve the role this id represents relative to a guild id.
       */
-    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Role] =
+    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, Role] =
       c.getRole(guildId, roleId)
   }
 
@@ -195,12 +195,12 @@ package object data {
       * Resolve the emoji this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshotLike[F]): OptionT[F, Emoji] = c.getEmoji(emojiId)
+    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Emoji] = c.getEmoji(emojiId)
 
     /**
       * Resolve the emoji this id represents relative to a guild id.
       */
-    def resolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshotLike[F]): OptionT[F, Emoji] =
+    def resolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, Emoji] =
       c.getGuild(guildId).subflatMap(_.emojis.get(emojiId))
   }
 

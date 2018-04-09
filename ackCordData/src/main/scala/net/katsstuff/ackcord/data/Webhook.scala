@@ -27,7 +27,7 @@ import scala.language.higherKinds
 
 import cats.Monad
 import cats.data.OptionT
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 
 /**
   * A webhook
@@ -53,7 +53,7 @@ case class Webhook(
   /**
     * Resolve the channel of this webhook as a guild channel
     */
-  def tGuildChannel[F[_]: Monad](implicit snapshot: CacheSnapshotLike[F]): OptionT[F, TChannel] =
+  def tGuildChannel[F[_]: Monad](implicit snapshot: CacheSnapshot[F]): OptionT[F, TChannel] =
     OptionT
       .fromOption(guildId)
       .flatMap(g => snapshot.getGuildChannel(g, channelId))

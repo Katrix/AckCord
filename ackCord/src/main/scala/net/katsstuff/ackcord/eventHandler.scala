@@ -38,7 +38,7 @@ trait EventHandler[A <: APIMessage, B] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshotLike[Id]): B
+  def handle(message: A)(implicit c: CacheSnapshot[Id]): B
 }
 
 /**
@@ -53,5 +53,5 @@ trait EventHandlerDSL[A <: APIMessage, B] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshotLike[Id]): RequestDSL[B]
+  def handle(message: A)(implicit c: CacheSnapshot[Id]): RequestDSL[B]
 }

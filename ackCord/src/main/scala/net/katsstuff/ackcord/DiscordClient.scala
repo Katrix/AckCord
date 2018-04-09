@@ -108,13 +108,13 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   //Event handling
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshotLike]] when an event happens.
+    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onEventDSLC[A](
-      handler: CacheSnapshotLike[Id] => PartialFunction[APIMessage, RequestDSL[A]]
+      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, RequestDSL[A]]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = runDSL {
     cache.subscribeAPI.collect {
       case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
@@ -134,13 +134,13 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     }
 
   /**
-    * Run some code with a [[CacheSnapshotLike]] when an event happens.
+    * Run some code with a [[CacheSnapshot]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onEventC[A](
-      handler: CacheSnapshotLike[Id] => PartialFunction[APIMessage, A]
+      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, A]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onEventDSLC { c =>
       {

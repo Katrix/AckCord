@@ -30,7 +30,7 @@ import cats.catsInstancesForId
 import cats.data.OptionT
 import net.katsstuff.ackcord.data._
 
-trait CacheSnapshotLikeId extends CacheSnapshotLike[Id] {
+trait CacheSnapshotId extends CacheSnapshot[Id] {
 
   override def getDmChannel(id: ChannelId): OptionT[Id, DMChannel] = OptionT.fromOption[Id](dmChannelMap.get(id))
 

@@ -34,7 +34,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import cats.{Applicative, Monad}
-import net.katsstuff.ackcord.CacheSnapshotLike
+import net.katsstuff.ackcord.CacheSnapshot
 
 sealed trait ImageFormat {
   def extensions: Seq[String]
@@ -285,7 +285,7 @@ case class Message(
   /**
     * Formats mentions in this message to their normal syntax with names.
     */
-  def formatMentions[F[_]: Monad](implicit c: CacheSnapshotLike[F]): F[String] = {
+  def formatMentions[F[_]: Monad](implicit c: CacheSnapshot[F]): F[String] = {
     for {
       userList <- mentions.toList.traverse(_.resolve.value)
       roleList <- mentionRoles.toList.traverse(_.resolve.value)

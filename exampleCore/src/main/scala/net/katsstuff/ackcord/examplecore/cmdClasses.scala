@@ -28,7 +28,7 @@ import scala.language.higherKinds
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import net.katsstuff.ackcord.commands.ParsedCmd
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
-import net.katsstuff.ackcord.{CacheSnapshotLike, DiscordShard}
+import net.katsstuff.ackcord.{CacheSnapshot, DiscordShard}
 
 class KillCmd(main: ActorRef) extends Actor with ActorLogging {
 
@@ -45,4 +45,4 @@ class KillCmd(main: ActorRef) extends Actor with ActorLogging {
 object KillCmd {
   def props(main: ActorRef): Props = Props(new KillCmd(main))
 }
-case class GetChannelInfo[F[_]](guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshotLike[F])
+case class GetChannelInfo[F[_]](guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot[F])
