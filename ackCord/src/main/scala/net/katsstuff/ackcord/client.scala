@@ -23,9 +23,9 @@
  */
 package net.katsstuff.ackcord
 
-import scala.collection.immutable
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.language.higherKinds
 import scala.reflect.ClassTag
 
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
@@ -46,29 +46,46 @@ import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 
 /**
-  * Core class used to interface with Discord stuff from high level.
-  * @param shards The shards of this client
-  * @param cache The cache used by the client
-  * @param commands The global commands object used by the client
-  * @param requests The requests object used by the client
+  * Trait used to interface with Discord stuff from high level.
   */
-case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
-    extends CommandsHelper {
-  import requests.{mat, system}
+trait DiscordClient[F[_]] extends CommandsHelper[F] {
+
+  /**
+    * The shards of this client
+    */
+  def shards: Seq[ActorRef]
+
+  /**
+    * The cache used by the client
+    */
+  def cache: Cache
+
+  /**
+    * The global commands object used by the client
+    */
+  def commands: Commands[F]
+
+  /**
+    * The requests object used by the client
+    */
+  def requests: RequestHelper
 
   require(shards.nonEmpty, "No shards")
 
   var shardShutdownManager: ActorRef = _
-  val musicManager:         ActorRef = system.actorOf(MusicManager.props(cache), "MusicManager")
+  val musicManager:         ActorRef = requests.system.actorOf(MusicManager.props(cache), "MusicManager")
 
-  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  implicit val executionContext: ExecutionContextExecutor = requests.system.dispatcher
 
   /**
     * Login the shards of this client.
     */
   def login(): Future[Done] = {
+    val req = requests
+    import req.mat
+
     require(shardShutdownManager == null, "Already logged in")
-    shardShutdownManager = system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
+    shardShutdownManager = req.system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
 
     DiscordShard.startShards(shards)
   }
@@ -89,21 +106,27 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @param timeout The amount of time to wait before forcing shutdown.
     */
   def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
-    logout(timeout).flatMap(_ => system.terminate())
+    logout(timeout).flatMap(_ => requests.system.terminate())
 
-  private def runDSL[A](source: Source[RequestDSL[A], NotUsed]): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
+  protected def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
+    val req = requests
+    import req.mat
+
     source
       .viaMat(KillSwitches.single)(Keep.right)
       .flatMapConcat(_.toSource(requests.flow))
-      .toMat(Sink.seq)(Keep.both)
+      .toMat(Sink.ignore)(Keep.both)
       .run()
   }
 
   /**
     * Runs a [[RequestDSL]] once, and returns the result.
     */
-  def runDSL[A](dsl: RequestDSL[A]): Future[A] =
+  def runDSL[A](dsl: RequestDSL[A]): Future[A] = {
+    val req = requests
+    import req.mat
     dsl.toSource(requests.flow).toMat(Sink.head)(Keep.right).run()
+  }
 
   //Event handling
 
@@ -113,20 +136,16 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def onEventDSLC[A](
-      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, RequestDSL[A]]
-  ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = runDSL {
-    cache.subscribeAPI.collect {
-      case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
-    }
-  }
+  def onEventDSLC(
+      handler: CacheSnapshot[F] => PartialFunction[APIMessage, RequestDSL[Unit]]
+  ): (UniqueKillSwitch, Future[Done])
 
   /**
     * Run a [[RequestDSL]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def onEventDSL[A](handler: PartialFunction[APIMessage, RequestDSL[A]]): (UniqueKillSwitch, Future[immutable.Seq[A]]) =
+  def onEventDSL(handler: PartialFunction[APIMessage, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { _ =>
       {
         case msg if handler.isDefinedAt(msg) => handler(msg)
@@ -139,9 +158,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def onEventC[A](
-      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, A]
-  ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
+  def onEventC(handler: CacheSnapshot[F] => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
     onEventDSLC { c =>
       {
         case msg if handler(c).isDefinedAt(msg) => RequestDSL.pure(handler(c)(msg))
@@ -154,7 +171,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def onEvent[A](handler: PartialFunction[APIMessage, A]): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
+  def onEvent(handler: PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
     onEventC { _ =>
       {
         case msg if handler.isDefinedAt(msg) => handler(msg)
@@ -167,9 +184,9 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerHandler[A <: APIMessage, B](
-      handler: EventHandler[A, B]
-  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+  def registerHandler[A <: APIMessage](
+      handler: EventHandler[A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
     onEventC { implicit c =>
       {
         case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
@@ -181,9 +198,9 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def registerHandler[A <: APIMessage, B](
-      handler: EventHandlerDSL[A, B]
-  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[immutable.Seq[B]]) =
+  def registerHandler[A <: APIMessage](
+      handler: EventHandlerDSL[A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { implicit c =>
       {
         case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
@@ -195,16 +212,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @param settings The settings to use for the commands object
     * @return A killswitch to stop this command helper, together with the command helper.
     */
-  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
-    val (killSwitch, newCommands) = CoreCommands.create(
-      settings.needMention,
-      settings.categories,
-      cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
-      requests
-    )
-
-    killSwitch -> SeperateCommandsHelper(newCommands, requests)
-  }
+  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper[F])
 
   /**
     * Join a voice channel.
@@ -248,4 +256,26 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     */
   def loadTrack(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] =
     LavaplayerHandler.loadItem(playerManager, identifier)
+}
+case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
+    extends DiscordClient[Id] {
+
+  override def onEventDSLC(
+      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, RequestDSL[Unit]]
+  ): (UniqueKillSwitch, Future[Done]) = runDSL {
+    cache.subscribeAPI.collect {
+      case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
+    }
+  }
+
+  override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper[Id]) = {
+    val (killSwitch, newCommands) = CoreCommands.create(
+      settings.needMention,
+      settings.categories,
+      cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
+      requests
+    )
+
+    killSwitch -> SeperateCommandsHelper(newCommands, requests)
+  }
 }

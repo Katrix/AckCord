@@ -30,6 +30,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
+import cats.Id
 import net.katsstuff.ackcord.commands.{CmdCategory, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity
@@ -69,7 +70,7 @@ class ClientSettings(
   /**
     * Create a [[DiscordClient]] from these settings.
     */
-  def build(): Future[DiscordClient] = {
+  def build(): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
 
@@ -84,7 +85,7 @@ class ClientSettings(
     val commands = CoreCommands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
 
     DiscordShard.fetchWsGateway.map(
-      uri => DiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
+      uri => CoreDiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
     )
   }
 
@@ -92,7 +93,7 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings while letting Discord
     * set the shard amount.
     */
-  def buildAutoShards(): Future[DiscordClient] = {
+  def buildAutoShards(): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem       = system
     implicit val mat:         ActorMaterializer = ActorMaterializer()
 
@@ -109,7 +110,7 @@ class ClientSettings(
     DiscordShard.fetchWsGatewayWithShards(token).map {
       case (uri, receivedShardTotal) =>
         val shards = DiscordShard.connectMultiple(uri, receivedShardTotal, this, cache, "DiscordClient")
-        DiscordClient(shards, cache, commands, requests)
+        CoreDiscordClient(shards, cache, commands, requests)
     }
   }
 }

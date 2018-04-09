@@ -25,8 +25,6 @@ package net.katsstuff.ackcord
 
 import java.time.{Instant, OffsetDateTime}
 
-import scala.language.higherKinds
-
 import net.katsstuff.ackcord.data._
 
 /**

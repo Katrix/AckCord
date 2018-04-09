@@ -23,7 +23,8 @@
  */
 package net.katsstuff.ackcord
 
-import cats.Id
+import scala.language.higherKinds
+
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter}
 import net.katsstuff.ackcord.data.Message
 
@@ -31,9 +32,8 @@ import net.katsstuff.ackcord.data.Message
   * A handler for a specific command.
   *
   * @tparam A The parameter type.
-  * @tparam B The return type, which may or may not be used for other stuff
   */
-abstract class CommandHandler[A, B](
+abstract class CommandHandler[A](
     val category: CmdCategory,
     val aliases: Seq[String],
     val filters: Seq[CmdFilter] = Nil,
@@ -44,16 +44,15 @@ abstract class CommandHandler[A, B](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[Id]): B
+  def handle[F[_]](msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): Unit
 }
 
 /**
   * A handler for a specific command that runs a [[RequestDSL]] when the command is received.
   *
   * @tparam A The parameter type.
-  * @tparam B The return type, which may or may not be used for other stuff
   */
-abstract class CommandHandlerDSL[A, B](
+abstract class CommandHandlerDSL[A](
     val category: CmdCategory,
     val aliases: Seq[String],
     val filters: Seq[CmdFilter] = Nil,
@@ -64,5 +63,5 @@ abstract class CommandHandlerDSL[A, B](
     * Runs the [[RequestDSL]] whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[Id]): RequestDSL[B]
+  def handle[F[_]](msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): RequestDSL[Unit]
 }

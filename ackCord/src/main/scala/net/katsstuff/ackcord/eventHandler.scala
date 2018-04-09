@@ -23,35 +23,33 @@
  */
 package net.katsstuff.ackcord
 
-import cats.Id
+import scala.language.higherKinds
 
 /**
   * A handler for a specific event type.
   *
   * @tparam A The API message type
-  * @tparam B The return type, which may or may not be used for other stuff
   */
-trait EventHandler[A <: APIMessage, B] {
+trait EventHandler[A <: APIMessage] {
 
   /**
     * Called whenever the event for this handler is received.
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshot[Id]): B
+  def handle[F[_]](message: A)(implicit c: CacheSnapshot[F]): Unit
 }
 
 /**
   * A handler for a specific event type that runs a [[RequestDSL]] when the event is received.
   * @tparam A The API message type
-  * @tparam B The return type, which may or may not be used for other stuff
   */
-trait EventHandlerDSL[A <: APIMessage, B] {
+trait EventHandlerDSL[A <: APIMessage] {
 
   /**
     * Runs the [[RequestDSL]] whenever the event for this handler is received.
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshot[Id]): RequestDSL[B]
+  def handle[F[_]](message: A)(implicit c: CacheSnapshot[F]): RequestDSL[Unit]
 }
