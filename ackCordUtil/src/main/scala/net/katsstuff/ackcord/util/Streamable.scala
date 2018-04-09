@@ -29,18 +29,22 @@ import scala.language.higherKinds
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import cats.Id
+import cats.data.OptionT
 
 /**
   * Typeclass for converting some type F[A] to a Source[A, NotUsed]
   */
 trait Streamable[F[_]] {
   def toSource[A](fa: F[A]): Source[A, NotUsed]
+
+  def optionToSource[A](opt: OptionT[F, A]): Source[A, NotUsed] = toSource(opt.value).mapConcat(_.toList)
 }
 object Streamable {
   def apply[F[_]](implicit F: Streamable[F]): Streamable[F] = F
 
   implicit val idStreamable: Streamable[Id] = new Streamable[Id] {
-    override def toSource[A](fa: Id[A]): Source[A, NotUsed] = Source.single(fa)
+    override def toSource[A](fa: Id[A]):                 Source[A, NotUsed] = Source.single(fa)
+    override def optionToSource[A](opt: OptionT[Id, A]): Source[A, NotUsed] = Source(opt.value.toList)
   }
 
   implicit val futureStreamable: Streamable[Future] = new Streamable[Future] {

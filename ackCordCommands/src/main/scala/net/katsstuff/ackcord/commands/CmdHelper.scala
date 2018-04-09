@@ -106,7 +106,7 @@ object CmdHelper {
         case parseError: CmdParseError[F] =>
           parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
       }
-      .flatMapConcat(opt => Streamable[F].toSource(opt.value).mapConcat(_.toList))
+      .flatMapConcat(Streamable[F].optionToSource(_))
 
   /**
     * Check if a message is a valid command.
