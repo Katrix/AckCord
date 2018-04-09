@@ -29,6 +29,7 @@ import scala.concurrent.Future
 import akka.NotUsed
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
+import cats.Id
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.MessageParser
@@ -41,7 +42,7 @@ trait CommandsHelper {
   /**
     * The commands object specific to this command helper.
     */
-  def commands: Commands
+  def commands: Commands[Id]
 
   /**
     * The request helper to use when sending messages from this command helper.
@@ -60,17 +61,17 @@ trait CommandsHelper {
   }
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
+    * Run a [[RequestDSL]] with a [[CacheSnapshotLike]] when raw command arrives.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onRawCommandDSLC[A](
-      handler: CacheSnapshot => PartialFunction[RawCmd, RequestDSL[A]]
+      handler: CacheSnapshotLike[Id] => PartialFunction[RawCmd[Id], RequestDSL[A]]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     runDSL {
       commands.subscribe.collect {
-        case cmd: RawCmd if handler(cmd.c).isDefinedAt(cmd) => handler(cmd.c)(cmd)
+        case cmd: RawCmd[Id] if handler(cmd.c).isDefinedAt(cmd) => handler(cmd.c)(cmd)
       }
     }
   }
@@ -81,7 +82,7 @@ trait CommandsHelper {
     *         when it's done and all the values it computed.
     */
   def onRawCommandDSL[A](
-      handler: PartialFunction[RawCmd, RequestDSL[A]]
+      handler: PartialFunction[RawCmd[Id], RequestDSL[A]]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) =
     onRawCommandDSLC { _ =>
       {
@@ -90,13 +91,13 @@ trait CommandsHelper {
     }
 
   /**
-    * Run some code with a [[CacheSnapshot]] when raw command arrives.
+    * Run some code with a [[CacheSnapshotLike]] when raw command arrives.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onRawCommandC[A](
-      handler: CacheSnapshot => PartialFunction[RawCmd, A]
+      handler: CacheSnapshotLike[Id] => PartialFunction[RawCmd[Id], A]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onRawCommandDSLC { c =>
       {
@@ -110,7 +111,7 @@ trait CommandsHelper {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
-  def onRawCommand[A](handler: PartialFunction[RawCmd, A]): (UniqueKillSwitch, Future[immutable.Seq[A]]) =
+  def onRawCommand[A](handler: PartialFunction[RawCmd[Id], A]): (UniqueKillSwitch, Future[immutable.Seq[A]]) =
     onRawCommandC { _ =>
       {
         case msg if handler.isDefinedAt(msg) => handler(msg)
@@ -118,7 +119,7 @@ trait CommandsHelper {
     }
 
   /**
-    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
+    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshotLike]].
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
@@ -128,16 +129,24 @@ trait CommandsHelper {
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(handler: CacheSnapshot => ParsedCmd[A] => RequestDSL[B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(
+      handler: CacheSnapshotLike[Id] => ParsedCmd[Id, A] => RequestDSL[B]
+  ): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (requests: RequestHelper) => {
-      ParsedCmdFlow[A]
+      ParsedCmdFlow[Id, A]
         .map(handler)
         .flatMapConcat(_.toSource(requests.flow))
         .viaMat(KillSwitches.single)(Keep.right)
         .toMat(Sink.seq)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory[Id, A, (UniqueKillSwitch, Future[immutable.Seq[B]])](
+      category,
+      aliases,
+      sink,
+      filters,
+      description
+    )
 
     commands.subscribe(factory)(Keep.right)
   }
@@ -152,22 +161,28 @@ trait CommandsHelper {
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(handler: ParsedCmd[A] => RequestDSL[B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: ParsedCmd[Id, A] => RequestDSL[B]): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (requests: RequestHelper) => {
-      ParsedCmdFlow[A]
+      ParsedCmdFlow[Id, A]
         .map(_ => handler)
         .flatMapConcat(_.toSource(requests.flow))
         .viaMat(KillSwitches.single)(Keep.right)
         .toMat(Sink.seq)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory[Id, A, (UniqueKillSwitch, Future[immutable.Seq[B]])](
+      category,
+      aliases,
+      sink,
+      filters,
+      description
+    )
 
     commands.subscribe(factory)(Keep.right)
   }
 
   /**
-    * Register a command which runs some code with a [[CacheSnapshot]].
+    * Register a command which runs some code with a [[CacheSnapshotLike]].
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
@@ -177,9 +192,9 @@ trait CommandsHelper {
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(handler: CacheSnapshot => ParsedCmd[A] => B): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
+  )(handler: CacheSnapshotLike[Id] => ParsedCmd[Id, A] => B): (UniqueKillSwitch, Future[immutable.Seq[B]]) = {
     val sink = (_: RequestHelper) => {
-      ParsedCmdFlow[A]
+      ParsedCmdFlow[Id, A]
         .map(handler)
         .viaMat(KillSwitches.single)(Keep.right)
         .toMat(Sink.seq)(Keep.both)
@@ -200,9 +215,9 @@ trait CommandsHelper {
       aliases: Seq[String],
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
-  )(handler: ParsedCmd[A] => Unit): (UniqueKillSwitch, Future[immutable.Seq[Unit]]) = {
+  )(handler: ParsedCmd[Id, A] => Unit): (UniqueKillSwitch, Future[immutable.Seq[Unit]]) = {
     val sink = (_: RequestHelper) => {
-      ParsedCmdFlow[A]
+      ParsedCmdFlow[Id, A]
         .map(_ => handler)
         .viaMat(KillSwitches.single)(Keep.right)
         .toMat(Sink.seq)(Keep.both)
@@ -239,4 +254,4 @@ trait CommandsHelper {
         handler.handle(parsed.msg, parsed.args, parsed.remaining)
     }
 }
-case class SeperateCommandsHelper(commands: Commands, requests: RequestHelper) extends CommandsHelper
+case class SeperateCommandsHelper(commands: Commands[Id], requests: RequestHelper) extends CommandsHelper

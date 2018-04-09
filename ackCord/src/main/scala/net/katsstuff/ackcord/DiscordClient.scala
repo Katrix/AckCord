@@ -37,6 +37,7 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
+import cats.Id
 import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
@@ -51,7 +52,7 @@ import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
   * @param commands The global commands object used by the client
   * @param requests The requests object used by the client
   */
-case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper)
+case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
     extends CommandsHelper {
   import requests.{mat, system}
 
@@ -107,13 +108,13 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
   //Event handling
 
   /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
+    * Run a [[RequestDSL]] with a [[CacheSnapshotLike]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onEventDSLC[A](
-      handler: CacheSnapshot => PartialFunction[APIMessage, RequestDSL[A]]
+      handler: CacheSnapshotLike[Id] => PartialFunction[APIMessage, RequestDSL[A]]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = runDSL {
     cache.subscribeAPI.collect {
       case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
@@ -133,13 +134,13 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     }
 
   /**
-    * Run some code with a [[CacheSnapshot]] when an event happens.
+    * Run some code with a [[CacheSnapshotLike]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done and all the values it computed.
     */
   def onEventC[A](
-      handler: CacheSnapshot => PartialFunction[APIMessage, A]
+      handler: CacheSnapshotLike[Id] => PartialFunction[APIMessage, A]
   ): (UniqueKillSwitch, Future[immutable.Seq[A]]) = {
     onEventDSLC { c =>
       {
@@ -195,7 +196,7 @@ case class DiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands
     * @return A killswitch to stop this command helper, together with the command helper.
     */
   def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
-    val (killSwitch, newCommands) = Commands.create(
+    val (killSwitch, newCommands) = CoreCommands.create(
       settings.needMention,
       settings.categories,
       cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),

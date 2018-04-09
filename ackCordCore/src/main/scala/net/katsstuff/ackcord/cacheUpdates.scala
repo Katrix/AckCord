@@ -54,8 +54,7 @@ sealed trait CacheUpdate[Data] {
   * An event that should publish an [[APIMessage]].
   * @param data The data.
   * @param sendEvent A function to gather the needed variables to send the
-  *                  event. The [[CacheSnapshot]]s passed is the current, and
-  *                  previous snapshot, in that order.
+  *                  event.
   * @param handler The handler to process the data of this event with.
   * @tparam Data The data it contains.
   */

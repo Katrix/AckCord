@@ -21,12 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.examplecore.commands
+package net.katsstuff.ackcord.examplecore
+
+import scala.language.higherKinds
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
-import net.katsstuff.ackcord.{CacheSnapshot, DiscordShard}
 import net.katsstuff.ackcord.commands.ParsedCmd
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
+import net.katsstuff.ackcord.{CacheSnapshotLike, DiscordShard}
 
 class KillCmd(main: ActorRef) extends Actor with ActorLogging {
 
@@ -43,4 +45,4 @@ class KillCmd(main: ActorRef) extends Actor with ActorLogging {
 object KillCmd {
   def props(main: ActorRef): Props = Props(new KillCmd(main))
 }
-case class GetChannelInfo(guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot)
+case class GetChannelInfo[F[_]](guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshotLike[F])

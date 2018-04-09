@@ -26,32 +26,36 @@ package net.katsstuff.ackcord.examplecore
 import java.nio.file.Paths
 import java.time.temporal.ChronoUnit
 
+import scala.language.higherKinds
+
 import akka.NotUsed
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.{Flow, Sink}
-import net.katsstuff.ackcord.{CacheSnapshot, RequestDSL}
-import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.data._
+import cats.Functor
+import net.katsstuff.ackcord.commands.{AllCmdMessages, CmdCategory, CmdDescription, NoCmd, NoCmdCategory, ParsedCmdFactory, ParsedCmdFlow, RawCmd}
 import net.katsstuff.ackcord.data.raw.RawChannel
+import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
-import net.katsstuff.ackcord.http.rest._
+import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData, GetChannel}
 import net.katsstuff.ackcord.syntax._
+import net.katsstuff.ackcord.util.Streamable
+import net.katsstuff.ackcord.{CacheSnapshotLike, RequestDSL}
 
-package object commands {
+class GenericCommands[F[_]: Streamable: Functor] {
 
-  val PingCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
+  val PingCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("ping"),
     sink = requests =>
       //Completely manual
-      ParsedCmdFlow[NotUsed]
+      ParsedCmdFlow[F, NotUsed]
         .map(_ => cmd => CreateMessage.mkContent(cmd.msg.channelId, "Pong"))
         .to(requests.sinkIgnore),
     description =
       Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
   )
 
-  val SendFileCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
+  val SendFileCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("sendFile"),
     sink = requests => {
@@ -62,8 +66,8 @@ package object commands {
       )
 
       //Using mapConcat for optional values
-      ParsedCmdFlow[NotUsed]
-        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.toList)
+      ParsedCmdFlow[F, NotUsed]
+        .flatMapConcat(implicit c => cmd => Streamable[F].optionToSource(cmd.msg.channelId.tResolve))
         .map(_.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed)))
         .to(requests.sinkIgnore)
     },
@@ -71,27 +75,28 @@ package object commands {
       Some(CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing"))
   )
 
-  val InfoChannelCmdFactory: ParsedCmdFactory[GuildChannel, NotUsed] = ParsedCmdFactory[GuildChannel, NotUsed](
+  val InfoChannelCmdFactory: ParsedCmdFactory[F, GuildChannel, NotUsed] = ParsedCmdFactory[F, GuildChannel, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("infoChannel"),
     sink = requests => {
       //Using the context
-      ParsedCmdFlow[GuildChannel]
+      ParsedCmdFlow[F, GuildChannel]
         .map { implicit c => cmd =>
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
         .via(requests.flow)
-        .mapConcat { answer =>
-          val GetChannelInfo(guildId, senderChannelId, c) = answer.context
-          implicit val cache: CacheSnapshot = c
-          val content = answer match {
-            case response: RequestResponse[RawChannel, GetChannelInfo] =>
-              val data = response.data
-              s"Info for ${data.name}:\n$data"
-            case _: FailedRequest[_] => "Error encountered"
-          }
+        .flatMapConcat {
+          answer =>
+            val GetChannelInfo(guildId, senderChannelId, c) = answer.context
+            implicit val cache: CacheSnapshotLike[F] = c
+            val content = answer match {
+              case response: RequestResponse[RawChannel, GetChannelInfo[F]] =>
+                val data = response.data
+                s"Info for ${data.name}:\n$data"
+              case _: FailedRequest[_] => "Error encountered"
+            }
 
-          senderChannelId.tResolve(guildId).value.map(_.sendMessage(content)).toList
+            Streamable[F].optionToSource(senderChannelId.tResolve[F](guildId).map(_.sendMessage(content)))
         }
         .to(requests.sinkIgnore)
     },
@@ -103,22 +108,23 @@ package object commands {
     )
   )
 
-  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("kill", "die"),
-    //We use system.actorOf to keep the actor alive when this actor shuts down
-    sink = requests => Sink.actorRef(requests.system.actorOf(KillCmd.props(mainActor), "KillCmd"), PoisonPill),
-    description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
-  )
+  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[F, NotUsed, NotUsed] =
+    ParsedCmdFactory[F, NotUsed, NotUsed](
+      category = ExampleCmdCategories.!,
+      aliases = Seq("kill", "die"),
+      //We use system.actorOf to keep the actor alive when this actor shuts down
+      sink = requests => Sink.actorRef(requests.system.actorOf(KillCmd.props(mainActor), "KillCmd"), PoisonPill),
+      description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
+    )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory.requestDSL[NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestDSL[F, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("timeDiff"),
-    flow = ParsedCmdFlow[NotUsed].map { implicit c => cmd =>
+    flow = ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
       //Using request dsl
       import RequestDSL._
       for {
-        channel <- maybePure(cmd.msg.channelId.tResolve.value)
+        channel <- liftOptionT(cmd.msg.channelId.tResolve)
         sentMsg <- channel.sendMessage("Msg")
         time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
         _ <- channel.sendMessage(s"$time ms between command and response")
@@ -132,12 +138,12 @@ package object commands {
     )
   )
 
-  val RatelimitTestCmdFactory: ParsedCmdFactory[Int, NotUsed] = ParsedCmdFactory[Int, NotUsed](
+  val RatelimitTestCmdFactory: ParsedCmdFactory[F, Int, NotUsed] = ParsedCmdFactory[F, Int, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("ratelimitTest"),
     sink = requests =>
-      ParsedCmdFlow[Int]
-        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.map(_ -> cmd.args).toList)
+      ParsedCmdFlow[F, Int]
+        .flatMapConcat(implicit c => cmd => Streamable[F].optionToSource(cmd.msg.channelId.tResolve.map(_ -> cmd.args)))
         .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
         .to(requests.sinkIgnore),
     description = Some(
@@ -152,14 +158,14 @@ package object commands {
   def ComplainErrorHandler(
       requests: RequestHelper,
       allCmds: Map[CmdCategory, Set[String]]
-  ): Sink[AllCmdMessages, NotUsed] =
-    Flow[AllCmdMessages]
+  ): Sink[AllCmdMessages[F], NotUsed] =
+    Flow[AllCmdMessages[F]]
       .collect {
-        case noCmd: NoCmd =>
+        case noCmd: NoCmd[F] =>
           CreateMessage(noCmd.msg.channelId, CreateMessageData("No command specified"))
-        case noCmdCat: NoCmdCategory =>
+        case noCmdCat: NoCmdCategory[F] =>
           CreateMessage(noCmdCat.msg.channelId, CreateMessageData("Unknown category"))
-        case unknown: RawCmd if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
+        case unknown: RawCmd[F] if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
           CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
       }
       .to(requests.sinkIgnore)

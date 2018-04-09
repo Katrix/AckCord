@@ -55,14 +55,14 @@ object MyBot extends App {
         {
           case APIMessage.ChannelCreate(channel, _) =>
             for {
-              tChannel <- maybePure(channel.asTChannel)
+              tChannel <- optionPure(channel.asTChannel)
               _        <- tChannel.sendMessage("First")
             } yield ()
           case APIMessage.ChannelDelete(channel, _) =>
             for {
-              guildChannel <- maybePure(channel.asGuildChannel)
-              guild        <- maybePure(guildChannel.guild.value)
-              _            <- maybeRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+              guildChannel <- optionPure(channel.asGuildChannel)
+              guild        <- optionPure(guildChannel.guild.value)
+              _            <- optionRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
             } yield ()
         }
       }
@@ -71,7 +71,7 @@ object MyBot extends App {
         {
           case APIMessage.ChannelCreate(channel, _) =>
             for {
-              tChannel <- maybePure(channel.asTChannel)
+              tChannel <- optionPure(channel.asTChannel)
               _        <- tChannel.sendMessage("First")
             } yield ()
         }
@@ -81,7 +81,7 @@ object MyBot extends App {
         {
           case RawCmd(message, GeneralCommands, "echo", args, _) =>
             for {
-              channel <- maybePure(message.tGuildChannel[Id].value)
+              channel <- optionPure(message.tGuildChannel[Id].value)
               _       <- channel.sendMessage(s"ECHO: ${args.mkString(" ")}")
             } yield ()
         }
@@ -92,7 +92,7 @@ object MyBot extends App {
         aliases = Seq("ping"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-      ) { cmd: ParsedCmd[Int] =>
+      ) { cmd: ParsedCmd[Id, Int] =>
         println(s"Received ping command with arg ${cmd.args}")
       }
 
@@ -104,7 +104,7 @@ object MyBot extends App {
         aliases = Seq("queue"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Queue", "Queue a track"))
-      ) { implicit c => cmd: ParsedCmd[String] =>
+      ) { implicit c => cmd: ParsedCmd[Id, String] =>
         for {
           channel    <- cmd.msg.tGuildChannel[Id].value
           authorId   <- cmd.msg.authorUserId

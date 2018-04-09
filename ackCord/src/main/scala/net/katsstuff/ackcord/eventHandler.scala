@@ -23,8 +23,11 @@
  */
 package net.katsstuff.ackcord
 
+import cats.Id
+
 /**
   * A handler for a specific event type.
+  *
   * @tparam A The API message type
   * @tparam B The return type, which may or may not be used for other stuff
   */
@@ -35,7 +38,7 @@ trait EventHandler[A <: APIMessage, B] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshot): B
+  def handle(message: A)(implicit c: CacheSnapshotLike[Id]): B
 }
 
 /**
@@ -50,5 +53,5 @@ trait EventHandlerDSL[A <: APIMessage, B] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshot): RequestDSL[B]
+  def handle(message: A)(implicit c: CacheSnapshotLike[Id]): RequestDSL[B]
 }

@@ -30,7 +30,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
-import net.katsstuff.ackcord.commands.{CmdCategory, Commands}
+import net.katsstuff.ackcord.commands.{CmdCategory, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
@@ -81,7 +81,7 @@ class ClientSettings(
       requestSettings.maxAllowedWait
     )
     val cache    = Cache.create
-    val commands = Commands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
+    val commands = CoreCommands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
 
     DiscordShard.fetchWsGateway.map(
       uri => DiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
@@ -104,7 +104,7 @@ class ClientSettings(
       requestSettings.maxAllowedWait
     )
     val cache    = Cache.create
-    val commands = Commands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
+    val commands = CoreCommands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
 
     DiscordShard.fetchWsGatewayWithShards(token).map {
       case (uri, receivedShardTotal) =>

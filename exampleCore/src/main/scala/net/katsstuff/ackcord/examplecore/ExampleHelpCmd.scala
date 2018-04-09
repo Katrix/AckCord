@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.examplecore
 
+import scala.language.higherKinds
+
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
@@ -101,7 +103,7 @@ object ExampleHelpCmd {
 }
 
 object ExampleHelpCmdFactory {
-  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[HelpCmd.Args, NotUsed] = ParsedCmdFactory(
+  def apply[F[_]](helpCmdActor: ActorRef): ParsedCmdFactory[F, HelpCmd.Args, NotUsed] = ParsedCmdFactory(
     category = ExampleCmdCategories.!,
     aliases = Seq("help"),
     sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),

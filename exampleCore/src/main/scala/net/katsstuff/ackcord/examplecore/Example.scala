@@ -23,17 +23,18 @@
  */
 package net.katsstuff.ackcord.examplecore
 
+import scala.language.higherKinds
 import scala.util.{Failure, Success}
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
-import net.katsstuff.ackcord.commands.{Commands, HelpCmd, ParsedCmdFactory}
-import net.katsstuff.ackcord.examplecore.music._
+import cats.{Id, Monad}
+import net.katsstuff.ackcord.commands.{Commands, CoreCommands, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.examplecore.music.MusicHandler
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
-import net.katsstuff.ackcord.util.GuildRouter
+import net.katsstuff.ackcord.util.{GuildRouter, Streamable}
 import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
@@ -69,7 +70,8 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
 
   val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token))
 
-  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
+  val genericCmds: Seq[ParsedCmdFactory[Id, _, NotUsed]] = {
+    val commands = new GenericCommands[Id]
     import commands._
     Seq(
       PingCmdFactory,
@@ -81,18 +83,18 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
-  val helpCmd = ExampleHelpCmdFactory(helpCmdActor)
+  val helpCmd = ExampleHelpCmdFactory[Id](helpCmdActor)
 
   //We set up a commands object, which parses potential commands
-  val cmdObj: Commands =
-    Commands.create(
+  val cmdObj: Commands[Id] =
+    CoreCommands.create(
       needMention = true,
       categories = Set(ExampleCmdCategories.!, ExampleCmdCategories.&),
       cache,
       requests
     )
 
-  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
+  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]): Mat =
     ExampleMain.registerCmd(cmdObj, helpCmdActor)(parsedCmdFactory)
 
   genericCmds.foreach(registerCmd)
@@ -128,7 +130,9 @@ object ExampleMain {
   def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
-  def registerCmd[Mat](commands: Commands, helpCmdActor: ActorRef)(parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat = {
+  def registerCmd[F[_]: Streamable: Monad, Mat](commands: Commands[F], helpCmdActor: ActorRef)(
+      parsedCmdFactory: ParsedCmdFactory[F, _, Mat]
+  ): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     helpCmdActor ! HelpCmd.AddCmd(parsedCmdFactory, complete)
     materialized
