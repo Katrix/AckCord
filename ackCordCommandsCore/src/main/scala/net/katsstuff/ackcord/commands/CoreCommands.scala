@@ -23,51 +23,47 @@
  */
 package net.katsstuff.ackcord.commands
 
-import java.util.Locale
-
-import akka.NotUsed
-import akka.stream.Materializer
-import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
+import akka.stream.scaladsl.Source
 import cats.Id
-import net.katsstuff.ackcord.commands.CmdHelper.isValidCommand
-import net.katsstuff.ackcord.{APIMessage, CacheSnapshot}
+import net.katsstuff.ackcord.http.requests.RequestHelper
+import net.katsstuff.ackcord.{APIMessage, Cache}
 
-object CmdStreams {
+object CoreCommands {
 
   /**
-    * Parse messages into potential commands.
+    * Create a new command handler using a cache.
     * @param needMention If this handler should require mentions before
     *                    the commands.
     * @param categories The categories this handler should know about.
-    * @param apiMessages A source of [[APIMessage]]s.
+    * @param cache The cache to use for subscribing to created messages.
+    * @param requests A request helper object which will be passed to handlers.
     */
-  def cmdStreams[A](
+  def create(
       needMention: Boolean,
       categories: Set[CmdCategory],
-      apiMessages: Source[APIMessage, A]
-  )(implicit mat: Materializer): (A, Source[RawCmdMessage[Id], NotUsed]) = {
-    apiMessages
-      .collect {
-        case APIMessage.MessageCreate(msg, c) =>
-          implicit val cache: CacheSnapshot = c.current
-
-          isValidCommand(needMention, msg).value.map { args =>
-            if (args == Nil) NoCmd(msg, c.current)
-            else {
-              val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
-
-              categories
-                .find(cat => lowercaseCommand.startsWith(cat.prefix))
-                .fold[RawCmdMessage[Id]](NoCmdCategory(msg, lowercaseCommand, args.tail, cache)) { cat =>
-                val withoutPrefix = lowercaseCommand.substring(cat.prefix.length)
-                RawCmd(msg, cat, withoutPrefix, args.tail, c.current)
-              }
-            }
-          }
-      }
-      .mapConcat(_.toList)
-      .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
-      .run()
+      cache: Cache,
+      requests: RequestHelper
+  ): Commands[Id] = {
+    import requests.mat
+    Commands(CmdStreams.cmdStreams(needMention, categories, cache.subscribeAPI)._2, categories, requests)
   }
 
+  /**
+    * Create a new command handler using an [[APIMessage]] source.
+    * @param needMention If this handler should require mentions before
+    *                    the commands.
+    * @param categories The categories this handler should know about.
+    * @param apiMessages The source of [[APIMessage]]s.
+    * @param requests A request helper object which will be passed to handlers.
+    */
+  def create[A](
+      needMention: Boolean,
+      categories: Set[CmdCategory],
+      apiMessages: Source[APIMessage, A],
+      requests: RequestHelper
+  ): (A, Commands[Id]) = {
+    import requests.mat
+    val (materialized, streams) = CmdStreams.cmdStreams(needMention, categories, apiMessages)
+    materialized -> Commands(streams, categories, requests)
+  }
 }

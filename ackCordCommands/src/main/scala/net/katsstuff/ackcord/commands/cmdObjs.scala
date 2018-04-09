@@ -23,33 +23,35 @@
  */
 package net.katsstuff.ackcord.commands
 
-import net.katsstuff.ackcord.CacheSnapshot
+import scala.language.higherKinds
+
+import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.data.Message
 
 /**
   * Top trait for all command messages.
   */
-sealed trait AllCmdMessages
+sealed trait AllCmdMessages[F[_]]
 
 /**
   * Trait for all command errors.
   */
-sealed trait CmdError extends AllCmdMessages
+sealed trait CmdError[F[_]] extends AllCmdMessages[F]
 
 /**
   * Trait for commands that have not been parsed into a specific command.
   */
-sealed trait RawCmdMessage extends AllCmdMessages
+sealed trait RawCmdMessage[F[_]] extends AllCmdMessages[F]
 
 /**
   * Trait for all unparsed command messages.
   */
-sealed trait CmdMessage extends AllCmdMessages
+sealed trait CmdMessage[F[_]] extends AllCmdMessages[F]
 
 /**
   * Trait for all parsed command messages.
   */
-sealed trait ParsedCmdMessage[+A] extends AllCmdMessages
+sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
 
 /**
   * A raw unparsed command.
@@ -59,20 +61,20 @@ sealed trait ParsedCmdMessage[+A] extends AllCmdMessages
   * @param args The arguments of this command.
   * @param c The cache for this command.
   */
-case class RawCmd(msg: Message, category: CmdCategory, cmd: String, args: List[String], c: CacheSnapshot)
-    extends RawCmdMessage
+case class RawCmd[F[_]](msg: Message, category: CmdCategory, cmd: String, args: List[String], c: CacheSnapshotLike[F])
+    extends RawCmdMessage[F]
 
 /**
   * Bot was mentioned, but no command was used.
   */
-case class NoCmd(msg: Message, c: CacheSnapshot) extends RawCmdMessage with CmdError
+case class NoCmd[F[_]](msg: Message, c: CacheSnapshotLike[F]) extends RawCmdMessage[F] with CmdError[F]
 
 /**
   * An unknown category was used.
   */
-case class NoCmdCategory(msg: Message, command: String, args: List[String], c: CacheSnapshot)
-    extends RawCmdMessage
-    with CmdError
+case class NoCmdCategory[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshotLike[F])
+    extends RawCmdMessage[F]
+    with CmdError[F]
 
 /**
   * An unparsed specific command.
@@ -80,7 +82,7 @@ case class NoCmdCategory(msg: Message, command: String, args: List[String], c: C
   * @param args The args for this command.
   * @param cache The cache for this command.
   */
-case class Cmd(msg: Message, args: List[String], cache: CacheSnapshot) extends CmdMessage
+case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshotLike[F]) extends CmdMessage[F]
 
 /**
   * A parsed specific command.
@@ -89,8 +91,8 @@ case class Cmd(msg: Message, args: List[String], cache: CacheSnapshot) extends C
   * @param remaining The remaining arguments after the parser did it's thing.
   * @param cache The cache for this command.
   */
-case class ParsedCmd[A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshot)
-    extends ParsedCmdMessage[A]
+case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshotLike[F])
+    extends ParsedCmdMessage[F, A]
 
 /**
   * A parse error for a parsed command.
@@ -98,16 +100,16 @@ case class ParsedCmd[A](msg: Message, args: A, remaining: List[String], cache: C
   * @param error The error message.
   * @param cache The cache for this command.
   */
-case class CmdParseError(msg: Message, error: String, cache: CacheSnapshot)
-    extends ParsedCmdMessage[Nothing]
-    with CmdError
+case class CmdParseError[F[_]](msg: Message, error: String, cache: CacheSnapshotLike[F])
+    extends ParsedCmdMessage[F, Nothing]
+    with CmdError[F]
 
 /**
   * A command that did not make it through some filters.
   * @param failedFilters The filters the command failed.
   * @param cmd The raw command object.
   */
-case class FilteredCmd(failedFilters: Seq[CmdFilter], cmd: RawCmd)
-    extends CmdMessage
-    with ParsedCmdMessage[Nothing]
-    with CmdError
+case class FilteredCmd[F[_]](failedFilters: Seq[CmdFilter], cmd: RawCmd[F])
+    extends CmdMessage[F]
+    with ParsedCmdMessage[F, Nothing]
+    with CmdError[F]

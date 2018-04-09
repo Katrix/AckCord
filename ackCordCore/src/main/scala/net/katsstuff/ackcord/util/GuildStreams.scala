@@ -101,37 +101,37 @@ object GuildStreams {
         handleLazyOpt(later)(identity)
 
       msg =>
-        {
-          val optGuildId = msg match {
-            case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
-              None
-            case msg: GatewayEvent.GuildCreate =>
-              handleLazy(msg.guildId) { guildId =>
-                handleLazy(msg.data) { data =>
-                  data.channels.foreach(channelToGuild ++= _.map(_.id -> guildId))
-                }
-                guildId
+      {
+        val optGuildId = msg match {
+          case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
+            None
+          case msg: GatewayEvent.GuildCreate =>
+            handleLazy(msg.guildId) { guildId =>
+              handleLazy(msg.data) { data =>
+                data.channels.foreach(channelToGuild ++= _.map(_.id -> guildId))
               }
-            case msg: GatewayEvent.ChannelCreate =>
-              handleLazyOpt(msg.guildId) { guildId =>
-                handleLazy(msg.channelId)(channelToGuild.put(_, guildId))
-                guildId
-              }
-            case msg: GatewayEvent.ChannelDelete =>
-              handleLazy(msg.channelId)(channelToGuild.remove)
-              lazyOptToOption(msg.guildId)
-            case msg: GatewayEvent.GuildEvent[_] =>
-              lazyToOption(msg.guildId)
-            case msg: GatewayEvent.ComplexGuildEvent[_, _] =>
-              lazyToOption(msg.guildId)
-            case msg: GatewayEvent.OptGuildEvent[_] =>
-              lazyOptToOption(msg.guildId)
-            case msg: GatewayEvent.ChannelEvent[_] =>
-              handleLazy(msg.channelId)(channelToGuild.get).flatten
-          }
-
-          List(msg -> optGuildId)
+              guildId
+            }
+          case msg: GatewayEvent.ChannelCreate =>
+            handleLazyOpt(msg.guildId) { guildId =>
+              handleLazy(msg.channelId)(channelToGuild.put(_, guildId))
+              guildId
+            }
+          case msg: GatewayEvent.ChannelDelete =>
+            handleLazy(msg.channelId)(channelToGuild.remove)
+            lazyOptToOption(msg.guildId)
+          case msg: GatewayEvent.GuildEvent[_] =>
+            lazyToOption(msg.guildId)
+          case msg: GatewayEvent.ComplexGuildEvent[_, _] =>
+            lazyToOption(msg.guildId)
+          case msg: GatewayEvent.OptGuildEvent[_] =>
+            lazyOptToOption(msg.guildId)
+          case msg: GatewayEvent.ChannelEvent[_] =>
+            handleLazy(msg.channelId)(channelToGuild.get).flatten
         }
+
+        List(msg -> optGuildId)
+      }
     }
 
   /**

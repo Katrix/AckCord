@@ -31,7 +31,7 @@ import scala.language.higherKinds
 
 import akka.actor.{Actor, ActorRef}
 import akka.{Done, NotUsed}
-import cats.Monad
+import cats.{Id, Monad}
 import cats.data.EitherT
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
@@ -39,7 +39,7 @@ import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.requests.Request
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.util.MessageParser
-import net.katsstuff.ackcord.{CacheSnapshot, CacheSnapshotLike}
+import net.katsstuff.ackcord.CacheSnapshotLike
 import net.katsstuff.ackcord.syntax._
 
 /**
@@ -53,7 +53,7 @@ abstract class HelpCmd extends Actor {
 
   override def receive: Receive = {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
-      implicit val cache: CacheSnapshot = c
+      implicit val cache: CacheSnapshotLike[Id] = c
       val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
 
       val response = for {
@@ -74,7 +74,7 @@ abstract class HelpCmd extends Actor {
       }
 
     case ParsedCmd(msg, Some(PageArgs(page)), _, c) =>
-      implicit val cache: CacheSnapshot = c
+      implicit val cache: CacheSnapshotLike[Id] = c
 
       if (page > 0) {
         sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
@@ -86,7 +86,7 @@ abstract class HelpCmd extends Actor {
       }
 
     case ParsedCmd(msg, None, _, c) =>
-      implicit val cache: CacheSnapshot = c
+      implicit val cache: CacheSnapshotLike[Id] = c
       sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(0)))
 
     case AddCmd(factory, commandEnd) =>
@@ -121,7 +121,7 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the command
     */
   def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
-      implicit c: CacheSnapshot
+      implicit c: CacheSnapshotLike[Id]
   ): CreateMessageData
 
   /**
@@ -130,7 +130,7 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(page: Int)(implicit c: CacheSnapshot): CreateMessageData
+  def createReplyAll(page: Int)(implicit c: CacheSnapshotLike[Id]): CreateMessageData
 
   def unknownCategory(command: String): Option[CreateMessageData] =
     Some(CreateMessageData("Unknown category"))

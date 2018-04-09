@@ -25,12 +25,12 @@ package net.katsstuff.ackcord
 
 import java.time.{Instant, OffsetDateTime}
 
+import scala.language.higherKinds
+
 import net.katsstuff.ackcord.data._
 
 /**
-  * Base trait for all messages sent from [[Cache]]. All descendants
-  * of this trait are published to the event stream passed in with
-  * [[net.katsstuff.ackcord.websocket.gateway.GatewaySettings]].
+  * Base trait normal messages.
   */
 sealed trait APIMessage {
 
@@ -181,8 +181,13 @@ object APIMessage {
     * @param user The user of the updated guild member
     * @param nick Nick of the user if one was set
     */
-  case class GuildMemberUpdate(guild: Guild, roles: Seq[Role], user: User, nick: Option[String], cache: CacheState)
-      extends GuildMessage
+  case class GuildMemberUpdate(
+      guild: Guild,
+      roles: Seq[Role],
+      user: User,
+      nick: Option[String],
+      cache: CacheState
+  ) extends GuildMessage
 
   /**
     * Sent to the client if the client requests to get all members
@@ -190,7 +195,8 @@ object APIMessage {
     * @param guild The guild requested for.
     * @param members The guild members in this chunk.
     */
-  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState) extends GuildMessage
+  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState)
+      extends GuildMessage
 
   /**
     * Sent to the client when a new role is created.
@@ -252,7 +258,8 @@ object APIMessage {
     * @param messages The deleted messages
     * @param channel The channel of the deleted messages
     */
-  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState) extends ChannelMessage
+  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState)
+      extends ChannelMessage
 
   /**
     * Sent to the client when a user adds a reaction to a message.
@@ -261,8 +268,13 @@ object APIMessage {
     * @param message The message the user added an reaction to.
     * @param emoji The emoji the user reacted with
     */
-  case class MessageReactionAdd(user: User, channel: TChannel, message: Message, emoji: PartialEmoji, cache: CacheState)
-      extends MessageMessage
+  case class MessageReactionAdd(
+      user: User,
+      channel: TChannel,
+      message: Message,
+      emoji: PartialEmoji,
+      cache: CacheState
+  ) extends MessageMessage
       with ChannelMessage
 
   /**
@@ -298,8 +310,13 @@ object APIMessage {
     * @param roleIds The roles of the user
     * @param presence The new presence
     */
-  case class PresenceUpdate(guild: Guild, user: User, roleIds: Seq[RoleId], presence: Presence, cache: CacheState)
-      extends GuildMessage
+  case class PresenceUpdate(
+      guild: Guild,
+      user: User,
+      roleIds: Seq[RoleId],
+      presence: Presence,
+      cache: CacheState
+  ) extends GuildMessage
 
   /**
     * Sent to the client when a user starts typing in a channel
@@ -307,7 +324,8 @@ object APIMessage {
     * @param user The user that began typing
     * @param timestamp When user started typing
     */
-  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
+  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState)
+      extends ChannelMessage
 
   /**
     * Sent to the client when a user object is updated.
@@ -327,7 +345,8 @@ object APIMessage {
     * @param guild The guild of the update
     * @param endpoint The voice server
     */
-  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, cache: CacheState) extends GuildMessage
+  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, cache: CacheState)
+      extends GuildMessage
 
   /**
     * Sent to the client when guilds webhooks are updated.
