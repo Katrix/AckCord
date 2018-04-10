@@ -3,7 +3,7 @@ import sbtcrossproject.{crossProject, CrossType}
 lazy val akkaVersion     = "2.5.11"
 lazy val akkaHttpVersion = "10.1.0"
 lazy val circeVersion    = "0.9.3"
-lazy val ackCordVersion  = "0.9.0"
+lazy val ackCordVersion  = "0.10.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.5",
@@ -98,7 +98,7 @@ lazy val ackCordImages = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-rest",
+    name := "ackcord-images",
     version := ackCordVersion,
     description := "The image requests module of AckCord"
   )
@@ -108,7 +108,7 @@ lazy val ackCordOAuth = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-rest",
+    name := "ackcord-oauth",
     version := ackCordVersion,
     description := "The OAuth requests module of AckCord"
   )
@@ -138,7 +138,7 @@ lazy val ackCordVoice = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-Voice",
+    name := "ackcord-voice",
     version := ackCordVersion,
     description := "The voice websocket module of AckCord"
   )
