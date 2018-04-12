@@ -1,0 +1,31 @@
+options:
+  - title: Getting Started
+    url: getting_started.html
+
+  - title: Shared concepts
+    url: docs/cachesnapshot.html
+
+    nested_options:
+      - title: CacheSnapshot
+        url: docs/cachesnapshot.html
+
+      - title: Shared command concepts
+        url: docs/sharedcommands.html
+
+  - title: Making Requests
+    url: docs/requests.html
+
+  - title: The cache (Advanced)
+    url: docs/cache.html
+
+  - title: Sending custom sound (Advanced)
+    url: docs/sound.html
+
+  - title: High level API commands
+    url: docs/hicommands.html
+
+  - title: Low level API commands
+    url: docs/locommands.html
+
+  - title: The many modules of AckCord
+    url: modules.html

@@ -17,7 +17,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-dead-code",
     "-Ywarn-unused-import"
   ),
-  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
+  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
   //Fixes repository not specified error
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -170,6 +170,7 @@ lazy val ackCordLavaplayer = project
     publishSettings,
     name := "ackcord-lavaplayer",
     version := ackCordVersion,
+    resolvers += JCenterRepository,
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
@@ -241,6 +242,65 @@ lazy val example = project
   )
   .dependsOn(ackCord)
 
+lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
+
+lazy val doc = project
+  .enablePlugins(MicrositesPlugin, ScalaUnidocPlugin, GhpagesPlugin)
+  .settings(commonSettings: _*)
+  .settings(
+    micrositeName := "AckCord",
+    micrositeAuthor := "Katrix",
+    micrositeDescription := "A Scala Discord library",
+    micrositeBaseUrl := "/ackcord",
+    micrositeDocumentationUrl := "/ackcord/api/net/katsstuff/ackcord",
+    micrositeHomepage := "https://github.com/Katrix-/AckCord",
+    micrositeGithubOwner := "Katrix-",
+    micrositeGithubRepo := "AckCord",
+    micrositeGitterChannel := false,
+    micrositeShareOnSocial := false,
+    scalacOptions in Tut --= Seq(
+      "-deprecation",
+      "-feature",
+      "-unchecked",
+      "-Xlint",
+      "-Ywarn-dead-code",
+      "-Ywarn-unused-import"
+    ),
+    scalacOptions in Tut ++= Seq("-language:higherKinds"),
+    autoAPIMappings := true,
+    unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
+      ackCordDataJVM,
+      ackCordNetwork,
+      ackCordRest,
+      ackCordImages,
+      ackCordOAuth,
+      ackCordWebsocket,
+      ackCordGateway,
+      ackCordVoice,
+      ackCordUtil,
+      ackCordCommands,
+      ackCordLavaplayer,
+      ackCordCore,
+      ackCordCommandsCore,
+      ackCordLavaplayerCore,
+      ackCord
+    ),
+    docsMappingsAPIDir := "api",
+    addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), docsMappingsAPIDir),
+    ghpagesNoJekyll := false,
+    fork in tut := true,
+    fork in (ScalaUnidoc, unidoc) := true,
+    scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
+      "-doc-source-url",
+      "https://github.com/Katrix-/Ackcord/tree/master€{FILE_PATH}.scala",
+      "-sourcepath",
+      baseDirectory.in(LocalRootProject).value.getAbsolutePath,
+      "-diagrams"
+    ),
+    git.remoteRepo := "git@github.com:Katrix/AckCord.git"
+  )
+  .dependsOn(ackCord)
+
 lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(
@@ -265,7 +325,6 @@ lazy val ackCordRoot = project
   )
   .settings(
     noPublishSettings,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(example, exampleCore),
     //Fixes repository not specified error
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
@@ -273,4 +332,3 @@ lazy val ackCordRoot = project
       else Some("releases" at nexus + "service/local/staging/deploy/maven2")
     }
   )
-  .enablePlugins(ScalaUnidocPlugin)
