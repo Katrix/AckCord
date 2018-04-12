@@ -297,7 +297,7 @@ lazy val doc = project
       baseDirectory.in(LocalRootProject).value.getAbsolutePath,
       "-diagrams"
     ),
-    git.remoteRepo := "git@github.com:Katrix/AckCord.git"
+    git.remoteRepo := "git@github.com:Katrix-/AckCord.git"
   )
   .dependsOn(ackCord)
 
