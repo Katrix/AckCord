@@ -34,8 +34,6 @@ import cats.Id
 import net.katsstuff.ackcord.commands.{CmdCategory, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity
-import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
-import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 
 /**
   * Settings used when connecting to Discord.
@@ -60,9 +58,9 @@ class ClientSettings(
     activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
-    system: ActorSystem = ActorSystem("AckCord"),
-    commandSettings: CommandSettings = CommandSettings(),
-    requestSettings: RequestSettings = RequestSettings()
+    val system: ActorSystem = ActorSystem("AckCord"),
+    val commandSettings: CommandSettings = CommandSettings(),
+    val requestSettings: RequestSettings = RequestSettings()
 ) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher

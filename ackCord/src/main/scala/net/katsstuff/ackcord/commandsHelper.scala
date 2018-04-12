@@ -31,8 +31,6 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.{Done, NotUsed}
 import cats.Monad
 import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.http.requests.RequestHelper
-import net.katsstuff.ackcord.util.{MessageParser, Streamable}
 
 /**
   * An object which manages a [[Commands]] instance.

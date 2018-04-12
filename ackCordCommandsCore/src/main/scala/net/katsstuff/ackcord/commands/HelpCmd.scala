@@ -36,11 +36,9 @@ import cats.data.EitherT
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
 import net.katsstuff.ackcord.data.raw.RawMessage
-import net.katsstuff.ackcord.http.requests.Request
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.MessageParser
-import net.katsstuff.ackcord.{MemoryCacheSnapshot, CacheSnapshot}
+import net.katsstuff.ackcord._
 
 /**
   * A base for help commands. Commands need to be registered manually

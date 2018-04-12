@@ -29,7 +29,6 @@ import akka.NotUsed
 import akka.stream.Materializer
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import cats.Id
-import net.katsstuff.ackcord.commands.CmdHelper.isValidCommand
 import net.katsstuff.ackcord.{APIMessage, MemoryCacheSnapshot}
 
 object CmdStreams {
@@ -51,7 +50,7 @@ object CmdStreams {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: MemoryCacheSnapshot = c.current
 
-          isValidCommand(needMention, msg).value.map { args =>
+          CmdHelper.isValidCommand(needMention, msg).value.map { args =>
             if (args == Nil) NoCmd(msg, c.current)
             else {
               val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)

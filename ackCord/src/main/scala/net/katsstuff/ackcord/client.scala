@@ -37,12 +37,11 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import cats.Id
+import cats.{Id, Monad}
 import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
-import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 
 /**
@@ -186,10 +185,10 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     */
   def registerHandler[A <: APIMessage](
       handler: EventHandler[A]
-  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
+  )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
     onEventC { implicit c =>
       {
-        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
+        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle[F](msg.asInstanceOf[A])
       }
     }
 
@@ -200,10 +199,10 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     */
   def registerHandler[A <: APIMessage](
       handler: EventHandlerDSL[A]
-  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
+  )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { implicit c =>
       {
-        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle(msg.asInstanceOf[A])
+        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle[F](msg.asInstanceOf[A])
       }
     }
 

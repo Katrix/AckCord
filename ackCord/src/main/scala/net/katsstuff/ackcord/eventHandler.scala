@@ -25,6 +25,8 @@ package net.katsstuff.ackcord
 
 import scala.language.higherKinds
 
+import cats.Monad
+
 /**
   * A handler for a specific event type.
   *
@@ -37,7 +39,7 @@ trait EventHandler[A <: APIMessage] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle[F[_]](message: A)(implicit c: CacheSnapshot[F]): Unit
+  def handle[F[_]: Monad: Streamable](message: A)(implicit c: CacheSnapshot[F]): Unit
 }
 
 /**
@@ -51,5 +53,5 @@ trait EventHandlerDSL[A <: APIMessage] {
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle[F[_]](message: A)(implicit c: CacheSnapshot[F]): RequestDSL[Unit]
+  def handle[F[_]: Monad: Streamable](message: A)(implicit c: CacheSnapshot[F]): RequestDSL[Unit]
 }

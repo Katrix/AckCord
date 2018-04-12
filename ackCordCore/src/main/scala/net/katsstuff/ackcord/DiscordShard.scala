@@ -38,9 +38,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.CreateGateway
 import net.katsstuff.ackcord.http.Routes
-import net.katsstuff.ackcord.http.requests.BotAuthentication
 import net.katsstuff.ackcord.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 
 /**
   * The core actor that controls all the other used actors of AckCord
