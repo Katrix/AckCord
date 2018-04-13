@@ -134,8 +134,9 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       goto(Active) using CanSendAudio(voiceWs, audioSender, vChannelId)
 
     case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _, _)) =>
+      context.watchWith(voiceWs, PoisonPill)
       voiceWs ! Logout
-      stop()
+      stay()
 
     case Event(DiscordShard.StopShard, _)                         => stop()
     case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
@@ -189,9 +190,10 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       }
 
     case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, dataSender, _)) =>
+      context.watchWith(voiceWs, PoisonPill)
       voiceWs ! Logout
       dataSender ! StopSendAudio
-      stop()
+      stay()
 
     case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
     case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _)       => stay() //NO-OP
