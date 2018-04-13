@@ -1,5 +1,5 @@
 name: AckCord
-baseurl: /
+baseurl: ''
 description: A Scala Discord library
 highlighter: rouge
 docs: true
