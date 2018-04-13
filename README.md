@@ -11,7 +11,7 @@ libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.10" //L
 libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.10" //Low level lavaplayer API
 ```
 
-For more information, either see the [microsite](https://Katrix-.github.io/ackcord/), the examples or the ScalaDoc.
+For more information, either see the [microsite](http://ackcord.katsstuff.net), the examples or the ScalaDoc.
 
 Or you can just join the Discord server (we got cookies).
 
