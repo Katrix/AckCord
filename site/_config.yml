@@ -1,0 +1,11 @@
+name: AckCord
+baseurl: /
+description: A Scala Discord library
+highlighter: rouge
+docs: true
+collections:
+  tut:
+    output: true
+version: 0.1.0-SNAPSHOT
+org: net.katsstuff
+markdown: kramdown
