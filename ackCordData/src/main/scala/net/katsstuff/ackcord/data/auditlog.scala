@@ -24,8 +24,11 @@
 
 package net.katsstuff.ackcord.data
 
+import net.katsstuff.ackcord.data.raw.RawRole
+
 /**
   * Root audit log object. Received from [[net.katsstuff.ackcord.http.requests.GetGuildAuditLog]]
+  *
   * @param webhooks The webhooks found in the log
   * @param users The users found in the log
   * @param auditLogEntries The entries of the log
@@ -257,12 +260,13 @@ object AuditLogChange {
   /**
     * Role added
     */
-  case class $Add(oldValue: Option[Seq[Role]], newValue: Option[Seq[Role]]) extends AuditLogChange[Seq[Role]]
+  case class $Add(oldValue: Option[Seq[RawRole]], newValue: Option[Seq[RawRole]]) extends AuditLogChange[Seq[RawRole]]
 
   /**
     * Role removed
     */
-  case class $Remove(oldValue: Option[Seq[Role]], newValue: Option[Seq[Role]]) extends AuditLogChange[Seq[Role]]
+  case class $Remove(oldValue: Option[Seq[RawRole]], newValue: Option[Seq[RawRole]])
+      extends AuditLogChange[Seq[RawRole]]
 
   /**
     * Prune delete duration changed
