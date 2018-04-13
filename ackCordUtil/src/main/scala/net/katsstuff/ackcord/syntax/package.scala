@@ -1259,114 +1259,116 @@ package object syntax {
       DeleteWebhookWithToken(webhook.id, webhook.token, context)
   }
 
-  //Global methods which are not tied to a specific object
+  implicit class AckCordSyntax(private val ackCord: AckCord.type) extends AnyVal {
+    //Global methods which are not tied to a specific object
 
-  /**
-    * Fetch a channel by id.
-    */
-  def fetchChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed) = GetChannel(channelId, context)
+    /**
+      * Fetch a channel by id.
+      */
+    def fetchChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed) = GetChannel(channelId, context)
 
-  /**
-    * Fetch a guild by id.
-    */
-  def fetchGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) = GetGuild(guildId, context)
+    /**
+      * Fetch a guild by id.
+      */
+    def fetchGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) = GetGuild(guildId, context)
 
-  /**
-    * Fetch a user by id.
-    */
-  def fetchUser[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = GetUser(userId, context)
+    /**
+      * Fetch a user by id.
+      */
+    def fetchUser[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = GetUser(userId, context)
 
-  /**
-    * Create a new guild. Bots can only have 10 guilds by default.
-    * @param name The name of the guild
-    * @param region The voice region for the guild
-    * @param icon The icon to use for the guild. Must be 128x128 jpeg.
-    * @param verificationLevel The verification level to use for the guild.
-    * @param defaultMessageNotifications The notification level to use for
-    *                                    the guild.
-    * @param roles The roles for the new guild. Note, here the snowflake is
-    *              just a placeholder.
-    * @param channels The channels for the new guild.
-    */
-  def createGuild[Ctx](
-      name: String,
-      region: String,
-      icon: Option[ImageData],
-      verificationLevel: VerificationLevel,
-      defaultMessageNotifications: NotificationLevel,
-      explicitContentFilter: FilterLevel,
-      roles: Seq[Role],
-      channels: Seq[CreateGuildChannelData],
-      context: Ctx = NotUsed: NotUsed
-  ) =
-    CreateGuild(
-      CreateGuildData(
-        name,
-        region,
-        icon,
-        verificationLevel,
-        defaultMessageNotifications,
-        explicitContentFilter,
-        roles,
-        channels
-      ),
-      context
-    )
+    /**
+      * Create a new guild. Bots can only have 10 guilds by default.
+      * @param name The name of the guild
+      * @param region The voice region for the guild
+      * @param icon The icon to use for the guild. Must be 128x128 jpeg.
+      * @param verificationLevel The verification level to use for the guild.
+      * @param defaultMessageNotifications The notification level to use for
+      *                                    the guild.
+      * @param roles The roles for the new guild. Note, here the snowflake is
+      *              just a placeholder.
+      * @param channels The channels for the new guild.
+      */
+    def createGuild[Ctx](
+        name: String,
+        region: String,
+        icon: Option[ImageData],
+        verificationLevel: VerificationLevel,
+        defaultMessageNotifications: NotificationLevel,
+        explicitContentFilter: FilterLevel,
+        roles: Seq[Role],
+        channels: Seq[CreateGuildChannelData],
+        context: Ctx = NotUsed: NotUsed
+    ) =
+      CreateGuild(
+        CreateGuildData(
+          name,
+          region,
+          icon,
+          verificationLevel,
+          defaultMessageNotifications,
+          explicitContentFilter,
+          roles,
+          channels
+        ),
+        context
+      )
 
-  /**
-    * Fetch the client user.
-    */
-  def fetchClientUser[Ctx](context: Ctx = NotUsed: NotUsed) = GetCurrentUser(context)
+    /**
+      * Fetch the client user.
+      */
+    def fetchClientUser[Ctx](context: Ctx = NotUsed: NotUsed) = GetCurrentUser(context)
 
-  /**
-    * Get the guilds of the client user.
-    * @param before Get guilds before this id.
-    * @param after Get guilds after this id.
-    * @param limit The max amount of guilds to return.
-    */
-  def fetchCurrentUserGuilds[Ctx](
-      before: Option[GuildId] = None,
-      after: Option[GuildId] = None,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ) = GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit), context)
+    /**
+      * Get the guilds of the client user.
+      * @param before Get guilds before this id.
+      * @param after Get guilds after this id.
+      * @param limit The max amount of guilds to return.
+      */
+    def fetchCurrentUserGuilds[Ctx](
+        before: Option[GuildId] = None,
+        after: Option[GuildId] = None,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ) = GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit), context)
 
-  /**
-    * Fetch the DMs of the client user.
-    */
-  def fetchUserDMs[Ctx](context: Ctx = NotUsed: NotUsed) = GetUserDMs(context)
+    /**
+      * Fetch the DMs of the client user.
+      */
+    def fetchUserDMs[Ctx](context: Ctx = NotUsed: NotUsed) = GetUserDMs(context)
 
-  /**
-    * Create a group DM to a few users.
-    * @param accessTokens The access tokens of users that have granted the bot
-    *                     the `gdm.join` scope.
-    * @param nicks A map specifying the nicknames for the users in this group DM.
-    */
-  def createGroupDM[Ctx](
-      accessTokens: Seq[String],
-      nicks: SnowflakeMap[User, String],
-      context: Ctx = NotUsed: NotUsed
-  ) = CreateGroupDm(CreateGroupDMData(accessTokens, nicks), context)
+    /**
+      * Create a group DM to a few users.
+      * @param accessTokens The access tokens of users that have granted the bot
+      *                     the `gdm.join` scope.
+      * @param nicks A map specifying the nicknames for the users in this group DM.
+      */
+    def createGroupDM[Ctx](
+        accessTokens: Seq[String],
+        nicks: SnowflakeMap[User, String],
+        context: Ctx = NotUsed: NotUsed
+    ) = CreateGroupDm(CreateGroupDMData(accessTokens, nicks), context)
 
-  /**
-    * Fetch an invite by code.
-    * @param inviteCode The invite code.
-    */
-  def fetchInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed) = GetInvite(inviteCode, context)
+    /**
+      * Fetch an invite by code.
+      * @param inviteCode The invite code.
+      */
+    def fetchInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed) = GetInvite(inviteCode, context)
 
-  /**
-    * Fetch a list of voice regions that can be used when creating a guild.
-    */
-  def fetchVoiceRegions[Ctx](context: Ctx = NotUsed: NotUsed) = ListVoiceRegions(context)
+    /**
+      * Fetch a list of voice regions that can be used when creating a guild.
+      */
+    def fetchVoiceRegions[Ctx](context: Ctx = NotUsed: NotUsed) = ListVoiceRegions(context)
 
-  /**
-    * Fetch a webhook by id.
-    */
-  def fetchWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: NotUsed) = GetWebhook(id, context)
+    /**
+      * Fetch a webhook by id.
+      */
+    def fetchWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: NotUsed) = GetWebhook(id, context)
 
-  /**
-    * Fetch a webhook by id with token. Doesn't require authentication.
-    */
-  def fetchWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed) =
-    GetWebhookWithToken(id, token, context)
+    /**
+      * Fetch a webhook by id with token. Doesn't require authentication.
+      */
+    def fetchWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed) =
+      GetWebhookWithToken(id, token, context)
+  }
 }
