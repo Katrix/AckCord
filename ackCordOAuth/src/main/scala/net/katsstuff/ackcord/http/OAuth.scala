@@ -8,10 +8,11 @@ import akka.http.scaladsl.model.{FormData, HttpMethods, HttpRequest, Uri}
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
+import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe._
 import io.circe.syntax._
 
-object OAuth {
+object OAuth extends FailFastCirceSupport {
 
   sealed abstract class Scope(val name: String)
   object Scope {
