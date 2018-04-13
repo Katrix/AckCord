@@ -111,6 +111,9 @@ class ClientSettings(
         CoreDiscordClient(shards, cache, commands, requests)
     }
   }
+
+  override def toString: String = s"ClientSettings($token, $largeThreshold, $shardNum, $shardTotal, $idleSince, " +
+    s"$activity, $status, $afk, $executionContext, $system, $commandSettings, $requestSettings)"
 }
 object ClientSettings {
 
