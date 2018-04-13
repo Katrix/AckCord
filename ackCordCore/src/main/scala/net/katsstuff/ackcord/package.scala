@@ -27,4 +27,13 @@ package object ackcord {
 
   val MessageParser: util.MessageParser.type = util.MessageParser
   type MessageParser[A] = util.MessageParser[A]
+
+  val JsonOption: util.JsonOption.type = util.JsonOption
+  type JsonOption[A] = util.JsonOption[A]
+
+  val JsonNull: util.JsonNull.type = util.JsonNull
+  type JsonNull = util.JsonNull.type
+
+  val JsonUndefined: util.JsonUndefined.type = util.JsonUndefined
+  type JsonUndefined = util.JsonUndefined.type
 }
