@@ -29,19 +29,9 @@ import scala.util.Try
 
 import io.circe._
 import io.circe.generic.extras.Configuration
-import io.circe.generic.extras.auto._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
-import net.katsstuff.ackcord.data.raw.{
-  RawBan,
-  RawChannel,
-  RawEmoji,
-  RawGuild,
-  RawGuildMember,
-  RawMessage,
-  RawMessageActivity,
-  RawRole
-}
+import net.katsstuff.ackcord.data.raw._
 
 trait DiscordProtocol {
 
@@ -111,6 +101,15 @@ trait DiscordProtocol {
   implicit val rawGuildEncoder: Encoder[RawGuild] = deriveEncoder
   implicit val rawGuildDecoder: Decoder[RawGuild] = deriveDecoder
 
+  implicit val rawPresenceEncoder: Encoder[RawPresence] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
+  implicit val rawPresenceDecoder: Decoder[RawPresence] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
+
   implicit val unavailableGuildEncoder: Encoder[UnavailableGuild] = deriveEncoder
   implicit val unavailableGuildDecoder: Decoder[UnavailableGuild] = deriveDecoder
 
@@ -134,11 +133,29 @@ trait DiscordProtocol {
   implicit val attachementEncoder: Encoder[Attachment] = deriveEncoder
   implicit val attachementDecoder: Decoder[Attachment] = deriveDecoder
 
-  implicit val embedEncoder: Encoder[ReceivedEmbed] = deriveEncoder
-  implicit val embedDecoder: Decoder[ReceivedEmbed] = deriveDecoder
+  implicit val embedEncoder: Encoder[ReceivedEmbed] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
+  implicit val embedDecoder: Decoder[ReceivedEmbed] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
 
-  implicit val reactionEncoder: Encoder[Reaction] = deriveEncoder
-  implicit val reactionDecoder: Decoder[Reaction] = deriveDecoder
+  implicit val reactionEncoder: Encoder[Reaction] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
+  implicit val reactionDecoder: Decoder[Reaction] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
+
+  implicit val rawMessageActivityEncoder: Encoder[RawMessageActivity] = deriveEncoder
+  implicit val rawMessageActivityDecoder: Decoder[RawMessageActivity] = deriveDecoder
+
+  implicit val messageApplicationEncoder: Encoder[MessageApplication] = deriveEncoder
+  implicit val messageApplicationDecoder: Decoder[MessageApplication] = deriveDecoder
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
@@ -215,6 +232,12 @@ trait DiscordProtocol {
   implicit val voiceStateEncoder: Encoder[VoiceState] = deriveEncoder
   implicit val voiceStateDecoder: Decoder[VoiceState] = deriveDecoder
 
+  implicit val inviteGuildEncoder: Encoder[InviteGuild] = deriveEncoder
+  implicit val inviteGuildDecoder: Decoder[InviteGuild] = deriveDecoder
+
+  implicit val inviteChannelEncoder: Encoder[InviteChannel] = deriveEncoder
+  implicit val inviteChannelDecoder: Decoder[InviteChannel] = deriveDecoder
+
   implicit val inviteEncoder: Encoder[Invite] = deriveEncoder
   implicit val inviteDecoder: Decoder[Invite] = deriveDecoder
 
@@ -224,8 +247,14 @@ trait DiscordProtocol {
   implicit val guildEmbedEncoder: Encoder[GuildEmbed] = deriveEncoder
   implicit val guildEmbedDecoder: Decoder[GuildEmbed] = deriveDecoder
 
-  implicit val outgoingEmbedEncoder: Encoder[OutgoingEmbed] = deriveEncoder
-  implicit val outgoingEmbedDecoder: Decoder[OutgoingEmbed] = deriveDecoder
+  implicit val outgoingEmbedEncoder: Encoder[OutgoingEmbed] = {
+    import io.circe.generic.auto._
+    deriveEncoder
+  }
+  implicit val outgoingEmbedDecoder: Decoder[OutgoingEmbed] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
 
   implicit val integrationAccountEncoder: Encoder[IntegrationAccount] = deriveEncoder
   implicit val integrationAccountDecoder: Decoder[IntegrationAccount] = deriveDecoder
@@ -244,7 +273,10 @@ trait DiscordProtocol {
 
   implicit val webhookDecoder: Decoder[Webhook] = deriveDecoder
 
-  implicit val auditLogDecoder: Decoder[AuditLog] = deriveDecoder
+  implicit val auditLogDecoder: Decoder[AuditLog] = {
+    import io.circe.generic.auto._
+    deriveDecoder
+  }
 
   implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = (c: HCursor) => {
 
