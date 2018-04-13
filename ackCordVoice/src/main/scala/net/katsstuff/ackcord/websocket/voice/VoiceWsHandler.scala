@@ -255,8 +255,8 @@ class VoiceWsHandler(
         )
 
       case SetSpeaking(speaking) =>
-        if (queue != null && ssrc != -1) {
-          queue.offer(Speaking(SpeakingData(speaking, None, ssrc, Some(userId))))
+        if (queue != null) {
+          queue.offer(Speaking(SpeakingData(speaking, JsonUndefined, JsonUndefined, JsonUndefined)))
         }
 
       case Logout =>

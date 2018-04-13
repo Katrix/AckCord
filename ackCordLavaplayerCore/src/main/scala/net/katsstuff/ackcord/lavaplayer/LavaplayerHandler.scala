@@ -129,7 +129,6 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
         else
           context.actorOf(AudioSender.props(player, udpHandler, voiceWs), "DataSender")
 
-      audioSender ! StartSendAudio
       sendEventsTo ! MusicReady
 
       goto(Active) using CanSendAudio(voiceWs, audioSender, vChannelId)
@@ -204,14 +203,14 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
   def connect(
       vChannelId: ChannelId,
       endPoint: String,
-      clientId: UserId,
+      userId: UserId,
       sessionId: String,
       token: String,
       sender: ActorRef
   ): State = {
     val voiceWs =
       context.actorOf(
-        VoiceWsHandler.props(endPoint, RawSnowflake(guildId), clientId, sessionId, token, Some(self), None),
+        VoiceWsHandler.props(endPoint, RawSnowflake(guildId), userId, sessionId, token, Some(self), None),
         "VoiceWS"
       )
     voiceWs ! Login

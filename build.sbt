@@ -171,7 +171,7 @@ lazy val ackCordLavaplayer = project
     name := "ackcord-lavaplayer",
     version := ackCordVersion,
     resolvers += JCenterRepository,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.45",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.63",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
   .dependsOn(ackCordVoice)

@@ -152,9 +152,9 @@ class VoiceUDPHandler(
       stay
 
     case Event(SendDataBurst(data), WithSecret(socket, secret)) =>
-      hasSentRequest = false
 
       if (data.nonEmpty) {
+        hasSentRequest = false
         queuePackets(data, secret, socket)
       }
 
@@ -165,10 +165,10 @@ class VoiceUDPHandler(
 
       if (queue.nonEmpty) {
         socket ! UdpConnected.Send(queue.head, UDPAck)
+      }
 
-        if (shouldSendDataRequest) {
-          sendDataRequest()
-        }
+      if (shouldSendDataRequest) {
+        sendDataRequest()
       }
 
       stay
@@ -202,7 +202,7 @@ class VoiceUDPHandler(
       socket ! UdpConnected.Send(payload, UDPAck)
     } else if (queue.lengthCompare(maxSize) > 0) {
       val toDrop = queue.size - maxSize
-      log.warning("Droped {} packets", toDrop)
+      log.warning("Dropped {} packets", toDrop)
 
       for (_ <- 0 until toDrop) queue.dequeue()
     }
@@ -210,7 +210,18 @@ class VoiceUDPHandler(
 
   def queuePackets(data: Seq[ByteString], secret: TweetNaclFast.SecretBox, socket: ActorRef): Unit = {
     queuePacket(data.head, secret, socket)
-    data.tail.foreach(data => queue.enqueue(createPayload(data, secret)))
+
+    val maxSize = AckCordSettings().UDPMaxPacketsBeforeDrop
+
+    val combinedSize = queue.size + data.tail.size
+    val withDropped = if (combinedSize > maxSize) {
+      val toDrop = combinedSize - maxSize
+      log.warning("Dropped {} packets", toDrop)
+
+      data.tail.drop(toDrop)
+    } else data.tail
+
+    withDropped.foreach(data => queue.enqueue(createPayload(data, secret)))
   }
 
   def shouldSendDataRequest: Boolean =
