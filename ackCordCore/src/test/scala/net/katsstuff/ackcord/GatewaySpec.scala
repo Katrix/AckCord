@@ -43,7 +43,6 @@ import cats.Later
 import io.circe.{parser, Encoder, Json}
 import net.katsstuff.ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.websocket.AbstractWsHandler.{Login, Logout}
 import net.katsstuff.ackcord.websocket.gateway._
 import net.katsstuff.ackcord.websocket.gateway.GatewayHandler
 

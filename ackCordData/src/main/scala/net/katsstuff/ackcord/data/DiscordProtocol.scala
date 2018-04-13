@@ -102,11 +102,11 @@ trait DiscordProtocol {
   implicit val rawGuildDecoder: Decoder[RawGuild] = deriveDecoder
 
   implicit val rawPresenceEncoder: Encoder[RawPresence] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveEncoder
   }
   implicit val rawPresenceDecoder: Decoder[RawPresence] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveDecoder
   }
 
@@ -134,20 +134,20 @@ trait DiscordProtocol {
   implicit val attachementDecoder: Decoder[Attachment] = deriveDecoder
 
   implicit val embedEncoder: Encoder[ReceivedEmbed] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveEncoder
   }
   implicit val embedDecoder: Decoder[ReceivedEmbed] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveDecoder
   }
 
   implicit val reactionEncoder: Encoder[Reaction] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveEncoder
   }
   implicit val reactionDecoder: Decoder[Reaction] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveDecoder
   }
 
@@ -248,11 +248,11 @@ trait DiscordProtocol {
   implicit val guildEmbedDecoder: Decoder[GuildEmbed] = deriveDecoder
 
   implicit val outgoingEmbedEncoder: Encoder[OutgoingEmbed] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveEncoder
   }
   implicit val outgoingEmbedDecoder: Decoder[OutgoingEmbed] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveDecoder
   }
 
@@ -274,7 +274,7 @@ trait DiscordProtocol {
   implicit val webhookDecoder: Decoder[Webhook] = deriveDecoder
 
   implicit val auditLogDecoder: Decoder[AuditLog] = {
-    import io.circe.generic.auto._
+    import io.circe.generic.extras.auto._
     deriveDecoder
   }
 
