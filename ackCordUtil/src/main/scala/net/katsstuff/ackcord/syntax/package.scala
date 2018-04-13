@@ -370,6 +370,12 @@ package object syntax {
       */
     def connectedMembers[F[_]: Monad](implicit c: CacheSnapshot[F]): F[Seq[GuildMember]] =
       c.getGuild(channel.guildId).cata(Nil, g => connectedUsers(g).flatMap(g.memberById(_)))
+
+    /**
+      * Get the guild members connected to this voice channel using an preexisting guild.
+      */
+    def connectedMembers(guild: Guild): Seq[GuildMember] =
+      connectedUsers(guild).flatMap(guild.memberById(_))
   }
 
   implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
