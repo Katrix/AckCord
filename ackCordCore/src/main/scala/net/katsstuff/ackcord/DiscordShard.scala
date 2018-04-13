@@ -38,7 +38,6 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.CreateGateway
 import net.katsstuff.ackcord.http.Routes
-import net.katsstuff.ackcord.websocket.AbstractWsHandler
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -65,9 +64,9 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
   override def receive: Receive = {
     case DiscordShard.StopShard =>
       isShuttingDown = true
-      gatewayHandler.forward(AbstractWsHandler.Logout)
+      gatewayHandler.forward(Logout)
     case DiscordShard.StartShard =>
-      gatewayHandler.forward(AbstractWsHandler.Login)
+      gatewayHandler.forward(Login)
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)

@@ -38,7 +38,6 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import cats.{Id, Monad}
-import net.katsstuff.ackcord.DiscordShard.StopShard
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
@@ -95,7 +94,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     */
   def logout(timeout: FiniteDuration = 1.minute): Future[Boolean] = {
     require(shardShutdownManager != null, "Logout before login")
-    val res = gracefulStop(shardShutdownManager, timeout, StopShard)
+    val res = gracefulStop(shardShutdownManager, timeout, DiscordShard.StopShard)
     shardShutdownManager = null
     res
   }
