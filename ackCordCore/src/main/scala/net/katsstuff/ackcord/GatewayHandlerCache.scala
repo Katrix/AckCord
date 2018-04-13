@@ -98,7 +98,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getTChannel(data.channelId)
-                .map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp, state))
+                .map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp.toOption, state))
                 .value,
             NOOPHandler
           )

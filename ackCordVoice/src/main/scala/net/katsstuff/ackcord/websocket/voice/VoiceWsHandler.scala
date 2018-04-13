@@ -42,7 +42,7 @@ import io.circe
 import io.circe.syntax._
 import io.circe.{parser, Error}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
-import net.katsstuff.ackcord.util.AckCordSettings
+import net.katsstuff.ackcord.util.{AckCordSettings, JsonSome, JsonUndefined}
 import net.katsstuff.ackcord.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.websocket.voice.VoiceUDPHandler._
 import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
@@ -335,8 +335,8 @@ class VoiceWsHandler(
       connectionActor ! StartConnection(secretKey)
       sender() ! AckSink
 
-    case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, Some(speakingUserId)))) =>
-      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, userSsrc, isSpeaking, delay, serverId, userId))
+    case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, JsonSome(speakingUserId)))) =>
+      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, userSsrc.toOption, isSpeaking, delay.toOption, serverId, userId))
       sender() ! AckSink
 
     case Right(Resumed)                => sender() ! AckSink //NO-OP

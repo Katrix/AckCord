@@ -30,6 +30,7 @@ import cats.{Eval, Later, Now}
 import io.circe.{Decoder, Encoder, Json}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw._
+import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import net.katsstuff.ackcord.websocket.WsMessage
 import net.katsstuff.ackcord.websocket.gateway.GatewayProtocol._
 import shapeless._
@@ -39,7 +40,7 @@ import shapeless.labelled.FieldType
   * Base trait for all gateway messages.
   */
 sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
-  def t: Option[ComplexGatewayEvent[D, _]] = None
+  def t: JsonOption[ComplexGatewayEvent[D, _]] = JsonUndefined
 }
 
 sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
@@ -54,10 +55,10 @@ sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
   */
 case class Dispatch[D](sequence: Int, event: ComplexGatewayEvent[D, _])(implicit val dataEncoder: Encoder[D])
     extends GatewayMessage[D] {
-  override val s:  Some[Int]                       = Some(sequence)
-  override val t:  Some[ComplexGatewayEvent[D, _]] = Some(event)
-  override def op: GatewayOpCode                   = GatewayOpCode.Dispatch
-  override def d:  Later[Decoder.Result[D]]        = event.data
+  override val s:  JsonSome[Int]                       = JsonSome(sequence)
+  override val t:  JsonSome[ComplexGatewayEvent[D, _]] = JsonSome(event)
+  override def op: GatewayOpCode                       = GatewayOpCode.Dispatch
+  override def d:  Later[Decoder.Result[D]]            = event.data
 }
 
 /**
@@ -385,7 +386,7 @@ object GatewayEvent {
     * @param channelId The channel where the change happened.
     * @param timestamp The time the most recent pinned message was pinned.
     */
-  case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: Option[OffsetDateTime])
+  case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: JsonOption[OffsetDateTime])
 
   /**
     * Sent to the shard when a message is pinned or unpinned in a text
@@ -635,20 +636,20 @@ object GatewayEvent {
   case class RawPartialMessage(
       id: MessageId,
       channelId: ChannelId,
-      author: Option[Author[_]],
-      content: Option[String],
-      timestamp: Option[OffsetDateTime],
-      editedTimestamp: Option[OffsetDateTime],
-      tts: Option[Boolean],
-      mentionEveryone: Option[Boolean],
-      mentions: Option[Seq[User]],
-      mentionRoles: Option[Seq[RoleId]],
-      attachment: Option[Seq[Attachment]],
-      embeds: Option[Seq[ReceivedEmbed]],
-      reactions: Option[Seq[Reaction]],
-      nonce: Option[RawSnowflake],
-      pinned: Option[Boolean],
-      webhookId: Option[String]
+      author: JsonOption[Author[_]],
+      content: JsonOption[String],
+      timestamp: JsonOption[OffsetDateTime],
+      editedTimestamp: JsonOption[OffsetDateTime],
+      tts: JsonOption[Boolean],
+      mentionEveryone: JsonOption[Boolean],
+      mentions: JsonOption[Seq[User]],
+      mentionRoles: JsonOption[Seq[RoleId]],
+      attachment: JsonOption[Seq[Attachment]],
+      embeds: JsonOption[Seq[ReceivedEmbed]],
+      reactions: JsonOption[Seq[Reaction]],
+      nonce: JsonOption[RawSnowflake],
+      pinned: JsonOption[Boolean],
+      webhookId: JsonOption[String]
   )
 
   /**

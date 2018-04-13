@@ -31,6 +31,7 @@ import io.circe.generic.extras.semiauto._
 import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 
 object GatewayProtocol extends DiscordProtocol {
 
@@ -113,7 +114,12 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val rawGuildMemberWithGuildEncoder: Encoder[GatewayEvent.RawGuildMemberWithGuild] = deriveEncoder
   implicit val rawGuildMemberWithGuildDecoder: Decoder[GatewayEvent.RawGuildMemberWithGuild] = deriveDecoder
 
-  implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] = deriveEncoder
+  implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] =
+    (a: GatewayEvent.ChannelPinsUpdateData) =>
+      JsonOption.removeUndefinedToObj(
+        "channel_id" -> JsonSome(a.channelId.asJson),
+        "timestamp"  -> a.timestamp.map(_.asJson)
+    )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] = deriveDecoder
 
   implicit val messageEmojiEncoder: Encoder[PartialEmoji] = deriveEncoder
@@ -130,28 +136,31 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
-      val base = Seq(
-        "id"               -> a.id.asJson,
-        "channel_id"       -> a.channelId.asJson,
-        "content"          -> a.content.asJson,
-        "timestamp"        -> a.timestamp.asJson,
-        "edited_timestamp" -> a.editedTimestamp.asJson,
-        "tts"              -> a.tts.asJson,
-        "mention_everyone" -> a.mentionEveryone.asJson,
-        "mentions"         -> a.mentions.asJson,
-        "mention_roles"    -> a.mentionRoles.asJson,
-        "attachments"      -> a.attachment.asJson,
-        "embeds"           -> a.embeds.asJson,
-        "reactions"        -> a.reactions.asJson,
-        "nonce"            -> a.nonce.asJson,
-        "pinned"           -> a.pinned.asJson,
-        "webhook_id"       -> a.webhookId.asJson
+      val base = JsonOption.removeUndefined(
+        Seq(
+          "id"               -> JsonSome(a.id.asJson),
+          "channel_id"       -> JsonSome(a.channelId.asJson),
+          "content"          -> a.content.map(_.asJson),
+          "timestamp"        -> a.timestamp.map(_.asJson),
+          "edited_timestamp" -> a.editedTimestamp.map(_.asJson),
+          "tts"              -> a.tts.map(_.asJson),
+          "mention_everyone" -> a.mentionEveryone.map(_.asJson),
+          "mentions"         -> a.mentions.map(_.asJson),
+          "mention_roles"    -> a.mentionRoles.map(_.asJson),
+          "attachments"      -> a.attachment.map(_.asJson),
+          "embeds"           -> a.embeds.map(_.asJson),
+          "reactions"        -> a.reactions.map(_.asJson),
+          "nonce"            -> a.nonce.map(_.asJson),
+          "pinned"           -> a.pinned.map(_.asJson),
+          "webhook_id"       -> a.webhookId.map(_.asJson)
+        )
       )
 
       a.author match {
-        case Some(user: User)             => Json.obj(base :+ "author" -> user.asJson: _*)
-        case Some(webhook: WebhookAuthor) => Json.obj(base :+ "author" -> webhook.asJson: _*)
-        case None                         => Json.obj(base: _*)
+        case JsonSome(user: User)             => Json.obj(base :+ "author" -> user.asJson: _*)
+        case JsonSome(webhook: WebhookAuthor) => Json.obj(base :+ "author" -> webhook.asJson: _*)
+        case JsonNull                         => Json.obj(base :+ "author" -> Json.Null: _*)
+        case JsonUndefined                    => Json.obj(base: _*)
       }
     }
 
@@ -162,22 +171,22 @@ object GatewayProtocol extends DiscordProtocol {
       id        <- c.downField("id").as[MessageId]
       channelId <- c.downField("channel_id").as[ChannelId]
       author <- {
-        if (isWebhook) c.downField("author").as[Option[WebhookAuthor]]
-        else c.downField("author").as[Option[User]]
+        if (isWebhook) c.downField("author").as[JsonOption[WebhookAuthor]]
+        else c.downField("author").as[JsonOption[User]]
       }
-      content         <- c.downField("content").as[Option[String]]
-      timestamp       <- c.downField("timestamp").as[Option[OffsetDateTime]]
-      editedTimestamp <- c.downField("edited_timestamp").as[Option[OffsetDateTime]]
-      tts             <- c.downField("tts").as[Option[Boolean]]
-      mentionEveryone <- c.downField("mention_everyone").as[Option[Boolean]]
-      mentions        <- c.downField("mentions").as[Option[Seq[User]]]
-      mentionRoles    <- c.downField("mention_roles").as[Option[Seq[RoleId]]]
-      attachment      <- c.downField("attachments").as[Option[Seq[Attachment]]]
-      embeds          <- c.downField("embeds").as[Option[Seq[ReceivedEmbed]]]
-      reactions       <- c.downField("reactions").as[Option[Seq[Reaction]]]
-      nonce           <- c.downField("nonce").as[Option[RawSnowflake]]
-      pinned          <- c.downField("pinned").as[Option[Boolean]]
-      webhookId       <- c.downField("webhook_id").as[Option[String]]
+      content         <- c.downField("content").as[JsonOption[String]]
+      timestamp       <- c.downField("timestamp").as[JsonOption[OffsetDateTime]]
+      editedTimestamp <- c.downField("edited_timestamp").as[JsonOption[OffsetDateTime]]
+      tts             <- c.downField("tts").as[JsonOption[Boolean]]
+      mentionEveryone <- c.downField("mention_everyone").as[JsonOption[Boolean]]
+      mentions        <- c.downField("mentions").as[JsonOption[Seq[User]]]
+      mentionRoles    <- c.downField("mention_roles").as[JsonOption[Seq[RoleId]]]
+      attachment      <- c.downField("attachments").as[JsonOption[Seq[Attachment]]]
+      embeds          <- c.downField("embeds").as[JsonOption[Seq[ReceivedEmbed]]]
+      reactions       <- c.downField("reactions").as[JsonOption[Seq[Reaction]]]
+      nonce           <- c.downField("nonce").as[JsonOption[RawSnowflake]]
+      pinned          <- c.downField("pinned").as[JsonOption[Boolean]]
+      webhookId       <- c.downField("webhook_id").as[JsonOption[String]]
     } yield
       GatewayEvent.RawPartialMessage(
         id,
@@ -201,11 +210,11 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit def wsMessageEncoder[D]: Encoder[GatewayMessage[D]] =
     (a: GatewayMessage[D]) =>
-      Json.obj(
-        "op" -> a.op.asJson,
-        "d"  -> a.dataEncoder(a.d.value.toTry.get),
-        "s"  -> a.s.asJson,
-        "t"  -> a.t.map(_.name).asJson
+      JsonOption.removeUndefinedToObj(
+        "op" -> JsonSome(a.op.asJson),
+        "d"  -> JsonSome(a.dataEncoder(a.d.value.toTry.get)),
+        "s"  -> a.s.map(_.asJson),
+        "t"  -> a.t.map(_.name.asJson)
     )
 
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {

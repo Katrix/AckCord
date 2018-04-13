@@ -32,7 +32,7 @@ import cats.{Functor, Monad, Traverse}
 import cats.data.OptionT
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.rest._
-import net.katsstuff.ackcord.http.rest.{RestOption, RestSome, RestUndefined}
+import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 
 package object syntax {
 
@@ -245,12 +245,12 @@ package object syntax {
       * @param category The new category id of the channel.
       */
     def modify[Ctx](
-        name: RestOption[String] = RestUndefined,
-        position: RestOption[Int] = RestUndefined,
-        topic: RestOption[String] = RestUndefined,
-        nsfw: RestOption[Boolean] = RestUndefined,
-        permissionOverwrites: RestOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = RestUndefined,
-        category: RestOption[ChannelId] = RestUndefined,
+        name: JsonOption[String] = JsonUndefined,
+        position: JsonOption[Int] = JsonUndefined,
+        topic: JsonOption[String] = JsonUndefined,
+        nsfw: JsonOption[Boolean] = JsonUndefined,
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[ChannelId] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = ModifyChannel(
       channel.id,
@@ -259,8 +259,8 @@ package object syntax {
         position = position,
         topic = topic,
         nsfw = nsfw,
-        bitrate = RestUndefined,
-        userLimit = RestUndefined,
+        bitrate = JsonUndefined,
+        userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
         parentId = category
       ),
@@ -326,19 +326,19 @@ package object syntax {
       * @param category The new category id of the channel.
       */
     def modify[Ctx](
-        name: RestOption[String] = RestUndefined,
-        position: RestOption[Int] = RestUndefined,
-        bitrate: RestOption[Int] = RestUndefined,
-        userLimit: RestOption[Int] = RestUndefined,
-        permissionOverwrites: RestOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = RestUndefined,
-        category: RestOption[ChannelId] = RestUndefined,
+        name: JsonOption[String] = JsonUndefined,
+        position: JsonOption[Int] = JsonUndefined,
+        bitrate: JsonOption[Int] = JsonUndefined,
+        userLimit: JsonOption[Int] = JsonUndefined,
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[ChannelId] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
         name = name,
         position = position,
-        nsfw = RestUndefined,
+        nsfw = JsonUndefined,
         bitrate = bitrate,
         userLimit = userLimit,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
@@ -518,18 +518,18 @@ package object syntax {
       * @param permissionOverwrites The new category permission overwrites.
       */
     def modify[Ctx](
-        name: RestOption[String] = RestUndefined,
-        position: RestOption[Int] = RestUndefined,
-        permissionOverwrites: RestOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = RestUndefined,
+        name: JsonOption[String] = JsonUndefined,
+        position: JsonOption[Int] = JsonUndefined,
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = ModifyChannel(
       category.id,
       ModifyChannelData(
         name = name,
         position = position,
-        nsfw = RestUndefined,
+        nsfw = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
-        parentId = RestUndefined
+        parentId = JsonUndefined
       ),
       context
     )
@@ -596,17 +596,17 @@ package object syntax {
       */
     def createTextChannel[Ctx](
         name: String,
-        permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
-        category: RestOption[ChannelId] = RestUndefined,
-        nsfw: RestOption[Boolean] = RestUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[ChannelId] = JsonUndefined,
+        nsfw: JsonOption[Boolean] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
         name = name,
-        `type` = RestSome(ChannelType.GuildText),
-        bitrate = RestUndefined,
-        userLimit = RestUndefined,
+        `type` = JsonSome(ChannelType.GuildText),
+        bitrate = JsonUndefined,
+        userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites,
         parentId = category,
         nsfw = nsfw
@@ -625,17 +625,17 @@ package object syntax {
       */
     def createVoiceChannel[Ctx](
         name: String,
-        bitrate: RestOption[Int] = RestUndefined,
-        userLimit: RestOption[Int] = RestUndefined,
-        permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
-        category: RestOption[ChannelId] = RestUndefined,
-        nsfw: RestOption[Boolean] = RestUndefined,
+        bitrate: JsonOption[Int] = JsonUndefined,
+        userLimit: JsonOption[Int] = JsonUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[ChannelId] = JsonUndefined,
+        nsfw: JsonOption[Boolean] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
         name,
-        RestSome(ChannelType.GuildVoice),
+        JsonSome(ChannelType.GuildVoice),
         bitrate,
         userLimit,
         permissionOverwrites,
@@ -653,18 +653,18 @@ package object syntax {
       */
     def createCategory[Ctx](
         name: String,
-        permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
-        nsfw: RestOption[Boolean] = RestUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
+        nsfw: JsonOption[Boolean] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
         name = name,
-        `type` = RestSome(ChannelType.GuildCategory),
-        bitrate = RestUndefined,
-        userLimit = RestUndefined,
+        `type` = JsonSome(ChannelType.GuildCategory),
+        bitrate = JsonUndefined,
+        userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites,
-        parentId = RestUndefined,
+        parentId = JsonUndefined,
         nsfw = nsfw
       ),
       context
@@ -1036,11 +1036,11 @@ package object syntax {
       * @param channelId The id of the channel to move the user to.
       */
     def modify[Ctx](
-        nick: RestOption[String] = RestUndefined,
-        roles: RestOption[Seq[RoleId]] = RestUndefined,
-        mute: RestOption[Boolean] = RestUndefined,
-        deaf: RestOption[Boolean] = RestUndefined,
-        channelId: RestOption[ChannelId] = RestUndefined,
+        nick: JsonOption[String] = JsonUndefined,
+        roles: JsonOption[Seq[RoleId]] = JsonUndefined,
+        mute: JsonOption[Boolean] = JsonUndefined,
+        deaf: JsonOption[Boolean] = JsonUndefined,
+        channelId: JsonOption[ChannelId] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) =
       ModifyGuildMember(
@@ -1175,8 +1175,8 @@ package object syntax {
       * @param embed The new embed of this message
       */
     def edit[Ctx](
-        content: RestOption[String] = RestUndefined,
-        embed: RestOption[OutgoingEmbed] = RestUndefined,
+        content: JsonOption[String] = JsonUndefined,
+        embed: JsonOption[OutgoingEmbed] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
     ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed), context)
 

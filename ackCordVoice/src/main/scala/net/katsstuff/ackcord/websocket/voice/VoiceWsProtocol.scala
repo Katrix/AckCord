@@ -28,6 +28,7 @@ import io.circe._
 import io.circe.generic.extras.semiauto._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data.DiscordProtocol
+import net.katsstuff.ackcord.util.{JsonOption, JsonSome}
 
 object VoiceWsProtocol extends DiscordProtocol {
 
@@ -58,14 +59,24 @@ object VoiceWsProtocol extends DiscordProtocol {
     } yield SessionDescriptionData(mode, ByteString(secretKey.map(_.toByte): _*))
   }
 
-  implicit val speakingDataEncoder: Encoder[SpeakingData] = deriveEncoder
+  implicit val speakingDataEncoder: Encoder[SpeakingData] = (a: SpeakingData) => JsonOption.removeUndefinedToObj(
+    "speaking" -> JsonSome(a.speaking.asJson),
+    "delay" -> a.delay.map(_.asJson),
+    "ssrc" -> a.ssrc.map(_.asJson),
+    "user_id" -> a.userId.map(_.asJson)
+  )
   implicit val speakingDataDecoder: Decoder[SpeakingData] = deriveDecoder
 
   implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
   implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
-    (a: VoiceMessage[Data]) => Json.obj("op" -> a.op.asJson, "d" -> a.dataEncoder(a.nowD), "s" -> a.s.asJson)
+    (a: VoiceMessage[Data]) =>
+      JsonOption.removeUndefinedToObj(
+        "op" -> JsonSome(a.op.asJson),
+        "d"  -> JsonSome(a.dataEncoder(a.nowD)),
+        "s"  -> a.s.map(_.asJson)
+    )
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
     c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>

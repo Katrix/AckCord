@@ -36,6 +36,7 @@ import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.RequestRoute
 import net.katsstuff.ackcord.{CacheSnapshot, SnowflakeMap}
 import net.katsstuff.ackcord.data.DiscordProtocol._
+import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 
 /**
   * @param name The name of the guild
@@ -164,19 +165,19 @@ case class GetGuildChannels[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
   */
 case class CreateGuildChannelData(
     name: String,
-    `type`: RestOption[ChannelType] = RestUndefined,
-    bitrate: RestOption[Int] = RestUndefined,
-    userLimit: RestOption[Int] = RestUndefined,
-    permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
-    parentId: RestOption[ChannelId] = RestUndefined,
-    nsfw: RestOption[Boolean] = RestUndefined
+    `type`: JsonOption[ChannelType] = JsonUndefined,
+    bitrate: JsonOption[Int] = JsonUndefined,
+    userLimit: JsonOption[Int] = JsonUndefined,
+    permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
+    parentId: JsonOption[ChannelId] = JsonUndefined,
+    nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
   require(name.length >= 2 && name.length <= 100, "A channel name has to be between 2 and 100 characters")
 }
 object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
-    RestOption.removeUndefinedToObj(
-      "name"                  -> RestSome(a.name.asJson),
+    JsonOption.removeUndefinedToObj(
+      "name"                  -> JsonSome(a.name.asJson),
       "type"                  -> a.`type`.map(_.asJson),
       "bitrate"               -> a.bitrate.map(_.asJson),
       "user_limit"            -> a.userLimit.map(_.asJson),
@@ -339,15 +340,15 @@ case class AddGuildMember[Ctx](
   * @param channelId The id of the channel to move the user to.
   */
 case class ModifyGuildMemberData(
-    nick: RestOption[String] = RestUndefined,
-    roles: RestOption[Seq[RoleId]] = RestUndefined,
-    mute: RestOption[Boolean] = RestUndefined,
-    deaf: RestOption[Boolean] = RestUndefined,
-    channelId: RestOption[ChannelId] = RestUndefined
+    nick: JsonOption[String] = JsonUndefined,
+    roles: JsonOption[Seq[RoleId]] = JsonUndefined,
+    mute: JsonOption[Boolean] = JsonUndefined,
+    deaf: JsonOption[Boolean] = JsonUndefined,
+    channelId: JsonOption[ChannelId] = JsonUndefined
 )
 object ModifyGuildMemberData {
   implicit val encoder: Encoder[ModifyGuildMemberData] = (a: ModifyGuildMemberData) =>
-    RestOption.removeUndefinedToObj(
+    JsonOption.removeUndefinedToObj(
       "nick"       -> a.nick.map(_.asJson),
       "roles"      -> a.roles.map(_.asJson),
       "mute"       -> a.mute.map(_.asJson),
@@ -372,7 +373,7 @@ case class ModifyGuildMember[Ctx](
   override def paramsEncoder: Encoder[ModifyGuildMemberData] = ModifyGuildMemberData.encoder
 
   override def requiredPermissions: Permission = {
-    def ifDefined(opt: RestOption[_], perm: Permission): Permission = if (opt.nonEmpty) perm else Permission.None
+    def ifDefined(opt: JsonOption[_], perm: Permission): Permission = if (opt.nonEmpty) perm else Permission.None
     Permission(
       Permission.CreateInstantInvite,
       ifDefined(params.nick, Permission.ManageNicknames),

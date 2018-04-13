@@ -28,6 +28,7 @@ import akka.util.ByteString
 import cats.Now
 import io.circe.{Decoder, Encoder, Json}
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.util.JsonOption
 import net.katsstuff.ackcord.websocket.WsMessage
 import net.katsstuff.ackcord.websocket.voice.VoiceWsProtocol._
 
@@ -130,7 +131,7 @@ case class SessionDescription(nowD: SessionDescriptionData) extends VoiceMessage
   * @param ssrc The ssrc of the speaking user
   * @param userId Optional user id
   */
-case class SpeakingData(speaking: Boolean, delay: Option[Int], ssrc: Int, userId: Option[UserId])
+case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId])
 
 /**
   * Sent by Discord when a user is speaking, anc client when we want to

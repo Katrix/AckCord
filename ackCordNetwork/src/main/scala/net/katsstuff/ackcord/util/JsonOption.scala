@@ -21,30 +21,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.http.rest
+package net.katsstuff.ackcord.util
 
 import io.circe._
 
-object RestOption {
+object JsonOption {
 
-  implicit def decodeRestOption[A](implicit decodeOpt: Decoder[Option[A]]): Decoder[RestOption[A]] =
+  implicit def decodeRestOption[A](implicit decodeOpt: Decoder[Option[A]]): Decoder[JsonOption[A]] =
     Decoder.withReattempt { c =>
-      if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(RestUndefined)
+      if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(JsonUndefined)
     }
 
-  def fromOptionWithNull[A](opt: Option[A]): RestOption[A] = opt.fold[RestOption[A]](RestNull)(RestSome.apply)
+  def fromOptionWithNull[A](opt: Option[A]): JsonOption[A] = opt.fold[JsonOption[A]](JsonNull)(JsonSome.apply)
 
-  def fromOptionWithUndefined[A](opt: Option[A]): RestOption[A] = opt.fold[RestOption[A]](RestUndefined)(RestSome.apply)
+  def fromOptionWithUndefined[A](opt: Option[A]): JsonOption[A] = opt.fold[JsonOption[A]](JsonUndefined)(JsonSome.apply)
 
-  def removeUndefined[A](seq: Seq[(String, RestOption[Json])]): Seq[(String, Json)] = seq.flatMap {
-    case (name, RestSome(json)) => Some(name -> json)
-    case (name, RestNull)       => Some(name -> Json.Null)
-    case (_, RestUndefined)     => None
+  def removeUndefined[A](seq: Seq[(String, JsonOption[Json])]): Seq[(String, Json)] = seq.flatMap {
+    case (name, JsonSome(json)) => Some(name -> json)
+    case (name, JsonNull)       => Some(name -> Json.Null)
+    case (_, JsonUndefined)     => None
   }
 
-  def removeUndefinedToObj(seq: (String, RestOption[Json])*): Json = Json.obj(removeUndefined(seq): _*)
+  def removeUndefinedToObj(seq: (String, JsonOption[Json])*): Json = Json.obj(removeUndefined(seq): _*)
 }
-sealed trait RestOption[+A] {
+sealed trait JsonOption[+A] {
 
   def isNull:      Boolean
   def isUndefined: Boolean
@@ -55,8 +55,8 @@ sealed trait RestOption[+A] {
 
   def fold[B](ifNull: => B, ifUndefined: => B)(f: A => B): B
 
-  def map[B](f: A => B):                 RestOption[B]
-  def flatMap[B](f: A => RestOption[B]): RestOption[B]
+  def map[B](f: A => B):                 JsonOption[B]
+  def flatMap[B](f: A => JsonOption[B]): JsonOption[B]
 
   def contains[A1 >: A](value: A1):      Boolean
   def exists[A1 >: A](f: A1 => Boolean): Boolean
@@ -64,12 +64,14 @@ sealed trait RestOption[+A] {
 
   def foreach[A1 >: A](f: A1 => Unit): Unit
 
-  def getOrElse[B >: A](other: => B):          B
-  def orElse[B >: A](other: => RestOption[B]): RestOption[B]
+  def getOrElse[B >: A](other: => B):                 B
+  def getOrElseIfUndefined[B >: A](other: => B):      Option[B]
+  def orElse[B >: A](other: => JsonOption[B]):        JsonOption[B]
+  def orElseIfUndefined[B >: A](other: => Option[B]): Option[B]
 
   def toList[A1 >: A]: List[A]
 }
-case class RestSome[A](value: A) extends RestOption[A] {
+case class JsonSome[A](value: A) extends JsonOption[A] {
   override def isNull:      Boolean = false
   override def isUndefined: Boolean = false
   override def isEmpty:     Boolean = false
@@ -78,8 +80,8 @@ case class RestSome[A](value: A) extends RestOption[A] {
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: A => B): B = f(value)
 
-  override def map[B](f: A => B):                 RestOption[B] = RestSome(f(value))
-  override def flatMap[B](f: A => RestOption[B]): RestOption[B] = f(value)
+  override def map[B](f: A => B):                 JsonOption[B] = JsonSome(f(value))
+  override def flatMap[B](f: A => JsonOption[B]): JsonOption[B] = f(value)
 
   override def contains[A1 >: A](value: A1):      Boolean = this.value == value
   override def exists[A1 >: A](f: A1 => Boolean): Boolean = f(value)
@@ -87,13 +89,15 @@ case class RestSome[A](value: A) extends RestOption[A] {
 
   override def foreach[A1 >: A](f: A1 => Unit): Unit = f(value)
 
-  override def getOrElse[B >: A](other: => B):          B             = value
-  override def orElse[B >: A](other: => RestOption[B]): RestOption[B] = this
+  override def getOrElse[B >: A](other: => B):                 B             = value
+  override def getOrElseIfUndefined[B >: A](other: => B):      Option[B]     = Some(value)
+  override def orElse[B >: A](other: => JsonOption[B]):        JsonOption[B] = this
+  override def orElseIfUndefined[B >: A](other: => Option[B]): Option[B]     = Some(value)
 
   override def toList[A1 >: A]: List[A] = List(value)
 }
 
-case object RestNull extends RestOption[Nothing] {
+case object JsonNull extends JsonOption[Nothing] {
   override def isNull:      Boolean = true
   override def isUndefined: Boolean = false
   override def isEmpty:     Boolean = true
@@ -102,8 +106,8 @@ case object RestNull extends RestOption[Nothing] {
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: Nothing => B): B = ifNull
 
-  override def map[B](f: Nothing => B):                 RestOption[B] = this
-  override def flatMap[B](f: Nothing => RestOption[B]): RestOption[B] = this
+  override def map[B](f: Nothing => B):                 JsonOption[B] = this
+  override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
   override def contains[A1 >: Nothing](value: A1):      Boolean = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false
@@ -111,13 +115,15 @@ case object RestNull extends RestOption[Nothing] {
 
   override def foreach[A1 >: Nothing](f: A1 => Unit): Unit = ()
 
-  override def getOrElse[B >: Nothing](other: => B):          B             = other
-  override def orElse[B >: Nothing](other: => RestOption[B]): RestOption[B] = other
+  override def getOrElse[B >: Nothing](other: => B):                 B             = other
+  override def getOrElseIfUndefined[B >: Nothing](other: => B):      Option[B]     = None
+  override def orElse[B >: Nothing](other: => JsonOption[B]):        JsonOption[B] = other
+  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B]     = None
 
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
 }
 
-case object RestUndefined extends RestOption[Nothing] {
+case object JsonUndefined extends JsonOption[Nothing] {
   override def isNull:      Boolean = false
   override def isUndefined: Boolean = true
   override def isEmpty:     Boolean = true
@@ -126,8 +132,8 @@ case object RestUndefined extends RestOption[Nothing] {
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: Nothing => B): B = ifUndefined
 
-  override def map[B](f: Nothing => B):                 RestOption[B] = this
-  override def flatMap[B](f: Nothing => RestOption[B]): RestOption[B] = this
+  override def map[B](f: Nothing => B):                 JsonOption[B] = this
+  override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
   override def contains[A1 >: Nothing](value: A1):      Boolean = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false
@@ -135,8 +141,10 @@ case object RestUndefined extends RestOption[Nothing] {
 
   override def foreach[A1 >: Nothing](f: A1 => Unit): Unit = ()
 
-  override def getOrElse[B >: Nothing](other: => B):          B             = other
-  override def orElse[B >: Nothing](other: => RestOption[B]): RestOption[B] = other
+  override def getOrElse[B >: Nothing](other: => B):                 B             = other
+  override def getOrElseIfUndefined[B >: Nothing](other: => B):      Option[B]     = Some(other)
+  override def orElse[B >: Nothing](other: => JsonOption[B]):        JsonOption[B] = other
+  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B]     = other
 
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
 }

@@ -40,6 +40,7 @@ import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.RequestRoute
 import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.DiscordProtocol._
+import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 
 /**
   * Get a channel by id.
@@ -66,14 +67,14 @@ case class GetChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed
   * @param parentId The new category id of the channel.
   */
 case class ModifyChannelData(
-    name: RestOption[String] = RestUndefined,
-    position: RestOption[Int] = RestUndefined,
-    topic: RestOption[String] = RestUndefined,
-    nsfw: RestOption[Boolean] = RestUndefined,
-    bitrate: RestOption[Int] = RestUndefined,
-    userLimit: RestOption[Int] = RestUndefined,
-    permissionOverwrites: RestOption[Seq[PermissionOverwrite]] = RestUndefined,
-    parentId: RestOption[ChannelId] = RestUndefined
+    name: JsonOption[String] = JsonUndefined,
+    position: JsonOption[Int] = JsonUndefined,
+    topic: JsonOption[String] = JsonUndefined,
+    nsfw: JsonOption[Boolean] = JsonUndefined,
+    bitrate: JsonOption[Int] = JsonUndefined,
+    userLimit: JsonOption[Int] = JsonUndefined,
+    permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
+    parentId: JsonOption[ChannelId] = JsonUndefined
 ) {
   require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
   require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
@@ -82,7 +83,7 @@ case class ModifyChannelData(
 }
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
-    RestOption.removeUndefinedToObj(
+    JsonOption.removeUndefinedToObj(
       "name"                  -> a.name.map(_.asJson),
       "position"              -> a.position.map(_.asJson),
       "topic"                 -> a.topic.map(_.asJson),
@@ -381,14 +382,14 @@ case class DeleteAllReactions[Ctx](channelId: ChannelId, messageId: MessageId, c
   * @param embed The embed of the new message
   */
 case class EditMessageData(
-    content: RestOption[String] = RestUndefined,
-    embed: RestOption[OutgoingEmbed] = RestUndefined
+    content: JsonOption[String] = JsonUndefined,
+    embed: JsonOption[OutgoingEmbed] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
-    RestOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "content" -> a.embed.map(_.asJson))
+    JsonOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "content" -> a.embed.map(_.asJson))
 }
 
 /**
@@ -413,14 +414,14 @@ object EditMessage {
       messageId: MessageId,
       content: String,
       context: Ctx = NotUsed: NotUsed
-  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(RestSome(content)), context)
+  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(JsonSome(content)), context)
 
   def mkEmbed[Ctx](
       channelId: ChannelId,
       messageId: MessageId,
       embed: OutgoingEmbed,
       context: Ctx = NotUsed: NotUsed
-  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = RestSome(embed)), context)
+  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = JsonSome(embed)), context)
 }
 
 /**

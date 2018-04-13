@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.websocket
 
 import cats.Eval
 import io.circe.{Decoder, Encoder}
+import net.katsstuff.ackcord.util.{JsonOption, JsonUndefined}
 
 /**
   * Represents a message sent by websocket handlers
@@ -47,7 +48,7 @@ private[websocket] trait WsMessage[D, OpCode] {
   /**
     * A sequence number for the message if there is one.
     */
-  def s: Option[Int] = None
+  def s: JsonOption[Int] = JsonUndefined
 
   /**
     * An encoder for the message.

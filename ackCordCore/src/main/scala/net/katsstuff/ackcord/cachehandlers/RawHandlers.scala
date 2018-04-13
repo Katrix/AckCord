@@ -194,7 +194,7 @@ object RawHandlers extends Handlers {
           isAuthorUser = obj.author.map(_.isUser).getOrElse(message.isAuthorUser),
           content = obj.content.getOrElse(message.content),
           timestamp = obj.timestamp.getOrElse(message.timestamp),
-          editedTimestamp = obj.editedTimestamp.orElse(message.editedTimestamp),
+          editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
           tts = obj.tts.getOrElse(message.tts),
           mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
           mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
@@ -202,7 +202,7 @@ object RawHandlers extends Handlers {
           attachment = obj.attachment.getOrElse(message.attachment),
           embeds = obj.embeds.getOrElse(message.embeds),
           reactions = obj.reactions.getOrElse(message.reactions),
-          nonce = obj.nonce.orElse(message.nonce),
+          nonce = obj.nonce.orElseIfUndefined(message.nonce),
           pinned = obj.pinned.getOrElse(message.pinned),
         )
 

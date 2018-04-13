@@ -55,7 +55,7 @@ object AudioAPIMessage {
     */
   case class UserSpeaking(
       speakingUserId: UserId,
-      ssrc: Int,
+      ssrc: Option[Int],
       isSpeaking: Boolean,
       delay: Option[Int],
       serverId: RawSnowflake,
