@@ -28,7 +28,7 @@ import scala.collection.mutable
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
-import akka.stream.Materializer
+import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import net.katsstuff.ackcord.cachehandlers.CacheSnapshotBuilder
 import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
@@ -47,6 +47,7 @@ object CacheStreams {
       .source[CacheUpdate[D]](perProducerBufferSize = 16)
       .via(cacheUpdater[D])
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+      .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
       .run()
 
     (sink, source)
@@ -62,6 +63,7 @@ object CacheStreams {
     MergeHub
       .source[GatewayMessage[D]](perProducerBufferSize = 16)
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+      .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
       .run()
   }
 

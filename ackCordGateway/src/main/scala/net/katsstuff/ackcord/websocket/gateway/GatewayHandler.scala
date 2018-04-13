@@ -32,7 +32,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.pattern.pipe
 import akka.stream.scaladsl._
-import akka.stream.{KillSwitches, Materializer, SharedKillSwitch}
+import akka.stream.{ActorAttributes, KillSwitches, Materializer, SharedKillSwitch, Supervision}
 import net.katsstuff.ackcord.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.websocket.gateway.GatewayHandler.ConnectionDied
 import net.katsstuff.ackcord.AckCord
@@ -75,6 +75,7 @@ class GatewayHandler(
         .viaMat(wsFlow)(Keep.right)
         .via(killSwitch.flow)
         .toMat(sink)(Keep.left)
+        .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
         .run()
 
       newResumeData.map(ConnectionDied).pipeTo(self)

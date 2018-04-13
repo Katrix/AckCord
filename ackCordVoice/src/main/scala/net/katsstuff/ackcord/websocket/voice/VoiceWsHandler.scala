@@ -35,12 +35,13 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws._
+import akka.stream.ActorAttributes.SupervisionStrategy
 import akka.stream.scaladsl.{Compression, Flow, Keep, Sink, Source, SourceQueueWithComplete}
-import akka.stream.{Attributes, Materializer, OverflowStrategy}
+import akka.stream.{ActorAttributes, Attributes, Materializer, OverflowStrategy, Supervision}
 import akka.util.ByteString
 import io.circe
 import io.circe.syntax._
-import io.circe.{parser, Error}
+import io.circe.{Error, parser}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.util.{AckCordSettings, JsonSome, JsonUndefined}
 import net.katsstuff.ackcord.websocket.AbstractWsHandler
@@ -169,6 +170,7 @@ class VoiceWsHandler(
       val (sourceQueue, future) = src
         .viaMat(flow)(Keep.both)
         .toMat(sink)(Keep.left)
+        .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
         .run()
 
       future.pipeTo(self)

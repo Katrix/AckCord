@@ -26,7 +26,7 @@ package net.katsstuff.ackcord.commands
 import java.util.Locale
 
 import akka.NotUsed
-import akka.stream.Materializer
+import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import cats.Id
 import net.katsstuff.ackcord.{APIMessage, MemoryCacheSnapshot}
@@ -66,6 +66,7 @@ object CmdStreams {
       }
       .mapConcat(_.toList)
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+      .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
       .run()
   }
 
