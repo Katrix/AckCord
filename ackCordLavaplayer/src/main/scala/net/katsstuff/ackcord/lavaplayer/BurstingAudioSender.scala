@@ -93,10 +93,12 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
     val expectedDiff = expectedTime - currentTime
 
     if (expectedDiff < AheadLimit && expectedDiff > BehindLimit) {
+      awaitingPackets = 0.max(awaitingPackets - num)
       sendPackets(num)
     } else if (expectedDiff <= BehindLimit) {
       log.warning("Behind on sending data with {} ms", expectedDiff.abs)
       val extra = expectedDiff.toInt.abs / 20
+      awaitingPackets = 0.max(awaitingPackets - num)
       sendPackets(num + extra)
     } else {
       awaitingPackets += num
@@ -123,9 +125,8 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
         expectedTime = 0 //If we did not manage to send any packets we reset everything
         20
       } else {
-        val notSentTime = notSent * 20
-        expectedTime += notSentTime
-        notSentTime
+        expectedTime += sentNum * 20
+        notSent * 20
       }
       timers.startSingleTimer("RetryRequest", SendAudio, untilRetry.millis)
     } else {
