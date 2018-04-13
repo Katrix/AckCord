@@ -115,12 +115,9 @@ object RequestStreams {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val in                = builder.add(Flow[Request[Data, Ctx]])
-      val buffer            = builder.add(Flow[Request[Data, Ctx]].buffer(bufferSize, overflowStrategy))
-      val globalRateLimiter = builder.add(new GlobalRatelimiter[Data, Ctx].named("GlobalRateLimiter"))
-      val globalMain        = FlowShape(globalRateLimiter.in0, globalRateLimiter.out)
-      val globalSecondary   = globalRateLimiter.in1
-      val uri               = builder.add(requestFlowWithRouteRatelimit[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
+      val in         = builder.add(Flow[Request[Data, Ctx]])
+      val buffer     = builder.add(Flow[Request[Data, Ctx]].buffer(bufferSize, overflowStrategy))
+      val ratelimits = builder.add(ratelimitFlow[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
 
       val partition = builder.add(Partition[MaybeRequest[Data, Ctx]](2, {
         case _: RequestDropped[_] => 1
@@ -129,19 +126,13 @@ object RequestStreams {
       val requests = partition.out(0).collect { case request: Request[Data, Ctx]  => request }
       val dropped  = partition.out(1).collect { case dropped: RequestDropped[Ctx] => dropped }
 
-      val network      = builder.add(requestFlowWithoutRatelimit[Data, Ctx](credentials, parallelism, rateLimitActor))
-      val answerFanout = builder.add(Broadcast[RequestAnswer[Data, Ctx]](2))
-      val out          = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
-
-      val ratelimited = builder.add(Flow[RequestAnswer[Data, Ctx]].collect {
-        case req: RequestRatelimited[Ctx] if req.global => req
-      })
+      val network = builder.add(requestFlowWithoutRatelimit[Data, Ctx](credentials, parallelism, rateLimitActor))
+      val out     = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
       // format: OFF
-      in ~> buffer ~> globalMain ~> uri ~> partition
-                                           requests ~> network ~> answerFanout ~> out
-                                           dropped  ~>                            out
-                      globalSecondary   <~ ratelimited         <~ answerFanout
+      in ~> buffer ~> ratelimits ~> partition
+                                    requests ~> network ~> out
+                                    dropped  ~>            out
       // format: ON
 
       FlowShape(in.in, out.out)
@@ -157,11 +148,9 @@ object RequestStreams {
     *                       specific ratelimits.
     * @param parallelism The amount of requests to run at the same time.
     */
-  def requestFlowWithRouteRatelimit[Data, Ctx](
-      ratelimiter: ActorRef,
-      maxAllowedWait: FiniteDuration,
-      parallelism: Int = 4
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] = {
+  def ratelimitFlow[Data, Ctx](ratelimiter: ActorRef, maxAllowedWait: FiniteDuration, parallelism: Int = 4)(
+      implicit system: ActorSystem
+  ): Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
     Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
       //We don't use ask here to get be able to create a RequestDropped instance
@@ -172,7 +161,7 @@ object RequestStreams {
         case _: AskTimeoutException => RequestDropped(request.context, request.route.uri, request.route.rawRoute)
       }
     }
-  }.named("UriRatelimiter")
+  }.named("Ratelimiter")
 
   private def createHttpRequestFlow[Data, Ctx](
       credentials: HttpCredentials
@@ -273,12 +262,17 @@ object RequestStreams {
   private def sendRatelimitUpdates[Data, Ctx](rateLimitActor: ActorRef): Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink
       .foreach[RequestAnswer[Data, Ctx]] { answer =>
+        val isGlobal = answer match {
+          case ratelimited: RequestRatelimited[Ctx] => ratelimited.global
+          case _                                    => false
+        }
+
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
         val requestLimit      = answer.uriRequestLimit
         val rawRoute          = answer.rawRoute
         if (tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
-          rateLimitActor ! Ratelimiter.UpdateRatelimits(rawRoute, tilReset, remainingRequests, requestLimit)
+          rateLimitActor ! Ratelimiter.UpdateRatelimits(rawRoute, isGlobal, tilReset, remainingRequests, requestLimit)
         }
       }
       .async

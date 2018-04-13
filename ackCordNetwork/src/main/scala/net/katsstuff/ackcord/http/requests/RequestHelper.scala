@@ -55,13 +55,6 @@ case class RequestHelper(
     RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
 
   /**
-    * A request flow which obeys route specific rate limits, but not global ones.
-    * Don't use this if you don't know what you're doing.
-    */
-  def flowWithRouteRatelimit[Data, Ctx]: Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] =
-    RequestStreams.requestFlowWithRouteRatelimit[Data, Ctx](ratelimitActor, maxAllowedWait, parallelism)
-
-  /**
     * A generic flow for making requests. You should use this one most of
     * the time. Backpressures before it hits a ratelimit.
     */
