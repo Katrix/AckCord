@@ -251,9 +251,9 @@ lazy val doc = project
     micrositeName := "AckCord",
     micrositeAuthor := "Katrix",
     micrositeDescription := "A Scala Discord library",
-    micrositeBaseUrl := "/ackcord",
-    micrositeDocumentationUrl := "/ackcord/api/net/katsstuff/ackcord",
-    micrositeHomepage := "https://github.com/Katrix-/AckCord",
+    micrositeBaseUrl := "/",
+    micrositeDocumentationUrl := "/api/net/katsstuff/ackcord",
+    micrositeHomepage := "http://ackcord.katsstuff.net",
     micrositeGithubOwner := "Katrix-",
     micrositeGithubRepo := "AckCord",
     micrositeGitterChannel := false,
@@ -296,8 +296,7 @@ lazy val doc = project
       "-sourcepath",
       baseDirectory.in(LocalRootProject).value.getAbsolutePath,
       "-diagrams"
-    ),
-    git.remoteRepo := "git@github.com:Katrix-/AckCord.git"
+    )
   )
   .dependsOn(ackCord)
 
