@@ -29,8 +29,12 @@ object RestOption {
 
   implicit def decodeRestOption[A](implicit decodeOpt: Decoder[Option[A]]): Decoder[RestOption[A]] =
     Decoder.withReattempt { c =>
-      if (c.succeeded) c.as[Option[A]].map(_.fold[RestOption[A]](RestNull)(RestSome.apply)) else Right(RestUndefined)
+      if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(RestUndefined)
     }
+
+  def fromOptionWithNull[A](opt: Option[A]): RestOption[A] = opt.fold[RestOption[A]](RestNull)(RestSome.apply)
+
+  def fromOptionWithUndefined[A](opt: Option[A]): RestOption[A] = opt.fold[RestOption[A]](RestUndefined)(RestSome.apply)
 
   def removeUndefined[A](seq: Seq[(String, RestOption[Json])]): Seq[(String, Json)] = seq.flatMap {
     case (name, RestSome(json)) => Some(name -> json)
