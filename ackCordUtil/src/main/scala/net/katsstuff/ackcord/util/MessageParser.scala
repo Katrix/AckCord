@@ -97,12 +97,11 @@ trait MessageParser[A] { self =>
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
     override def parse[F[_]: Monad](
         strings: List[String]
-    )(implicit c: CacheSnapshot[F]): EitherT[F, String, (List[String], B)] = {
+    )(implicit c: CacheSnapshot[F]): EitherT[F, String, (List[String], B)] =
       self.parse(strings).subflatMap {
         case (tail, obj) if pf.isDefinedAt(obj) => Right(tail -> pf(obj))
         case (_, _)                             => Left(error)
       }
-    }
   }
 }
 object MessageParser extends MessageParserInstances with DeriveMessageParser {
@@ -190,19 +189,19 @@ trait MessageParserInstances {
         EitherT.rightT[F, String](Nil -> RemainingAsString(strings.mkString(" ")))
     }
 
-  implicit val stringParser:  MessageParser[String]  = fromString(identity)
-  implicit val byteParser:    MessageParser[Byte]    = withTry(_.toByte)
-  implicit val shortParser:   MessageParser[Short]   = withTry(_.toShort)
-  implicit val intParser:     MessageParser[Int]     = withTry(_.toInt)
-  implicit val longParser:    MessageParser[Long]    = withTry(_.toLong)
-  implicit val floatParser:   MessageParser[Float]   = withTry(_.toFloat)
-  implicit val doubleParser:  MessageParser[Double]  = withTry(_.toDouble)
+  implicit val stringParser: MessageParser[String]   = fromString(identity)
+  implicit val byteParser: MessageParser[Byte]       = withTry(_.toByte)
+  implicit val shortParser: MessageParser[Short]     = withTry(_.toShort)
+  implicit val intParser: MessageParser[Int]         = withTry(_.toInt)
+  implicit val longParser: MessageParser[Long]       = withTry(_.toLong)
+  implicit val floatParser: MessageParser[Float]     = withTry(_.toFloat)
+  implicit val doubleParser: MessageParser[Double]   = withTry(_.toDouble)
   implicit val booleanParser: MessageParser[Boolean] = withTry(_.toBoolean)
 
-  val userRegex:    Regex = """<@!?(\d+)>""".r
+  val userRegex: Regex    = """<@!?(\d+)>""".r
   val channelRegex: Regex = """<#(\d+)>""".r
-  val roleRegex:    Regex = """<@&(\d+)>""".r
-  val emojiRegex:   Regex = """<:\w+:(\d+)>""".r
+  val roleRegex: Regex    = """<@&(\d+)>""".r
+  val emojiRegex: Regex   = """<:\w+:(\d+)>""".r
 
   trait HighFunc[F[_[_]], G[_[_]]] {
     def apply[A[_]](fa: F[A]): G[A]

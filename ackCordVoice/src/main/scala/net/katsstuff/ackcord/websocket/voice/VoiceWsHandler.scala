@@ -75,14 +75,14 @@ class VoiceWsHandler(
   import VoiceWsProtocol._
   import context.dispatcher
 
-  private implicit val system: ActorSystem = context.system
+  implicit private val system: ActorSystem = context.system
 
-  private var ssrc:            Int         = -1
-  private var previousNonce:   Option[Int] = None
-  private var connectionActor: ActorRef    = _
+  private var ssrc: Int                  = -1
+  private var previousNonce: Option[Int] = None
+  private var connectionActor: ActorRef  = _
 
-  private var sendFirstSinkAck: Option[ActorRef]                         = None
-  var queue:                    SourceQueueWithComplete[VoiceMessage[_]] = _
+  private var sendFirstSinkAck: Option[ActorRef]      = None
+  var queue: SourceQueueWithComplete[VoiceMessage[_]] = _
 
   var receivedAck = true
 
@@ -99,9 +99,10 @@ class VoiceWsHandler(
       }
       .flatMapConcat(identity)
 
-    val withLogging = if (AckCordSettings().LogReceivedWs) {
-      jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
-    } else jsonFlow
+    val withLogging =
+      if (AckCordSettings().LogReceivedWs)
+        jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
+      else jsonFlow
 
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
@@ -109,9 +110,10 @@ class VoiceWsHandler(
   def createMessage: Flow[VoiceMessage[_], Message, NotUsed] = {
     val baseFlow = Flow[VoiceMessage[_]].map(_.asJson.noSpaces)
 
-    val withLogging = if (AckCordSettings().LogSentWs) {
-      baseFlow.log("Sending payload")
-    } else baseFlow
+    val withLogging =
+      if (AckCordSettings().LogSentWs)
+        baseFlow.log("Sending payload")
+      else baseFlow
 
     withLogging.map(TextMessage.apply)
   }
@@ -210,20 +212,18 @@ class VoiceWsHandler(
         queue = null
         timers.cancel(heartbeatTimerKey)
 
-        if (connectionActor == null) {
+        if (connectionActor == null)
           stopOrGotoInactive()
-        } else {
+        else
           log.info("Websocket connection completed. Waiting for UDP connection.")
-        }
 
       case ConnectionDied =>
         connectionActor = null
 
-        if (queue == null) {
+        if (queue == null)
           stopOrGotoInactive()
-        } else {
+        else
           log.info("UDP connection completed. Waiting for websocket connection.")
-        }
 
       case Status.Failure(e) =>
         //TODO: Inspect error and only do fresh if needed
@@ -257,9 +257,8 @@ class VoiceWsHandler(
         )
 
       case SetSpeaking(speaking) =>
-        if (queue != null) {
+        if (queue != null)
           queue.offer(Speaking(SpeakingData(speaking, JsonSome(0), JsonUndefined, JsonUndefined)))
-        }
 
       case Logout =>
         log.info("Logging out")
@@ -270,13 +269,11 @@ class VoiceWsHandler(
       case Restart(fresh, waitDur) =>
         log.info("Restarting")
         queue.complete()
-        if (connectionActor != null) {
+        if (connectionActor != null)
           connectionActor ! Disconnect
-        }
         timers.startSingleTimer(restartLoginKey, Login, waitDur)
-        if (fresh) {
+        if (fresh)
           resume = None
-        }
     }
 
     base.orElse(handleWsMessages)
@@ -290,9 +287,8 @@ class VoiceWsHandler(
       context.stop(self)
     } else {
       log.info("Websocket and UDP connection died. Logging in again.")
-      if (!timers.isTimerActive(restartLoginKey)) {
+      if (!timers.isTimerActive(restartLoginKey))
         self ! Login
-      }
       becomeInactive()
     }
   }
@@ -323,9 +319,9 @@ class VoiceWsHandler(
 
     case Right(HeartbeatACK(nonce)) =>
       log.debug("Received HeartbeatACK")
-      if (previousNonce.contains(nonce)) {
+      if (previousNonce.contains(nonce))
         receivedAck = true
-      } else {
+      else {
         log.warning("Did not receive correct nonce in HeartbeatACK. Restarting.")
         self ! Restart(fresh = false, 500.millis)
       }
@@ -338,7 +334,16 @@ class VoiceWsHandler(
       sender() ! AckSink
 
     case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, JsonSome(speakingUserId)))) =>
-      sendTo.foreach(_ ! AudioAPIMessage.UserSpeaking(speakingUserId, userSsrc.toOption, isSpeaking, delay.toOption, serverId, userId))
+      sendTo.foreach { actor =>
+        actor ! AudioAPIMessage.UserSpeaking(
+          speakingUserId,
+          userSsrc.toOption,
+          isSpeaking,
+          delay.toOption,
+          serverId,
+          userId
+        )
+      }
       sender() ! AckSink
 
     case Right(Resumed)                => sender() ! AckSink //NO-OP

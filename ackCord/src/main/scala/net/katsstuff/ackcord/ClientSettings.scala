@@ -69,8 +69,8 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings.
     */
   def build(): Future[DiscordClient[Id]] = {
-    implicit val actorSystem: ActorSystem       = system
-    implicit val mat:         ActorMaterializer = ActorMaterializer()
+    implicit val actorSystem: ActorSystem = system
+    implicit val mat: ActorMaterializer   = ActorMaterializer()
 
     val requests = RequestHelper.create(
       BotAuthentication(token),
@@ -92,8 +92,8 @@ class ClientSettings(
     * set the shard amount.
     */
   def buildAutoShards(): Future[DiscordClient[Id]] = {
-    implicit val actorSystem: ActorSystem       = system
-    implicit val mat:         ActorMaterializer = ActorMaterializer()
+    implicit val actorSystem: ActorSystem = system
+    implicit val mat: ActorMaterializer   = ActorMaterializer()
 
     val requests = RequestHelper.create(
       BotAuthentication(token),
@@ -112,8 +112,9 @@ class ClientSettings(
     }
   }
 
-  override def toString: String = s"ClientSettings($token, $largeThreshold, $shardNum, $shardTotal, $idleSince, " +
-    s"$activity, $status, $afk, $executionContext, $system, $commandSettings, $requestSettings)"
+  override def toString: String =
+    s"ClientSettings($token, $largeThreshold, $shardNum, $shardTotal, $idleSince, " +
+      s"$activity, $status, $afk, $executionContext, $system, $commandSettings, $requestSettings)"
 }
 object ClientSettings {
 

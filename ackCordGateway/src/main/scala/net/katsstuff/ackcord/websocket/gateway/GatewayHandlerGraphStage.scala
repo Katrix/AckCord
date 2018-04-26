@@ -47,8 +47,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
     extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
       Option[ResumeData]
     ]] {
-  val in:          Inlet[GatewayMessage[_]] = Inlet("GatewayHandlerGraphStage.in")
-  val dispatchOut: Outlet[Dispatch[_]]      = Outlet("GatewayHandlerGraphStage.dispatchOut")
+  val in: Inlet[GatewayMessage[_]]     = Inlet("GatewayHandlerGraphStage.in")
+  val dispatchOut: Outlet[Dispatch[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
 
   val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")
 
@@ -62,10 +62,10 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
     val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var resume: ResumeData = _
-      var receivedAck = false
-      var restarting  = false
+      var receivedAck        = false
+      var restarting         = false
 
-      val HeartbeatTimerKey:                   String  = "HeartbeatTimer"
+      val HeartbeatTimerKey: String                    = "HeartbeatTimer"
       def restartTimerKey(resumable: Boolean): Restart = Restart(resumable)
 
       def restart(resumable: Boolean, time: FiniteDuration): Unit = {

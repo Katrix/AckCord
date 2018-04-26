@@ -43,7 +43,7 @@ object Routes {
   val cdn: Route = Route(s"https://cdn.$discord/", s"https://cdn.$discord/")
 
   //WS
-  val gateway:    Route = base / "gateway"
+  val gateway: Route    = base / "gateway"
   val botGateway: Route = gateway / "bot"
 
   //REST
@@ -85,21 +85,21 @@ object Routes {
   case class MinorParameter(name: String, value: String)
   case class MajorParameter(value: String)
 
-  implicit def guildIdParam(id: GuildId):                  MajorParameter = MajorParameter(id.asString)
-  implicit def channelIdParam(id: ChannelId):              MajorParameter = MajorParameter(id.asString)
+  implicit def guildIdParam(id: GuildId): MajorParameter                  = MajorParameter(id.asString)
+  implicit def channelIdParam(id: ChannelId): MajorParameter              = MajorParameter(id.asString)
   implicit def webhookIdParam(id: SnowflakeType[Webhook]): MajorParameter = MajorParameter(id.asString)
 
   implicit def messageIdParam(id: MessageId): MinorParameter = MinorParameter("messageId", id.asString)
-  def emojiParam(emoji: Emoji):               MinorParameter = MinorParameter("emoji", emoji)
-  implicit def emojiIdParam(id: EmojiId):     MinorParameter = MinorParameter("emojiId", id.asString)
-  implicit def userIdParam(id: UserId):       MinorParameter = MinorParameter("userId", id.asString)
+  def emojiParam(emoji: Emoji): MinorParameter               = MinorParameter("emoji", emoji)
+  implicit def emojiIdParam(id: EmojiId): MinorParameter     = MinorParameter("emojiId", id.asString)
+  implicit def userIdParam(id: UserId): MinorParameter       = MinorParameter("userId", id.asString)
   implicit def permissionOverwriteIdParam(id: UserOrRoleId): MinorParameter =
     MinorParameter("permissionOverwriteId", id.asString)
-  implicit def roldIdParam(id: RoleId):               MinorParameter = MinorParameter("roldId", id.asString)
+  implicit def roldIdParam(id: RoleId): MinorParameter               = MinorParameter("roldId", id.asString)
   implicit def integrationIdParam(id: IntegrationId): MinorParameter = MinorParameter("integrationId", id.asString)
-  def inviteCodeParam(code: InviteCode):              MinorParameter = MinorParameter("inviteCode", code)
-  def tokenParam(token: String):                      MinorParameter = MinorParameter("token", token)
-  def hashParam(hash: String):                        MinorParameter = MinorParameter("hash", hash)
+  def inviteCodeParam(code: InviteCode): MinorParameter              = MinorParameter("inviteCode", code)
+  def tokenParam(token: String): MinorParameter                      = MinorParameter("token", token)
+  def hashParam(hash: String): MinorParameter                        = MinorParameter("hash", hash)
   implicit def rawSnowflakeIdParam(id: RawSnowflake): MinorParameter = MinorParameter("applicationId", id.asString)
 
   implicit class Func1ToRequestSyntax[T1](val f: T1 => Route) extends AnyVal {
@@ -154,8 +154,8 @@ object Routes {
 
   //Audit log
 
-  val guilds: Route            = base / "guilds"
-  val guild:  GuildId => Route = guildId => guilds / guildId
+  val guilds: Route           = base / "guilds"
+  val guild: GuildId => Route = guildId => guilds / guildId
 
   val getGuildAuditLogs: GuildId => RequestRoute = guild / "audit-logs" toRequest GET
 
@@ -163,86 +163,86 @@ object Routes {
 
   val channel: ChannelId => Route = channelId => base / "channels" / channelId
 
-  val getChannel:         ChannelId => RequestRoute = channel.toRequest(GET)
-  val modifyChannelPut:   ChannelId => RequestRoute = channel.toRequest(PUT)
+  val getChannel: ChannelId => RequestRoute         = channel.toRequest(GET)
+  val modifyChannelPut: ChannelId => RequestRoute   = channel.toRequest(PUT)
   val modifyChannelPatch: ChannelId => RequestRoute = channel.toRequest(PATCH)
   val deleteCloseChannel: ChannelId => RequestRoute = channel.toRequest(DELETE)
 
-  val channelMessages: ChannelId => Route              = channel / "messages"
-  val channelMessage:  (MessageId, ChannelId) => Route = (messageId, channelId) => channelMessages(channelId) / messageId
+  val channelMessages: ChannelId => Route             = channel / "messages"
+  val channelMessage: (MessageId, ChannelId) => Route = (messageId, channelId) => channelMessages(channelId) / messageId
 
-  val getChannelMessages: ChannelId => RequestRoute              = channelMessages.toRequest(GET)
-  val getChannelMessage:  (MessageId, ChannelId) => RequestRoute = channelMessage.toRequest(GET)
-  val createMessage:      ChannelId => RequestRoute              = channelMessages.toRequest(POST)
-  val editMessage:        (MessageId, ChannelId) => RequestRoute = channelMessage.toRequest(PATCH)
-  val deleteMessage:      (MessageId, ChannelId) => RequestRoute = channelMessage.toRequest(DELETE)
-  val bulkDeleteMessages: (ChannelId) => RequestRoute            = channelMessages / "bulk-delete" toRequest POST
+  val getChannelMessages: ChannelId => RequestRoute             = channelMessages.toRequest(GET)
+  val getChannelMessage: (MessageId, ChannelId) => RequestRoute = channelMessage.toRequest(GET)
+  val createMessage: ChannelId => RequestRoute                  = channelMessages.toRequest(POST)
+  val editMessage: (MessageId, ChannelId) => RequestRoute       = channelMessage.toRequest(PATCH)
+  val deleteMessage: (MessageId, ChannelId) => RequestRoute     = channelMessage.toRequest(DELETE)
+  val bulkDeleteMessages: (ChannelId) => RequestRoute           = channelMessages / "bulk-delete" toRequest POST
 
   val reactions: (MessageId, ChannelId) => Route = channelMessage / "reactions"
   val emojiReactions: (Emoji, MessageId, ChannelId) => Route =
     Function.uncurried(emoji => (reactions / emojiParam(emoji)).curried)
   val modifyMeReaction: (Emoji, MessageId, ChannelId) => Route = emojiReactions / "@me"
 
-  val createReaction:    (Emoji, MessageId, ChannelId) => RequestRoute = modifyMeReaction.toRequest(PUT)
+  val createReaction: (Emoji, MessageId, ChannelId) => RequestRoute    = modifyMeReaction.toRequest(PUT)
   val deleteOwnReaction: (Emoji, MessageId, ChannelId) => RequestRoute = modifyMeReaction.toRequest(DELETE)
   val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => RequestRoute =
     Function.uncurried(userId => (emojiReactions / userId toRequest DELETE).curried)
 
-  val getReactions:       (Emoji, MessageId, ChannelId) => RequestRoute = emojiReactions.toRequest(GET)
-  val deleteAllReactions: (MessageId, ChannelId) => RequestRoute        = reactions.toRequest(DELETE)
+  val getReactions: (Emoji, MessageId, ChannelId) => RequestRoute = emojiReactions.toRequest(GET)
+  val deleteAllReactions: (MessageId, ChannelId) => RequestRoute  = reactions.toRequest(DELETE)
 
   val channelPermissions: (UserOrRoleId, ChannelId) => Route = (overwrite, channelId) =>
     channel(channelId) / "permissions" / overwrite
 
-  val editChannelPermissions:   (UserOrRoleId, ChannelId) => RequestRoute = channelPermissions.toRequest(PUT)
+  val editChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute   = channelPermissions.toRequest(PUT)
   val deleteChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute = channelPermissions.toRequest(DELETE)
 
   val channelInvites: ChannelId => Route = channel / "invites"
 
-  val getChannelInvites:    ChannelId => RequestRoute = channelInvites.toRequest(GET)
+  val getChannelInvites: ChannelId => RequestRoute    = channelInvites.toRequest(GET)
   val createChannelInvites: ChannelId => RequestRoute = channelInvites.toRequest(POST)
 
   val triggerTyping: ChannelId => RequestRoute = channel / "typing" toRequest POST
 
-  val pinnedMessage:    ChannelId => Route        = channel / "pins"
+  val pinnedMessage: ChannelId => Route           = channel / "pins"
   val getPinnedMessage: ChannelId => RequestRoute = pinnedMessage.toRequest(GET)
 
   val channelPinnedMessage: (MessageId, ChannelId) => Route = (messageId, channelId) =>
     pinnedMessage(channelId) / messageId
-  val addPinnedChannelMessage:    (MessageId, ChannelId) => RequestRoute = channelPinnedMessage.toRequest(PUT)
+  val addPinnedChannelMessage: (MessageId, ChannelId) => RequestRoute    = channelPinnedMessage.toRequest(PUT)
   val deletePinnedChannelMessage: (MessageId, ChannelId) => RequestRoute = channelPinnedMessage.toRequest(DELETE)
 
-  val groupDmRecipient:       (UserId, ChannelId) => Route        = (userId, channelId) => channel(channelId) / userId
-  val groupDmAddRecipient:    (UserId, ChannelId) => RequestRoute = groupDmRecipient.toRequest(PUT)
+  val groupDmRecipient: (UserId, ChannelId) => Route              = (userId, channelId) => channel(channelId) / userId
+  val groupDmAddRecipient: (UserId, ChannelId) => RequestRoute    = groupDmRecipient.toRequest(PUT)
   val groupDmRemoveRecipient: (UserId, ChannelId) => RequestRoute = groupDmRecipient.toRequest(DELETE)
 
   //Emoji routes
 
-  val guildEmojis:      GuildId => Route        = guild / "emojis"
-  val listGuildEmojis:  GuildId => RequestRoute = guildEmojis.toRequest(GET)
+  val guildEmojis: GuildId => Route             = guild / "emojis"
+  val listGuildEmojis: GuildId => RequestRoute  = guildEmojis.toRequest(GET)
   val createGuildEmoji: GuildId => RequestRoute = guildEmojis.toRequest(POST)
 
-  val guildEmoji:       (EmojiId, GuildId) => Route        = (emojiId, guildId) => guildEmojis(guildId) / emojiId
-  val getGuildEmoji:    (EmojiId, GuildId) => RequestRoute = guildEmoji.toRequest(GET)
+  val guildEmoji: (EmojiId, GuildId) => Route              = (emojiId, guildId) => guildEmojis(guildId) / emojiId
+  val getGuildEmoji: (EmojiId, GuildId) => RequestRoute    = guildEmoji.toRequest(GET)
   val modifyGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.toRequest(PATCH)
   val deleteGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.toRequest(DELETE)
 
   //Guild routes
   val createGuild: RequestRoute            = guilds.toRequest(POST)
-  val getGuild:    GuildId => RequestRoute = guild.toRequest(GET)
+  val getGuild: GuildId => RequestRoute    = guild.toRequest(GET)
   val modifyGuild: GuildId => RequestRoute = guild.toRequest(PATCH)
   val deleteGuild: GuildId => RequestRoute = guild.toRequest(DELETE)
 
-  val guildChannels:                GuildId => Route        = guild / "channels"
-  val getGuildChannels:             GuildId => RequestRoute = guildChannels.toRequest(GET)
-  val createGuildChannel:           GuildId => RequestRoute = guildChannels.toRequest(POST)
+  val guildChannels: GuildId => Route                       = guild / "channels"
+  val getGuildChannels: GuildId => RequestRoute             = guildChannels.toRequest(GET)
+  val createGuildChannel: GuildId => RequestRoute           = guildChannels.toRequest(POST)
   val modifyGuildChannelsPositions: GuildId => RequestRoute = guildChannels.toRequest(PATCH)
 
-  val guildMembers:      GuildId => Route                  = guild / "members"
-  val guildMember:       (UserId, GuildId) => Route        = (userId, guildId) => guildMembers(guildId) / userId
-  val getGuildMember:    (UserId, GuildId) => RequestRoute = guildMember.toRequest(GET)
-  val listGuildMembers:  GuildId => RequestRoute           = guildMembers.toRequest(GET)
-  val addGuildMember:    (UserId, GuildId) => RequestRoute = guildMember.toRequest(PUT)
+  val guildMembers: GuildId => Route                       = guild / "members"
+  val guildMember: (UserId, GuildId) => Route              = (userId, guildId) => guildMembers(guildId) / userId
+  val getGuildMember: (UserId, GuildId) => RequestRoute    = guildMember.toRequest(GET)
+  val listGuildMembers: GuildId => RequestRoute            = guildMembers.toRequest(GET)
+  val addGuildMember: (UserId, GuildId) => RequestRoute    = guildMember.toRequest(PUT)
   val modifyGuildMember: (UserId, GuildId) => RequestRoute = guildMember.toRequest(PATCH)
   val removeGuildMember: (UserId, GuildId) => RequestRoute = guildMember.toRequest(DELETE)
   val modifyCurrentNick: GuildId => RequestRoute           = guildMembers / "@me" / "nick" toRequest PATCH
@@ -250,68 +250,68 @@ object Routes {
   val guildMemberRole: (RoleId, UserId, GuildId) => Route =
     Function.uncurried(roleId => (guildMember / "roles" / roleId).curried)
 
-  val addGuildMemberRole:    (RoleId, UserId, GuildId) => RequestRoute = guildMemberRole.toRequest(PUT)
+  val addGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute    = guildMemberRole.toRequest(PUT)
   val removeGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute = guildMemberRole.toRequest(DELETE)
 
-  val guildBans:      GuildId => Route           = guild / "bans"
+  val guildBans: GuildId => Route                = guild / "bans"
   val guildMemberBan: (UserId, GuildId) => Route = (userId, guildId) => guildBans(guildId) / userId
 
-  val getGuildBans:         GuildId => RequestRoute           = guildBans.toRequest(GET)
+  val getGuildBans: GuildId => RequestRoute                   = guildBans.toRequest(GET)
   val createGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(PUT)
   val removeGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(DELETE)
 
-  val guildRoles:               GuildId => Route        = guild / "roles"
-  val getGuildRole:             GuildId => RequestRoute = guildRoles.toRequest(GET)
-  val createGuildRole:          GuildId => RequestRoute = guildRoles.toRequest(POST)
+  val guildRoles: GuildId => Route                      = guild / "roles"
+  val getGuildRole: GuildId => RequestRoute             = guildRoles.toRequest(GET)
+  val createGuildRole: GuildId => RequestRoute          = guildRoles.toRequest(POST)
   val modifyGuildRolePositions: GuildId => RequestRoute = guildRoles.toRequest(PATCH)
 
-  val guildRole:       (RoleId, GuildId) => Route        = (roleId, guildId) => guildRoles(guildId) / roleId
+  val guildRole: (RoleId, GuildId) => Route              = (roleId, guildId) => guildRoles(guildId) / roleId
   val modifyGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.toRequest(PATCH)
   val deleteGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.toRequest(DELETE)
 
-  val guildPrune:         GuildId => Route        = guild / "prune"
+  val guildPrune: GuildId => Route                = guild / "prune"
   val getGuildPruneCount: GuildId => RequestRoute = guildPrune.toRequest(GET)
-  val beginGuildPrune:    GuildId => RequestRoute = guildPrune.toRequest(POST)
+  val beginGuildPrune: GuildId => RequestRoute    = guildPrune.toRequest(POST)
 
   val getGuildVoiceRegions: GuildId => RequestRoute = guild / "regions" toRequest GET
-  val getGuildInvites:      GuildId => RequestRoute = guild / "invites" toRequest GET
+  val getGuildInvites: GuildId => RequestRoute      = guild / "invites" toRequest GET
 
-  val guildIntegrations:       GuildId => Route        = guild / "integrations"
-  val getGuildIntegrations:    GuildId => RequestRoute = guildIntegrations.toRequest(GET)
+  val guildIntegrations: GuildId => Route              = guild / "integrations"
+  val getGuildIntegrations: GuildId => RequestRoute    = guildIntegrations.toRequest(GET)
   val createGuildIntegrations: GuildId => RequestRoute = guildIntegrations.toRequest(POST)
 
   val guildIntegration: (IntegrationId, GuildId) => Route = (integrationId, guildId) =>
     guildIntegrations(guildId) / integrationId
   val modifyGuildIntegration: (IntegrationId, GuildId) => RequestRoute = guildIntegration.toRequest(PATCH)
   val deleteGuildIntegration: (IntegrationId, GuildId) => RequestRoute = guildIntegration.toRequest(DELETE)
-  val syncGuildIntegration:   (IntegrationId, GuildId) => RequestRoute = guildIntegration / "sync" toRequest PATCH
+  val syncGuildIntegration: (IntegrationId, GuildId) => RequestRoute   = guildIntegration / "sync" toRequest PATCH
 
-  val guildEmbed:        GuildId => Route        = guild / "embed"
-  val getGuildEmbed:     GuildId => RequestRoute = guildEmbed.toRequest(GET)
-  val modifyGuildEmbed:  GuildId => RequestRoute = guildEmbed.toRequest(PATCH)
+  val guildEmbed: GuildId => Route               = guild / "embed"
+  val getGuildEmbed: GuildId => RequestRoute     = guildEmbed.toRequest(GET)
+  val modifyGuildEmbed: GuildId => RequestRoute  = guildEmbed.toRequest(PATCH)
   val getGuildVanityUrl: GuildId => RequestRoute = guild / "vanity-url" toRequest GET
 
   //Invites
-  val invites:      Route                      = base / "invites"
-  val inviteCode:   InviteCode => Route        = code => invites / inviteCodeParam(code)
-  val getInvite:    InviteCode => RequestRoute = inviteCode.toRequest(GET)
+  val invites: Route                           = base / "invites"
+  val inviteCode: InviteCode => Route          = code => invites / inviteCodeParam(code)
+  val getInvite: InviteCode => RequestRoute    = inviteCode.toRequest(GET)
   val deleteInvite: InviteCode => RequestRoute = inviteCode.toRequest(DELETE)
   val acceptInvite: InviteCode => RequestRoute = inviteCode.toRequest(POST)
 
   //Users
-  val users:          Route        = base / "users"
-  val currentUser:    Route        = users / "@me"
+  val users: Route                 = base / "users"
+  val currentUser: Route           = users / "@me"
   val getCurrentUser: RequestRoute = currentUser.toRequest(GET)
 
-  val getUser:              UserId => RequestRoute  = userId => users / userId toRequest GET
-  val modifyCurrentUser:    RequestRoute            = currentUser.toRequest(PATCH)
-  val currentUserGuilds:    Route                   = currentUser / "guilds"
-  val getCurrentUserGuilds: RequestRoute            = currentUserGuilds.toRequest(GET)
-  val leaveGuild:           GuildId => RequestRoute = guildId => currentUserGuilds / guildId toRequest DELETE
+  val getUser: UserId => RequestRoute     = userId => users / userId toRequest GET
+  val modifyCurrentUser: RequestRoute     = currentUser.toRequest(PATCH)
+  val currentUserGuilds: Route            = currentUser / "guilds"
+  val getCurrentUserGuilds: RequestRoute  = currentUserGuilds.toRequest(GET)
+  val leaveGuild: GuildId => RequestRoute = guildId => currentUserGuilds / guildId toRequest DELETE
 
-  val userDMs:    Route        = currentUser / "channels"
+  val userDMs: Route           = currentUser / "channels"
   val getUserDMs: RequestRoute = userDMs.toRequest(GET)
-  val createDM:   RequestRoute = userDMs.toRequest(POST)
+  val createDM: RequestRoute   = userDMs.toRequest(POST)
 
   val getUserConnections: RequestRoute = currentUser / "connections" toRequest GET
 
@@ -324,18 +324,19 @@ object Routes {
     webhook(webhookId) / tokenParam(token)
   val channelWebhooks: ChannelId => Route = channel / "webhooks"
 
-  val createWebhook:          ChannelId => RequestRoute                        = channelWebhooks.toRequest(POST)
-  val getChannelWebhooks:     ChannelId => RequestRoute                        = channelWebhooks.toRequest(GET)
-  val getGuildWebhooks:       GuildId => RequestRoute                          = guild / "webhooks" toRequest GET
-  val getWebhook:             SnowflakeType[Webhook] => RequestRoute           = webhook.toRequest(GET)
-  val getWebhookWithToken:    (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(GET)
-  val modifyWebhook:          SnowflakeType[Webhook] => RequestRoute           = webhook.toRequest(PATCH)
+  val createWebhook: ChannelId => RequestRoute                                 = channelWebhooks.toRequest(POST)
+  val getChannelWebhooks: ChannelId => RequestRoute                            = channelWebhooks.toRequest(GET)
+  val getGuildWebhooks: GuildId => RequestRoute                                = guild / "webhooks" toRequest GET
+  val getWebhook: SnowflakeType[Webhook] => RequestRoute                       = webhook.toRequest(GET)
+  val getWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute    = webhookWithToken.toRequest(GET)
+  val modifyWebhook: SnowflakeType[Webhook] => RequestRoute                    = webhook.toRequest(PATCH)
   val modifyWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(PATCH)
-  val deleteWebhook:          SnowflakeType[Webhook] => RequestRoute           = webhook.toRequest(DELETE)
+  val deleteWebhook: SnowflakeType[Webhook] => RequestRoute                    = webhook.toRequest(DELETE)
   val deleteWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(DELETE)
-  val executeWebhook:         (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(POST)
-  val executeSlackWebhook:    (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken / "slack" toRequest POST
-  val executeGithubWebhook:   (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken / "github" toRequest POST
+  val executeWebhook: (String, SnowflakeType[Webhook]) => RequestRoute         = webhookWithToken.toRequest(POST)
+  val executeSlackWebhook: (String, SnowflakeType[Webhook]) => RequestRoute    = webhookWithToken / "slack" toRequest POST
+  val executeGithubWebhook
+    : (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken / "github" toRequest POST
 
   def imageExtra(format: ImageFormat, size: Int): String = s".${format.extension}?size=$size"
 
@@ -355,8 +356,8 @@ object Routes {
       cdn / "app-icons" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
 
   //OAuth
-  val oAuth2:          Route = base / "oauth2"
+  val oAuth2: Route          = base / "oauth2"
   val oAuth2Authorize: Route = oAuth2 / "authorize"
-  val oAuth2Token:     Route = oAuth2 / "token"
-  val oAuth2Revoke:    Route = oAuth2Token / "revoke"
+  val oAuth2Token: Route     = oAuth2 / "token"
+  val oAuth2Revoke: Route    = oAuth2Token / "revoke"
 }

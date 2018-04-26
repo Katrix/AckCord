@@ -40,8 +40,8 @@ import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 object Example {
 
-  implicit val system: ActorSystem  = ActorSystem("AckCord")
-  implicit val mat:    Materializer = ActorMaterializer()
+  implicit val system: ActorSystem = ActorSystem("AckCord")
+  implicit val mat: Materializer   = ActorMaterializer()
   import system.dispatcher
 
   def main(args: Array[String]): Unit = {
@@ -83,7 +83,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
-  val helpCmd = ExampleHelpCmdFactory[Id](helpCmdActor)
+  val helpCmd                = ExampleHelpCmdFactory[Id](helpCmdActor)
 
   //We set up a commands object, which parses potential commands
   val cmdObj: Commands[Id] =

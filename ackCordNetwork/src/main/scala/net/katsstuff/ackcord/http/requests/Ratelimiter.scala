@@ -37,7 +37,7 @@ class Ratelimiter extends Actor with Timers {
   private val rateLimits        = new mutable.HashMap[String, mutable.Queue[(ActorRef, Any)]]
 
   private var globalRatelimitTimeout = 0.toLong
-  private val globalLimited = new mutable.Queue[(ActorRef, Any)]
+  private val globalLimited          = new mutable.Queue[(ActorRef, Any)]
 
   def isGlobalRatelimited: Boolean = globalRatelimitTimeout - System.currentTimeMillis() > 0
 
@@ -50,19 +50,19 @@ class Ratelimiter extends Actor with Timers {
       releaseWaiting(uri)
 
     case GlobalTimer =>
-      globalLimited.dequeueAll(_ => true).foreach { case (actor, obj) =>
-        actor ! obj
-        context.unwatch(actor)
+      globalLimited.dequeueAll(_ => true).foreach {
+        case (actor, obj) =>
+          actor ! obj
+          context.unwatch(actor)
       }
 
     case WantToPass(uri, responseObj) =>
       val sendResponseTo = sender()
 
-      if(isGlobalRatelimited) {
+      if (isGlobalRatelimited) {
         context.watchWith(sendResponseTo, GlobalTimedOut(sendResponseTo))
         globalLimited.enqueue(sendResponseTo -> responseObj)
-      }
-      else {
+      } else {
         val remainingOpt = remainingRequests.get(uri)
 
         if (remainingOpt.forall(_ > 0)) {
@@ -75,11 +75,10 @@ class Ratelimiter extends Actor with Timers {
       }
 
     case UpdateRatelimits(uri, isGlobal, timeTilReset, remainingRequestsAmount, requestLimit) =>
-      if(isGlobal) {
+      if (isGlobal) {
         globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
         timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
-      }
-      else {
+      } else {
         routeLimits.put(uri, requestLimit)
         remainingRequests.put(uri, remainingRequestsAmount)
         timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset)
@@ -124,7 +123,13 @@ object Ratelimiter {
 
   case class WantToPass[A](route: String, ret: A)
   case class ResetRatelimit(uri: String)
-  case class UpdateRatelimits(uri: String, isGlobal: Boolean, timeTilReset: FiniteDuration, remainingRequests: Int, requestLimit: Int)
+  case class UpdateRatelimits(
+      uri: String,
+      isGlobal: Boolean,
+      timeTilReset: FiniteDuration,
+      remainingRequests: Int,
+      requestLimit: Int
+  )
 
   case class TimedOut(uri: String, actorRef: ActorRef)
   case class GlobalTimedOut(actorRef: ActorRef)

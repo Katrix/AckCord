@@ -77,12 +77,11 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
       udpHandler ! SendDataBurst(Seq.fill(5)(silence))
   }
 
-  def setSpeaking(speaking: Boolean): Unit = {
+  def setSpeaking(speaking: Boolean): Unit =
     if (speaking != isSpeaking) {
       wsHandler ! SetSpeaking(speaking)
       isSpeaking = speaking
     }
-  }
 
   def calculateAndSendPackets(num: Int): Unit = {
     //We try to keep track of how much audio we have sent time wise, and check if it's too early to send another burst

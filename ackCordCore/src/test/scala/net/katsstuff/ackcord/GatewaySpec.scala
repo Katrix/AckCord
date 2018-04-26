@@ -46,14 +46,23 @@ import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.websocket.gateway._
 import net.katsstuff.ackcord.websocket.gateway.GatewayHandler
 
-class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseString("""
-    |akka {
-    |  loglevel = "DEBUG"
-    |}
-  """.stripMargin))) with FunSuiteLike with Matchers with BeforeAndAfterAll {
+class GatewaySpec
+    extends TestKit(
+      ActorSystem(
+        "TestSystem",
+        ConfigFactory.parseString(
+          """|akka {
+             |  loglevel = "DEBUG"
+             |}""".stripMargin
+        )
+      )
+    )
+    with FunSuiteLike
+    with Matchers
+    with BeforeAndAfterAll {
   import GatewayProtocol._
 
-  implicit val materializer:   Materializer     = ActorMaterializer()
+  implicit val materializer: Materializer       = ActorMaterializer()
   implicit val notUsedEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.Null
 
   var gatewayNameNum = 0
@@ -114,9 +123,8 @@ class GatewaySpec extends TestKit(ActorSystem("TestSystem", ConfigFactory.parseS
       readySeq: Int,
       login: Boolean = true
   ): Unit = {
-    if (login) {
+    if (login)
       handler ! Login
-    }
     expectMsg(HasSetClient)
     expectNoMessage(50.millis)
 
@@ -243,7 +251,8 @@ class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)(implici
 
   implicit val system: ActorSystem = context.system
 
-  override def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+  override def wsFlow
+    : Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val response = ValidUpgrade(HttpResponse(), None)
 
     val sendToServer = Sink.foreach[Message](gateway ! _)
@@ -295,7 +304,7 @@ class MockedGateway(sendMessagesTo: ActorRef) extends Actor with Stash {
   import GatewayProtocol._
 
   var client: ActorRef = _
-  var useCompression = false
+  var useCompression   = false
 
   override def receive: Receive = {
     case SetClient(newClient) =>

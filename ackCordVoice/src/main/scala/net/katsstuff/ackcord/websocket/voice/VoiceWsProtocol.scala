@@ -59,11 +59,12 @@ object VoiceWsProtocol extends DiscordProtocol {
     } yield SessionDescriptionData(mode, ByteString(secretKey.map(_.toByte): _*))
   }
 
-  implicit val speakingDataEncoder: Encoder[SpeakingData] = (a: SpeakingData) => JsonOption.removeUndefinedToObj(
-    "speaking" -> JsonSome(a.speaking.asJson),
-    "delay" -> a.delay.map(_.asJson),
-    "ssrc" -> a.ssrc.map(_.asJson),
-    "user_id" -> a.userId.map(_.asJson)
+  implicit val speakingDataEncoder: Encoder[SpeakingData] = (a: SpeakingData) =>
+    JsonOption.removeUndefinedToObj(
+      "speaking" -> JsonSome(a.speaking.asJson),
+      "delay"    -> a.delay.map(_.asJson),
+      "ssrc"     -> a.ssrc.map(_.asJson),
+      "user_id"  -> a.userId.map(_.asJson)
   )
   implicit val speakingDataDecoder: Decoder[SpeakingData] = deriveDecoder
 

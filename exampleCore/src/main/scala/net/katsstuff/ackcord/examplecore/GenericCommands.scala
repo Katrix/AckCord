@@ -32,7 +32,7 @@ import akka.NotUsed
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.{Flow, Sink}
 import cats.Functor
-import net.katsstuff.ackcord.commands.{AllCmdMessages, CmdCategory, CmdDescription, NoCmd, NoCmdCategory, ParsedCmdFactory, ParsedCmdFlow, RawCmd}
+import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
@@ -88,7 +88,7 @@ class GenericCommands[F[_]: Streamable: Functor] {
         .flatMapConcat {
           answer =>
             val GetChannelInfo(guildId, senderChannelId, c) = answer.context
-            implicit val cache: CacheSnapshot[F] = c
+            implicit val cache: CacheSnapshot[F]            = c
             val content = answer match {
               case response: RequestResponse[RawChannel, GetChannelInfo[F]] =>
                 val data = response.data

@@ -136,7 +136,7 @@ case class ParsedCmdFactory[F[_], A, +Mat](
     filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
-  extends CmdFactory[ParsedCmd[F, A], Mat]
+    extends CmdFactory[ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
   def requestDSL[F[_], A](
       category: CmdCategory,

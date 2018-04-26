@@ -71,7 +71,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   require(shards.nonEmpty, "No shards")
 
   var shardShutdownManager: ActorRef = _
-  val musicManager:         ActorRef = requests.system.actorOf(MusicManager.props(cache), "MusicManager")
+  val musicManager: ActorRef         = requests.system.actorOf(MusicManager.props(cache), "MusicManager")
 
   implicit val executionContext: ExecutionContextExecutor = requests.system.dispatcher
 

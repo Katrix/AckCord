@@ -58,9 +58,9 @@ object CmdStreams {
               categories
                 .find(cat => lowercaseCommand.startsWith(cat.prefix))
                 .fold[RawCmdMessage[Id]](NoCmdCategory(msg, lowercaseCommand, args.tail, cache)) { cat =>
-                val withoutPrefix = lowercaseCommand.substring(cat.prefix.length)
-                RawCmd(msg, cat, withoutPrefix, args.tail, c.current)
-              }
+                  val withoutPrefix = lowercaseCommand.substring(cat.prefix.length)
+                  RawCmd(msg, cat, withoutPrefix, args.tail, c.current)
+                }
             }
           }
       }

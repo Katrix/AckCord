@@ -275,15 +275,18 @@ object LavaplayerHandler {
   def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
     val promise = Promise[AudioItem]
 
-    playerManager.loadItem(identifier, new AudioLoadResultHandler {
-      override def loadFailed(e: FriendlyException): Unit = promise.failure(e)
+    playerManager.loadItem(
+      identifier,
+      new AudioLoadResultHandler {
+        override def loadFailed(e: FriendlyException): Unit = promise.failure(e)
 
-      override def playlistLoaded(playlist: AudioPlaylist): Unit = promise.success(playlist)
+        override def playlistLoaded(playlist: AudioPlaylist): Unit = promise.success(playlist)
 
-      override def noMatches(): Unit = promise.failure(new NoMatchException(identifier))
+        override def noMatches(): Unit = promise.failure(new NoMatchException(identifier))
 
-      override def trackLoaded(track: AudioTrack): Unit = promise.success(track)
-    })
+        override def trackLoaded(track: AudioTrack): Unit = promise.success(track)
+      }
+    )
 
     promise.future
   }

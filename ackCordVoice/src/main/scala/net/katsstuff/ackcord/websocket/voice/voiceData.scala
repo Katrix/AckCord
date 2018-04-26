@@ -55,7 +55,7 @@ case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: Strin
   * Discord responds with [[Ready]]
   */
 case class Identify(nowD: IdentifyData) extends VoiceMessage[IdentifyData] {
-  override def op:          VoiceOpCode           = VoiceOpCode.Identify
+  override def op: VoiceOpCode                    = VoiceOpCode.Identify
   override def dataEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
 }
 
@@ -79,7 +79,7 @@ case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionDa
   * Discord responds with [[SessionDescription]]
   */
 case class SelectProtocol(nowD: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
-  override def op:          VoiceOpCode                 = VoiceOpCode.SelectProtocol
+  override def op: VoiceOpCode                          = VoiceOpCode.SelectProtocol
   override def dataEncoder: Encoder[SelectProtocolData] = Encoder[SelectProtocolData]
 }
 
@@ -96,7 +96,7 @@ case class ReadyData(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval
   * Sent by Discord following [[Identify]]
   */
 case class Ready(nowD: ReadyData) extends VoiceMessage[ReadyData] {
-  override def op:          VoiceOpCode        = VoiceOpCode.Ready
+  override def op: VoiceOpCode                 = VoiceOpCode.Ready
   override def dataEncoder: Encoder[ReadyData] = Encoder[ReadyData]
 }
 
@@ -105,7 +105,7 @@ case class Ready(nowD: ReadyData) extends VoiceMessage[ReadyData] {
   * @param nowD Nonce
   */
 case class Heartbeat(nowD: Int) extends VoiceMessage[Int] {
-  override def op:          VoiceOpCode  = VoiceOpCode.Heartbeat
+  override def op: VoiceOpCode           = VoiceOpCode.Heartbeat
   override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
@@ -120,7 +120,7 @@ case class SessionDescriptionData(mode: String, secretKey: ByteString)
   * Sent by Discord in response to [[SelectProtocol]]
   */
 case class SessionDescription(nowD: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
-  override def op:          VoiceOpCode                     = VoiceOpCode.SessionDescription
+  override def op: VoiceOpCode                              = VoiceOpCode.SessionDescription
   override def dataEncoder: Encoder[SessionDescriptionData] = Encoder[SessionDescriptionData]
 }
 
@@ -138,7 +138,7 @@ case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOpt
   * set the bot as speaking. This is required before sending voice data.
   */
 case class Speaking(nowD: SpeakingData) extends VoiceMessage[SpeakingData] {
-  override def op:          VoiceOpCode           = VoiceOpCode.Speaking
+  override def op: VoiceOpCode                    = VoiceOpCode.Speaking
   override def dataEncoder: Encoder[SpeakingData] = Encoder[SpeakingData]
 }
 
@@ -147,7 +147,7 @@ case class Speaking(nowD: SpeakingData) extends VoiceMessage[SpeakingData] {
   * @param nowD The nonce we sent
   */
 case class HeartbeatACK(nowD: Int) extends VoiceMessage[Int] {
-  override def op:          VoiceOpCode  = VoiceOpCode.HeartbeatACK
+  override def op: VoiceOpCode           = VoiceOpCode.HeartbeatACK
   override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
@@ -164,7 +164,7 @@ case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
   * disconnected.
   */
 case class Resume(nowD: ResumeData) extends VoiceMessage[ResumeData] {
-  override def op:          VoiceOpCode         = VoiceOpCode.Resume
+  override def op: VoiceOpCode                  = VoiceOpCode.Resume
   override def dataEncoder: Encoder[ResumeData] = Encoder[ResumeData]
 }
 
@@ -172,8 +172,8 @@ case class Resume(nowD: ResumeData) extends VoiceMessage[ResumeData] {
   * Sent by Discord to tell us what heartbeat interval we should use.
   */
 case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
-  override def op:          VoiceOpCode      = VoiceOpCode.Hello
-  override def nowD:        NotUsed          = NotUsed
+  override def op: VoiceOpCode               = VoiceOpCode.Hello
+  override def nowD: NotUsed                 = NotUsed
   override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
@@ -181,8 +181,8 @@ case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
   * Send by Discord when we successfully resume a connection
   */
 case object Resumed extends VoiceMessage[NotUsed] {
-  override def op:          VoiceOpCode      = VoiceOpCode.Resumed
-  override def nowD:        NotUsed          = NotUsed
+  override def op: VoiceOpCode               = VoiceOpCode.Resumed
+  override def nowD: NotUsed                 = NotUsed
   override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
@@ -190,8 +190,8 @@ case object Resumed extends VoiceMessage[NotUsed] {
   * Message for OpCode 12, should be ignored
   */
 case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
-  override def op:          VoiceOpCode      = VoiceOpCode.Op12Ignore
-  override def nowD:        NotUsed          = NotUsed
+  override def op: VoiceOpCode               = VoiceOpCode.Op12Ignore
+  override def nowD: NotUsed                 = NotUsed
   override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
@@ -199,8 +199,8 @@ case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
   * Message for OpCode 13, should be ignored
   */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
-  override def op:          VoiceOpCode      = VoiceOpCode.ClientDisconnect
-  override def nowD:        NotUsed          = NotUsed
+  override def op: VoiceOpCode               = VoiceOpCode.ClientDisconnect
+  override def nowD: NotUsed                 = NotUsed
   override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 

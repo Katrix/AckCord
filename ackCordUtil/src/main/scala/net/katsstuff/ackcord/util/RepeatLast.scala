@@ -29,8 +29,8 @@ import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
 import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 
 class RepeatLast[A] extends GraphStage[FlowShape[A, A]] {
-  val in:             Inlet[A]        = Inlet("RepeatLast.in")
-  val out:            Outlet[A]       = Outlet("RepeatLast.out")
+  val in: Inlet[A]                    = Inlet("RepeatLast.in")
+  val out: Outlet[A]                  = Outlet("RepeatLast.out")
   override def shape: FlowShape[A, A] = FlowShape(in, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =

@@ -46,105 +46,105 @@ object JsonOption {
 }
 sealed trait JsonOption[+A] {
 
-  def isNull:      Boolean
+  def isNull: Boolean
   def isUndefined: Boolean
-  def isEmpty:     Boolean
+  def isEmpty: Boolean
   def nonEmpty: Boolean = !isEmpty
 
   def toOption: Option[A]
 
   def fold[B](ifNull: => B, ifUndefined: => B)(f: A => B): B
 
-  def map[B](f: A => B):                 JsonOption[B]
+  def map[B](f: A => B): JsonOption[B]
   def flatMap[B](f: A => JsonOption[B]): JsonOption[B]
 
-  def contains[A1 >: A](value: A1):      Boolean
+  def contains[A1 >: A](value: A1): Boolean
   def exists[A1 >: A](f: A1 => Boolean): Boolean
   def forall[A1 >: A](f: A1 => Boolean): Boolean
 
   def foreach[A1 >: A](f: A1 => Unit): Unit
 
-  def getOrElse[B >: A](other: => B):                 B
-  def getOrElseIfUndefined[B >: A](other: => B):      Option[B]
-  def orElse[B >: A](other: => JsonOption[B]):        JsonOption[B]
+  def getOrElse[B >: A](other: => B): B
+  def getOrElseIfUndefined[B >: A](other: => B): Option[B]
+  def orElse[B >: A](other: => JsonOption[B]): JsonOption[B]
   def orElseIfUndefined[B >: A](other: => Option[B]): Option[B]
 
   def toList[A1 >: A]: List[A]
 }
 case class JsonSome[A](value: A) extends JsonOption[A] {
-  override def isNull:      Boolean = false
+  override def isNull: Boolean      = false
   override def isUndefined: Boolean = false
-  override def isEmpty:     Boolean = false
+  override def isEmpty: Boolean     = false
 
   override def toOption: Option[A] = Some(value)
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: A => B): B = f(value)
 
-  override def map[B](f: A => B):                 JsonOption[B] = JsonSome(f(value))
+  override def map[B](f: A => B): JsonOption[B]                 = JsonSome(f(value))
   override def flatMap[B](f: A => JsonOption[B]): JsonOption[B] = f(value)
 
-  override def contains[A1 >: A](value: A1):      Boolean = this.value == value
+  override def contains[A1 >: A](value: A1): Boolean      = this.value == value
   override def exists[A1 >: A](f: A1 => Boolean): Boolean = f(value)
   override def forall[A1 >: A](f: A1 => Boolean): Boolean = f(value)
 
   override def foreach[A1 >: A](f: A1 => Unit): Unit = f(value)
 
-  override def getOrElse[B >: A](other: => B):                 B             = value
-  override def getOrElseIfUndefined[B >: A](other: => B):      Option[B]     = Some(value)
-  override def orElse[B >: A](other: => JsonOption[B]):        JsonOption[B] = this
-  override def orElseIfUndefined[B >: A](other: => Option[B]): Option[B]     = Some(value)
+  override def getOrElse[B >: A](other: => B): B                         = value
+  override def getOrElseIfUndefined[B >: A](other: => B): Option[B]      = Some(value)
+  override def orElse[B >: A](other: => JsonOption[B]): JsonOption[B]    = this
+  override def orElseIfUndefined[B >: A](other: => Option[B]): Option[B] = Some(value)
 
   override def toList[A1 >: A]: List[A] = List(value)
 }
 
 case object JsonNull extends JsonOption[Nothing] {
-  override def isNull:      Boolean = true
+  override def isNull: Boolean      = true
   override def isUndefined: Boolean = false
-  override def isEmpty:     Boolean = true
+  override def isEmpty: Boolean     = true
 
   override def toOption: Option[Nothing] = None
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: Nothing => B): B = ifNull
 
-  override def map[B](f: Nothing => B):                 JsonOption[B] = this
+  override def map[B](f: Nothing => B): JsonOption[B]                 = this
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
-  override def contains[A1 >: Nothing](value: A1):      Boolean = false
+  override def contains[A1 >: Nothing](value: A1): Boolean      = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false
   override def forall[A1 >: Nothing](f: A1 => Boolean): Boolean = true
 
   override def foreach[A1 >: Nothing](f: A1 => Unit): Unit = ()
 
-  override def getOrElse[B >: Nothing](other: => B):                 B             = other
-  override def getOrElseIfUndefined[B >: Nothing](other: => B):      Option[B]     = None
-  override def orElse[B >: Nothing](other: => JsonOption[B]):        JsonOption[B] = other
-  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B]     = None
+  override def getOrElse[B >: Nothing](other: => B): B                         = other
+  override def getOrElseIfUndefined[B >: Nothing](other: => B): Option[B]      = None
+  override def orElse[B >: Nothing](other: => JsonOption[B]): JsonOption[B]    = other
+  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B] = None
 
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
 }
 
 case object JsonUndefined extends JsonOption[Nothing] {
-  override def isNull:      Boolean = false
+  override def isNull: Boolean      = false
   override def isUndefined: Boolean = true
-  override def isEmpty:     Boolean = true
+  override def isEmpty: Boolean     = true
 
   override def toOption: Option[Nothing] = None
 
   override def fold[B](ifNull: => B, ifUndefined: => B)(f: Nothing => B): B = ifUndefined
 
-  override def map[B](f: Nothing => B):                 JsonOption[B] = this
+  override def map[B](f: Nothing => B): JsonOption[B]                 = this
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
-  override def contains[A1 >: Nothing](value: A1):      Boolean = false
+  override def contains[A1 >: Nothing](value: A1): Boolean      = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false
   override def forall[A1 >: Nothing](f: A1 => Boolean): Boolean = true
 
   override def foreach[A1 >: Nothing](f: A1 => Unit): Unit = ()
 
-  override def getOrElse[B >: Nothing](other: => B):                 B             = other
-  override def getOrElseIfUndefined[B >: Nothing](other: => B):      Option[B]     = Some(other)
-  override def orElse[B >: Nothing](other: => JsonOption[B]):        JsonOption[B] = other
-  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B]     = other
+  override def getOrElse[B >: Nothing](other: => B): B                         = other
+  override def getOrElseIfUndefined[B >: Nothing](other: => B): Option[B]      = Some(other)
+  override def orElse[B >: Nothing](other: => JsonOption[B]): JsonOption[B]    = other
+  override def orElseIfUndefined[B >: Nothing](other: => Option[B]): Option[B] = other
 
   override def toList[A1 >: Nothing]: List[Nothing] = Nil
 }

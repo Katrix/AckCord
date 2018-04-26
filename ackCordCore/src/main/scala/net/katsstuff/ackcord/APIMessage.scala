@@ -193,8 +193,7 @@ object APIMessage {
     * @param guild The guild requested for.
     * @param members The guild members in this chunk.
     */
-  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState)
-      extends GuildMessage
+  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when a new role is created.
@@ -256,8 +255,7 @@ object APIMessage {
     * @param messages The deleted messages
     * @param channel The channel of the deleted messages
     */
-  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState)
-      extends ChannelMessage
+  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user adds a reaction to a message.
@@ -322,8 +320,7 @@ object APIMessage {
     * @param user The user that began typing
     * @param timestamp When user started typing
     */
-  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState)
-      extends ChannelMessage
+  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user object is updated.
@@ -343,8 +340,7 @@ object APIMessage {
     * @param guild The guild of the update
     * @param endpoint The voice server
     */
-  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, cache: CacheState)
-      extends GuildMessage
+  case class VoiceServerUpdate(token: String, guild: Guild, endpoint: String, cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when guilds webhooks are updated.

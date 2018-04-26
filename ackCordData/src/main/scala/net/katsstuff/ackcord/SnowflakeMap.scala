@@ -48,7 +48,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     case (k, v) => (keyToSnowflake(k), v)
   }
 
-  override final def foreach[U](f: ((Key, V)) => U): Unit =
+  final override def foreach[U](f: ((Key, V)) => U): Unit =
     inner.foreach {
       case (k, v) => f((keyToSnowflake(k), v))
     }
@@ -87,13 +87,13 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
       case (k, v) => f(keyToSnowflake(k), v)
     })
 
-  override final def size: Int = inner.size
+  final override def size: Int = inner.size
 
-  override final def get(key: Key): Option[V] = inner.get(key)
+  final override def get(key: Key): Option[V] = inner.get(key)
 
-  override final def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key, default)
+  final override def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key, default)
 
-  override final def apply(key: Key): V = inner.apply(key)
+  final override def apply(key: Key): V = inner.apply(key)
 
   override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1, kv._2))
 

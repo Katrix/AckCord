@@ -150,7 +150,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 object Request {
   implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] =
     new CoflatMap[({ type L[A] = Request[A, Ctx] })#L] {
-      override def map[A, B](fa: Request[A, Ctx])(f: A => B):                     Request[B, Ctx] = fa.map(f)
+      override def map[A, B](fa: Request[A, Ctx])(f: A => B): Request[B, Ctx]                     = fa.map(f)
       override def coflatMap[A, B](fa: Request[A, Ctx])(f: Request[A, Ctx] => B): Request[B, Ctx] = fa.map(_ => f(fa))
     }
 }
@@ -272,13 +272,13 @@ case class RequestRatelimited[Ctx](
 
   override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
 
-  override def remainingRequests: Int                = 0
-  override def asException:       RatelimitException = new RatelimitException(global, tilReset, uri)
+  override def remainingRequests: Int          = 0
+  override def asException: RatelimitException = new RatelimitException(global, tilReset, uri)
 
   override def optData: None.type = None
 
-  override def map[B](f: Nothing => B):                         RequestRatelimited[Ctx] = this
-  override def filter(f: Nothing => Boolean):                   RequestRatelimited[Ctx] = this
+  override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
+  override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestRatelimited[Ctx] = this
 }
 
@@ -290,14 +290,14 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
 
   override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
 
-  override def tilReset:          FiniteDuration = -1.millis
-  override def remainingRequests: Int            = -1
-  override def uriRequestLimit:   Int            = -1
+  override def tilReset: FiniteDuration = -1.millis
+  override def remainingRequests: Int   = -1
+  override def uriRequestLimit: Int     = -1
 
   override def optData: None.type = None
 
-  override def map[B](f: Nothing => B):                         RequestError[Ctx] = this
-  override def filter(f: Nothing => Boolean):                   RequestError[Ctx] = this
+  override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
+  override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestError[Ctx] = this
 }
 
@@ -312,13 +312,13 @@ case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String)
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
 
-  override def tilReset:          FiniteDuration = -1.millis
-  override def remainingRequests: Int            = -1
-  override def uriRequestLimit:   Int            = -1
+  override def tilReset: FiniteDuration = -1.millis
+  override def remainingRequests: Int   = -1
+  override def uriRequestLimit: Int     = -1
 
   override def optData: None.type = None
 
-  override def map[B](f: Nothing => B):                         RequestDropped[Ctx] = this
-  override def filter(f: Nothing => Boolean):                   RequestDropped[Ctx] = this
+  override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
+  override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestDropped[Ctx] = this
 }

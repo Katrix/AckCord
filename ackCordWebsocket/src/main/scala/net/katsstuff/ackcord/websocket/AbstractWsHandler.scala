@@ -33,7 +33,7 @@ import akka.http.scaladsl.model.Uri
   */
 abstract class AbstractWsHandler[WsMessageTpe, Resume] extends Actor with Timers with ActorLogging {
 
-  var shuttingDown = false
+  var shuttingDown           = false
   var resume: Option[Resume] = None
 
   /**

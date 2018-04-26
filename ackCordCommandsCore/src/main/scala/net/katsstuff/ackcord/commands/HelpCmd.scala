@@ -54,7 +54,7 @@ abstract class HelpCmd extends Actor {
   override def receive: Receive = {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
-      val lowercaseCommand = cmd.toLowerCase(Locale.ROOT)
+      val lowercaseCommand                    = cmd.toLowerCase(Locale.ROOT)
 
       val response = for {
         cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))

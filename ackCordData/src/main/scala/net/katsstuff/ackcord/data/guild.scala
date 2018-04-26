@@ -34,7 +34,7 @@ import net.katsstuff.ackcord.{CacheSnapshot, SnowflakeMap}
   * A guild which that status of is unknown.
   */
 sealed trait UnknownStatusGuild {
-  def id:          GuildId
+  def id: GuildId
   def unavailable: Boolean
 }
 

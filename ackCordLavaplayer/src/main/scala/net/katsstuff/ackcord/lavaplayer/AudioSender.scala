@@ -38,7 +38,7 @@ class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef
   implicit val system: ActorSystem = context.system
 
   var future: ScheduledFuture[_] = _
-  var isSpeaking = false
+  var isSpeaking                 = false
 
   //We use our own scheduler as the Akka one isn't the most accurate one
   val threadScheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
@@ -82,12 +82,11 @@ class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef
       }
   }
 
-  def setSpeaking(speaking: Boolean): Unit = {
+  def setSpeaking(speaking: Boolean): Unit =
     if (speaking != isSpeaking) {
       wsHandler ! SetSpeaking(speaking)
       isSpeaking = speaking
     }
-  }
 }
 object AudioSender {
   def props(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef): Props =

@@ -88,7 +88,7 @@ class MusicHandler[F[_]](
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
 
-  private var inVChannel = ChannelId(0)
+  private var inVChannel             = ChannelId(0)
   private var lastTChannel: TChannel = _
 
   onTermination {

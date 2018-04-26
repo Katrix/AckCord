@@ -39,21 +39,21 @@ package object data {
 
   type SnowflakeType[A] = Long @@ SnowflakeTag[A]
   object SnowflakeType {
-    def apply[A](long: Long):      Long @@ SnowflakeTag[A] = tagS[SnowflakeTag[A]](long)
-    def apply[A](content: String): SnowflakeType[A]        = apply[A](JLong.parseUnsignedLong(content))
+    def apply[A](long: Long): Long @@ SnowflakeTag[A] = tagS[SnowflakeTag[A]](long)
+    def apply[A](content: String): SnowflakeType[A]   = apply[A](JLong.parseUnsignedLong(content))
   }
 
   private val DiscordEpoch = 1420070400000L
 
   implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
     def creationDate: Instant = Instant.ofEpochMilli(DiscordEpoch + (snowflake >> 22))
-    def asString:     String  = JLong.toUnsignedString(snowflake)
+    def asString: String      = JLong.toUnsignedString(snowflake)
   }
 
   type RawSnowflake = SnowflakeType[RawSnowflakeTag]
   object RawSnowflake {
     def apply(content: String): RawSnowflake = RawSnowflake(JLong.parseUnsignedLong(content))
-    def apply(long: Long):      RawSnowflake = SnowflakeType[RawSnowflakeTag](long)
+    def apply(long: Long): RawSnowflake      = SnowflakeType[RawSnowflakeTag](long)
   }
 
   //Some type aliases for better documentation by the types

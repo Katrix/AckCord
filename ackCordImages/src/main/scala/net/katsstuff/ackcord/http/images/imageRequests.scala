@@ -86,7 +86,7 @@ case class GetCustomEmojiImage[Ctx](
     emojiId: EmojiId,
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
-  override def route:          RequestRoute     = Routes.emojiImage(emojiId, format, desiredSize)
+  override def route: RequestRoute              = Routes.emojiImage(emojiId, format, desiredSize)
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.GIF)
 }
 
@@ -101,7 +101,7 @@ case class GetGuildIconImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route:          RequestRoute     = Routes.guildIconImage(guildId, iconHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.guildIconImage(guildId, iconHash, format, desiredSize)
 }
 
 /**
@@ -115,7 +115,7 @@ case class GetGuildSplashImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route:          RequestRoute     = Routes.guildSplashImage(guildId, splashHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, desiredSize)
 }
 
 /**
@@ -124,8 +124,8 @@ case class GetGuildSplashImage[Ctx](
 case class GetDefaultUserAvatarImage[Ctx](desiredSize: Int, discriminator: Int, context: Ctx = NotUsed: NotUsed)
     extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
-  override def format:         ImageFormat      = ImageFormat.PNG
-  override def route:          RequestRoute     = Routes.defaultUserAvatarImage(discriminator, format, desiredSize)
+  override def format: ImageFormat              = ImageFormat.PNG
+  override def route: RequestRoute              = Routes.defaultUserAvatarImage(discriminator, format, desiredSize)
 }
 
 /**
@@ -154,5 +154,5 @@ case class GetApplicationIconImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route:          RequestRoute     = Routes.applicationIconImage(applicationId, iconHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, desiredSize)
 }

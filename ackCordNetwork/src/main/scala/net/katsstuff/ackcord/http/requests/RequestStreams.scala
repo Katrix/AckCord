@@ -84,12 +84,11 @@ object RequestStreams {
       credentials: HttpCredentials,
       parallelism: Int = 4,
       rateLimitActor: ActorRef
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
     createHttpRequestFlow[Data, Ctx](credentials)
       .via(requestHttpFlow)
       .via(requestParser(parallelism))
       .alsoTo(sendRatelimitUpdates(rateLimitActor))
-  }
 
   /**
     * A request flow which will send requests to Discord, and receive responses.
@@ -170,10 +169,12 @@ object RequestStreams {
 
     val withLogging =
       if (AckCordSettings().LogSentREST)
-        baseFlow.log("Sent REST request", { request =>
-          val loggingBody = request.bodyForLogging.fold("")(body => s" and content $body")
-          s"to ${request.route.uri} with method ${request.route.method}$loggingBody"
-        })
+        baseFlow.log(
+          "Sent REST request", { request =>
+            val loggingBody = request.bodyForLogging.fold("")(body => s" and content $body")
+            s"to ${request.route.uri} with method ${request.route.method}$loggingBody"
+          }
+        )
       else baseFlow
 
     withLogging

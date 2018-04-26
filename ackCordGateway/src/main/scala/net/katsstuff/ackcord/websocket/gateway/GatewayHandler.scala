@@ -56,8 +56,8 @@ class GatewayHandler(
   import AbstractWsHandler._
   import context.dispatcher
 
-  private implicit val system: ActorSystem      = context.system
-  private var killSwitch:      SharedKillSwitch = _
+  implicit private val system: ActorSystem = context.system
+  private var killSwitch: SharedKillSwitch = _
 
   def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 

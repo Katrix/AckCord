@@ -143,7 +143,7 @@ trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceRespons
   */
 trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUsed, RawResponse, NiceResponse, Ctx] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
-  override def params:        NotUsed          = NotUsed
+  override def params: NotUsed                 = NotUsed
 }
 
 /**
@@ -152,7 +152,7 @@ trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUse
 trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, NiceResponse, Ctx], RawResponse, NiceResponse, Ctx]
     extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
-  override def params:        NotUsed          = NotUsed
+  override def params: NotUsed                 = NotUsed
 }
 
 /**

@@ -29,9 +29,9 @@ import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
 import akka.stream.{Attributes, FlowShape, Inlet, Materializer, Outlet}
 
 class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphStage[FlowShape[In, Out]] {
-  val in:  Inlet[In]   = Inlet("MapWithMaterializer.in")
+  val in: Inlet[In]    = Inlet("MapWithMaterializer.in")
   val out: Outlet[Out] = Outlet("MapWithMaterializer.out")
-  override def shape = FlowShape(in, out)
+  override def shape   = FlowShape(in, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) with InHandler with OutHandler {

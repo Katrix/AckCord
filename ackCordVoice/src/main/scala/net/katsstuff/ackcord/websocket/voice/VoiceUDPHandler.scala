@@ -65,10 +65,10 @@ class VoiceUDPHandler(
   startWith(Inactive, NoSocket)
 
   var sequence: Short = 0
-  var timestamp = 0
+  var timestamp       = 0
 
   var burstSender: ActorRef = _
-  var hasSentRequest = false
+  var hasSentRequest        = false
 
   /**
     * Sometimes we send messages too quickly, in that case we put
@@ -152,7 +152,6 @@ class VoiceUDPHandler(
       stay
 
     case Event(SendDataBurst(data), WithSecret(socket, secret)) =>
-
       if (data.nonEmpty) {
         hasSentRequest = false
         queuePackets(data, secret, socket)
@@ -264,7 +263,7 @@ object VoiceUDPHandler {
 
   private case class UDPAck(sequence: Short)
 
-  private sealed trait ExpectedResponseType
+  sealed private trait ExpectedResponseType
   private case class IPDiscovery(replyTo: ActorRef) extends ExpectedResponseType
 
   /**
@@ -344,7 +343,7 @@ object VoiceUDPHandler {
     */
   case class RTPHeader(tpe: Byte, version: Byte, sequence: Short, timestamp: Int, ssrc: Int) {
     lazy val byteString: ByteString = {
-      val builder = ByteString.newBuilder
+      val builder                   = ByteString.newBuilder
       implicit val order: ByteOrder = ByteOrder.BIG_ENDIAN
       builder.putByte(tpe)
       builder.putByte(version)

@@ -52,7 +52,7 @@ case class CreateWebhook[Ctx](
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateWebhook[Ctx], CreateWebhookData, Webhook, Ctx] {
-  override def route:         RequestRoute               = Routes.createWebhook(channelId)
+  override def route: RequestRoute                       = Routes.createWebhook(channelId)
   override def paramsEncoder: Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -136,12 +136,12 @@ case class ModifyWebhook[Ctx](
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyWebhook[Ctx], ModifyWebhookData, Webhook, Ctx] {
-  override def route:         RequestRoute               = Routes.getWebhook(id)
+  override def route: RequestRoute                       = Routes.getWebhook(id)
   override def paramsEncoder: Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
-  override def requiredPermissions:        Permission         = Permission.ManageWebhooks
+  override def requiredPermissions: Permission                = Permission.ManageWebhooks
   override def withReason(reason: String): ModifyWebhook[Ctx] = copy(reason = Some(reason))
 }
 
@@ -158,8 +158,8 @@ case class ModifyWebhookWithToken[Ctx](
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
   override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
 
-  override def paramsEncoder:   Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
-  override def responseDecoder: Decoder[Webhook]           = Decoder[Webhook]
+  override def paramsEncoder: Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+  override def responseDecoder: Decoder[Webhook]         = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 

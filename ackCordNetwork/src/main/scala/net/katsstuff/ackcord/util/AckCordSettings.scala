@@ -33,14 +33,14 @@ import akka.actor.ActorSystem
 class AckCordSettings(config: Config) {
   import config._
 
-  val LogReceivedWs:   Boolean = getBoolean("ackcord.logging.payloads.log-received-ws")
-  val LogSentWs:       Boolean = getBoolean("ackcord.logging.payloads.log-sent-ws")
+  val LogReceivedWs: Boolean   = getBoolean("ackcord.logging.payloads.log-received-ws")
+  val LogSentWs: Boolean       = getBoolean("ackcord.logging.payloads.log-sent-ws")
   val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
-  val LogSentREST:     Boolean = getBoolean("ackcord.logging.payloads.log-sent-rest")
+  val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
 
   val UDPMaxPacketsBeforeDrop: Int = getInt("ackcord.voice.max-packets-before-drop")
-  val UDPMaxBurstAmount:       Int = getInt("ackcord.voice.max-burst-amount")
-  val UDPSendRequestAmount:    Int = getInt("ackcord.voice.send-request-amount")
+  val UDPMaxBurstAmount: Int       = getInt("ackcord.voice.max-burst-amount")
+  val UDPSendRequestAmount: Int    = getInt("ackcord.voice.send-request-amount")
 }
 object AckCordSettings {
 
