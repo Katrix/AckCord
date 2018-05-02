@@ -25,12 +25,16 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
+import scala.language.higherKinds
+
 import cats.Id
 import cats.catsInstancesForId
 import cats.data.OptionT
 import net.katsstuff.ackcord.data._
 
 trait CacheSnapshotId extends CacheSnapshot[Id] {
+
+  override type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
 
   override def getDmChannel(id: ChannelId): OptionT[Id, DMChannel] = OptionT.fromOption[Id](dmChannelMap.get(id))
 
