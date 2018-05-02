@@ -34,7 +34,52 @@ import net.katsstuff.ackcord.data._
 
 trait CacheSnapshotId extends CacheSnapshot[Id] {
 
-  override type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
+  /**
+    * The map type to use. Mutable for builder, immutable otherwise.
+    */
+  type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
+
+  /**
+    * The current dm channels.
+    */
+  def dmChannelMap: MapType[Channel, DMChannel]
+
+  /**
+    * The current group dm channels.
+    */
+  def groupDmChannelMap: MapType[Channel, GroupDMChannel]
+
+  /**
+    * The guilds currently not available.
+    */
+  def unavailableGuildMap: MapType[Guild, UnavailableGuild]
+
+  /**
+    * The currently joined guilds.
+    */
+  def guildMap: MapType[Guild, Guild]
+
+  /**
+    * All messages, organized by channelId, and then messageId.
+    */
+  def messageMap: MapType[Channel, MapType[Message, Message]]
+
+  /**
+    * The point each user typed for each channel.
+    */
+  def lastTypedMap: MapType[Channel, MapType[User, Instant]]
+
+  /**
+    * All the users currently tracked.
+    */
+  def userMap: MapType[User, User]
+
+  /**
+    * The bans received this session. NOTE: This is not all the bans that exists,
+    * only the ones received during this session. If you want all the bans,
+    * use [[net.katsstuff.ackcord.http.rest.GetGuildBans]].
+    */
+  def banMap: MapType[Guild, MapType[User, Ban]]
 
   override def getDmChannel(id: ChannelId): OptionT[Id, DMChannel] = OptionT.fromOption[Id](dmChannelMap.get(id))
 
@@ -48,6 +93,11 @@ trait CacheSnapshotId extends CacheSnapshot[Id] {
 
   override def getGuildWithUnavailable(id: GuildId): OptionT[Id, UnknownStatusGuild] =
     OptionT.fromOption[Id](getGuild(id).value.orElse(unavailableGuildMap.get(id)))
+
+  /**
+    * Gets all the messages for a specific channel.
+    */
+  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
 
   override def getMessage(channelId: ChannelId, messageId: MessageId): OptionT[Id, Message] =
     OptionT.fromOption[Id](messageMap.get(channelId).flatMap(_.get(messageId)))
@@ -76,12 +126,22 @@ trait CacheSnapshotId extends CacheSnapshot[Id] {
   override def getEmoji(id: EmojiId): OptionT[Id, Emoji] =
     OptionT.fromOption[Id](guildMap.collectFirst { case (_, gMap) if gMap.emojis.contains(id) => gMap.emojis(id) })
 
+  /**
+    * Get a map of when users last typed in a channel.
+    */
+  def getChannelLastTyped(channelId: ChannelId): MapType[User, Instant]
+
   override def getLastTyped(channelId: ChannelId, userId: UserId): OptionT[Id, Instant] =
     OptionT.fromOption[Id](lastTypedMap.get(channelId).flatMap(_.get(userId)))
 
   override def getUser(id: UserId): OptionT[Id, User] =
     if (id == botUser.id) OptionT.pure[Id](botUser)
     else OptionT.fromOption[Id](userMap.get(id))
+
+  /**
+    * Gets all the bans for a specific guild.
+    */
+  def getGuildBans(id: GuildId): MapType[User, Ban]
 
   override def getBan(guildId: GuildId, userId: UserId): OptionT[Id, Ban] =
     OptionT.fromOption[Id](getGuildBans(guildId).get(userId))

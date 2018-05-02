@@ -38,56 +38,9 @@ import shapeless.tag._
 trait CacheSnapshot[F[_]] {
 
   /**
-    * The map type to use. Mutable for builder, immutable otherwise.
-    */
-  type MapType[K, V] <: collection.Map[SnowflakeType[K], F[V]]
-
-  /**
     * Our bot user. Tagged to allow special syntax.
     */
   def botUser: F[User @@ BotUser]
-
-  /**
-    * The current dm channels.
-    */
-  def dmChannelMap: MapType[Channel, DMChannel]
-
-  /**
-    * The current group dm channels.
-    */
-  def groupDmChannelMap: MapType[Channel, GroupDMChannel]
-
-  /**
-    * The guilds currently not available.
-    */
-  def unavailableGuildMap: MapType[Guild, UnavailableGuild]
-
-  /**
-    * The currently joined guilds.
-    */
-  def guildMap: MapType[Guild, Guild]
-
-  /**
-    * All messages, organized by channelId, and then messageId.
-    */
-  def messageMap: MapType[Channel, MapType[Message, Message]]
-
-  /**
-    * The point each user typed for each channel.
-    */
-  def lastTypedMap: MapType[Channel, MapType[User, Instant]]
-
-  /**
-    * All the users currently tracked.
-    */
-  def userMap: MapType[User, User]
-
-  /**
-    * The bans received this session. NOTE: This is not all the bans that exists,
-    * only the ones received during this session. If you want all the bans,
-    * use [[net.katsstuff.ackcord.http.rest.GetGuildBans]].
-    */
-  def banMap: MapType[Guild, MapType[User, Ban]]
 
   /**
     * Get a dm channel by id.
@@ -113,11 +66,6 @@ trait CacheSnapshot[F[_]] {
     * Get guild by id, also including unavailable guilds.
     */
   def getGuildWithUnavailable(id: GuildId): OptionT[F, UnknownStatusGuild]
-
-  /**
-    * Gets all the messages for a specific channel.
-    */
-  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
 
   /**
     * Get a message, specifying both the channel, and message id.
@@ -167,11 +115,6 @@ trait CacheSnapshot[F[_]] {
   def getEmoji(id: EmojiId): OptionT[F, Emoji]
 
   /**
-    * Get a map of when users last typed in a channel.
-    */
-  def getChannelLastTyped(channelId: ChannelId): MapType[User, Instant]
-
-  /**
     * Get the instant a user last typed in a channel.
     */
   def getLastTyped(channelId: ChannelId, userId: UserId): OptionT[F, Instant]
@@ -181,11 +124,6 @@ trait CacheSnapshot[F[_]] {
     * Get a user by id.
     */
   def getUser(id: UserId): OptionT[F, User]
-
-  /**
-    * Gets all the bans for a specific guild.
-    */
-  def getGuildBans(id: GuildId): MapType[User, Ban]
 
   /**
     * Gets the ban for a specific user.
