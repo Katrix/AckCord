@@ -469,9 +469,9 @@ case class RawRole(
   * @param id The id of the party.
   * @param size Sequence of two integers, the current size, and the max size.
   */
-case class RawActivityParty(id: Option[String], size: Seq[Int]) {
+case class RawActivityParty(id: Option[String], size: Option[Seq[Int]]) {
 
-  def toParty: ActivityParty = ActivityParty(id, size.head, size(1))
+  def toParty: ActivityParty = ActivityParty(id, size.map(_.head), size.map(seq => seq(1)))
 }
 
 /**

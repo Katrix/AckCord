@@ -443,7 +443,7 @@ case class ActivityAsset(
   * @param currentSize The current size of the party.
   * @param maxSize The max size of the party.
   */
-case class ActivityParty(id: Option[String], currentSize: Int, maxSize: Int)
+case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: Option[Int])
 
 /**
   * The text in a presence
