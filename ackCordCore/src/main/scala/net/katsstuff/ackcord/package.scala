@@ -31,6 +31,9 @@ package object ackcord {
   val JsonOption: util.JsonOption.type = util.JsonOption
   type JsonOption[A] = util.JsonOption[A]
 
+  val JsonSome: util.JsonSome.type = util.JsonSome
+  type JsonSome[A] = util.JsonSome[A]
+
   val JsonNull: util.JsonNull.type = util.JsonNull
   type JsonNull = util.JsonNull.type
 
