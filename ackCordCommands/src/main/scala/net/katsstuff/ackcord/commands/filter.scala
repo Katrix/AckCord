@@ -44,18 +44,18 @@ trait CmdFilter {
     * and similar. If it's not possible to determine if the command can be
     * used, then this method should be optimistic.
     */
-  def isAllowed[F[_]: Monad](userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot[F]): F[Boolean]
+  def isAllowed[F[_]](userId: UserId, guildId: GuildId)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
 
   /**
     * Check if the message can be executed.
     */
-  def isAllowed[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): F[Boolean]
+  def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
 
   /**
     * If the message could not be executed, get an error message to
     * give the user.
     */
-  def errorMessage[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): OptionT[F, String]
+  def errorMessage[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, String]
 }
 object CmdFilter {
 
@@ -63,18 +63,18 @@ object CmdFilter {
     * Only allow this command to be used in a specific context
     */
   case class InContext(context: Context) extends CmdFilter {
-    override def isAllowed[F[_]: Monad](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F]
+    override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
+        implicit c: CacheSnapshot[F], F: Monad[F]
     ): F[Boolean] = Monad[F].pure(true)
 
-    override def isAllowed[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): F[Boolean] =
+    override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
       msg.channelId.resolve.exists {
         case _: GuildChannel   => context == Context.Guild
         case _: DMChannel      => context == Context.DM
         case _: GroupDMChannel => context == Context.DM //We consider group DMs to be DMs
       }
 
-    override def errorMessage[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): OptionT[F, String] =
+    override def errorMessage[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, String] =
       OptionT.pure[F](s"This command can only be used in a $context")
   }
 
@@ -92,14 +92,14 @@ object CmdFilter {
     * A command that can only be used in a single guild.
     */
   case class InOneGuild(guildId: GuildId) extends CmdFilter {
-    override def isAllowed[F[_]: Monad](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F]
+    override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
+        implicit c: CacheSnapshot[F], F: Monad[F]
     ): F[Boolean] = guildId.resolve.map(_.members).exists(_.contains(userId))
 
-    override def isAllowed[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): F[Boolean] =
+    override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
       msg.tGuildChannel(guildId).isDefined
 
-    override def errorMessage[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): OptionT[F, String] =
+    override def errorMessage[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, String] =
       OptionT.none
   }
 
@@ -108,13 +108,13 @@ object CmdFilter {
     * If this command is not used in a guild, it will always pass this filter.
     */
   case class NeedPermission(neededPermission: Permission) extends CmdFilter {
-    override def isAllowed[F[_]: Monad](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F]
+    override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
+        implicit c: CacheSnapshot[F], F: Monad[F]
     ): F[Boolean] = guildId.resolve.exists { guild =>
       guild.members.get(userId).exists(_.permissions(guild).hasPermissions(neededPermission))
     }
 
-    override def isAllowed[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): F[Boolean] = {
+    override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = {
       val allowed = for {
         channel      <- msg.channelId.tResolve
         guildChannel <- OptionT.fromOption(channel.asGuildChannel)
@@ -128,7 +128,7 @@ object CmdFilter {
       allowed.getOrElse(false)
     }
 
-    override def errorMessage[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): OptionT[F, String] =
+    override def errorMessage[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, String] =
       OptionT.pure("You don't have permission to use this command")
   }
 
@@ -136,15 +136,15 @@ object CmdFilter {
     * A filter that only allows non bot users.
     */
   case object NonBot extends CmdFilter {
-    override def isAllowed[F[_]: Monad](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F]
+    override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
+        implicit c: CacheSnapshot[F], F: Monad[F]
     ): F[Boolean] =
       c.getUser(userId).exists(_.bot.getOrElse(false))
 
-    override def isAllowed[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): F[Boolean] =
+    override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
       UserId(msg.authorId).resolve.exists(u => !u.bot.getOrElse(false) && msg.isAuthorUser)
 
-    override def errorMessage[F[_]: Monad](msg: Message)(implicit c: CacheSnapshot[F]): OptionT[F, String] =
+    override def errorMessage[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, String] =
       OptionT.none
   }
 }

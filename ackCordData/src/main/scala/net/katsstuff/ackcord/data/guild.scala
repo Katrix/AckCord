@@ -277,7 +277,7 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user
     */
-  def permissions[F[_]: Functor](implicit c: CacheSnapshot[F]): F[Permission] =
+  def permissions[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): F[Permission] =
     guildId.resolve.map(permissions).getOrElse(Permission.None)
 
   /**
@@ -298,8 +298,8 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def permissionsWithOverrides[F[_]: Functor: Applicative](guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshot[F]
+  def permissionsWithOverrides[F[_]](guildPermissions: Permission, channelId: ChannelId)(
+      implicit c: CacheSnapshot[F], F: Monad[F]
   ): F[Permission] = {
     if (guildPermissions.hasPermissions(Permission.Administrator)) Applicative[F].pure(Permission.All)
     else {
@@ -349,13 +349,13 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def channelPermissions[F[_]: Monad](channelId: ChannelId)(implicit c: CacheSnapshot[F]): F[Permission] =
+  def channelPermissions[F[_]](channelId: ChannelId)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Permission] =
     Monad[F].flatMap(permissions)(perms => permissionsWithOverrides(perms, channelId))
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove[F[_]: Monad](others: Seq[RoleId])(implicit c: CacheSnapshot[F]): F[Boolean] = {
+  def hasRoleAbove[F[_]](others: Seq[RoleId])(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = {
     guild
       .semiflatMap { guild =>
         val ownerId = guild.ownerId
@@ -381,7 +381,7 @@ case class GuildMember(
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove[F[_]: Monad](other: GuildMember)(implicit c: CacheSnapshot[F]): F[Boolean] =
+  def hasRoleAbove[F[_]](other: GuildMember)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
     guild
       .semiflatMap { guild =>
         if (other.userId == guild.ownerId) Monad[F].pure(false) else hasRoleAbove(other.roleIds)

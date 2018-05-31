@@ -146,9 +146,9 @@ object HelpCmd {
 
     //We write out the parser ourself as string parses any string
     implicit val parser: MessageParser[Args] = new MessageParser[Args] {
-      override def parse[F[_]: Monad](
+      override def parse[F[_]](
           strings: List[String]
-      )(implicit c: CacheSnapshot[F]): EitherT[F, String, (List[String], Args)] = {
+      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Args)] = {
         if (strings.nonEmpty) {
           val head :: tail = strings
           MessageParser.intParser

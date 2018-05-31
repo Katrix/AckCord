@@ -105,14 +105,14 @@ package object data {
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, TGuildChannel] =
+    def tResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
 
     /**
       * Resolve the channel represented by this id as a voice channel relative
       * to a guild id.
       */
-    def vResolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, VGuildChannel] =
+    def vResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, VGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
@@ -152,7 +152,7 @@ package object data {
       * Resolve the guild member represented by this id.
       * @param guildId The guild to find the guild member in
       */
-    def resolveMember[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, GuildMember] =
+    def resolveMember[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, GuildMember] =
       c.getGuild(guildId).subflatMap(_.members.get(userId))
   }
 
@@ -200,7 +200,7 @@ package object data {
     /**
       * Resolve the emoji this id represents relative to a guild id.
       */
-    def resolve[F[_]: Functor](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, Emoji] =
+    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, Emoji] =
       c.getGuild(guildId).subflatMap(_.emojis.get(emojiId))
   }
 

@@ -285,7 +285,7 @@ case class Message(
   /**
     * Formats mentions in this message to their normal syntax with names.
     */
-  def formatMentions[F[_]: Monad](implicit c: CacheSnapshot[F]): F[String] = {
+  def formatMentions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[String] = {
     for {
       userList <- mentions.toList.traverse(_.resolve.value)
       roleList <- mentionRoles.toList.traverse(_.resolve.value)

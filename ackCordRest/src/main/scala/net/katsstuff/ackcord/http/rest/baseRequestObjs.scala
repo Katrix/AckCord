@@ -88,7 +88,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
   /**
     * Check if a client has the needed permissions to execute this request.
     */
-  def hasPermissions[F[_]: Monad](implicit c: CacheSnapshot[F]): F[Boolean] = Monad[F].pure(true)
+  def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = Monad[F].pure(true)
 }
 
 /**

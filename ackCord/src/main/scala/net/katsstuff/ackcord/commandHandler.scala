@@ -45,8 +45,10 @@ abstract class CommandHandler[A](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle[F[_]: Monad: Streamable](msg: Message, args: A, remaining: List[String])(
-      implicit c: CacheSnapshot[F]
+  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
+      implicit c: CacheSnapshot[F],
+      F: Monad[F],
+      S: Streamable[F]
   ): Unit
 }
 
@@ -66,7 +68,9 @@ abstract class CommandHandlerDSL[A](
     * Runs the [[RequestDSL]] whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle[F[_]: Monad: Streamable](msg: Message, args: A, remaining: List[String])(
-      implicit c: CacheSnapshot[F]
+  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
+      implicit c: CacheSnapshot[F],
+      F: Monad[F],
+      S: Streamable[F]
   ): RequestDSL[Unit]
 }

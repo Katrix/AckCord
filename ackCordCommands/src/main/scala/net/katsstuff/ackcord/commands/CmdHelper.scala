@@ -111,8 +111,8 @@ object CmdHelper {
   /**
     * Check if a message is a valid command.
     */
-  def isValidCommand[F[_]: Monad](needMention: Boolean, msg: Message)(
-      implicit c: CacheSnapshot[F]
+  def isValidCommand[F[_]](needMention: Boolean, msg: Message)(
+      implicit c: CacheSnapshot[F], F: Monad[F]
   ): OptionT[F, List[String]] = {
     if (needMention) {
       OptionT.liftF(c.botUser).flatMap { botUser =>
