@@ -1,9 +1,9 @@
 import sbtcrossproject.{crossProject, CrossType}
 
-lazy val akkaVersion     = "2.5.11"
-lazy val akkaHttpVersion = "10.1.0"
+lazy val akkaVersion     = "2.5.12"
+lazy val akkaHttpVersion = "10.1.1"
 lazy val circeVersion    = "0.9.3"
-lazy val ackCordVersion  = "0.10.0"
+lazy val ackCordVersion  = "0.11.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.5",
@@ -79,7 +79,7 @@ lazy val ackCordNetwork = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.20.0",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.21.0",
     description := "The base network module of AckCord"
   )
   .dependsOn(ackCordDataJVM)
