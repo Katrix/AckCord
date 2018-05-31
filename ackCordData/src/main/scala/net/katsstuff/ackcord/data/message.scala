@@ -74,14 +74,14 @@ object ImageData {
   */
 trait MessageType
 object MessageType {
-  object Default              extends MessageType
-  object RecipientAdd         extends MessageType
-  object RecipientRemove      extends MessageType
-  object Call                 extends MessageType
-  object ChannelNameChange    extends MessageType
-  object ChannelIconChange    extends MessageType
-  object ChannelPinnedMessage extends MessageType
-  object GuildMemberJoin      extends MessageType
+  case object Default              extends MessageType
+  case object RecipientAdd         extends MessageType
+  case object RecipientRemove      extends MessageType
+  case object Call                 extends MessageType
+  case object ChannelNameChange    extends MessageType
+  case object ChannelIconChange    extends MessageType
+  case object ChannelPinnedMessage extends MessageType
+  case object GuildMemberJoin      extends MessageType
 
   def forId(id: Int): Option[MessageType] = id match {
     case 0 => Some(Default)
