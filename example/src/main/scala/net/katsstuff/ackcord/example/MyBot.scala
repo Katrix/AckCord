@@ -63,12 +63,10 @@ object MyBot extends App {
 
           for {
             tChannel <- optionPure(message.channel.asTChannel)
-            _        <- wrapRequest(tChannel.sendMessage("First"))
+            _        <- runRequest(tChannel.sendMessage("First"))
           } yield ()
         }
       })
-
-
 
       client.registerHandler(new EventHandlerDSL[Id, APIMessage.ChannelDelete] {
         override def handle[G[_]](
@@ -86,14 +84,16 @@ object MyBot extends App {
       })
 
       client.registerHandler(new RawCommandHandlerDSL[Id] {
-        override def handle[G[_]](implicit c: CacheSnapshot[Id], DSL: RequestDSL[G], G: Alternative[G] with Monad[G])
-          : PartialFunction[RawCmd[Id], Unit] = {
+        override def handle[G[_]](
+            rawCmd: RawCmd[Id]
+        )(implicit c: CacheSnapshot[Id], DSL: RequestDSL[G], G: Alternative[G] with Monad[G]): G[Unit] = rawCmd match {
           case RawCmd(message, GeneralCommands, "echo", args, _) =>
             import DSL._
             for {
               channel <- optionPure(message.tGuildChannel.value)
-              _       <- wrapRequest(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
+              _       <- runRequest(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
             } yield ()
+          case _ => G.unit
         }
       })
 

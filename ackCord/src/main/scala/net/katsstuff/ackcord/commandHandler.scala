@@ -29,18 +29,30 @@ import cats.{Alternative, Monad}
 import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, RawCmd}
 import net.katsstuff.ackcord.data.Message
 
-abstract class RawCommandHandler[F[_]] {
+/**
+  * A handler for raw commands.
+  */
+trait RawCommandHandler[F[_]] {
 
-  def handle(implicit c: CacheSnapshot[F]): PartialFunction[RawCmd[F], Unit]
+  /**
+    * Called whenever a command is received.
+    */
+  def handle(rawCmd: RawCmd[F])(implicit c: CacheSnapshot[F]): Unit
 }
 
-abstract class RawCommandHandlerDSL[F[_]] {
+/**
+  * A handler for raw commands that uses a [[RequestDSL]] when the commands are received.
+  */
+trait RawCommandHandlerDSL[F[_]] {
 
-  def handle[G[_]](
+  /**
+    * Called whenever a command is received.
+    */
+  def handle[G[_]](rawCmd: RawCmd[F])(
       implicit c: CacheSnapshot[F],
       DSL: RequestDSL[G],
       G: Alternative[G] with Monad[G]
-  ): PartialFunction[RawCmd[F], Unit]
+  ): G[Unit]
 }
 
 /**

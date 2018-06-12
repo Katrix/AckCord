@@ -61,16 +61,14 @@ trait CommandsHelper[F[_]] {
 
   def registerHandler(handler: RawCommandHandler[F]): (UniqueKillSwitch, Future[Done]) = runDSL { _ =>
     commands.subscribe.collect {
-      case cmd: RawCmd[F] if handler.handle(cmd.c).isDefinedAt(cmd) => handler.handle(cmd.c)(cmd)
+      case cmd: RawCmd[F] => handler.handle(cmd)(cmd.c)
     }
   }
 
   def registerHandler(handler: RawCommandHandlerDSL[F]): (UniqueKillSwitch, Future[Done]) = runDSL { dsl =>
     commands.subscribe.collect {
-      case cmd: RawCmd[F]
-          if handler.handle[Source[?, Any]](cmd.c, dsl, StreamConveniences.sourceInstance).isDefinedAt(cmd) =>
-        handler.handle[Source[?, Any]](cmd.c, dsl, StreamConveniences.sourceInstance)(cmd)
-    }
+      case cmd: RawCmd[F] => handler.handle[Source[?, Any]](cmd)(cmd.c, dsl, StreamConveniences.sourceInstance)
+    }.flatMapConcat(identity)
   }
 
   /**
