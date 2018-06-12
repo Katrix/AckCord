@@ -35,7 +35,6 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws._
-import akka.stream.ActorAttributes.SupervisionStrategy
 import akka.stream.scaladsl.{Compression, Flow, Keep, Sink, Source, SourceQueueWithComplete}
 import akka.stream.{ActorAttributes, Attributes, Materializer, OverflowStrategy, Supervision}
 import akka.util.ByteString

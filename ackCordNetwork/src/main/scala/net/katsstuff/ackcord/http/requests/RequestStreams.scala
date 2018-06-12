@@ -36,7 +36,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
 import akka.pattern.{ask, AskTimeoutException}
-import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
