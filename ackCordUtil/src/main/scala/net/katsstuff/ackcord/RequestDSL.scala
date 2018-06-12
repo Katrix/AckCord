@@ -28,14 +28,14 @@ import scala.language.{higherKinds, implicitConversions}
 
 import akka.NotUsed
 import akka.stream.scaladsl.{Sink, Source}
-import cats.{Alternative, Applicative, Foldable, Monad}
+import cats.{Alternative, Applicative, Foldable}
 import net.katsstuff.ackcord.http.requests.{Request, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.util.Streamable
 
 trait RequestDSL[F[_]] {
-  def wrapRequest[A](request: Request[A, _]): F[A]
+  def runRequest[A](request: Request[A, _]): F[A]
 
-  def fromSource[A](source: Source[A, NotUsed]): F[A]
+  def runSource[A](source: Source[A, NotUsed]): F[A]
 
   //From here on it's all convenience methods
 
@@ -43,15 +43,12 @@ trait RequestDSL[F[_]] {
 
   def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(F.pure)
 
-  def optionRequest[A](opt: Option[Request[A, _]])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(wrapRequest)
+  def optionRequest[A](opt: Option[Request[A, _]])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(runRequest)
 
-  def liftStreamable[G[_], A](ga: G[A])(implicit streamable: Streamable[G]): F[A] = fromSource(streamable.toSource(ga))
+  def liftStreamable[G[_], A](ga: G[A])(implicit streamable: Streamable[G]): F[A] = runSource(streamable.toSource(ga))
 
   def liftFoldable[G[_], A](ga: G[A])(implicit F: Alternative[F], G: Foldable[G]): F[A] =
     G.foldLeft(ga, F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
-
-  def wrapFRequest[G[_], A](request: G[Request[A, _]])(implicit F: Alternative[F], FM: Monad[F], G: Foldable[G]): F[A] =
-    FM.flatMap(liftFoldable(request))(wrapRequest)
 }
 
 object RequestDSL {
@@ -59,11 +56,11 @@ object RequestDSL {
 
   implicit def sourceRequestDsl(implicit requests: RequestHelper): RequestDSL[Source[?, Any]] =
     new RequestDSL[Source[?, Any]] {
-      implicit override def wrapRequest[A](request: Request[A, _]): Source[A, _] = requests.single(request).collect {
+      implicit override def runRequest[A](request: Request[A, _]): Source[A, _] = requests.single(request).collect {
         case res: RequestResponse[A, _] => res.data
       }
 
-      override def fromSource[A](source: Source[A, NotUsed]): Source[A, _] = source
+      override def runSource[A](source: Source[A, NotUsed]): Source[A, _] = source
     }
 
   implicit def futureRequestDsl[F[_]](
@@ -72,13 +69,13 @@ object RequestDSL {
   ): RequestDSL[λ[A => Future[F[A]]]] = new RequestDSL[λ[A => Future[F[A]]]] {
     import requests.mat
     import requests.mat.executionContext
-    implicit override def wrapRequest[A](request: Request[A, _]): Future[F[A]] =
+    implicit override def runRequest[A](request: Request[A, _]): Future[F[A]] =
       requests
         .singleFuture(request)
         .collect { case res: RequestResponse[A, _] => res.data }
         .map(F.pure)
 
-    override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =
+    override def runSource[A](source: Source[A, NotUsed]): Future[F[A]] =
       source.runWith(Sink.fold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a))))
   }
 
@@ -86,23 +83,23 @@ object RequestDSL {
     import requests.mat
     import requests.mat.executionContext
 
-    implicit override def wrapRequest[A](request: Request[A, _]): Future[A] =
+    implicit override def runRequest[A](request: Request[A, _]): Future[A] =
       requests
         .singleFuture(request)
         .collect { case res: RequestResponse[A, _] => res.data }
 
-    override def fromSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.head)
+    override def runSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.head)
   }
 
   def futureLastRequestDsl(implicit requests: RequestHelper): RequestDSL[Future] = new RequestDSL[Future] {
     import requests.mat
     import requests.mat.executionContext
 
-    implicit override def wrapRequest[A](request: Request[A, _]): Future[A] =
+    implicit override def runRequest[A](request: Request[A, _]): Future[A] =
       requests
         .singleFuture(request)
         .collect { case res: RequestResponse[A, _] => res.data }
 
-    override def fromSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.last)
+    override def runSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.last)
   }
 }

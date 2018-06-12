@@ -125,9 +125,9 @@ class GenericCommands[F[_]: Streamable: Functor: Foldable] {
       for {
         channelOpt <- liftFoldable(cmd.msg.channelId.tResolve.value)
         channel <- optionPure(channelOpt)
-        sentMsg <- wrapRequest(channel.sendMessage("Msg"))
+        sentMsg <- runRequest(channel.sendMessage("Msg"))
         time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
-        _ <- wrapRequest(channel.sendMessage(s"$time ms between command and response"))
+        _ <- runRequest(channel.sendMessage(s"$time ms between command and response"))
       } yield ()
     },
     description = Some(
