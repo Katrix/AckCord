@@ -36,12 +36,13 @@ import akka.pattern.{ask, gracefulStop}
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.util.Timeout
-import akka.{Done, NotUsed}
-import cats.{Id, Monad}
+import akka.Done
+import cats.Id
 import net.katsstuff.ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
+import net.katsstuff.ackcord.util.StreamConveniences
 
 /**
   * Trait used to interface with Discord stuff from high level.
@@ -106,76 +107,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
     logout(timeout).flatMap(_ => requests.system.terminate())
 
-  protected def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
-    val req = requests
-    import req.mat
-
-    source
-      .viaMat(KillSwitches.single)(Keep.right)
-      .flatMapConcat(_.toSource(requests.flow))
-      .toMat(Sink.ignore)(Keep.both)
-      .run()
-  }
-
-  /**
-    * Runs a [[RequestDSL]] once, and returns the result.
-    */
-  def runDSL[A](dsl: RequestDSL[A]): Future[A] = {
-    val req = requests
-    import req.mat
-    dsl.toSource(requests.flow).toMat(Sink.head)(Keep.right).run()
-  }
-
   //Event handling
-
-  /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onEventDSLC(
-      handler: CacheSnapshot[F] => PartialFunction[APIMessage, RequestDSL[Unit]]
-  ): (UniqueKillSwitch, Future[Done])
-
-  /**
-    * Run a [[RequestDSL]] when an event happens.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onEventDSL(handler: PartialFunction[APIMessage, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
-    onEventDSLC { _ =>
-      {
-        case msg if handler.isDefinedAt(msg) => handler(msg)
-      }
-    }
-
-  /**
-    * Run some code with a [[CacheSnapshot]] when an event happens.
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onEventC(handler: CacheSnapshot[F] => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
-    onEventDSLC { c =>
-      {
-        case msg if handler(c).isDefinedAt(msg) => RequestDSL.pure(handler(c)(msg))
-      }
-    }
-  }
-
-  /**
-    * Run some code when an event happens.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onEvent(handler: PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
-    onEventC { _ =>
-      {
-        case msg if handler.isDefinedAt(msg) => handler(msg)
-      }
-    }
-  }
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.
@@ -183,13 +115,8 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     *         when it's done and all the values it computed.
     */
   def registerHandler[A <: APIMessage](
-      handler: EventHandler[A]
-  )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
-    onEventC { implicit c =>
-      {
-        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle[F](msg.asInstanceOf[A])
-      }
-    }
+      handler: EventHandler[F, A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done])
 
   /**
     * Registers an [[EventHandlerDSL]] that will be run when an event happens.
@@ -197,13 +124,8 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     *         when it's done and all the values it computed.
     */
   def registerHandler[A <: APIMessage](
-      handler: EventHandlerDSL[A]
-  )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
-    onEventDSLC { implicit c =>
-      {
-        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle[F](msg.asInstanceOf[A])
-      }
-    }
+      handler: EventHandlerDSL[F, A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done])
 
   /**
     * Creates a new commands object to handle commands if the global settings are unfitting.
@@ -257,14 +179,35 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
 }
 case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
     extends DiscordClient[Id] {
+  import requests.mat
 
-  override def onEventDSLC(
-      handler: CacheSnapshot[Id] => PartialFunction[APIMessage, RequestDSL[Unit]]
-  ): (UniqueKillSwitch, Future[Done]) = runDSL {
-    cache.subscribeAPI.collect {
-      case msg if handler(msg.cache.current).isDefinedAt(msg) => handler(msg.cache.current)(msg)
-    }
-  }
+  override def registerHandler[A <: APIMessage](
+      handler: EventHandler[Id, A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
+    cache.subscribeAPI
+      .collectType[A]
+      .map { a =>
+        implicit val c: MemoryCacheSnapshot = a.cache.current
+        handler.handle(a)
+      }
+      .viaMat(KillSwitches.single)(Keep.right)
+      .toMat(Sink.ignore)(Keep.both)
+      .run()
+
+  override def registerHandler[A <: APIMessage](
+      handler: EventHandlerDSL[Id, A]
+  )(implicit classTag: ClassTag[A]): (UniqueKillSwitch, Future[Done]) =
+    cache.subscribeAPI
+      .collectType[A]
+      .flatMapConcat { a =>
+        val c: MemoryCacheSnapshot             = a.cache.current
+        implicit val impRequest: RequestHelper = requests
+        val DSL: RequestDSL[Source[?, Any]]    = RequestDSL[Source[?, Any]]
+        handler.handle[Source[?, Any]](a)(c, DSL, StreamConveniences.sourceInstance)
+      }
+      .viaMat(KillSwitches.single)(Keep.right)
+      .toMat(Sink.ignore)(Keep.both)
+      .run()
 
   override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper[Id]) = {
     val (killSwitch, newCommands) = CoreCommands.create(

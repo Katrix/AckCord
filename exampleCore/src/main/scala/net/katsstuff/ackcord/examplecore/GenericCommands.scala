@@ -31,17 +31,16 @@ import scala.language.higherKinds
 import akka.NotUsed
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.{Flow, Sink}
-import cats.Functor
+import cats.{Foldable, Functor}
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData, GetChannel}
+import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.Streamable
-import net.katsstuff.ackcord.{CacheSnapshot, RequestDSL}
 
-class GenericCommands[F[_]: Streamable: Functor] {
+class GenericCommands[F[_]: Streamable: Functor: Foldable] {
 
   val PingCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
@@ -117,17 +116,18 @@ class GenericCommands[F[_]: Streamable: Functor] {
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestDSL[F, NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestDSL[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("timeDiff"),
-    flow = ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
+    flow = DSL => ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
       //Using request dsl
-      import RequestDSL._
+      import DSL._
       for {
-        channel <- liftOptionT(cmd.msg.channelId.tResolve)
-        sentMsg <- channel.sendMessage("Msg")
+        channelOpt <- liftFoldable(cmd.msg.channelId.tResolve.value)
+        channel <- optionPure(channelOpt)
+        sentMsg <- wrapRequest(channel.sendMessage("Msg"))
         time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
-        _ <- channel.sendMessage(s"$time ms between command and response")
+        _ <- wrapRequest(channel.sendMessage(s"$time ms between command and response"))
       } yield ()
     },
     description = Some(

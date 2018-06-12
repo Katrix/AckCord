@@ -26,11 +26,12 @@ package net.katsstuff.ackcord
 import scala.concurrent.Future
 import scala.language.higherKinds
 
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.{Done, NotUsed}
 import cats.Monad
 import net.katsstuff.ackcord.commands._
+import net.katsstuff.ackcord.util.StreamConveniences
 
 /**
   * An object which manages a [[Commands]] instance.
@@ -47,173 +48,29 @@ trait CommandsHelper[F[_]] {
     */
   def requests: RequestHelper
 
-  private def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
-    val helper = requests
+  private def runDSL(source: RequestDSL[Source[?, Any]] => Source[Unit, NotUsed]): (UniqueKillSwitch, Future[Done]) = {
+    implicit val helper: RequestHelper = requests
+    val dsl                            = RequestDSL[Source[?, Any]]
     import helper.mat
 
-    source
+    source(dsl)
       .viaMat(KillSwitches.single)(Keep.right)
-      .flatMapConcat(_.toSource(helper.flow))
       .toMat(Sink.ignore)(Keep.both)
       .run()
   }
 
-  /**
-    * Run a [[RequestDSL]] with a [[CacheSnapshot]] when raw command arrives.
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onRawCommandDSLC(
-      handler: CacheSnapshot[F] => PartialFunction[RawCmd[F], RequestDSL[Unit]]
-  ): (UniqueKillSwitch, Future[Done]) = {
-    runDSL {
-      commands.subscribe.collect {
-        case cmd: RawCmd[F] if handler(cmd.c).isDefinedAt(cmd) => handler(cmd.c)(cmd)
-      }
+  def registerHandler(handler: RawCommandHandler[F]): (UniqueKillSwitch, Future[Done]) = runDSL { _ =>
+    commands.subscribe.collect {
+      case cmd: RawCmd[F] if handler.handle(cmd.c).isDefinedAt(cmd) => handler.handle(cmd.c)(cmd)
     }
   }
 
-  /**
-    * Run a [[RequestDSL]] when raw command arrives.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onRawCommandDSL(handler: PartialFunction[RawCmd[F], RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
-    onRawCommandDSLC { _ =>
-      {
-        case cmd if handler.isDefinedAt(cmd) => handler(cmd)
-      }
+  def registerHandler(handler: RawCommandHandlerDSL[F]): (UniqueKillSwitch, Future[Done]) = runDSL { dsl =>
+    commands.subscribe.collect {
+      case cmd: RawCmd[F]
+          if handler.handle[Source[?, Any]](cmd.c, dsl, StreamConveniences.sourceInstance).isDefinedAt(cmd) =>
+        handler.handle[Source[?, Any]](cmd.c, dsl, StreamConveniences.sourceInstance)(cmd)
     }
-
-  /**
-    * Run some code with a [[CacheSnapshot]] when raw command arrives.
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onRawCommandC(handler: CacheSnapshot[F] => PartialFunction[RawCmd[F], Unit]): (UniqueKillSwitch, Future[Done]) = {
-    onRawCommandDSLC { c =>
-      {
-        case msg if handler(c).isDefinedAt(msg) => RequestDSL.pure(handler(c)(msg))
-      }
-    }
-  }
-
-  /**
-    * Run some code when raw command arrives.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def onRawCommand(handler: PartialFunction[RawCmd[F], Unit]): (UniqueKillSwitch, Future[Done]) =
-    onRawCommandC { _ =>
-      {
-        case msg if handler.isDefinedAt(msg) => handler(msg)
-      }
-    }
-
-  /**
-    * Register a command which runs a [[RequestDSL]] with a [[CacheSnapshot]].
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def registerCommandDSLC[A: MessageParser](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot[F] => ParsedCmd[F, A] => RequestDSL[Unit]
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
-    val sink = (requests: RequestHelper) => {
-      ParsedCmdFlow[F, A]
-        .map(handler)
-        .flatMapConcat(_.toSource(requests.flow))
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.both)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.right)
-  }
-
-  /**
-    * Register a command which runs a [[RequestDSL]].
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def registerCommandDSL[A: MessageParser](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: ParsedCmd[F, A] => RequestDSL[Unit]
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
-    val sink = (requests: RequestHelper) => {
-      ParsedCmdFlow[F, A]
-        .map(_ => handler)
-        .flatMapConcat(_.toSource(requests.flow))
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.both)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.right)
-  }
-
-  /**
-    * Register a command which runs some code with a [[CacheSnapshot]].
-    *
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def registerCommandC[A: MessageParser](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: CacheSnapshot[F] => ParsedCmd[F, A] => Unit
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
-    val sink = (_: RequestHelper) => {
-      ParsedCmdFlow[F, A]
-        .map(handler)
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.both)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.right)
-  }
-
-  /**
-    * Register a command which runs some code.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
-    */
-  def registerCommand[A: MessageParser](
-      category: CmdCategory,
-      aliases: Seq[String],
-      filters: Seq[CmdFilter] = Nil,
-      description: Option[CmdDescription] = None
-  )(
-      handler: ParsedCmd[F, A] => Unit
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
-    val sink = (_: RequestHelper) => {
-      ParsedCmdFlow[F, A]
-        .map(_ => handler)
-        .viaMat(KillSwitches.single)(Keep.right)
-        .toMat(Sink.ignore)(Keep.both)
-    }
-
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
-
-    commands.subscribe(factory)(Keep.right)
   }
 
   /**
@@ -222,12 +79,19 @@ trait CommandsHelper[F[_]] {
     *         when it's done and all the values it computed.
     */
   def registerHandler[A: MessageParser](
-      handler: CommandHandler[A]
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
-    registerCommandC[A](handler.category, handler.aliases, handler.filters, handler.description) {
-      implicit c => parsed =>
-        handler.handle(parsed.msg, parsed.args, parsed.remaining)
+      handler: CommandHandler[F, A]
+  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
+    val sink: RequestHelper => Sink[ParsedCmd[F, A], UniqueKillSwitch] = _ => {
+      ParsedCmdFlow[F, A]
+        .map(implicit c => cmd => handler.handle(cmd.msg, cmd.args, cmd.remaining))
+        .viaMat(KillSwitches.single)(Keep.right)
+        .toMat(Sink.ignore)(Keep.left)
     }
+
+    val factory = ParsedCmdFactory(handler.category, handler.aliases, sink, handler.filters, handler.description)
+
+    commands.subscribe(factory)(Keep.both).swap
+  }
 
   /**
     * Registers an [[CommandHandlerDSL]] that will be run when that command is used.
@@ -235,11 +99,19 @@ trait CommandsHelper[F[_]] {
     *         when it's done and all the values it computed.
     */
   def registerHandler[A: MessageParser](
-      handler: CommandHandlerDSL[A]
-  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
-    registerCommandDSLC[A](handler.category, handler.aliases, handler.filters, handler.description) {
-      implicit c => parsed =>
-        handler.handle(parsed.msg, parsed.args, parsed.remaining)
-    }
+      handler: CommandHandlerDSL[F, A]
+  )(implicit F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
+    val flow: RequestDSL[Source[?, Any]] => Flow[ParsedCmd[F, A], Source[Unit, Any], UniqueKillSwitch] =
+      implicit dsl => {
+        ParsedCmdFlow[F, A]
+          .map(implicit c => cmd => handler.handle[Source[?, Any]](cmd.msg, cmd.args, cmd.remaining))
+          .viaMat(KillSwitches.single)(Keep.right)
+      }
+
+    val factory =
+      ParsedCmdFactory.requestDSL(handler.category, handler.aliases, flow, handler.filters, handler.description)
+
+    commands.subscribe(factory)(Keep.both).swap
+  }
 }
 case class SeperateCommandsHelper[F[_]](commands: Commands[F], requests: RequestHelper) extends CommandsHelper[F]

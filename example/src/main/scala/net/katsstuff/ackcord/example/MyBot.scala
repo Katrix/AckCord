@@ -23,13 +23,17 @@
  */
 package net.katsstuff.ackcord.example
 
+import scala.language.higherKinds
+
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
-import cats.Id
-import net.katsstuff.ackcord.commands._
+import cats.{Alternative, Id, Monad}
+import cats.syntax.all._
 import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.commands._
+import net.katsstuff.ackcord.data.Message
 import net.katsstuff.ackcord.syntax._
 
 object MyBot extends App {
@@ -46,90 +50,105 @@ object MyBot extends App {
   settings
     .build()
     .foreach { client =>
-      client.onEvent {
-        case APIMessage.Ready(_) => println("Now ready")
-      }
+      client.registerHandler(new EventHandler[Id, APIMessage.Ready] {
+        override def handle(message: APIMessage.Ready)(implicit c: CacheSnapshot[Id]): Unit =
+          println("Now ready")
+      })
 
-      import RequestDSL._
-      client.onEventDSLC { implicit c =>
-        {
-          case APIMessage.ChannelCreate(channel, _) =>
-            for {
-              tChannel <- optionPure(channel.asTChannel)
-              _        <- tChannel.sendMessage("First")
-            } yield ()
-          case APIMessage.ChannelDelete(channel, _) =>
-            for {
-              guildChannel <- optionPure(channel.asGuildChannel)
-              guild        <- optionPure(guildChannel.guild.value)
-              _            <- optionRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
-            } yield ()
+      client.registerHandler(new EventHandlerDSL[Id, APIMessage.ChannelCreate] {
+        override def handle[G[_]](
+            message: APIMessage.ChannelCreate
+        )(implicit c: CacheSnapshot[Id], DSL: RequestDSL[G], G: Alternative[G] with Monad[G]): G[Unit] = {
+          import DSL._
+
+          for {
+            tChannel <- optionPure(message.channel.asTChannel)
+            _        <- wrapRequest(tChannel.sendMessage("First"))
+          } yield ()
         }
-      }
+      })
 
-      client.onEventDSLC { implicit c =>
-        {
-          case APIMessage.ChannelCreate(channel, _) =>
-            for {
-              tChannel <- optionPure(channel.asTChannel)
-              _        <- tChannel.sendMessage("First")
-            } yield ()
+
+
+      client.registerHandler(new EventHandlerDSL[Id, APIMessage.ChannelDelete] {
+        override def handle[G[_]](
+            message: APIMessage.ChannelDelete
+        )(implicit c: CacheSnapshot[Id], DSL: RequestDSL[G], G: Alternative[G] with Monad[G]): G[Unit] = {
+          import DSL._
+
+          for {
+            guildChannel <- optionPure(message.channel.asGuildChannel)
+            optGuild     <- liftFoldable(guildChannel.guild.value)
+            guild        <- optionPure(optGuild)
+            _            <- optionRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+          } yield ()
         }
-      }
+      })
 
-      client.onRawCommandDSLC { implicit c =>
-        {
+      client.registerHandler(new RawCommandHandlerDSL[Id] {
+        override def handle[G[_]](implicit c: CacheSnapshot[Id], DSL: RequestDSL[G], G: Alternative[G] with Monad[G])
+          : PartialFunction[RawCmd[Id], Unit] = {
           case RawCmd(message, GeneralCommands, "echo", args, _) =>
+            import DSL._
             for {
-              channel <- optionPure(message.tGuildChannel[Id].value)
-              _       <- channel.sendMessage(s"ECHO: ${args.mkString(" ")}")
+              channel <- optionPure(message.tGuildChannel.value)
+              _       <- wrapRequest(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
             } yield ()
         }
-      }
+      })
 
-      client.registerCommand(
-        category = GeneralCommands,
-        aliases = Seq("ping"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
-        description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-      ) { cmd: ParsedCmd[Id, Int] =>
-        println(s"Received ping command with arg ${cmd.args}")
-      }
+      client.registerHandler(
+        new CommandHandler[Id, Int](
+          category = GeneralCommands,
+          aliases = Seq("ping"),
+          filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+          description = Some(CmdDescription("Ping", "Check if the bot is alive"))
+        ) {
+          override def handle(msg: Message, args: Int, remaining: List[String])(implicit c: CacheSnapshot[Id]): Unit =
+            println(s"Received ping command with arg $args")
+        }
+      )
 
       val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
       AudioSourceManagers.registerRemoteSources(playerManager)
 
-      client.registerCommandC(
-        category = MusicCommands,
-        aliases = Seq("queue"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
-        description = Some(CmdDescription("Queue", "Queue a track"))
-      ) { implicit c => cmd: ParsedCmd[Id, String] =>
-        for {
-          channel    <- cmd.msg.tGuildChannel[Id].value
-          authorId   <- cmd.msg.authorUserId
-          guild      <- channel.guild[Id].value
-          vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
-        } {
-          val guildId     = guild.id
-          val url         = cmd.args
-          val loadItem    = client.loadTrack(playerManager, url)
-          val joinChannel = client.joinChannel(guildId, vChannelId, playerManager.createPlayer())
+      client.registerHandler(
+        new CommandHandler[Id, String](
+          category = MusicCommands,
+          aliases = Seq("queue"),
+          filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+          description = Some(CmdDescription("Queue", "Queue a track"))
+        ) {
+          override def handle(msg: Message, args: String, remaining: List[String])(
+              implicit c: CacheSnapshot[Id]
+          ): Unit = {
+            for {
+              channel    <- msg.tGuildChannel[Id].value
+              authorId   <- msg.authorUserId
+              guild      <- channel.guild[Id].value
+              vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
+            } {
+              val guildId     = guild.id
+              val url         = args
+              val loadItem    = client.loadTrack(playerManager, url)
+              val joinChannel = client.joinChannel(guildId, vChannelId, playerManager.createPlayer())
 
-          loadItem.zip(joinChannel).foreach {
-            case (track: AudioTrack, player) =>
-              player.startTrack(track, true)
-              client.setPlaying(guildId, playing = true)
-            case (playlist: AudioPlaylist, player) =>
-              if (playlist.getSelectedTrack != null) {
-                player.startTrack(playlist.getSelectedTrack, false)
-              } else {
-                player.startTrack(playlist.getTracks.get(0), false)
+              loadItem.zip(joinChannel).foreach {
+                case (track: AudioTrack, player) =>
+                  player.startTrack(track, true)
+                  client.setPlaying(guildId, playing = true)
+                case (playlist: AudioPlaylist, player) =>
+                  if (playlist.getSelectedTrack != null) {
+                    player.startTrack(playlist.getSelectedTrack, false)
+                  } else {
+                    player.startTrack(playlist.getTracks.get(0), false)
+                  }
+                  client.setPlaying(guildId, playing = true)
               }
-              client.setPlaying(guildId, playing = true)
+            }
           }
         }
-      }
+      )
 
       client.login()
     }

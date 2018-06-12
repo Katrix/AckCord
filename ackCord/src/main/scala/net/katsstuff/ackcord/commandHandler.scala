@@ -25,16 +25,30 @@ package net.katsstuff.ackcord
 
 import scala.language.higherKinds
 
-import cats.Monad
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter}
+import cats.{Alternative, Monad}
+import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, RawCmd}
 import net.katsstuff.ackcord.data.Message
+
+abstract class RawCommandHandler[F[_]] {
+
+  def handle(implicit c: CacheSnapshot[F]): PartialFunction[RawCmd[F], Unit]
+}
+
+abstract class RawCommandHandlerDSL[F[_]] {
+
+  def handle[G[_]](
+      implicit c: CacheSnapshot[F],
+      DSL: RequestDSL[G],
+      G: Alternative[G] with Monad[G]
+  ): PartialFunction[RawCmd[F], Unit]
+}
 
 /**
   * A handler for a specific command.
   *
   * @tparam A The parameter type.
   */
-abstract class CommandHandler[A](
+abstract class CommandHandler[F[_], A](
     val category: CmdCategory,
     val aliases: Seq[String],
     val filters: Seq[CmdFilter] = Nil,
@@ -45,19 +59,15 @@ abstract class CommandHandler[A](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F],
-      S: Streamable[F]
-  ): Unit
+  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): Unit
 }
 
 /**
-  * A handler for a specific command that runs a [[RequestDSL]] when the command is received.
+  * A handler for a specific command that uses a [[RequestDSL]] when the command is received.
   *
   * @tparam A The parameter type.
   */
-abstract class CommandHandlerDSL[A](
+abstract class CommandHandlerDSL[F[_], A](
     val category: CmdCategory,
     val aliases: Seq[String],
     val filters: Seq[CmdFilter] = Nil,
@@ -65,12 +75,12 @@ abstract class CommandHandlerDSL[A](
 ) {
 
   /**
-    * Runs the [[RequestDSL]] whenever the command for this handler is received.
+    * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
+  def handle[G[_]](msg: Message, args: A, remaining: List[String])(
       implicit c: CacheSnapshot[F],
-      F: Monad[F],
-      S: Streamable[F]
-  ): RequestDSL[Unit]
+      DSL: RequestDSL[G],
+      G: Alternative[G] with Monad[G]
+  ): G[Unit]
 }
