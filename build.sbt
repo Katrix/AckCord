@@ -56,11 +56,12 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
     version := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core",
-      "io.circe" %%% "circe-generic-extras",
-      "io.circe" %%% "circe-shapes",
-      "io.circe" %%% "circe-parser"
-    ).map(_ % circeVersion),
+      "io.circe" %%% "circe-core" % circeVersion,
+      "io.circe" %%% "circe-generic-extras" % circeVersion,
+      "io.circe" %%% "circe-shapes" % circeVersion,
+      "io.circe" %%% "circe-parser" % circeVersion,
+      "io.circe" %%% "circe-derivation" % "0.9.0-M4"
+    ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
 

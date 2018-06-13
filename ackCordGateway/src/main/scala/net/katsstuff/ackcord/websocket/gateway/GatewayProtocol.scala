@@ -27,7 +27,7 @@ import java.time.OffsetDateTime
 
 import cats.Later
 import io.circe._
-import io.circe.generic.extras.semiauto._
+import io.circe.derivation
 import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
@@ -39,80 +39,68 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val opCodeDecoder: Decoder[GatewayOpCode] =
     Decoder[Int].emap(GatewayOpCode.forCode(_).toRight("Not an opCode"))
 
-  implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] = deriveEncoder
-  implicit val readyDataDecoder: Decoder[GatewayEvent.ReadyData] = deriveDecoder
+  implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val readyDataDecoder: Decoder[GatewayEvent.ReadyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val resumedDataEncoder: Encoder[GatewayEvent.ResumedData] = deriveEncoder
-  implicit val resumedDataDecoder: Decoder[GatewayEvent.ResumedData] = deriveDecoder
+  implicit val resumedDataEncoder: Encoder[GatewayEvent.ResumedData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val resumedDataDecoder: Decoder[GatewayEvent.ResumedData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] = deriveEncoder
-  implicit val guildEmojisUpdateDataDecoder: Decoder[GatewayEvent.GuildEmojisUpdateData] = deriveDecoder
+  implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildEmojisUpdateDataDecoder: Decoder[GatewayEvent.GuildEmojisUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildIntegrationsUpdateDataEncoder: Encoder[GatewayEvent.GuildIntegrationsUpdateData] = deriveEncoder
-  implicit val guildIntegrationsUpdateDataDecoder: Decoder[GatewayEvent.GuildIntegrationsUpdateData] = deriveDecoder
+  implicit val guildIntegrationsUpdateDataEncoder: Encoder[GatewayEvent.GuildIntegrationsUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildIntegrationsUpdateDataDecoder: Decoder[GatewayEvent.GuildIntegrationsUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildMemberRemoveDataEncoder: Encoder[GatewayEvent.GuildMemberRemoveData] = deriveEncoder
-  implicit val guildMemberRemoveDataDecoder: Decoder[GatewayEvent.GuildMemberRemoveData] = deriveDecoder
+  implicit val guildMemberRemoveDataEncoder: Encoder[GatewayEvent.GuildMemberRemoveData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildMemberRemoveDataDecoder: Decoder[GatewayEvent.GuildMemberRemoveData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildMemberUpdateDataEncoder: Encoder[GatewayEvent.GuildMemberUpdateData] = deriveEncoder
-  implicit val guildMemberUpdateDataDecoder: Decoder[GatewayEvent.GuildMemberUpdateData] = deriveDecoder
+  implicit val guildMemberUpdateDataEncoder: Encoder[GatewayEvent.GuildMemberUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildMemberUpdateDataDecoder: Decoder[GatewayEvent.GuildMemberUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildMemberChunkDataEncoder: Encoder[GatewayEvent.GuildMemberChunkData] = deriveEncoder
-  implicit val guildMemberChunkDataDecoder: Decoder[GatewayEvent.GuildMemberChunkData] = deriveDecoder
+  implicit val guildMemberChunkDataEncoder: Encoder[GatewayEvent.GuildMemberChunkData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildMemberChunkDataDecoder: Decoder[GatewayEvent.GuildMemberChunkData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildRoleModifyDataEncoder: Encoder[GatewayEvent.GuildRoleModifyData] = deriveEncoder
-  implicit val guildRoleModifyDataDecoder: Decoder[GatewayEvent.GuildRoleModifyData] = deriveDecoder
+  implicit val guildRoleModifyDataEncoder: Encoder[GatewayEvent.GuildRoleModifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildRoleModifyDataDecoder: Decoder[GatewayEvent.GuildRoleModifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val guildRoleDeleteDataEncoder: Encoder[GatewayEvent.GuildRoleDeleteData] = deriveEncoder
-  implicit val guildRoleDeleteDataDecoder: Decoder[GatewayEvent.GuildRoleDeleteData] = deriveDecoder
+  implicit val guildRoleDeleteDataEncoder: Encoder[GatewayEvent.GuildRoleDeleteData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val guildRoleDeleteDataDecoder: Decoder[GatewayEvent.GuildRoleDeleteData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val messageDeleteDataEncoder: Encoder[GatewayEvent.MessageDeleteData] = deriveEncoder
-  implicit val messageDeleteDataDecoder: Decoder[GatewayEvent.MessageDeleteData] = deriveDecoder
+  implicit val messageDeleteDataEncoder: Encoder[GatewayEvent.MessageDeleteData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val messageDeleteDataDecoder: Decoder[GatewayEvent.MessageDeleteData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val messageDeleteBulkDataEncoder: Encoder[GatewayEvent.MessageDeleteBulkData] = deriveEncoder
-  implicit val messageDeleteBulkDataDecoder: Decoder[GatewayEvent.MessageDeleteBulkData] = deriveDecoder
+  implicit val messageDeleteBulkDataEncoder: Encoder[GatewayEvent.MessageDeleteBulkData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val messageDeleteBulkDataDecoder: Decoder[GatewayEvent.MessageDeleteBulkData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val presenceUpdateDataEncoder: Encoder[GatewayEvent.PresenceUpdateData] = {
-    import io.circe.generic.extras.auto._
-    deriveEncoder
-  }
-  implicit val presenceUpdateDataDecoder: Decoder[GatewayEvent.PresenceUpdateData] = {
-    import io.circe.generic.extras.auto._
-    deriveDecoder
-  }
+  implicit val presenceUpdateDataEncoder: Encoder[GatewayEvent.PresenceUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val presenceUpdateDataDecoder: Decoder[GatewayEvent.PresenceUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val typingStartDataEncoder: Encoder[GatewayEvent.TypingStartData] = deriveEncoder
-  implicit val typingStartDataDecoder: Decoder[GatewayEvent.TypingStartData] = deriveDecoder
+  implicit val typingStartDataEncoder: Encoder[GatewayEvent.TypingStartData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val typingStartDataDecoder: Decoder[GatewayEvent.TypingStartData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val voiceServerUpdateDataEncoder: Encoder[VoiceServerUpdateData] = deriveEncoder
-  implicit val voiceServerUpdateDataDecoder: Decoder[VoiceServerUpdateData] = deriveDecoder
+  implicit val voiceServerUpdateDataEncoder: Encoder[VoiceServerUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val voiceServerUpdateDataDecoder: Decoder[VoiceServerUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val identifyObjectEncoder: Encoder[IdentifyData] = deriveEncoder
-  implicit val identifyObjectDecoder: Decoder[IdentifyData] = deriveDecoder
+  implicit val identifyObjectEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val identifyObjectDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val statusDataEncoder: Encoder[StatusData] = {
-    import io.circe.generic.extras.auto._
-    deriveEncoder
-  }
-  implicit val statusDataDecoder: Decoder[StatusData] = {
-    import io.circe.generic.extras.auto._
-    deriveDecoder
-  }
+  implicit val statusDataEncoder: Encoder[StatusData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val statusDataDecoder: Decoder[StatusData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
-  implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
+  implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = deriveEncoder
-  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = deriveDecoder
+  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val helloDataEncoder: Encoder[HelloData] = deriveEncoder
-  implicit val helloDataDecoder: Decoder[HelloData] = deriveDecoder
+  implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val helloDataDecoder: Decoder[HelloData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val voiceStateUpdateDataEncoder: Encoder[VoiceStateUpdateData] = deriveEncoder
-  implicit val voiceStateUpdateDataDecoder: Decoder[VoiceStateUpdateData] = deriveDecoder
+  implicit val voiceStateUpdateDataEncoder: Encoder[VoiceStateUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val voiceStateUpdateDataDecoder: Decoder[VoiceStateUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val rawGuildMemberWithGuildEncoder: Encoder[GatewayEvent.RawGuildMemberWithGuild] = deriveEncoder
-  implicit val rawGuildMemberWithGuildDecoder: Decoder[GatewayEvent.RawGuildMemberWithGuild] = deriveDecoder
+  implicit val rawGuildMemberWithGuildEncoder: Encoder[GatewayEvent.RawGuildMemberWithGuild] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val rawGuildMemberWithGuildDecoder: Decoder[GatewayEvent.RawGuildMemberWithGuild] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] =
     (a: GatewayEvent.ChannelPinsUpdateData) =>
@@ -120,19 +108,19 @@ object GatewayProtocol extends DiscordProtocol {
         "channel_id" -> JsonSome(a.channelId.asJson),
         "timestamp"  -> a.timestamp.map(_.asJson)
     )
-  implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] = deriveDecoder
+  implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val messageEmojiEncoder: Encoder[PartialEmoji] = deriveEncoder
-  implicit val messageEmojiDecoder: Decoder[PartialEmoji] = deriveDecoder
+  implicit val messageEmojiEncoder: Encoder[PartialEmoji] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val messageEmojiDecoder: Decoder[PartialEmoji] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val messageReactionDataEncoder: Encoder[GatewayEvent.MessageReactionData] = deriveEncoder
-  implicit val messageReactionDataDecoder: Decoder[GatewayEvent.MessageReactionData] = deriveDecoder
+  implicit val messageReactionDataEncoder: Encoder[GatewayEvent.MessageReactionData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val messageReactionDataDecoder: Decoder[GatewayEvent.MessageReactionData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val messageReactionRemoveAllDataEncoder: Encoder[GatewayEvent.MessageReactionRemoveAllData] = deriveEncoder
-  implicit val messageReactionRemoveAllDataDecoder: Decoder[GatewayEvent.MessageReactionRemoveAllData] = deriveDecoder
+  implicit val messageReactionRemoveAllDataEncoder: Encoder[GatewayEvent.MessageReactionRemoveAllData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val messageReactionRemoveAllDataDecoder: Decoder[GatewayEvent.MessageReactionRemoveAllData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val webhookUpdateDataEncoder: Encoder[GatewayEvent.WebhookUpdateData] = deriveEncoder
-  implicit val webhookUpdateDataDecoder: Decoder[GatewayEvent.WebhookUpdateData] = deriveDecoder
+  implicit val webhookUpdateDataEncoder: Encoder[GatewayEvent.WebhookUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val webhookUpdateDataDecoder: Decoder[GatewayEvent.WebhookUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {

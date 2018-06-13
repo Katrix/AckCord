@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.websocket.voice
 
 import akka.util.ByteString
 import io.circe._
-import io.circe.generic.extras.semiauto._
+import io.circe.derivation
 import io.circe.syntax._
 import net.katsstuff.ackcord.data.DiscordProtocol
 import net.katsstuff.ackcord.util.{JsonOption, JsonSome}
@@ -36,17 +36,17 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val opCodeDecoder: Decoder[VoiceOpCode] =
     Decoder[Int].emap(VoiceOpCode.forCode(_).toRight("Not an opCode"))
 
-  implicit val identifyDataEncoder: Encoder[IdentifyData] = deriveEncoder
-  implicit val identifyDataDecoder: Decoder[IdentifyData] = deriveDecoder
+  implicit val identifyDataEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val identifyDataDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] = deriveEncoder
-  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] = deriveDecoder
+  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] = deriveEncoder
-  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] = deriveDecoder
+  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val readyDataEncoder: Encoder[ReadyData] = deriveEncoder
-  implicit val readyDataDecoder: Decoder[ReadyData] = deriveDecoder
+  implicit val readyDataEncoder: Encoder[ReadyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val readyDataDecoder: Decoder[ReadyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
     Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
@@ -66,10 +66,10 @@ object VoiceWsProtocol extends DiscordProtocol {
       "ssrc"     -> a.ssrc.map(_.asJson),
       "user_id"  -> a.userId.map(_.asJson)
   )
-  implicit val speakingDataDecoder: Decoder[SpeakingData] = deriveDecoder
+  implicit val speakingDataDecoder: Decoder[SpeakingData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val resumeDataEncoder: Encoder[ResumeData] = deriveEncoder
-  implicit val resumeDataDecoder: Decoder[ResumeData] = deriveDecoder
+  implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
     (a: VoiceMessage[Data]) =>

@@ -28,7 +28,6 @@ import scala.language.higherKinds
 import akka.NotUsed
 import cats.Monad
 import io.circe._
-import io.circe.generic.extras.semiauto._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.RequestRoute
@@ -53,7 +52,7 @@ case class CreateWebhook[Ctx](
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateWebhook[Ctx], CreateWebhookData, Webhook, Ctx] {
   override def route: RequestRoute                       = Routes.createWebhook(channelId)
-  override def paramsEncoder: Encoder[CreateWebhookData] = deriveEncoder[CreateWebhookData]
+  override def paramsEncoder: Encoder[CreateWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -137,7 +136,7 @@ case class ModifyWebhook[Ctx](
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyWebhook[Ctx], ModifyWebhookData, Webhook, Ctx] {
   override def route: RequestRoute                       = Routes.getWebhook(id)
-  override def paramsEncoder: Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -158,7 +157,7 @@ case class ModifyWebhookWithToken[Ctx](
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
   override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
 
-  override def paramsEncoder: Encoder[ModifyWebhookData] = deriveEncoder[ModifyWebhookData]
+  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   override def responseDecoder: Decoder[Webhook]         = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
