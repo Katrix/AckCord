@@ -31,15 +31,18 @@ import akka.stream.scaladsl.{Keep, Sink}
 import akka.util.Timeout
 import akka.pattern.ask
 import akka.{Done, NotUsed}
-import cats.{Foldable, Functor}
+import cats.Functor
+import cats.data.OptionT
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, ParsedCmdFactory, ParsedCmdFlow}
 import net.katsstuff.ackcord.data.{GuildId, TChannel, UserId, VoiceState}
 import net.katsstuff.ackcord.examplecore.ExampleCmdCategories
 import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
-import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.syntax._
+import net.katsstuff.ackcord.RequestDSL
+import net.katsstuff.ackcord.http.rest.CreateMessage
+import net.katsstuff.ackcord.util.Streamable
 
-class MusicCommands[F[_]: Streamable: Functor: Foldable](guildId: GuildId, musicHandler: ActorRef)(
+class MusicCommands[F[_]: Streamable: Functor](guildId: GuildId, musicHandler: ActorRef)(
     implicit timeout: Timeout,
     ec: ExecutionContext
 ) {
@@ -47,24 +50,19 @@ class MusicCommands[F[_]: Streamable: Functor: Foldable](guildId: GuildId, music
   val QueueCmdFactory: ParsedCmdFactory[F, String, NotUsed] = ParsedCmdFactory.requestDSL(
     category = ExampleCmdCategories.&,
     aliases = Seq("q", "queue"),
-    flow = DSL =>
-      ParsedCmdFlow[F, String].map { implicit c => cmd =>
-        import DSL._
-
-        for {
-          optGuild <- liftFoldable(guildId.resolve.value)
-          guild    <- optionPure(optGuild)
-          channel  <- optionPure(guild.tChannelById(cmd.msg.channelId))
-          optSendMessage <- {
-            guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
-              case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _)) =>
-                liftStreamable((musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None))
-              case _ =>
-                pure(Some(channel.sendMessage("Not in a voice channel")))
-            }
-          }
-          _ <- optionRequest(optSendMessage)
-        } yield ()
+    flow = ParsedCmdFlow[F, String].map { implicit c => cmd =>
+      import RequestDSL._
+      for {
+        guild   <- liftOptionT(guildId.resolve)
+        channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
+        _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
+          OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
+            case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _)) =>
+              (musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None)
+            case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
+          })
+        }
+      } yield ()
     },
     filters = Seq(CmdFilter.InOneGuild(guildId)),
     description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play"))

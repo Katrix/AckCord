@@ -23,83 +23,130 @@
  */
 package net.katsstuff.ackcord
 
-import scala.concurrent.Future
 import scala.language.{higherKinds, implicitConversions}
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Sink, Source}
-import cats.{Alternative, Applicative, Foldable}
-import net.katsstuff.ackcord.http.requests.{Request, RequestHelper, RequestResponse}
+import akka.stream.scaladsl.{Flow, Source}
+import cats.Monad
+import cats.data.OptionT
+import net.katsstuff.ackcord.http.requests.{Request, RequestAnswer, RequestResponse}
 import net.katsstuff.ackcord.util.Streamable
 
-trait RequestDSL[F[_]] {
-  def runRequest[A](request: Request[A, _]): F[A]
+/**
+  * Base trait for a RequestDSL object. An RequestDSL object is a program
+  * that will evaluate to a value gotten by running requests, while hiding the
+  * streaming implementation.
+  */
+sealed trait RequestDSL[+A] {
 
-  def runSource[A](source: Source[A, NotUsed]): F[A]
+  def map[B](f: A => B): RequestDSL[B]
+  def filter(f: A => Boolean): RequestDSL[A]
+  def flatMap[B](f: A => RequestDSL[B]): RequestDSL[B]
+  def collect[B](f: PartialFunction[A, B]): RequestDSL[B]
 
-  //From here on it's all convenience methods
+  def flatten[B](implicit ev: A <:< RequestDSL[B]): RequestDSL[B] = flatMap(ev)
 
-  def pure[A](a: A)(implicit F: Applicative[F]): F[A] = F.pure(a)
-
-  def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(F.pure)
-
-  def optionRequest[A](opt: Option[Request[A, _]])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(runRequest)
-
-  def liftStreamable[G[_], A](ga: G[A])(implicit streamable: Streamable[G]): F[A] = runSource(streamable.toSource(ga))
-
-  def liftFoldable[G[_], A](ga: G[A])(implicit F: Alternative[F], G: Foldable[G]): F[A] =
-    G.foldLeft(ga, F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
+  /**
+    * Run this request using the given flow.
+    */
+  def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed]
 }
-
 object RequestDSL {
-  def apply[F[_]](implicit DSL: RequestDSL[F]): RequestDSL[F] = DSL
 
-  implicit def sourceRequestDsl(implicit requests: RequestHelper): RequestDSL[Source[?, Any]] =
-    new RequestDSL[Source[?, Any]] {
-      implicit override def runRequest[A](request: Request[A, _]): Source[A, _] = requests.single(request).collect {
-        case res: RequestResponse[A, _] => res.data
+  implicit def wrap[A](request: Request[A, _]): RequestDSL[A] = SingleRequest(request)
+
+  /**
+    * Lift a pure value into the dsl.
+    */
+  def pure[A](a: A): RequestDSL[A] = SourceRequest(Source.single(a))
+
+  /**
+    * Lift a an optional pure value into the dsl.
+    */
+  def optionPure[A](opt: Option[A]): RequestDSL[A] = opt.fold[RequestDSL[A]](SourceRequest(Source.empty))(pure)
+
+  /**
+    * Lift a an optional request into the dsl.
+    */
+  def optionRequest[A](opt: Option[Request[A, _]]): RequestDSL[A] =
+    opt.fold[RequestDSL[A]](SourceRequest(Source.empty))(SingleRequest.apply)
+
+  /**
+    * Lifts a [[Source]] into the dsl.
+    */
+  def fromSource[A](source: Source[A, NotUsed]): RequestDSL[A] = SourceRequest(source)
+
+  /**
+    * Converts an F into a [[Source]] ad lifts it into the dsl.
+    */
+  def liftF[F[_]: Streamable, A](fa: F[A]): RequestDSL[A] = fromSource(Streamable[F].toSource(fa))
+
+  /**
+    * Lifts an [[OptionT]] into a [[Source]] and lifts it into the dsl.
+    */
+  def liftOptionT[F[_]: Streamable, A](opt: OptionT[F, A]): RequestDSL[A] =
+    fromSource(Streamable[F].optionToSource(opt))
+
+  /**
+    * Lifts a future request into the dsl.
+    */
+  def liftRequest[F[_]: Streamable, A](fRequest: F[RequestDSL[A]]): RequestDSL[A] =
+    liftF(fRequest).flatten
+
+  /**
+    * Run a RequestDSL using the specified flow.
+    */
+  def apply[Data, Ctx, B](flow: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed])(
+      dsl: RequestDSL[B]
+  ): Source[B, NotUsed] = dsl.toSource(flow)
+
+  implicit val monad: Monad[RequestDSL] = new Monad[RequestDSL] {
+    override def map[A, B](fa: RequestDSL[A])(f: A => B): RequestDSL[B] = fa.map(f)
+
+    override def flatMap[A, B](fa: RequestDSL[A])(f: A => RequestDSL[B]): RequestDSL[B] = fa.flatMap(f)
+
+    override def tailRecM[A, B](a: A)(f: A => RequestDSL[Either[A, B]]): RequestDSL[B] =
+      f(a).flatMap {
+        case Left(_)  => tailRecM(a)(f) //Think this is the best we can do as flatMap is a separate object.
+        case Right(v) => RequestDSL.pure(v)
       }
 
-      override def runSource[A](source: Source[A, NotUsed]): Source[A, _] = source
+    override def pure[A](x: A): RequestDSL[A] = RequestDSL.pure(x)
+  }
+
+  private case class SingleRequest[A](request: Request[A, _]) extends RequestDSL[A] {
+    override def map[B](f: A => B)                                   = SingleRequest(request.map(f))
+    override def filter(f: A => Boolean)                             = SingleRequest(request.filter(f))
+    override def flatMap[B](f: A => RequestDSL[B])                   = AndThenRequestDSL(this, f)
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = SingleRequest(request.collect(f))
+
+    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] = {
+      val casted = flow.asInstanceOf[Flow[Request[A, _], RequestAnswer[A, _], NotUsed]]
+
+      Source.single(request).via(casted).collect {
+        case res: RequestResponse[A, _] => res.data
+      }
     }
-
-  implicit def futureRequestDsl[F[_]](
-      implicit requests: RequestHelper,
-      F: Alternative[F]
-  ): RequestDSL[λ[A => Future[F[A]]]] = new RequestDSL[λ[A => Future[F[A]]]] {
-    import requests.mat
-    import requests.mat.executionContext
-    implicit override def runRequest[A](request: Request[A, _]): Future[F[A]] =
-      requests
-        .singleFuture(request)
-        .collect { case res: RequestResponse[A, _] => res.data }
-        .map(F.pure)
-
-    override def runSource[A](source: Source[A, NotUsed]): Future[F[A]] =
-      source.runWith(Sink.fold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a))))
   }
 
-  def futureHeadRequestDsl(implicit requests: RequestHelper): RequestDSL[Future] = new RequestDSL[Future] {
-    import requests.mat
-    import requests.mat.executionContext
+  private case class AndThenRequestDSL[A, +B](request: RequestDSL[A], f: A => RequestDSL[B]) extends RequestDSL[B] {
+    override def map[C](g: B => C): RequestDSL[C]                 = AndThenRequestDSL(request, f.andThen(_.map(g)))
+    override def filter(g: B => Boolean): RequestDSL[B]           = AndThenRequestDSL(request, f.andThen(_.filter(g)))
+    override def flatMap[C](g: B => RequestDSL[C]): RequestDSL[C] = AndThenRequestDSL(this, g)
+    override def collect[C](g: PartialFunction[B, C]): RequestDSL[C] =
+      AndThenRequestDSL(request, f.andThen(_.collect(g)))
 
-    implicit override def runRequest[A](request: Request[A, _]): Future[A] =
-      requests
-        .singleFuture(request)
-        .collect { case res: RequestResponse[A, _] => res.data }
-
-    override def runSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.head)
+    override def toSource[C, Ctx](flow: Flow[Request[C, Ctx], RequestAnswer[C, Ctx], NotUsed]): Source[B, NotUsed] =
+      request.toSource(flow).flatMapConcat(s => f(s).toSource(flow))
   }
 
-  def futureLastRequestDsl(implicit requests: RequestHelper): RequestDSL[Future] = new RequestDSL[Future] {
-    import requests.mat
-    import requests.mat.executionContext
+  private case class SourceRequest[A](source: Source[A, NotUsed]) extends RequestDSL[A] {
+    override def map[B](f: A => B): RequestDSL[B]                    = SourceRequest(source.map(f))
+    override def filter(f: A => Boolean): RequestDSL[A]              = SourceRequest(source.filter(f))
+    override def flatMap[B](f: A => RequestDSL[B]): RequestDSL[B]    = AndThenRequestDSL(this, f)
+    override def collect[B](f: PartialFunction[A, B]): RequestDSL[B] = SourceRequest(source.collect(f))
 
-    implicit override def runRequest[A](request: Request[A, _]): Future[A] =
-      requests
-        .singleFuture(request)
-        .collect { case res: RequestResponse[A, _] => res.data }
-
-    override def runSource[A](source: Source[A, NotUsed]): Future[A] = source.runWith(Sink.last)
+    override def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed] =
+      source
   }
 }

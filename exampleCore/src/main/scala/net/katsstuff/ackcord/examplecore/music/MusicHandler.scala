@@ -39,7 +39,7 @@ import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import cats.{Foldable, Monad}
+import cats.Monad
 import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
@@ -51,13 +51,14 @@ import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.Streamable
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
-class MusicHandler[F[_]: Monad: Streamable: Foldable](
+class MusicHandler[F[_]](
     requests: RequestHelper,
     commands: Commands[F],
     helpCmdActor: ActorRef,
     guildId: GuildId,
     cache: Cache
-) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
+)(implicit streamable: Streamable[F], F: Monad[F])
+    extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
@@ -293,11 +294,9 @@ class MusicHandler[F[_]: Monad: Streamable: Foldable](
   }
 }
 object MusicHandler {
-  def props[F[_]: Monad: Streamable: Foldable](
-      requests: RequestHelper,
-      commands: Commands[F],
-      helpCmdActor: ActorRef,
-      cache: Cache
+  def props[F[_]](requests: RequestHelper, commands: Commands[F], helpCmdActor: ActorRef, cache: Cache)(
+      implicit streamable: Streamable[F],
+      F: Monad[F]
   ): GuildId => Props =
     guildId => Props(new MusicHandler(requests, commands, helpCmdActor, guildId, cache))
 

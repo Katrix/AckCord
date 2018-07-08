@@ -1,10 +1,6 @@
 package net.katsstuff
 
-import scala.language.{higherKinds, implicitConversions}
-
-import akka.stream.scaladsl.{Flow, Sink, Source}
-import cats.{Alternative, Contravariant, Functor, MonadError}
-import net.katsstuff.ackcord.util.StreamConveniences
+import scala.language.higherKinds
 
 package object ackcord {
 
@@ -43,12 +39,4 @@ package object ackcord {
 
   val JsonUndefined: util.JsonUndefined.type = util.JsonUndefined
   type JsonUndefined = util.JsonUndefined.type
-
-  implicit val sourceMonadInstance: MonadError[Source[?, Any], Throwable] with Alternative[Source[?, Any]] =
-    StreamConveniences.sourceInstance
-  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, ?, Mat]]     = StreamConveniences.flowInstance[In, Mat]
-  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[?, Mat]] = StreamConveniences.sinkInstance[Mat]
-
-  implicit def sourceSyntax[A, M1](source: Source[A, M1]): StreamConveniences.SourceForSyntax[A, M1] =
-    new StreamConveniences.SourceForSyntax(source)
 }
