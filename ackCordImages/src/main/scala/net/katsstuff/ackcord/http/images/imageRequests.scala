@@ -29,6 +29,8 @@ import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
+import cats.Monad
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.{EmojiId, GuildId, ImageFormat, RawSnowflake, UserId}
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.{Request, RequestRoute}
@@ -71,6 +73,8 @@ trait ImageRequest[Ctx] extends Request[ByteString, Ctx] {
       }
       .mapAsyncUnordered(parallelism)(identity)
   }
+  
+  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = F.pure(true)
 }
 object ImageRequest {
   //https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2

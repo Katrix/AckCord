@@ -29,7 +29,8 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpHeader, HttpMethod, RequestEntity, ResponseEntity, Uri}
 import akka.stream.scaladsl.Flow
-import cats.CoflatMap
+import cats.{CoflatMap, Monad}
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.http.Routes.Route
 
 /**
@@ -85,6 +86,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
+
+    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
   }
 
   /**
@@ -130,6 +133,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem) = f(self.parseResponse(parallelism))
+
+    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
   }
 
   /**
@@ -146,6 +151,11 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     * Map the result if the function is defined for the response data.
     */
   def collect[B](f: PartialFunction[Data, B]): Request[B, Ctx] = transformResponse(_.collect(f))
+
+  /**
+    * Check if a client has the needed permissions to execute this request.
+    */
+  def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
 }
 object Request {
   implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] =
