@@ -31,17 +31,16 @@ import scala.language.higherKinds
 import akka.NotUsed
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.{Flow, Sink}
-import cats.Functor
+import cats._
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
 import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData, GetChannel}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.util.Streamable
-import net.katsstuff.ackcord.{CacheSnapshot, RequestDSL}
+import net.katsstuff.ackcord._
 
-class GenericCommands[F[_]: Streamable: Functor] {
+class GenericCommands[F[_]: Streamable: Monad] {
 
   val PingCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
@@ -117,17 +116,16 @@ class GenericCommands[F[_]: Streamable: Functor] {
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestDSL[F, NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed, NotUsed](
     category = ExampleCmdCategories.!,
     aliases = Seq("timeDiff"),
-    flow = ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
-      //Using request dsl
-      import RequestDSL._
+    flow = runner => ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
+      import runner._
       for {
         channel <- liftOptionT(cmd.msg.channelId.tResolve)
-        sentMsg <- channel.sendMessage("Msg")
+        sentMsg <- run(channel.sendMessage("Msg"))
         time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
-        _ <- channel.sendMessage(s"$time ms between command and response")
+        _ <- run(channel.sendMessage(s"$time ms between command and response"))
       } yield ()
     },
     description = Some(

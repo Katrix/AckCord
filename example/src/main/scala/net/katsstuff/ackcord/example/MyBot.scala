@@ -27,9 +27,10 @@ import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudio
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
+import akka.NotUsed
 import cats.Id
-import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.syntax._
 
 object MyBot extends App {
@@ -46,87 +47,87 @@ object MyBot extends App {
   settings
     .build()
     .foreach { client =>
-      client.onEvent {
+      client.onEvent[Id] {
         case APIMessage.Ready(_) => println("Now ready")
+        case _ => client.sourceRequesterRunner.unit
       }
 
-      import RequestDSL._
-      client.onEventDSLC { implicit c =>
-        {
-          case APIMessage.ChannelCreate(channel, _) =>
-            for {
-              tChannel <- optionPure(channel.asTChannel)
-              _        <- tChannel.sendMessage("First")
-            } yield ()
-          case APIMessage.ChannelDelete(channel, _) =>
-            for {
-              guildChannel <- optionPure(channel.asGuildChannel)
-              guild        <- optionPure(guildChannel.guild.value)
-              _            <- optionRequest(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
-            } yield ()
+      import client.sourceRequesterRunner._
+      client.onEvent[SourceRequest] {
+        client.withCache[SourceRequest, APIMessage] { implicit c =>
+          {
+            case APIMessage.ChannelCreate(channel, _) =>
+              for {
+                tChannel <- optionPure(channel.asTChannel)
+                _        <- run(tChannel.sendMessage("First"))
+              } yield ()
+            case APIMessage.ChannelDelete(channel, _) =>
+              for {
+                guildChannel <- optionPure(channel.asGuildChannel)
+                guild        <- optionPure(guildChannel.guild.value)
+                _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+              } yield ()
+            case _ => client.sourceRequesterRunner.unit
+          }
         }
       }
 
-      client.onEventDSLC { implicit c =>
-        {
-          case APIMessage.ChannelCreate(channel, _) =>
-            for {
-              tChannel <- optionPure(channel.asTChannel)
-              _        <- tChannel.sendMessage("First")
-            } yield ()
+      client.onRawCmd[SourceRequest] {
+        client.withCache[SourceRequest, RawCmd[Id]] { implicit c =>
+          {
+            case RawCmd(message, GeneralCommands, "echo", args, _) =>
+              for {
+                channel <- optionPure(message.tGuildChannel[Id].value)
+                _       <- run(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
+              } yield ()
+            case _ => client.sourceRequesterRunner.unit
+          }
         }
       }
 
-      client.onRawCommandDSLC { implicit c =>
-        {
-          case RawCmd(message, GeneralCommands, "echo", args, _) =>
-            for {
-              channel <- optionPure(message.tGuildChannel[Id].value)
-              _       <- channel.sendMessage(s"ECHO: ${args.mkString(" ")}")
-            } yield ()
-        }
-      }
-
-      client.registerCommand(
+      client.registerCmd[NotUsed, Id](
         category = GeneralCommands,
         aliases = Seq("ping"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-      ) { cmd: ParsedCmd[Id, Int] =>
-        println(s"Received ping command with arg ${cmd.args}")
+      ) { _ =>
+        println(s"Received ping command}")
       }
 
       val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
       AudioSourceManagers.registerRemoteSources(playerManager)
 
-      client.registerCommandC(
+      client.registerCmd[String, Id](
         category = MusicCommands,
         aliases = Seq("queue"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Queue", "Queue a track"))
-      ) { implicit c => cmd: ParsedCmd[Id, String] =>
-        for {
-          channel    <- cmd.msg.tGuildChannel[Id].value
-          authorId   <- cmd.msg.authorUserId
-          guild      <- channel.guild[Id].value
-          vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
-        } {
-          val guildId     = guild.id
-          val url         = cmd.args
-          val loadItem    = client.loadTrack(playerManager, url)
-          val joinChannel = client.joinChannel(guildId, vChannelId, playerManager.createPlayer())
+      ) {
+        client.withCache[Id, ParsedCmd[Id, String]] { implicit c => cmd =>
+          for {
+            channel    <- cmd.msg.tGuildChannel.value
+            authorId   <- cmd.msg.authorUserId
+            guild      <- channel.guild.value
+            vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
+          } {
+            val guildId     = guild.id
+            val url         = cmd.args
+            val loadItem    = client.loadTrack(playerManager, url)
+            val joinChannel = client.joinChannel(guildId, vChannelId, playerManager.createPlayer())
 
-          loadItem.zip(joinChannel).foreach {
-            case (track: AudioTrack, player) =>
-              player.startTrack(track, true)
-              client.setPlaying(guildId, playing = true)
-            case (playlist: AudioPlaylist, player) =>
-              if (playlist.getSelectedTrack != null) {
-                player.startTrack(playlist.getSelectedTrack, false)
-              } else {
-                player.startTrack(playlist.getTracks.get(0), false)
-              }
-              client.setPlaying(guildId, playing = true)
+            loadItem.zip(joinChannel).foreach {
+              case (track: AudioTrack, player) =>
+                player.startTrack(track, true)
+                client.setPlaying(guildId, playing = true)
+              case (playlist: AudioPlaylist, player) =>
+                if (playlist.getSelectedTrack != null) {
+                  player.startTrack(playlist.getSelectedTrack, false)
+                } else {
+                  player.startTrack(playlist.getTracks.get(0), false)
+                }
+                client.setPlaying(guildId, playing = true)
+              case _ => sys.error("Unknown audio item")
+            }
           }
         }
       }
