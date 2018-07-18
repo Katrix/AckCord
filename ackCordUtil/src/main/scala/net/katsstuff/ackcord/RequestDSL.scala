@@ -37,6 +37,7 @@ import net.katsstuff.ackcord.util.Streamable
   * that will evaluate to a value gotten by running requests, while hiding the
   * streaming implementation.
   */
+@deprecated("Use RequestRunner instead", since = "0.11")
 sealed trait RequestDSL[+A] {
 
   def map[B](f: A => B): RequestDSL[B]
@@ -51,6 +52,7 @@ sealed trait RequestDSL[+A] {
     */
   def toSource[B, Ctx](flow: Flow[Request[B, Ctx], RequestAnswer[B, Ctx], NotUsed]): Source[A, NotUsed]
 }
+@deprecated("Use RequestRunner instead", since = "0.11")
 object RequestDSL {
 
   implicit def wrap[A](request: Request[A, _]): RequestDSL[A] = SingleRequest(request)
