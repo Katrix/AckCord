@@ -28,10 +28,11 @@ import java.util.Locale
 import scala.language.higherKinds
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Flow, Sink}
-import net.katsstuff.ackcord.RequestDSL
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import cats.Monad
+import net.katsstuff.ackcord.{RequestDSL, RequestRunner}
 import net.katsstuff.ackcord.http.requests.RequestHelper
-import net.katsstuff.ackcord.util.MessageParser
+import net.katsstuff.ackcord.util.{MessageParser, Streamable}
 
 /**
   * Represents some group of commands.
@@ -107,6 +108,8 @@ case class BaseCmdFactory[F[_], +Mat](
     description: Option[CmdDescription] = None,
 ) extends CmdFactory[Cmd[F], Mat]
 object BaseCmdFactory {
+
+  @deprecated("Use requestRunner instead", since = "0.11")
   def requestDSL[F[_]](
       category: CmdCategory,
       aliases: Seq[String],
@@ -116,6 +119,23 @@ object BaseCmdFactory {
   ): BaseCmdFactory[F, NotUsed] = {
     val sink: RequestHelper => Sink[Cmd[F], NotUsed] = requests =>
       flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
+
+    BaseCmdFactory(category, aliases, sink, filters, description)
+  }
+
+  type SourceRequest[A] = Source[A, NotUsed]
+
+  def requestRunner[F[_]: Monad: Streamable](
+    category: CmdCategory,
+    aliases: Seq[String],
+    flow: RequestRunner[SourceRequest, F] => Flow[Cmd[F], SourceRequest[Unit], NotUsed],
+    filters: Seq[CmdFilter] = Seq.empty,
+    description: Option[CmdDescription] = None,
+  ): BaseCmdFactory[F, NotUsed] = {
+    val sink: RequestHelper => Sink[Cmd[F], NotUsed] = implicit requests => {
+      val runner = RequestRunner[Source[?, NotUsed], F]
+      flow(runner).flatMapConcat(s => s).to(Sink.ignore)
+    }
 
     BaseCmdFactory(category, aliases, sink, filters, description)
   }
@@ -138,6 +158,8 @@ case class ParsedCmdFactory[F[_], A, +Mat](
 )(implicit val parser: MessageParser[A])
     extends CmdFactory[ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
+
+  @deprecated("Use requestRunner instead", since = "0.11")
   def requestDSL[F[_], A](
       category: CmdCategory,
       aliases: Seq[String],
@@ -147,6 +169,23 @@ object ParsedCmdFactory {
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, NotUsed] = {
     val sink: RequestHelper => Sink[ParsedCmd[F, A], NotUsed] = requests =>
       flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
+
+    new ParsedCmdFactory(category, aliases, sink, filters, description)
+  }
+
+  type SourceRequest[A] = Source[A, NotUsed]
+
+  def requestRunner[F[_]: Monad: Streamable, A, Mat](
+    category: CmdCategory,
+    aliases: Seq[String],
+    flow: RequestRunner[SourceRequest, F] => Flow[ParsedCmd[F, A], SourceRequest[Unit], Mat],
+    filters: Seq[CmdFilter] = Seq.empty,
+    description: Option[CmdDescription] = None,
+  )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, Mat] = {
+    val sink: RequestHelper => Sink[ParsedCmd[F, A], Mat] = implicit requests => {
+      val runner = RequestRunner[SourceRequest, F]
+      flow(runner).flatMapConcat(s => s).toMat(Sink.ignore)(Keep.left)
+    }
 
     new ParsedCmdFactory(category, aliases, sink, filters, description)
   }
