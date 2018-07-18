@@ -1,6 +1,11 @@
 package net.katsstuff
 
-import scala.language.higherKinds
+import scala.concurrent.Future
+import scala.language.{higherKinds, implicitConversions}
+
+import akka.stream.scaladsl.{Flow, Sink, Source}
+import cats.{Alternative, Contravariant, Functor, MonadError}
+import net.katsstuff.ackcord.util.StreamInstances
 
 package object ackcord {
 
@@ -39,4 +44,14 @@ package object ackcord {
 
   val JsonUndefined: util.JsonUndefined.type = util.JsonUndefined
   type JsonUndefined = util.JsonUndefined.type
+
+  type SourceRequest[A] = StreamInstances.SourceRequest[A]
+  type FutureVectorRequest[A] = Future[Vector[A]]
+
+  implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] = StreamInstances.SourceFlatmap(source)
+
+  implicit val sourceMonadInstance: MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
+    StreamInstances.sourceInstance
+  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, ?, Mat]]     = StreamInstances.flowInstance[In, Mat]
+  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[?, Mat]] = StreamInstances.sinkInstance[Mat]
 }

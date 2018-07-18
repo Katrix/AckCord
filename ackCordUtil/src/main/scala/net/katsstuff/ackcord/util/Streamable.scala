@@ -50,4 +50,8 @@ object Streamable {
   implicit val futureStreamable: Streamable[Future] = new Streamable[Future] {
     override def toSource[A](fa: Future[A]): Source[A, NotUsed] = Source.fromFuture(fa)
   }
+
+  implicit val sourceStreamable: Streamable[Source[?, NotUsed]] = new Streamable[Source[?, NotUsed]] {
+    override def toSource[A](fa: Source[A, NotUsed]): Source[A, NotUsed] = fa
+  }
 }

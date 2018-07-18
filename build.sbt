@@ -15,7 +15,8 @@ lazy val commonSettings = Seq(
     "-Xlint",
     "-Yno-adapted-args",
     "-Ywarn-dead-code",
-    "-Ywarn-unused-import"
+    "-Ywarn-unused-import",
+    "-Ypartial-unification"
   ),
   libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
   //Fixes repository not specified error
