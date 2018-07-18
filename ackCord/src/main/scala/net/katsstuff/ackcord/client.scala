@@ -118,8 +118,14 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   }
 
   /**
+    * A stream requester runner.
+    */
+  val sourceRequesterRunner: RequestRunner[SourceRequest, F]
+
+  /**
     * Runs a [[RequestDSL]] once, and returns the result.
     */
+  @deprecated("Use requesterRunner instead", since = "0.11")
   def runDSL[A](dsl: RequestDSL[A]): Future[A] = {
     val req = requests
     import req.mat
@@ -132,8 +138,9 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     * Run a [[RequestDSL]] with a [[CacheSnapshot]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
+  @deprecated("Use the handlers or the new onEvent instead", since = "0.11")
   def onEventDSLC(
       handler: CacheSnapshot[F] => PartialFunction[APIMessage, RequestDSL[Unit]]
   ): (UniqueKillSwitch, Future[Done])
@@ -141,8 +148,9 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   /**
     * Run a [[RequestDSL]] when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
+  @deprecated("Use the handlers or the new onEvent instead", since = "0.11")
   def onEventDSL(handler: PartialFunction[APIMessage, RequestDSL[Unit]]): (UniqueKillSwitch, Future[Done]) =
     onEventDSLC { _ =>
       {
@@ -154,8 +162,9 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     * Run some code with a [[CacheSnapshot]] when an event happens.
     *
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
+  @deprecated("Use the handlers or the new onEvent instead", since = "0.11")
   def onEventC(handler: CacheSnapshot[F] => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
     onEventDSLC { c =>
       {
@@ -165,37 +174,48 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   }
 
   /**
-    * Run some code when an event happens.
+    * Runs a partial function whenever [[APIMessage]]s are received.
+    *
+    * If you use IntelliJ you might have to specify the execution type.
+    * (Normally Id or SourceRequest)
+    * @param handler The handler function
+    * @param streamable A way to convert your execution type to a stream.
+    * @tparam G The execution type
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
-  def onEvent(handler: PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) = {
-    onEventC { _ =>
-      {
-        case msg if handler.isDefinedAt(msg) => handler(msg)
-      }
-    }
-  }
+  def onEvent[G[_]](handler: APIMessage => G[Unit])(
+      implicit streamable: Streamable[G]
+  ): (UniqueKillSwitch, Future[Done])
+
+  /**
+    * An utility function to extract a [[CacheSnapshot]] from a type in
+    * a function.
+    * @param handler The handler function with a cache parameter.
+    * @param hasCache A typeclass allowing you to extract the cache.
+    * @tparam G The execution type
+    * @tparam ContainsCache The type of the value that contains the cache.
+    * @return A handler function
+    */
+  def withCache[G[_], ContainsCache](
+      handler: CacheSnapshot[F] => ContainsCache => G[Unit]
+  )(implicit hasCache: HasCache[F, ContainsCache]): ContainsCache => G[Unit] = msg => handler(hasCache.cache(msg))(msg)
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
-  def registerHandler[A <: APIMessage](
-      handler: EventHandler[A]
-  )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
-    onEventC { implicit c =>
-      {
-        case msg if classTag.runtimeClass.isInstance(msg) => handler.handle[F](msg.asInstanceOf[A])
-      }
-    }
+  def registerHandler[G[_], A <: APIMessage](
+      handler: EventHandler[F, G, A]
+  )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
 
   /**
     * Registers an [[EventHandlerDSL]] that will be run when an event happens.
     * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done and all the values it computed.
+    *         when it's done.
     */
+  @deprecated("RequestDSL is deprecated. Use the handlers instead", since = "0.11")
   def registerHandler[A <: APIMessage](
       handler: EventHandlerDSL[A]
   )(implicit classTag: ClassTag[A], F: Monad[F], streamable: Streamable[F]): (UniqueKillSwitch, Future[Done]) =
@@ -257,7 +277,9 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
 }
 case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
     extends DiscordClient[Id] {
+  import cache.mat
 
+  @deprecated("Use the handlers or the new onEvent instead", since = "0.11")
   override def onEventDSLC(
       handler: CacheSnapshot[Id] => PartialFunction[APIMessage, RequestDSL[Unit]]
   ): (UniqueKillSwitch, Future[Done]) = runDSL {
@@ -276,4 +298,30 @@ case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Comm
 
     killSwitch -> SeperateCommandsHelper(newCommands, requests)
   }
+
+  override val sourceRequesterRunner: RequestRunner[Source[?, NotUsed], Id] =
+    RequestRunner.sourceRequestRunner[Id](requests, cats.catsInstancesForId, Streamable.idStreamable)
+
+  override def registerHandler[G[_], A <: APIMessage](
+      handler: EventHandler[Id, G, A]
+  )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
+    cache.subscribeAPI
+      .collectType[A]
+      .map { a =>
+        implicit val c: MemoryCacheSnapshot = a.cache.current
+        handler.handle(a)
+      }
+      .flatMapConcat(streamable.toSource)
+      .viaMat(KillSwitches.single)(Keep.right)
+      .toMat(Sink.ignore)(Keep.both)
+      .run()
+
+  override def onEvent[G[_]](
+      handler: APIMessage => G[Unit]
+  )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
+    cache.subscribeAPI
+      .flatMapConcat(handler.andThen(streamable.toSource))
+      .viaMat(KillSwitches.single)(Keep.right)
+      .toMat(Sink.ignore)(Keep.both)
+      .run()
 }

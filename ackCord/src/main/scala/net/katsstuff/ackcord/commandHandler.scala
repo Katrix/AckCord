@@ -26,15 +26,28 @@ package net.katsstuff.ackcord
 import scala.language.higherKinds
 
 import cats.Monad
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter}
+import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, RawCmd}
 import net.katsstuff.ackcord.data.Message
+
+/**
+  * A handler for all raw commands.
+  */
+abstract class RawCommandHandler[F[_], G[_]] {
+
+  /**
+    * Called whenever a raw command is encountered.
+    * @param rawCmd The command object
+    * @param c The cache snapshot for the command.
+    */
+  def handle(rawCmd: RawCmd[F])(implicit c: CacheSnapshot[F]): G[Unit]
+}
 
 /**
   * A handler for a specific command.
   *
   * @tparam A The parameter type.
   */
-abstract class CommandHandler[A](
+abstract class CommandHandler[F[_], G[_], A](
     val category: CmdCategory,
     val aliases: Seq[String],
     val filters: Seq[CmdFilter] = Nil,
@@ -45,11 +58,7 @@ abstract class CommandHandler[A](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F],
-      S: Streamable[F]
-  ): Unit
+  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): G[Unit]
 }
 
 /**
@@ -57,6 +66,7 @@ abstract class CommandHandler[A](
   *
   * @tparam A The parameter type.
   */
+@deprecated("Use CommandHandler instead", since = "0.11")
 abstract class CommandHandlerDSL[A](
     val category: CmdCategory,
     val aliases: Seq[String],
