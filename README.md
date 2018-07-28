@@ -15,4 +15,4 @@ For more information, either see the [microsite](http://ackcord.katsstuff.net), 
 
 Or you can just join the Discord server (we got cookies).
 
-[![](https://discordapp.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/fdKBnT) 
+[![](https://discordapp.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/5UH627u) 
