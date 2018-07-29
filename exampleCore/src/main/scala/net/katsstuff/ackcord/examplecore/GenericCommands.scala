@@ -161,7 +161,7 @@ class GenericCommands[F[_]: Streamable: Monad] {
       .collect {
         case noCmd: NoCmd[F] =>
           CreateMessage(noCmd.msg.channelId, CreateMessageData("No command specified"))
-        case noCmdCat: NoCmdCategory[F] =>
+        case noCmdCat: NoCmdPrefix[F] =>
           CreateMessage(noCmdCat.msg.channelId, CreateMessageData("Unknown category"))
         case unknown: RawCmd[F] if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
           CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))

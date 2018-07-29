@@ -23,8 +23,6 @@
  */
 package net.katsstuff.ackcord.commands
 
-import java.util.Locale
-
 import akka.NotUsed
 import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
@@ -35,14 +33,12 @@ object CmdStreams {
 
   /**
     * Parse messages into potential commands.
-    * @param needMention If this handler should require mentions before
-    *                    the commands.
-    * @param categories The categories this handler should know about.
+    * @param settings The settings which defines how messages should be parsed
+    *                 into commands.
     * @param apiMessages A source of [[APIMessage]]s.
     */
   def cmdStreams[A](
-      needMention: Boolean,
-      categories: Set[CmdCategory],
+      settings: AbstractCommandSettings[Id],
       apiMessages: Source[APIMessage, A]
   )(implicit mat: Materializer): (A, Source[RawCmdMessage[Id], NotUsed]) = {
     apiMessages
@@ -50,16 +46,14 @@ object CmdStreams {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: MemoryCacheSnapshot = c.current
 
-          CmdHelper.isValidCommand(needMention, msg).value.map { args =>
+          CmdHelper.isValidCommand(settings.needMention(msg), msg).value.map { args =>
             if (args == Nil) NoCmd(msg, c.current)
             else {
-              val lowercaseCommand = args.head.toLowerCase(Locale.ROOT)
-
-              categories
-                .find(cat => lowercaseCommand.startsWith(cat.prefix))
-                .fold[RawCmdMessage[Id]](NoCmdCategory(msg, lowercaseCommand, args.tail, cache)) { cat =>
-                  val withoutPrefix = lowercaseCommand.substring(cat.prefix.length)
-                  RawCmd(msg, cat, withoutPrefix, args.tail, c.current)
+              settings
+                .getPrefix(args, msg)
+                .value
+                .fold[RawCmdMessage[Id]](NoCmdPrefix(msg, args.head, args.tail, cache)) {
+                  case (prefix, remaining) => RawCmd(msg, prefix, remaining.head, remaining.tail.toList, c.current)
                 }
             }
           }

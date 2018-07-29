@@ -30,9 +30,9 @@ import scala.language.higherKinds
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import cats.Monad
-import net.katsstuff.ackcord.{RequestDSL, RequestRunner}
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.{MessageParser, Streamable}
+import net.katsstuff.ackcord.{RequestDSL, RequestRunner}
 
 /**
   * Represents some group of commands.
@@ -40,6 +40,7 @@ import net.katsstuff.ackcord.util.{MessageParser, Streamable}
   * @param prefix The prefix for this category. This must be lowercase.
   * @param description The description for this category.
   */
+@deprecated("Use normal prefixes instead")
 case class CmdCategory(prefix: String, description: String) {
   require(prefix.toLowerCase(Locale.ROOT) == prefix, "The prefix of a command category must be lowercase")
   override def equals(obj: scala.Any): Boolean = {
@@ -66,17 +67,12 @@ case class CmdDescription(name: String, description: String, usage: String = "",
   * A factory for a command, that also includes other information about
   * the command.
   */
-trait CmdFactory[A, +Mat] {
+sealed trait CmdFactory[F[_], A, +Mat] {
 
   /**
-    * The category of this command.
+    * The refiner to use to determine if, and how commands should be accepted.
     */
-  def category: CmdCategory
-
-  /**
-    * The aliases for this command.
-    */
-  def aliases: Seq[String]
+  def refiner: CmdRefiner[F]
 
   /**
     * A sink which defines the behavior of this command.
@@ -87,30 +83,34 @@ trait CmdFactory[A, +Mat] {
     * A description of this command.
     */
   def description: Option[CmdDescription]
-
-  def lowercaseAliases: Seq[String] = aliases.map(_.toLowerCase(Locale.ROOT))
 }
 
 /**
   * The factory for an unparsed command.
   *
-  * @param category The category of this command.
-  * @param aliases The aliases for this command.
+  * @param refiner The refiner to use to determine if, and how commands
+  *                should be accepted.
   * @param sink A sink which defines the behavior of this command.
-  * @param filters The filters to use for this command.
   * @param description A description of this command.
   */
 case class BaseCmdFactory[F[_], +Mat](
-    category: CmdCategory,
-    aliases: Seq[String],
+    refiner: CmdRefiner[F],
     sink: RequestHelper => Sink[Cmd[F], Mat],
-    filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
-) extends CmdFactory[Cmd[F], Mat]
+) extends CmdFactory[F, Cmd[F], Mat]
 object BaseCmdFactory {
 
+  @deprecated("Use the normal apply method and supply an CmdInfo or similar")
+  def apply[F[_]: Monad, Mat](
+      category: CmdCategory,
+      aliases: Seq[String],
+      sink: RequestHelper => Sink[Cmd[F], Mat],
+      filters: Seq[CmdFilter] = Seq.empty,
+      description: Option[CmdDescription] = None,
+  ): BaseCmdFactory[F, Mat] = BaseCmdFactory(CmdInfo(category.prefix, aliases, filters), sink, description)
+
   @deprecated("Use requestRunner instead", since = "0.11")
-  def requestDSL[F[_]](
+  def requestDSL[F[_]: Monad](
       category: CmdCategory,
       aliases: Seq[String],
       flow: Flow[Cmd[F], RequestDSL[_], NotUsed],
@@ -126,41 +126,45 @@ object BaseCmdFactory {
   type SourceRequest[A] = Source[A, NotUsed]
 
   def requestRunner[F[_]: Monad: Streamable](
-    category: CmdCategory,
-    aliases: Seq[String],
-    flow: RequestRunner[SourceRequest, F] => Flow[Cmd[F], SourceRequest[Unit], NotUsed],
-    filters: Seq[CmdFilter] = Seq.empty,
-    description: Option[CmdDescription] = None,
+      canRun: CmdRefiner[F],
+      flow: RequestRunner[SourceRequest, F] => Flow[Cmd[F], SourceRequest[Unit], NotUsed],
+      description: Option[CmdDescription] = None,
   ): BaseCmdFactory[F, NotUsed] = {
     val sink: RequestHelper => Sink[Cmd[F], NotUsed] = implicit requests => {
       val runner = RequestRunner[Source[?, NotUsed], F]
       flow(runner).flatMapConcat(s => s).to(Sink.ignore)
     }
 
-    BaseCmdFactory(category, aliases, sink, filters, description)
+    BaseCmdFactory(canRun, sink, description)
   }
 }
 
 /**
   * The factory for a parsed command.
-  * @param category The category of this command.
-  * @param aliases The aliases for this command.
+  * @param refiner The refiner to use to determine if, and how commands
+  *                should be accepted.
   * @param sink A sink which defines the behavior of this command.
-  * @param filters The filters to use for this command.
   * @param description A description of this command.
   */
 case class ParsedCmdFactory[F[_], A, +Mat](
-    category: CmdCategory,
-    aliases: Seq[String],
+    refiner: CmdRefiner[F],
     sink: RequestHelper => Sink[ParsedCmd[F, A], Mat],
-    filters: Seq[CmdFilter] = Seq.empty,
     description: Option[CmdDescription] = None,
 )(implicit val parser: MessageParser[A])
-    extends CmdFactory[ParsedCmd[F, A], Mat]
+    extends CmdFactory[F, ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
 
+  def apply[F[_]: Monad, A, Mat](
+      category: CmdCategory,
+      aliases: Seq[String],
+      sink: RequestHelper => Sink[ParsedCmd[F, A], Mat],
+      filters: Seq[CmdFilter] = Seq.empty,
+      description: Option[CmdDescription] = None,
+  )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, Mat] =
+    ParsedCmdFactory(CmdInfo(category.prefix, aliases, filters), sink, description)
+
   @deprecated("Use requestRunner instead", since = "0.11")
-  def requestDSL[F[_], A](
+  def requestDSL[F[_]: Monad, A](
       category: CmdCategory,
       aliases: Seq[String],
       flow: Flow[ParsedCmd[F, A], RequestDSL[_], NotUsed],
@@ -170,23 +174,21 @@ object ParsedCmdFactory {
     val sink: RequestHelper => Sink[ParsedCmd[F, A], NotUsed] = requests =>
       flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
 
-    new ParsedCmdFactory(category, aliases, sink, filters, description)
+    ParsedCmdFactory(category, aliases, sink, filters, description)
   }
 
   type SourceRequest[A] = Source[A, NotUsed]
 
   def requestRunner[F[_]: Monad: Streamable, A, Mat](
-    category: CmdCategory,
-    aliases: Seq[String],
-    flow: RequestRunner[SourceRequest, F] => Flow[ParsedCmd[F, A], SourceRequest[Unit], Mat],
-    filters: Seq[CmdFilter] = Seq.empty,
-    description: Option[CmdDescription] = None,
+      canRun: CmdRefiner[F],
+      flow: RequestRunner[SourceRequest, F] => Flow[ParsedCmd[F, A], SourceRequest[Unit], Mat],
+      description: Option[CmdDescription] = None,
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, Mat] = {
     val sink: RequestHelper => Sink[ParsedCmd[F, A], Mat] = implicit requests => {
       val runner = RequestRunner[SourceRequest, F]
       flow(runner).flatMapConcat(s => s).toMat(Sink.ignore)(Keep.left)
     }
 
-    new ParsedCmdFactory(category, aliases, sink, filters, description)
+    ParsedCmdFactory(canRun, sink, description)
   }
 }
