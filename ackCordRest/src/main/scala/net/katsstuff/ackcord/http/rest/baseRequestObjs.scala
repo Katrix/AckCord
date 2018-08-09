@@ -188,6 +188,13 @@ trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonReques
   * A request that doesn't have a response.
   */
 trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUsed, Ctx] {
+
+  override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, NotUsed, NotUsed] =
+    MapWithMaterializer.flow { implicit mat => responseEntity: ResponseEntity =>
+      responseEntity.discardBytes()
+      NotUsed
+    }
+
   override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
 }
 
