@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord.http.rest
 
+import java.net.URLEncoder
 import java.nio.file.{Files, Path}
 
 import scala.language.higherKinds
@@ -275,6 +276,8 @@ object CreateMessage {
 
 /**
   * Create a reaction for a message.
+  * @param emoji The emoji to send, if this is a Unicode emoji, then you
+  *              need to url encode it first.
   */
 case class CreateReaction[Ctx](
     channelId: ChannelId,
@@ -287,6 +290,19 @@ case class CreateReaction[Ctx](
   override def requiredPermissions: Permission = Permission.ReadMessageHistory
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
     hasPermissionsChannel(channelId, requiredPermissions)
+}
+object CreateReaction {
+
+  /**
+    * An utility method to create a reaction request with a unicode emoji.
+    * This method will do the URL encoding for you.
+    */
+  def unicodeEmoji[Ctx](
+      channelId: ChannelId,
+      messageId: MessageId,
+      unicodeEmoji: String,
+      context: Ctx = NotUsed: NotUsed
+  ): CreateReaction[Ctx] = CreateReaction(channelId, messageId, URLEncoder.encode(unicodeEmoji, "UTF-8"), context)
 }
 
 /**
