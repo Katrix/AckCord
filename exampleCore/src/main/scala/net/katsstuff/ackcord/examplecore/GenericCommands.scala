@@ -30,21 +30,20 @@ import scala.language.higherKinds
 
 import akka.NotUsed
 import akka.actor.{ActorRef, PoisonPill}
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.Sink
 import cats._
+import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.raw.RawChannel
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
-import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestHelper, RequestResponse}
-import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData, GetChannel}
+import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestResponse}
+import net.katsstuff.ackcord.http.rest.{CreateMessage, GetChannel}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord._
 
 class GenericCommands[F[_]: Streamable: Monad] {
 
   val PingCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("ping"),
+    refiner = CmdInfo(prefix = "!", aliases = Seq("ping")),
     sink = requests =>
       //Completely manual
       ParsedCmdFlow[F, NotUsed]
@@ -55,8 +54,7 @@ class GenericCommands[F[_]: Streamable: Monad] {
   )
 
   val SendFileCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("sendFile"),
+    refiner = CmdInfo(prefix = "!", aliases = Seq("sendFile")),
     sink = requests => {
       val embed = OutgoingEmbed(
         title = Some("This is an embed"),
@@ -75,8 +73,7 @@ class GenericCommands[F[_]: Streamable: Monad] {
   )
 
   val InfoChannelCmdFactory: ParsedCmdFactory[F, GuildChannel, NotUsed] = ParsedCmdFactory[F, GuildChannel, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("infoChannel"),
+    refiner = CmdInfo(prefix = "!", aliases = Seq("infoChannel")),
     sink = requests => {
       //Using the context
       ParsedCmdFlow[F, GuildChannel]
@@ -109,16 +106,14 @@ class GenericCommands[F[_]: Streamable: Monad] {
 
   def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[F, NotUsed, NotUsed] =
     ParsedCmdFactory[F, NotUsed, NotUsed](
-      category = ExampleCmdCategories.!,
-      aliases = Seq("kill", "die"),
+      refiner = CmdInfo(prefix = "!", aliases = Seq("kill", "die")),
       //We use system.actorOf to keep the actor alive when this actor shuts down
       sink = requests => Sink.actorRef(requests.system.actorOf(KillCmd.props(mainActor), "KillCmd"), PoisonPill),
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
   val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("timeDiff"),
+    refiner = CmdInfo(prefix = "!", aliases = Seq("timeDiff")),
     flow = runner => ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
       import runner._
       for {
@@ -137,8 +132,7 @@ class GenericCommands[F[_]: Streamable: Monad] {
   )
 
   val RatelimitTestCmdFactory: ParsedCmdFactory[F, Int, NotUsed] = ParsedCmdFactory[F, Int, NotUsed](
-    category = ExampleCmdCategories.!,
-    aliases = Seq("ratelimitTest"),
+    refiner = CmdInfo(prefix = "!", aliases = Seq("ratelimitTest")),
     sink = requests =>
       ParsedCmdFlow[F, Int]
         .flatMapConcat(implicit c => cmd => Streamable[F].optionToSource(cmd.msg.channelId.tResolve.map(_ -> cmd.args)))
@@ -152,19 +146,4 @@ class GenericCommands[F[_]: Streamable: Monad] {
       )
     )
   )
-
-  def ComplainErrorHandler(
-      requests: RequestHelper,
-      allCmds: Map[CmdCategory, Set[String]]
-  ): Sink[AllCmdMessages[F], NotUsed] =
-    Flow[AllCmdMessages[F]]
-      .collect {
-        case noCmd: NoCmd[F] =>
-          CreateMessage(noCmd.msg.channelId, CreateMessageData("No command specified"))
-        case noCmdCat: NoCmdPrefix[F] =>
-          CreateMessage(noCmdCat.msg.channelId, CreateMessageData("Unknown category"))
-        case unknown: RawCmd[F] if allCmds.get(unknown.category).forall(!_.contains(unknown.cmd)) =>
-          CreateMessage(unknown.msg.channelId, CreateMessageData(s"No command named ${unknown.cmd} known"))
-      }
-      .to(requests.sinkIgnore)
 }

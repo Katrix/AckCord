@@ -35,13 +35,16 @@ import net.katsstuff.ackcord.syntax._
 
 object MyBot extends App {
 
-  val GeneralCommands = CmdCategory("!", "General commands")
-  val MusicCommands   = CmdCategory("&", "Music commands")
+  val GeneralCommands = "!"
+  val MusicCommands   = "&"
 
   require(args.nonEmpty, "Please provide a token")
   val token = args.head
   val settings =
-    ClientSettings(token, commandSettings = CommandSettings(categories = Set(GeneralCommands, MusicCommands)))
+    ClientSettings(
+      token,
+      commandSettings = CommandSettings(needsMention = true, prefixes = Set(GeneralCommands, MusicCommands))
+    )
   import settings.executionContext
 
   settings
@@ -49,7 +52,7 @@ object MyBot extends App {
     .foreach { client =>
       client.onEvent[Id] {
         case APIMessage.Ready(_) => println("Now ready")
-        case _ => client.sourceRequesterRunner.unit
+        case _                   => client.sourceRequesterRunner.unit
       }
 
       import client.sourceRequesterRunner._
@@ -86,7 +89,7 @@ object MyBot extends App {
       }
 
       client.registerCmd[NotUsed, Id](
-        category = GeneralCommands,
+        prefix = GeneralCommands,
         aliases = Seq("ping"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Ping", "Check if the bot is alive"))
@@ -98,9 +101,8 @@ object MyBot extends App {
       AudioSourceManagers.registerRemoteSources(playerManager)
 
       client.registerCmd[String, Id](
-        category = MusicCommands,
-        aliases = Seq("queue"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+        refiner =
+          CmdInfo[Id](prefix = MusicCommands, aliases = Seq("queue"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
         description = Some(CmdDescription("Queue", "Queue a track"))
       ) {
         client.withCache[Id, ParsedCmd[Id, String]] { implicit c => cmd =>

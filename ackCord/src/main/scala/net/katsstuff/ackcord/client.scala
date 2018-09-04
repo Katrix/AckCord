@@ -106,6 +106,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
     logout(timeout).flatMap(_ => requests.system.terminate())
 
+  @deprecated("RequestDSL is deprecated", since = "0.11")
   protected def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.mat
@@ -230,7 +231,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     * @param settings The settings to use for the commands object
     * @return A killswitch to stop this command helper, together with the command helper.
     */
-  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper[F])
+  def newCommandsHelper(settings: CommandSettings[F]): (UniqueKillSwitch, CommandsHelper[F])
 
   /**
     * Join a voice channel.
@@ -288,10 +289,9 @@ case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Comm
     }
   }
 
-  override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper[Id]) = {
+  override def newCommandsHelper(settings: CommandSettings[Id]): (UniqueKillSwitch, CommandsHelper[Id]) = {
     val (killSwitch, newCommands) = CoreCommands.create(
-      settings.needMention,
-      settings.categories,
+      settings,
       cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
       requests
     )

@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, OverflowStrategy}
 import cats.Id
-import net.katsstuff.ackcord.commands.{CmdCategory, CoreCommands}
+import net.katsstuff.ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity
 
@@ -59,7 +59,7 @@ class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     val system: ActorSystem = ActorSystem("AckCord"),
-    val commandSettings: CommandSettings = CommandSettings(),
+    val commandSettings: AbstractCommandSettings[Id] = CommandSettings(needsMention = true, prefixes = Set.empty),
     val requestSettings: RequestSettings = RequestSettings()
 ) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
 
@@ -80,7 +80,7 @@ class ClientSettings(
       requestSettings.maxAllowedWait
     )
     val cache    = Cache.create
-    val commands = CoreCommands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
+    val commands = CoreCommands.create(commandSettings, cache, requests)
 
     DiscordShard.fetchWsGateway.map(
       uri => CoreDiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
@@ -103,7 +103,7 @@ class ClientSettings(
       requestSettings.maxAllowedWait
     )
     val cache    = Cache.create
-    val commands = CoreCommands.create(commandSettings.needMention, commandSettings.categories, cache, requests)
+    val commands = CoreCommands.create(commandSettings, cache, requests)
 
     DiscordShard.fetchWsGatewayWithShards(token).map {
       case (uri, receivedShardTotal) =>
@@ -142,7 +142,7 @@ object ClientSettings {
       status: PresenceStatus = PresenceStatus.Online,
       afk: Boolean = false,
       system: ActorSystem = ActorSystem("AckCord"),
-      commandSettings: CommandSettings = CommandSettings(),
+      commandSettings: AbstractCommandSettings[Id] = CommandSettings(needsMention = true, prefixes = Set.empty),
       requestSettings: RequestSettings = RequestSettings()
   ): ClientSettings =
     new ClientSettings(
@@ -172,9 +172,3 @@ case class RequestSettings(
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
 )
-
-/**
-  * @param needMention If a mention is needed before the category when using a prefix.
-  * @param categories The valid command categories AckCord should keep a lookout for.
-  */
-case class CommandSettings(needMention: Boolean = true, categories: Set[CmdCategory] = Set.empty)

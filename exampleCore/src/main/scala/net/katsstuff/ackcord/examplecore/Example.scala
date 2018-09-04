@@ -23,18 +23,17 @@
  */
 package net.katsstuff.ackcord.examplecore
 
-import scala.language.higherKinds
 import scala.util.{Failure, Success}
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, Materializer}
-import cats.{Id, Monad}
-import net.katsstuff.ackcord.commands.{Commands, CoreCommands, HelpCmd, ParsedCmdFactory}
-import net.katsstuff.ackcord.examplecore.music.MusicHandler
+import cats.Id
+import net.katsstuff.ackcord.commands.{AbstractCmdInfo, CommandSettings, Commands, CoreCommands, HelpCmd, ParsedCmdFactory}
+import net.katsstuff.ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
-import net.katsstuff.ackcord.util.{GuildRouter, Streamable}
+import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
@@ -88,8 +87,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   //We set up a commands object, which parses potential commands
   val cmdObj: Commands[Id] =
     CoreCommands.create(
-      needMention = true,
-      categories = Set(ExampleCmdCategories.!, ExampleCmdCategories.&),
+      CommandSettings(needsMention = true, prefixes = Set("!", "&")),
       cache,
       requests
     )
@@ -100,8 +98,19 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   genericCmds.foreach(registerCmd)
   registerCmd(helpCmd)
 
-  val guildRouterMusic: ActorRef =
-    context.actorOf(GuildRouter.props(MusicHandler.props(requests, cmdObj, helpCmdActor, cache), None), "MusicHandler")
+  val guildRouterMusic: ActorRef = {
+    val registerCmdObj = new CmdRegisterFunc[Id] {
+      def apply[Mat](a: ParsedCmdFactory[Id, _, Mat]): Id[Mat] = ExampleMain.registerCmd(cmdObj, helpCmdActor)(a)
+    }
+
+    context.actorOf(
+      GuildRouter.props(
+        MusicHandler.props(requests, registerCmdObj, cache),
+        None
+      ),
+      "MusicHandler"
+    )
+  }
 
   cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard)(classOf[APIMessage.Ready])
   shard ! DiscordShard.StartShard
@@ -130,11 +139,14 @@ object ExampleMain {
   def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
-  def registerCmd[F[_]: Streamable: Monad, Mat](commands: Commands[F], helpCmdActor: ActorRef)(
-      parsedCmdFactory: ParsedCmdFactory[F, _, Mat]
+  def registerCmd[Mat](commands: Commands[Id], helpCmdActor: ActorRef)(
+      parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]
   ): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
-    helpCmdActor ! HelpCmd.AddCmd(parsedCmdFactory, complete)
+    (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
+      case (info: AbstractCmdInfo[Id], Some(description)) => helpCmdActor ! HelpCmd.AddCmd(info, description, complete)
+      case _                                              =>
+    }
     materialized
   }
 }

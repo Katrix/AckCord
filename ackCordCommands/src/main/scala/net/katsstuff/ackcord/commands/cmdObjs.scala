@@ -64,7 +64,7 @@ sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
 case class RawCmd[F[_]](msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot[F])
     extends RawCmdMessage[F] {
 
-  @deprecated("CmdCategory is deprecated. Use the prefix instead")
+  @deprecated("CmdCategory is deprecated. Use the prefix instead", since = "0.11")
   def category: CmdCategory = CmdCategory(prefix, "")
 }
 

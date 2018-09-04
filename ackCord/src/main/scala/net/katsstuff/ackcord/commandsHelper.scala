@@ -47,6 +47,7 @@ trait CommandsHelper[F[_]] {
     */
   def requests: RequestHelper
 
+  @deprecated("RequestDSL is deprecated", since = "0.11")
   private def runDSL(source: Source[RequestDSL[Unit], NotUsed]): (UniqueKillSwitch, Future[Done]) = {
     val helper = requests
     import helper.mat
@@ -139,7 +140,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory.old(category, aliases, sink, filters, description)
 
     commands.subscribe(factory)(Keep.right)
   }
@@ -166,7 +167,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory.old(category, aliases, sink, filters, description)
 
     commands.subscribe(factory)(Keep.right)
   }
@@ -193,7 +194,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory.old(category, aliases, sink, filters, description)
 
     commands.subscribe(factory)(Keep.right)
   }
@@ -219,7 +220,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory.old(category, aliases, sink, filters, description)
 
     commands.subscribe(factory)(Keep.right)
   }
@@ -240,7 +241,7 @@ trait CommandsHelper[F[_]] {
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.mat
-    commands.subscribe
+    commands.subscribeRaw
       .collectType[RawCmd[F]]
       .flatMapConcat(handler.andThen(streamable.toSource))
       .viaMat(KillSwitches.single)(Keep.right)
@@ -258,7 +259,7 @@ trait CommandsHelper[F[_]] {
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.mat
-    commands.subscribe
+    commands.subscribeRaw
       .collect {
         case cmd: RawCmd[F] => handler.handle(cmd)(cmd.c)
       }
@@ -284,7 +285,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.left)
     }
 
-    val factory = ParsedCmdFactory(handler.category, handler.aliases, sink, handler.filters, handler.description)
+    val factory = ParsedCmdFactory(handler.refiner, sink, handler.description)
 
     commands.subscribe(factory)(Keep.both).swap
   }
@@ -313,12 +314,29 @@ trait CommandsHelper[F[_]] {
     *         when it's done.
     */
   def registerCmd[A: MessageParser, G[_]](
-    category: CmdCategory,
-    aliases: Seq[String],
-    filters: Seq[CmdFilter] = Nil,
-    description: Option[CmdDescription] = None
+      prefix: String,
+      aliases: Seq[String],
+      filters: Seq[CmdFilter] = Nil,
+      description: Option[CmdDescription] = None
   )(
-    handler: ParsedCmd[F, A] => G[Unit]
+      handler: ParsedCmd[F, A] => G[Unit]
+  )(implicit F: Monad[F], streamableF: Streamable[F], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
+    registerCmd(CmdInfo[F](prefix, aliases, filters), description)(handler)
+
+  /**
+    * Register a command which runs some code.
+    *
+    * @param handler The handler function.
+    * @param streamable A way to convert your execution type to a stream.
+    * @tparam G The execution type
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
+  def registerCmd[A: MessageParser, G[_]](
+      refiner: CmdRefiner[F],
+      description: Option[CmdDescription]
+  )(
+      handler: ParsedCmd[F, A] => G[Unit]
   )(implicit F: Monad[F], streamableF: Streamable[F], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val sink = (_: RequestHelper) => {
       ParsedCmdFlow[F, A]
@@ -328,7 +346,7 @@ trait CommandsHelper[F[_]] {
         .toMat(Sink.ignore)(Keep.both)
     }
 
-    val factory = ParsedCmdFactory(category, aliases, sink, filters, description)
+    val factory = ParsedCmdFactory(refiner, sink, description)
 
     commands.subscribe(factory)(Keep.right)
   }

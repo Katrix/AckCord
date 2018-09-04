@@ -68,7 +68,7 @@ object CoreCommands {
     * @param cache The cache to use for subscribing to created messages.
     * @param requests A request helper object which will be passed to handlers.
     */
-  @deprecated("Use the method that takes AbstractCommandSettings")
+  @deprecated("Use the method that takes AbstractCommandSettings", since = "0.11")
   def create(
       needMention: Boolean,
       categories: Set[CmdCategory],
@@ -84,7 +84,7 @@ object CoreCommands {
     * @param apiMessages The source of [[APIMessage]]s.
     * @param requests A request helper object which will be passed to handlers.
     */
-  @deprecated("Use the method that takes AbstractCommandSettings")
+  @deprecated("Use the method that takes AbstractCommandSettings", since = "0.11")
   def create[A](
       needMention: Boolean,
       categories: Set[CmdCategory],

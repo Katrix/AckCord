@@ -39,6 +39,7 @@ import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.data.Message
 
 /**
   * A base for help commands. Commands need to be registered manually
@@ -65,7 +66,7 @@ abstract class HelpCmd extends Actor {
         if aliases.contains(command)
       } yield reg
 
-      val response = if(matches.nonEmpty) Some(createSearchReply(matches.toSeq)) else unknownCmd(cmd)
+      val response = if(matches.nonEmpty) Some(createSearchReply(msg, cmd, matches.toSeq)) else unknownCmd(cmd)
 
       response.map(CreateMessage(msg.channelId, _)) match {
         case Some(req) => sendMessageAndAck(sender(), req)
@@ -76,7 +77,7 @@ abstract class HelpCmd extends Actor {
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
 
       if (page > 0) {
-        sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
+        sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(msg, page - 1)))
       } else {
         msg.channelId.tResolve.value match {
           case Some(channel) => sendMessageAndAck(sender(), channel.sendMessage(s"Invalid page $page"))
@@ -86,7 +87,7 @@ abstract class HelpCmd extends Actor {
 
     case ParsedCmd(msg, None, _, c) =>
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
-      sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(0)))
+      sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(msg, 0)))
 
     case AddCmd(info, description, commandEnd) =>
       val registration = CommandRegistration(info, description)
@@ -115,7 +116,7 @@ abstract class HelpCmd extends Actor {
     * @param matches All the commands that matched the arguments
     * @return Data to create a message describing the search
     */
-  def createSearchReply(matches: Seq[CommandRegistration])(
+  def createSearchReply(message: Message, query: String, matches: Seq[CommandRegistration])(
       implicit c: MemoryCacheSnapshot
   ): CreateMessageData
 
@@ -125,7 +126,7 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData
+  def createReplyAll(message: Message, page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData
 
   def unknownCmd(command: String): Option[CreateMessageData] =
     Some(CreateMessageData(s"Unknown command $command"))

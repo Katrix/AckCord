@@ -49,7 +49,7 @@ case class Commands[F[_]](
     * A source that represents the parsed commands. Can be
     * materialized as many times as needed.
     */
-  @deprecated("Use subscribeRaw instead")
+  @deprecated("Use subscribeRaw instead", since = "0.11")
   def subscribe: Source[RawCmdMessage[F], NotUsed] = subscribeRaw
 
   /**
@@ -71,7 +71,7 @@ case class Commands[F[_]](
     * Subscribe to a specific command using a category, aliases, and filters.
     * @return A source representing the individual command.
     */
-  @deprecated("Use the method that takes a CmdPredicate instead")
+  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
   def subscribeCmd(category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
       implicit streamable: Streamable[F],
       F: Monad[F]
@@ -102,7 +102,7 @@ case class Commands[F[_]](
     * and a parser.
     * @return A source representing the individual parsed command.
     */
-  @deprecated("Use the method that takes a CmdPredicate instead")
+  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
   def subscribeCmdParsed[A](category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
       implicit parser: MessageParser[A],
       F: Monad[F],

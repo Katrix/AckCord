@@ -40,7 +40,7 @@ import net.katsstuff.ackcord.{RequestDSL, RequestRunner}
   * @param prefix The prefix for this category. This must be lowercase.
   * @param description The description for this category.
   */
-@deprecated("Use normal prefixes instead")
+@deprecated("Use normal prefixes instead", since = "0.11")
 case class CmdCategory(prefix: String, description: String) {
   require(prefix.toLowerCase(Locale.ROOT) == prefix, "The prefix of a command category must be lowercase")
   override def equals(obj: scala.Any): Boolean = {
@@ -100,7 +100,7 @@ case class BaseCmdFactory[F[_], +Mat](
 ) extends CmdFactory[F, Cmd[F], Mat]
 object BaseCmdFactory {
 
-  @deprecated("Use the normal apply method and supply an CmdInfo or similar")
+  @deprecated("Use the normal apply method and supply an CmdInfo or similar", since = "0.11")
   def old[F[_]: Monad, Mat](
       category: CmdCategory,
       aliases: Seq[String],
@@ -154,7 +154,7 @@ case class ParsedCmdFactory[F[_], A, +Mat](
     extends CmdFactory[F, ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
 
-  @deprecated("Use CmdInfo instead")
+  @deprecated("Use CmdInfo instead", since = "0.11")
   def old[F[_]: Monad, A, Mat](
       category: CmdCategory,
       aliases: Seq[String],
@@ -181,7 +181,7 @@ object ParsedCmdFactory {
   type SourceRequest[A] = Source[A, NotUsed]
 
   def requestRunner[F[_]: Monad: Streamable, A, Mat](
-      canRun: CmdRefiner[F],
+      refiner: CmdRefiner[F],
       flow: RequestRunner[SourceRequest, F] => Flow[ParsedCmd[F, A], SourceRequest[Unit], Mat],
       description: Option[CmdDescription] = None,
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, Mat] = {
@@ -190,6 +190,6 @@ object ParsedCmdFactory {
       flow(runner).flatMapConcat(s => s).toMat(Sink.ignore)(Keep.left)
     }
 
-    ParsedCmdFactory(canRun, sink, description)
+    ParsedCmdFactory(refiner, sink, description)
   }
 }
