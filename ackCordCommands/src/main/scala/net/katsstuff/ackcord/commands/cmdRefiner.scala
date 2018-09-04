@@ -29,6 +29,7 @@ import cats.Monad
 import cats.data.EitherT
 import cats.syntax.all._
 import net.katsstuff.ackcord.CacheSnapshot
+import net.katsstuff.ackcord.data.Message
 
 /**
   * An object used to refine [[RawCmd]] into [[Cmd]], or return errors instead.
@@ -50,37 +51,36 @@ trait CmdRefiner[F[_]] {
 abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
 
   /**
-    * Get the prefix to use for the given raw command.
+    * Get the prefix to use for the given message.
     */
-  def prefix(raw: RawCmd[F]): F[String]
+  def prefix(message: Message)(implicit c: CacheSnapshot[F]): F[String]
 
   /**
-    * Get the valid aliases for the given raw command.
+    * Get the valid aliases for the given message.
     */
-  def aliases(raw: RawCmd[F]): F[Seq[String]]
+  def aliases(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[String]]
 
   /**
-    * Get the filters to use for the given raw command.
+    * Get the filters to use for the given message.
     */
-  def filters(raw: RawCmd[F]): F[Seq[CmdFilter]]
+  def filters(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[CmdFilter]]
 
   override def refine(raw: RawCmd[F]): EitherT[F, Option[CmdMessage[F] with CmdError[F]], Cmd[F]] = {
-    val canRun = prefix(raw)
+    implicit val cache: CacheSnapshot[F] = raw.c
+    val canRun = prefix(raw.msg)
       .map(_ == raw.prefix)
-      .map2(aliases(raw).map(_.contains(raw.cmd)))(_ && _)
+      .map2(aliases(raw.msg).map(_.contains(raw.cmd)))(_ && _)
 
-    lazy val shouldRun = filters(raw).flatMap { filters =>
+    lazy val shouldRun = filters(raw.msg).flatMap { filters =>
       import cats.instances.list._
       implicit val cache: CacheSnapshot[F] = raw.c
-      val ret = filters.toList.traverse(filter => filter.isAllowed(raw.msg).map(_ -> filter)).map { processedFilters =>
+      filters.toList.traverse(filter => filter.isAllowed(raw.msg).map(_ -> filter)).map { processedFilters =>
         val filtersNotPassed = processedFilters.collect {
           case (passed, filter) if !passed => filter
         }
         if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
         else Left(Some(FilteredCmd(filtersNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
       }
-
-      ret
     }
 
     EitherT(canRun.map(b => Either.cond(b, (), None))).flatMapF(_ => shouldRun)
@@ -100,9 +100,9 @@ case class CmdInfo[F[_]: Monad](
     filters: Seq[CmdFilter] = Seq.empty
 ) extends AbstractCmdInfo[F] {
 
-  override def prefix(raw: RawCmd[F]): F[String] = prefix.pure
+  override def prefix(message: Message)(implicit c: CacheSnapshot[F]): F[String] = prefix.pure
 
-  override def aliases(raw: RawCmd[F]): F[Seq[String]] = aliases.pure
+  override def aliases(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[String]] = aliases.pure
 
-  override def filters(raw: RawCmd[F]): F[Seq[CmdFilter]] = filters.pure
+  override def filters(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[CmdFilter]] = filters.pure
 }

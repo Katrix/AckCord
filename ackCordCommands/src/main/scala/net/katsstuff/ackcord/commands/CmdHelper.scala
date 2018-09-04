@@ -44,8 +44,9 @@ object CmdHelper {
   /**
     * Handle command errors.
     */
-  def handleErrors[F[_]: Monad: Streamable, A <: AllCmdMessages[F]](requests: RequestHelper): Flow[A, A, NotUsed] = {
-
+  def addErrorHandlingGraph[F[_]: Monad: Streamable, A <: AllCmdMessages[F]](
+      requests: RequestHelper
+  ): Flow[A, A, NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
       val in          = builder.add(Flow[A])
@@ -54,10 +55,10 @@ object CmdHelper {
       val requestSink = builder.add(requests.sinkIgnore[RawMessage, NotUsed])
 
       // format: OFF
-      
+
       in ~> broadcast
             broadcast.out(0) ~> mkWrapper ~> requestSink
-            
+
       // format: ON
 
       FlowShape(in.in, broadcast.out(1))
@@ -69,18 +70,18 @@ object CmdHelper {
   /**
     * Handle all the errors for a parsed command.
     */
-  def handleErrorsParsed[F[_]: Streamable: Monad, A](
+  def addErrorHandlingParsed[F[_]: Streamable: Monad, A](
       requests: RequestHelper
   ): Flow[ParsedCmdMessage[F, A], ParsedCmd[F, A], NotUsed] =
-    handleErrors[F, ParsedCmdMessage[F, A]](requests).collect {
+    addErrorHandlingGraph[F, ParsedCmdMessage[F, A]](requests).collect {
       case msg: ParsedCmd[F, A] => msg
     }
 
   /**
     * Handle all the errors for a unparsed command.
     */
-  def handleErrorsUnparsed[F[_]: Monad: Streamable](requests: RequestHelper): Flow[CmdMessage[F], Cmd[F], NotUsed] =
-    handleErrors[F, CmdMessage[F]](requests).collect {
+  def addErrorHandlingUnparsed[F[_]: Monad: Streamable](requests: RequestHelper): Flow[CmdMessage[F], Cmd[F], NotUsed] =
+    addErrorHandlingGraph[F, CmdMessage[F]](requests).collect {
       case msg: Cmd[F] => msg
     }
 
@@ -109,10 +110,11 @@ object CmdHelper {
       .flatMapConcat(Streamable[F].optionToSource(_))
 
   /**
-    * Check if a message is a valid command.
+    * Check if a message is a valid command, and if it is, returns the arguments of the command.
     */
   def isValidCommand[F[_]](needMention: Boolean, msg: Message)(
-      implicit c: CacheSnapshot[F], F: Monad[F]
+      implicit c: CacheSnapshot[F],
+      F: Monad[F]
   ): OptionT[F, List[String]] = {
     if (needMention) {
       OptionT.liftF(c.botUser).flatMap { botUser =>

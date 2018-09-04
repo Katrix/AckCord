@@ -62,10 +62,10 @@ trait AbstractCommandSettings[F[_]] {
   */
 case class CommandSettings[F[_]: Applicative](
     needsMention: Boolean,
-    prefixes: Seq[String]
+    prefixes: Set[String]
 ) extends AbstractCommandSettings[F] {
 
-  override def needMention(message: Message)(implicit c: CacheSnapshot[F]): F[Boolean] = needsMention.pure
+  override def needMention(message: Message)(implicit c: CacheSnapshot[F]): F[Boolean] = needsMention.pure[F]
 
   override def getPrefix(args: Seq[String], message: Message)(
       implicit c: CacheSnapshot[F]

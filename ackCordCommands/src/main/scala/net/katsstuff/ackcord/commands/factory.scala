@@ -101,7 +101,7 @@ case class BaseCmdFactory[F[_], +Mat](
 object BaseCmdFactory {
 
   @deprecated("Use the normal apply method and supply an CmdInfo or similar")
-  def apply[F[_]: Monad, Mat](
+  def old[F[_]: Monad, Mat](
       category: CmdCategory,
       aliases: Seq[String],
       sink: RequestHelper => Sink[Cmd[F], Mat],
@@ -120,7 +120,7 @@ object BaseCmdFactory {
     val sink: RequestHelper => Sink[Cmd[F], NotUsed] = requests =>
       flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
 
-    BaseCmdFactory(category, aliases, sink, filters, description)
+    BaseCmdFactory.old(category, aliases, sink, filters, description)
   }
 
   type SourceRequest[A] = Source[A, NotUsed]
@@ -154,7 +154,8 @@ case class ParsedCmdFactory[F[_], A, +Mat](
     extends CmdFactory[F, ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
 
-  def apply[F[_]: Monad, A, Mat](
+  @deprecated("Use CmdInfo instead")
+  def old[F[_]: Monad, A, Mat](
       category: CmdCategory,
       aliases: Seq[String],
       sink: RequestHelper => Sink[ParsedCmd[F, A], Mat],
@@ -174,7 +175,7 @@ object ParsedCmdFactory {
     val sink: RequestHelper => Sink[ParsedCmd[F, A], NotUsed] = requests =>
       flow.flatMapConcat(dsl => RequestDSL(requests.flow)(dsl)).to(Sink.ignore)
 
-    ParsedCmdFactory(category, aliases, sink, filters, description)
+    ParsedCmdFactory.old(category, aliases, sink, filters, description)
   }
 
   type SourceRequest[A] = Source[A, NotUsed]
