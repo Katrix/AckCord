@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.http.images
 
+import scala.language.higherKinds
+
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}

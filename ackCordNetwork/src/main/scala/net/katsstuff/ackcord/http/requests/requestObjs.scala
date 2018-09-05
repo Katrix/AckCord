@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord.http.requests
 
 import scala.concurrent.duration._
+import scala.language.higherKinds
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -158,8 +159,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
 }
 object Request {
-  implicit def instance[Ctx]: CoflatMap[({ type L[A] = Request[A, Ctx] })#L] =
-    new CoflatMap[({ type L[A] = Request[A, Ctx] })#L] {
+  implicit def instance[Ctx]: CoflatMap[Request[?, Ctx]] =
+    new CoflatMap[Request[?, Ctx]] {
       override def map[A, B](fa: Request[A, Ctx])(f: A => B): Request[B, Ctx]                     = fa.map(f)
       override def coflatMap[A, B](fa: Request[A, Ctx])(f: Request[A, Ctx] => B): Request[B, Ctx] = fa.map(_ => f(fa))
     }
