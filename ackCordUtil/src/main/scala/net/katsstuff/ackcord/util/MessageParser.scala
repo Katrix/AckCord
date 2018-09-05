@@ -352,14 +352,16 @@ trait DeriveMessageParser {
     }
   }
 
-  implicit def caseSerializer[A, Repr](
-      implicit gen: Generic.Aux[A, Repr],
-      ser: Lazy[MessageParser[Repr]]
-  ): MessageParser[A] =
-    new MessageParser[A] {
-      override def parse[F[_]](
-          strings: List[String]
-      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-        ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }
-    }
+  object Auto {
+    implicit def deriveParser[A, Repr](
+        implicit gen: Generic.Aux[A, Repr],
+        ser: Lazy[MessageParser[Repr]]
+    ): MessageParser[A] =
+      new MessageParser[A] {
+        override def parse[F[_]](
+            strings: List[String]
+        )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
+          ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }
+      }
+  }
 }
