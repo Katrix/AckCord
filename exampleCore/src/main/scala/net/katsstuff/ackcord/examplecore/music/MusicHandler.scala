@@ -297,7 +297,7 @@ object MusicHandler {
       implicit streamable: Streamable[F],
       F: Monad[F]
   ): GuildId => Props =
-    guildId => Props(new MusicHandler[F](requests, registerCmd, guildId, cache))
+    guildId => Props(new MusicHandler(requests, registerCmd, guildId, cache))
 
   final val UseBurstingSender = true
 

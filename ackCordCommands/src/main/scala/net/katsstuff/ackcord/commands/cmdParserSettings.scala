@@ -71,7 +71,7 @@ case class CommandSettings[F[_]: Applicative](
       implicit c: CacheSnapshot[F]
   ): OptionT[F, (String, Seq[String])] = OptionT.fromOption[F](
     prefixes
-      .find(args.headOption.contains)
-      .tupleRight(args.tail)
+      .find(prefix => args.headOption.exists(_.contains(prefix)))
+      .fproduct(prefix => args.head.drop(prefix.length) +: args.tail)
   )
 }

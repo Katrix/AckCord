@@ -115,7 +115,7 @@ object ExampleHelpCmd {
 }
 
 object ExampleHelpCmdFactory {
-  def apply[F[_]: Monad](helpCmdActor: ActorRef): ParsedCmdFactory[F, HelpCmd.Args, NotUsed] = ParsedCmdFactory(
+  def apply[F[_]: Monad](helpCmdActor: ActorRef): ParsedCmdFactory[F, Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
     refiner = CmdInfo[F](prefix = "!", aliases = Seq("help")),
     sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
     description = Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
