@@ -42,24 +42,31 @@ case class RequestHelper(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef,
     parallelism: Int = 4,
+    maxRetryCount: Int = 3,
     bufferSize: Int = 32,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem, val mat: Materializer) {
+
+  private lazy val rawFlowWithoutRateLimits =
+    RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
 
   /**
     * A basic request flow which will send requests to Discord, and
     * receive responses. Don't use this if you don't know what you're doing.
     */
   def flowWithoutRateLimits[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
+    rawFlowWithoutRateLimits.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
+
+  private lazy val rawFlow =
+    RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
 
   /**
     * A generic flow for making requests. You should use this one most of
     * the time. Backpressures before it hits a ratelimit.
     */
   def flow[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
+    rawFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
 
   /**
     * A generic sink for making requests and ignoring the results.
@@ -99,21 +106,33 @@ case class RequestHelper(
   def singleIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit =
     single(request).runWith(Sink.ignore)
 
+  private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
+    credentials,
+    bufferSize,
+    overflowStrategy,
+    maxAllowedWait,
+    parallelism,
+    maxRetryCount,
+    ratelimitActor
+  )
+
   /**
     * A request flow that will retry failed requests.
     */
   def retryFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
-    RequestStreams.retryRequestFlow(
-      credentials,
-      bufferSize,
-      overflowStrategy,
-      maxAllowedWait,
-      parallelism,
-      ratelimitActor
-    )
+    rawRetryFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed]]
+
+  /**
+    * A sink for making requests and ignoring the results that will retry on error.
+    * Backpressures before it hits a ratelimit.
+    */
+  def retrySinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
+    retryFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
 
   /**
     * Sends a single request which will retry if it fails.
+    *
+    * NOTE: This Source sometimes stops working.
     * @param request The request to send.
     * @return A source of the retried request.
     */
@@ -138,6 +157,7 @@ object RequestHelper {
   def create(
       credentials: HttpCredentials,
       parallelism: Int = 4,
+      maxRetryCount: Int = 3,
       bufferSize: Int = 32,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes
@@ -146,6 +166,7 @@ object RequestHelper {
       credentials,
       system.actorOf(Ratelimiter.props),
       parallelism,
+      maxRetryCount,
       bufferSize,
       overflowStrategy,
       maxAllowedWait
