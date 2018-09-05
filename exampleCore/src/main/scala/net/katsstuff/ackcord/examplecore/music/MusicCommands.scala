@@ -47,7 +47,7 @@ class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: Act
 
   val QueueCmdFactory: ParsedCmdFactory[F, String, NotUsed] = ParsedCmdFactory.requestRunner(
     refiner = CmdInfo[F](prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
-    flow = runner => ParsedCmdFlow[F, String].map { implicit c => cmd =>
+    run = implicit c =>  (runner, cmd) => {
       import runner._
       for {
         guild   <- liftOptionT(guildId.resolve)

@@ -112,9 +112,9 @@ class GenericCommands[F[_]: Streamable: Monad] {
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed, NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("timeDiff")),
-    flow = runner => ParsedCmdFlow[F, NotUsed].map { implicit c => cmd =>
+    run = implicit c => (runner, cmd) => {
       import runner._
       for {
         channel <- liftOptionT(cmd.msg.channelId.tResolve)
