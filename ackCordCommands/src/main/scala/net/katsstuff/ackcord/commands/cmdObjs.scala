@@ -117,3 +117,13 @@ case class FilteredCmd[F[_]](failedFilters: Seq[CmdFilter], cmd: RawCmd[F])
     extends CmdMessage[F]
     with ParsedCmdMessage[F, Nothing]
     with CmdError[F]
+
+/**
+  * A generic command error.
+  * @param error The error message.
+  * @param cmd The raw command object.
+  */
+case class GenericCmdError[F[_]](error: String, cmd: RawCmd[F])
+    extends CmdMessage[F]
+    with ParsedCmdMessage[F, Nothing]
+    with CmdError[F]

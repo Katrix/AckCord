@@ -106,6 +106,8 @@ object CmdHelper {
           )
         case parseError: CmdParseError[F] =>
           parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
+        case error: GenericCmdError[F] =>
+          error.cmd.msg.channelId.tResolve(error.cmd.c).map(_.sendMessage(error.error))
       }
       .flatMapConcat(Streamable[F].optionToSource(_))
 
