@@ -28,73 +28,86 @@ import scala.language.higherKinds
 
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
-import cats.syntax.functor._
-import cats.{Monad, Traverse}
+import cats.Monad
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.{MessageParser, Streamable}
 import net.katsstuff.ackcord.CacheSnapshot
 
 /**
-  * Represents a command handler, which will try to parse commands with
-  * categories it's been told about.
-  * @param subscribe A source that represents the parsed commands. Can be
-  *                  materialized as many times as needed.
-  * @param categories The categories this handler knows about.
+  * Represents a command handler, which will try to parse commands.
+  * @param subscribeRaw A source that represents the parsed commands. Can be
+  *                     materialized as many times as needed.
   * @param requests A request helper object which will be passed to handlers.
   */
 case class Commands[F[_]](
-    subscribe: Source[RawCmdMessage[F], NotUsed],
-    categories: Set[CmdCategory],
+    @deprecatedName('subscribe) subscribeRaw: Source[RawCmdMessage[F], NotUsed],
     requests: RequestHelper
 ) {
   import requests.mat
 
   /**
+    * A source that represents the parsed commands. Can be
+    * materialized as many times as needed.
+    */
+  @deprecated("Use subscribeRaw instead", since = "0.11")
+  def subscribe: Source[RawCmdMessage[F], NotUsed] = subscribeRaw
+
+  /**
+    * Subscribe to a specific command using a refiner.
+    * @return A source representing the individual command.
+    */
+  def subscribeCmd(refiner: CmdRefiner[F])(
+      implicit streamable: Streamable[F]
+  ): Source[CmdMessage[F], NotUsed] =
+    subscribeRaw
+      .collectType[RawCmd[F]]
+      .flatMapConcat(raw => streamable.toSource(refiner.refine(raw).value))
+      .collect {
+        case Left(Some(error)) => error
+        case Right(cmd)        => cmd
+      }
+
+  /**
     * Subscribe to a specific command using a category, aliases, and filters.
     * @return A source representing the individual command.
     */
+  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
   def subscribeCmd(category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
       implicit streamable: Streamable[F],
       F: Monad[F]
-  ): Source[CmdMessage[F], NotUsed] = {
-    require(categories.contains(category), "Tried to register command with wrong category")
-    subscribe
-      .collect {
-        case cmd @ RawCmd(msg, `category`, command, args, c) if aliases.contains(command) =>
-          import cats.instances.list._
-          implicit val cache: CacheSnapshot[F] = c
-          Traverse[List].traverse(filters.toList)(filter => filter.isAllowed[F](msg).map(_ -> filter)).map {
-            processedFilters =>
-              val filtersNotPassed = processedFilters.collect {
-                case (passed, filter) if !passed => filter
-              }
-              if (filtersNotPassed.isEmpty) Cmd(msg, args, c) else FilteredCmd(filtersNotPassed, cmd)
-          }
+  ): Source[CmdMessage[F], NotUsed] = subscribeCmd(CmdInfo(category.prefix, aliases, filters))
+
+  /**
+    * Subscribe to a specific command using a refiner and a parser.
+    * @return A source representing the individual parsed command.
+    */
+  def subscribeCmdParsed[A](refiner: CmdRefiner[F])(
+      implicit parser: MessageParser[A],
+      F: Monad[F],
+      streamable: Streamable[F]
+  ): Source[ParsedCmdMessage[F, A], NotUsed] =
+    subscribeCmd(refiner)
+      .collect[F[ParsedCmdMessage[F, A]]] {
+        case Cmd(msg, args, cache) =>
+          implicit val c: CacheSnapshot[F] = cache
+          parser
+            .parse(args)
+            .fold(e => CmdParseError(msg, e, cache), res => ParsedCmd(msg, res._2, res._1, cache))
+        case filtered: FilteredCmd[F] => F.pure(filtered)
       }
       .flatMapConcat(streamable.toSource)
-  }
 
   /**
     * Subscribe to a specific command using a category, aliases, filters,
     * and a parser.
     * @return A source representing the individual parsed command.
     */
+  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
   def subscribeCmdParsed[A](category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
       implicit parser: MessageParser[A],
       F: Monad[F],
       streamable: Streamable[F]
-  ): Source[ParsedCmdMessage[F, A], NotUsed] =
-    subscribeCmd(category, aliases, filters)
-      .collect[F[ParsedCmdMessage[F, A]]] {
-        case cmd: Cmd[F] =>
-          implicit val c: CacheSnapshot[F] = cmd.cache
-          parser
-            .parse(cmd.args)
-            .fold(e => CmdParseError(cmd.msg, e, cmd.cache), res => ParsedCmd(cmd.msg, res._2, res._1, cmd.cache))
-
-        case filtered: FilteredCmd[F] => F.pure(filtered)
-      }
-      .flatMapConcat(streamable.toSource)
+  ): Source[ParsedCmdMessage[F, A], NotUsed] = subscribeCmdParsed(CmdInfo(category.prefix, aliases, filters))
 
   /**
     * Subscribe to a command using a unparsed command factory.
@@ -102,8 +115,8 @@ case class Commands[F[_]](
   def subscribe[Mat, Mat2](
       factory: BaseCmdFactory[F, Mat]
   )(combine: (Future[Done], Mat) => Mat2)(implicit F: Monad[F], streamable: Streamable[F]): Mat2 =
-    subscribeCmd(factory.category, factory.lowercaseAliases, factory.filters)
-      .via(CmdHelper.handleErrorsUnparsed(requests))
+    subscribeCmd(factory.refiner)
+      .via(CmdHelper.addErrorHandlingUnparsed(requests))
       .watchTermination()(Keep.right)
       .toMat(factory.sink(requests))(combine)
       .run()
@@ -114,8 +127,8 @@ case class Commands[F[_]](
   def subscribe[A, Mat, Mat2](
       factory: ParsedCmdFactory[F, A, Mat]
   )(combine: (Future[Done], Mat) => Mat2)(implicit F: Monad[F], streamable: Streamable[F]): Mat2 =
-    subscribeCmdParsed(factory.category, factory.lowercaseAliases, factory.filters)(factory.parser, F, streamable)
-      .via(CmdHelper.handleErrorsParsed(requests))
+    subscribeCmdParsed(factory.refiner)(factory.parser, F, streamable)
+      .via(CmdHelper.addErrorHandlingParsed(requests))
       .watchTermination()(Keep.right)
       .toMat(factory.sink(requests))(combine)
       .run()

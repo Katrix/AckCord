@@ -7,7 +7,7 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Sink, Source}
 import cats.data.OptionT
 import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
-import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
+import net.katsstuff.ackcord.http.requests.{Request, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.util.StreamInstances.SourceRequest
 import net.katsstuff.ackcord.util.Streamable
 
@@ -59,7 +59,10 @@ object RequestRunner {
       override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): SourceRequest[A] =
         streamable.toSource(request.hasPermissions).flatMapConcat {
           case false => Source.failed(new RequestPermissionException(request))
-          case true  => requests.retry(request).map(_.data)
+          //case true  => requests.retry(request).map(_.data) //FIXME: Retry is broken
+          case true  => requests.single(request).collect {
+            case RequestResponse(data, _, _, _, _, _, _) => data
+          }
         }
 
       override def fromSource[A](source: Source[A, NotUsed]): SourceRequest[A] = source

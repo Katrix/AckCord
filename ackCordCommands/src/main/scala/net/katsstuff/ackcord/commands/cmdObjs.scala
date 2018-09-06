@@ -56,13 +56,17 @@ sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
 /**
   * A raw unparsed command.
   * @param msg The message of this command.
-  * @param category The category for this command.
+  * @param prefix The prefix for this command.
   * @param cmd The name of this command.
   * @param args The arguments of this command.
   * @param c The cache for this command.
   */
-case class RawCmd[F[_]](msg: Message, category: CmdCategory, cmd: String, args: List[String], c: CacheSnapshot[F])
-    extends RawCmdMessage[F]
+case class RawCmd[F[_]](msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot[F])
+    extends RawCmdMessage[F] {
+
+  @deprecated("CmdCategory is deprecated. Use the prefix instead", since = "0.11")
+  def category: CmdCategory = CmdCategory(prefix, "")
+}
 
 /**
   * Bot was mentioned, but no command was used.
@@ -70,9 +74,9 @@ case class RawCmd[F[_]](msg: Message, category: CmdCategory, cmd: String, args: 
 case class NoCmd[F[_]](msg: Message, c: CacheSnapshot[F]) extends RawCmdMessage[F] with CmdError[F]
 
 /**
-  * An unknown category was used.
+  * An unknown prefix was used.
   */
-case class NoCmdCategory[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshot[F])
+case class NoCmdPrefix[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshot[F])
     extends RawCmdMessage[F]
     with CmdError[F]
 

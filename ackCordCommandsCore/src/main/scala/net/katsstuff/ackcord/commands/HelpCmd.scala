@@ -31,14 +31,15 @@ import scala.language.higherKinds
 
 import akka.actor.{Actor, ActorRef}
 import akka.{Done, NotUsed}
-import cats.Monad
+import cats.{Id, Monad}
 import cats.data.EitherT
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
-import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, TerminatedCmd}
+import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, CommandRegistration, TerminateCommand}
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.data.Message
 
 /**
   * A base for help commands. Commands need to be registered manually
@@ -49,26 +50,25 @@ import net.katsstuff.ackcord._
 abstract class HelpCmd extends Actor {
   import context.dispatcher
 
-  val commands = mutable.HashMap.empty[CmdCategory, mutable.HashMap[String, CmdDescription]]
+  val commands = mutable.HashSet.empty[CommandRegistration]
 
   override def receive: Receive = {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
       val lowercaseCommand                    = cmd.toLowerCase(Locale.ROOT)
 
-      val response = for {
-        cat     <- commands.keys.find(cat => lowercaseCommand.startsWith(cat.prefix))
-        descMap <- commands.get(cat)
-        command = lowercaseCommand.substring(cat.prefix.length)
-        req <- descMap.get(command) match {
-          case Some(desc) => Some(CreateMessage(msg.channelId, createSingleReply(cat, command, desc)))
-          case None       => unknownCmd(cat, command).map(CreateMessage(msg.channelId, _))
-        }
-      } yield req
+      val matches = for {
+        reg    <- commands
+        prefix = reg.info.prefix(msg)
+        if lowercaseCommand.startsWith(prefix)
+        command = lowercaseCommand.substring(prefix.length)
+        aliases = reg.info.aliases(msg): Seq[String]
+        if aliases.contains(command)
+      } yield reg
 
-      val withUnknownCategory = response.orElse(unknownCategory(lowercaseCommand).map(CreateMessage(msg.channelId, _)))
+      val response = if(matches.nonEmpty) Some(createSearchReply(msg, cmd, matches.toSeq)) else unknownCmd(cmd)
 
-      withUnknownCategory match {
+      response.map(CreateMessage(msg.channelId, _)) match {
         case Some(req) => sendMessageAndAck(sender(), req)
         case None      => sendAck(sender())
       }
@@ -77,7 +77,7 @@ abstract class HelpCmd extends Actor {
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
 
       if (page > 0) {
-        sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(page - 1)))
+        sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(msg, page - 1)))
       } else {
         msg.channelId.tResolve.value match {
           case Some(channel) => sendMessageAndAck(sender(), channel.sendMessage(s"Invalid page $page"))
@@ -87,19 +87,17 @@ abstract class HelpCmd extends Actor {
 
     case ParsedCmd(msg, None, _, c) =>
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
-      sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(0)))
+      sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(msg, 0)))
 
-    case AddCmd(factory, commandEnd) =>
-      factory.description.foreach { desc =>
-        commands.getOrElseUpdate(factory.category, mutable.HashMap.empty) ++= factory.lowercaseAliases.map(_ -> desc)
+    case AddCmd(info, description, commandEnd) =>
+      val registration = CommandRegistration(info, description)
+      commands += registration
 
-        commandEnd.onComplete { _ =>
-          self ! TerminatedCmd(factory)
-        }
+      commandEnd.onComplete { _ =>
+        self ! TerminateCommand(registration)
       }
 
-    case TerminatedCmd(factory) =>
-      commands.get(factory.category).foreach(_ --= factory.lowercaseAliases)
+    case TerminateCommand(registration) => commands -= registration
   }
 
   /**
@@ -114,13 +112,11 @@ abstract class HelpCmd extends Actor {
   def sendMessageAndAck(sender: ActorRef, request: Request[RawMessage, NotUsed]): Unit
 
   /**
-    * Create a reply for a single command
-    * @param category The category of the command
-    * @param name The command name
-    * @param desc The description for the command
-    * @return Data to create a message describing the command
+    * Create a reply for a search result
+    * @param matches All the commands that matched the arguments
+    * @return Data to create a message describing the search
     */
-  def createSingleReply(category: CmdCategory, name: String, desc: CmdDescription)(
+  def createSearchReply(message: Message, query: String, matches: Seq[CommandRegistration])(
       implicit c: MemoryCacheSnapshot
   ): CreateMessageData
 
@@ -130,15 +126,15 @@ abstract class HelpCmd extends Actor {
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData
+  def createReplyAll(message: Message, page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData
 
-  def unknownCategory(command: String): Option[CreateMessageData] =
-    Some(CreateMessageData("Unknown category"))
-
-  def unknownCmd(category: CmdCategory, command: String): Option[CreateMessageData] =
-    Some(CreateMessageData("Unknown command"))
+  def unknownCmd(command: String): Option[CreateMessageData] =
+    Some(CreateMessageData(s"Unknown command $command"))
 }
 object HelpCmd {
+  case class CommandRegistration(info: AbstractCmdInfo[Id], description: CmdDescription)
+  private case class TerminateCommand(registration: CommandRegistration)
+
   sealed trait Args
   object Args {
     case class CommandArgs(command: String) extends Args
@@ -162,10 +158,9 @@ object HelpCmd {
 
   /**
     * Register a new help entry for a command.
-    * @param factory The factory for the command.
+    * @param info The command info for the command.
+    * @param description The command description for the command
     * @param commandEnd A future that is completed when the command is removed.
     */
-  case class AddCmd(factory: CmdFactory[_, _], commandEnd: Future[Done])
-
-  private case class TerminatedCmd(factory: CmdFactory[_, _])
+  case class AddCmd(info: AbstractCmdInfo[Id], description: CmdDescription, commandEnd: Future[Done])
 }

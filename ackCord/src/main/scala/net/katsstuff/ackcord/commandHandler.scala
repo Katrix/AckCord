@@ -26,7 +26,7 @@ package net.katsstuff.ackcord
 import scala.language.higherKinds
 
 import cats.Monad
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, RawCmd}
+import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, CmdRefiner, RawCmd}
 import net.katsstuff.ackcord.data.Message
 
 /**
@@ -48,9 +48,7 @@ abstract class RawCommandHandler[F[_], G[_]] {
   * @tparam A The parameter type.
   */
 abstract class CommandHandler[F[_], G[_], A](
-    val category: CmdCategory,
-    val aliases: Seq[String],
-    val filters: Seq[CmdFilter] = Nil,
+    val refiner: CmdRefiner[F],
     val description: Option[CmdDescription] = None
 ) {
 

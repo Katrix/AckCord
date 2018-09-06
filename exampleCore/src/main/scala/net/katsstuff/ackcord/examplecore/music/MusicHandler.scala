@@ -35,15 +35,14 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack, AudioTrackEndReason}
 
 import akka.NotUsed
-import akka.actor.{ActorLogging, ActorRef, ActorSystem, FSM, Props}
+import akka.actor.{ActorLogging, ActorSystem, FSM, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import cats.Monad
-import net.katsstuff.ackcord.commands.{Commands, ParsedCmdFactory}
+import net.katsstuff.ackcord.commands.ParsedCmdFactory
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
-import net.katsstuff.ackcord.examplecore.ExampleMain
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
@@ -51,10 +50,13 @@ import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.util.Streamable
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
+trait CmdRegisterFunc[F[_]] {
+  def apply[Mat](factory: ParsedCmdFactory[F, _, Mat]): F[Mat]
+}
+
 class MusicHandler[F[_]](
     requests: RequestHelper,
-    commands: Commands[F],
-    helpCmdActor: ActorRef,
+    registerCmd: CmdRegisterFunc[F],
     guildId: GuildId,
     cache: Cache
 )(implicit streamable: Streamable[F], F: Monad[F])
@@ -64,9 +66,6 @@ class MusicHandler[F[_]](
   import context.dispatcher
   import requests.mat
   implicit val system: ActorSystem = context.system
-
-  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[F, _, Mat]): Mat =
-    ExampleMain.registerCmd(commands, helpCmdActor)(parsedCmdFactory)
 
   private val msgQueue =
     Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
@@ -83,7 +82,7 @@ class MusicHandler[F[_]](
     implicit val timeout = Timeout(30.seconds)
     val cmds             = new MusicCommands[F](guildId, self)
     import cmds._
-    Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd)
+    Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd(_))
   }
 
   val queue: mutable.Queue[AudioTrack] = mutable.Queue.empty[AudioTrack]
@@ -294,11 +293,11 @@ class MusicHandler[F[_]](
   }
 }
 object MusicHandler {
-  def props[F[_]](requests: RequestHelper, commands: Commands[F], helpCmdActor: ActorRef, cache: Cache)(
+  def props[F[_]](requests: RequestHelper, registerCmd: CmdRegisterFunc[F], cache: Cache)(
       implicit streamable: Streamable[F],
       F: Monad[F]
   ): GuildId => Props =
-    guildId => Props(new MusicHandler(requests, commands, helpCmdActor, guildId, cache))
+    guildId => Props(new MusicHandler(requests, registerCmd, guildId, cache))
 
   final val UseBurstingSender = true
 
