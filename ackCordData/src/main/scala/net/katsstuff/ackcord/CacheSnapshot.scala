@@ -34,8 +34,74 @@ import shapeless.tag._
 
 /**
   * A representation of the cache.
+  * @define optionalMap This method returns a map that might be empty depending
+  *                     on the implementation. Make sure you know if this will
+  *                     be the case before you use this method.
   */
 trait CacheSnapshot[F[_]] {
+
+  /**
+    * The map type to use. Mutable for builder, immutable otherwise.
+    */
+  type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
+
+  /**
+    * The current dm channels.
+    *
+    * $optionalMap
+    */
+  def dmChannelMap: F[MapType[Channel, DMChannel]]
+
+  /**
+    * The current group dm channels.
+    *
+    * $optionalMap
+    */
+  def groupDmChannelMap: F[MapType[Channel, GroupDMChannel]]
+
+  /**
+    * The guilds currently not available.
+    *
+    * $optionalMap
+    */
+  def unavailableGuildMap: F[MapType[Guild, UnavailableGuild]]
+
+  /**
+    * The currently joined guilds.
+    *
+    * $optionalMap
+    */
+  def guildMap: F[MapType[Guild, Guild]]
+
+  /**
+    * All messages, organized by channelId, and then messageId.
+    *
+    * $optionalMap
+    */
+  def messageMap: F[MapType[Channel, MapType[Message, Message]]]
+
+  /**
+    * The point each user typed for each channel.
+    *
+    * $optionalMap
+    */
+  def lastTypedMap: F[MapType[Channel, MapType[User, Instant]]]
+
+  /**
+    * All the users currently tracked.
+    *
+    * $optionalMap
+    */
+  def userMap: F[MapType[User, User]]
+
+  /**
+    * The bans received this session. NOTE: This is not all the bans that exists,
+    * only the ones received during this session. If you want all the bans,
+    * use [[net.katsstuff.ackcord.http.rest.GetGuildBans]].
+    *
+    * $optionalMap
+    */
+  def banMap: F[MapType[Guild, MapType[User, Ban]]]
 
   /**
     * Our bot user. Tagged to allow special syntax.

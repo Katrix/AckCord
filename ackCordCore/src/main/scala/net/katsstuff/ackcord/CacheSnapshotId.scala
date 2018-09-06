@@ -34,53 +34,6 @@ import net.katsstuff.ackcord.data._
 
 trait CacheSnapshotId extends CacheSnapshot[Id] {
 
-  /**
-    * The map type to use. Mutable for builder, immutable otherwise.
-    */
-  type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
-
-  /**
-    * The current dm channels.
-    */
-  def dmChannelMap: MapType[Channel, DMChannel]
-
-  /**
-    * The current group dm channels.
-    */
-  def groupDmChannelMap: MapType[Channel, GroupDMChannel]
-
-  /**
-    * The guilds currently not available.
-    */
-  def unavailableGuildMap: MapType[Guild, UnavailableGuild]
-
-  /**
-    * The currently joined guilds.
-    */
-  def guildMap: MapType[Guild, Guild]
-
-  /**
-    * All messages, organized by channelId, and then messageId.
-    */
-  def messageMap: MapType[Channel, MapType[Message, Message]]
-
-  /**
-    * The point each user typed for each channel.
-    */
-  def lastTypedMap: MapType[Channel, MapType[User, Instant]]
-
-  /**
-    * All the users currently tracked.
-    */
-  def userMap: MapType[User, User]
-
-  /**
-    * The bans received this session. NOTE: This is not all the bans that exists,
-    * only the ones received during this session. If you want all the bans,
-    * use [[net.katsstuff.ackcord.http.rest.GetGuildBans]].
-    */
-  def banMap: MapType[Guild, MapType[User, Ban]]
-
   override def getDmChannel(id: ChannelId): OptionT[Id, DMChannel] = OptionT.fromOption[Id](dmChannelMap.get(id))
 
   override def getUserDmChannel(id: UserId): OptionT[Id, DMChannel] =
