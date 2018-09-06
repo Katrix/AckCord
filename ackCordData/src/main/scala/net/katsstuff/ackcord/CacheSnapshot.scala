@@ -134,6 +134,13 @@ trait CacheSnapshot[F[_]] {
   def getGuildWithUnavailable(id: GuildId): OptionT[F, UnknownStatusGuild]
 
   /**
+    * Gets all the messages for a specific channel.
+    *
+    * $optionalMap
+    */
+  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
+
+  /**
     * Get a message, specifying both the channel, and message id.
     */
   def getMessage(channelId: ChannelId, messageId: MessageId): OptionT[F, Message]

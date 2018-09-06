@@ -25,8 +25,6 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
-import scala.language.higherKinds
-
 import cats.Id
 import cats.catsInstancesForId
 import cats.data.OptionT
@@ -46,11 +44,6 @@ trait CacheSnapshotId extends CacheSnapshot[Id] {
 
   override def getGuildWithUnavailable(id: GuildId): OptionT[Id, UnknownStatusGuild] =
     OptionT.fromOption[Id](getGuild(id).value.orElse(unavailableGuildMap.get(id)))
-
-  /**
-    * Gets all the messages for a specific channel.
-    */
-  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
 
   override def getMessage(channelId: ChannelId, messageId: MessageId): OptionT[Id, Message] =
     OptionT.fromOption[Id](messageMap.get(channelId).flatMap(_.get(messageId)))
