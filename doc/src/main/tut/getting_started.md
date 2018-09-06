@@ -4,6 +4,8 @@ title: Getting Started
 position: 1
 ---
 
+{% assign versions = site.data.versions %}
+
 # AckCord
 *You do what you want, exactly how you want it.*
 
@@ -11,10 +13,10 @@ AckCord is a Scala library for Discord, using Akka. AckCord's focus is on lettin
 
 While AckCord is still in active development, you can try AckCord by adding some of these to your `build.sbt` file.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord"                 % "0.10" //For high level API, includes all the other modules
-libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "0.10" //Low level core API
-libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.10" //Low to mid level Commands API
-libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.10" //Low level lavaplayer API
+libraryDependencies += "net.katsstuff" %% "ackcord"                 % "{{versions.ackcord}}" //For high level API, includes all the other modules
+libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "{{versions.ackcord}}" //Low level core API
+libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "{{versions.ackcord}}" //Low to mid level Commands API
+libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "{{versions.ackcord}}" //Low level lavaplayer API
 ```
 
 From there on you go with the API you have decided to use.
@@ -23,6 +25,7 @@ Most of these examples assume these two imports.
 ```tut:silent
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
+import cats.Id
 ```
 
 AckCord comes with two (3 if you count handling dispatch events yourself) major APIs. A high level and a low level API. Let's see how you would log in from both the high level and the low level API.
@@ -41,11 +44,12 @@ To use the high level API of AckCord, you create the `ClientSettings` you want t
 val clientSettings = ClientSettings(token) //Keep your settings around. It contains useful objects.
 import clientSettings.executionContext
 
-val futureClient = clientSettings.build()
+val futureClient = clientSettings.createClient()
 
 futureClient.foreach { client =>
-  client.onEvent {
+  client.onEvent[Id] {
     case APIMessage.Ready(_) => println("Now ready")
+    case _                   =>
   }
   
   //client.login()
@@ -62,6 +66,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Sink
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
+//I'd recommend using a supplying a custom supervision to log exceptions here
 implicit val mat: Materializer = ActorMaterializer()
 //import system.dispatcher We use the ExecutionContext imported above for this example too
 
@@ -75,7 +80,7 @@ cache.subscribeAPI.collect {
 
 val gatewaySettings = GatewaySettings(token)
 DiscordShard.fetchWsGateway.foreach { wsUri =>
- val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, "DiscordShard")
+ val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, actorName = "DiscordShard")
  //shard ! DiscordShard.StartShard
 }
 ```

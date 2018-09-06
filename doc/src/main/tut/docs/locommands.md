@@ -12,9 +12,8 @@ import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.commands._
-import cats.Monad
+import cats.{Id, Monad}
 import akka.NotUsed
-import akka.actor.ActorSystem
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Flow, Sink, Keep}
@@ -37,8 +36,8 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 ## The Commands object
 Just like the job of the `Cache` object is to keep track of the current events, and the state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
 ```tut
-val GeneralCommands = CmdCategory("!", "General commands")
-val commands = CoreCommands.create(needMention = true, Set(GeneralCommands), cache, requests)
+val GeneralCommands = "!"
+val commands = CoreCommands.create(CommandSettings[Id](prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
 
 def rawCommandEcho[F[_]: Monad: Streamable] = Flow[RawCmdMessage[F]].collect {
   case RawCmd(msg, GeneralCommands, "echo", args, c) =>
@@ -56,25 +55,24 @@ Often times, working with the raw commands objects directly can be kind of tires
 AckCord represents the code to run for a command as a Sink that can be connected to the command messages. While you can use the materialized value of running the sink, in most cases you probably only want use an ignoring sink as the last step of the pipeline.
 
 ## Other helpers
-There are a few more helpers that you can use when writing commands. The first one is `CmdFlow[F]` and `ParsedCmdFlow[F, A]`, which helps you construct a flow with an implicit cache snapshot. The next is the `requestDSL` methods on the command factory objects, which lets you create factories that take a flow from a `Cmd[F]` or `ParsedCmd[F, A]` to a `RequestDSL[B]` instead.
+There are a few more helpers that you can use when writing commands. The first one is `CmdFlow[F]` and `ParsedCmdFlow[F, A]`, which helps you construct a flow with an implicit cache snapshot. The next is the `requestRunner` methods on the command factory objects, which lets you create factories that takes a `(RequestRunner[SourceRequest, F], <cmdtype>[F]) => SourceRequest[Unit]` instead.
 
 ## Putting it all together
 So now that we know what all the different things to, let's create our factories.
 ```tut
-def getUsernameCmdFactory[F[_]: Monad: Streamable] = ParsedCmdFactory.requestDSL[F, User](
-  category = GeneralCommands,
-  aliases = Seq("getUsername"),
-  flow = ParsedCmdFlow[F, User].map { implicit c => cmd =>
-    import RequestDSL._
+def getUsernameCmdFactory[F[_]: Monad: Streamable] = ParsedCmdFactory.requestRunner[F, User](
+  refiner = CmdInfo(prefix = GeneralCommands, aliases = Seq("getUsername")),
+  run = implicit c => (runner, cmd) => {
+    import runner._
     for {
       channel <- liftOptionT(cmd.msg.tGuildChannel[F])
-      _       <- channel.sendMessage(s"Username for user is: ${cmd.args.username}")
+      _       <- run(channel.sendMessage(s"Username for user is: ${cmd.args.username}"))
     } yield ()
   },
   description = Some(CmdDescription(name = "Get username", description = "Get the username of a user"))
 )
 
-commands.subscribe(getUsernameCmdFactory)(Keep.left)
+commands.subscribe(getUsernameCmdFactory[Id])(Keep.left)
 ```
 
 ## Help command

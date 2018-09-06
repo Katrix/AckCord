@@ -256,7 +256,7 @@ lazy val doc = project
     micrositeBaseUrl := "",
     micrositeDocumentationUrl := "/api/net/katsstuff/ackcord",
     micrositeHomepage := "http://ackcord.katsstuff.net",
-    micrositeGithubOwner := "Katrix-",
+    micrositeGithubOwner := "Katrix",
     micrositeGithubRepo := "AckCord",
     micrositeGitterChannel := false,
     micrositeShareOnSocial := false,
@@ -293,7 +293,7 @@ lazy val doc = project
     fork in (ScalaUnidoc, unidoc) := true,
     scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
       "-doc-source-url",
-      "https://github.com/Katrix-/Ackcord/tree/master€{FILE_PATH}.scala",
+      "https://github.com/Katrix/Ackcord/tree/master€{FILE_PATH}.scala",
       "-sourcepath",
       baseDirectory.in(LocalRootProject).value.getAbsolutePath,
       "-diagrams"

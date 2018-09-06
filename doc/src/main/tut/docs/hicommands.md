@@ -11,32 +11,31 @@ In the high level API you can either just listen to the raw command events, or y
 
 As before we create out client as usual, but with a small twist. This time we also pass in command settings to our client settings, which is where we specify our categories. We also import the commands package.
 ```tut
+import akka.NotUsed
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.commands._
 import cats.{Monad, Id}
 val token = "<token>"
-val GeneralCommands = CmdCategory("!", "General commands")
-val settings = ClientSettings(token, commandSettings = CommandSettings(categories = Set(GeneralCommands)))
+val GeneralCommands = "!"
+val settings = ClientSettings(token, commandSettings = CommandSettings(prefixes = Set(GeneralCommands), needsMention = true))
 import settings.executionContext
 
-val futureClient = settings.build()
+val futureClient = settings.createClient()
 futureClient.foreach { client =>
   //client.login()
 }
 ```
 
-When you register a parsed command, you also pass in the aliases for the command, filters to use for the command, and a description for the command.
+When you register a parsed command, you also pass in a refiner and a description for the command.
 ```tut
 def registerParsedCommand[F[_]: Monad: Streamable](commands: CommandsHelper[F]): Unit = {
-  commands.registerCommand(
-    category = GeneralCommands,
-    aliases = Seq("ping"),
-    filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+  commands.registerCmd[NotUsed, Id](
+  	refiner = CmdInfo[F](prefix = GeneralCommands, aliases = Seq("ping"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
     description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-  ) { cmd: ParsedCmd[F, Int] =>
-    println(s"Received ping command with arg ${cmd.args}")
+  ) { cmd: ParsedCmd[F, NotUsed] =>
+    println(s"Received ping command")
   }
 }
 
@@ -45,25 +44,28 @@ futureClient.foreach { client =>
 }
 ```
 
-Notice the type `CommandsHelper[F]` there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other `CommandsHelper[F]`s though. Let's see how, in addition to see how raw commands are done.
+Notice the type `CommandsHelper[F]` there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other `CommandsHelper[F]`. Let's see how, in addition to see how raw commands are done.
 
 ```tut
-val TestCommands = CmdCategory("?", "Test commands")
-def registerRawCommand[F[_]: Monad: Streamable](commands: CommandsHelper[F]): Unit = {
-  commands.onRawCommandDSLC { implicit c => {
-      case RawCmd(message, TestCommands, "echo", args, _) =>
-        import RequestDSL._
-        for {
-          channel <- liftOptionT(message.tGuildChannel[F])
-          _       <- channel.sendMessage(s"ECHO: ${args.mkString(" ")}")
-        } yield ()
+val TestCommands = "?"
+def registerRawCommand[F[_]: Monad: Streamable](client: DiscordClient[F], commands: CommandsHelper[F]): Unit = {
+  commands.onRawCmd {
+    client.withCache[SourceRequest, RawCmd[F]] { implicit c => {
+        case RawCmd(message, TestCommands, "echo", args, _) =>
+          import client.sourceRequesterRunner._
+          for {
+            channel <- liftOptionT(message.tGuildChannel[F])
+            _       <- run(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
+          } yield ()
+        case _ => client.sourceRequesterRunner.unit
+      }
     }
   }
 }
 
 futureClient.foreach { client =>
-  val (shutdown, newHelper) = client.newCommandsHelper(CommandSettings(categories = Set(TestCommands)))
-  registerRawCommand(newHelper)
+  val (shutdown, newHelper) = client.newCommandsHelper(CommandSettings(prefixes = Set(TestCommands), needsMention = true))
+  registerRawCommand(client, newHelper)
 }
 ```
 
