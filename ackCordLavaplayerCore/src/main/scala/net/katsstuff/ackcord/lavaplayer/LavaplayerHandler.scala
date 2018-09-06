@@ -270,7 +270,7 @@ object LavaplayerHandler {
   /**
     * Tries to load an item given an identifier and returns it as a future.
     * If there were no matches, the future fails with [[NoMatchException]].
-    * Otherwise it fails with [[FriendlyException]].
+    * Otherwise it fails with [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
     */
   def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
     val promise = Promise[AudioItem]
@@ -292,7 +292,7 @@ object LavaplayerHandler {
   }
 
   /**
-    * An adapter between [[AudioEventListener]] and actors.
+    * An adapter between [[com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener]] and actors.
     * @param sendTo The actor to send the events to.
     */
   class AudioEventSender(sendTo: ActorRef) extends AudioEventListener {
@@ -300,7 +300,7 @@ object LavaplayerHandler {
   }
 
   /**
-    * An exception signaling that a [[AudioPlayerManager]] find a track.
+    * An exception signaling that a [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a track.
     */
   class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
 

@@ -74,17 +74,17 @@ object RequestDSL {
     opt.fold[RequestDSL[A]](SourceRequest(Source.empty))(SingleRequest.apply)
 
   /**
-    * Lifts a [[Source]] into the dsl.
+    * Lifts a [[akka.stream.scaladsl.Source]] into the dsl.
     */
   def fromSource[A](source: Source[A, NotUsed]): RequestDSL[A] = SourceRequest(source)
 
   /**
-    * Converts an F into a [[Source]] ad lifts it into the dsl.
+    * Converts an F into a [[akka.stream.scaladsl.Source]] ad lifts it into the dsl.
     */
   def liftF[F[_]: Streamable, A](fa: F[A]): RequestDSL[A] = fromSource(Streamable[F].toSource(fa))
 
   /**
-    * Lifts an [[OptionT]] into a [[Source]] and lifts it into the dsl.
+    * Lifts an [[cats.data.OptionT]] into a [[Source]] and lifts it into the dsl.
     */
   def liftOptionT[F[_]: Streamable, A](opt: OptionT[F, A]): RequestDSL[A] =
     fromSource(Streamable[F].optionToSource(opt))

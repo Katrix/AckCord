@@ -27,7 +27,7 @@ package net.katsstuff.ackcord.data
 import net.katsstuff.ackcord.data.raw.RawRole
 
 /**
-  * Root audit log object. Received from [[net.katsstuff.ackcord.http.requests.GetGuildAuditLog]]
+  * Root audit log object. Received from [[net.katsstuff.ackcord.http.rest.GetGuildAuditLog]]
   *
   * @param webhooks The webhooks found in the log
   * @param users The users found in the log

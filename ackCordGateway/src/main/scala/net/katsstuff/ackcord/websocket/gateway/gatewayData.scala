@@ -443,7 +443,7 @@ object GatewayEvent {
   val userGen = LabelledGeneric[User]
 
   /**
-    * A record type for a user together with a [[GuildId]].
+    * A record type for a user together with a [[net.katsstuff.ackcord.data.GuildId]].
     */
   type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
 
@@ -550,7 +550,7 @@ object GatewayEvent {
 
   /**
     * The fields seen here are all the fields that can change. Looking at the
-    * users [[RawGuildMember]] for changes is pointless.
+    * users [[net.katsstuff.ackcord.data.raw.RawGuildMember]] for changes is pointless.
     * @param guildId The guild of the guild member.
     * @param roles Thew new roles for the guild member.
     * @param user The user of the updated guild member.

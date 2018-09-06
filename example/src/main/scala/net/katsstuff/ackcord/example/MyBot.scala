@@ -48,7 +48,7 @@ object MyBot extends App {
   import settings.executionContext
 
   settings
-    .build()
+    .createClient()
     .foreach { client =>
       client.onEvent[Id] {
         case APIMessage.Ready(_) => println("Now ready")

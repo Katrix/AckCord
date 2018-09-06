@@ -28,7 +28,7 @@ import java.util.Locale
 import scala.language.higherKinds
 
 import akka.NotUsed
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import cats.Monad
 import net.katsstuff.ackcord.http.requests.RequestHelper
 import net.katsstuff.ackcord.util.{MessageParser, Streamable}

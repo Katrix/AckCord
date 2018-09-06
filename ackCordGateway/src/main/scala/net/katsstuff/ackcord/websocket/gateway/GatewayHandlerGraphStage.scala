@@ -227,7 +227,7 @@ object GatewayHandlerGraphStage {
   }
 
   /**
-    * Turn a websocket [[Message]] into a [[GatewayMessage]].
+    * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
     */
   def parseMessage(implicit system: ActorSystem): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
@@ -246,7 +246,7 @@ object GatewayHandlerGraphStage {
   }
 
   /**
-    * Turn a [[GatewayMessage]] into a websocket [[Message]].
+    * Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]].
     */
   def createMessage(implicit system: ActorSystem): Flow[GatewayMessage[_], Message, NotUsed] = {
     val flow = Flow[GatewayMessage[_]].map { msg =>

@@ -45,7 +45,7 @@ case class RequestRoute(rawRoute: String, uri: Uri, method: HttpMethod)
 object RequestRoute {
 
   /**
-    * Create a [[RequestRoute]] from a [[Route]] using the raw and applied
+    * Create a [[RequestRoute]] from a [[net.katsstuff.ackcord.http.Routes.Route]] using the raw and applied
     * values for the this route.
     */
   def apply(route: Route, method: HttpMethod): RequestRoute = RequestRoute(route.rawRoute, route.applied, method)

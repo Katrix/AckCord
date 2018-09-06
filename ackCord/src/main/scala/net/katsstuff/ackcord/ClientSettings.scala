@@ -91,7 +91,7 @@ class ClientSettings(
     )
   }
 
-  @deprecated("Use createClientAutoShards instead")
+  @deprecated("Use createClientAutoShards instead", since = "0.11")
   def buildAutoShards(): Future[DiscordClient[Id]] = createClientAutoShards()
 
   /**

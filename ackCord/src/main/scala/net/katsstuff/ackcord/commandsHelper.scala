@@ -33,7 +33,7 @@ import cats.Monad
 import net.katsstuff.ackcord.commands._
 
 /**
-  * An object which manages a [[Commands]] instance.
+  * An object which manages a [[net.katsstuff.ackcord.commands.Commands]] instance.
   */
 trait CommandsHelper[F[_]] {
 
