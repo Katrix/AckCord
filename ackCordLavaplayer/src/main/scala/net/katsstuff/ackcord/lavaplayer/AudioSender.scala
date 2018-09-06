@@ -58,7 +58,7 @@ class AudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: ActorRef
 
         val frame = player.provide()
         if (frame != null) {
-          udpHandler ! SendData(ByteString.fromArray(frame.data))
+          udpHandler ! SendData(ByteString.fromArray(frame.getData))
         }
       } else {
         setSpeaking(false)

@@ -1,12 +1,12 @@
 import sbtcrossproject.{crossProject, CrossType}
 
-lazy val akkaVersion     = "2.5.12"
-lazy val akkaHttpVersion = "10.1.1"
+lazy val akkaVersion     = "2.5.16"
+lazy val akkaHttpVersion = "10.1.5"
 lazy val circeVersion    = "0.9.3"
 lazy val ackCordVersion  = "0.11.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.5",
+  scalaVersion := "2.12.6",
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -18,7 +18,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused-import",
     "-Ypartial-unification"
   ),
-  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6"),
+  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7"),
   //Fixes repository not specified error
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -61,7 +61,7 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-generic-extras" % circeVersion,
       "io.circe" %%% "circe-shapes" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,
-      "io.circe" %%% "circe-derivation" % "0.9.0-M4"
+      "io.circe" %%% "circe-derivation" % "0.9.0-M5"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -173,7 +173,7 @@ lazy val ackCordLavaplayer = project
     name := "ackcord-lavaplayer",
     version := ackCordVersion,
     resolvers += JCenterRepository,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.2.63",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.7",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
   .dependsOn(ackCordVoice)

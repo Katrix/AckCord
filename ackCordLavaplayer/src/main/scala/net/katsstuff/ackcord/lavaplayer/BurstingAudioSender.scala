@@ -110,7 +110,7 @@ class BurstingAudioSender(player: AudioPlayer, udpHandler: ActorRef, wsHandler: 
       _ <- 0 until num
       frame = player.provide()
       if frame != null
-    } yield ByteString.fromArray(frame.data)
+    } yield ByteString.fromArray(frame.getData)
 
     //It might be that we don't get as many packets as we asked for, in which case we have to handle the extra packets at some other time
     val sentNum = data.length
