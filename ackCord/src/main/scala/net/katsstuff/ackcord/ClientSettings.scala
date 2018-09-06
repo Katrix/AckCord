@@ -65,10 +65,13 @@ class ClientSettings(
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
+  @deprecated("Use createClient instead", since = "0.11")
+  def build(): Future[DiscordClient[Id]] = createClient()
+
   /**
     * Create a [[DiscordClient]] from these settings.
     */
-  def build(): Future[DiscordClient[Id]] = {
+  def createClient(): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem = system
     implicit val mat: ActorMaterializer   = ActorMaterializer()
 
@@ -76,6 +79,7 @@ class ClientSettings(
       BotAuthentication(token),
       requestSettings.parallelism,
       requestSettings.bufferSize,
+      requestSettings.maxRetryCount,
       requestSettings.overflowStrategy,
       requestSettings.maxAllowedWait
     )
@@ -87,11 +91,14 @@ class ClientSettings(
     )
   }
 
+  @deprecated("Use createClientAutoShards instead")
+  def buildAutoShards(): Future[DiscordClient[Id]] = createClientAutoShards()
+
   /**
     * Create a [[DiscordClient]] from these settings while letting Discord
     * set the shard amount.
     */
-  def buildAutoShards(): Future[DiscordClient[Id]] = {
+  def createClientAutoShards(): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem = system
     implicit val mat: ActorMaterializer   = ActorMaterializer()
 
@@ -99,6 +106,7 @@ class ClientSettings(
       BotAuthentication(token),
       requestSettings.parallelism,
       requestSettings.bufferSize,
+      requestSettings.maxRetryCount,
       requestSettings.overflowStrategy,
       requestSettings.maxAllowedWait
     )
@@ -163,12 +171,15 @@ object ClientSettings {
 /**
   * @param parallelism Parallelism to use for requests.
   * @param bufferSize The buffer size to use for waiting requests.
+  * @param maxRetryCount The maximum amount of times a request will be retried.
+  *                      Only affects requests that uses retries.
   * @param overflowStrategy The overflow strategy to use when the buffer is full.
   * @param maxAllowedWait The max allowed wait time before giving up on a request.
   */
 case class RequestSettings(
     parallelism: Int = 4,
     bufferSize: Int = 32,
+    maxRetryCount: Int = 3,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
 )
