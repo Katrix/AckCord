@@ -219,14 +219,21 @@ object RawHandlers extends Handlers {
   implicit val rawMessageReactionUpdateHandler: CacheUpdateHandler[MessageReactionData] = updateHandler {
     (builder, obj, _) =>
       builder.getMessage(obj.channelId, obj.messageId).value.foreach { message =>
-        val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
-        val changed = toChange.map { emoji =>
-          val isMe = if (builder.botUser.id == obj.userId) true else emoji.me
-          emoji.copy(count = emoji.count + 1, me = isMe)
-        }
+        if(message.reactions.exists(_.emoji == obj.emoji)) {
+          val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
+          val changed = toChange.map { emoji =>
+            val isMe = if (builder.botUser.id == obj.userId) true else emoji.me
+            emoji.copy(count = emoji.count + 1, me = isMe)
+          }
 
-        val newMessage = message.copy(reactions = toNotChange ++ changed)
-        builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
+          val newMessage = message.copy(reactions = toNotChange ++ changed)
+          builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
+        }
+        else {
+          val isMe = builder.botUser.id == obj.userId
+          val newMessage = message.copy(reactions = Reaction(1, isMe, obj.emoji) +: message.reactions)
+          builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
+        }
       }
   }
 
