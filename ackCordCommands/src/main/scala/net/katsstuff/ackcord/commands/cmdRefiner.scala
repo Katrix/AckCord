@@ -65,13 +65,15 @@ abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
     */
   def filters(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[CmdFilter]]
 
+  def filterBehavior(message: Message)(implicit c: CacheSnapshot[F]): F[FilterBehavior]
+
   override def refine(raw: RawCmd[F]): EitherT[F, Option[CmdMessage[F] with CmdError[F]], Cmd[F]] = {
     implicit val cache: CacheSnapshot[F] = raw.c
     val canRun = prefix(raw.msg)
       .map(_ == raw.prefix)
       .map2(aliases(raw.msg).map(_.contains(raw.cmd)))(_ && _)
 
-    lazy val shouldRun = filters(raw.msg).flatMap { filters =>
+    lazy val shouldRun = filters(raw.msg).map2(filterBehavior(raw.msg)) { (filters, behavior) =>
       import cats.instances.list._
       implicit val cache: CacheSnapshot[F] = raw.c
       filters.toList.traverse(filter => filter.isAllowed(raw.msg).map(_ -> filter)).map { processedFilters =>
@@ -79,9 +81,17 @@ abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
           case (passed, filter) if !passed => filter
         }
         if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
-        else Left(Some(FilteredCmd(filtersNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
+        else {
+          val toSendNotPassed = behavior match {
+            case FilterBehavior.SendNone => Nil
+            case FilterBehavior.SendOne => Seq(filtersNotPassed.head)
+            case FilterBehavior.SendAll => filtersNotPassed
+          }
+
+          Left(Some(FilteredCmd(toSendNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
+        }
       }
-    }
+    }.flatten
 
     EitherT(canRun.map(b => Either.cond(b, (), None))).flatMapF(_ => shouldRun)
   }
@@ -97,7 +107,8 @@ abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
 case class CmdInfo[F[_]: Monad](
     prefix: String,
     aliases: Seq[String],
-    filters: Seq[CmdFilter] = Seq.empty
+    filters: Seq[CmdFilter] = Seq.empty,
+    filterBehavior: FilterBehavior = FilterBehavior.SendAll
 ) extends AbstractCmdInfo[F] {
 
   override def prefix(message: Message)(implicit c: CacheSnapshot[F]): F[String] = prefix.pure
@@ -105,4 +116,13 @@ case class CmdInfo[F[_]: Monad](
   override def aliases(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[String]] = aliases.pure
 
   override def filters(message: Message)(implicit c: CacheSnapshot[F]): F[Seq[CmdFilter]] = filters.pure
+
+  override def filterBehavior(message: Message)(implicit c: CacheSnapshot[F]): F[FilterBehavior] = filterBehavior.pure
+}
+
+sealed trait FilterBehavior
+object FilterBehavior {
+  case object SendAll  extends FilterBehavior
+  case object SendOne  extends FilterBehavior
+  case object SendNone extends FilterBehavior
 }
