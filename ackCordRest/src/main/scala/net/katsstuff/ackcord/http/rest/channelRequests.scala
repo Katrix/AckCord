@@ -404,7 +404,7 @@ case class EditMessageData(
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
-    JsonOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "content" -> a.embed.map(_.asJson))
+    JsonOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "embed" -> a.embed.map(_.asJson))
 }
 
 /**
