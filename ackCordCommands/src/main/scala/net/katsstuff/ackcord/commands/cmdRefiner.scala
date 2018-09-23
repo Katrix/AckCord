@@ -23,6 +23,8 @@
  */
 package net.katsstuff.ackcord.commands
 
+import java.util.Locale
+
 import scala.language.higherKinds
 
 import cats.Monad
@@ -70,28 +72,30 @@ abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
   override def refine(raw: RawCmd[F]): EitherT[F, Option[CmdMessage[F] with CmdError[F]], Cmd[F]] = {
     implicit val cache: CacheSnapshot[F] = raw.c
     val canRun = prefix(raw.msg)
-      .map(_ == raw.prefix)
-      .map2(aliases(raw.msg).map(_.contains(raw.cmd)))(_ && _)
+      .map(_.toLowerCase(Locale.ROOT) == raw.prefix.toLowerCase(Locale.ROOT))
+      .map2(aliases(raw.msg).map(_.map(_.toLowerCase(Locale.ROOT)).contains(raw.cmd.toLowerCase(Locale.ROOT))))(_ && _)
 
-    lazy val shouldRun = filters(raw.msg).map2(filterBehavior(raw.msg)) { (filters, behavior) =>
-      import cats.instances.list._
-      implicit val cache: CacheSnapshot[F] = raw.c
-      filters.toList.traverse(filter => filter.isAllowed(raw.msg).map(_ -> filter)).map { processedFilters =>
-        val filtersNotPassed = processedFilters.collect {
-          case (passed, filter) if !passed => filter
-        }
-        if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
-        else {
-          val toSendNotPassed = behavior match {
-            case FilterBehavior.SendNone => Nil
-            case FilterBehavior.SendOne => Seq(filtersNotPassed.head)
-            case FilterBehavior.SendAll => filtersNotPassed
+    lazy val shouldRun = filters(raw.msg)
+      .map2(filterBehavior(raw.msg)) { (filters, behavior) =>
+        import cats.instances.list._
+        implicit val cache: CacheSnapshot[F] = raw.c
+        filters.toList.traverse(filter => filter.isAllowed(raw.msg).map(_ -> filter)).map { processedFilters =>
+          val filtersNotPassed = processedFilters.collect {
+            case (passed, filter) if !passed => filter
           }
+          if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
+          else {
+            val toSendNotPassed = behavior match {
+              case FilterBehavior.SendNone => Nil
+              case FilterBehavior.SendOne  => Seq(filtersNotPassed.head)
+              case FilterBehavior.SendAll  => filtersNotPassed
+            }
 
-          Left(Some(FilteredCmd(toSendNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
+            Left(Some(FilteredCmd(toSendNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
+          }
         }
       }
-    }.flatten
+      .flatten
 
     EitherT(canRun.map(b => Either.cond(b, (), None))).flatMapF(_ => shouldRun)
   }
