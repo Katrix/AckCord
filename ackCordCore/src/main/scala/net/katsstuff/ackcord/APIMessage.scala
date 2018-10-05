@@ -67,7 +67,7 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(channel: Channel, cache: CacheState) extends ChannelMessage
+  case class ChannelCreate(channel: GuildChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a channel is edited or updated.
@@ -81,7 +81,7 @@ object APIMessage {
     * not contain the channel.
     * @param channel The channel that was deleted.
     */
-  case class ChannelDelete(channel: Channel, cache: CacheState) extends ChannelMessage
+  case class ChannelDelete(channel: GuildChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a message is pinned or unpinned in a text
