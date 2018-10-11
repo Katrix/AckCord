@@ -72,8 +72,16 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings.
     */
   def createClient(): Future[DiscordClient[Id]] = {
+    implicit val mat: ActorMaterializer   = ActorMaterializer()(system)
+
+    createClientWithMaterializer()
+  }
+
+  /**
+    * Create a [[DiscordClient]] from these settings and a custom materializer.
+    */
+  def createClientWithMaterializer() (implicit mat: ActorMaterializer): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem = system
-    implicit val mat: ActorMaterializer   = ActorMaterializer()
 
     val requests = RequestHelper.create(
       BotAuthentication(token),
