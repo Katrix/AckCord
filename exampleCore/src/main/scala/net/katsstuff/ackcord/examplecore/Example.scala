@@ -31,7 +31,14 @@ import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision}
 import cats.Id
-import net.katsstuff.ackcord.commands.{AbstractCmdInfo, CommandSettings, Commands, CoreCommands, HelpCmd, ParsedCmdFactory}
+import net.katsstuff.ackcord.commands.{
+  AbstractCmdInfo,
+  CommandSettings,
+  Commands,
+  CoreCommands,
+  HelpCmd,
+  ParsedCmdFactory
+}
 import net.katsstuff.ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
@@ -48,7 +55,9 @@ object Example {
   }
 
   implicit val system: ActorSystem = ActorSystem("AckCord")
-  implicit val mat: Materializer   = ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy(loggingDecider))
+  implicit val mat: Materializer = ActorMaterializer(
+    ActorMaterializerSettings(system).withSupervisionStrategy(loggingDecider)
+  )
   import system.dispatcher
 
   def main(args: Array[String]): Unit = {

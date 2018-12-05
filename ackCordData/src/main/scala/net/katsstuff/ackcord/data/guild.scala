@@ -299,7 +299,8 @@ case class GuildMember(
     * Calculate the permissions of this user in a channel.
     */
   def permissionsWithOverrides[F[_]](guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshot[F], F: Monad[F]
+      implicit c: CacheSnapshot[F],
+      F: Monad[F]
   ): F[Permission] = {
     if (guildPermissions.hasPermissions(Permission.Administrator)) Applicative[F].pure(Permission.All)
     else {

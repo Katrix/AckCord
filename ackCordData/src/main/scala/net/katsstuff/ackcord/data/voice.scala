@@ -26,7 +26,7 @@ import net.katsstuff.ackcord.data.raw.RawGuildMember
 
 /**
   * Represents a user voice connection status
- *
+  *
   * @param guildId The guild this state belongs to
   * @param channelId The channel the user is in, or None if the user isn't in a channel.
   * @param userId The user of this state.

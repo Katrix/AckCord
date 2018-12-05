@@ -45,10 +45,11 @@ package object ackcord {
   val JsonUndefined: util.JsonUndefined.type = util.JsonUndefined
   type JsonUndefined = util.JsonUndefined.type
 
-  type SourceRequest[A] = StreamInstances.SourceRequest[A]
+  type SourceRequest[A]       = StreamInstances.SourceRequest[A]
   type FutureVectorRequest[A] = Future[Vector[A]]
 
-  implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] = StreamInstances.SourceFlatmap(source)
+  implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] =
+    StreamInstances.SourceFlatmap(source)
 
   implicit val sourceMonadInstance: MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
     StreamInstances.sourceInstance

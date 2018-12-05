@@ -442,7 +442,9 @@ package object syntax {
       * Get a text channel by id in this category.
       * @param id The id of the channel.
       */
-    def tChannelById[F[_]](id: ChannelId)(implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
+    def tChannelById[F[_]](
+        id: ChannelId
+    )(implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
       channelById(id).collect {
         case tChannel: TGuildChannel => tChannel
       }
@@ -459,7 +461,9 @@ package object syntax {
       * Get a voice channel by id in this category.
       * @param id The id of the channel.
       */
-    def vChannelById[F[_]](id: ChannelId)(implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, VGuildChannel] =
+    def vChannelById[F[_]](
+        id: ChannelId
+    )(implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, VGuildChannel] =
       channelById(id).collect {
         case vChannel: VGuildChannel => vChannel
       }

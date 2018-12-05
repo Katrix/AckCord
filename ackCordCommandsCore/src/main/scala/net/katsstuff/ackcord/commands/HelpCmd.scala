@@ -58,7 +58,7 @@ abstract class HelpCmd extends Actor {
       val lowercaseCommand                    = cmd.toLowerCase(Locale.ROOT)
 
       val matches = for {
-        reg    <- commands
+        reg <- commands
         prefix = reg.info.prefix(msg)
         if lowercaseCommand.startsWith(prefix)
         command = lowercaseCommand.substring(prefix.length)
@@ -66,7 +66,7 @@ abstract class HelpCmd extends Actor {
         if aliases.contains(command)
       } yield reg
 
-      val response = if(matches.nonEmpty) Some(createSearchReply(msg, cmd, matches.toSeq)) else unknownCmd(cmd)
+      val response = if (matches.nonEmpty) Some(createSearchReply(msg, cmd, matches.toSeq)) else unknownCmd(cmd)
 
       response.map(CreateMessage(msg.channelId, _)) match {
         case Some(req) => sendMessageAndAck(sender(), req)

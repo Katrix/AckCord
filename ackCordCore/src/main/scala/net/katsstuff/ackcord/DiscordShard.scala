@@ -198,14 +198,14 @@ object DiscordShard extends FailFastCirceSupport {
           )
       }
       .flatMap { json =>
-        val c = json.hcursor
+        val c          = json.hcursor
         val startLimit = c.downField("session_start_limit")
         val res = for {
           gateway <- c.get[String]("url")
           shards  <- c.get[Int]("shards")
           // TODO: Use these
-          total <- startLimit.get[Int]("total")
-          remaining <- startLimit.get[Int]("remaining")
+          total      <- startLimit.get[Int]("total")
+          remaining  <- startLimit.get[Int]("remaining")
           resetAfter <- startLimit.get[Int]("reset_after")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)

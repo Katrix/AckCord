@@ -39,11 +39,15 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val identifyDataEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val identifyDataDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val readyDataEncoder: Encoder[ReadyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val readyDataDecoder: Decoder[ReadyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)

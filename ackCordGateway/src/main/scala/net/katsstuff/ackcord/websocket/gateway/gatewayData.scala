@@ -661,12 +661,14 @@ object GatewayEvent {
   /**
     * Sent to the shard when a message is deleted.
     */
-  case class MessageDelete(data: Later[Decoder.Result[MessageDeleteData]]) extends ChannelEvent[MessageDeleteData] with OptGuildEvent[MessageDeleteData] {
+  case class MessageDelete(data: Later[Decoder.Result[MessageDeleteData]])
+      extends ChannelEvent[MessageDeleteData]
+      with OptGuildEvent[MessageDeleteData] {
     override def name: String = "MESSAGE_DELETE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
-}
+  }
 
   /**
     * @param ids The deleted messages.
@@ -680,10 +682,11 @@ object GatewayEvent {
     * Often this is performed by a bot.
     */
   case class MessageDeleteBulk(data: Later[Decoder.Result[MessageDeleteBulkData]])
-      extends ChannelEvent[MessageDeleteBulkData] with OptGuildEvent[MessageDeleteBulkData] {
+      extends ChannelEvent[MessageDeleteBulkData]
+      with OptGuildEvent[MessageDeleteBulkData] {
     override def name: String = "MESSAGE_DELETE_BULK"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
@@ -694,16 +697,23 @@ object GatewayEvent {
     * @param guildId The guild this was done in. Can be missing.
     * @param emoji The emoji the user reacted with.
     */
-  case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, guildId: Option[GuildId], emoji: PartialEmoji)
+  case class MessageReactionData(
+      userId: UserId,
+      channelId: ChannelId,
+      messageId: MessageId,
+      guildId: Option[GuildId],
+      emoji: PartialEmoji
+  )
 
   /**
     * Sent to the shard when a user adds a reaction to a message.
     */
   case class MessageReactionAdd(data: Later[Decoder.Result[MessageReactionData]])
-      extends ChannelEvent[MessageReactionData] with OptGuildEvent[MessageReactionData] {
+      extends ChannelEvent[MessageReactionData]
+      with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_ADD"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
@@ -711,10 +721,11 @@ object GatewayEvent {
     * Sent to the shard when a user removes a reaction from a message.
     */
   case class MessageReactionRemove(data: Later[Decoder.Result[MessageReactionData]])
-      extends ChannelEvent[MessageReactionData] with OptGuildEvent[MessageReactionData] {
+      extends ChannelEvent[MessageReactionData]
+      with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_REMOVE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
@@ -729,10 +740,11 @@ object GatewayEvent {
     * Sent to the shard when a user removes all reactions from a message.
     */
   case class MessageReactionRemoveAll(data: Later[Decoder.Result[MessageReactionRemoveAllData]])
-      extends ChannelEvent[MessageReactionRemoveAllData] with OptGuildEvent[MessageReactionRemoveAllData] {
+      extends ChannelEvent[MessageReactionRemoveAllData]
+      with OptGuildEvent[MessageReactionRemoveAllData] {
     override def name: String = "MESSAGE_REACTION_REMOVE_ALL"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 

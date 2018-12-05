@@ -114,14 +114,15 @@ class GenericCommands[F[_]: Streamable: Monad] {
 
   val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("timeDiff")),
-    run = implicit c => (runner, cmd) => {
-      import runner._
-      for {
-        channel <- liftOptionT(cmd.msg.channelId.tResolve)
-        sentMsg <- run(channel.sendMessage("Msg"))
-        time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
-        _ <- run(channel.sendMessage(s"$time ms between command and response"))
-      } yield ()
+    run = implicit c =>
+      (runner, cmd) => {
+        import runner._
+        for {
+          channel <- liftOptionT(cmd.msg.channelId.tResolve)
+          sentMsg <- run(channel.sendMessage("Msg"))
+          time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
+          _ <- run(channel.sendMessage(s"$time ms between command and response"))
+        } yield ()
     },
     description = Some(
       CmdDescription(
