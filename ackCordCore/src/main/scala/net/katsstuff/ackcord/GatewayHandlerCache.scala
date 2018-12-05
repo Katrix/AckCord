@@ -30,7 +30,7 @@ import akka.stream.scaladsl.Flow
 import cats.Later
 import io.circe.Decoder
 import net.katsstuff.ackcord.cachehandlers.{Handlers, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
-import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel, TGuildChannel}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.data.raw.RawBan
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}

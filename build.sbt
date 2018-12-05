@@ -1,12 +1,12 @@
-import sbtcrossproject.{crossProject, CrossType}
+import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-lazy val akkaVersion     = "2.5.16"
+lazy val akkaVersion     = "2.5.18"
 lazy val akkaHttpVersion = "10.1.5"
-lazy val circeVersion    = "0.9.3"
+lazy val circeVersion    = "0.10.1"
 lazy val ackCordVersion  = "0.11.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.6",
+  scalaVersion := "2.12.8",
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -30,9 +30,6 @@ lazy val commonSettings = Seq(
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
   publishArtifact in Test := false,
-  pomIncludeRepository := { _ =>
-    false
-  },
   licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
   scmInfo := Some(
     ScmInfo(
@@ -57,11 +54,9 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
     version := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core"           % circeVersion,
-      "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-shapes"         % circeVersion,
-      "io.circe" %%% "circe-parser"         % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.9.0-M5"
+      "io.circe" %%% "circe-core"       % circeVersion,
+      "io.circe" %%% "circe-parser"     % circeVersion,
+      "io.circe" %%% "circe-derivation" % "0.10.0-M1"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -81,7 +76,7 @@ lazy val ackCordNetwork = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.21.0",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
     description := "The base network module of AckCord"
   )
   .dependsOn(ackCordDataJVM)
@@ -173,7 +168,7 @@ lazy val ackCordLavaplayer = project
     name := "ackcord-lavaplayer",
     version := ackCordVersion,
     resolvers += JCenterRepository,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.7",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.10",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
   .dependsOn(ackCordVoice)
@@ -219,7 +214,7 @@ lazy val ackCord = project
     name := "ackcord",
     version := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    description := "AckCord-highlvl is a higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
+    description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
   )
   .dependsOn(ackCordCore, ackCordCommandsCore, ackCordLavaplayerCore)
 
