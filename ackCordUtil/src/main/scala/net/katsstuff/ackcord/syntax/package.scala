@@ -241,6 +241,7 @@ package object syntax {
       * @param position New position of the channel.
       * @param topic The new channel topic for text channels.
       * @param nsfw If the channel is NSFW for text channels.
+      * @param rateLimitPerUser The new user ratelimit for guild text channels.
       * @param permissionOverwrites The new channel permission overwrites.
       * @param category The new category id of the channel.
       */
@@ -249,6 +250,7 @@ package object syntax {
         position: JsonOption[Int] = JsonUndefined,
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[ChannelId] = JsonUndefined,
         context: Ctx = NotUsed: NotUsed
@@ -259,6 +261,7 @@ package object syntax {
         position = position,
         topic = topic,
         nsfw = nsfw,
+        rateLimitPerUser = rateLimitPerUser,
         bitrate = JsonUndefined,
         userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
@@ -305,7 +308,7 @@ package object syntax {
       * @param name The webhook name.
       * @param avatar The webhook avatar.
       */
-    def createWebhook[Ctx](name: String, avatar: ImageData, context: Ctx = NotUsed: NotUsed) =
+    def createWebhook[Ctx](name: String, avatar: Option[ImageData], context: Ctx = NotUsed: NotUsed) =
       CreateWebhook(channel.id, CreateWebhookData(name, avatar), context)
 
     /**
@@ -590,12 +593,16 @@ package object syntax {
     /**
       * Create a text channel in this guild.
       * @param name The name of the channel.
+      * @param topic The topic to give this channel.
+      * @param rateLimitPerUser The user ratelimit to give this channel.
       * @param permissionOverwrites The permission overwrites for the channel.
       * @param category The category id for the channel.
       * @param nsfw If the channel is NSFW.
       */
     def createTextChannel[Ctx](
         name: String,
+        topic: JsonOption[String] = JsonUndefined,
+        rateLimitPerUser: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[ChannelId] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
@@ -605,8 +612,8 @@ package object syntax {
       CreateGuildChannelData(
         name = name,
         `type` = JsonSome(ChannelType.GuildText),
-        bitrate = JsonUndefined,
-        userLimit = JsonUndefined,
+        topic = topic,
+        rateLimitPerUser = rateLimitPerUser,
         permissionOverwrites = permissionOverwrites,
         parentId = category,
         nsfw = nsfw
@@ -634,13 +641,13 @@ package object syntax {
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
-        name,
-        JsonSome(ChannelType.GuildVoice),
-        bitrate,
-        userLimit,
-        permissionOverwrites,
-        category,
-        nsfw
+        name = name,
+        `type` = JsonSome(ChannelType.GuildVoice),
+        bitrate = bitrate,
+        userLimit = userLimit,
+        permissionOverwrites = permissionOverwrites,
+        parentId = category,
+        nsfw = nsfw
       ),
       context
     )
@@ -661,10 +668,7 @@ package object syntax {
       CreateGuildChannelData(
         name = name,
         `type` = JsonSome(ChannelType.GuildCategory),
-        bitrate = JsonUndefined,
-        userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites,
-        parentId = JsonUndefined,
         nsfw = nsfw
       ),
       context
@@ -686,6 +690,11 @@ package object syntax {
       */
     def fetchGuildMember[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) =
       GetGuildMember(guild.id, userId, context)
+
+    /**
+      * Fetch a ban for a specific user.
+      */
+    def fetchBan[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = GetGuildBan(guild.id, userId)
 
     /**
       * Fetch all the bans for this guild.
@@ -1333,11 +1342,6 @@ package object syntax {
     ) = GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit), context)
 
     /**
-      * Fetch the DMs of the client user.
-      */
-    def fetchUserDMs[Ctx](context: Ctx = NotUsed: NotUsed) = GetUserDMs(context)
-
-    /**
       * Create a group DM to a few users.
       * @param accessTokens The access tokens of users that have granted the bot
       *                     the `gdm.join` scope.
@@ -1352,8 +1356,11 @@ package object syntax {
     /**
       * Fetch an invite by code.
       * @param inviteCode The invite code.
+      * @param withCounts If the returned invite object should return approximate
+      *                   counts for members and people online.
       */
-    def fetchInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed) = GetInvite(inviteCode, context)
+    def fetchInvite[Ctx](inviteCode: String, withCounts: Boolean = false, context: Ctx = NotUsed: NotUsed) =
+      GetInvite(inviteCode, withCounts, context)
 
     /**
       * Fetch a list of voice regions that can be used when creating a guild.

@@ -30,6 +30,7 @@ import akka.stream.scaladsl.Flow
 import cats.Later
 import io.circe.Decoder
 import net.katsstuff.ackcord.cachehandlers.{Handlers, NOOPHandler, PresenceUpdateHandler, RawHandlers, ReadyHandler}
+import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel, TGuildChannel}
 import net.katsstuff.ackcord.data.raw.RawBan
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
@@ -61,6 +62,15 @@ object GatewayHandlerCache {
           None
       }
     }
+
+    def getChannelUsingMaybeGuildId(
+        state: CacheSnapshotId,
+        guildId: Option[GuildId],
+        channelId: ChannelId
+    ): Option[TChannel] =
+      guildId.fold(state.getTChannel(channelId).value) { guildId =>
+        state.getGuildChannel(guildId, channelId).value.flatMap(_.asTChannel)
+      }
 
     event match {
       case gateway.Ready(later) =>
@@ -131,11 +141,11 @@ object GatewayHandlerCache {
       case gateway.GuildBanAdd(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
-            (data.head, RawBan(None, gateway.userGen.from(data.tail))),
+            (data.guildId, RawBan(None, data.user)),
             state =>
               state.current
-                .getGuild(data.head)
-                .map(g => APIMessage.GuildBanAdd(g, gateway.userGen.from(data.tail), state))
+                .getGuild(data.guildId)
+                .map(g => APIMessage.GuildBanAdd(g, data.user, state))
                 .value,
             RawHandlers.rawBanUpdateHandler
           )
@@ -143,11 +153,11 @@ object GatewayHandlerCache {
       case gateway.GuildBanRemove(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
-            (data.head, gateway.userGen.from(data.tail)),
+            data,
             state =>
               state.current
-                .getGuild(data.head)
-                .map(g => APIMessage.GuildBanRemove(g, gateway.userGen.from(data.tail), state))
+                .getGuild(data.guildId)
+                .map(g => APIMessage.GuildBanRemove(g, data.user, state))
                 .value,
             RawHandlers.rawBanDeleteHandler
           )
@@ -284,7 +294,7 @@ object GatewayHandlerCache {
             state =>
               for {
                 message <- state.previous.getMessage(data.id).value
-                channel <- state.current.getTChannel(data.channelId).value
+                channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
               } yield APIMessage.MessageDelete(message, channel, state),
             RawHandlers.rawMessageDeleteHandler
           )
@@ -294,13 +304,9 @@ object GatewayHandlerCache {
           CacheUpdate(
             data,
             state =>
-              state.current
-                .getTChannel(data.channelId)
-                .map { channel =>
-                  APIMessage
-                    .MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).value.toSeq), channel, state)
-                }
-                .value,
+              getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId).map { channel =>
+                APIMessage.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).value.toSeq), channel, state)
+            },
             RawHandlers.rawMessageDeleteBulkHandler
           )
         }
@@ -311,7 +317,7 @@ object GatewayHandlerCache {
             state =>
               for {
                 user     <- state.current.getUser(data.userId).value
-                tChannel <- state.current.getTChannel(data.channelId).value
+                tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
               } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, state),
             RawHandlers.rawMessageReactionUpdateHandler
@@ -324,7 +330,7 @@ object GatewayHandlerCache {
             state =>
               for {
                 user     <- state.current.getUser(data.userId).value
-                tChannel <- state.current.getTChannel(data.channelId).value
+                tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
               } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, state),
             RawHandlers.rawMessageReactionRemoveHandler
@@ -336,7 +342,7 @@ object GatewayHandlerCache {
             data,
             state =>
               for {
-                tChannel <- state.current.getChannel(data.channelId).value.flatMap(_.asTChannel)
+                tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
               } yield APIMessage.MessageReactionRemoveAll(tChannel, message, state),
             RawHandlers.rawMessageReactionRemoveAllHandler
@@ -362,7 +368,7 @@ object GatewayHandlerCache {
             state =>
               for {
                 user    <- state.current.getUser(data.userId).value
-                channel <- state.current.getTChannel(data.channelId).value
+                channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
               } yield APIMessage.TypingStart(channel, user, data.timestamp, state),
             RawHandlers.lastTypedHandler
           )

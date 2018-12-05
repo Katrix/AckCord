@@ -63,6 +63,7 @@ case class GetChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed
   * @param nsfw If the channel is NSFW for text channels.
   * @param bitrate The new channel bitrate for voice channels.
   * @param userLimit The new user limit for voice channel.
+  * @param rateLimitPerUser The new user ratelimit for guild text channels.
   * @param permissionOverwrites The new channel permission overwrites.
   * @param parentId The new category id of the channel.
   */
@@ -71,6 +72,7 @@ case class ModifyChannelData(
     position: JsonOption[Int] = JsonUndefined,
     topic: JsonOption[String] = JsonUndefined,
     nsfw: JsonOption[Boolean] = JsonUndefined,
+    rateLimitPerUser: JsonOption[Int] = JsonUndefined,
     bitrate: JsonOption[Int] = JsonUndefined,
     userLimit: JsonOption[Int] = JsonUndefined,
     permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
@@ -88,6 +90,7 @@ object ModifyChannelData {
       "position"              -> a.position.map(_.asJson),
       "topic"                 -> a.topic.map(_.asJson),
       "nsfw"                  -> a.nsfw.map(_.asJson),
+      "rate_limit_per_user"   -> a.rateLimitPerUser.map(_.asJson),
       "bitrate"               -> a.bitrate.map(_.asJson),
       "user_limit"            -> a.userLimit.map(_.asJson),
       "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
@@ -337,7 +340,7 @@ case class DeleteUserReaction[Ctx](
 /**
   * @param before Get users before this user.
   * @param after Get users after this user.
-  * @param limit The max amount of users to return. Defaults to 100.
+  * @param limit The max amount of users to return. Defaults to 25.
   */
 case class GetReactionsData(before: Option[UserId] = None, after: Option[UserId] = None, limit: Option[Int] = None) {
   require(limit.forall(l => l >= 1 && l <= 100), "Limit must be between 1 and 100")
@@ -507,8 +510,9 @@ case class EditChannelPermissions[Ctx](
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
 ) extends NoResponseReasonRequest[EditChannelPermissions[Ctx], EditChannelPermissionsData, Ctx] {
-  override def route: RequestRoute                                = Routes.editChannelPermissions(overwriteId, channelId)
-  override def paramsEncoder: Encoder[EditChannelPermissionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.editChannelPermissions(overwriteId, channelId)
+  override def paramsEncoder: Encoder[EditChannelPermissionsData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =

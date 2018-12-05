@@ -257,6 +257,7 @@ object Routes {
   val guildMemberBan: (UserId, GuildId) => Route = (userId, guildId) => guildBans(guildId) / userId
 
   val getGuildBans: GuildId => RequestRoute                   = guildBans.toRequest(GET)
+  val getGuildBan: (UserId, GuildId) => RequestRoute          = guildMemberBan.toRequest(GET)
   val createGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(PUT)
   val removeGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(DELETE)
 
@@ -291,12 +292,14 @@ object Routes {
   val modifyGuildEmbed: GuildId => RequestRoute  = guildEmbed.toRequest(PATCH)
   val getGuildVanityUrl: GuildId => RequestRoute = guild / "vanity-url" toRequest GET
 
+  val getGuildWidgetImage: (WidgetImageStyle, GuildId) => RequestRoute =
+    (style, guildId) => guild(guildId) / "widget.png" ++ s"?style=${style.name}" toRequest GET
+
   //Invites
   val invites: Route                           = base / "invites"
   val inviteCode: InviteCode => Route          = code => invites / inviteCodeParam(code)
   val getInvite: InviteCode => RequestRoute    = inviteCode.toRequest(GET)
   val deleteInvite: InviteCode => RequestRoute = inviteCode.toRequest(DELETE)
-  val acceptInvite: InviteCode => RequestRoute = inviteCode.toRequest(POST)
 
   //Users
   val users: Route                 = base / "users"

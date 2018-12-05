@@ -204,6 +204,11 @@ trait DiscordProtocol {
   implicit val messageApplicationDecoder: Decoder[MessageApplication] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
+  implicit val partialRawGuildMemberEncoder: Encoder[PartialRawGuildMember] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val partialRawGuildMemberDecoder: Decoder[PartialRawGuildMember] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
+
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
       "id"               -> a.id.asJson,
@@ -237,7 +242,9 @@ trait DiscordProtocol {
     for {
       id              <- c.get[MessageId]("id")
       channelId       <- c.get[ChannelId]("channel_id")
+      guildId         <- c.get[Option[GuildId]]("guild_id")
       author          <- if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")
+      member          <- c.get[Option[PartialRawGuildMember]]("member")
       content         <- c.get[String]("content")
       timestamp       <- c.get[OffsetDateTime]("timestamp")
       editedTimestamp <- c.get[Option[OffsetDateTime]]("edited_timestamp")
@@ -257,7 +264,9 @@ trait DiscordProtocol {
       RawMessage(
         id,
         channelId,
+        guildId,
         author,
+        member,
         content,
         timestamp,
         editedTimestamp,

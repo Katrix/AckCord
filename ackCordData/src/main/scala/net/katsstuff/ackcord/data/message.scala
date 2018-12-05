@@ -229,8 +229,10 @@ case class MessageApplication(id: RawSnowflake, coverImage: String, description:
   * A message sent to a channel.
   * @param id The id of the message.
   * @param channelId The channel this message was sent to.
+  * @param guildId The guild this message was sent to. Can me missing.
   * @param authorId The id of the author that sent this message.
   * @param isAuthorUser If the author of this message was a user.
+  * @param member The guild member user that sent this message. Can be missing.
   * @param content The content of this message.
   * @param timestamp The timestamp this message was created.
   * @param editedTimestamp The timestamp this message was last edited.
@@ -248,8 +250,10 @@ case class MessageApplication(id: RawSnowflake, coverImage: String, description:
 case class Message(
     id: MessageId,
     channelId: ChannelId,
+    guildId: Option[GuildId],
     authorId: RawSnowflake,
     isAuthorUser: Boolean,
+    member: Option[GuildMember],
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -362,10 +366,10 @@ case class ReceivedEmbed(
     timestamp = timestamp,
     color = color,
     footer = footer.map(_.toOutgoing),
-    image = image.map(_.toOutgoing),
-    video = video.map(_.toOutgoing),
-    thumbnail = thumbnail.map(_.toOutgoing),
-    author = author.map(_.toOutgoing),
+    image = image.flatMap(_.toOutgoing),
+    video = video.flatMap(_.toOutgoing),
+    thumbnail = thumbnail.flatMap(_.toOutgoing),
+    author = author.flatMap(_.toOutgoing),
     fields = fields.getOrElse(Seq.empty)
   )
 }
@@ -377,9 +381,14 @@ case class ReceivedEmbed(
   * @param height The height of the thumbnail.
   * @param width The width of the thumbnail.
   */
-case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, width: Int) {
+case class ReceivedEmbedThumbnail(
+    url: Option[String],
+    proxyUrl: Option[String],
+    height: Option[Int],
+    width: Option[Int]
+) {
 
-  def toOutgoing: OutgoingEmbedThumbnail = OutgoingEmbedThumbnail(url)
+  def toOutgoing: Option[OutgoingEmbedThumbnail] = url.map(OutgoingEmbedThumbnail)
 }
 
 /**
@@ -388,8 +397,8 @@ case class ReceivedEmbedThumbnail(url: String, proxyUrl: String, height: Int, wi
   * @param height The height of the video.
   * @param width The width of the video.
   */
-case class ReceivedEmbedVideo(url: String, height: Int, width: Int) {
-  def toOutgoing: OutgoingEmbedVideo = OutgoingEmbedVideo(url)
+case class ReceivedEmbedVideo(url: Option[String], height: Option[Int], width: Option[Int]) {
+  def toOutgoing: Option[OutgoingEmbedVideo] = url.map(OutgoingEmbedVideo)
 }
 
 /**
@@ -399,8 +408,8 @@ case class ReceivedEmbedVideo(url: String, height: Int, width: Int) {
   * @param height The height of the image.
   * @param width The width of the image.
   */
-case class ReceivedEmbedImage(url: String, proxyUrl: String, height: Int, width: Int) {
-  def toOutgoing: OutgoingEmbedImage = OutgoingEmbedImage(url)
+case class ReceivedEmbedImage(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+  def toOutgoing: Option[OutgoingEmbedImage] = url.map(OutgoingEmbedImage)
 }
 
 /**
@@ -408,7 +417,7 @@ case class ReceivedEmbedImage(url: String, proxyUrl: String, height: Int, width:
   * @param name The name of the provider.
   * @param url The url of a provider.
   */
-case class ReceivedEmbedProvider(name: String, url: Option[String]) //url can be null
+case class ReceivedEmbedProvider(name: Option[String], url: Option[String])
 
 /**
   * The author part of a received embed.
@@ -418,13 +427,13 @@ case class ReceivedEmbedProvider(name: String, url: Option[String]) //url can be
   * @param proxyIconUrl A proxy url for the icon.
   */
 case class ReceivedEmbedAuthor(
-    name: String,
+    name: Option[String],
     url: Option[String],
     iconUrl: Option[String],
     proxyIconUrl: Option[String]
 ) {
 
-  def toOutgoing: OutgoingEmbedAuthor = OutgoingEmbedAuthor(name, url, iconUrl)
+  def toOutgoing: Option[OutgoingEmbedAuthor] = name.map(n => OutgoingEmbedAuthor(n, url, iconUrl))
 }
 
 /**

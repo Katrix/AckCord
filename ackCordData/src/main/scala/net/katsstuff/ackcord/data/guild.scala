@@ -210,7 +210,7 @@ case class Guild(
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
-    afkChannelId: Option[ChannelId], //AfkChannelId can be null
+    afkChannelId: Option[ChannelId],
     afkTimeout: Int,
     embedEnabled: Option[Boolean],
     embedChannelId: Option[ChannelId],

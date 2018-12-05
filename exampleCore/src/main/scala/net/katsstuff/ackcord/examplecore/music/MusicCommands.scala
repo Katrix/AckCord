@@ -54,7 +54,7 @@ class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: Act
         channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
         _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
           OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
-            case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _)) =>
+            case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _, _)) =>
               (musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None)
             case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
           })

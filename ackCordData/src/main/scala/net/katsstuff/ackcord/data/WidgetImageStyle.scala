@@ -21,21 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package net.katsstuff.ackcord.cachehandlers
+package net.katsstuff.ackcord.data
 
-import akka.event.LoggingAdapter
-import net.katsstuff.ackcord.CacheSnapshot.BotUser
-import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
-import shapeless._
-
-//We handle this one separately as is it's kind of special
-object ReadyHandler extends CacheHandler[ReadyData] {
-  override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
-    val ReadyData(_, botUser, unavailableGuilds, _, _) = obj
-
-    val guilds = unavailableGuilds.map(g => g.id -> g)
-
-    builder.botUser = tag[BotUser](botUser)
-    builder.unavailableGuildMap ++= guilds
-  }
+/**
+  * A style the widget image might be shown as.
+  * See examples here. https://discordapp.com/developers/docs/resources/guild#get-guild-widget-image
+  */
+sealed trait WidgetImageStyle {
+  def name: String
+}
+object WidgetImageStyle {
+  case object Shield  extends WidgetImageStyle { def name = "shield"  }
+  case object Banner1 extends WidgetImageStyle { def name = "banner1" }
+  case object Banner2 extends WidgetImageStyle { def name = "banner2" }
+  case object Banner3 extends WidgetImageStyle { def name = "banner3" }
+  case object Banner4 extends WidgetImageStyle { def name = "banner4" }
 }

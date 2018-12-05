@@ -30,8 +30,16 @@ import java.time.OffsetDateTime
   * @param code An invite code.
   * @param guild The guild the invite is for.
   * @param channel The channel the invite is for.
+  * @param approximatePresenceCount Approximate amount of people online.
+  * @param approximateMemberCount Approximate amount of total members.
   */
-case class Invite(code: String, guild: InviteGuild, channel: InviteChannel)
+case class Invite(
+    code: String,
+    guild: InviteGuild,
+    channel: InviteChannel,
+    approximatePresenceCount: Option[Int],
+    approximateMemberCount: Option[Int]
+)
 
 /**
   * An invite with extra information.

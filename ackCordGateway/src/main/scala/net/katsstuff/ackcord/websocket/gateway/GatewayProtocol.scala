@@ -26,9 +26,9 @@ package net.katsstuff.ackcord.websocket.gateway
 import java.time.OffsetDateTime
 
 import cats.Later
+import cats.syntax.either._
 import io.circe._
 import io.circe.derivation
-import io.circe.shapes._
 import io.circe.syntax._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
@@ -90,8 +90,18 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = (a: RequestGuildMembersData) =>
+    Json.obj(
+      "guild_id" -> a.guildId.fold(_.asJson, _.asJson),
+      "query"    -> a.query.asJson,
+      "limit"    -> a.limit.asJson
+  )
+  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
+    for {
+      guildId <- c.get[GuildId]("guild_id").map(Right.apply).orElse(c.get[Seq[GuildId]]("guild_id").map(Left.apply))
+      query   <- c.get[String]("query")
+      limit   <- c.get[Int]("limit")
+    } yield RequestGuildMembersData(guildId, query, limit)
 
   implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val helloDataDecoder: Decoder[HelloData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -121,6 +131,9 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit val webhookUpdateDataEncoder: Encoder[GatewayEvent.WebhookUpdateData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val webhookUpdateDataDecoder: Decoder[GatewayEvent.WebhookUpdateData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val userWithGuildIdEncoder: Encoder[GatewayEvent.UserWithGuildId] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val userWithGuildIdDecoder: Decoder[GatewayEvent.UserWithGuildId] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
