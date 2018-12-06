@@ -21,6 +21,11 @@ libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "{{version
 
 From there on you go with the API you have decided to use.
 
+## Should I use the low level or high level API?
+It depends on your knowledge with Scala and Akka. If you know what Akka Streams is, and have no problem using it, then I'd say go for the low level API. If you're familiar with other stream libraries, you might also want to try the low level API. Lastly, if you want to use AckCord the way it was meant to be used, and don't mind reading up on the documentation for Akka, then again go with the low level API. If none of those apply to you, then go with the high level API.
+
+## The simplest bot
+
 Most of these examples assume these two imports.
 ```tut:silent
 import net.katsstuff.ackcord._
@@ -58,9 +63,18 @@ futureClient.foreach { client =>
 
 ## Logging in from the low level API
 
-For the low level API, you need to do most of the setup yourself. That includes creating the actor system, a stream materializer, the cache and the request helper.
+```tut:reset:invisible
+import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.data._
+import cats.Id
 
-```tut
+val token = "<token>"
+```
+
+When working with the low level API, you're the one responsible for setting stuff up, and knowing how it works.
+
+First we need an actor system and materializer.
+```tut:silent
 import akka.actor.{ActorSystem, ActorRef}
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Sink
@@ -68,16 +82,24 @@ import akka.stream.scaladsl.Sink
 implicit val system: ActorSystem  = ActorSystem("AckCord")
 //I'd recommend using a supplying a custom supervision to log exceptions here
 implicit val mat: Materializer = ActorMaterializer()
-//import system.dispatcher We use the ExecutionContext imported above for this example too
+import system.dispatcher
+```
 
-val cache = Cache.create //The Cache keeps track of all the state, and provides a way to listen to changes in that state
-val requests = RequestHelper.create(BotAuthentication(token)) //The RequestHelper allows us to make REST requests to Discord
+Next we create the `Cache`, and the `RequestHelper`. The `Cache` helps you know when stuff happens, and keeps around the changes from old things that have happened. The `RequestHelper` helps you make stuff happen. I'd recommend looking into the settings used when creating both the `Cache` and `RequestHelper` if you want to fine tune your bot.
+```tut
+val cache = Cache.create
+val requests = RequestHelper.create(BotAuthentication(token))
+```
 
-//In the low level API, the events are represented as a Source you can materialize as many times you want.
+Now that we have all the pieces we want, we can create our event listener. In the low level API, events are represented as a `Source` you can materialize as many times as you want.
+```tut:silent
 cache.subscribeAPI.collect {
   case APIMessage.Ready(c) => c
 }.to(Sink.foreach(_ => println("Now ready"))).run()
+```
 
+Finally we can create our `GatewaySettings` and start the shard.
+```tut
 val gatewaySettings = GatewaySettings(token)
 DiscordShard.fetchWsGateway.foreach { wsUri =>
  val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, actorName = "DiscordShard")

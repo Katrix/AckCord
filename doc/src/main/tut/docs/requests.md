@@ -4,7 +4,7 @@ title: Making Requests
 ---
 
 # {{page.title}}
-What use is a Discord library if you can't make REST requests? There are two parts to this, creating a request, and running it. Both have many ways to do things.
+What use is a Discord library if you can't make REST requests? There are two parts to this, creating a request, and running it. Both have many ways to do things. In AckCord, you don't do request by calling methods. Instead you first create a request object which describes everything about your request. The headers to use, the body to use. The uri to make the request to, and son on.
 
 ## Creating a request
 First we need a request object to send. There are two main ways to get such a request object. The first one is to create `Request` objects with requests from the `net.katsstuff.ackcord.http.rest` and `net.katsstuff.ackcord.http.images` packages manually. The second is to import `net.katsstuff.ackcord.syntax._` and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.
@@ -12,13 +12,13 @@ First we need a request object to send. There are two main ways to get such a re
 ## Running the request
 To run requests you would either use a `RequestHelper`, or a `RequestRunner`. 
 
-`RequestHelper` is normally used in low level API where you want to model your behavior as a stream. Here you represent your requests as a `Source`, and the act of sending them as a `Flow` found in `RequestHelper`. You have to create the `RequestHelper` yourself.
+`RequestHelper` is normally used in low level API where you want to model your behavior as a stream. Here you represent your requests as a `Source`, and the act of sending them as a `Flow` found in `RequestHelper`. You then get a source of response objects. You have to create the `RequestHelper` yourself.
 
-`RequestRunner` helps you use `RequestHelper` from higher level code. While you're still dealing with `Source`s, you can put all your code in a for comprehensions. Sometimes there are dedicated versions of methods for using a `RequestRunner`.
+`RequestRunner` helps you use `RequestHelper` from higher level code. While you're still dealing with `Source`s. Generally you just put all your code in a for comprehensions. Sometimes there are dedicated versions of methods for using a `RequestRunner`.
 
 ## Example
 
-```tut
+```tut:silent
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._

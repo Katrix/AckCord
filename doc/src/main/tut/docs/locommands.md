@@ -34,11 +34,14 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 ```
 
 ## The Commands object
-Just like the job of the `Cache` object is to keep track of the current events, and the state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
+Just like the job of the `Cache` object is to keep track of the current events and state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
 ```tut
 val GeneralCommands = "!"
 val commands = CoreCommands.create(CommandSettings[Id](prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
+```
 
+Let's create a raw command, using the `Source` found the the `Commands` object.
+```tut
 def rawCommandEcho[F[_]: Monad: Streamable] = Flow[RawCmdMessage[F]].collect {
   case RawCmd(msg, GeneralCommands, "echo", args, c) =>
     implicit val cache: CacheSnapshot[F] = c

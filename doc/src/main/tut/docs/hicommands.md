@@ -4,13 +4,12 @@ title: High level API commands
 ---
 
 # {{page.title}}
-
 The high level AckCord API comes with built in command support. Before reading this, make sure you understand the shared command concepts.
 
 In the high level API you can either just listen to the raw command events, or you can register a parsed command.
 
 As before we create out client as usual, but with a small twist. This time we also pass in command settings to our client settings, which is where we specify our categories. We also import the commands package.
-```tut
+```tut:silent
 import akka.NotUsed
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
@@ -19,6 +18,8 @@ import net.katsstuff.ackcord.commands._
 import cats.{Monad, Id}
 val token = "<token>"
 val GeneralCommands = "!"
+// IMPORTANT: We specify needsMention = true here. This is the default option.
+// If you don't want to require a mention, turn this off.
 val settings = ClientSettings(token, commandSettings = CommandSettings(prefixes = Set(GeneralCommands), needsMention = true))
 import settings.executionContext
 
@@ -63,6 +64,10 @@ def registerRawCommand[F[_]: Monad: Streamable](client: DiscordClient[F], comman
   }
 }
 
+```
+
+Here we create the new commands helper. Note that `?` is the only valid prefix here. `!` would not be valid.
+```tut
 futureClient.foreach { client =>
   val (shutdown, newHelper) = client.newCommandsHelper(CommandSettings(prefixes = Set(TestCommands), needsMention = true))
   registerRawCommand(client, newHelper)
