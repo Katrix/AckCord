@@ -22,12 +22,15 @@
  * SOFTWARE.
  */
 package net.katsstuff.ackcord.data
+import net.katsstuff.ackcord.data.raw.RawGuildMember
 
 /**
   * Represents a user voice connection status
+  *
   * @param guildId The guild this state belongs to
-  * @param channelId The channel the user is in, or None if the user isn't in a channel
+  * @param channelId The channel the user is in, or None if the user isn't in a channel.
   * @param userId The user of this state.
+  * @param member The guild member of this voice state. Can be missing.
   * @param sessionId The sessionId
   * @param deaf If the user is deafened by the guild
   * @param mute If the user is muted by the guild
@@ -37,8 +40,9 @@ package net.katsstuff.ackcord.data
   */
 case class VoiceState(
     guildId: Option[GuildId],
-    channelId: Option[ChannelId], //channelId can be null
+    channelId: Option[ChannelId],
     userId: UserId,
+    member: Option[RawGuildMember],
     sessionId: String,
     deaf: Boolean,
     mute: Boolean,

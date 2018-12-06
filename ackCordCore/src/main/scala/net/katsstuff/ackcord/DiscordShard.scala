@@ -36,7 +36,7 @@ import akka.stream.scaladsl.Source
 import akka.stream.{Materializer, ThrottleMode}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
-import net.katsstuff.ackcord.DiscordShard.CreateGateway
+import net.katsstuff.ackcord.DiscordShard.{CreateGateway, RestartShard}
 import net.katsstuff.ackcord.http.Routes
 
 /**
@@ -54,32 +54,42 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
+  private var isRestarting   = false
 
   context.watch(gatewayHandler)
 
-  //If we fail more than 5 time in 3 minutes we want to wait to restart the gateway handler
-  override def supervisorStrategy: SupervisorStrategy =
-    OneForOneStrategy(5, 3.minutes)(SupervisorStrategy.defaultDecider)
+  //We start the actor again manually. The actor itself is responsible for retrying
+  override def supervisorStrategy: SupervisorStrategy = SupervisorStrategy.stoppingStrategy
 
   override def receive: Receive = {
     case DiscordShard.StopShard =>
       isShuttingDown = true
       gatewayHandler.forward(Logout)
+
     case DiscordShard.StartShard =>
       gatewayHandler.forward(Login)
+
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
       if (shutdownCount == 1) {
         context.stop(self)
       }
+
     case Terminated(ref) =>
       if (ref == gatewayHandler) {
-        log.info("Gateway handler shut down. Restarting in 5 minutes")
-        timers.startSingleTimer("RestartGateway", CreateGateway, 5.minutes)
+        val restartTime = if (isRestarting) 1.second else 5.minutes
+        log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else "5 minutes"}")
+        timers.startSingleTimer("RestartGateway", CreateGateway, restartTime)
       }
+
     case CreateGateway =>
       gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log), "GatewayHandler")
+      gatewayHandler ! Login
+
+    case RestartShard =>
+      isRestarting = true
+      gatewayHandler.forward(Logout)
   }
 }
 object DiscordShard extends FailFastCirceSupport {
@@ -143,6 +153,11 @@ object DiscordShard extends FailFastCirceSupport {
   private case object CreateGateway
 
   /**
+    * Send this to log out and log in again this shard.
+    */
+  case object RestartShard
+
+  /**
     * Fetch the websocket gateway.
     * @param system The actor system to use.
     * @param mat The materializer to use.
@@ -198,9 +213,15 @@ object DiscordShard extends FailFastCirceSupport {
           )
       }
       .flatMap { json =>
+        val c          = json.hcursor
+        val startLimit = c.downField("session_start_limit")
         val res = for {
-          gateway <- json.hcursor.get[String]("url")
-          shards  <- json.hcursor.get[Int]("shards")
+          gateway <- c.get[String]("url")
+          shards  <- c.get[Int]("shards")
+          // TODO: Use these
+          total      <- startLimit.get[Int]("total")
+          remaining  <- startLimit.get[Int]("remaining")
+          resetAfter <- startLimit.get[Int]("reset_after")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
           (gateway: Uri, shards)

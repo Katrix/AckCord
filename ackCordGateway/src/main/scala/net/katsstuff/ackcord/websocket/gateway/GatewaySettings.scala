@@ -42,7 +42,7 @@ import net.katsstuff.ackcord.data.raw.RawActivity
   */
 case class GatewaySettings(
     token: String,
-    largeThreshold: Int = 100,
+    largeThreshold: Int = 50,
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,

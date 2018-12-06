@@ -33,8 +33,6 @@ import net.katsstuff.ackcord.data.raw._
 import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import net.katsstuff.ackcord.websocket.WsMessage
 import net.katsstuff.ackcord.websocket.gateway.GatewayProtocol._
-import shapeless._
-import shapeless.labelled.FieldType
 
 /**
   * Base trait for all gateway messages.
@@ -173,12 +171,12 @@ case object Reconnect extends EagerGatewayMessage[NotUsed] {
 }
 
 /**
-  * @param guildId The guildId to request for.
+  * @param guildId The guildId(s) to request for.
   * @param query Return all the users where their username start with this.
   *              or an empty string for all users.
   * @param limit The amount of users to send, or 0 for all users.
   */
-case class RequestGuildMembersData(guildId: GuildId, query: String = "", limit: Int = 0)
+case class RequestGuildMembersData(guildId: Either[Seq[GuildId], GuildId], query: String = "", limit: Int = 0)
 
 /**
   * Sent by the shard to receive all the members of a guild, even logged out ones.
@@ -293,14 +291,12 @@ object GatewayEvent {
   /**
     * @param v The API version used.
     * @param user The client user.
-    * @param privateChannels The DM channels for this shard.
     * @param guilds The guilds for this shard. Not available at first.
     * @param sessionId The session id.
     */
   case class ReadyData(
       v: Int,
       user: User,
-      privateChannels: Seq[RawChannel],
       guilds: Seq[UnavailableGuild],
       sessionId: String,
       _trace: Seq[String]
@@ -439,13 +435,7 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.id)
   }
 
-  //This must be public because the guild user type is public. Please don't use it for anything
-  val userGen = LabelledGeneric[User]
-
-  /**
-    * A record type for a user together with a [[net.katsstuff.ackcord.data.GuildId]].
-    */
-  type GuildUser = FieldType[Witness.`'guildId`.T, GuildId] :: userGen.Repr
+  case class UserWithGuildId(guildId: GuildId, user: User)
 
   /**
     * Base trait for all complex events that include an optional guild.
@@ -458,20 +448,20 @@ object GatewayEvent {
     * Sent to the shard when an user is banned from a guild.
     * @param data The banned user with a guildId of what guild the user was banned from.
     */
-  case class GuildBanAdd(data: Later[Decoder.Result[GuildUser]])
-      extends ComplexGuildEvent[GuildUser, (GuildId, RawBan)] {
+  case class GuildBanAdd(data: Later[Decoder.Result[UserWithGuildId]])
+      extends ComplexGuildEvent[UserWithGuildId, (GuildId, RawBan)] {
     override def name: String                           = "GUILD_BAN_ADD"
-    override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.head)
+    override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
   /**
     * Sent to the shard when an user is unbanned from a guild.
     * @param data The unbanned user with a guildId of what guild the user was unbanned from.
     */
-  case class GuildBanRemove(data: Later[Decoder.Result[GuildUser]])
-      extends ComplexGuildEvent[GuildUser, (GuildId, User)] {
+  case class GuildBanRemove(data: Later[Decoder.Result[UserWithGuildId]])
+      extends ComplexGuildEvent[UserWithGuildId, (GuildId, User)] {
     override def name: String                           = "GUILD_BAN_REMOVE"
-    override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.head)
+    override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
   /**
@@ -664,77 +654,98 @@ object GatewayEvent {
   /**
     * @param id The deleted message.
     * @param channelId The channel of the message.
+    * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageDeleteData(id: MessageId, channelId: ChannelId)
+  case class MessageDeleteData(id: MessageId, channelId: ChannelId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when a message is deleted.
     */
-  case class MessageDelete(data: Later[Decoder.Result[MessageDeleteData]]) extends ChannelEvent[MessageDeleteData] {
+  case class MessageDelete(data: Later[Decoder.Result[MessageDeleteData]])
+      extends ChannelEvent[MessageDeleteData]
+      with OptGuildEvent[MessageDeleteData] {
     override def name: String = "MESSAGE_DELETE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
     * @param ids The deleted messages.
     * @param channelId The channel of the deleted messages.
+    * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId)
+  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when multiple messages are deleted at the same time.
     * Often this is performed by a bot.
     */
   case class MessageDeleteBulk(data: Later[Decoder.Result[MessageDeleteBulkData]])
-      extends ChannelEvent[MessageDeleteBulkData] {
+      extends ChannelEvent[MessageDeleteBulkData]
+      with OptGuildEvent[MessageDeleteBulkData] {
     override def name: String = "MESSAGE_DELETE_BULK"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
     * @param userId The user that caused the reaction change.
     * @param channelId The channel of the message.
     * @param messageId The message the reaction belonged to.
+    * @param guildId The guild this was done in. Can be missing.
     * @param emoji The emoji the user reacted with.
     */
-  case class MessageReactionData(userId: UserId, channelId: ChannelId, messageId: MessageId, emoji: PartialEmoji)
+  case class MessageReactionData(
+      userId: UserId,
+      channelId: ChannelId,
+      messageId: MessageId,
+      guildId: Option[GuildId],
+      emoji: PartialEmoji
+  )
 
   /**
     * Sent to the shard when a user adds a reaction to a message.
     */
   case class MessageReactionAdd(data: Later[Decoder.Result[MessageReactionData]])
-      extends ChannelEvent[MessageReactionData] {
+      extends ChannelEvent[MessageReactionData]
+      with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_ADD"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
     * Sent to the shard when a user removes a reaction from a message.
     */
   case class MessageReactionRemove(data: Later[Decoder.Result[MessageReactionData]])
-      extends ChannelEvent[MessageReactionData] {
+      extends ChannelEvent[MessageReactionData]
+      with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_REMOVE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
     * @param channelId The channel of the message.
     * @param messageId The message the user removed the reactions from.
+    * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId)
+  case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when a user removes all reactions from a message.
     */
   case class MessageReactionRemoveAll(data: Later[Decoder.Result[MessageReactionRemoveAllData]])
-      extends ChannelEvent[MessageReactionRemoveAllData] {
+      extends ChannelEvent[MessageReactionRemoveAllData]
+      with OptGuildEvent[MessageReactionRemoveAllData] {
     override def name: String = "MESSAGE_REACTION_REMOVE_ALL"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -743,13 +754,15 @@ object GatewayEvent {
     * @param game The new presence message.
     * @param guildId The guild where the update took place.
     * @param status The new status.
+    * @param activities The current activites of the user.
     */
   case class PresenceUpdateData(
       user: PartialUser,
       roles: Seq[RoleId],
       game: Option[RawActivity],
       guildId: GuildId,
-      status: PresenceStatus
+      status: PresenceStatus,
+      activities: Seq[RawActivity]
   )
 
   /**
@@ -763,10 +776,11 @@ object GatewayEvent {
 
   /**
     * @param channelId The channel where the typing happened.
+    * @param guildId The guild id of where the typing happened.
     * @param userId The user that began typing.
     * @param timestamp When user started typing.
     */
-  case class TypingStartData(channelId: ChannelId, userId: UserId, timestamp: Instant)
+  case class TypingStartData(channelId: ChannelId, guildId: Option[GuildId], userId: UserId, timestamp: Instant)
 
   /**
     * Sent to the shard when a user starts typing in a channel.

@@ -101,8 +101,11 @@ object MyBot extends App {
       AudioSourceManagers.registerRemoteSources(playerManager)
 
       client.registerCmd[String, Id](
-        refiner =
-          CmdInfo[Id](prefix = MusicCommands, aliases = Seq("queue"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
+        refiner = CmdInfo[Id](
+          prefix = MusicCommands,
+          aliases = Seq("queue"),
+          filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
+        ),
         description = Some(CmdDescription("Queue", "Queue a track"))
       ) {
         client.withCache[Id, ParsedCmd[Id, String]] { implicit c => cmd =>

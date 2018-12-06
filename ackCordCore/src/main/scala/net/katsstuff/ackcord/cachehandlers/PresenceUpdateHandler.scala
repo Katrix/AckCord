@@ -29,7 +29,7 @@ import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.PresenceUpdateData
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
-    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status) = obj
+    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _) = obj
 
     builder.guildMap.get(guildId).foreach { oldGuild =>
       //Add the user

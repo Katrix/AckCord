@@ -170,6 +170,10 @@ sealed trait GuildChannel extends Channel with GetGuild {
 
 /**
   * A text channel in a guild
+  *
+  * @param rateLimitPerUser The amount of time a user has to wait before
+  *                         sending messages after each other. Bots are not
+  *                         affected.
   */
 case class TGuildChannel(
     id: ChannelId,
@@ -179,6 +183,7 @@ case class TGuildChannel(
     permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
+    rateLimitPerUser: Option[Int],
     nsfw: Boolean,
     parentId: Option[ChannelId],
     lastPinTimestamp: Option[OffsetDateTime]

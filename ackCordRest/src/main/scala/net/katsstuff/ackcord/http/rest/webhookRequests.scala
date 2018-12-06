@@ -38,7 +38,7 @@ import net.katsstuff.ackcord.data.DiscordProtocol._
   * @param name Name of the webhook
   * @param avatar The avatar data of the webhook
   */
-case class CreateWebhookData(name: String, avatar: ImageData) {
+case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
   require(name.length >= 2 && name.length <= 32, "Webhook name must be between 2 and 32 characters")
 }
 

@@ -183,8 +183,21 @@ object RawHandlers extends Handlers {
     builder.messageMap.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, message)
     handleUpdateLog(builder, users, log)
     obj.author match {
-      case user: User => handleUpdateLog(builder, user, log)
-      case _          => //Ignore
+      case user: User =>
+        handleUpdateLog(builder, user, log)
+        obj.member.foreach { rawMember =>
+          val rawMemberWithGuild = RawGuildMemberWithGuild(
+            obj.guildId.get,
+            user,
+            rawMember.nick,
+            rawMember.roles,
+            rawMember.joinedAt,
+            rawMember.deaf,
+            rawMember.mute
+          )
+          handleUpdateLog(builder, rawMemberWithGuild, log)
+        }
+      case _ => //Ignore
     }
   }
 
@@ -223,7 +236,7 @@ object RawHandlers extends Handlers {
   implicit val rawMessageReactionUpdateHandler: CacheUpdateHandler[MessageReactionData] = updateHandler {
     (builder, obj, _) =>
       builder.getMessage(obj.channelId, obj.messageId).value.foreach { message =>
-        if(message.reactions.exists(_.emoji == obj.emoji)) {
+        if (message.reactions.exists(_.emoji == obj.emoji)) {
           val (toChange, toNotChange) = message.reactions.partition(_.emoji == obj.emoji)
           val changed = toChange.map { emoji =>
             val isMe = if (builder.botUser.id == obj.userId) true else emoji.me
@@ -232,9 +245,8 @@ object RawHandlers extends Handlers {
 
           val newMessage = message.copy(reactions = toNotChange ++ changed)
           builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
-        }
-        else {
-          val isMe = builder.botUser.id == obj.userId
+        } else {
+          val isMe       = builder.botUser.id == obj.userId
           val newMessage = message.copy(reactions = Reaction(1, isMe, obj.emoji) +: message.reactions)
           builder.getChannelMessages(obj.channelId).put(obj.messageId, newMessage)
         }
@@ -295,12 +307,12 @@ object RawHandlers extends Handlers {
   }
 
   implicit val rawMessageDeleteHandler: CacheDeleteHandler[MessageDeleteData] = deleteHandler {
-    case (builder, MessageDeleteData(id, channelId), _) =>
+    case (builder, MessageDeleteData(id, channelId, _), _) =>
       builder.messageMap.get(channelId).foreach(_.remove(id))
   }
 
   implicit val rawMessageDeleteBulkHandler: CacheDeleteHandler[MessageDeleteBulkData] = deleteHandler {
-    case (builder, MessageDeleteBulkData(ids, channelId), _) =>
+    case (builder, MessageDeleteBulkData(ids, channelId, _), _) =>
       builder.messageMap.get(channelId).foreach(_ --= ids)
   }
 
@@ -325,8 +337,8 @@ object RawHandlers extends Handlers {
       }
   }
 
-  implicit val rawBanDeleteHandler: CacheDeleteHandler[(GuildId, User)] = deleteHandler {
-    case (builder, (guildId, user), log) =>
+  implicit val rawBanDeleteHandler: CacheDeleteHandler[UserWithGuildId] = deleteHandler {
+    case (builder, UserWithGuildId(guildId, user), log) =>
       builder.banMap.get(guildId).foreach(_.remove(user.id))
       handleUpdateLog(builder, user, log)
   }

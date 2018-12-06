@@ -43,14 +43,12 @@ object CacheStreams {
       implicit system: ActorSystem,
       mat: Materializer
   ): (Sink[CacheUpdate[D], NotUsed], Source[(CacheUpdate[D], CacheState), NotUsed]) = {
-    val (sink, source) = MergeHub
+    MergeHub
       .source[CacheUpdate[D]](perProducerBufferSize = 16)
       .via(cacheUpdater[D])
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
       .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
       .run()
-
-    (sink, source)
   }
 
   /**

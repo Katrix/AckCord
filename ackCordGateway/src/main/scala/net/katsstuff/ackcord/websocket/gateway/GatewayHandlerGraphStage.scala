@@ -61,7 +61,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
     val promise = Promise[Option[ResumeData]]
 
     val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
-      var resume: ResumeData = _
+      var resume: ResumeData = prevResume.orNull
       var receivedAck        = false
       var restarting         = false
 
@@ -76,9 +76,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       def handleHello(data: HelloData): Unit = {
         val response = prevResume match {
-          case Some(resumeData) =>
-            resume = resumeData
-            Resume(resumeData)
+          case Some(resumeData) => Resume(resumeData)
           case None =>
             val identifyObject = IdentifyData(
               token = settings.token,

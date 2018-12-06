@@ -60,9 +60,10 @@ object RequestRunner {
         streamable.toSource(request.hasPermissions).flatMapConcat {
           case false => Source.failed(new RequestPermissionException(request))
           //case true  => requests.retry(request).map(_.data) //FIXME: Retry is broken
-          case true  => requests.single(request).collect {
-            case RequestResponse(data, _, _, _, _, _, _) => data
-          }
+          case true =>
+            requests.single(request).collect {
+              case RequestResponse(data, _, _, _, _, _, _) => data
+            }
         }
 
       override def fromSource[A](source: Source[A, NotUsed]): SourceRequest[A] = source

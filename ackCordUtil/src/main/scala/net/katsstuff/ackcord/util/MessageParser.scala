@@ -304,15 +304,15 @@ trait MessageParserInstances {
       else EitherT.leftT[F, (List[String], NotUsed)](s"Found dangling arguments: ${strings.mkString(", ")}")
   }
 
-  implicit def optionParser[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] = new MessageParser[Option[A]] {
-    override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Option[A])] = {
-      parser.parse(strings).map(t => t._1 -> (Some(t._2): Option[A])).recover {
-        case _ => strings -> None
-      }
+  implicit def optionParser[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
+    new MessageParser[Option[A]] {
+      override def parse[F[_]](
+          strings: List[String]
+      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Option[A])] =
+        parser.parse(strings).map(t => t._1 -> (Some(t._2): Option[A])).recover {
+          case _ => strings -> None
+        }
     }
-  }
 }
 
 trait DeriveMessageParser {

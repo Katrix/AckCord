@@ -105,7 +105,6 @@ class GatewaySpec
                 verified = None,
                 email = None
               ),
-              privateChannels = Seq.empty,
               guilds = Seq.empty,
               sessionId = sessionId,
               _trace = Seq.empty

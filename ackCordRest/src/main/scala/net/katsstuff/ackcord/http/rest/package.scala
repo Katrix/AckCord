@@ -39,7 +39,8 @@ package object rest {
     * @param c The cache
     */
   def hasPermissionsGuild[F[_]](guildId: GuildId, permissions: Permission)(
-      implicit c: CacheSnapshot[F], F: Monad[F]
+      implicit c: CacheSnapshot[F],
+      F: Monad[F]
   ): F[Boolean] = {
     val res = for {
       guild         <- c.getGuild(guildId)
@@ -57,7 +58,8 @@ package object rest {
     * @param c The cache
     */
   def hasPermissionsChannel[F[_]](channelId: ChannelId, permissions: Permission)(
-      implicit c: CacheSnapshot[F], F: Monad[F]
+      implicit c: CacheSnapshot[F],
+      F: Monad[F]
   ): F[Boolean] = {
     val opt = for {
       gChannel      <- c.getGuildChannel(channelId)

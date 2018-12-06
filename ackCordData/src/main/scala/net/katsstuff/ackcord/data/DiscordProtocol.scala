@@ -106,14 +106,18 @@ trait DiscordProtocol {
   implicit val rawActivityEncoder: Encoder[RawActivity] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawActivityDecoder: Decoder[RawActivity] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val activityTimestampsEncoder: Encoder[ActivityTimestamps] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val activityTimestampsDecoder: Decoder[ActivityTimestamps] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val activityTimestampsEncoder: Encoder[ActivityTimestamps] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val activityTimestampsDecoder: Decoder[ActivityTimestamps] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val activityAssetEncoder: Encoder[ActivityAsset] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val activityAssetDecoder: Decoder[ActivityAsset] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val rawActivityPartyEncoder: Encoder[RawActivityParty] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val rawActivityPartyDecoder: Decoder[RawActivityParty] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val rawActivityPartyEncoder: Encoder[RawActivityParty] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val rawActivityPartyDecoder: Decoder[RawActivityParty] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val rawPresenceEncoder: Encoder[RawPresence] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawPresenceDecoder: Decoder[RawPresence] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -149,41 +153,63 @@ trait DiscordProtocol {
   implicit val embedFieldEncoder: Encoder[EmbedField] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val embedFieldDecoder: Decoder[EmbedField] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedFooterEncoder: Encoder[ReceivedEmbedFooter] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedFooterDecoder: Decoder[ReceivedEmbedFooter] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedFooterEncoder: Encoder[ReceivedEmbedFooter] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedFooterDecoder: Decoder[ReceivedEmbedFooter] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedImageEncoder: Encoder[ReceivedEmbedImage] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedImageDecoder: Decoder[ReceivedEmbedImage] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedImageEncoder: Encoder[ReceivedEmbedImage] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedImageDecoder: Decoder[ReceivedEmbedImage] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedThumbnailEncoder: Encoder[ReceivedEmbedThumbnail] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedThumbnailDecoder: Decoder[ReceivedEmbedThumbnail] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedThumbnailEncoder: Encoder[ReceivedEmbedThumbnail] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedThumbnailDecoder: Decoder[ReceivedEmbedThumbnail] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedVideoEncoder: Encoder[ReceivedEmbedVideo] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedVideoDecoder: Decoder[ReceivedEmbedVideo] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedVideoEncoder: Encoder[ReceivedEmbedVideo] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedVideoDecoder: Decoder[ReceivedEmbedVideo] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedProviderEncoder: Encoder[ReceivedEmbedProvider] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedProviderDecoder: Decoder[ReceivedEmbedProvider] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedProviderEncoder: Encoder[ReceivedEmbedProvider] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedProviderDecoder: Decoder[ReceivedEmbedProvider] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val receivedEmbedAuthorEncoder: Encoder[ReceivedEmbedAuthor] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val receivedEmbedAuthorDecoder: Decoder[ReceivedEmbedAuthor] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedAuthorEncoder: Encoder[ReceivedEmbedAuthor] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val receivedEmbedAuthorDecoder: Decoder[ReceivedEmbedAuthor] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val receivedEmbedEncoder: Encoder[ReceivedEmbed] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val receivedEmbedDecoder: Decoder[ReceivedEmbed] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val outgoingEmbedFooterEncoder: Encoder[OutgoingEmbedFooter] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val outgoingEmbedFooterDecoder: Decoder[OutgoingEmbedFooter] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedFooterEncoder: Encoder[OutgoingEmbedFooter] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedFooterDecoder: Decoder[OutgoingEmbedFooter] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val outgoingEmbedImageEncoder: Encoder[OutgoingEmbedImage] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val outgoingEmbedImageDecoder: Decoder[OutgoingEmbedImage] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedImageEncoder: Encoder[OutgoingEmbedImage] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedImageDecoder: Decoder[OutgoingEmbedImage] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val outgoingEmbedVideoEncoder: Encoder[OutgoingEmbedVideo] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val outgoingEmbedVideoDecoder: Decoder[OutgoingEmbedVideo] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedVideoEncoder: Encoder[OutgoingEmbedVideo] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedVideoDecoder: Decoder[OutgoingEmbedVideo] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val outgoingEmbedThumbnailEncoder: Encoder[OutgoingEmbedThumbnail] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val outgoingEmbedThumbnailDecoder: Decoder[OutgoingEmbedThumbnail] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedThumbnailEncoder: Encoder[OutgoingEmbedThumbnail] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedThumbnailDecoder: Decoder[OutgoingEmbedThumbnail] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val outgoingEmbedAuthorEncoder: Encoder[OutgoingEmbedAuthor] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val outgoingEmbedAuthorDecoder: Decoder[OutgoingEmbedAuthor] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedAuthorEncoder: Encoder[OutgoingEmbedAuthor] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val outgoingEmbedAuthorDecoder: Decoder[OutgoingEmbedAuthor] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val outgoingEmbedEncoder: Encoder[OutgoingEmbed] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val outgoingEmbedDecoder: Decoder[OutgoingEmbed] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -202,6 +228,11 @@ trait DiscordProtocol {
   implicit val messageApplicationEncoder: Encoder[MessageApplication] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val messageApplicationDecoder: Decoder[MessageApplication] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val partialRawGuildMemberEncoder: Encoder[PartialRawGuildMember] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val partialRawGuildMemberDecoder: Decoder[PartialRawGuildMember] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
@@ -237,7 +268,9 @@ trait DiscordProtocol {
     for {
       id              <- c.get[MessageId]("id")
       channelId       <- c.get[ChannelId]("channel_id")
+      guildId         <- c.get[Option[GuildId]]("guild_id")
       author          <- if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")
+      member          <- c.get[Option[PartialRawGuildMember]]("member")
       content         <- c.get[String]("content")
       timestamp       <- c.get[OffsetDateTime]("timestamp")
       editedTimestamp <- c.get[Option[OffsetDateTime]]("edited_timestamp")
@@ -257,7 +290,9 @@ trait DiscordProtocol {
       RawMessage(
         id,
         channelId,
+        guildId,
         author,
+        member,
         content,
         timestamp,
         editedTimestamp,

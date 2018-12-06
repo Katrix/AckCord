@@ -47,19 +47,20 @@ class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: Act
 
   val QueueCmdFactory: ParsedCmdFactory[F, String, NotUsed] = ParsedCmdFactory.requestRunner(
     refiner = CmdInfo[F](prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
-    run = implicit c =>  (runner, cmd) => {
-      import runner._
-      for {
-        guild   <- liftOptionT(guildId.resolve)
-        channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
-        _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
-          OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
-            case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _)) =>
-              (musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None)
-            case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
-          })
-        }
-      } yield ()
+    run = implicit c =>
+      (runner, cmd) => {
+        import runner._
+        for {
+          guild   <- liftOptionT(guildId.resolve)
+          channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
+          _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
+            OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
+              case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _, _)) =>
+                (musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None)
+              case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
+            })
+          }
+        } yield ()
     },
     description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play"))
   )

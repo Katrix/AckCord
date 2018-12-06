@@ -64,7 +64,8 @@ object CmdFilter {
     */
   case class InContext(context: Context) extends CmdFilter {
     override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F], F: Monad[F]
+        implicit c: CacheSnapshot[F],
+        F: Monad[F]
     ): F[Boolean] = Monad[F].pure(true)
 
     override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
@@ -93,7 +94,8 @@ object CmdFilter {
     */
   case class InOneGuild(guildId: GuildId) extends CmdFilter {
     override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F], F: Monad[F]
+        implicit c: CacheSnapshot[F],
+        F: Monad[F]
     ): F[Boolean] = guildId.resolve.map(_.members).exists(_.contains(userId))
 
     override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
@@ -109,7 +111,8 @@ object CmdFilter {
     */
   case class NeedPermission(neededPermission: Permission) extends CmdFilter {
     override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F], F: Monad[F]
+        implicit c: CacheSnapshot[F],
+        F: Monad[F]
     ): F[Boolean] = guildId.resolve.exists { guild =>
       guild.members.get(userId).exists(_.permissions(guild).hasPermissions(neededPermission))
     }
@@ -137,7 +140,8 @@ object CmdFilter {
     */
   case object NonBot extends CmdFilter {
     override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
-        implicit c: CacheSnapshot[F], F: Monad[F]
+        implicit c: CacheSnapshot[F],
+        F: Monad[F]
     ): F[Boolean] =
       c.getUser(userId).exists(_.bot.getOrElse(false))
 

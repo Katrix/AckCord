@@ -33,7 +33,7 @@ import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 import cats.Monad
 import net.katsstuff.ackcord.CacheSnapshot
-import net.katsstuff.ackcord.data.{EmojiId, GuildId, ImageFormat, RawSnowflake, UserId}
+import net.katsstuff.ackcord.data.{EmojiId, GuildId, ImageFormat, RawSnowflake, UserId, WidgetImageStyle}
 import net.katsstuff.ackcord.http.Routes
 import net.katsstuff.ackcord.http.requests.{Request, RequestRoute}
 import net.katsstuff.ackcord.util.MapWithMaterializer
@@ -75,7 +75,7 @@ trait ImageRequest[Ctx] extends Request[ByteString, Ctx] {
       }
       .mapAsyncUnordered(parallelism)(identity)
   }
-  
+
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = F.pure(true)
 }
 object ImageRequest {
@@ -161,4 +161,22 @@ case class GetApplicationIconImage[Ctx](
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
   override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, desiredSize)
+}
+
+/**
+  * Get the widget image for a specific guild.
+  * @param guildId The guild to get the widget for.
+  * @param style Which style should be gotten.
+  */
+case class GetGuildWidgetImage[Ctx](
+    guildId: GuildId,
+    style: WidgetImageStyle = WidgetImageStyle.Shield,
+    context: Ctx = NotUsed: NotUsed
+) extends ImageRequest[Ctx] {
+  override def route: RequestRoute = Routes.getGuildWidgetImage(style, guildId)
+
+  //Dummy fields which aren't used
+  override def desiredSize: Int                 = 16
+  override def format: ImageFormat              = ImageFormat.PNG
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
 }

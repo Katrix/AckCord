@@ -44,6 +44,9 @@ import net.katsstuff.ackcord.data._
   *                      may be invalid.
   * @param bitrate The bitrate of this channel if it's a guild voice channel.
   * @param userLimit The user limit of this channel if it's a guild voice channel.
+  * @param rateLimitPerUser The amount of time a user has to wait before
+  *                         sending messages after each other. Bots are not
+  *                         affected.
   * @param recipients The recipients of this channel if it's a group DM channel.
   * @param icon The icon of this channel if it has one.
   * @param ownerId The owner of this channel if it's a DM or group DM channel.
@@ -63,6 +66,7 @@ case class RawChannel(
     lastMessageId: Option[MessageId],
     bitrate: Option[Int],
     userLimit: Option[Int],
+    rateLimitPerUser: Option[Int],
     recipients: Option[Seq[User]],
     icon: Option[String],
     ownerId: Option[UserId],
@@ -91,6 +95,7 @@ case class RawChannel(
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
             topic,
             lastMessageId,
+            rateLimitPerUser,
             nsfw.getOrElse(false),
             parentId,
             lastPinTimestamp
@@ -168,6 +173,7 @@ case class RawChannel(
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
             topic,
             lastMessageId,
+            rateLimitPerUser,
             nsfw.getOrElse(false),
             parentId,
             lastPinTimestamp
@@ -215,6 +221,25 @@ case class RawChannel(
   }
 }
 
+/**
+  * Represents a user in a guild, without the user field.
+  * @param nick The nickname of this user in this guild.
+  * @param roles The roles of this user.
+  * @param joinedAt When this user joined the guild.
+  * @param deaf If this user is deaf.
+  * @param mute IF this user is mute.
+  */
+case class PartialRawGuildMember(
+    nick: Option[String],
+    roles: Seq[RoleId],
+    joinedAt: OffsetDateTime,
+    deaf: Boolean,
+    mute: Boolean
+) {
+
+  def toGuildMember(userId: UserId, guildId: GuildId) = GuildMember(userId, guildId, nick, roles, joinedAt, deaf, mute)
+}
+
 //Remember to edit RawGuildMemberWithGuild when editing this
 /**
   * Represents a user in a guild.
@@ -253,7 +278,9 @@ case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[Strin
   * A raw message before going through the cache.
   * @param id The id of the message.
   * @param channelId The channel this message was sent to.
+  * @param guildId The guild this message was sent to. Can me missing.
   * @param author The author that sent this message.
+  * @param member The guild member user that sent this message. Can be missing.
   * @param content The content of this message.
   * @param timestamp The timestamp this message was created.
   * @param editedTimestamp The timestamp this message was last edited.
@@ -272,7 +299,9 @@ case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[Strin
 case class RawMessage(
     id: MessageId,
     channelId: ChannelId,
+    guildId: Option[GuildId],
     author: Author[_],
+    member: Option[PartialRawGuildMember], //Hope this is correct
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -297,8 +326,10 @@ case class RawMessage(
     Message(
       id,
       channelId,
+      guildId,
       RawSnowflake(author.id),
       author.isUser,
+      member.map(_.toGuildMember(UserId(author.id), guildId.get)),
       content,
       timestamp,
       editedTimestamp,
