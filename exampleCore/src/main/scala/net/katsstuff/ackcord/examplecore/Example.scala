@@ -37,7 +37,8 @@ import net.katsstuff.ackcord.commands.{
   Commands,
   CoreCommands,
   HelpCmd,
-  ParsedCmdFactory
+  ParsedCmdFactory,
+  RawCmd
 }
 import net.katsstuff.ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
 import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
@@ -115,6 +116,11 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   genericCmds.foreach(registerCmd)
   registerCmd(helpCmd)
 
+  //Here is an example for a raw simple command
+  cmdObj.subscribeRaw.collect {
+    case RawCmd(_, "!", "restart", _, _) => println("Restart Starting")
+  }.runForeach(_ => self ! DiscordShard.RestartShard)
+
   val guildRouterMusic: ActorRef = {
     val registerCmdObj = new CmdRegisterFunc[Id] {
       def apply[Mat](a: ParsedCmdFactory[Id, _, Mat]): Id[Mat] = registerCmd(a)
@@ -136,6 +142,9 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   private var isShuttingDown = false
 
   override def receive: Receive = {
+    case DiscordShard.RestartShard =>
+      shard.forward(DiscordShard.RestartShard)
+
     case DiscordShard.StopShard =>
       isShuttingDown = true
 
@@ -144,6 +153,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
 
       shard ! DiscordShard.StopShard
       guildRouterMusic ! DiscordShard.StopShard
+
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
