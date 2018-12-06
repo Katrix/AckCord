@@ -103,6 +103,10 @@ object RawHandlers extends Handlers {
     )
 
     builder.guildMap.put(guild.id, guild)
+
+    if (builder.unavailableGuildMap.contains(guild.id))
+      builder.unavailableGuildMap.remove(guild.id)
+
     handleUpdateLog(builder, users, log)
   }
 

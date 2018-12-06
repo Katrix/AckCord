@@ -497,7 +497,7 @@ case class PresenceGame(
   */
 case class PresenceStreaming(
     name: String,
-    uri: String,
+    uri: Option[String],
     timestamps: Option[ActivityTimestamps],
     applicationId: Option[RawSnowflake],
     details: Option[String],

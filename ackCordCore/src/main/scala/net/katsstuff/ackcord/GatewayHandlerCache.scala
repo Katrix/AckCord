@@ -81,7 +81,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getChannel(data.id).map(ch => api.ChannelCreate(ch, state)).value,
+            state => state.current.getGuildChannel(data.id).map(ch => api.ChannelCreate(ch, state)).value,
             RawHandlers.rawChannelUpdateHandler
           )
         }
@@ -97,7 +97,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.previous.getChannel(data.id).map(ch => api.ChannelDelete(ch, state)).value,
+            state => state.previous.getGuildChannel(data.id).map(ch => api.ChannelDelete(ch, state)).value,
             RawHandlers.rawChannelDeleteHandler
           )
         }

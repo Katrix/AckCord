@@ -537,7 +537,7 @@ case class RawActivity(
 
   def toActivity: Activity = `type` match {
     case 0 => PresenceGame(name, timestamps, applicationId, details, state, party.map(_.toParty), assets)
-    case 1 => PresenceStreaming(name, url.get, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+    case 1 => PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets)
     case 2 => PresenceListening(name, timestamps, details, assets)
   }
 }
