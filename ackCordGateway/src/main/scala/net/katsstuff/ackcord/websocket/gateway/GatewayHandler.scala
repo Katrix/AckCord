@@ -24,6 +24,7 @@
 package net.katsstuff.ackcord.websocket.gateway
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Props, Status}
@@ -33,9 +34,9 @@ import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSoc
 import akka.pattern.pipe
 import akka.stream.scaladsl._
 import akka.stream.{ActorAttributes, KillSwitches, Materializer, SharedKillSwitch, Supervision}
+import net.katsstuff.ackcord.AckCord
 import net.katsstuff.ackcord.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.websocket.gateway.GatewayHandler.ConnectionDied
-import net.katsstuff.ackcord.AckCord
 
 /**
   * Responsible for normal websocket communication with Discord.
@@ -58,8 +59,9 @@ class GatewayHandler(
 
   implicit private val system: ActorSystem = context.system
   private var killSwitch: SharedKillSwitch = _
+  private var retryCount                   = 0
 
-  def wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
+  val wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
   def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
     GatewayHandlerGraphStage.flow(wsUri, settings, resume)
@@ -67,22 +69,39 @@ class GatewayHandler(
   override def postStop(): Unit =
     if (killSwitch != null) killSwitch.shutdown()
 
+  private def retryLogin() = {
+    if (retryCount < 5) {
+      //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
+      retryCount += 1
+      system.scheduler.scheduleOnce(5.seconds)(self ! Login)
+    } else {
+      throw new Exception("Max retry count exceeded")
+    }
+  }
+
   def inactive: Receive = {
     case Login =>
       log.info("Logging in")
       killSwitch = KillSwitches.shared("GatewayComplete")
+
       val (wsUpgrade, newResumeData) = source
         .viaMat(wsFlow)(Keep.right)
         .via(killSwitch.flow)
         .toMat(sink)(Keep.left)
-        .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
+        .addAttributes(ActorAttributes.supervisionStrategy(e => {
+          log.error(e, "Error in stream")
+          Supervision.Resume
+        }))
         .run()
 
       newResumeData.map(ConnectionDied).pipeTo(self)
       wsUpgrade.pipeTo(self)
 
+      wsUpgrade.onComplete(println)
+
     case ValidUpgrade(response, _) =>
-      log.debug("Valid login: {}\nGoing to active", response.entity.toString)
+      retryCount = 0
+      log.info("Valid login. Going to active. Response: {}", response.entity.toString)
       response.discardEntityBytes()
       context.become(active)
 
@@ -90,31 +109,43 @@ class GatewayHandler(
       response.discardEntityBytes()
       killSwitch.shutdown()
       throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
+
+    //Handling this too just in case
+    case Status.Failure(e) =>
+      log.error(e, "Websocket error. Retry count {}", retryCount)
+      killSwitch.shutdown()
+      killSwitch = null
+      retryLogin()
+
+    case GatewayHandler.ConnectionDied(newResume) =>
+      log.error("Connection died before starting. Retry count {}", retryCount)
+      println(newResume)
+      killSwitch.shutdown()
+      killSwitch = null
+      retryLogin()
   }
 
   def active: Receive = {
     case ConnectionDied(newResume) =>
-      resume = newResume
-      killSwitch.shutdown()
-      killSwitch = null
-
       if (shuttingDown) {
         log.info("Websocket connection completed. Stopping.")
         context.stop(self)
       } else {
-        //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
-        log.info("Websocket connection died. Logging in again.")
-        self ! Login
+        resume = newResume
+        killSwitch.shutdown()
+        killSwitch = null
+
+        log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
         context.become(inactive)
+        retryLogin()
       }
 
     case Status.Failure(e) =>
-      log.error(e, "Websocket error")
+      log.error(e, "Websocket error. Retry count {}", retryCount)
       killSwitch.shutdown()
       killSwitch = null
       context.become(inactive)
-      //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
-      self ! Login
+      retryLogin()
 
     case Logout =>
       log.info("Shutting down")
