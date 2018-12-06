@@ -71,7 +71,6 @@ lazy val ackCordNetwork = project
     publishSettings,
     name := "ackcord-network",
     version := ackCordVersion,
-    resolvers += JCenterRepository,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
@@ -168,7 +167,8 @@ lazy val ackCordLavaplayer = project
     publishSettings,
     name := "ackcord-lavaplayer",
     version := ackCordVersion,
-    resolvers += JCenterRepository,
+    //Workaround for https://github.com/sbt/sbt/issues/4479
+    resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.10",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )

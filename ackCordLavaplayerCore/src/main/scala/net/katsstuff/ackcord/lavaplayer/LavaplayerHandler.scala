@@ -50,7 +50,6 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
   import cache.mat
 
   cache.subscribeAPIActor(self, DiscordShard.StopShard)(
-    classOf[APIMessage.Ready],
     classOf[APIMessage.VoiceServerUpdate],
     classOf[APIMessage.VoiceStateUpdate]
   )
