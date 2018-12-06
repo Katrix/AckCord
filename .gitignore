@@ -26,6 +26,7 @@ run
 #sbt
 target
 project/target
+/.jvmopts
 
 #mac
 .DS_Store
