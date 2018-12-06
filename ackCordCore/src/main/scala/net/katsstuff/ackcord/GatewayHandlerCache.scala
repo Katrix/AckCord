@@ -81,7 +81,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getChannel(data.id).map(ch => APIMessage.ChannelCreate(ch, state)).value,
+            state => state.current.getChannel(data.id).map(ch => api.ChannelCreate(ch, state)).value,
             RawHandlers.rawChannelUpdateHandler
           )
         }
@@ -89,7 +89,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getGuildChannel(data.id).map(ch => APIMessage.ChannelUpdate(ch, state)).value,
+            state => state.current.getGuildChannel(data.id).map(ch => api.ChannelUpdate(ch, state)).value,
             RawHandlers.rawChannelUpdateHandler
           )
         }
@@ -97,7 +97,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.previous.getChannel(data.id).map(ch => APIMessage.ChannelDelete(ch, state)).value,
+            state => state.previous.getChannel(data.id).map(ch => api.ChannelDelete(ch, state)).value,
             RawHandlers.rawChannelDeleteHandler
           )
         }
@@ -108,7 +108,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getTChannel(data.channelId)
-                .map(c => APIMessage.ChannelPinsUpdate(c, data.timestamp.toOption, state))
+                .map(c => api.ChannelPinsUpdate(c, data.timestamp.toOption, state))
                 .value,
             NOOPHandler
           )
@@ -117,7 +117,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getGuild(data.id).map(g => APIMessage.GuildCreate(g, state)).value,
+            state => state.current.getGuild(data.id).map(g => api.GuildCreate(g, state)).value,
             RawHandlers.rawGuildUpdateHandler
           )
         }
@@ -125,7 +125,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getGuild(data.id).map(g => APIMessage.GuildUpdate(g, state)).value,
+            state => state.current.getGuild(data.id).map(g => api.GuildUpdate(g, state)).value,
             RawHandlers.rawGuildUpdateHandler
           )
         }
@@ -134,7 +134,7 @@ object GatewayHandlerCache {
           CacheUpdate(
             data,
             state =>
-              state.previous.getGuild(data.id).map(g => APIMessage.GuildDelete(g, data.unavailable, state)).value,
+              state.previous.getGuild(data.id).map(g => api.GuildDelete(g, data.unavailable, state)).value,
             RawHandlers.deleteGuildDataHandler
           )
         }
@@ -145,7 +145,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildBanAdd(g, data.user, state))
+                .map(g => api.GuildBanAdd(g, data.user, state))
                 .value,
             RawHandlers.rawBanUpdateHandler
           )
@@ -157,7 +157,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildBanRemove(g, data.user, state))
+                .map(g => api.GuildBanRemove(g, data.user, state))
                 .value,
             RawHandlers.rawBanDeleteHandler
           )
@@ -169,7 +169,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state))
+                .map(g => api.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state))
                 .value,
             RawHandlers.guildEmojisUpdateDataHandler
           )
@@ -178,7 +178,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getGuild(data.guildId).map(g => APIMessage.GuildIntegrationsUpdate(g, state)).value,
+            state => state.current.getGuild(data.guildId).map(g => api.GuildIntegrationsUpdate(g, state)).value,
             NOOPHandler
           )
         }
@@ -190,7 +190,7 @@ object GatewayHandlerCache {
               for {
                 g   <- state.current.getGuild(data.guildId).value
                 mem <- g.members.get(data.user.id)
-              } yield APIMessage.GuildMemberAdd(mem, g, state),
+              } yield api.GuildMemberAdd(mem, g, state),
             RawHandlers.rawGuildMemberWithGuildUpdateHandler
           )
         }
@@ -199,7 +199,7 @@ object GatewayHandlerCache {
           CacheUpdate(
             data,
             state =>
-              state.current.getGuild(data.guildId).map(g => APIMessage.GuildMemberRemove(data.user, g, state)).value,
+              state.current.getGuild(data.guildId).map(g => api.GuildMemberRemove(data.user, g, state)).value,
             RawHandlers.rawGuildMemberDeleteHandler
           )
         }
@@ -211,7 +211,7 @@ object GatewayHandlerCache {
               state.current
                 .getGuild(data.guildId)
                 .map { g =>
-                  APIMessage.GuildMemberUpdate(
+                  api.GuildMemberUpdate(
                     g,
                     data.roles.flatMap(state.current.getRole(data.guildId, _).value),
                     data.user,
@@ -230,7 +230,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildMembersChunk(g, data.members.map(_.toGuildMember(g.id)), state))
+                .map(g => api.GuildMembersChunk(g, data.members.map(_.toGuildMember(g.id)), state))
                 .value,
             RawHandlers.rawGuildMemberChunkHandler
           )
@@ -242,7 +242,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildRoleCreate(g, data.role.toRole(data.guildId), state))
+                .map(g => api.GuildRoleCreate(g, data.role.toRole(data.guildId), state))
                 .value,
             RawHandlers.roleUpdateHandler
           )
@@ -254,7 +254,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.GuildRoleUpdate(g, data.role.toRole(data.guildId), state))
+                .map(g => api.GuildRoleUpdate(g, data.role.toRole(data.guildId), state))
                 .value,
             RawHandlers.roleUpdateHandler
           )
@@ -267,7 +267,7 @@ object GatewayHandlerCache {
               for {
                 previousGuild <- state.previous.getGuild(data.guildId).value
                 role          <- previousGuild.roles.get(data.roleId)
-              } yield APIMessage.GuildRoleDelete(previousGuild, role, state),
+              } yield api.GuildRoleDelete(previousGuild, role, state),
             RawHandlers.roleDeleteHandler
           )
         }
@@ -275,7 +275,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getMessage(data.id).map(message => APIMessage.MessageCreate(message, state)).value,
+            state => state.current.getMessage(data.id).map(message => api.MessageCreate(message, state)).value,
             RawHandlers.rawMessageUpdateHandler
           )
         }
@@ -283,7 +283,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state => state.current.getMessage(data.id).map(message => APIMessage.MessageUpdate(message, state)).value,
+            state => state.current.getMessage(data.id).map(message => api.MessageUpdate(message, state)).value,
             RawHandlers.rawPartialMessageUpdateHandler
           )
         }
@@ -295,7 +295,7 @@ object GatewayHandlerCache {
               for {
                 message <- state.previous.getMessage(data.id).value
                 channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-              } yield APIMessage.MessageDelete(message, channel, state),
+              } yield api.MessageDelete(message, channel, state),
             RawHandlers.rawMessageDeleteHandler
           )
         }
@@ -305,7 +305,7 @@ object GatewayHandlerCache {
             data,
             state =>
               getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId).map { channel =>
-                APIMessage.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).value.toSeq), channel, state)
+                api.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).value.toSeq), channel, state)
             },
             RawHandlers.rawMessageDeleteBulkHandler
           )
@@ -319,7 +319,7 @@ object GatewayHandlerCache {
                 user     <- state.current.getUser(data.userId).value
                 tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
-              } yield APIMessage.MessageReactionAdd(user, tChannel, message, data.emoji, state),
+              } yield api.MessageReactionAdd(user, tChannel, message, data.emoji, state),
             RawHandlers.rawMessageReactionUpdateHandler
           )
         }
@@ -332,7 +332,7 @@ object GatewayHandlerCache {
                 user     <- state.current.getUser(data.userId).value
                 tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
-              } yield APIMessage.MessageReactionRemove(user, tChannel, message, data.emoji, state),
+              } yield api.MessageReactionRemove(user, tChannel, message, data.emoji, state),
             RawHandlers.rawMessageReactionRemoveHandler
           )
         }
@@ -344,7 +344,7 @@ object GatewayHandlerCache {
               for {
                 tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                 message  <- state.current.getMessage(data.channelId, data.messageId).value
-              } yield APIMessage.MessageReactionRemoveAll(tChannel, message, state),
+              } yield api.MessageReactionRemoveAll(tChannel, message, state),
             RawHandlers.rawMessageReactionRemoveAllHandler
           )
         }
@@ -357,7 +357,7 @@ object GatewayHandlerCache {
                 guild    <- state.current.getGuild(data.guildId).value
                 user     <- state.current.getUser(data.user.id).value
                 presence <- guild.presences.get(user.id)
-              } yield APIMessage.PresenceUpdate(guild, user, data.roles, presence, state),
+              } yield api.PresenceUpdate(guild, user, data.roles, presence, state),
             PresenceUpdateHandler
           )
         }
@@ -369,17 +369,17 @@ object GatewayHandlerCache {
               for {
                 user    <- state.current.getUser(data.userId).value
                 channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-              } yield APIMessage.TypingStart(channel, user, data.timestamp, state),
+              } yield api.TypingStart(channel, user, data.timestamp, state),
             RawHandlers.lastTypedHandler
           )
         }
       case gateway.UserUpdate(later) =>
         handleLazy(later) { data =>
-          CacheUpdate(data, state => Some(APIMessage.UserUpdate(data, state)), RawHandlers.userUpdateHandler)
+          CacheUpdate(data, state => Some(api.UserUpdate(data, state)), RawHandlers.userUpdateHandler)
         }
       case gateway.VoiceStateUpdate(later) =>
         handleLazy(later) { data =>
-          CacheUpdate(data, state => Some(APIMessage.VoiceStateUpdate(data, state)), Handlers.voiceStateUpdateHandler)
+          CacheUpdate(data, state => Some(api.VoiceStateUpdate(data, state)), Handlers.voiceStateUpdateHandler)
         }
       case gateway.VoiceServerUpdate(later) =>
         handleLazy(later) { data =>
@@ -388,7 +388,7 @@ object GatewayHandlerCache {
             state =>
               state.current
                 .getGuild(data.guildId)
-                .map(g => APIMessage.VoiceServerUpdate(data.token, g, data.endpoint, state))
+                .map(g => api.VoiceServerUpdate(data.token, g, data.endpoint, state))
                 .value,
             NOOPHandler
           )
@@ -401,7 +401,7 @@ object GatewayHandlerCache {
               for {
                 guild   <- state.current.getGuild(data.guildId).value
                 channel <- guild.channels.get(data.channelId)
-              } yield APIMessage.WebhookUpdate(guild, channel, state),
+              } yield api.WebhookUpdate(guild, channel, state),
             NOOPHandler
           )
         }
