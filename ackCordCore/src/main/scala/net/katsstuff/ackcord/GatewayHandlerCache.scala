@@ -133,8 +133,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state =>
-              state.previous.getGuild(data.id).map(g => api.GuildDelete(g, data.unavailable, state)).value,
+            state => state.previous.getGuild(data.id).map(g => api.GuildDelete(g, data.unavailable, state)).value,
             RawHandlers.deleteGuildDataHandler
           )
         }
@@ -198,8 +197,7 @@ object GatewayHandlerCache {
         handleLazy(later) { data =>
           CacheUpdate(
             data,
-            state =>
-              state.current.getGuild(data.guildId).map(g => api.GuildMemberRemove(data.user, g, state)).value,
+            state => state.current.getGuild(data.guildId).map(g => api.GuildMemberRemove(data.user, g, state)).value,
             RawHandlers.rawGuildMemberDeleteHandler
           )
         }

@@ -117,9 +117,11 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   registerCmd(helpCmd)
 
   //Here is an example for a raw simple command
-  cmdObj.subscribeRaw.collect {
-    case RawCmd(_, "!", "restart", _, _) => println("Restart Starting")
-  }.runForeach(_ => self ! DiscordShard.RestartShard)
+  cmdObj.subscribeRaw
+    .collect {
+      case RawCmd(_, "!", "restart", _, _) => println("Restart Starting")
+    }
+    .runForeach(_ => self ! DiscordShard.RestartShard)
 
   val guildRouterMusic: ActorRef = {
     val registerCmdObj = new CmdRegisterFunc[Id] {

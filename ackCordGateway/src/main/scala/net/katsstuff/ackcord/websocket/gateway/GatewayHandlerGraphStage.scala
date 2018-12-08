@@ -232,8 +232,11 @@ object GatewayHandlerGraphStage {
       .collect {
         case t: TextMessage => t.textStream.fold("")(_ + _)
         case b: BinaryMessage =>
-          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate())
-            .map(_.utf8String).fold("")(_ + _)
+          b.dataStream
+            .fold(ByteString.empty)(_ ++ _)
+            .via(Compression.inflate())
+            .map(_.utf8String)
+            .fold("")(_ + _)
       }
       .flatMapConcat(identity)
 

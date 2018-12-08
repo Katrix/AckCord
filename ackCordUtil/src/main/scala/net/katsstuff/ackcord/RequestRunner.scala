@@ -115,16 +115,19 @@ object RequestRunner {
       import cats.syntax.all._
 
       val requestVec = requestSeq.toVector
-      streamable.toSource(requestVec.forallM(_.hasPermissions)).flatMapConcat {
-        case false =>
-          streamable
-            .toSource(requestVec.findM(_.hasPermissions.map(!_)))
-            .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
-        case true =>
-          requests.many(requestSeq).collect {
-            case RequestResponse(data, _, _, _, _, _, _) => data
-          }
-      }.runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
+      streamable
+        .toSource(requestVec.forallM(_.hasPermissions))
+        .flatMapConcat {
+          case false =>
+            streamable
+              .toSource(requestVec.findM(_.hasPermissions.map(!_)))
+              .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
+          case true =>
+            requests.many(requestSeq).collect {
+              case RequestResponse(data, _, _, _, _, _, _) => data
+            }
+        }
+        .runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
     }
 
     override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =
