@@ -147,10 +147,8 @@ trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUse
   * A request that takes no params with an audit log reason.
   */
 trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, NiceResponse, Ctx], RawResponse, NiceResponse, Ctx]
-    extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx] {
-  override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
-  override def params: NotUsed                 = NotUsed
-}
+    extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx]
+    with NoParamsRequest[RawResponse, NiceResponse, Ctx]
 
 /**
   * A request where the response type and the nice response type are the same.
@@ -164,9 +162,8 @@ trait NoNiceResponseRequest[Params, Response, Ctx] extends RESTRequest[Params, R
   * the nice response type are the same.
   */
 trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Params, Response, Ctx], Params, Response, Ctx]
-    extends ReasonRequest[Self, Params, Response, Response, Ctx] {
-  override def toNiceResponse(response: Response): Response = response
-}
+    extends ReasonRequest[Self, Params, Response, Response, Ctx]
+    with NoNiceResponseRequest[Params, Response, Ctx]
 
 /**
   * A request that takes no params, and where the response type and the
@@ -202,9 +199,8 @@ trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUs
   * A request, with an audit log reason, that doesn't have a response.
   */
 trait NoResponseReasonRequest[Self <: NoResponseReasonRequest[Self, Params, Ctx], Params, Ctx]
-    extends NoNiceResponseReasonRequest[Self, Params, NotUsed, Ctx] {
-  override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
-}
+    extends NoNiceResponseReasonRequest[Self, Params, NotUsed, Ctx]
+    with NoResponseRequest[Params, Ctx]
 
 /**
   * A request that has neither params nor a response.
