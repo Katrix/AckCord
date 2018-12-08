@@ -1,5 +1,6 @@
 package net.katsstuff.ackcord
 
+import scala.collection.immutable
 import scala.concurrent.Future
 import scala.language.higherKinds
 
@@ -14,6 +15,8 @@ import net.katsstuff.ackcord.util.Streamable
 trait RequestRunner[F[_], G[_]] {
 
   def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): F[A]
+
+  def runMany[A](requests: immutable.Seq[Request[A, NotUsed]])(implicit c: CacheSnapshot[G]): F[A]
 
   def fromSource[A](source: Source[A, NotUsed]): F[A]
 
@@ -66,6 +69,25 @@ object RequestRunner {
             }
         }
 
+      override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
+          implicit c: CacheSnapshot[G]
+      ): SourceRequest[A] = {
+        import cats.instances.vector._
+        import cats.syntax.all._
+
+        val requestVec = requestSeq.toVector
+        streamable.toSource(requestVec.forallM(_.hasPermissions)).flatMapConcat {
+          case false =>
+            streamable
+              .toSource(requestVec.findM(_.hasPermissions.map(!_)))
+              .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
+          case true =>
+            requests.many(requestSeq).collect {
+              case RequestResponse(data, _, _, _, _, _, _) => data
+            }
+        }
+      }
+
       override def fromSource[A](source: Source[A, NotUsed]): SourceRequest[A] = source
 
       override def unit: SourceRequest[Unit] = Source.single(())
@@ -83,8 +105,27 @@ object RequestRunner {
     override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): Future[F[A]] =
       streamable.toSource(request.hasPermissions).runWith(Sink.head).flatMap {
         case false => Future.failed(new RequestPermissionException(request))
-        case true  => requests.retryFuture(request).map(res => F.pure(res.data))
+        case true  => requests.singleRetryFuture(request).map(res => F.pure(res.data))
       }
+
+    override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
+        implicit c: CacheSnapshot[G]
+    ): Future[F[A]] = {
+      import cats.instances.vector._
+      import cats.syntax.all._
+
+      val requestVec = requestSeq.toVector
+      streamable.toSource(requestVec.forallM(_.hasPermissions)).flatMapConcat {
+        case false =>
+          streamable
+            .toSource(requestVec.findM(_.hasPermissions.map(!_)))
+            .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
+        case true =>
+          requests.many(requestSeq).collect {
+            case RequestResponse(data, _, _, _, _, _, _) => data
+          }
+      }.runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
+    }
 
     override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =
       source.runWith(Sink.fold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a))))

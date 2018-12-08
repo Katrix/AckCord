@@ -23,6 +23,7 @@
  */
 package net.katsstuff.ackcord.http.requests
 
+import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
@@ -87,10 +88,18 @@ case class RequestHelper(
   /**
     * Sends a single request.
     * @param request The request to send.
-    * @return A source of the single request.
+    * @return A source of the single request answer.
     */
   def single[Data, Ctx](request: Request[Data, Ctx]): Source[RequestAnswer[Data, Ctx], NotUsed] =
     Source.single(request).via(flow)
+
+  /**
+    * Sends many requests
+    * @param requests The requests to send.
+    * @return A source of the request answers.
+    */
+  def many[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestAnswer[Data, Ctx], NotUsed] =
+    Source(requests).via(flow)
 
   /**
     * Sends a single request and gets the response as a future.
@@ -100,11 +109,27 @@ case class RequestHelper(
     single(request).runWith(Sink.head)
 
   /**
+    * Sends many requests and gets the responses as a future.
+    * @param requests The requests to send.
+    */
+  def singleFuture[Data, Ctx](
+      requests: immutable.Seq[Request[Data, Ctx]]
+  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
+    many(requests).runWith(Sink.seq)
+
+  /**
     * Sends a single request and ignores the result.
     * @param request The request to send.
     */
   def singleIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit =
     single(request).runWith(Sink.ignore)
+
+  /**
+    * Sends many requests and ignores the result.
+    * @param requests The requests to send.
+    */
+  def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
+    many(requests).runWith(Sink.ignore)
 
   private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
     credentials,
@@ -136,21 +161,46 @@ case class RequestHelper(
     * @param request The request to send.
     * @return A source of the retried request.
     */
-  def retry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
+  def singleRetry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
     Source.single(request).via(retryFlow)
+
+  /**
+    * Sends many which will retry if they fail.
+    *
+    * @param requests The requests to send.
+    * @return A source of the retried requests.
+    */
+  def manyRetry[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestResponse[Data, Ctx], NotUsed] =
+    Source(requests).via(retryFlow)
 
   /**
     * Sends a single request with retries if it fails, and gets the response as a future.
     * @param request The request to send.
     */
-  def retryFuture[Data, Ctx](request: Request[Data, Ctx]): Future[RequestResponse[Data, Ctx]] =
-    retry(request).runWith(Sink.head)
+  def singleRetryFuture[Data, Ctx](request: Request[Data, Ctx]): Future[RequestResponse[Data, Ctx]] =
+    singleRetry(request).runWith(Sink.head)
+
+  /**
+    * Sends many requests with retries if they fail, and gets the response as a future.
+    * @param requests The requests to send.
+    */
+  def manyRetryFuture[Data, Ctx](
+      requests: immutable.Seq[Request[Data, Ctx]]
+  ): Future[immutable.Seq[RequestResponse[Data, Ctx]]] =
+    manyRetry(requests).runWith(Sink.seq)
 
   /**
     * Sends a single request with retries if it fails, and ignores the result.
     * @param request The request to send.
     */
-  def retryIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit = retry(request).runWith(Sink.ignore)
+  def singleRetryIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit = singleRetry(request).runWith(Sink.ignore)
+
+  /**
+    * Sends many requests with retries if they fail, and ignores the result.
+    * @param requests The requests to send.
+    */
+  def manyRetryIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
+    manyRetry(requests).runWith(Sink.ignore)
 }
 object RequestHelper {
 
