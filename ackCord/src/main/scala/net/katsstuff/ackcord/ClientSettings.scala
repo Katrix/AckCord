@@ -29,7 +29,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.event.slf4j.Logger
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, Supervision}
 import cats.Id
 import net.katsstuff.ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
@@ -72,7 +73,12 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings.
     */
   def createClient(): Future[DiscordClient[Id]] = {
-    implicit val mat: ActorMaterializer   = ActorMaterializer()(system)
+    val streamLogger = Logger("StreamLogger")
+    implicit val mat: ActorMaterializer =
+      ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy { e =>
+        streamLogger.error("Error in stream", e)
+        Supervision.Resume
+      })(system)
 
     createClientWithMaterializer()
   }
@@ -80,7 +86,7 @@ class ClientSettings(
   /**
     * Create a [[DiscordClient]] from these settings and a custom materializer.
     */
-  def createClientWithMaterializer() (implicit mat: ActorMaterializer): Future[DiscordClient[Id]] = {
+  def createClientWithMaterializer()(implicit mat: ActorMaterializer): Future[DiscordClient[Id]] = {
     implicit val actorSystem: ActorSystem = system
 
     val requests = RequestHelper.create(
