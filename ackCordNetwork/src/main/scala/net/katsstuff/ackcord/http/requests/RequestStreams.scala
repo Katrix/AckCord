@@ -35,7 +35,8 @@ import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
-import akka.pattern.{ask, AskTimeoutException}
+import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.pattern.{AskTimeoutException, ask}
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
@@ -240,6 +241,13 @@ object RequestStreams {
                     Source
                       .single(HttpEntity.Empty)
                       .via(request.parseResponse(breadth))
+                      .recover {
+                        case Unmarshaller.NoContentException =>
+                          throw new HttpException(
+                            StatusCodes.NoContent,
+                            Some(s"Encountered NoContentException when trying to parse an ${request.getClass}")
+                          )
+                      }
                       .map { data =>
                         RequestResponse(data, request.context, tilRatelimit, tilReset, requestLimit, uri, rawRoute)
                       }
