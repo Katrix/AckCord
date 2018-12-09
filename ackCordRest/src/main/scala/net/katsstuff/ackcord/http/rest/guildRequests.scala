@@ -231,18 +231,12 @@ case class ModifyGuildChannelPositions[Ctx](
     params: Seq[ModifyGuildChannelPositionsData],
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuildChannelPositions[Ctx], Seq[ModifyGuildChannelPositionsData], Seq[RawChannel], Seq[
-      Option[Channel]
-    ], Ctx] {
+) extends NoResponseReasonRequest[ModifyGuildChannelPositions[Ctx], Seq[ModifyGuildChannelPositionsData], Ctx] {
   override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
   override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
     implicit val enc: Encoder[ModifyGuildChannelPositionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
     Encoder[Seq[ModifyGuildChannelPositionsData]]
   }
-
-  override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
-  override def toNiceResponse(response: Seq[RawChannel]): Seq[Option[GuildChannel]] =
-    response.map(_.toGuildChannel(guildId))
 
   override def requiredPermissions: Permission = Permission.ManageChannels
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
