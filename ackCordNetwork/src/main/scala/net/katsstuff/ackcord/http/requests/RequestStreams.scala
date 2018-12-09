@@ -72,7 +72,7 @@ object RequestStreams {
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
 
-  private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix-/AckCord, ${AckCord.Version})")
+  private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
   /**
     * A basic request flow which will send requests to Discord, and
