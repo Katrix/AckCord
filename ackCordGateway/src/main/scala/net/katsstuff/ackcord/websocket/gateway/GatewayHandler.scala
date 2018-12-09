@@ -97,8 +97,6 @@ class GatewayHandler(
       newResumeData.map(ConnectionDied).pipeTo(self)
       wsUpgrade.pipeTo(self)
 
-      wsUpgrade.onComplete(println)
-
     case ValidUpgrade(response, _) =>
       retryCount = 0
       log.info("Valid login. Going to active. Response: {}", response.entity.toString)
