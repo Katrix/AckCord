@@ -112,7 +112,7 @@ case class RequestHelper(
     * Sends many requests and gets the responses as a future.
     * @param requests The requests to send.
     */
-  def singleFuture[Data, Ctx](
+  def manyFuture[Data, Ctx](
       requests: immutable.Seq[Request[Data, Ctx]]
   ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
     many(requests).runWith(Sink.seq)
@@ -154,6 +154,10 @@ case class RequestHelper(
   def retrySinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
     retryFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
 
+  @deprecated("Prefer singleRetry instead", since = "0.11.0")
+  def retry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
+    singleRetry(request)
+
   /**
     * Sends a single request which will retry if it fails.
     *
@@ -173,6 +177,10 @@ case class RequestHelper(
   def manyRetry[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestResponse[Data, Ctx], NotUsed] =
     Source(requests).via(retryFlow)
 
+  @deprecated("Prefer singleRetryFuture instead", since = "0.11.0")
+  def retryFuture[Data, Ctx](request: Request[Data, Ctx]): Future[RequestResponse[Data, Ctx]] =
+    singleRetryFuture(request)
+
   /**
     * Sends a single request with retries if it fails, and gets the response as a future.
     * @param request The request to send.
@@ -188,6 +196,9 @@ case class RequestHelper(
       requests: immutable.Seq[Request[Data, Ctx]]
   ): Future[immutable.Seq[RequestResponse[Data, Ctx]]] =
     manyRetry(requests).runWith(Sink.seq)
+
+  @deprecated("Prefer singleRetryIgnore instead", since = "0.11.0")
+  def retryIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit = singleRetryIgnore(request)
 
   /**
     * Sends a single request with retries if it fails, and ignores the result.
