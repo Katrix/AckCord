@@ -63,6 +63,10 @@ futureClient.foreach { client =>
 
 ## Logging in from the low level API
 
+```tut:invisible
+clientSettings.system.terminate()
+```
+
 ```tut:reset:invisible
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
@@ -107,10 +111,26 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 }
 ```
 
+```tut:invisible
+system.terminate()
+```
+
 ## Access to the low level API from the high level API
 Accessing the low level API from the high level API is simple.
 The shard actors can be gotten from the `shards` method on the `DiscordClient[F]`.
 The cache can be gotten from the `cache` method on the `DiscordClient[F]`.
+
+```tut:reset:invisible
+import akka.actor.ActorRef
+import net.katsstuff.ackcord._
+import net.katsstuff.ackcord.data._
+import cats.Id
+
+val clientSettings = ClientSettings("<token>")
+import clientSettings.executionContext
+
+val futureClient = clientSettings.createClient()
+```
 
 ```tut
 futureClient.foreach { client =>
@@ -121,5 +141,4 @@ futureClient.foreach { client =>
 
 ```tut:invisible
 clientSettings.system.terminate()
-system.terminate()
 ```
