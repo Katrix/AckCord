@@ -135,6 +135,14 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="net.katsstuff.ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command."></a>
+                        <a href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command.">AbstractCmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects."></a>
+                        <a href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects.">AbstractCommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="AllCmdMessages.html" title="Top trait for all command messages."></a>
                         <a href="AllCmdMessages.html" title="Top trait for all command messages.">AllCmdMessages</a>
                       </li><li class="current-entities indented4">
@@ -179,6 +187,10 @@
                         <a href="CmdHelper$.html" title="">CmdHelper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance."></a>
+                        <a href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance.">CmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CmdMessage.html" title="Trait for all unparsed command messages."></a>
                         <a href="CmdMessage.html" title="Trait for all unparsed command messages.">CmdMessage</a>
                       </li><li class="current-entities indented4">
@@ -187,12 +199,20 @@
                         <a href="CmdParseError.html" title="A parse error for a parsed command.">CmdParseError</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead."></a>
+                        <a href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead.">CmdRefiner</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="object" href="CmdStreams$.html" title=""></a>
                         <a href="CmdStreams$.html" title="">CmdStreams</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about."></a>
-                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about.">Commands</a>
+                        <a class="class" href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid."></a>
+                        <a href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid.">CommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands."></a>
+                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands.">Commands</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Context$.html" title=""></a>
                         <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
@@ -202,9 +222,17 @@
                         <a class="object" href="CoreCommands$.html" title=""></a>
                         <a href="CoreCommands$.html" title="">CoreCommands</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="FilterBehavior$.html" title=""></a>
+                        <a class="trait" href="FilterBehavior.html" title=""></a>
+                        <a href="FilterBehavior.html" title="">FilterBehavior</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="FilteredCmd.html" title="A command that did not make it through some filters."></a>
                         <a href="FilteredCmd.html" title="A command that did not make it through some filters.">FilteredCmd</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="GenericCmdError.html" title="A generic command error."></a>
+                        <a href="GenericCmdError.html" title="A generic command error.">GenericCmdError</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="HelpCmd$.html" title=""></a>
                         <a class="class" href="HelpCmd.html" title="A base for help commands."></a>
@@ -215,8 +243,8 @@
                         <a href="NoCmd.html" title="Bot was mentioned, but no command was used.">NoCmd</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="NoCmdCategory.html" title="An unknown category was used."></a>
-                        <a href="NoCmdCategory.html" title="An unknown category was used.">NoCmdCategory</a>
+                        <a class="class" href="NoCmdPrefix.html" title="An unknown prefix was used."></a>
+                        <a href="NoCmdPrefix.html" title="An unknown prefix was used.">NoCmdPrefix</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ParsedCmd.html" title="A parsed specific command."></a>
@@ -260,22 +288,22 @@
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">sealed </span>
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">CmdFactory</span><span class="tparams">[<span name="A">A</span>, <span name="Mat">+Mat</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">CmdFactory</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>, <span name="Mat">+Mat</span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A factory for a command, that also includes other information about
 the command.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/factory.scala" target="_blank">factory.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/factory.scala" target="_blank">factory.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -285,7 +313,7 @@ the command.
                 <span class="toggle diagram-link">
                   Type Hierarchy
                 </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 340.00 155.00" height="155pt" width="340pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 336,-151 336,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="net.katsstuff.ackcord.commands.CmdFactory (this trait)" xlink:href="#inheritance-diagram"><path d="M215.167,-86C215.167,-86 105.833,-86 105.833,-86 101.667,-86 97.5,-81.8333 97.5,-77.6667 97.5,-77.6667 97.5,-69.3333 97.5,-69.3333 97.5,-65.1667 101.667,-61 105.833,-61 105.833,-61 215.167,-61 215.167,-61 219.333,-61 223.5,-65.1667 223.5,-69.3333 223.5,-69.3333 223.5,-77.6667 223.5,-77.6667 223.5,-81.8333 219.333,-86 215.167,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="107.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="128.5" text-anchor="start">CmdFactory[A, Mat]</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="net.katsstuff.ackcord.commands.BaseCmdFactory" xlink:href="BaseCmdFactory.html#inheritance-diagram"><path d="M138.667,-25C138.667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 138.667,-0 138.667,-0 142.833,-0 147,-4.16667 147,-8.33333 147,-8.33333 147,-16.6667 147,-16.6667 147,-20.8333 142.833,-25 138.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31.5" text-anchor="start">BaseCmdFactory[F, Mat]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="BaseCmdFactory[F, Mat] is a subtype of CmdFactory[A, Mat]"><path d="M137.295,-56.7633C122.626,-46.8155 103.989,-34.1764 90.6527,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="136.143,-58.9423 143.312,-60.8435 138.893,-54.8869 136.143,-58.9423" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="net.katsstuff.ackcord.commands.ParsedCmdFactory" xlink:href="ParsedCmdFactory.html#inheritance-diagram"><path d="M323.667,-25C323.667,-25 173.333,-25 173.333,-25 169.167,-25 165,-20.8333 165,-16.6667 165,-16.6667 165,-8.33333 165,-8.33333 165,-4.16667 169.167,-0 173.333,-0 173.333,-0 323.667,-0 323.667,-0 327.833,-0 332,-4.16667 332,-8.33333 332,-8.33333 332,-16.6667 332,-16.6667 332,-20.8333 327.833,-25 323.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="175.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="196.5" text-anchor="start">ParsedCmdFactory[F, A, Mat]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="ParsedCmdFactory[F, A, Mat] is a subtype of CmdFactory[A, Mat]"><path d="M183.972,-56.7633C198.809,-46.8155 217.661,-34.1764 231.15,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="182.336,-54.9104 177.886,-60.8435 185.065,-58.9803 182.336,-54.9104" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="scala.AnyRef"><path d="M188.667,-147C188.667,-147 132.333,-147 132.333,-147 128.167,-147 124,-142.833 124,-138.667 124,-138.667 124,-130.333 124,-130.333 124,-126.167 128.167,-122 132.333,-122 132.333,-122 188.667,-122 188.667,-122 192.833,-122 197,-126.167 197,-130.333 197,-130.333 197,-138.667 197,-138.667 197,-142.833 192.833,-147 188.667,-147" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-141.5" x="134.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="155.5" text-anchor="start">AnyRef</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="CmdFactory[A, Mat] is a subtype of AnyRef"><path d="M160.5,-114.76C160.5,-105.367 160.5,-94.2882 160.5,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="158.05,-114.843 160.5,-121.843 162.95,-114.844 158.05,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 340.00 155.00" height="155pt" width="340pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 336,-151 336,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="net.katsstuff.ackcord.commands.CmdFactory (this trait)" xlink:href="#inheritance-diagram"><path d="M220.667,-86C220.667,-86 100.333,-86 100.333,-86 96.1667,-86 92,-81.8333 92,-77.6667 92,-77.6667 92,-69.3333 92,-69.3333 92,-65.1667 96.1667,-61 100.333,-61 100.333,-61 220.667,-61 220.667,-61 224.833,-61 229,-65.1667 229,-69.3333 229,-69.3333 229,-77.6667 229,-77.6667 229,-81.8333 224.833,-86 220.667,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="102.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="123.5" text-anchor="start">CmdFactory[F, A, Mat]</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="net.katsstuff.ackcord.commands.BaseCmdFactory" xlink:href="BaseCmdFactory.html#inheritance-diagram"><path d="M138.667,-25C138.667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 138.667,-0 138.667,-0 142.833,-0 147,-4.16667 147,-8.33333 147,-8.33333 147,-16.6667 147,-16.6667 147,-20.8333 142.833,-25 138.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31.5" text-anchor="start">BaseCmdFactory[F, Mat]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="BaseCmdFactory[F, Mat] is a subtype of CmdFactory[F, A, Mat]"><path d="M137.295,-56.7633C122.626,-46.8155 103.989,-34.1764 90.6527,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="136.143,-58.9423 143.312,-60.8435 138.893,-54.8869 136.143,-58.9423" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="net.katsstuff.ackcord.commands.ParsedCmdFactory" xlink:href="ParsedCmdFactory.html#inheritance-diagram"><path d="M323.667,-25C323.667,-25 173.333,-25 173.333,-25 169.167,-25 165,-20.8333 165,-16.6667 165,-16.6667 165,-8.33333 165,-8.33333 165,-4.16667 169.167,-0 173.333,-0 173.333,-0 323.667,-0 323.667,-0 327.833,-0 332,-4.16667 332,-8.33333 332,-8.33333 332,-16.6667 332,-16.6667 332,-20.8333 327.833,-25 323.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="175.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="196.5" text-anchor="start">ParsedCmdFactory[F, A, Mat]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="ParsedCmdFactory[F, A, Mat] is a subtype of CmdFactory[F, A, Mat]"><path d="M183.972,-56.7633C198.809,-46.8155 217.661,-34.1764 231.15,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="182.336,-54.9104 177.886,-60.8435 185.065,-58.9803 182.336,-54.9104" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="scala.AnyRef"><path d="M188.667,-147C188.667,-147 132.333,-147 132.333,-147 128.167,-147 124,-142.833 124,-138.667 124,-138.667 124,-130.333 124,-130.333 124,-126.167 128.167,-122 132.333,-122 132.333,-122 188.667,-122 188.667,-122 192.833,-122 197,-126.167 197,-130.333 197,-130.333 197,-138.667 197,-138.667 197,-142.833 192.833,-147 188.667,-147" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-141.5" x="134.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="155.5" text-anchor="start">AnyRef</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="CmdFactory[F, A, Mat] is a subtype of AnyRef"><path d="M160.5,-114.76C160.5,-105.367 160.5,-94.2882 160.5,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="158.05,-114.843 160.5,-121.843 162.95,-114.844 158.05,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
                 <div id="diagram-controls" class="hiddenContent">
                   <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
                   <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
@@ -340,39 +368,7 @@ the command.
 
         <div class="values members">
               <h3>Abstract Value Members</h3>
-              <ol><li name="net.katsstuff.ackcord.commands.CmdFactory#aliases" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="aliases:Seq[String]"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdFactory.html#aliases:Seq[String]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">aliases</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">The aliases for this command.</p>
-    </li><li name="net.katsstuff.ackcord.commands.CmdFactory#category" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="category:net.katsstuff.ackcord.commands.CmdCategory"></a><a id="category:CmdCategory"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdFactory.html#category:net.katsstuff.ackcord.commands.CmdCategory" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">category</span><span class="result">: <a href="CmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.CmdCategory">CmdCategory</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">The category of this command.</p>
-    </li><li name="net.katsstuff.ackcord.commands.CmdFactory#description" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+              <ol><li name="net.katsstuff.ackcord.commands.CmdFactory#description" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="description:Option[net.katsstuff.ackcord.commands.CmdDescription]"></a><a id="description:Option[CmdDescription]"></a>
       <span class="permalink">
       <a href="../../../../net/katsstuff/ackcord/commands/CmdFactory.html#description:Option[net.katsstuff.ackcord.commands.CmdDescription]" title="Permalink">
@@ -384,10 +380,26 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">description</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CmdDescription.html" class="extype" name="net.katsstuff.ackcord.commands.CmdDescription">CmdDescription</a>]</span>
+        <span class="name">description</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CmdDescription.html" class="extype" name="net.katsstuff.ackcord.commands.CmdDescription">CmdDescription</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A description of this command.</p>
+    </li><li name="net.katsstuff.ackcord.commands.CmdFactory#refiner" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="refiner:net.katsstuff.ackcord.commands.CmdRefiner[F]"></a><a id="refiner:CmdRefiner[F]"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CmdFactory.html#refiner:net.katsstuff.ackcord.commands.CmdRefiner[F]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">refiner</span><span class="result">: <a href="CmdRefiner.html" class="extype" name="net.katsstuff.ackcord.commands.CmdRefiner">CmdRefiner</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFactory.F">F</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The refiner to use to determine if, and how commands should be accepted.</p>
     </li><li name="net.katsstuff.ackcord.commands.CmdFactory#sink" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="sink:net.katsstuff.ackcord.http.requests.RequestHelper=&gt;akka.stream.scaladsl.Sink[A,Mat]"></a><a id="sink:(http.requests.RequestHelper)⇒Sink[A,Mat]"></a>
       <span class="permalink">
@@ -400,7 +412,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sink</span><span class="result">: (<a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a>) ⇒ <span class="extype" name="akka.stream.scaladsl.Sink">Sink</span>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFactory.A">A</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdFactory.Mat">Mat</span>]</span>
+        <span class="name">sink</span><span class="result">: (<a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a>) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Sink.html#akka.stream.scaladsl.Sink" class="extype" name="akka.stream.scaladsl.Sink">Sink</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFactory.A">A</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdFactory.Mat">Mat</span>]</span>
       </span>
       
       <p class="shortcomment cmt">A sink which defines the behavior of this command.</p>
@@ -422,7 +434,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -438,7 +450,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -454,7 +466,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -486,7 +498,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -510,7 +522,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -526,7 +538,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -542,7 +554,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -583,7 +595,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -602,26 +614,10 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.commands.CmdFactory#lowercaseAliases" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="lowercaseAliases:Seq[String]"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdFactory.html#lowercaseAliases:Seq[String]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">lowercaseAliases</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
-      </span>
-      
-      
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -634,7 +630,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -650,7 +646,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -669,7 +665,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -720,7 +716,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -742,7 +738,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -764,7 +760,7 @@ the command.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -787,9 +783,9 @@ the command.
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

@@ -135,6 +135,14 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="net.katsstuff.ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command."></a>
+                        <a href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command.">AbstractCmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects."></a>
+                        <a href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects.">AbstractCommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="AllCmdMessages.html" title="Top trait for all command messages."></a>
                         <a href="AllCmdMessages.html" title="Top trait for all command messages.">AllCmdMessages</a>
                       </li><li class="current-entities indented4">
@@ -179,6 +187,10 @@
                         <a href="" title="">CmdHelper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance."></a>
+                        <a href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance.">CmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CmdMessage.html" title="Trait for all unparsed command messages."></a>
                         <a href="CmdMessage.html" title="Trait for all unparsed command messages.">CmdMessage</a>
                       </li><li class="current-entities indented4">
@@ -187,12 +199,20 @@
                         <a href="CmdParseError.html" title="A parse error for a parsed command.">CmdParseError</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead."></a>
+                        <a href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead.">CmdRefiner</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="object" href="CmdStreams$.html" title=""></a>
                         <a href="CmdStreams$.html" title="">CmdStreams</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about."></a>
-                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about.">Commands</a>
+                        <a class="class" href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid."></a>
+                        <a href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid.">CommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands."></a>
+                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands.">Commands</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Context$.html" title=""></a>
                         <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
@@ -202,9 +222,17 @@
                         <a class="object" href="CoreCommands$.html" title=""></a>
                         <a href="CoreCommands$.html" title="">CoreCommands</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="FilterBehavior$.html" title=""></a>
+                        <a class="trait" href="FilterBehavior.html" title=""></a>
+                        <a href="FilterBehavior.html" title="">FilterBehavior</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="FilteredCmd.html" title="A command that did not make it through some filters."></a>
                         <a href="FilteredCmd.html" title="A command that did not make it through some filters.">FilteredCmd</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="GenericCmdError.html" title="A generic command error."></a>
+                        <a href="GenericCmdError.html" title="A generic command error.">GenericCmdError</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="HelpCmd$.html" title=""></a>
                         <a class="class" href="HelpCmd.html" title="A base for help commands."></a>
@@ -215,8 +243,8 @@
                         <a href="NoCmd.html" title="Bot was mentioned, but no command was used.">NoCmd</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="NoCmdCategory.html" title="An unknown category was used."></a>
-                        <a href="NoCmdCategory.html" title="An unknown category was used.">NoCmdCategory</a>
+                        <a class="class" href="NoCmdPrefix.html" title="An unknown prefix was used."></a>
+                        <a href="NoCmdPrefix.html" title="An unknown prefix was used.">NoCmdPrefix</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ParsedCmd.html" title="A parsed specific command."></a>
@@ -269,11 +297,11 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/CmdHelper.scala" target="_blank">CmdHelper.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/CmdHelper.scala" target="_blank">CmdHelper.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -338,7 +366,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -354,7 +382,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -370,10 +398,58 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#addErrorHandlingGraph" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="addErrorHandlingGraph[F[_],A&lt;:net.katsstuff.ackcord.commands.AllCmdMessages[F]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$1:cats.Monad[F],implicitevidence$2:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[A,A,akka.NotUsed]"></a><a id="addErrorHandlingGraph[F[_],A&lt;:AllCmdMessages[F]](http.requests.RequestHelper)(Monad[F],util.Streamable[F]):Flow[A,A,NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#addErrorHandlingGraph[F[_],A&lt;:net.katsstuff.ackcord.commands.AllCmdMessages[F]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$1:cats.Monad[F],implicitevidence$2:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[A,A,akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addErrorHandlingGraph</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A &lt;: <a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingGraph.F">F</span>]</span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingGraph.F">F</span>]</span>, <span name="arg1">arg1: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingGraph.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingGraph.A">A</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingGraph.A">A</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Handle command errors.</p>
+    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#addErrorHandlingParsed" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="addErrorHandlingParsed[F[_],A](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$3:net.katsstuff.ackcord.util.Streamable[F],implicitevidence$4:cats.Monad[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.ParsedCmdMessage[F,A],net.katsstuff.ackcord.commands.ParsedCmd[F,A],akka.NotUsed]"></a><a id="addErrorHandlingParsed[F[_],A](http.requests.RequestHelper)(util.Streamable[F],Monad[F]):Flow[ParsedCmdMessage[F,A],ParsedCmd[F,A],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#addErrorHandlingParsed[F[_],A](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$3:net.katsstuff.ackcord.util.Streamable[F],implicitevidence$4:cats.Monad[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.ParsedCmdMessage[F,A],net.katsstuff.ackcord.commands.ParsedCmd[F,A],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addErrorHandlingParsed</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.F">F</span>]</span>, <span name="arg1">arg1: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmdMessage.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdMessage">ParsedCmdMessage</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.A">A</span>], <a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingParsed.A">A</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Handle all the errors for a parsed command.</p>
+    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#addErrorHandlingUnparsed" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="addErrorHandlingUnparsed[F[_]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$5:cats.Monad[F],implicitevidence$6:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.CmdMessage[F],net.katsstuff.ackcord.commands.Cmd[F],akka.NotUsed]"></a><a id="addErrorHandlingUnparsed[F[_]](http.requests.RequestHelper)(Monad[F],util.Streamable[F]):Flow[CmdMessage[F],Cmd[F],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#addErrorHandlingUnparsed[F[_]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$5:cats.Monad[F],implicitevidence$6:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.CmdMessage[F],net.katsstuff.ackcord.commands.Cmd[F],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addErrorHandlingUnparsed</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingUnparsed.F">F</span>]</span>, <span name="arg1">arg1: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingUnparsed.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="CmdMessage.html" class="extype" name="net.katsstuff.ackcord.commands.CmdMessage">CmdMessage</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingUnparsed.F">F</span>], <a href="Cmd.html" class="extype" name="net.katsstuff.ackcord.commands.Cmd">Cmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.addErrorHandlingUnparsed.F">F</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Handle all the errors for a unparsed command.</p>
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
@@ -402,7 +478,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -426,7 +502,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -442,7 +518,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -458,7 +534,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -487,54 +563,6 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#handleErrors" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="handleErrors[F[_],A&lt;:net.katsstuff.ackcord.commands.AllCmdMessages[F]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$1:cats.Monad[F],implicitevidence$2:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[A,A,akka.NotUsed]"></a><a id="handleErrors[F[_],A&lt;:AllCmdMessages[F]](http.requests.RequestHelper)(Monad[F],util.Streamable[F]):Flow[A,A,NotUsed]"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#handleErrors[F[_],A&lt;:net.katsstuff.ackcord.commands.AllCmdMessages[F]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$1:cats.Monad[F],implicitevidence$2:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[A,A,akka.NotUsed]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">handleErrors</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A &lt;: <a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrors.F">F</span>]</span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrors.F">F</span>]</span>, <span name="arg1">arg1: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrors.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrors.A">A</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrors.A">A</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Handle command errors.</p>
-    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#handleErrorsParsed" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="handleErrorsParsed[F[_],A](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$3:net.katsstuff.ackcord.util.Streamable[F],implicitevidence$4:cats.Monad[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.ParsedCmdMessage[F,A],net.katsstuff.ackcord.commands.ParsedCmd[F,A],akka.NotUsed]"></a><a id="handleErrorsParsed[F[_],A](http.requests.RequestHelper)(util.Streamable[F],Monad[F]):Flow[ParsedCmdMessage[F,A],ParsedCmd[F,A],NotUsed]"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#handleErrorsParsed[F[_],A](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$3:net.katsstuff.ackcord.util.Streamable[F],implicitevidence$4:cats.Monad[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.ParsedCmdMessage[F,A],net.katsstuff.ackcord.commands.ParsedCmd[F,A],akka.NotUsed]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">handleErrorsParsed</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.F">F</span>]</span>, <span name="arg1">arg1: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmdMessage.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdMessage">ParsedCmdMessage</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.A">A</span>], <a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsParsed.A">A</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Handle all the errors for a parsed command.</p>
-    </li><li name="net.katsstuff.ackcord.commands.CmdHelper#handleErrorsUnparsed" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="handleErrorsUnparsed[F[_]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$5:cats.Monad[F],implicitevidence$6:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.CmdMessage[F],net.katsstuff.ackcord.commands.Cmd[F],akka.NotUsed]"></a><a id="handleErrorsUnparsed[F[_]](http.requests.RequestHelper)(Monad[F],util.Streamable[F]):Flow[CmdMessage[F],Cmd[F],NotUsed]"></a>
-      <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#handleErrorsUnparsed[F[_]](requests:net.katsstuff.ackcord.http.requests.RequestHelper)(implicitevidence$5:cats.Monad[F],implicitevidence$6:net.katsstuff.ackcord.util.Streamable[F]):akka.stream.scaladsl.Flow[net.katsstuff.ackcord.commands.CmdMessage[F],net.katsstuff.ackcord.commands.Cmd[F],akka.NotUsed]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">handleErrorsUnparsed</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="requests">requests: <a href="../http/requests/RequestHelper.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper">http.requests.RequestHelper</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsUnparsed.F">F</span>]</span>, <span name="arg1">arg1: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsUnparsed.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="CmdMessage.html" class="extype" name="net.katsstuff.ackcord.commands.CmdMessage">CmdMessage</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsUnparsed.F">F</span>], <a href="Cmd.html" class="extype" name="net.katsstuff.ackcord.commands.Cmd">Cmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.handleErrorsUnparsed.F">F</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Handle all the errors for a unparsed command.</p>
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
@@ -547,7 +575,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -566,14 +594,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.commands.CmdHelper#isValidCommand" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="isValidCommand[F[_]](needMention:Boolean,msg:net.katsstuff.ackcord.data.Message)(implicitevidence$9:cats.Monad[F],implicitc:net.katsstuff.ackcord.CacheSnapshot[F]):cats.data.OptionT[F,List[String]]"></a><a id="isValidCommand[F[_]](Boolean,Message)(Monad[F],CacheSnapshot[F]):OptionT[F,List[String]]"></a>
+      <a id="isValidCommand[F[_]](needMention:Boolean,msg:net.katsstuff.ackcord.data.Message)(implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):cats.data.OptionT[F,List[String]]"></a><a id="isValidCommand[F[_]](Boolean,Message)(CacheSnapshot[F],Monad[F]):OptionT[F,List[String]]"></a>
       <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#isValidCommand[F[_]](needMention:Boolean,msg:net.katsstuff.ackcord.data.Message)(implicitevidence$9:cats.Monad[F],implicitc:net.katsstuff.ackcord.CacheSnapshot[F]):cats.data.OptionT[F,List[String]]" title="Permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CmdHelper$.html#isValidCommand[F[_]](needMention:Boolean,msg:net.katsstuff.ackcord.data.Message)(implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):cats.data.OptionT[F,List[String]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -582,10 +610,10 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isValidCommand</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="msg">msg: <a href="../data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>]</span>, <span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="cats.data.OptionT">OptionT</span>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+        <span class="name">isValidCommand</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="msg">msg: <a href="../data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>]</span>, <span name="F">F: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="cats.data.OptionT">OptionT</span>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.isValidCommand.F">F</span>, <span class="extype" name="scala.List">List</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
       </span>
       
-      <p class="shortcomment cmt">Check if a message is a valid command.</p>
+      <p class="shortcomment cmt">Check if a message is a valid command, and if it is, returns the arguments of the command.</p>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -598,7 +626,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -614,7 +642,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -633,7 +661,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -652,7 +680,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sendCmdErrorMsg</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A &lt;: <a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>, <span name="arg1">arg1: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.A">A</span>, <a href="../http/requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">http.requests.Request</a>[<a href="../data/raw/RawMessage.html" class="extype" name="net.katsstuff.ackcord.data.raw.RawMessage">RawMessage</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">sendCmdErrorMsg</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A &lt;: <a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="../util/Streamable.html" class="extype" name="net.katsstuff.ackcord.util.Streamable">util.Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>, <span name="arg1">arg1: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.F">F</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdHelper.sendCmdErrorMsg.A">A</span>, <a href="../http/requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">http.requests.Request</a>[<a href="../data/raw/RawMessage.html" class="extype" name="net.katsstuff.ackcord.data.raw.RawMessage">RawMessage</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A flow which will send error messages as messages.</p>
@@ -700,7 +728,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -722,7 +750,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -744,7 +772,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -767,9 +795,9 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

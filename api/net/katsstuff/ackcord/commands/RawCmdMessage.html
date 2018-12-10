@@ -135,6 +135,14 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="net.katsstuff.ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command."></a>
+                        <a href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command.">AbstractCmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects."></a>
+                        <a href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects.">AbstractCommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="AllCmdMessages.html" title="Top trait for all command messages."></a>
                         <a href="AllCmdMessages.html" title="Top trait for all command messages.">AllCmdMessages</a>
                       </li><li class="current-entities indented4">
@@ -179,6 +187,10 @@
                         <a href="CmdHelper$.html" title="">CmdHelper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance."></a>
+                        <a href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance.">CmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CmdMessage.html" title="Trait for all unparsed command messages."></a>
                         <a href="CmdMessage.html" title="Trait for all unparsed command messages.">CmdMessage</a>
                       </li><li class="current-entities indented4">
@@ -187,12 +199,20 @@
                         <a href="CmdParseError.html" title="A parse error for a parsed command.">CmdParseError</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead."></a>
+                        <a href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead.">CmdRefiner</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="object" href="CmdStreams$.html" title=""></a>
                         <a href="CmdStreams$.html" title="">CmdStreams</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about."></a>
-                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about.">Commands</a>
+                        <a class="class" href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid."></a>
+                        <a href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid.">CommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands."></a>
+                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands.">Commands</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Context$.html" title=""></a>
                         <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
@@ -202,9 +222,17 @@
                         <a class="object" href="CoreCommands$.html" title=""></a>
                         <a href="CoreCommands$.html" title="">CoreCommands</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="FilterBehavior$.html" title=""></a>
+                        <a class="trait" href="FilterBehavior.html" title=""></a>
+                        <a href="FilterBehavior.html" title="">FilterBehavior</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="FilteredCmd.html" title="A command that did not make it through some filters."></a>
                         <a href="FilteredCmd.html" title="A command that did not make it through some filters.">FilteredCmd</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="GenericCmdError.html" title="A generic command error."></a>
+                        <a href="GenericCmdError.html" title="A generic command error.">GenericCmdError</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="HelpCmd$.html" title=""></a>
                         <a class="class" href="HelpCmd.html" title="A base for help commands."></a>
@@ -215,8 +243,8 @@
                         <a href="NoCmd.html" title="Bot was mentioned, but no command was used.">NoCmd</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="NoCmdCategory.html" title="An unknown category was used."></a>
-                        <a href="NoCmdCategory.html" title="An unknown category was used.">NoCmdCategory</a>
+                        <a class="class" href="NoCmdPrefix.html" title="An unknown prefix was used."></a>
+                        <a href="NoCmdPrefix.html" title="An unknown prefix was used.">NoCmdPrefix</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ParsedCmd.html" title="A parsed specific command."></a>
@@ -270,21 +298,21 @@
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Trait for commands that have not been parsed into a specific command.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/cmdObjs.scala" target="_blank">cmdObjs.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/cmdObjs.scala" target="_blank">cmdObjs.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.RawCmdMessage.F">F</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.RawCmdMessage.F">F</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
             </span>
-            <div class="subClasses hiddenContent"><a href="NoCmd.html" class="extype" name="net.katsstuff.ackcord.commands.NoCmd">NoCmd</a>, <a href="NoCmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.NoCmdCategory">NoCmdCategory</a>, <a href="RawCmd.html" class="extype" name="net.katsstuff.ackcord.commands.RawCmd">RawCmd</a></div>
+            <div class="subClasses hiddenContent"><a href="NoCmd.html" class="extype" name="net.katsstuff.ackcord.commands.NoCmd">NoCmd</a>, <a href="NoCmdPrefix.html" class="extype" name="net.katsstuff.ackcord.commands.NoCmdPrefix">NoCmdPrefix</a>, <a href="RawCmd.html" class="extype" name="net.katsstuff.ackcord.commands.RawCmd">RawCmd</a></div>
           </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
                 </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 346.00 155.00" height="155pt" width="346pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 342,-151 342,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="net.katsstuff.ackcord.commands.RawCmdMessage (this trait)" xlink:href="#inheritance-diagram"><path d="M222.667,-86C222.667,-86 109.333,-86 109.333,-86 105.167,-86 101,-81.8333 101,-77.6667 101,-77.6667 101,-69.3333 101,-69.3333 101,-65.1667 105.167,-61 109.333,-61 109.333,-61 222.667,-61 222.667,-61 226.833,-61 231,-65.1667 231,-69.3333 231,-69.3333 231,-77.6667 231,-77.6667 231,-81.8333 226.833,-86 222.667,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="111" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="132" text-anchor="start">RawCmdMessage[F]</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="net.katsstuff.ackcord.commands.NoCmd" xlink:href="NoCmd.html#inheritance-diagram"><path d="M77.6667,-25C77.6667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 77.6667,-0 77.6667,-0 81.8333,-0 86,-4.16667 86,-8.33333 86,-8.33333 86,-16.6667 86,-16.6667 86,-20.8333 81.8333,-25 77.6667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31" text-anchor="start">NoCmd[F]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="NoCmd[F] is a subtype of RawCmdMessage[F]"><path d="M135.419,-57.8308C114.41,-47.7538 86.8966,-34.5561 67.3674,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="134.621,-60.1657 141.992,-60.9841 136.741,-55.7476 134.621,-60.1657" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="net.katsstuff.ackcord.commands.NoCmdCategory" xlink:href="NoCmdCategory.html#inheritance-diagram"><path d="M219.667,-25C219.667,-25 112.333,-25 112.333,-25 108.167,-25 104,-20.8333 104,-16.6667 104,-16.6667 104,-8.33333 104,-8.33333 104,-4.16667 108.167,-0 112.333,-0 112.333,-0 219.667,-0 219.667,-0 223.833,-0 228,-4.16667 228,-8.33333 228,-8.33333 228,-16.6667 228,-16.6667 228,-20.8333 223.833,-25 219.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="114" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="135" text-anchor="start">NoCmdCategory[F]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="NoCmdCategory[F] is a subtype of RawCmdMessage[F]"><path d="M166,-53.7603C166,-44.3675 166,-33.2882 166,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="163.55,-53.8435 166,-60.8435 168.45,-53.8435 163.55,-53.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="net.katsstuff.ackcord.commands.RawCmd" xlink:href="RawCmd.html#inheritance-diagram"><path d="M329.667,-25C329.667,-25 254.333,-25 254.333,-25 250.167,-25 246,-20.8333 246,-16.6667 246,-16.6667 246,-8.33333 246,-8.33333 246,-4.16667 250.167,-0 254.333,-0 254.333,-0 329.667,-0 329.667,-0 333.833,-0 338,-4.16667 338,-8.33333 338,-8.33333 338,-16.6667 338,-16.6667 338,-20.8333 333.833,-25 329.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="256" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="277" text-anchor="start">RawCmd[F]</text></a></g></g><!-- node0&#45;&gt;node3 --><g class="edge inheritance" id="graph1_0_3"><g id="a_inheritance|graph1_0_3"><a xlink:title="RawCmd[F] is a subtype of RawCmdMessage[F]"><path d="M197.048,-57.9615C218.604,-47.8681 246.946,-34.5966 267.038,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="195.894,-55.7968 190.593,-60.9841 197.972,-60.2344 195.894,-55.7968" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node trait" id="graph1_4"><g id="a_trait|graph1_4"><a xlink:title="net.katsstuff.ackcord.commands.AllCmdMessages" xlink:href="AllCmdMessages.html#inheritance-diagram"><path d="M221.667,-147C221.667,-147 110.333,-147 110.333,-147 106.167,-147 102,-142.833 102,-138.667 102,-138.667 102,-130.333 102,-130.333 102,-126.167 106.167,-122 110.333,-122 110.333,-122 221.667,-122 221.667,-122 225.833,-122 230,-126.167 230,-130.333 230,-130.333 230,-138.667 230,-138.667 230,-142.833 225.833,-147 221.667,-147" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-141.5" x="112" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="133" text-anchor="start">AllCmdMessages[F]</text></a></g></g><!-- node4&#45;&gt;node0 --><g class="edge inheritance" id="graph1_4_0"><g id="a_inheritance|graph1_4_0"><a xlink:title="RawCmdMessage[F] is a subtype of AllCmdMessages[F]"><path d="M166,-114.76C166,-105.367 166,-94.2882 166,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="163.55,-114.843 166,-121.843 168.45,-114.844 163.55,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 332.00 155.00" height="155pt" width="332pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 328,-151 328,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="net.katsstuff.ackcord.commands.RawCmdMessage (this trait)" xlink:href="#inheritance-diagram"><path d="M215.667,-86C215.667,-86 102.333,-86 102.333,-86 98.1667,-86 94,-81.8333 94,-77.6667 94,-77.6667 94,-69.3333 94,-69.3333 94,-65.1667 98.1667,-61 102.333,-61 102.333,-61 215.667,-61 215.667,-61 219.833,-61 224,-65.1667 224,-69.3333 224,-69.3333 224,-77.6667 224,-77.6667 224,-81.8333 219.833,-86 215.667,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-80.5" x="104" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="125" text-anchor="start">RawCmdMessage[F]</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="net.katsstuff.ackcord.commands.NoCmd" xlink:href="NoCmd.html#inheritance-diagram"><path d="M77.6667,-25C77.6667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 77.6667,-0 77.6667,-0 81.8333,-0 86,-4.16667 86,-8.33333 86,-8.33333 86,-16.6667 86,-16.6667 86,-20.8333 81.8333,-25 77.6667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31" text-anchor="start">NoCmd[F]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="NoCmd[F] is a subtype of RawCmdMessage[F]"><path d="M129.901,-57.6998C110.122,-47.6396 84.3186,-34.5155 65.9807,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="129.009,-59.9944 136.359,-60.9841 131.23,-55.6269 129.009,-59.9944" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="net.katsstuff.ackcord.commands.NoCmdPrefix" xlink:href="NoCmdPrefix.html#inheritance-diagram"><path d="M205.667,-25C205.667,-25 112.333,-25 112.333,-25 108.167,-25 104,-20.8333 104,-16.6667 104,-16.6667 104,-8.33333 104,-8.33333 104,-4.16667 108.167,-0 112.333,-0 112.333,-0 205.667,-0 205.667,-0 209.833,-0 214,-4.16667 214,-8.33333 214,-8.33333 214,-16.6667 214,-16.6667 214,-20.8333 209.833,-25 205.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="114" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="135" text-anchor="start">NoCmdPrefix[F]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="NoCmdPrefix[F] is a subtype of RawCmdMessage[F]"><path d="M159,-53.7603C159,-44.3675 159,-33.2882 159,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="156.55,-53.8435 159,-60.8435 161.45,-53.8435 156.55,-53.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="net.katsstuff.ackcord.commands.RawCmd" xlink:href="RawCmd.html#inheritance-diagram"><path d="M315.667,-25C315.667,-25 240.333,-25 240.333,-25 236.167,-25 232,-20.8333 232,-16.6667 232,-16.6667 232,-8.33333 232,-8.33333 232,-4.16667 236.167,-0 240.333,-0 240.333,-0 315.667,-0 315.667,-0 319.833,-0 324,-4.16667 324,-8.33333 324,-8.33333 324,-16.6667 324,-16.6667 324,-20.8333 319.833,-25 315.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../lib/class_diagram.png" y="-19.5" x="242" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="263" text-anchor="start">RawCmd[F]</text></a></g></g><!-- node0&#45;&gt;node3 --><g class="edge inheritance" id="graph1_0_3"><g id="a_inheritance|graph1_0_3"><a xlink:title="RawCmd[F] is a subtype of RawCmdMessage[F]"><path d="M188.587,-57.8308C208.912,-47.7538 235.531,-34.5561 254.425,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="187.41,-55.6797 182.227,-60.9841 189.587,-60.0697 187.41,-55.6797" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node trait" id="graph1_4"><g id="a_trait|graph1_4"><a xlink:title="net.katsstuff.ackcord.commands.AllCmdMessages" xlink:href="AllCmdMessages.html#inheritance-diagram"><path d="M214.667,-147C214.667,-147 103.333,-147 103.333,-147 99.1667,-147 95,-142.833 95,-138.667 95,-138.667 95,-130.333 95,-130.333 95,-126.167 99.1667,-122 103.333,-122 103.333,-122 214.667,-122 214.667,-122 218.833,-122 223,-126.167 223,-130.333 223,-130.333 223,-138.667 223,-138.667 223,-142.833 218.833,-147 214.667,-147" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../lib/trait_diagram.png" y="-141.5" x="105" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="126" text-anchor="start">AllCmdMessages[F]</text></a></g></g><!-- node4&#45;&gt;node0 --><g class="edge inheritance" id="graph1_4_0"><g id="a_inheritance|graph1_4_0"><a xlink:title="RawCmdMessage[F] is a subtype of AllCmdMessages[F]"><path d="M159,-114.76C159,-105.367 159,-94.2882 159,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="156.55,-114.843 159,-121.843 161.45,-114.844 156.55,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
                 <div id="diagram-controls" class="hiddenContent">
                   <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
                   <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
@@ -354,7 +382,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -370,7 +398,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -386,7 +414,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -418,7 +446,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -442,7 +470,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -458,7 +486,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -474,7 +502,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -515,7 +543,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -534,7 +562,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -550,7 +578,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -566,7 +594,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -585,7 +613,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -636,7 +664,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -658,7 +686,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -680,7 +708,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -705,9 +733,9 @@
         <div class="parent" name="net.katsstuff.ackcord.commands.AllCmdMessages">
               <h3>Inherited from <a href="AllCmdMessages.html" class="extype" name="net.katsstuff.ackcord.commands.AllCmdMessages">AllCmdMessages</a>[<span class="extype" name="net.katsstuff.ackcord.commands.RawCmdMessage.F">F</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

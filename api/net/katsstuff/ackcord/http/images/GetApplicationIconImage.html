@@ -171,6 +171,10 @@
                         <a href="GetGuildSplashImage.html" title="Get a guild splash image.">GetGuildSplashImage</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
+                        <a class="class" href="GetGuildWidgetImage.html" title="Get the widget image for a specific guild."></a>
+                        <a href="GetGuildWidgetImage.html" title="Get the widget image for a specific guild.">GetGuildWidgetImage</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
                         <a class="class" href="GetUserAvatarImage.html" title="Get the image of a user avatar."></a>
                         <a href="GetUserAvatarImage.html" title="Get the image of a user avatar.">GetUserAvatarImage</a>
                       </li><li class="current-entities indented5">
@@ -200,17 +204,17 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">GetApplicationIconImage</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="desiredSize">desiredSize: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="format">format: <a href="../../data/ImageFormat.html" class="extype" name="net.katsstuff.ackcord.data.ImageFormat">ImageFormat</a></span>, <span name="applicationId">applicationId: <a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a></span>, <span name="iconHash">iconHash: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>)</span><span class="result"> extends <a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>] with <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">GetApplicationIconImage</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="desiredSize">desiredSize: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="format">format: <a href="../../data/ImageFormat.html" class="extype" name="net.katsstuff.ackcord.data.ImageFormat">ImageFormat</a></span>, <span name="applicationId">applicationId: <a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a></span>, <span name="iconHash">iconHash: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>)</span><span class="result"> extends <a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Get the icon of an application. Allowed formats are PNG, JPEG and WebP.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordImages/src/main/scala/net/katsstuff/ackcord/http/images/imageRequests.scala" target="_blank">imageRequests.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordImages/src/main/scala/net/katsstuff/ackcord/http/images/imageRequests.scala" target="_blank">imageRequests.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -278,7 +282,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">GetApplicationIconImage</span><span class="params">(<span name="desiredSize">desiredSize: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="format">format: <a href="../../data/ImageFormat.html" class="extype" name="net.katsstuff.ackcord.data.ImageFormat">ImageFormat</a></span>, <span name="applicationId">applicationId: <a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a></span>, <span name="iconHash">iconHash: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>)</span>
+        <span class="name">GetApplicationIconImage</span><span class="params">(<span name="desiredSize">desiredSize: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="format">format: <a href="../../data/ImageFormat.html" class="extype" name="net.katsstuff.ackcord.data.ImageFormat">ImageFormat</a></span>, <span name="applicationId">applicationId: <a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a></span>, <span name="iconHash">iconHash: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>)</span>
       </span>
       
       
@@ -304,7 +308,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -320,7 +324,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -336,7 +340,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -401,7 +405,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">bodyForLogging</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">bodyForLogging</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Returns the body of this Request for use in logging.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the body of this Request for use in logging.
@@ -418,7 +422,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -442,7 +446,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: <a href="http://www.scala-lang.org/api/2.12.5/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
+        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: <a href="http://www.scala-lang.org/api/2.12.8/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Map the result if the function is defined for the response data.</p><div class="fullcomment"><div class="comment cmt"><p>Map the result if the function is defined for the response data.
@@ -476,7 +480,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">desiredSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">desiredSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <p class="shortcomment cmt">The desired size of the image.</p><div class="fullcomment"><div class="comment cmt"><p>The desired size of the image. Must be between 16 and 2048, and must be a power of 2.
@@ -493,7 +497,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -509,7 +513,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">extraHeaders</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/HttpHeader.html#akka.http.scaladsl.model.HttpHeader" class="extype" name="akka.http.scaladsl.model.HttpHeader">HttpHeader</a>]</span>
+        <span class="name">extraHeaders</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/HttpHeader.html#akka.http.scaladsl.model.HttpHeader" class="extype" name="akka.http.scaladsl.model.HttpHeader">HttpHeader</a>]</span>
       </span>
       
       <p class="shortcomment cmt">All the extra headers to send with this request.</p><div class="fullcomment"><div class="comment cmt"><p>All the extra headers to send with this request.
@@ -526,7 +530,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
+        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Filter the response of sending this request.</p><div class="fullcomment"><div class="comment cmt"><p>Filter the response of sending this request.
@@ -543,7 +547,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -589,6 +593,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.images.ImageRequest#hasPermissions" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hasPermissions[F[_]](implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):F[Boolean]"></a><a id="hasPermissions[F[_]](CacheSnapshot[F],Monad[F]):F[Boolean]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/images/GetApplicationIconImage.html#hasPermissions[F[_]](implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):F[Boolean]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hasPermissions</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest.hasPermissions.F">F</span>]</span>, <span name="F">F: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest.hasPermissions.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest.hasPermissions.F">F</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Check if a client has the needed permissions to execute this request.</p><div class="fullcomment"><div class="comment cmt"><p>Check if a client has the needed permissions to execute this request.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a> → <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.images.GetApplicationIconImage#iconHash" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="iconHash:String"></a>
       <span class="permalink">
@@ -617,7 +638,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -633,7 +654,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Map the result of sending this request.</p><div class="fullcomment"><div class="comment cmt"><p>Map the result of sending this request.
@@ -650,7 +671,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -666,7 +687,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -685,7 +706,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -704,7 +725,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">parseResponse</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">parseResponse</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A flow that can be used to parse the responses from this request.</p><div class="fullcomment"><div class="comment cmt"><p>A flow that can be used to parse the responses from this request.
@@ -721,7 +742,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">requestBody</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/RequestEntity.html#akka.http.scaladsl.model.RequestEntity" class="extype" name="akka.http.scaladsl.model.RequestEntity">RequestEntity</a></span>
+        <span class="name">requestBody</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/RequestEntity.html#akka.http.scaladsl.model.RequestEntity" class="extype" name="akka.http.scaladsl.model.RequestEntity">RequestEntity</a></span>
       </span>
       
       <p class="shortcomment cmt">The body of the request to send.</p><div class="fullcomment"><div class="comment cmt"><p>The body of the request to send.
@@ -771,7 +792,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">transformResponse</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
+        <span class="name">transformResponse</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Transform the response of this request as a flow.</p><div class="fullcomment"><div class="comment cmt"><p>Transform the response of this request as a flow.
@@ -788,7 +809,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -810,7 +831,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -832,7 +853,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -856,7 +877,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="newContext">newContext: <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span>]</span>
+        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="newContext">newContext: <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Updates the context of this request.</p><div class="fullcomment"><div class="comment cmt"><p>Updates the context of this request.
@@ -872,23 +893,23 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.images.ImageRequest">
               <h3>Inherited from <a href="ImageRequest.html" class="extype" name="net.katsstuff.ackcord.http.images.ImageRequest">ImageRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.requests.Request">
-              <h3>Inherited from <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.requests.MaybeRequest">
-              <h3>Inherited from <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/util/ByteString.html#akka.util.ByteString" class="extype" name="akka.util.ByteString">ByteString</a>, <span class="extype" name="net.katsstuff.ackcord.http.images.GetApplicationIconImage.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

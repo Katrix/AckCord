@@ -375,6 +375,10 @@
                         <a href="GatewayEvent$$UserUpdate.html" title="Sent to the shard when a user object is updated.">UserUpdate</a>
                       </li><li class="current-entities indented6">
                         <span class="separator"></span>
+                        <a class="class" href="GatewayEvent$$UserWithGuildId.html" title=""></a>
+                        <a href="GatewayEvent$$UserWithGuildId.html" title="">UserWithGuildId</a>
+                      </li><li class="current-entities indented6">
+                        <span class="separator"></span>
                         <a class="class" href="GatewayEvent$$VoiceServerUpdate.html" title="Sent a guilds voice server is updated."></a>
                         <a href="GatewayEvent$$VoiceServerUpdate.html" title="Sent a guilds voice server is updated.">VoiceServerUpdate</a>
                       </li><li class="current-entities indented6">
@@ -412,22 +416,22 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">MessageReactionRemoveAll</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>] with <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">MessageReactionRemoveAll</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>] with <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Sent to the shard when a user removes all reactions from a message.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordGateway/src/main/scala/net/katsstuff/ackcord/websocket/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordGateway/src/main/scala/net/katsstuff/ackcord/websocket/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="SimpleGatewayEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="ComplexGatewayEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>, <a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="SimpleGatewayEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="ComplexGatewayEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>, <a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
                 </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 460.50 118.00" height="118pt" width="461pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 456.5,-114 456.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll (this class)" xlink:href="#inheritance-diagram"><path d="M375.667,-49C375.667,-49 230.333,-49 230.333,-49 226.167,-49 222,-44.8333 222,-40.6667 222,-40.6667 222,-32.3333 222,-32.3333 222,-28.1667 226.167,-24 230.333,-24 230.333,-24 375.667,-24 375.667,-24 379.833,-24 384,-28.1667 384,-32.3333 384,-32.3333 384,-40.6667 384,-40.6667 384,-44.8333 379.833,-49 375.667,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../../lib/class_diagram.png" y="-43.5" x="232" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="253" text-anchor="start">MessageReactionRemoveAll</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent" xlink:href="GatewayEvent$$ChannelEvent.html#inheritance-diagram"><path d="M237.667,-110C237.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 237.667,-85 237.667,-85 241.833,-85 246,-89.1667 246,-93.3333 246,-93.3333 246,-101.667 246,-101.667 246,-105.833 241.833,-110 237.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">ChannelEvent[MessageReactionRemoveAllData]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="MessageReactionRemoveAll is a subtype of ChannelEvent[MessageReactionRemoveAllData]"><path d="M165.008,-82.7306C196.175,-72.5148 238.195,-58.7417 267.648,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="164.022,-80.4756 158.133,-84.9841 165.548,-85.1319 164.022,-80.4756" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M333.167,-110C333.167,-110 272.833,-110 272.833,-110 268.667,-110 264.5,-105.833 264.5,-101.667 264.5,-101.667 264.5,-93.3333 264.5,-93.3333 264.5,-89.1667 268.667,-85 272.833,-85 272.833,-85 333.167,-85 333.167,-85 337.333,-85 341.5,-89.1667 341.5,-93.3333 341.5,-93.3333 341.5,-101.667 341.5,-101.667 341.5,-105.833 337.333,-110 333.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="275" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="296" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="MessageReactionRemoveAll is a subtype of Product"><path d="M303,-77.7603C303,-68.3675 303,-57.2882 303,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="300.55,-77.8435 303,-84.8435 305.45,-77.8435 300.55,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M444.167,-110C444.167,-110 367.833,-110 367.833,-110 363.667,-110 359.5,-105.833 359.5,-101.667 359.5,-101.667 359.5,-93.3333 359.5,-93.3333 359.5,-89.1667 363.667,-85 367.833,-85 367.833,-85 444.167,-85 444.167,-85 448.333,-85 452.5,-89.1667 452.5,-93.3333 452.5,-93.3333 452.5,-101.667 452.5,-101.667 452.5,-105.833 448.333,-110 444.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="370" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="391" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="MessageReactionRemoveAll is a subtype of Serializable"><path d="M379.453,-81.2936C361.951,-71.268 339.378,-58.338 323.307,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="378.359,-83.4901 385.651,-84.8435 380.794,-79.2382 378.359,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
+                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 726.50 118.00" height="118pt" width="727pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 722.5,-114 722.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll (this class)" xlink:href="#inheritance-diagram"><path d="M550.667,-49C550.667,-49 405.333,-49 405.333,-49 401.167,-49 397,-44.8333 397,-40.6667 397,-40.6667 397,-32.3333 397,-32.3333 397,-28.1667 401.167,-24 405.333,-24 405.333,-24 550.667,-24 550.667,-24 554.833,-24 559,-28.1667 559,-32.3333 559,-32.3333 559,-40.6667 559,-40.6667 559,-44.8333 554.833,-49 550.667,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../../../../lib/class_diagram.png" y="-43.5" x="407" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="428" text-anchor="start">MessageReactionRemoveAll</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent" xlink:href="GatewayEvent$$ChannelEvent.html#inheritance-diagram"><path d="M237.667,-110C237.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 237.667,-85 237.667,-85 241.833,-85 246,-89.1667 246,-93.3333 246,-93.3333 246,-101.667 246,-101.667 246,-105.833 241.833,-110 237.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">ChannelEvent[MessageReactionRemoveAllData]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="MessageReactionRemoveAll is a subtype of ChannelEvent[MessageReactionRemoveAllData]"><path d="M199.359,-83.8093C261.481,-73.4848 348.41,-59.0374 408.582,-49.0371" stroke="#d4d4d4" fill="none"></path><polygon points="198.794,-81.4196 192.29,-84.9841 199.597,-86.2533 198.794,-81.4196" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent" xlink:href="GatewayEvent$$OptGuildEvent.html#inheritance-diagram"><path d="M503.667,-110C503.667,-110 272.333,-110 272.333,-110 268.167,-110 264,-105.833 264,-101.667 264,-101.667 264,-93.3333 264,-93.3333 264,-89.1667 268.167,-85 272.333,-85 272.333,-85 503.667,-85 503.667,-85 507.833,-85 512,-89.1667 512,-93.3333 512,-93.3333 512,-101.667 512,-101.667 512,-105.833 507.833,-110 503.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="274" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="295" text-anchor="start">OptGuildEvent[MessageReactionRemoveAllData]</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="MessageReactionRemoveAll is a subtype of OptGuildEvent[MessageReactionRemoveAllData]"><path d="M412.005,-80.7633C427.18,-70.8155 446.46,-58.1764 460.256,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="410.292,-78.9567 405.781,-84.8435 412.979,-83.0547 410.292,-78.9567" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Product"><path d="M599.167,-110C599.167,-110 538.833,-110 538.833,-110 534.667,-110 530.5,-105.833 530.5,-101.667 530.5,-101.667 530.5,-93.3333 530.5,-93.3333 530.5,-89.1667 534.667,-85 538.833,-85 538.833,-85 599.167,-85 599.167,-85 603.333,-85 607.5,-89.1667 607.5,-93.3333 607.5,-93.3333 607.5,-101.667 607.5,-101.667 607.5,-105.833 603.333,-110 599.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="541" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="562" text-anchor="start">Product</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="MessageReactionRemoveAll is a subtype of Product"><path d="M545.138,-81.0291C529.733,-71.0415 510.015,-58.2572 495.941,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="543.815,-83.0911 551.021,-84.8435 546.481,-78.9796 543.815,-83.0911" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node trait" id="graph1_4"><g id="a_trait|graph1_4"><a xlink:title="scala.Serializable"><path d="M710.167,-110C710.167,-110 633.833,-110 633.833,-110 629.667,-110 625.5,-105.833 625.5,-101.667 625.5,-101.667 625.5,-93.3333 625.5,-93.3333 625.5,-89.1667 629.667,-85 633.833,-85 633.833,-85 710.167,-85 710.167,-85 714.333,-85 718.5,-89.1667 718.5,-93.3333 718.5,-93.3333 718.5,-101.667 718.5,-101.667 718.5,-105.833 714.333,-110 710.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../../../lib/trait_diagram.png" y="-104.5" x="636" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="657" text-anchor="start">Serializable</text></a></g></g><!-- node4&#45;&gt;node0 --><g class="edge inheritance" id="graph1_4_0"><g id="a_inheritance|graph1_4_0"><a xlink:title="MessageReactionRemoveAll is a subtype of Serializable"><path d="M627.147,-82.8592C593.514,-72.6307 547.979,-58.7823 516.101,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="626.724,-85.2913 634.134,-84.9841 628.15,-80.6033 626.724,-85.2913" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
                 <div id="diagram-controls" class="hiddenContent">
                   <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
                   <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
@@ -458,7 +462,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll"><span>MessageReactionRemoveAll</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent"><span>ChannelEvent</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.SimpleGatewayEvent"><span>SimpleGatewayEvent</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent"><span>ComplexGatewayEvent</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll"><span>MessageReactionRemoveAll</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent"><span>OptGuildEvent</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent"><span>ChannelEvent</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.SimpleGatewayEvent"><span>SimpleGatewayEvent</span></li><li class="in" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent"><span>ComplexGatewayEvent</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -516,7 +520,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -532,7 +536,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -548,7 +552,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -597,7 +601,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -638,7 +642,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -654,7 +658,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -683,6 +687,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll#guildId" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="guildId:cats.Eval[io.circe.Decoder.Result[Option[net.katsstuff.ackcord.data.GuildId]]]"></a><a id="guildId:Eval[Result[Option[GuildId]]]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$MessageReactionRemoveAll.html#guildId:cats.Eval[io.circe.Decoder.Result[Option[net.katsstuff.ackcord.data.GuildId]]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">guildId</span><span class="result">: <a href="http://typelevel.org/cats/api/cats/Eval.html#cats.Eval" class="extype" name="cats.Eval">Eval</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a>]]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">The guild id for this event.</p><div class="fullcomment"><div class="comment cmt"><p>The guild id for this event.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAll">MessageReactionRemoveAll</a> → <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -695,7 +716,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -745,7 +766,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -761,7 +782,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -780,7 +801,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -815,7 +836,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -837,7 +858,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -859,7 +880,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -882,13 +903,15 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+            </div><div class="parent" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent">
+              <h3>Inherited from <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">
               <h3>Inherited from <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.websocket.gateway.SimpleGatewayEvent">
@@ -896,9 +919,9 @@
             </div><div class="parent" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent">
               <h3>Inherited from <a href="ComplexGatewayEvent.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>, <a href="GatewayEvent$$MessageReactionRemoveAllData.html" class="extype" name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.MessageReactionRemoveAllData">MessageReactionRemoveAllData</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

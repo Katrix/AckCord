@@ -299,12 +299,8 @@
                         <a href="CommandHandlerDSL.html" title="A handler for a specific command that runs a RequestDSL when the command is received.">CommandHandlerDSL</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="CommandSettings.html" title=""></a>
-                        <a href="CommandSettings.html" title="">CommandSettings</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="trait" href="CommandsHelper.html" title="An object which manages a Commands instance."></a>
-                        <a href="CommandsHelper.html" title="An object which manages a Commands instance.">CommandsHelper</a>
+                        <a class="trait" href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance."></a>
+                        <a href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance.">CommandsHelper</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="CoreDiscordClient.html" title=""></a>
@@ -330,6 +326,10 @@
                         <a class="object" href="GatewayHandlerCache$.html" title=""></a>
                         <a href="GatewayHandlerCache$.html" title="">GatewayHandlerCache</a>
                       </li><li class="current-entities indented3">
+                        <a class="object" href="HasCache$.html" title=""></a>
+                        <a class="trait" href="HasCache.html" title=""></a>
+                        <a href="HasCache.html" title="">HasCache</a>
+                      </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time"></a>
                         <a href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time">MemoryCacheSnapshot</a>
@@ -342,9 +342,21 @@
                         <a class="object" href="MusicManager$.html" title=""></a>
                         <a href="MusicManager$.html" title="">MusicManager</a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RawCommandHandler.html" title="A handler for all raw commands."></a>
+                        <a href="RawCommandHandler.html" title="A handler for all raw commands.">RawCommandHandler</a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="RequestDSL$.html" title=""></a>
                         <a class="trait" href="RequestDSL.html" title="Base trait for a RequestDSL object."></a>
                         <a href="RequestDSL.html" title="Base trait for a RequestDSL object.">RequestDSL</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RequestPermissionException.html" title=""></a>
+                        <a href="RequestPermissionException.html" title="">RequestPermissionException</a>
+                      </li><li class="current-entities indented3">
+                        <a class="object" href="RequestRunner$.html" title=""></a>
+                        <a class="trait" href="RequestRunner.html" title=""></a>
+                        <a href="RequestRunner.html" title="">RequestRunner</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="RequestSettings.html" title=""></a>
@@ -386,16 +398,16 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">DiscordShard</span><span class="result"> extends <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a> with <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a> with <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a></span>
+        <span class="name">DiscordShard</span><span class="result"> extends <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a> with <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a> with <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The core actor that controls all the other used actors of AckCord</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/DiscordShard.scala" target="_blank">DiscordShard.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>The core actor that controls all the other used actors of AckCord</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/DiscordShard.scala" target="_blank">DiscordShard.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -463,7 +475,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">DiscordShard</span><span class="params">(<span name="gatewayUri">gatewayUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span>
+        <span class="name">DiscordShard</span><span class="params">(<span name="gatewayUri">gatewayUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">gatewayUri</dt><dd class="cmt"><p>The gateway websocket uri</p></dd><dt class="param">settings</dt><dd class="cmt"><p>The settings to use</p></dd></dl></div>
@@ -484,7 +496,7 @@
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Receive</span><span class="result alias"> = <a href="http://www.scala-lang.org/api/2.12.5/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a>]</span>
+        <span class="name">Receive</span><span class="result alias"> = <a href="http://www.scala-lang.org/api/2.12.8/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -508,7 +520,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -524,7 +536,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -540,7 +552,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -556,7 +568,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -575,7 +587,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Timers → Actor</dd></dl></div>
@@ -591,7 +603,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Timers → Actor</dd></dl></div>
@@ -607,7 +619,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -626,7 +638,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Timers → Actor</dd></dl></div>
@@ -658,7 +670,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -682,7 +694,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">context</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorContext.html#akka.actor.ActorContext" class="extype" name="akka.actor.ActorContext">ActorContext</a></span>
+        <span class="name">context</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorContext.html#akka.actor.ActorContext" class="extype" name="akka.actor.ActorContext">ActorContext</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -698,7 +710,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -714,7 +726,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -730,7 +742,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -771,7 +783,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -790,7 +802,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -806,7 +818,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">log</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>
+        <span class="name">log</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ActorLogging</dd></dl></div>
@@ -822,7 +834,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -838,7 +850,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -857,7 +869,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -876,7 +888,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -898,7 +910,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -920,7 +932,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -942,7 +954,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -980,7 +992,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">self</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">self</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -996,7 +1008,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sender</span><span class="params">()</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">sender</span><span class="params">()</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -1012,7 +1024,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">supervisorStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/SupervisorStrategy.html#akka.actor.SupervisorStrategy" class="extype" name="akka.actor.SupervisorStrategy">SupervisorStrategy</a></span>
+        <span class="name">supervisorStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/SupervisorStrategy.html#akka.actor.SupervisorStrategy" class="extype" name="akka.actor.SupervisorStrategy">SupervisorStrategy</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.DiscordShard">DiscordShard</a> → Actor</dd></dl></div>
@@ -1044,7 +1056,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">timers</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/TimerScheduler.html#akka.actor.TimerScheduler" class="extype" name="akka.actor.TimerScheduler">TimerScheduler</a></span>
+        <span class="name">timers</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/TimerScheduler.html#akka.actor.TimerScheduler" class="extype" name="akka.actor.TimerScheduler">TimerScheduler</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Timers</dd></dl></div>
@@ -1076,7 +1088,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -1092,7 +1104,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1114,7 +1126,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1136,7 +1148,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1159,15 +1171,15 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="akka.actor.Timers">
-              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a></h3>
+              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Timers.html#akka.actor.Timers" class="extype" name="akka.actor.Timers">Timers</a></h3>
             </div><div class="parent" name="akka.actor.ActorLogging">
-              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></h3>
+              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></h3>
             </div><div class="parent" name="akka.actor.Actor">
-              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a></h3>
+              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

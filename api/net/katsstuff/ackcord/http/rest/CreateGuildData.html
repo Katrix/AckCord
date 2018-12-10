@@ -262,7 +262,7 @@
                         <a class="class" href="CreateMessageData.html" title=""></a>
                         <a href="CreateMessageData.html" title="">CreateMessageData</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
+                        <a class="object" href="CreateReaction$.html" title=""></a>
                         <a class="class" href="CreateReaction.html" title="Create a reaction for a message."></a>
                         <a href="CreateReaction.html" title="Create a reaction for a message.">CreateReaction</a>
                       </li><li class="current-entities indented5">
@@ -391,6 +391,10 @@
                         <a href="GetGuildAuditLog.html" title="Get an audit log for a given guild.">GetGuildAuditLog</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
+                        <a class="class" href="GetGuildBan.html" title="Get the ban object for a specific member in a guild."></a>
+                        <a href="GetGuildBan.html" title="Get the ban object for a specific member in a guild.">GetGuildBan</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
                         <a class="class" href="GetGuildBans.html" title="Get all the bans for this guild."></a>
                         <a href="GetGuildBans.html" title="Get all the bans for this guild.">GetGuildBans</a>
                       </li><li class="current-entities indented5">
@@ -439,8 +443,8 @@
                         <a href="GetGuildWebhooks.html" title="Get the webhooks in a guild.">GetGuildWebhooks</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code"></a>
-                        <a href="GetInvite.html" title="Get an invite for a given invite code">GetInvite</a>
+                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code."></a>
+                        <a href="GetInvite.html" title="Get an invite for a given invite code.">GetInvite</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetPinnedMessages.html" title="Get all the pinned messages in a channel."></a>
@@ -461,10 +465,6 @@
                         <span class="separator"></span>
                         <a class="class" href="GetUserConnections.html" title="Get a list of connection objects."></a>
                         <a href="GetUserConnections.html" title="Get a list of connection objects.">GetUserConnections</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="GetUserDMs.html" title=""></a>
-                        <a href="GetUserDMs.html" title="">GetUserDMs</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetUserGuildsGuild.html" title=""></a>
@@ -663,22 +663,6 @@
                         <a href="RemoveGuildMemberRole.html" title="Remove a role from a guild member.">RemoveGuildMemberRole</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="object" href="RestNull$.html" title=""></a>
-                        <a href="RestNull$.html" title="">RestNull</a>
-                      </li><li class="current-entities indented5">
-                        <a class="object" href="RestOption$.html" title=""></a>
-                        <a class="trait" href="RestOption.html" title=""></a>
-                        <a href="RestOption.html" title="">RestOption</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="RestSome.html" title=""></a>
-                        <a href="RestSome.html" title="">RestSome</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="RestUndefined$.html" title=""></a>
-                        <a href="RestUndefined$.html" title="">RestUndefined</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
                         <a class="class" href="SyncGuildIntegration.html" title="Sync an integration."></a>
                         <a href="SyncGuildIntegration.html" title="Sync an integration.">SyncGuildIntegration</a>
                       </li><li class="current-entities indented5">
@@ -712,18 +696,18 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">CreateGuildData</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="region">region: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="icon">icon: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>, <span name="verificationLevel">verificationLevel: <a href="../../data/VerificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.VerificationLevel">VerificationLevel</a></span>, <span name="defaultMessageNotifications">defaultMessageNotifications: <a href="../../data/NotificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.NotificationLevel">NotificationLevel</a></span>, <span name="explicitContentFilter">explicitContentFilter: <a href="../../data/FilterLevel.html" class="extype" name="net.katsstuff.ackcord.data.FilterLevel">FilterLevel</a></span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Role.html" class="extype" name="net.katsstuff.ackcord.data.Role">Role</a>]</span>, <span name="channels">channels: <span class="extype" name="scala.Seq">Seq</span>[<a href="CreateGuildChannelData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildChannelData">CreateGuildChannelData</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">CreateGuildData</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="region">region: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="icon">icon: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>, <span name="verificationLevel">verificationLevel: <a href="../../data/VerificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.VerificationLevel">VerificationLevel</a></span>, <span name="defaultMessageNotifications">defaultMessageNotifications: <a href="../../data/NotificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.NotificationLevel">NotificationLevel</a></span>, <span name="explicitContentFilter">explicitContentFilter: <a href="../../data/FilterLevel.html" class="extype" name="net.katsstuff.ackcord.data.FilterLevel">FilterLevel</a></span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Role.html" class="extype" name="net.katsstuff.ackcord.data.Role">Role</a>]</span>, <span name="channels">channels: <span class="extype" name="scala.Seq">Seq</span>[<a href="CreateGuildChannelData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildChannelData">CreateGuildChannelData</a>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>The name of the guild</p></dd><dt class="param">region</dt><dd class="cmt"><p>The voice region for the guild</p></dd><dt class="param">icon</dt><dd class="cmt"><p>The icon to use for the guild. Must be 128x128 jpeg.</p></dd><dt class="param">verificationLevel</dt><dd class="cmt"><p>The verification level to use for the guild.</p></dd><dt class="param">defaultMessageNotifications</dt><dd class="cmt"><p>The notification level to use for
                                    the guild.</p></dd><dt class="param">roles</dt><dd class="cmt"><p>The roles for the new guild. Note, here the snowflake is
-             just a placeholder.</p></dd><dt class="param">channels</dt><dd class="cmt"><p>The channels for the new guild.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/guildRequests.scala" target="_blank">guildRequests.scala</a></dd></dl><div class="toggleContainer block">
+             just a placeholder.</p></dd><dt class="param">channels</dt><dd class="cmt"><p>The channels for the new guild.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/guildRequests.scala" target="_blank">guildRequests.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -791,7 +775,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CreateGuildData</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="region">region: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="icon">icon: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>, <span name="verificationLevel">verificationLevel: <a href="../../data/VerificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.VerificationLevel">VerificationLevel</a></span>, <span name="defaultMessageNotifications">defaultMessageNotifications: <a href="../../data/NotificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.NotificationLevel">NotificationLevel</a></span>, <span name="explicitContentFilter">explicitContentFilter: <a href="../../data/FilterLevel.html" class="extype" name="net.katsstuff.ackcord.data.FilterLevel">FilterLevel</a></span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Role.html" class="extype" name="net.katsstuff.ackcord.data.Role">Role</a>]</span>, <span name="channels">channels: <span class="extype" name="scala.Seq">Seq</span>[<a href="CreateGuildChannelData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildChannelData">CreateGuildChannelData</a>]</span>)</span>
+        <span class="name">CreateGuildData</span><span class="params">(<span name="name">name: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="region">region: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="icon">icon: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>, <span name="verificationLevel">verificationLevel: <a href="../../data/VerificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.VerificationLevel">VerificationLevel</a></span>, <span name="defaultMessageNotifications">defaultMessageNotifications: <a href="../../data/NotificationLevel.html" class="extype" name="net.katsstuff.ackcord.data.NotificationLevel">NotificationLevel</a></span>, <span name="explicitContentFilter">explicitContentFilter: <a href="../../data/FilterLevel.html" class="extype" name="net.katsstuff.ackcord.data.FilterLevel">FilterLevel</a></span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Role.html" class="extype" name="net.katsstuff.ackcord.data.Role">Role</a>]</span>, <span name="channels">channels: <span class="extype" name="scala.Seq">Seq</span>[<a href="CreateGuildChannelData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildChannelData">CreateGuildChannelData</a>]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>The name of the guild</p></dd><dt class="param">region</dt><dd class="cmt"><p>The voice region for the guild</p></dd><dt class="param">icon</dt><dd class="cmt"><p>The icon to use for the guild. Must be 128x128 jpeg.</p></dd><dt class="param">verificationLevel</dt><dd class="cmt"><p>The verification level to use for the guild.</p></dd><dt class="param">defaultMessageNotifications</dt><dd class="cmt"><p>The notification level to use for
@@ -819,7 +803,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -835,7 +819,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -851,7 +835,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -899,7 +883,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -939,7 +923,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -971,7 +955,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1012,7 +996,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">icon</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>
+        <span class="name">icon</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/ImageData.html" class="extype" name="net.katsstuff.ackcord.data.ImageData">ImageData</a>]</span>
       </span>
       
       
@@ -1028,7 +1012,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -1060,7 +1044,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -1076,7 +1060,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1095,7 +1079,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1178,7 +1162,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1200,7 +1184,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1222,7 +1206,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1245,17 +1229,17 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

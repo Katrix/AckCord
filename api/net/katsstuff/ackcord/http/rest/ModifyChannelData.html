@@ -262,7 +262,7 @@
                         <a class="class" href="CreateMessageData.html" title=""></a>
                         <a href="CreateMessageData.html" title="">CreateMessageData</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
+                        <a class="object" href="CreateReaction$.html" title=""></a>
                         <a class="class" href="CreateReaction.html" title="Create a reaction for a message."></a>
                         <a href="CreateReaction.html" title="Create a reaction for a message.">CreateReaction</a>
                       </li><li class="current-entities indented5">
@@ -391,6 +391,10 @@
                         <a href="GetGuildAuditLog.html" title="Get an audit log for a given guild.">GetGuildAuditLog</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
+                        <a class="class" href="GetGuildBan.html" title="Get the ban object for a specific member in a guild."></a>
+                        <a href="GetGuildBan.html" title="Get the ban object for a specific member in a guild.">GetGuildBan</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
                         <a class="class" href="GetGuildBans.html" title="Get all the bans for this guild."></a>
                         <a href="GetGuildBans.html" title="Get all the bans for this guild.">GetGuildBans</a>
                       </li><li class="current-entities indented5">
@@ -439,8 +443,8 @@
                         <a href="GetGuildWebhooks.html" title="Get the webhooks in a guild.">GetGuildWebhooks</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code"></a>
-                        <a href="GetInvite.html" title="Get an invite for a given invite code">GetInvite</a>
+                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code."></a>
+                        <a href="GetInvite.html" title="Get an invite for a given invite code.">GetInvite</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetPinnedMessages.html" title="Get all the pinned messages in a channel."></a>
@@ -461,10 +465,6 @@
                         <span class="separator"></span>
                         <a class="class" href="GetUserConnections.html" title="Get a list of connection objects."></a>
                         <a href="GetUserConnections.html" title="Get a list of connection objects.">GetUserConnections</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="GetUserDMs.html" title=""></a>
-                        <a href="GetUserDMs.html" title="">GetUserDMs</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetUserGuildsGuild.html" title=""></a>
@@ -663,22 +663,6 @@
                         <a href="RemoveGuildMemberRole.html" title="Remove a role from a guild member.">RemoveGuildMemberRole</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="object" href="RestNull$.html" title=""></a>
-                        <a href="RestNull$.html" title="">RestNull</a>
-                      </li><li class="current-entities indented5">
-                        <a class="object" href="RestOption$.html" title=""></a>
-                        <a class="trait" href="RestOption.html" title=""></a>
-                        <a href="RestOption.html" title="">RestOption</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="RestSome.html" title=""></a>
-                        <a href="RestSome.html" title="">RestSome</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="RestUndefined$.html" title=""></a>
-                        <a href="RestUndefined$.html" title="">RestUndefined</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
                         <a class="class" href="SyncGuildIntegration.html" title="Sync an integration."></a>
                         <a href="SyncGuildIntegration.html" title="Sync an integration.">SyncGuildIntegration</a>
                       </li><li class="current-entities indented5">
@@ -714,16 +698,16 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">ModifyChannelData</span><span class="params">(<span name="name">name: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="position">position: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="topic">topic: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="nsfw">nsfw: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="bitrate">bitrate: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="userLimit">userLimit: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="permissionOverwrites">permissionOverwrites: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="parentId">parentId: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">ModifyChannelData</span><span class="params">(<span name="name">name: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="position">position: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="topic">topic: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="nsfw">nsfw: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="rateLimitPerUser">rateLimitPerUser: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="bitrate">bitrate: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="userLimit">userLimit: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="permissionOverwrites">permissionOverwrites: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="parentId">parentId: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>New name of the channel.</p></dd><dt class="param">position</dt><dd class="cmt"><p>New position of the channel.</p></dd><dt class="param">topic</dt><dd class="cmt"><p>The new channel topic for text channels.</p></dd><dt class="param">nsfw</dt><dd class="cmt"><p>If the channel is NSFW for text channels.</p></dd><dt class="param">bitrate</dt><dd class="cmt"><p>The new channel bitrate for voice channels.</p></dd><dt class="param">userLimit</dt><dd class="cmt"><p>The new user limit for voice channel.</p></dd><dt class="param">permissionOverwrites</dt><dd class="cmt"><p>The new channel permission overwrites.</p></dd><dt class="param">parentId</dt><dd class="cmt"><p>The new category id of the channel.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/channelRequests.scala" target="_blank">channelRequests.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>New name of the channel.</p></dd><dt class="param">position</dt><dd class="cmt"><p>New position of the channel.</p></dd><dt class="param">topic</dt><dd class="cmt"><p>The new channel topic for text channels.</p></dd><dt class="param">nsfw</dt><dd class="cmt"><p>If the channel is NSFW for text channels.</p></dd><dt class="param">rateLimitPerUser</dt><dd class="cmt"><p>The new user ratelimit for guild text channels.</p></dd><dt class="param">bitrate</dt><dd class="cmt"><p>The new channel bitrate for voice channels.</p></dd><dt class="param">userLimit</dt><dd class="cmt"><p>The new user limit for voice channel.</p></dd><dt class="param">permissionOverwrites</dt><dd class="cmt"><p>The new channel permission overwrites.</p></dd><dt class="param">parentId</dt><dd class="cmt"><p>The new category id of the channel.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/channelRequests.scala" target="_blank">channelRequests.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -780,9 +764,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(name:net.katsstuff.ackcord.http.rest.RestOption[String],position:net.katsstuff.ackcord.http.rest.RestOption[Int],topic:net.katsstuff.ackcord.http.rest.RestOption[String],nsfw:net.katsstuff.ackcord.http.rest.RestOption[Boolean],bitrate:net.katsstuff.ackcord.http.rest.RestOption[Int],userLimit:net.katsstuff.ackcord.http.rest.RestOption[Int],permissionOverwrites:net.katsstuff.ackcord.http.rest.RestOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]],parentId:net.katsstuff.ackcord.http.rest.RestOption[net.katsstuff.ackcord.data.ChannelId]):net.katsstuff.ackcord.http.rest.ModifyChannelData"></a><a id="&lt;init&gt;:ModifyChannelData"></a>
+      <a id="&lt;init&gt;(name:net.katsstuff.ackcord.util.JsonOption[String],position:net.katsstuff.ackcord.util.JsonOption[Int],topic:net.katsstuff.ackcord.util.JsonOption[String],nsfw:net.katsstuff.ackcord.util.JsonOption[Boolean],rateLimitPerUser:net.katsstuff.ackcord.util.JsonOption[Int],bitrate:net.katsstuff.ackcord.util.JsonOption[Int],userLimit:net.katsstuff.ackcord.util.JsonOption[Int],permissionOverwrites:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]],parentId:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.ChannelId]):net.katsstuff.ackcord.http.rest.ModifyChannelData"></a><a id="&lt;init&gt;:ModifyChannelData"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#&lt;init&gt;(name:net.katsstuff.ackcord.http.rest.RestOption[String],position:net.katsstuff.ackcord.http.rest.RestOption[Int],topic:net.katsstuff.ackcord.http.rest.RestOption[String],nsfw:net.katsstuff.ackcord.http.rest.RestOption[Boolean],bitrate:net.katsstuff.ackcord.http.rest.RestOption[Int],userLimit:net.katsstuff.ackcord.http.rest.RestOption[Int],permissionOverwrites:net.katsstuff.ackcord.http.rest.RestOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]],parentId:net.katsstuff.ackcord.http.rest.RestOption[net.katsstuff.ackcord.data.ChannelId]):net.katsstuff.ackcord.http.rest.ModifyChannelData" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#&lt;init&gt;(name:net.katsstuff.ackcord.util.JsonOption[String],position:net.katsstuff.ackcord.util.JsonOption[Int],topic:net.katsstuff.ackcord.util.JsonOption[String],nsfw:net.katsstuff.ackcord.util.JsonOption[Boolean],rateLimitPerUser:net.katsstuff.ackcord.util.JsonOption[Int],bitrate:net.katsstuff.ackcord.util.JsonOption[Int],userLimit:net.katsstuff.ackcord.util.JsonOption[Int],permissionOverwrites:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]],parentId:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.ChannelId]):net.katsstuff.ackcord.http.rest.ModifyChannelData" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -791,10 +775,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">ModifyChannelData</span><span class="params">(<span name="name">name: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="position">position: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="topic">topic: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="nsfw">nsfw: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="bitrate">bitrate: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="userLimit">userLimit: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="permissionOverwrites">permissionOverwrites: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>, <span name="parentId">parentId: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>] = <span class="symbol"><span class="name"><a href="RestUndefined$.html">RestUndefined</a></span></span></span>)</span>
+        <span class="name">ModifyChannelData</span><span class="params">(<span name="name">name: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="position">position: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="topic">topic: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="nsfw">nsfw: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="rateLimitPerUser">rateLimitPerUser: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="bitrate">bitrate: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="userLimit">userLimit: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="permissionOverwrites">permissionOverwrites: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>, <span name="parentId">parentId: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>] = <span class="symbol"><span class="name"><a href="../../../../index.html">JsonUndefined</a></span></span></span>)</span>
       </span>
       
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>New name of the channel.</p></dd><dt class="param">position</dt><dd class="cmt"><p>New position of the channel.</p></dd><dt class="param">topic</dt><dd class="cmt"><p>The new channel topic for text channels.</p></dd><dt class="param">nsfw</dt><dd class="cmt"><p>If the channel is NSFW for text channels.</p></dd><dt class="param">bitrate</dt><dd class="cmt"><p>The new channel bitrate for voice channels.</p></dd><dt class="param">userLimit</dt><dd class="cmt"><p>The new user limit for voice channel.</p></dd><dt class="param">permissionOverwrites</dt><dd class="cmt"><p>The new channel permission overwrites.</p></dd><dt class="param">parentId</dt><dd class="cmt"><p>The new category id of the channel.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">name</dt><dd class="cmt"><p>New name of the channel.</p></dd><dt class="param">position</dt><dd class="cmt"><p>New position of the channel.</p></dd><dt class="param">topic</dt><dd class="cmt"><p>The new channel topic for text channels.</p></dd><dt class="param">nsfw</dt><dd class="cmt"><p>If the channel is NSFW for text channels.</p></dd><dt class="param">rateLimitPerUser</dt><dd class="cmt"><p>The new user ratelimit for guild text channels.</p></dd><dt class="param">bitrate</dt><dd class="cmt"><p>The new channel bitrate for voice channels.</p></dd><dt class="param">userLimit</dt><dd class="cmt"><p>The new user limit for voice channel.</p></dd><dt class="param">permissionOverwrites</dt><dd class="cmt"><p>The new channel permission overwrites.</p></dd><dt class="param">parentId</dt><dd class="cmt"><p>The new category id of the channel.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -817,7 +801,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -833,7 +817,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -849,7 +833,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -870,9 +854,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#bitrate" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="bitrate:net.katsstuff.ackcord.http.rest.RestOption[Int]"></a><a id="bitrate:RestOption[Int]"></a>
+      <a id="bitrate:net.katsstuff.ackcord.util.JsonOption[Int]"></a><a id="bitrate:util.JsonOption[Int]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#bitrate:net.katsstuff.ackcord.http.rest.RestOption[Int]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#bitrate:net.katsstuff.ackcord.util.JsonOption[Int]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -881,7 +865,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">bitrate</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
+        <span class="name">bitrate</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
       </span>
       
       
@@ -897,7 +881,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -921,7 +905,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -937,7 +921,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -978,14 +962,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#name" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="name:net.katsstuff.ackcord.http.rest.RestOption[String]"></a><a id="name:RestOption[String]"></a>
+      <a id="name:net.katsstuff.ackcord.util.JsonOption[String]"></a><a id="name:util.JsonOption[String]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#name:net.katsstuff.ackcord.http.rest.RestOption[String]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#name:net.katsstuff.ackcord.util.JsonOption[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -994,7 +978,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">name</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">name</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       
@@ -1010,7 +994,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -1026,7 +1010,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1045,7 +1029,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1053,9 +1037,9 @@
               
         </dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#nsfw" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="nsfw:net.katsstuff.ackcord.http.rest.RestOption[Boolean]"></a><a id="nsfw:RestOption[Boolean]"></a>
+      <a id="nsfw:net.katsstuff.ackcord.util.JsonOption[Boolean]"></a><a id="nsfw:util.JsonOption[Boolean]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#nsfw:net.katsstuff.ackcord.http.rest.RestOption[Boolean]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#nsfw:net.katsstuff.ackcord.util.JsonOption[Boolean]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1064,14 +1048,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">nsfw</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+        <span class="name">nsfw</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#parentId" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="parentId:net.katsstuff.ackcord.http.rest.RestOption[net.katsstuff.ackcord.data.ChannelId]"></a><a id="parentId:RestOption[ChannelId]"></a>
+      <a id="parentId:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.ChannelId]"></a><a id="parentId:util.JsonOption[ChannelId]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#parentId:net.katsstuff.ackcord.http.rest.RestOption[net.katsstuff.ackcord.data.ChannelId]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#parentId:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.ChannelId]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1080,14 +1064,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">parentId</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>]</span>
+        <span class="name">parentId</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#permissionOverwrites" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="permissionOverwrites:net.katsstuff.ackcord.http.rest.RestOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]]"></a><a id="permissionOverwrites:RestOption[Seq[PermissionOverwrite]]"></a>
+      <a id="permissionOverwrites:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]]"></a><a id="permissionOverwrites:util.JsonOption[Seq[PermissionOverwrite]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#permissionOverwrites:net.katsstuff.ackcord.http.rest.RestOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#permissionOverwrites:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.PermissionOverwrite]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1096,14 +1080,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">permissionOverwrites</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]]</span>
+        <span class="name">permissionOverwrites</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/PermissionOverwrite.html" class="extype" name="net.katsstuff.ackcord.data.PermissionOverwrite">PermissionOverwrite</a>]]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#position" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="position:net.katsstuff.ackcord.http.rest.RestOption[Int]"></a><a id="position:RestOption[Int]"></a>
+      <a id="position:net.katsstuff.ackcord.util.JsonOption[Int]"></a><a id="position:util.JsonOption[Int]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#position:net.katsstuff.ackcord.http.rest.RestOption[Int]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#position:net.katsstuff.ackcord.util.JsonOption[Int]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1112,7 +1096,23 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">position</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
+        <span class="name">position</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
+      </span>
+      
+      
+    </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#rateLimitPerUser" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="rateLimitPerUser:net.katsstuff.ackcord.util.JsonOption[Int]"></a><a id="rateLimitPerUser:util.JsonOption[Int]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#rateLimitPerUser:net.katsstuff.ackcord.util.JsonOption[Int]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rateLimitPerUser</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
       </span>
       
       
@@ -1133,9 +1133,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#topic" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="topic:net.katsstuff.ackcord.http.rest.RestOption[String]"></a><a id="topic:RestOption[String]"></a>
+      <a id="topic:net.katsstuff.ackcord.util.JsonOption[String]"></a><a id="topic:util.JsonOption[String]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#topic:net.katsstuff.ackcord.http.rest.RestOption[String]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#topic:net.katsstuff.ackcord.util.JsonOption[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1144,14 +1144,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">topic</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">topic</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.http.rest.ModifyChannelData#userLimit" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="userLimit:net.katsstuff.ackcord.http.rest.RestOption[Int]"></a><a id="userLimit:RestOption[Int]"></a>
+      <a id="userLimit:net.katsstuff.ackcord.util.JsonOption[Int]"></a><a id="userLimit:util.JsonOption[Int]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#userLimit:net.katsstuff.ackcord.http.rest.RestOption[Int]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/ModifyChannelData.html#userLimit:net.katsstuff.ackcord.util.JsonOption[Int]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1160,7 +1160,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">userLimit</span><span class="result">: <a href="RestOption.html" class="extype" name="net.katsstuff.ackcord.http.rest.RestOption">RestOption</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
+        <span class="name">userLimit</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>]</span>
       </span>
       
       
@@ -1176,7 +1176,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1198,7 +1198,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1220,7 +1220,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1243,17 +1243,17 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

@@ -135,6 +135,14 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="net.katsstuff.ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command."></a>
+                        <a href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command.">AbstractCmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects."></a>
+                        <a href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects.">AbstractCommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="AllCmdMessages.html" title="Top trait for all command messages."></a>
                         <a href="AllCmdMessages.html" title="Top trait for all command messages.">AllCmdMessages</a>
                       </li><li class="current-entities indented4">
@@ -179,6 +187,10 @@
                         <a href="CmdHelper$.html" title="">CmdHelper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance."></a>
+                        <a href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance.">CmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CmdMessage.html" title="Trait for all unparsed command messages."></a>
                         <a href="CmdMessage.html" title="Trait for all unparsed command messages.">CmdMessage</a>
                       </li><li class="current-entities indented4">
@@ -187,12 +199,20 @@
                         <a href="CmdParseError.html" title="A parse error for a parsed command.">CmdParseError</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead."></a>
+                        <a href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead.">CmdRefiner</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="object" href="CmdStreams$.html" title=""></a>
                         <a href="CmdStreams$.html" title="">CmdStreams</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about."></a>
-                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about.">Commands</a>
+                        <a class="class" href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid."></a>
+                        <a href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid.">CommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands."></a>
+                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands.">Commands</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Context$.html" title=""></a>
                         <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
@@ -202,9 +222,17 @@
                         <a class="object" href="CoreCommands$.html" title=""></a>
                         <a href="CoreCommands$.html" title="">CoreCommands</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="FilterBehavior$.html" title=""></a>
+                        <a class="trait" href="FilterBehavior.html" title=""></a>
+                        <a href="FilterBehavior.html" title="">FilterBehavior</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="FilteredCmd.html" title="A command that did not make it through some filters."></a>
                         <a href="FilteredCmd.html" title="A command that did not make it through some filters.">FilteredCmd</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="GenericCmdError.html" title="A generic command error."></a>
+                        <a href="GenericCmdError.html" title="A generic command error.">GenericCmdError</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="HelpCmd$.html" title=""></a>
                         <a class="class" href="HelpCmd.html" title="A base for help commands."></a>
@@ -215,8 +243,8 @@
                         <a href="NoCmd.html" title="Bot was mentioned, but no command was used.">NoCmd</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="NoCmdCategory.html" title="An unknown category was used."></a>
-                        <a href="NoCmdCategory.html" title="An unknown category was used.">NoCmdCategory</a>
+                        <a class="class" href="NoCmdPrefix.html" title="An unknown prefix was used."></a>
+                        <a href="NoCmdPrefix.html" title="An unknown prefix was used.">NoCmdPrefix</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ParsedCmd.html" title="A parsed specific command."></a>
@@ -272,11 +300,11 @@
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A class to extract the cache from a parsed cmd object.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/cmdFlows.scala" target="_blank">cmdFlows.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCommands/src/main/scala/net/katsstuff/ackcord/commands/cmdFlows.scala" target="_blank">cmdFlows.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -370,7 +398,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -386,7 +414,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -402,7 +430,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -434,7 +462,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -458,7 +486,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -474,7 +502,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -490,7 +518,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -512,7 +540,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flatMapConcat</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Graph.html#akka.stream.Graph" class="extype" name="akka.stream.Graph">Graph</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/SourceShape.html#akka.stream.SourceShape" class="extype" name="akka.stream.SourceShape">SourceShape</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapConcat.B">B</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapConcat.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flatMapConcat</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Graph.html#akka.stream.Graph" class="extype" name="akka.stream.Graph">Graph</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/SourceShape.html#akka.stream.SourceShape" class="extype" name="akka.stream.SourceShape">SourceShape</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapConcat.B">B</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapConcat.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -528,7 +556,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flatMapMerge</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="breadth">breadth: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Graph.html#akka.stream.Graph" class="extype" name="akka.stream.Graph">Graph</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/SourceShape.html#akka.stream.SourceShape" class="extype" name="akka.stream.SourceShape">SourceShape</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapMerge.B">B</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapMerge.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flatMapMerge</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="breadth">breadth: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Graph.html#akka.stream.Graph" class="extype" name="akka.stream.Graph">Graph</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/SourceShape.html#akka.stream.SourceShape" class="extype" name="akka.stream.SourceShape">SourceShape</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapMerge.B">B</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.flatMapMerge.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -579,7 +607,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -598,7 +626,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -614,7 +642,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.map.B">B</span></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.map.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.map.B">B</span></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.map.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -630,7 +658,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">mapAsync</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsync.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsync.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">mapAsync</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsync.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsync.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -646,7 +674,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">mapAsyncUnordered</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsyncUnordered.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsyncUnordered.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">mapAsyncUnordered</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsyncUnordered.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapAsyncUnordered.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -662,7 +690,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">mapConcat</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <span class="extype" name="scala.List">List</span>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapConcat.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapConcat.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">mapConcat</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]) ⇒ (<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>]) ⇒ <span class="extype" name="scala.List">List</span>[<span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapConcat.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase.mapConcat.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a></dd></dl></div>
@@ -678,7 +706,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -694,7 +722,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -713,7 +741,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -764,7 +792,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -786,7 +814,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -808,7 +836,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -833,9 +861,9 @@
         <div class="parent" name="net.katsstuff.ackcord.commands.CmdFlowBase">
               <h3>Inherited from <a href="CmdFlowBase.html" class="extype" name="net.katsstuff.ackcord.commands.CmdFlowBase">CmdFlowBase</a>[<a href="ParsedCmd.html" class="extype" name="net.katsstuff.ackcord.commands.ParsedCmd">ParsedCmd</a>[<span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.A">A</span>], <span class="extype" name="net.katsstuff.ackcord.commands.ParsedCmdFlow.F">F</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

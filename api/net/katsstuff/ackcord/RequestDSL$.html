@@ -299,12 +299,8 @@
                         <a href="CommandHandlerDSL.html" title="A handler for a specific command that runs a RequestDSL when the command is received.">CommandHandlerDSL</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="CommandSettings.html" title=""></a>
-                        <a href="CommandSettings.html" title="">CommandSettings</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="trait" href="CommandsHelper.html" title="An object which manages a Commands instance."></a>
-                        <a href="CommandsHelper.html" title="An object which manages a Commands instance.">CommandsHelper</a>
+                        <a class="trait" href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance."></a>
+                        <a href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance.">CommandsHelper</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="CoreDiscordClient.html" title=""></a>
@@ -330,6 +326,10 @@
                         <a class="object" href="GatewayHandlerCache$.html" title=""></a>
                         <a href="GatewayHandlerCache$.html" title="">GatewayHandlerCache</a>
                       </li><li class="current-entities indented3">
+                        <a class="object" href="HasCache$.html" title=""></a>
+                        <a class="trait" href="HasCache.html" title=""></a>
+                        <a href="HasCache.html" title="">HasCache</a>
+                      </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time"></a>
                         <a href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time">MemoryCacheSnapshot</a>
@@ -342,9 +342,21 @@
                         <a class="object" href="MusicManager$.html" title=""></a>
                         <a href="MusicManager$.html" title="">MusicManager</a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RawCommandHandler.html" title="A handler for all raw commands."></a>
+                        <a href="RawCommandHandler.html" title="A handler for all raw commands.">RawCommandHandler</a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="" title=""></a>
                         <a class="trait" href="RequestDSL.html" title="Base trait for a RequestDSL object."></a>
                         <a href="RequestDSL.html" title="Base trait for a RequestDSL object.">RequestDSL</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RequestPermissionException.html" title=""></a>
+                        <a href="RequestPermissionException.html" title="">RequestPermissionException</a>
+                      </li><li class="current-entities indented3">
+                        <a class="object" href="RequestRunner$.html" title=""></a>
+                        <a class="trait" href="RequestRunner.html" title=""></a>
+                        <a href="RequestRunner.html" title="">RequestRunner</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="RequestSettings.html" title=""></a>
@@ -386,16 +398,19 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">RequestDSL</span>
+        <span class="name deprecated" title="Deprecated: (Since version 0.11) Use RequestRunner instead">RequestDSL</span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordUtil/src/main/scala/net/katsstuff/ackcord/RequestDSL.scala" target="_blank">RequestDSL.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11)</i> Use RequestRunner instead</p></dd><dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordUtil/src/main/scala/net/katsstuff/ackcord/RequestDSL.scala" target="_blank">RequestDSL.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -460,7 +475,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -476,7 +491,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -492,7 +507,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -508,7 +523,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>, <span name="B">B</span>]</span><span class="params">(<span name="flow">flow: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="index.html#Request[Data,Ctx]=net.katsstuff.ackcord.http.requests.Request[Data,Ctx]" class="extmbr" name="net.katsstuff.ackcord.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Ctx">Ctx</span>], <a href="http/requests/RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="params">(<span name="dsl">dsl: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">apply</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>, <span name="B">B</span>]</span><span class="params">(<span name="flow">flow: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="index.html#Request[Data,Ctx]=net.katsstuff.ackcord.http.requests.Request[Data,Ctx]" class="extmbr" name="net.katsstuff.ackcord.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Ctx">Ctx</span>], <a href="http/requests/RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="params">(<span name="dsl">dsl: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.B">B</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.apply.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Run a RequestDSL using the specified flow.</p>
@@ -540,7 +555,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -564,7 +579,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -580,7 +595,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -596,7 +611,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -618,10 +633,10 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">fromSource</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="source">source: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.fromSource.A">A</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.fromSource.A">A</span>]</span>
+        <span class="name">fromSource</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="source">source: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.fromSource.A">A</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.fromSource.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Lifts a <span class="extype" name="Source">Source</span> into the dsl.</p>
+      <p class="shortcomment cmt">Lifts a <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html" class="extype" name="akka.stream.scaladsl.Source">akka.stream.scaladsl.Source</a> into the dsl.</p>
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -653,7 +668,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -672,7 +687,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -691,7 +706,7 @@
         <span class="name">liftF</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="fa">fa: <span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftF.F">F</span>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftF.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="index.html#Streamable[F[_]]=net.katsstuff.ackcord.util.Streamable[F]" class="extmbr" name="net.katsstuff.ackcord.Streamable">Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftF.F">F</span>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftF.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Converts an F into a <span class="extype" name="Source">Source</span> ad lifts it into the dsl.</p>
+      <p class="shortcomment cmt">Converts an F into a <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html" class="extype" name="akka.stream.scaladsl.Source">akka.stream.scaladsl.Source</a> ad lifts it into the dsl.</p>
     </li><li name="net.katsstuff.ackcord.RequestDSL#liftOptionT" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="liftOptionT[F[_],A](opt:cats.data.OptionT[F,A])(implicitevidence$2:net.katsstuff.ackcord.Streamable[F]):net.katsstuff.ackcord.RequestDSL[A]"></a><a id="liftOptionT[F[_],A](OptionT[F,A])(Streamable[F]):RequestDSL[A]"></a>
       <span class="permalink">
@@ -707,7 +722,7 @@
         <span class="name">liftOptionT</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="opt">opt: <span class="extype" name="cats.data.OptionT">OptionT</span>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftOptionT.F">F</span>, <span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftOptionT.A">A</span>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="index.html#Streamable[F[_]]=net.katsstuff.ackcord.util.Streamable[F]" class="extmbr" name="net.katsstuff.ackcord.Streamable">Streamable</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftOptionT.F">F</span>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.liftOptionT.A">A</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Lifts an <span class="extype" name="OptionT">OptionT</span> into a <span class="extype" name="Source">Source</span> and lifts it into the dsl.</p>
+      <p class="shortcomment cmt">Lifts an <span class="extype" name="cats.data.OptionT">cats.data.OptionT</span> into a <span class="extype" name="Source">Source</span> and lifts it into the dsl.</p>
     </li><li name="net.katsstuff.ackcord.RequestDSL#liftRequest" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="liftRequest[F[_],A](fRequest:F[net.katsstuff.ackcord.RequestDSL[A]])(implicitevidence$3:net.katsstuff.ackcord.Streamable[F]):net.katsstuff.ackcord.RequestDSL[A]"></a><a id="liftRequest[F[_],A](F[RequestDSL[A]])(Streamable[F]):RequestDSL[A]"></a>
       <span class="permalink">
@@ -752,7 +767,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -768,7 +783,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -787,7 +802,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -806,7 +821,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">optionPure</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="opt">opt: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionPure.A">A</span>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionPure.A">A</span>]</span>
+        <span class="name">optionPure</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="opt">opt: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionPure.A">A</span>]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionPure.A">A</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Lift a an optional pure value into the dsl.</p>
@@ -822,7 +837,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">optionRequest</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="opt">opt: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="index.html#Request[Data,Ctx]=net.katsstuff.ackcord.http.requests.Request[Data,Ctx]" class="extmbr" name="net.katsstuff.ackcord.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionRequest.A">A</span>, _]]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionRequest.A">A</span>]</span>
+        <span class="name">optionRequest</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="opt">opt: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="index.html#Request[Data,Ctx]=net.katsstuff.ackcord.http.requests.Request[Data,Ctx]" class="extmbr" name="net.katsstuff.ackcord.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionRequest.A">A</span>, _]]</span>)</span><span class="result">: <a href="RequestDSL.html" class="extype" name="net.katsstuff.ackcord.RequestDSL">RequestDSL</a>[<span class="extype" name="net.katsstuff.ackcord.RequestDSL.optionRequest.A">A</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Lift a an optional request into the dsl.</p>
@@ -886,7 +901,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -908,7 +923,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -930,7 +945,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -969,9 +984,9 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

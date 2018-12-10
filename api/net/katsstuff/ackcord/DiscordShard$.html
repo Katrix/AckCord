@@ -299,12 +299,8 @@
                         <a href="CommandHandlerDSL.html" title="A handler for a specific command that runs a RequestDSL when the command is received.">CommandHandlerDSL</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="CommandSettings.html" title=""></a>
-                        <a href="CommandSettings.html" title="">CommandSettings</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="trait" href="CommandsHelper.html" title="An object which manages a Commands instance."></a>
-                        <a href="CommandsHelper.html" title="An object which manages a Commands instance.">CommandsHelper</a>
+                        <a class="trait" href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance."></a>
+                        <a href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance.">CommandsHelper</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="CoreDiscordClient.html" title=""></a>
@@ -330,6 +326,10 @@
                         <a class="object" href="GatewayHandlerCache$.html" title=""></a>
                         <a href="GatewayHandlerCache$.html" title="">GatewayHandlerCache</a>
                       </li><li class="current-entities indented3">
+                        <a class="object" href="HasCache$.html" title=""></a>
+                        <a class="trait" href="HasCache.html" title=""></a>
+                        <a href="HasCache.html" title="">HasCache</a>
+                      </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time"></a>
                         <a href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time">MemoryCacheSnapshot</a>
@@ -342,9 +342,21 @@
                         <a class="object" href="MusicManager$.html" title=""></a>
                         <a href="MusicManager$.html" title="">MusicManager</a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RawCommandHandler.html" title="A handler for all raw commands."></a>
+                        <a href="RawCommandHandler.html" title="A handler for all raw commands.">RawCommandHandler</a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="RequestDSL$.html" title=""></a>
                         <a class="trait" href="RequestDSL.html" title="Base trait for a RequestDSL object."></a>
                         <a href="RequestDSL.html" title="Base trait for a RequestDSL object.">RequestDSL</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RequestPermissionException.html" title=""></a>
+                        <a href="RequestPermissionException.html" title="">RequestPermissionException</a>
+                      </li><li class="current-entities indented3">
+                        <a class="object" href="RequestRunner$.html" title=""></a>
+                        <a class="trait" href="RequestRunner.html" title=""></a>
+                        <a href="RequestRunner.html" title="">RequestRunner</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="RequestSettings.html" title=""></a>
@@ -391,11 +403,11 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/DiscordShard.scala" target="_blank">DiscordShard.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/DiscordShard.scala" target="_blank">DiscordShard.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><span class="extype" name="de.heikoseeberger.akkahttpcirce.FailFastCirceSupport">FailFastCirceSupport</span>, <span class="extype" name="de.heikoseeberger.akkahttpcirce.FailFastUnmarshaller">FailFastUnmarshaller</span>, <span class="extype" name="de.heikoseeberger.akkahttpcirce.BaseCirceSupport">BaseCirceSupport</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="de.heikoseeberger.akkahttpcirce.FailFastCirceSupport">FailFastCirceSupport</span>, <span class="extype" name="de.heikoseeberger.akkahttpcirce.FailFastUnmarshaller">FailFastUnmarshaller</span>, <span class="extype" name="de.heikoseeberger.akkahttpcirce.BaseCirceSupport">BaseCirceSupport</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -460,7 +472,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -476,7 +488,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -492,7 +504,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -524,7 +536,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -548,7 +560,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">connect</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">connect</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <p class="shortcomment cmt">Create a shard actor given the needed arguments.</p><div class="fullcomment"><div class="comment cmt"><p>Create a shard actor given the needed arguments.</p></div><dl class="paramcmts block"><dt class="param">wsUri</dt><dd class="cmt"><p>The websocket gateway uri.</p></dd><dt class="param">settings</dt><dd class="cmt"><p>The settings to use.</p></dd><dt class="param">system</dt><dd class="cmt"><p>The actor system to use for creating the client actor.</p></dd></dl></div>
@@ -564,7 +576,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">connect</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">connect</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <p class="shortcomment cmt">Create a shard actor given the needed arguments.</p><div class="fullcomment"><div class="comment cmt"><p>Create a shard actor given the needed arguments.</p></div><dl class="paramcmts block"><dt class="param">wsUri</dt><dd class="cmt"><p>The websocket gateway uri.</p></dd><dt class="param">token</dt><dd class="cmt"><p>The bot token to use for authentication.</p></dd><dt class="param">system</dt><dd class="cmt"><p>The actor system to use for creating the client actor.</p></dd></dl></div>
@@ -580,7 +592,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">connectMultiple</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="shardTotal">shardTotal: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>
+        <span class="name">connectMultiple</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="shardTotal">shardTotal: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="actorName">actorName: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Create as multiple shard actors, given the needed arguments.</p><div class="fullcomment"><div class="comment cmt"><p>Create as multiple shard actors, given the needed arguments.</p></div><dl class="paramcmts block"><dt class="param">wsUri</dt><dd class="cmt"><p>The websocket gateway uri.</p></dd><dt class="param">shardTotal</dt><dd class="cmt"><p>The amount of shards to create.</p></dd><dt class="param">settings</dt><dd class="cmt"><p>The settings to use.</p></dd><dt class="param">system</dt><dd class="cmt"><p>The actor system to use for creating the client actor.</p></dd></dl></div>
@@ -596,7 +608,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -612,7 +624,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -628,7 +640,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">fetchWsGateway</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a>]</span>
+        <span class="name">fetchWsGateway</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Fetch the websocket gateway.</p><div class="fullcomment"><div class="comment cmt"><p>Fetch the websocket gateway.</p></div><dl class="paramcmts block"><dt class="param">system</dt><dd class="cmt"><p>The actor system to use.</p></dd><dt class="param">mat</dt><dd class="cmt"><p>The materializer to use.</p></dd><dt>returns</dt><dd class="cmt"><p>An URI with the websocket gateway uri.</p></dd></dl></div>
@@ -644,7 +656,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">fetchWsGatewayWithShards</span><span class="params">(<span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[(<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>)]</span>
+        <span class="name">fetchWsGatewayWithShards</span><span class="params">(<span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[(<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>)]</span>
       </span>
       
       <p class="shortcomment cmt">Fetch the websocket gateway with information about how many shards should be used.</p><div class="fullcomment"><div class="comment cmt"><p>Fetch the websocket gateway with information about how many shards should be used.</p></div><dl class="paramcmts block"><dt class="param">system</dt><dd class="cmt"><p>The actor system to use.</p></dd><dt class="param">mat</dt><dd class="cmt"><p>The materializer to use.</p></dd><dt>returns</dt><dd class="cmt"><p>An URI with the websocket gateway uri.</p></dd></dl></div>
@@ -660,7 +672,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -701,7 +713,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -720,7 +732,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -784,7 +796,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">mediaTypes</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<span class="extype" name="akka.http.scaladsl.model.MediaType.WithFixedCharset">WithFixedCharset</span>]</span>
+        <span class="name">mediaTypes</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<span class="extype" name="akka.http.scaladsl.model.MediaType.WithFixedCharset">WithFixedCharset</span>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>BaseCirceSupport</dd></dl></div>
@@ -800,7 +812,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -816,7 +828,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -835,7 +847,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -854,7 +866,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
+        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="token">token: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
       </span>
       
       
@@ -870,7 +882,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
+        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=net.katsstuff.ackcord.websocket.gateway.GatewaySettings" class="extmbr" name="net.katsstuff.ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
       </span>
       
       
@@ -886,7 +898,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">startShards</span><span class="params">(<span name="shards">shards: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/Done.html#akka.Done" class="extype" name="akka.Done">Done</a>]</span>
+        <span class="name">startShards</span><span class="params">(<span name="shards">shards: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>)</span><span class="params">(<span class="implicit">implicit </span><span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/Done.html#akka.Done" class="extype" name="akka.Done">Done</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Sends a login message to all the shards in the sequence, while obeying
@@ -951,7 +963,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">unmarshallerContentTypes</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ContentTypeRange.html#akka.http.scaladsl.model.ContentTypeRange" class="extype" name="akka.http.scaladsl.model.ContentTypeRange">ContentTypeRange</a>]</span>
+        <span class="name">unmarshallerContentTypes</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ContentTypeRange.html#akka.http.scaladsl.model.ContentTypeRange" class="extype" name="akka.http.scaladsl.model.ContentTypeRange">ContentTypeRange</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>BaseCirceSupport</dd></dl></div>
@@ -967,7 +979,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -989,7 +1001,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1011,7 +1023,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1023,6 +1035,22 @@ IDENTIFY ratelimits.</p>
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.DiscordShard.RestartShard" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="RestartShard"></a><a id="RestartShard:RestartShard"></a>
+      <span class="permalink">
+      <a href="../../../net/katsstuff/ackcord/DiscordShard$.html#RestartShard" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="Send this to log out and log in again this shard." href="DiscordShard$$RestartShard$.html"><span class="name">RestartShard</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Send this to log out and log in again this shard.</p>
     </li><li name="net.katsstuff.ackcord.DiscordShard.StartShard" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="StartShard"></a><a id="StartShard:StartShard"></a>
       <span class="permalink">
@@ -1035,7 +1063,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="Send this to the client to log in." href="DiscordShard$$StartShard$.html"><span class="name">StartShard</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <a title="Send this to the client to log in." href="DiscordShard$$StartShard$.html"><span class="name">StartShard</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       
       <p class="shortcomment cmt">Send this to the client to log in.</p>
@@ -1051,7 +1079,7 @@ IDENTIFY ratelimits.</p>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="Send this to the client to log out and stop gracefully." href="DiscordShard$$StopShard$.html"><span class="name">StopShard</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <a title="Send this to the client to log out and stop gracefully." href="DiscordShard$$StopShard$.html"><span class="name">StopShard</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       
       <p class="shortcomment cmt">Send this to the client to log out and stop gracefully.</p>
@@ -1072,9 +1100,9 @@ IDENTIFY ratelimits.</p>
             </div><div class="parent" name="de.heikoseeberger.akkahttpcirce.BaseCirceSupport">
               <h3>Inherited from <span class="extype" name="de.heikoseeberger.akkahttpcirce.BaseCirceSupport">BaseCirceSupport</span></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

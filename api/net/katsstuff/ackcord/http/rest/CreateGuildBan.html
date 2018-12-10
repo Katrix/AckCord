@@ -262,7 +262,7 @@
                         <a class="class" href="CreateMessageData.html" title=""></a>
                         <a href="CreateMessageData.html" title="">CreateMessageData</a>
                       </li><li class="current-entities indented5">
-                        <span class="separator"></span>
+                        <a class="object" href="CreateReaction$.html" title=""></a>
                         <a class="class" href="CreateReaction.html" title="Create a reaction for a message."></a>
                         <a href="CreateReaction.html" title="Create a reaction for a message.">CreateReaction</a>
                       </li><li class="current-entities indented5">
@@ -391,6 +391,10 @@
                         <a href="GetGuildAuditLog.html" title="Get an audit log for a given guild.">GetGuildAuditLog</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
+                        <a class="class" href="GetGuildBan.html" title="Get the ban object for a specific member in a guild."></a>
+                        <a href="GetGuildBan.html" title="Get the ban object for a specific member in a guild.">GetGuildBan</a>
+                      </li><li class="current-entities indented5">
+                        <span class="separator"></span>
                         <a class="class" href="GetGuildBans.html" title="Get all the bans for this guild."></a>
                         <a href="GetGuildBans.html" title="Get all the bans for this guild.">GetGuildBans</a>
                       </li><li class="current-entities indented5">
@@ -439,8 +443,8 @@
                         <a href="GetGuildWebhooks.html" title="Get the webhooks in a guild.">GetGuildWebhooks</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code"></a>
-                        <a href="GetInvite.html" title="Get an invite for a given invite code">GetInvite</a>
+                        <a class="class" href="GetInvite.html" title="Get an invite for a given invite code."></a>
+                        <a href="GetInvite.html" title="Get an invite for a given invite code.">GetInvite</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetPinnedMessages.html" title="Get all the pinned messages in a channel."></a>
@@ -461,10 +465,6 @@
                         <span class="separator"></span>
                         <a class="class" href="GetUserConnections.html" title="Get a list of connection objects."></a>
                         <a href="GetUserConnections.html" title="Get a list of connection objects.">GetUserConnections</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="GetUserDMs.html" title=""></a>
-                        <a href="GetUserDMs.html" title="">GetUserDMs</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
                         <a class="class" href="GetUserGuildsGuild.html" title=""></a>
@@ -663,22 +663,6 @@
                         <a href="RemoveGuildMemberRole.html" title="Remove a role from a guild member.">RemoveGuildMemberRole</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="object" href="RestNull$.html" title=""></a>
-                        <a href="RestNull$.html" title="">RestNull</a>
-                      </li><li class="current-entities indented5">
-                        <a class="object" href="RestOption$.html" title=""></a>
-                        <a class="trait" href="RestOption.html" title=""></a>
-                        <a href="RestOption.html" title="">RestOption</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="class" href="RestSome.html" title=""></a>
-                        <a href="RestSome.html" title="">RestSome</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
-                        <a class="object" href="RestUndefined$.html" title=""></a>
-                        <a href="RestUndefined$.html" title="">RestUndefined</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
                         <a class="class" href="SyncGuildIntegration.html" title="Sync an integration."></a>
                         <a href="SyncGuildIntegration.html" title="Sync an integration.">SyncGuildIntegration</a>
                       </li><li class="current-entities indented5">
@@ -714,17 +698,17 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">CreateGuildBan</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="guildId">guildId: <a href="../../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="userId">userId: <a href="../../data/index.html#UserId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.User]" class="extmbr" name="net.katsstuff.ackcord.data.UserId">UserId</a></span>, <span name="params">params: <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>, <span name="reason">reason: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>] with <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">CreateGuildBan</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="guildId">guildId: <a href="../../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="userId">userId: <a href="../../data/index.html#UserId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.User]" class="extmbr" name="net.katsstuff.ackcord.data.UserId">UserId</a></span>, <span name="params">params: <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>, <span name="reason">reason: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span><span class="result"> extends <a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Ban a user from a guild.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/guildRequests.scala" target="_blank">guildRequests.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordRest/src/main/scala/net/katsstuff/ackcord/http/rest/guildRequests.scala" target="_blank">guildRequests.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="NoNiceResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">NoNiceResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="ReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.ReasonRequest">ReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="RESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.RESTRequest">RESTRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="NoResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseRequest">NoResponseRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="NoNiceResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">NoNiceResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="NoNiceResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest">NoNiceResponseRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="ReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.ReasonRequest">ReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="RESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.RESTRequest">RESTRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -760,7 +744,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="net.katsstuff.ackcord.http.rest.CreateGuildBan"><span>CreateGuildBan</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest"><span>NoResponseReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest"><span>NoNiceResponseReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.ReasonRequest"><span>ReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.RESTRequest"><span>RESTRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest"><span>BaseRESTRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.requests.Request"><span>Request</span></li><li class="in" name="net.katsstuff.ackcord.http.requests.MaybeRequest"><span>MaybeRequest</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="net.katsstuff.ackcord.http.rest.CreateGuildBan"><span>CreateGuildBan</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest"><span>NoResponseReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoResponseRequest"><span>NoResponseRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest"><span>NoNiceResponseReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest"><span>NoNiceResponseRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.ReasonRequest"><span>ReasonRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.RESTRequest"><span>RESTRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest"><span>BaseRESTRequest</span></li><li class="in" name="net.katsstuff.ackcord.http.requests.Request"><span>Request</span></li><li class="in" name="net.katsstuff.ackcord.http.requests.MaybeRequest"><span>MaybeRequest</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -792,7 +776,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CreateGuildBan</span><span class="params">(<span name="guildId">guildId: <a href="../../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="userId">userId: <a href="../../data/index.html#UserId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.User]" class="extmbr" name="net.katsstuff.ackcord.data.UserId">UserId</a></span>, <span name="params">params: <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>, <span name="reason">reason: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span>
+        <span class="name">CreateGuildBan</span><span class="params">(<span name="guildId">guildId: <a href="../../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="userId">userId: <a href="../../data/index.html#UserId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.User]" class="extmbr" name="net.katsstuff.ackcord.data.UserId">UserId</a></span>, <span name="params">params: <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a></span>, <span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">NotUsed: NotUsed</a></span></span></span>, <span name="reason">reason: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>] = <span class="symbol">None</span></span>)</span>
       </span>
       
       
@@ -818,7 +802,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -834,7 +818,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -850,7 +834,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -882,7 +866,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">bodyForLogging</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">bodyForLogging</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Returns the body of this Request for use in logging.</p><div class="fullcomment"><div class="comment cmt"><p>Returns the body of this Request for use in logging.
@@ -899,7 +883,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -923,7 +907,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: <a href="http://www.scala-lang.org/api/2.12.5/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
+        <span class="name">collect</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: <a href="http://www.scala-lang.org/api/2.12.8/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.collect.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Map the result if the function is defined for the response data.</p><div class="fullcomment"><div class="comment cmt"><p>Map the result if the function is defined for the response data.
@@ -957,7 +941,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -973,7 +957,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">extraHeaders</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/HttpHeader.html#akka.http.scaladsl.model.HttpHeader" class="extype" name="akka.http.scaladsl.model.HttpHeader">HttpHeader</a>]</span>
+        <span class="name">extraHeaders</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/HttpHeader.html#akka.http.scaladsl.model.HttpHeader" class="extype" name="akka.http.scaladsl.model.HttpHeader">HttpHeader</a>]</span>
       </span>
       
       <p class="shortcomment cmt">All the extra headers to send with this request.</p><div class="fullcomment"><div class="comment cmt"><p>All the extra headers to send with this request.
@@ -990,7 +974,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
+        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Filter the response of sending this request.</p><div class="fullcomment"><div class="comment cmt"><p>Filter the response of sending this request.
@@ -1007,7 +991,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1053,9 +1037,9 @@
       
       
     </li><li name="net.katsstuff.ackcord.http.rest.CreateGuildBan#hasPermissions" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="hasPermissions[F[_]](implicitevidence$11:cats.Monad[F],implicitc:net.katsstuff.ackcord.CacheSnapshot[F]):F[Boolean]"></a><a id="hasPermissions[F[_]](Monad[F],CacheSnapshot[F]):F[Boolean]"></a>
+      <a id="hasPermissions[F[_]](implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):F[Boolean]"></a><a id="hasPermissions[F[_]](CacheSnapshot[F],Monad[F]):F[Boolean]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#hasPermissions[F[_]](implicitevidence$11:cats.Monad[F],implicitc:net.katsstuff.ackcord.CacheSnapshot[F]):F[Boolean]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#hasPermissions[F[_]](implicitc:net.katsstuff.ackcord.CacheSnapshot[F],implicitF:cats.Monad[F]):F[Boolean]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1064,11 +1048,11 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hasPermissions</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>]</span>, <span name="c">c: <a href="../../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+        <span class="name">hasPermissions</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../../CacheSnapshot.html" class="extype" name="net.katsstuff.ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>]</span>, <span name="F">F: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.hasPermissions.F">F</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Check if a client has the needed permissions to execute this request.</p><div class="fullcomment"><div class="comment cmt"><p>Check if a client has the needed permissions to execute this request.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a> → <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a></dd></dl></div>
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
@@ -1081,7 +1065,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -1130,7 +1114,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Map the result of sending this request.</p><div class="fullcomment"><div class="comment cmt"><p>Map the result of sending this request.
@@ -1147,7 +1131,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -1163,7 +1147,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1182,7 +1166,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1225,10 +1209,10 @@
       <p class="shortcomment cmt">An encoder for the params of this request
 </p><div class="fullcomment"><div class="comment cmt"><p>An encoder for the params of this request
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a> → <a href="RESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.RESTRequest">RESTRequest</a></dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.http.rest.BaseRESTRequest#parseResponse" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="parseResponse(parallelism:Int)(implicitsystem:akka.actor.ActorSystem):akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,RawResponse,akka.NotUsed]"></a><a id="parseResponse(Int)(ActorSystem):Flow[ResponseEntity,NotUsed,NotUsed]"></a>
+    </li><li name="net.katsstuff.ackcord.http.rest.NoResponseRequest#parseResponse" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="parseResponse(parallelism:Int)(implicitsystem:akka.actor.ActorSystem):akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,akka.NotUsed,akka.NotUsed]"></a><a id="parseResponse(Int)(ActorSystem):Flow[ResponseEntity,NotUsed,NotUsed]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#parseResponse(parallelism:Int)(implicitsystem:akka.actor.ActorSystem):akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,RawResponse,akka.NotUsed]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#parseResponse(parallelism:Int)(implicitsystem:akka.actor.ActorSystem):akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,akka.NotUsed,akka.NotUsed]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1237,11 +1221,11 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">parseResponse</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">parseResponse</span><span class="params">(<span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A flow that can be used to parse the responses from this request.</p><div class="fullcomment"><div class="comment cmt"><p>A flow that can be used to parse the responses from this request.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a> → <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="NoResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseRequest">NoResponseRequest</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a> → <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.CreateGuildBan#reason" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="reason:Option[String]"></a>
       <span class="permalink">
@@ -1254,7 +1238,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">reason</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">reason</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a> → <a href="ReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.ReasonRequest">ReasonRequest</a></dd></dl></div>
@@ -1270,7 +1254,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">requestBody</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/RequestEntity.html#akka.http.scaladsl.model.RequestEntity" class="extype" name="akka.http.scaladsl.model.RequestEntity">RequestEntity</a></span>
+        <span class="name">requestBody</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/RequestEntity.html#akka.http.scaladsl.model.RequestEntity" class="extype" name="akka.http.scaladsl.model.RequestEntity">RequestEntity</a></span>
       </span>
       
       <p class="shortcomment cmt">The body of the request to send.</p><div class="fullcomment"><div class="comment cmt"><p>The body of the request to send.
@@ -1292,7 +1276,7 @@
       
       <p class="shortcomment cmt">The permissions needed to use this request.</p><div class="fullcomment"><div class="comment cmt"><p>The permissions needed to use this request.
 </p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest#responseDecoder" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="net.katsstuff.ackcord.http.rest.NoResponseRequest#responseDecoder" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="responseDecoder:io.circe.Decoder[akka.NotUsed]"></a><a id="responseDecoder:Decoder[NotUsed]"></a>
       <span class="permalink">
       <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#responseDecoder:io.circe.Decoder[akka.NotUsed]" title="Permalink">
@@ -1304,11 +1288,11 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">responseDecoder</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Decoder.html#io.circe.Decoder" class="extype" name="io.circe.Decoder">Decoder</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">responseDecoder</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Decoder.html#io.circe.Decoder" class="extype" name="io.circe.Decoder">Decoder</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A decoder to decode the response.</p><div class="fullcomment"><div class="comment cmt"><p>A decoder to decode the response.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="NoResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseRequest">NoResponseRequest</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.rest.CreateGuildBan#route" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="route:net.katsstuff.ackcord.http.requests.RequestRoute"></a><a id="route:RequestRoute"></a>
       <span class="permalink">
@@ -1342,7 +1326,7 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest#toNiceResponse" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+    </li><li name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest#toNiceResponse" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toNiceResponse(response:Response):Response"></a><a id="toNiceResponse(NotUsed):NotUsed"></a>
       <span class="permalink">
       <a href="../../../../../net/katsstuff/ackcord/http/rest/CreateGuildBan.html#toNiceResponse(response:Response):Response" title="Permalink">
@@ -1354,11 +1338,11 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">toNiceResponse</span><span class="params">(<span name="response">response: <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a></span>
+        <span class="name">toNiceResponse</span><span class="params">(<span name="response">response: <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a></span>
       </span>
       
       <p class="shortcomment cmt">Convert the response to a format the cache handler can understand.</p><div class="fullcomment"><div class="comment cmt"><p>Convert the response to a format the cache handler can understand.
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="NoNiceResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">NoNiceResponseReasonRequest</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="NoNiceResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest">NoNiceResponseRequest</a> → <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.requests.Request#transformResponse" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="transformResponse[B](f:akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,Data,akka.NotUsed]=&gt;akka.stream.scaladsl.Flow[akka.http.scaladsl.model.ResponseEntity,B,akka.NotUsed]):net.katsstuff.ackcord.http.requests.Request[B,Ctx]"></a><a id="transformResponse[B]((Flow[ResponseEntity,NotUsed,NotUsed])⇒Flow[ResponseEntity,B,NotUsed]):requests.Request[B,Ctx]"></a>
       <span class="permalink">
@@ -1371,7 +1355,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">transformResponse</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
+        <span class="name">transformResponse</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/ResponseEntity.html#akka.http.scaladsl.model.ResponseEntity" class="extype" name="akka.http.scaladsl.model.ResponseEntity">ResponseEntity</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.Request.transformResponse.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Transform the response of this request as a flow.</p><div class="fullcomment"><div class="comment cmt"><p>Transform the response of this request as a flow.
@@ -1404,7 +1388,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1426,7 +1410,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1448,7 +1432,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1472,7 +1456,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="newContext">newContext: <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span>]</span>
+        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="newContext">newContext: <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.Request.withContext.NewCtx">NewCtx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Updates the context of this request.</p><div class="fullcomment"><div class="comment cmt"><p>Updates the context of this request.
@@ -1505,31 +1489,35 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">
               <h3>Inherited from <a href="NoResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseReasonRequest">NoResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+            </div><div class="parent" name="net.katsstuff.ackcord.http.rest.NoResponseRequest">
+              <h3>Inherited from <a href="NoResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoResponseRequest">NoResponseRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">
-              <h3>Inherited from <a href="NoNiceResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">NoNiceResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="NoNiceResponseReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseReasonRequest">NoNiceResponseReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+            </div><div class="parent" name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest">
+              <h3>Inherited from <a href="NoNiceResponseRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.NoNiceResponseRequest">NoNiceResponseRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.rest.ReasonRequest">
-              <h3>Inherited from <a href="ReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.ReasonRequest">ReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="ReasonRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.ReasonRequest">ReasonRequest</a>[<a href="" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan">CreateGuildBan</a>[<span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>], <a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.rest.RESTRequest">
-              <h3>Inherited from <a href="RESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.RESTRequest">RESTRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="RESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.RESTRequest">RESTRequest</a>[<a href="CreateGuildBanData.html" class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBanData">CreateGuildBanData</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">
-              <h3>Inherited from <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="BaseRESTRequest.html" class="extype" name="net.katsstuff.ackcord.http.rest.BaseRESTRequest">BaseRESTRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.requests.Request">
-              <h3>Inherited from <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="../requests/Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">requests.Request</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="net.katsstuff.ackcord.http.requests.MaybeRequest">
-              <h3>Inherited from <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="../requests/MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>, <span class="extype" name="net.katsstuff.ackcord.http.rest.CreateGuildBan.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

@@ -163,10 +163,6 @@
                         <a href="" title="A failed request.">FailedRequest</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="GlobalRatelimiter.html" title=""></a>
-                        <a href="GlobalRatelimiter.html" title="">GlobalRatelimiter</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
                         <a class="class" href="HttpException.html" title="An exception for Http errors."></a>
                         <a href="HttpException.html" title="An exception for Http errors.">HttpException</a>
                       </li><li class="current-entities indented5">
@@ -264,17 +260,17 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">FailedRequest</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="result"> extends <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
+        <span class="name">FailedRequest</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="result"> extends <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A failed request.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordNetwork/src/main/scala/net/katsstuff/ackcord/http/requests/requestObjs.scala" target="_blank">requestObjs.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordNetwork/src/main/scala/net/katsstuff/ackcord/http/requests/requestObjs.scala" target="_blank">requestObjs.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -385,7 +381,7 @@ if one does not exist.</p>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
+        <span class="name">filter</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Apply f if this is a successful response, and return this if the result
@@ -404,7 +400,7 @@ is true, else returns a failed answer.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.flatMap.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.flatMap.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
+        <span class="name">flatMap</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.flatMap.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.flatMap.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Apply f and returns the result if this is a successful response.</p><div class="fullcomment"><div class="comment cmt"><p>Apply f and returns the result if this is a successful response.
@@ -421,7 +417,7 @@ is true, else returns a failed answer.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.map.B">B</span></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
+        <span class="name">map</span><span class="tparams">[<span name="B">B</span>]</span><span class="params">(<span name="f">f: (<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>) ⇒ <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.map.B">B</span></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.map.B">B</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Apply a function to this answer, if it's a successful response.</p><div class="fullcomment"><div class="comment cmt"><p>Apply a function to this answer, if it's a successful response.
@@ -438,7 +434,7 @@ is true, else returns a failed answer.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">optData</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>]</span>
+        <span class="name">optData</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>]</span>
       </span>
       
       <p class="shortcomment cmt">An option that contains the response data if this is a success, or None if it's a failure.</p><div class="fullcomment"><div class="comment cmt"><p>An option that contains the response data if this is a success, or None if it's a failure.
@@ -472,7 +468,7 @@ is true, else returns a failed answer.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">remainingRequests</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">remainingRequests</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <p class="shortcomment cmt">The amount of requests that can be made until this endpoint is ratelimited.</p><div class="fullcomment"><div class="comment cmt"><p>The amount of requests that can be made until this endpoint is ratelimited.
@@ -490,7 +486,7 @@ is true, else returns a failed answer.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">tilReset</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a></span>
+        <span class="name">tilReset</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a></span>
       </span>
       
       <p class="shortcomment cmt">The amount of time until this endpoint ratelimit is reset.</p><div class="fullcomment"><div class="comment cmt"><p>The amount of time until this endpoint ratelimit is reset.
@@ -508,7 +504,7 @@ Minus if unknown.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">uri</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>
+        <span class="name">uri</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>
       </span>
       
       <p class="shortcomment cmt">The uri for this request.</p><div class="fullcomment"><div class="comment cmt"><p>The uri for this request.
@@ -525,7 +521,7 @@ Minus if unknown.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">uriRequestLimit</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">uriRequestLimit</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <p class="shortcomment cmt">The total amount of requests that can be sent to this to this endpoint
@@ -545,7 +541,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.withContext.NewCtx">NewCtx</span>]</span>
+        <span class="name">withContext</span><span class="tparams">[<span name="NewCtx">NewCtx</span>]</span><span class="params">(<span name="context">context: <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.withContext.NewCtx">NewCtx</span></span>)</span><span class="result">: <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer.withContext.NewCtx">NewCtx</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Updates the context of this request response.</p><div class="fullcomment"><div class="comment cmt"><p>Updates the context of this request response.
@@ -568,7 +564,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -584,7 +580,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -600,7 +596,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -632,7 +628,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -656,7 +652,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -672,7 +668,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -688,7 +684,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -729,7 +725,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -748,7 +744,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -764,7 +760,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -780,7 +776,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -799,7 +795,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -850,7 +846,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -872,7 +868,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -894,7 +890,7 @@ until a ratelimit kicks in.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -917,11 +913,11 @@ until a ratelimit kicks in.
 
         <div id="inheritedMembers">
         <div class="parent" name="net.katsstuff.ackcord.http.requests.RequestAnswer">
-              <h3>Inherited from <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</h3>
+              <h3>Inherited from <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Nothing.html#scala.Nothing" class="extype" name="scala.Nothing">Nothing</a>, <span class="extype" name="net.katsstuff.ackcord.http.requests.FailedRequest.Ctx">Ctx</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

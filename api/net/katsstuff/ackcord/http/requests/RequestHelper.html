@@ -163,10 +163,6 @@
                         <a href="FailedRequest.html" title="A failed request.">FailedRequest</a>
                       </li><li class="current-entities indented5">
                         <span class="separator"></span>
-                        <a class="class" href="GlobalRatelimiter.html" title=""></a>
-                        <a href="GlobalRatelimiter.html" title="">GlobalRatelimiter</a>
-                      </li><li class="current-entities indented5">
-                        <span class="separator"></span>
                         <a class="class" href="HttpException.html" title="An exception for Http errors."></a>
                         <a href="HttpException.html" title="An exception for Http errors.">HttpException</a>
                       </li><li class="current-entities indented5">
@@ -266,18 +262,18 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">RequestHelper</span><span class="params">(<span name="credentials">credentials: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>, <span name="ratelimitActor">ratelimitActor: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>, <span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">4</span></span>, <span name="bufferSize">bufferSize: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">32</span></span>, <span name="overflowStrategy">overflowStrategy: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">OverflowStrategy.backpressure</a></span></span></span>, <span name="maxAllowedWait">maxAllowedWait: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a> = <span class="symbol">2.minutes</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">RequestHelper</span><span class="params">(<span name="credentials">credentials: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>, <span name="ratelimitActor">ratelimitActor: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>, <span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">4</span></span>, <span name="maxRetryCount">maxRetryCount: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">3</span></span>, <span name="bufferSize">bufferSize: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">32</span></span>, <span name="overflowStrategy">overflowStrategy: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">OverflowStrategy.backpressure</a></span></span></span>, <span name="maxAllowedWait">maxAllowedWait: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a> = <span class="symbol">2.minutes</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A class holding all the relevant information to create a request stream.
 Also contains some convenience methods for common operations with requests.</p><p>This should be instantiated once per bot, and shared between shards.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordNetwork/src/main/scala/net/katsstuff/ackcord/http/requests/RequestHelper.scala" target="_blank">RequestHelper.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordNetwork/src/main/scala/net/katsstuff/ackcord/http/requests/RequestHelper.scala" target="_blank">RequestHelper.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -334,9 +330,9 @@ Also contains some convenience methods for common operations with requests.</p><
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="net.katsstuff.ackcord.http.requests.RequestHelper#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(credentials:akka.http.scaladsl.model.headers.HttpCredentials,ratelimitActor:akka.actor.ActorRef,parallelism:Int,bufferSize:Int,overflowStrategy:akka.stream.OverflowStrategy,maxAllowedWait:scala.concurrent.duration.FiniteDuration)(implicitsystem:akka.actor.ActorSystem,implicitmat:akka.stream.Materializer):net.katsstuff.ackcord.http.requests.RequestHelper"></a><a id="&lt;init&gt;:RequestHelper"></a>
+      <a id="&lt;init&gt;(credentials:akka.http.scaladsl.model.headers.HttpCredentials,ratelimitActor:akka.actor.ActorRef,parallelism:Int,maxRetryCount:Int,bufferSize:Int,overflowStrategy:akka.stream.OverflowStrategy,maxAllowedWait:scala.concurrent.duration.FiniteDuration)(implicitsystem:akka.actor.ActorSystem,implicitmat:akka.stream.Materializer):net.katsstuff.ackcord.http.requests.RequestHelper"></a><a id="&lt;init&gt;:RequestHelper"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#&lt;init&gt;(credentials:akka.http.scaladsl.model.headers.HttpCredentials,ratelimitActor:akka.actor.ActorRef,parallelism:Int,bufferSize:Int,overflowStrategy:akka.stream.OverflowStrategy,maxAllowedWait:scala.concurrent.duration.FiniteDuration)(implicitsystem:akka.actor.ActorSystem,implicitmat:akka.stream.Materializer):net.katsstuff.ackcord.http.requests.RequestHelper" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#&lt;init&gt;(credentials:akka.http.scaladsl.model.headers.HttpCredentials,ratelimitActor:akka.actor.ActorRef,parallelism:Int,maxRetryCount:Int,bufferSize:Int,overflowStrategy:akka.stream.OverflowStrategy,maxAllowedWait:scala.concurrent.duration.FiniteDuration)(implicitsystem:akka.actor.ActorSystem,implicitmat:akka.stream.Materializer):net.katsstuff.ackcord.http.requests.RequestHelper" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -345,7 +341,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">RequestHelper</span><span class="params">(<span name="credentials">credentials: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>, <span name="ratelimitActor">ratelimitActor: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>, <span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">4</span></span>, <span name="bufferSize">bufferSize: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">32</span></span>, <span name="overflowStrategy">overflowStrategy: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">OverflowStrategy.backpressure</a></span></span></span>, <span name="maxAllowedWait">maxAllowedWait: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a> = <span class="symbol">2.minutes</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span>
+        <span class="name">RequestHelper</span><span class="params">(<span name="credentials">credentials: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>, <span name="ratelimitActor">ratelimitActor: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>, <span name="parallelism">parallelism: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">4</span></span>, <span name="maxRetryCount">maxRetryCount: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">3</span></span>, <span name="bufferSize">bufferSize: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a> = <span class="symbol">32</span></span>, <span name="overflowStrategy">overflowStrategy: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a> = <span class="symbol"><span class="name"><a href="../../../../../akka/index.html">OverflowStrategy.backpressure</a></span></span></span>, <span name="maxAllowedWait">maxAllowedWait: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a> = <span class="symbol">2.minutes</span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="system">system: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>, <span name="mat">mat: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>)</span>
       </span>
       
       
@@ -371,7 +367,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -387,7 +383,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -403,7 +399,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -435,7 +431,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">bufferSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">bufferSize</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       
@@ -451,7 +447,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -475,7 +471,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">credentials</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.0/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>
+        <span class="name">credentials</span><span class="result">: <a href="http://doc.akka.io/api/akka-http/10.1.5/akka/http/scaladsl/model/headers/HttpCredentials.html#akka.http.scaladsl.model.headers.HttpCredentials" class="extype" name="akka.http.scaladsl.model.headers.HttpCredentials">HttpCredentials</a></span>
       </span>
       
       
@@ -491,7 +487,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -507,7 +503,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -529,7 +525,7 @@ Also contains some convenience methods for common operations with requests.</p><
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flow</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Ctx">Ctx</span>], <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flow</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Ctx">Ctx</span>], <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flow.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A generic flow for making requests.</p><div class="fullcomment"><div class="comment cmt"><p>A generic flow for making requests. You should use this one most of
@@ -547,29 +543,11 @@ the time. Backpressures before it hits a ratelimit.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flowSuccess</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Ctx">Ctx</span>], (<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Ctx">Ctx</span>), <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flowSuccess</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Ctx">Ctx</span>], (<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowSuccess.Ctx">Ctx</span>), <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A generic flow for making requests.</p><div class="fullcomment"><div class="comment cmt"><p>A generic flow for making requests. Only returns successful requests.
 Backpressures before it hits a ratelimit.
-</p></div></div>
-    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#flowWithRouteRatelimit" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="flowWithRouteRatelimit[Data,Ctx]:akka.stream.scaladsl.Flow[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],net.katsstuff.ackcord.http.requests.MaybeRequest[Data,Ctx],akka.NotUsed]"></a><a id="flowWithRouteRatelimit[Data,Ctx]:Flow[Request[Data,Ctx],MaybeRequest[Data,Ctx],NotUsed]"></a>
-      <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#flowWithRouteRatelimit[Data,Ctx]:akka.stream.scaladsl.Flow[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],net.katsstuff.ackcord.http.requests.MaybeRequest[Data,Ctx],akka.NotUsed]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">flowWithRouteRatelimit</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithRouteRatelimit.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithRouteRatelimit.Ctx">Ctx</span>], <a href="MaybeRequest.html" class="extype" name="net.katsstuff.ackcord.http.requests.MaybeRequest">MaybeRequest</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithRouteRatelimit.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithRouteRatelimit.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">A request flow which obeys route specific rate limits, but not global ones.</p><div class="fullcomment"><div class="comment cmt"><p>A request flow which obeys route specific rate limits, but not global ones.
-Don't use this if you don't know what you're doing.
 </p></div></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#flowWithoutRateLimits" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="flowWithoutRateLimits[Data,Ctx]:akka.stream.scaladsl.Flow[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx],akka.NotUsed]"></a><a id="flowWithoutRateLimits[Data,Ctx]:Flow[Request[Data,Ctx],RequestAnswer[Data,Ctx],NotUsed]"></a>
@@ -583,7 +561,7 @@ Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flowWithoutRateLimits</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Ctx">Ctx</span>], <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flowWithoutRateLimits</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Ctx">Ctx</span>], <a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.flowWithoutRateLimits.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A basic request flow which will send requests to Discord, and
@@ -621,10 +599,107 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#many" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="many[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx],akka.NotUsed]"></a><a id="many[Data,Ctx](Seq[Request[Data,Ctx]]):Source[RequestAnswer[Data,Ctx],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#many[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">many</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.many.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.many.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.many.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.many.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many requests</p><div class="fullcomment"><div class="comment cmt"><p>Sends many requests</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the request answers.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#manyFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="manyFuture[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):scala.concurrent.Future[scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx]]]"></a><a id="manyFuture[Data,Ctx](Seq[Request[Data,Ctx]]):Future[Seq[RequestAnswer[Data,Ctx]]]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#manyFuture[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):scala.concurrent.Future[scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx]]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">manyFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyFuture.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyFuture.Ctx">Ctx</span>]]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many requests and gets the responses as a future.</p><div class="fullcomment"><div class="comment cmt"><p>Sends many requests and gets the responses as a future.</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#manyIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="manyIgnore[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):Unit"></a><a id="manyIgnore[Data,Ctx](Seq[Request[Data,Ctx]]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#manyIgnore[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">manyIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyIgnore.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many requests and ignores the result.</p><div class="fullcomment"><div class="comment cmt"><p>Sends many requests and ignores the result.</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#manyRetry" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="manyRetry[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]"></a><a id="manyRetry[Data,Ctx](Seq[Request[Data,Ctx]]):Source[RequestResponse[Data,Ctx],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#manyRetry[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">manyRetry</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetry.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetry.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many which will retry if they fail.</p><div class="fullcomment"><div class="comment cmt"><p>Sends many which will retry if they fail.
+</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the retried requests.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#manyRetryFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="manyRetryFuture[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):scala.concurrent.Future[scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]]"></a><a id="manyRetryFuture[Data,Ctx](Seq[Request[Data,Ctx]]):Future[Seq[RequestResponse[Data,Ctx]]]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#manyRetryFuture[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):scala.concurrent.Future[scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">manyRetryFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryFuture.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryFuture.Ctx">Ctx</span>]]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many requests with retries if they fail, and gets the response as a future.</p><div class="fullcomment"><div class="comment cmt"><p>Sends many requests with retries if they fail, and gets the response as a future.</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#manyRetryIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="manyRetryIgnore[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):Unit"></a><a id="manyRetryIgnore[Data,Ctx](Seq[Request[Data,Ctx]]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#manyRetryIgnore[Data,Ctx](requests:scala.collection.immutable.Seq[net.katsstuff.ackcord.http.requests.Request[Data,Ctx]]):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">manyRetryIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="requests">requests: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Seq.html#scala.collection.immutable.Seq" class="extype" name="scala.collection.immutable.Seq">Seq</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.manyRetryIgnore.Ctx">Ctx</span>]]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends many requests with retries if they fail, and ignores the result.</p><div class="fullcomment"><div class="comment cmt"><p>Sends many requests with retries if they fail, and ignores the result.</p></div><dl class="paramcmts block"><dt class="param">requests</dt><dd class="cmt"><p>The requests to send.</p></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#mat" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="mat:akka.stream.Materializer"></a><a id="mat:Materializer"></a>
       <span class="permalink">
@@ -637,7 +712,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">mat</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>
+        <span class="name">mat</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/Materializer.html#akka.stream.Materializer" class="extype" name="akka.stream.Materializer">Materializer</a></span>
       </span>
       
       
@@ -653,7 +728,23 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">maxAllowedWait</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a></span>
+        <span class="name">maxAllowedWait</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/duration/FiniteDuration.html#scala.concurrent.duration.FiniteDuration" class="extype" name="scala.concurrent.duration.FiniteDuration">FiniteDuration</a></span>
+      </span>
+      
+      
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#maxRetryCount" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="maxRetryCount:Int"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#maxRetryCount:Int" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">maxRetryCount</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       
@@ -669,7 +760,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -685,7 +776,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -704,7 +795,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -723,7 +814,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">overflowStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a></span>
+        <span class="name">overflowStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/OverflowStrategy.html#akka.stream.OverflowStrategy" class="extype" name="akka.stream.OverflowStrategy">OverflowStrategy</a></span>
       </span>
       
       
@@ -739,7 +830,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">parallelism</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">parallelism</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       
@@ -755,26 +846,10 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">ratelimitActor</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">ratelimitActor</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       
-    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retry" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="retry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]"></a><a id="retry[Data,Ctx](Request[Data,Ctx]):Source[RequestResponse[Data,Ctx],NotUsed]"></a>
-      <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">retry</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Sends a single request which will retry if it fails.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request which will retry if it fails.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the retried request.</p></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retryFlow" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="retryFlow[Data,Ctx]:akka.stream.scaladsl.Flow[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]"></a><a id="retryFlow[Data,Ctx]:Flow[Request[Data,Ctx],RequestResponse[Data,Ctx],NotUsed]"></a>
       <span class="permalink">
@@ -787,14 +862,14 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">retryFlow</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Ctx">Ctx</span>], <a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">retryFlow</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Ctx">Ctx</span>], <a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFlow.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A request flow that will retry failed requests.</p>
-    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retryFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="retryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]"></a><a id="retryFuture[Data,Ctx](Request[Data,Ctx]):Future[RequestResponse[Data,Ctx]]"></a>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retrySinkIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="retrySinkIgnore[Data,Ctx]:akka.stream.scaladsl.Sink[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],scala.concurrent.Future[akka.Done]]"></a><a id="retrySinkIgnore[Data,Ctx]:Sink[Request[Data,Ctx],Future[Done]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retrySinkIgnore[Data,Ctx]:akka.stream.scaladsl.Sink[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],scala.concurrent.Future[akka.Done]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -803,26 +878,12 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">retryFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Ctx">Ctx</span>]]</span>
+        <span class="name">retrySinkIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Sink.html#akka.stream.scaladsl.Sink" class="extype" name="akka.stream.scaladsl.Sink">Sink</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retrySinkIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retrySinkIgnore.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/Done.html#akka.Done" class="extype" name="akka.Done">Done</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">Sends a single request with retries if it fails, and gets the response as a future.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request with retries if it fails, and gets the response as a future.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
-    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retryIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="retryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit"></a><a id="retryIgnore[Data,Ctx](Request[Data,Ctx]):Unit"></a>
-      <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">retryIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryIgnore.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Sends a single request with retries if it fails, and ignores the result.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request with retries if it fails, and ignores the result.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
+      <p class="shortcomment cmt">A sink for making requests and ignoring the results that will retry on error.</p><div class="fullcomment"><div class="comment cmt"><p>A sink for making requests and ignoring the results that will retry on error.
+Backpressures before it hits a ratelimit.
+</p></div></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#single" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="single[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx],akka.NotUsed]"></a><a id="single[Data,Ctx](Request[Data,Ctx]):Source[RequestAnswer[Data,Ctx],NotUsed]"></a>
       <span class="permalink">
@@ -835,10 +896,10 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">single</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.11/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">single</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.single.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
-      <p class="shortcomment cmt">Sends a single request.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the single request.</p></dd></dl></div>
+      <p class="shortcomment cmt">Sends a single request.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the single request answer.</p></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#singleFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="singleFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestAnswer[Data,Ctx]]"></a><a id="singleFuture[Data,Ctx](Request[Data,Ctx]):Future[RequestAnswer[Data,Ctx]]"></a>
       <span class="permalink">
@@ -851,7 +912,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">singleFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Ctx">Ctx</span>]]</span>
+        <span class="name">singleFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="RequestAnswer.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestAnswer">RequestAnswer</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleFuture.Ctx">Ctx</span>]]</span>
       </span>
       
       <p class="shortcomment cmt">Sends a single request and gets the response as a future.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request and gets the response as a future.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
@@ -867,10 +928,58 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">singleIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleIgnore.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">singleIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleIgnore.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <p class="shortcomment cmt">Sends a single request and ignores the result.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request and ignores the result.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#singleRetry" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="singleRetry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]"></a><a id="singleRetry[Data,Ctx](Request[Data,Ctx]):Source[RequestResponse[Data,Ctx],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#singleRetry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">singleRetry</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetry.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetry.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends a single request which will retry if it fails.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request which will retry if it fails.</p><p>NOTE: This Source sometimes stops working.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd><dt>returns</dt><dd class="cmt"><p>A source of the retried request.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#singleRetryFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="singleRetryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]"></a><a id="singleRetryFuture[Data,Ctx](Request[Data,Ctx]):Future[RequestResponse[Data,Ctx]]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#singleRetryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">singleRetryFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryFuture.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryFuture.Ctx">Ctx</span>]]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends a single request with retries if it fails, and gets the response as a future.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request with retries if it fails, and gets the response as a future.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#singleRetryIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="singleRetryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit"></a><a id="singleRetryIgnore[Data,Ctx](Request[Data,Ctx]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#singleRetryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">singleRetryIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.singleRetryIgnore.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Sends a single request with retries if it fails, and ignores the result.</p><div class="fullcomment"><div class="comment cmt"><p>Sends a single request with retries if it fails, and ignores the result.</p></div><dl class="paramcmts block"><dt class="param">request</dt><dd class="cmt"><p>The request to send.</p></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#sinkIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="sinkIgnore[Data,Ctx]:akka.stream.scaladsl.Sink[net.katsstuff.ackcord.http.requests.Request[Data,Ctx],scala.concurrent.Future[akka.Done]]"></a><a id="sinkIgnore[Data,Ctx]:Sink[Request[Data,Ctx],Future[Done]]"></a>
       <span class="permalink">
@@ -883,7 +992,7 @@ receive responses. Don't use this if you don't know what you're doing.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sinkIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <span class="extype" name="akka.stream.scaladsl.Sink">Sink</span>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.sinkIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.sinkIgnore.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.5/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/Done.html#akka.Done" class="extype" name="akka.Done">Done</a>]]</span>
+        <span class="name">sinkIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Sink.html#akka.stream.scaladsl.Sink" class="extype" name="akka.stream.scaladsl.Sink">Sink</a>[<a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.sinkIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.sinkIgnore.Ctx">Ctx</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/Done.html#akka.Done" class="extype" name="akka.Done">Done</a>]]</span>
       </span>
       
       <p class="shortcomment cmt">A generic sink for making requests and ignoring the results.</p><div class="fullcomment"><div class="comment cmt"><p>A generic sink for making requests and ignoring the results.
@@ -917,7 +1026,7 @@ Backpressures before it hits a ratelimit.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">system</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>
+        <span class="name">system</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>
       </span>
       
       
@@ -933,7 +1042,7 @@ Backpressures before it hits a ratelimit.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -955,7 +1064,7 @@ Backpressures before it hits a ratelimit.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -977,7 +1086,7 @@ Backpressures before it hits a ratelimit.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -995,22 +1104,82 @@ Backpressures before it hits a ratelimit.
 
         
 
-        
+        <div class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retry" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="retry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]"></a><a id="retry[Data,Ctx](Request[Data,Ctx]):Source[RequestResponse[Data,Ctx],NotUsed]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retry[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):akka.stream.scaladsl.Source[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx],akka.NotUsed]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.11.0) Prefer singleRetry instead">retry</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retry.Ctx">Ctx</span>], <a href="http://doc.akka.io/api/akka/2.5.18/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11.0)</i> Prefer singleRetry instead</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retryFuture" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="retryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]"></a><a id="retryFuture[Data,Ctx](Request[Data,Ctx]):Future[RequestResponse[Data,Ctx]]"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retryFuture[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):scala.concurrent.Future[net.katsstuff.ackcord.http.requests.RequestResponse[Data,Ctx]]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.11.0) Prefer singleRetryFuture instead">retryFuture</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/concurrent/Future.html#scala.concurrent.Future" class="extype" name="scala.concurrent.Future">Future</a>[<a href="RequestResponse.html" class="extype" name="net.katsstuff.ackcord.http.requests.RequestResponse">RequestResponse</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryFuture.Ctx">Ctx</span>]]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11.0)</i> Prefer singleRetryFuture instead</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.http.requests.RequestHelper#retryIgnore" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="retryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit"></a><a id="retryIgnore[Data,Ctx](Request[Data,Ctx]):Unit"></a>
+      <span class="permalink">
+      <a href="../../../../../net/katsstuff/ackcord/http/requests/RequestHelper.html#retryIgnore[Data,Ctx](request:net.katsstuff.ackcord.http.requests.Request[Data,Ctx]):Unit" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.11.0) Prefer singleRetryIgnore instead">retryIgnore</span><span class="tparams">[<span name="Data">Data</span>, <span name="Ctx">Ctx</span>]</span><span class="params">(<span name="request">request: <a href="Request.html" class="extype" name="net.katsstuff.ackcord.http.requests.Request">Request</a>[<span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryIgnore.Data">Data</span>, <span class="extype" name="net.katsstuff.ackcord.http.requests.RequestHelper.retryIgnore.Ctx">Ctx</span>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11.0)</i> Prefer singleRetryIgnore instead</p></dd></dl></div>
+    </li></ol>
+            </div>
         </div>
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

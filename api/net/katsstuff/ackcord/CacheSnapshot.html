@@ -299,12 +299,8 @@
                         <a href="CommandHandlerDSL.html" title="A handler for a specific command that runs a RequestDSL when the command is received.">CommandHandlerDSL</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="class" href="CommandSettings.html" title=""></a>
-                        <a href="CommandSettings.html" title="">CommandSettings</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="trait" href="CommandsHelper.html" title="An object which manages a Commands instance."></a>
-                        <a href="CommandsHelper.html" title="An object which manages a Commands instance.">CommandsHelper</a>
+                        <a class="trait" href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance."></a>
+                        <a href="CommandsHelper.html" title="An object which manages a net.katsstuff.ackcord.commands.Commands instance.">CommandsHelper</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="CoreDiscordClient.html" title=""></a>
@@ -330,6 +326,10 @@
                         <a class="object" href="GatewayHandlerCache$.html" title=""></a>
                         <a href="GatewayHandlerCache$.html" title="">GatewayHandlerCache</a>
                       </li><li class="current-entities indented3">
+                        <a class="object" href="HasCache$.html" title=""></a>
+                        <a class="trait" href="HasCache.html" title=""></a>
+                        <a href="HasCache.html" title="">HasCache</a>
+                      </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time"></a>
                         <a href="MemoryCacheSnapshot.html" title="Represents the cache at some point in time">MemoryCacheSnapshot</a>
@@ -342,9 +342,21 @@
                         <a class="object" href="MusicManager$.html" title=""></a>
                         <a href="MusicManager$.html" title="">MusicManager</a>
                       </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RawCommandHandler.html" title="A handler for all raw commands."></a>
+                        <a href="RawCommandHandler.html" title="A handler for all raw commands.">RawCommandHandler</a>
+                      </li><li class="current-entities indented3">
                         <a class="object" href="RequestDSL$.html" title=""></a>
                         <a class="trait" href="RequestDSL.html" title="Base trait for a RequestDSL object."></a>
                         <a href="RequestDSL.html" title="Base trait for a RequestDSL object.">RequestDSL</a>
+                      </li><li class="current-entities indented3">
+                        <span class="separator"></span>
+                        <a class="class" href="RequestPermissionException.html" title=""></a>
+                        <a href="RequestPermissionException.html" title="">RequestPermissionException</a>
+                      </li><li class="current-entities indented3">
+                        <a class="object" href="RequestRunner$.html" title=""></a>
+                        <a class="trait" href="RequestRunner.html" title=""></a>
+                        <a href="RequestRunner.html" title="">RequestRunner</a>
                       </li><li class="current-entities indented3">
                         <span class="separator"></span>
                         <a class="class" href="RequestSettings.html" title=""></a>
@@ -386,17 +398,17 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">CacheSnapshot</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">CacheSnapshot</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A representation of the cache.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordData/src/main/scala/net/katsstuff/ackcord/CacheSnapshot.scala" target="_blank">CacheSnapshot.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordData/src/main/scala/net/katsstuff/ackcord/CacheSnapshot.scala" target="_blank">CacheSnapshot.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block">
             <span class="toggle">
               Known Subclasses
@@ -471,7 +483,7 @@
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">MapType</span><span class="tparams">[<span name="K">K</span>, <span name="V">V</span>]</span><span class="result"> &lt;: <a href="http://www.scala-lang.org/api/2.12.5/scala/collection/Map.html#scala.collection.Map" class="extype" name="scala.collection.Map">Map</a>[<a href="data/index.html#SnowflakeType[A]=Long@@net.katsstuff.ackcord.data.SnowflakeTag[A]" class="extmbr" name="net.katsstuff.ackcord.data.SnowflakeType">SnowflakeType</a>[<span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.MapType.K">K</span>], <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.MapType.V">V</span>]</span>
+        <span class="name">MapType</span><span class="tparams">[<span name="K">K</span>, <span name="V">V</span>]</span><span class="result"> &lt;: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/Map.html#scala.collection.Map" class="extype" name="scala.collection.Map">Map</a>[<a href="data/index.html#SnowflakeType[A]=Long@@net.katsstuff.ackcord.data.SnowflakeTag[A]" class="extmbr" name="net.katsstuff.ackcord.data.SnowflakeType">SnowflakeType</a>[<span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.MapType.K">K</span>], <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.MapType.V">V</span>]</span>
       </span>
       
       <p class="shortcomment cmt">The map type to use.</p><div class="fullcomment"><div class="comment cmt"><p>The map type to use. Mutable for builder, immutable otherwise.
@@ -498,7 +510,9 @@
       
       <p class="shortcomment cmt">The bans received this session.</p><div class="fullcomment"><div class="comment cmt"><p>The bans received this session. NOTE: This is not all the bans that exists,
 only the ones received during this session. If you want all the bans,
-use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ackcord.http.rest.GetGuildBans">net.katsstuff.ackcord.http.rest.GetGuildBans</a>.
+use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ackcord.http.rest.GetGuildBans">net.katsstuff.ackcord.http.rest.GetGuildBans</a>.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
 </p></div></div>
     </li><li name="net.katsstuff.ackcord.CacheSnapshot#botUser" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="botUser:F[net.katsstuff.ackcord.data.User@@net.katsstuff.ackcord.CacheSnapshot.BotUser]"></a><a id="botUser:F[@@[User,BotUser]]"></a>
@@ -517,7 +531,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
       
       <p class="shortcomment cmt">Our bot user.</p><div class="fullcomment"><div class="comment cmt"><p>Our bot user. Tagged to allow special syntax.
 </p></div></div>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#dmChannelMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#dmChannelMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="dmChannelMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,net.katsstuff.ackcord.data.DMChannel]]"></a><a id="dmChannelMap:F[MapType[Channel,DMChannel]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#dmChannelMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,net.katsstuff.ackcord.data.DMChannel]]" title="Permalink">
@@ -532,7 +546,10 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">dmChannelMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Channel.html" class="extype" name="net.katsstuff.ackcord.data.Channel">Channel</a>, <a href="data/DMChannel.html" class="extype" name="net.katsstuff.ackcord.data.DMChannel">DMChannel</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">The current dm channels.</p>
+      <p class="shortcomment cmt">The current dm channels.</p><div class="fullcomment"><div class="comment cmt"><p>The current dm channels.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
     </li><li name="net.katsstuff.ackcord.CacheSnapshot#getBan" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="getBan(guildId:net.katsstuff.ackcord.data.GuildId,userId:net.katsstuff.ackcord.data.UserId):cats.data.OptionT[F,net.katsstuff.ackcord.data.Ban]"></a><a id="getBan(GuildId,UserId):OptionT[F,Ban]"></a>
       <span class="permalink">
@@ -565,10 +582,10 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
       </span>
       
       <p class="shortcomment cmt">Get a channel by id, ignoring if it's a dm or guild channel.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#getChannelLastTyped" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="getChannelLastTyped(channelId:net.katsstuff.ackcord.data.ChannelId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,java.time.Instant]]"></a><a id="getChannelLastTyped(ChannelId):F[MapType[User,Instant]]"></a>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#getChannelMessages" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="getChannelMessages(channelId:net.katsstuff.ackcord.data.ChannelId):CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]"></a><a id="getChannelMessages(ChannelId):MapType[Message,Message]"></a>
       <span class="permalink">
-      <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#getChannelLastTyped(channelId:net.katsstuff.ackcord.data.ChannelId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,java.time.Instant]]" title="Permalink">
+      <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#getChannelMessages(channelId:net.katsstuff.ackcord.data.ChannelId):CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -577,26 +594,13 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getChannelLastTyped</span><span class="params">(<span name="channelId">channelId: <a href="data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>, <span class="extype" name="java.time.Instant">Instant</span>]]</span>
+        <span class="name">getChannelMessages</span><span class="params">(<span name="channelId">channelId: <a href="data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>)</span><span class="result">: <a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>, <a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>]</span>
       </span>
       
-      <p class="shortcomment cmt">Get a map of when users last typed in a channel.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#getChannelMessages" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="getChannelMessages(channelId:net.katsstuff.ackcord.data.ChannelId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]]"></a><a id="getChannelMessages(ChannelId):F[MapType[Message,Message]]"></a>
-      <span class="permalink">
-      <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#getChannelMessages(channelId:net.katsstuff.ackcord.data.ChannelId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">getChannelMessages</span><span class="params">(<span name="channelId">channelId: <a href="data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>, <a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>]]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Gets all the messages for a specific channel.</p>
+      <p class="shortcomment cmt">Gets all the messages for a specific channel.</p><div class="fullcomment"><div class="comment cmt"><p>Gets all the messages for a specific channel.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
     </li><li name="net.katsstuff.ackcord.CacheSnapshot#getDmChannel" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="getDmChannel(id:net.katsstuff.ackcord.data.ChannelId):cats.data.OptionT[F,net.katsstuff.ackcord.data.DMChannel]"></a><a id="getDmChannel(ChannelId):OptionT[F,DMChannel]"></a>
       <span class="permalink">
@@ -661,22 +665,6 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
       </span>
       
       <p class="shortcomment cmt">Get a guild by id.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#getGuildBans" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="getGuildBans(id:net.katsstuff.ackcord.data.GuildId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,net.katsstuff.ackcord.data.Ban]]"></a><a id="getGuildBans(GuildId):F[MapType[User,Ban]]"></a>
-      <span class="permalink">
-      <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#getGuildBans(id:net.katsstuff.ackcord.data.GuildId):F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,net.katsstuff.ackcord.data.Ban]]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">getGuildBans</span><span class="params">(<span name="id">id: <a href="data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>)</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>, <a href="data/Ban.html" class="extype" name="net.katsstuff.ackcord.data.Ban">Ban</a>]]</span>
-      </span>
-      
-      <p class="shortcomment cmt">Gets all the bans for a specific guild.</p>
     </li><li name="net.katsstuff.ackcord.CacheSnapshot#getGuildChannel" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="getGuildChannel(id:net.katsstuff.ackcord.data.ChannelId):cats.data.OptionT[F,net.katsstuff.ackcord.data.GuildChannel]"></a><a id="getGuildChannel(ChannelId):OptionT[F,GuildChannel]"></a>
       <span class="permalink">
@@ -870,7 +858,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
       </span>
       
       <p class="shortcomment cmt">Get the dm channel for a specific user.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#groupDmChannelMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#groupDmChannelMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="groupDmChannelMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,net.katsstuff.ackcord.data.GroupDMChannel]]"></a><a id="groupDmChannelMap:F[MapType[Channel,GroupDMChannel]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#groupDmChannelMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,net.katsstuff.ackcord.data.GroupDMChannel]]" title="Permalink">
@@ -885,8 +873,11 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">groupDmChannelMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Channel.html" class="extype" name="net.katsstuff.ackcord.data.Channel">Channel</a>, <a href="data/GroupDMChannel.html" class="extype" name="net.katsstuff.ackcord.data.GroupDMChannel">GroupDMChannel</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">The current group dm channels.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#guildMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">The current group dm channels.</p><div class="fullcomment"><div class="comment cmt"><p>The current group dm channels.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#guildMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="guildMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Guild,net.katsstuff.ackcord.data.Guild]]"></a><a id="guildMap:F[MapType[Guild,Guild]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#guildMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Guild,net.katsstuff.ackcord.data.Guild]]" title="Permalink">
@@ -901,8 +892,11 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">guildMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Guild.html" class="extype" name="net.katsstuff.ackcord.data.Guild">Guild</a>, <a href="data/Guild.html" class="extype" name="net.katsstuff.ackcord.data.Guild">Guild</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">The currently joined guilds.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#lastTypedMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">The currently joined guilds.</p><div class="fullcomment"><div class="comment cmt"><p>The currently joined guilds.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#lastTypedMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="lastTypedMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,java.time.Instant]]]"></a><a id="lastTypedMap:F[MapType[Channel,MapType[User,Instant]]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#lastTypedMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,java.time.Instant]]]" title="Permalink">
@@ -917,8 +911,11 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">lastTypedMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Channel.html" class="extype" name="net.katsstuff.ackcord.data.Channel">Channel</a>, <a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>, <span class="extype" name="java.time.Instant">Instant</span>]]]</span>
       </span>
       
-      <p class="shortcomment cmt">The point each user typed for each channel.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#messageMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">The point each user typed for each channel.</p><div class="fullcomment"><div class="comment cmt"><p>The point each user typed for each channel.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#messageMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="messageMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]]]"></a><a id="messageMap:F[MapType[Channel,MapType[Message,Message]]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#messageMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Channel,CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Message,net.katsstuff.ackcord.data.Message]]]" title="Permalink">
@@ -933,8 +930,11 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">messageMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Channel.html" class="extype" name="net.katsstuff.ackcord.data.Channel">Channel</a>, <a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>, <a href="data/Message.html" class="extype" name="net.katsstuff.ackcord.data.Message">Message</a>]]]</span>
       </span>
       
-      <p class="shortcomment cmt">All messages, organized by channelId, and then messageId.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#unavailableGuildMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">All messages, organized by channelId, and then messageId.</p><div class="fullcomment"><div class="comment cmt"><p>All messages, organized by channelId, and then messageId.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#unavailableGuildMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="unavailableGuildMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Guild,net.katsstuff.ackcord.data.UnavailableGuild]]"></a><a id="unavailableGuildMap:F[MapType[Guild,UnavailableGuild]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#unavailableGuildMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.Guild,net.katsstuff.ackcord.data.UnavailableGuild]]" title="Permalink">
@@ -949,8 +949,11 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">unavailableGuildMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/Guild.html" class="extype" name="net.katsstuff.ackcord.data.Guild">Guild</a>, <a href="data/UnavailableGuild.html" class="extype" name="net.katsstuff.ackcord.data.UnavailableGuild">UnavailableGuild</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">The guilds currently not available.</p>
-    </li><li name="net.katsstuff.ackcord.CacheSnapshot#userMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <p class="shortcomment cmt">The guilds currently not available.</p><div class="fullcomment"><div class="comment cmt"><p>The guilds currently not available.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
+    </li><li name="net.katsstuff.ackcord.CacheSnapshot#userMap" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
       <a id="userMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,net.katsstuff.ackcord.data.User]]"></a><a id="userMap:F[MapType[User,User]]"></a>
       <span class="permalink">
       <a href="../../../net/katsstuff/ackcord/CacheSnapshot.html#userMap:F[CacheSnapshot.this.MapType[net.katsstuff.ackcord.data.User,net.katsstuff.ackcord.data.User]]" title="Permalink">
@@ -965,7 +968,10 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="name">userMap</span><span class="result">: <span class="extype" name="net.katsstuff.ackcord.CacheSnapshot.F">F</span>[<a href="#MapType[K,V]&lt;:scala.collection.Map[net.katsstuff.ackcord.data.SnowflakeType[K],V]" class="extmbr" name="net.katsstuff.ackcord.CacheSnapshot.MapType">MapType</a>[<a href="data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>, <a href="data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>
       </span>
       
-      <p class="shortcomment cmt">All the users currently tracked.</p>
+      <p class="shortcomment cmt">All the users currently tracked.</p><div class="fullcomment"><div class="comment cmt"><p>All the users currently tracked.</p><p>This method returns a map that might be empty depending
+                    on the implementation. Make sure you know if this will
+                    be the case before you use this method.
+</p></div></div>
     </li></ol>
             </div>
 
@@ -984,7 +990,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -1000,7 +1006,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -1016,7 +1022,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -1048,7 +1054,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1072,7 +1078,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -1088,7 +1094,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -1104,7 +1110,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1145,7 +1151,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -1164,7 +1170,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -1180,7 +1186,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -1196,7 +1202,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1215,7 +1221,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1266,7 +1272,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1288,7 +1294,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1310,7 +1316,7 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1333,9 +1339,9 @@ use <a href="http/rest/GetGuildBans.html" class="extype" name="net.katsstuff.ack
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

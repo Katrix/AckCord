@@ -135,6 +135,14 @@
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="net.katsstuff.ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command."></a>
+                        <a href="AbstractCmdInfo.html" title="A CmdRefiner which works on the normal structure of a command.">AbstractCmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="trait" href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects."></a>
+                        <a href="AbstractCommandSettings.html" title="An object to control how messages are parsed into command objects.">AbstractCommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="AllCmdMessages.html" title="Top trait for all command messages."></a>
                         <a href="AllCmdMessages.html" title="Top trait for all command messages.">AllCmdMessages</a>
                       </li><li class="current-entities indented4">
@@ -179,6 +187,10 @@
                         <a href="CmdHelper$.html" title="">CmdHelper</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="class" href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance."></a>
+                        <a href="CmdInfo.html" title="A CmdRefiner that can be used when the prefix, aliases, and filters for a command are known in advance.">CmdInfo</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="trait" href="CmdMessage.html" title="Trait for all unparsed command messages."></a>
                         <a href="CmdMessage.html" title="Trait for all unparsed command messages.">CmdMessage</a>
                       </li><li class="current-entities indented4">
@@ -187,12 +199,20 @@
                         <a href="CmdParseError.html" title="A parse error for a parsed command.">CmdParseError</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
+                        <a class="trait" href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead."></a>
+                        <a href="CmdRefiner.html" title="An object used to refine RawCmd into Cmd, or return errors instead.">CmdRefiner</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
                         <a class="object" href="CmdStreams$.html" title=""></a>
                         <a href="CmdStreams$.html" title="">CmdStreams</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about."></a>
-                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands with categories it's been told about.">Commands</a>
+                        <a class="class" href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid."></a>
+                        <a href="CommandSettings.html" title="A simple AbstractCommandSettings that can be used when you know in advance if commands need a mention at the start, and what prefixes are valid.">CommandSettings</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="Commands.html" title="Represents a command handler, which will try to parse commands."></a>
+                        <a href="Commands.html" title="Represents a command handler, which will try to parse commands.">Commands</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Context$.html" title=""></a>
                         <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
@@ -202,9 +222,17 @@
                         <a class="object" href="" title=""></a>
                         <a href="" title="">CoreCommands</a>
                       </li><li class="current-entities indented4">
+                        <a class="object" href="FilterBehavior$.html" title=""></a>
+                        <a class="trait" href="FilterBehavior.html" title=""></a>
+                        <a href="FilterBehavior.html" title="">FilterBehavior</a>
+                      </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="FilteredCmd.html" title="A command that did not make it through some filters."></a>
                         <a href="FilteredCmd.html" title="A command that did not make it through some filters.">FilteredCmd</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="GenericCmdError.html" title="A generic command error."></a>
+                        <a href="GenericCmdError.html" title="A generic command error.">GenericCmdError</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="HelpCmd$.html" title=""></a>
                         <a class="class" href="HelpCmd.html" title="A base for help commands."></a>
@@ -215,8 +243,8 @@
                         <a href="NoCmd.html" title="Bot was mentioned, but no command was used.">NoCmd</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
-                        <a class="class" href="NoCmdCategory.html" title="An unknown category was used."></a>
-                        <a href="NoCmdCategory.html" title="An unknown category was used.">NoCmdCategory</a>
+                        <a class="class" href="NoCmdPrefix.html" title="An unknown prefix was used."></a>
+                        <a href="NoCmdPrefix.html" title="An unknown prefix was used.">NoCmdPrefix</a>
                       </li><li class="current-entities indented4">
                         <span class="separator"></span>
                         <a class="class" href="ParsedCmd.html" title="A parsed specific command."></a>
@@ -269,11 +297,11 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCommandsCore/src/main/scala/net/katsstuff/ackcord/commands/CoreCommands.scala" target="_blank">CoreCommands.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCommandsCore/src/main/scala/net/katsstuff/ackcord/commands/CoreCommands.scala" target="_blank">CoreCommands.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -338,7 +366,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -354,7 +382,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -370,7 +398,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -402,7 +430,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -415,9 +443,9 @@
               
         </dd></dl></div>
     </li><li name="net.katsstuff.ackcord.commands.CoreCommands#create" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="create[A](needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])"></a><a id="create[A](Boolean,Set[CmdCategory],Source[APIMessage,A],RequestHelper):(A,Commands[Id])"></a>
+      <a id="create[A](settings:net.katsstuff.ackcord.commands.AbstractCommandSettings[cats.Id],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])"></a><a id="create[A](AbstractCommandSettings[Id],Source[APIMessage,A],RequestHelper):(A,Commands[Id])"></a>
       <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create[A](needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])" title="Permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create[A](settings:net.katsstuff.ackcord.commands.AbstractCommandSettings[cats.Id],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -426,15 +454,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">create</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="categories">categories: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="CmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.CmdCategory">CmdCategory</a>]</span>, <span name="apiMessages">apiMessages: <a href="http://doc.akka.io/api/akka/2.5.11/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>, <span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>]</span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: (<span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>, <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>])</span>
+        <span class="name">create</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="settings">settings: <a href="AbstractCommandSettings.html" class="extype" name="net.katsstuff.ackcord.commands.AbstractCommandSettings">AbstractCommandSettings</a>[<span class="extype" name="cats.Id">Id</span>]</span>, <span name="apiMessages">apiMessages: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>, <span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>]</span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: (<span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>, <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>])</span>
       </span>
       
-      <p class="shortcomment cmt">Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p></div><dl class="paramcmts block"><dt class="param">needMention</dt><dd class="cmt"><p>If this handler should require mentions before
-                   the commands.</p></dd><dt class="param">categories</dt><dd class="cmt"><p>The categories this handler should know about.</p></dd><dt class="param">apiMessages</dt><dd class="cmt"><p>The source of <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>s.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl></div>
+      <p class="shortcomment cmt">Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The settings this handler should use.</p></dd><dt class="param">apiMessages</dt><dd class="cmt"><p>The source of <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>s.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl></div>
     </li><li name="net.katsstuff.ackcord.commands.CoreCommands#create" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="create(needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]"></a><a id="create(Boolean,Set[CmdCategory],Cache,RequestHelper):Commands[Id]"></a>
+      <a id="create(settings:net.katsstuff.ackcord.commands.AbstractCommandSettings[cats.Id],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]"></a><a id="create(AbstractCommandSettings[Id],Cache,RequestHelper):Commands[Id]"></a>
       <span class="permalink">
-      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create(needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]" title="Permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create(settings:net.katsstuff.ackcord.commands.AbstractCommandSettings[cats.Id],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -443,11 +470,10 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">create</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="categories">categories: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="CmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.CmdCategory">CmdCategory</a>]</span>, <span name="cache">cache: <a href="../Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>]</span>
+        <span class="name">create</span><span class="params">(<span name="settings">settings: <a href="AbstractCommandSettings.html" class="extype" name="net.katsstuff.ackcord.commands.AbstractCommandSettings">AbstractCommandSettings</a>[<span class="extype" name="cats.Id">Id</span>]</span>, <span name="cache">cache: <a href="../Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>]</span>
       </span>
       
-      <p class="shortcomment cmt">Create a new command handler using a cache.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using a cache.</p></div><dl class="paramcmts block"><dt class="param">needMention</dt><dd class="cmt"><p>If this handler should require mentions before
-                   the commands.</p></dd><dt class="param">categories</dt><dd class="cmt"><p>The categories this handler should know about.</p></dd><dt class="param">cache</dt><dd class="cmt"><p>The cache to use for subscribing to created messages.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl></div>
+      <p class="shortcomment cmt">Create a new command handler using a cache.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using a cache.</p></div><dl class="paramcmts block"><dt class="param">settings</dt><dd class="cmt"><p>The settings this handler should use.</p></dd><dt class="param">cache</dt><dd class="cmt"><p>The cache to use for subscribing to created messages.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
@@ -460,7 +486,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -476,7 +502,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -492,7 +518,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -533,7 +559,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -552,7 +578,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -568,7 +594,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -584,7 +610,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -603,7 +629,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -654,7 +680,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -676,7 +702,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -698,7 +724,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -716,14 +742,57 @@
 
         
 
-        
+        <div class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="net.katsstuff.ackcord.commands.CoreCommands#create" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="create[A](needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])"></a><a id="create[A](Boolean,Set[CmdCategory],Source[APIMessage,A],RequestHelper):(A,Commands[Id])"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create[A](needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],apiMessages:akka.stream.scaladsl.Source[net.katsstuff.ackcord.APIMessage,A],requests:net.katsstuff.ackcord.RequestHelper):(A,net.katsstuff.ackcord.commands.Commands[cats.Id])" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.11) Use the method that takes AbstractCommandSettings">create</span><span class="tparams">[<span name="A">A</span>]</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="categories">categories: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="CmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.CmdCategory">CmdCategory</a>]</span>, <span name="apiMessages">apiMessages: <a href="http://doc.akka.io/api/akka/2.5.18/akka/stream/scaladsl/Source.html#akka.stream.scaladsl.Source" class="extype" name="akka.stream.scaladsl.Source">Source</a>[<a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>, <span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>]</span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: (<span class="extype" name="net.katsstuff.ackcord.commands.CoreCommands.create.A">A</span>, <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>])</span>
+      </span>
+      
+      <p class="shortcomment cmt">Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using an <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a> source.</p></div><dl class="paramcmts block"><dt class="param">needMention</dt><dd class="cmt"><p>If this handler should require mentions before
+                   the commands.</p></dd><dt class="param">categories</dt><dd class="cmt"><p>The categories this handler should know about.</p></dd><dt class="param">apiMessages</dt><dd class="cmt"><p>The source of <a href="../APIMessage.html" class="extype" name="net.katsstuff.ackcord.APIMessage">APIMessage</a>s.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11)</i> Use the method that takes AbstractCommandSettings</p></dd></dl></div>
+    </li><li name="net.katsstuff.ackcord.commands.CoreCommands#create" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="create(needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]"></a><a id="create(Boolean,Set[CmdCategory],Cache,RequestHelper):Commands[Id]"></a>
+      <span class="permalink">
+      <a href="../../../../net/katsstuff/ackcord/commands/CoreCommands$.html#create(needMention:Boolean,categories:Set[net.katsstuff.ackcord.commands.CmdCategory],cache:net.katsstuff.ackcord.Cache,requests:net.katsstuff.ackcord.RequestHelper):net.katsstuff.ackcord.commands.Commands[cats.Id]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.11) Use the method that takes AbstractCommandSettings">create</span><span class="params">(<span name="needMention">needMention: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="categories">categories: <span class="extype" name="scala.Predef.Set">Set</span>[<a href="CmdCategory.html" class="extype" name="net.katsstuff.ackcord.commands.CmdCategory">CmdCategory</a>]</span>, <span name="cache">cache: <a href="../Cache.html" class="extype" name="net.katsstuff.ackcord.Cache">Cache</a></span>, <span name="requests">requests: <a href="../index.html#RequestHelper=net.katsstuff.ackcord.http.requests.RequestHelper" class="extmbr" name="net.katsstuff.ackcord.RequestHelper">RequestHelper</a></span>)</span><span class="result">: <a href="Commands.html" class="extype" name="net.katsstuff.ackcord.commands.Commands">Commands</a>[<span class="extype" name="cats.Id">Id</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Create a new command handler using a cache.</p><div class="fullcomment"><div class="comment cmt"><p>Create a new command handler using a cache.</p></div><dl class="paramcmts block"><dt class="param">needMention</dt><dd class="cmt"><p>If this handler should require mentions before
+                   the commands.</p></dd><dt class="param">categories</dt><dd class="cmt"><p>The categories this handler should know about.</p></dd><dt class="param">cache</dt><dd class="cmt"><p>The cache to use for subscribing to created messages.</p></dd><dt class="param">requests</dt><dd class="cmt"><p>A request helper object which will be passed to handlers.</p></dd></dl><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.11)</i> Use the method that takes AbstractCommandSettings</p></dd></dl></div>
+    </li></ol>
+            </div>
         </div>
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

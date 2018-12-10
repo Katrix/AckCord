@@ -375,6 +375,10 @@
                         <a href="GatewayEvent$$UserUpdate.html" title="Sent to the shard when a user object is updated.">UserUpdate</a>
                       </li><li class="current-entities indented6">
                         <span class="separator"></span>
+                        <a class="class" href="GatewayEvent$$UserWithGuildId.html" title=""></a>
+                        <a href="GatewayEvent$$UserWithGuildId.html" title="">UserWithGuildId</a>
+                      </li><li class="current-entities indented6">
+                        <span class="separator"></span>
                         <a class="class" href="GatewayEvent$$VoiceServerUpdate.html" title="Sent a guilds voice server is updated."></a>
                         <a href="GatewayEvent$$VoiceServerUpdate.html" title="Sent a guilds voice server is updated.">VoiceServerUpdate</a>
                       </li><li class="current-entities indented6">
@@ -412,16 +416,16 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">RawPartialMessage</span><span class="params">(<span name="id">id: <a href="../../data/index.html#MessageId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Message]" class="extmbr" name="net.katsstuff.ackcord.data.MessageId">MessageId</a></span>, <span name="channelId">channelId: <a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>, <span name="author">author: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>, <span name="content">content: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="timestamp">timestamp: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="editedTimestamp">editedTimestamp: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="tts">tts: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentionEveryone">mentionEveryone: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentions">mentions: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>, <span name="mentionRoles">mentionRoles: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>, <span name="attachment">attachment: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>, <span name="embeds">embeds: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>, <span name="reactions">reactions: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>, <span name="nonce">nonce: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>, <span name="pinned">pinned: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="webhookId">webhookId: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">RawPartialMessage</span><span class="params">(<span name="id">id: <a href="../../data/index.html#MessageId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Message]" class="extmbr" name="net.katsstuff.ackcord.data.MessageId">MessageId</a></span>, <span name="channelId">channelId: <a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>, <span name="author">author: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>, <span name="content">content: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="timestamp">timestamp: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="editedTimestamp">editedTimestamp: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="tts">tts: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentionEveryone">mentionEveryone: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentions">mentions: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>, <span name="mentionRoles">mentionRoles: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>, <span name="attachment">attachment: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>, <span name="embeds">embeds: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>, <span name="reactions">reactions: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>, <span name="nonce">nonce: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>, <span name="pinned">pinned: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="webhookId">webhookId: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordGateway/src/main/scala/net/katsstuff/ackcord/websocket/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordGateway/src/main/scala/net/katsstuff/ackcord/websocket/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -478,9 +482,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(id:net.katsstuff.ackcord.data.MessageId,channelId:net.katsstuff.ackcord.data.ChannelId,author:Option[net.katsstuff.ackcord.data.Author[_]],content:Option[String],timestamp:Option[java.time.OffsetDateTime],editedTimestamp:Option[java.time.OffsetDateTime],tts:Option[Boolean],mentionEveryone:Option[Boolean],mentions:Option[Seq[net.katsstuff.ackcord.data.User]],mentionRoles:Option[Seq[net.katsstuff.ackcord.data.RoleId]],attachment:Option[Seq[net.katsstuff.ackcord.data.Attachment]],embeds:Option[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]],reactions:Option[Seq[net.katsstuff.ackcord.data.Reaction]],nonce:Option[net.katsstuff.ackcord.data.RawSnowflake],pinned:Option[Boolean],webhookId:Option[String]):net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage"></a><a id="&lt;init&gt;:RawPartialMessage"></a>
+      <a id="&lt;init&gt;(id:net.katsstuff.ackcord.data.MessageId,channelId:net.katsstuff.ackcord.data.ChannelId,author:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.Author[_]],content:net.katsstuff.ackcord.util.JsonOption[String],timestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime],editedTimestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime],tts:net.katsstuff.ackcord.util.JsonOption[Boolean],mentionEveryone:net.katsstuff.ackcord.util.JsonOption[Boolean],mentions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.User]],mentionRoles:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.RoleId]],attachment:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Attachment]],embeds:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]],reactions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Reaction]],nonce:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.RawSnowflake],pinned:net.katsstuff.ackcord.util.JsonOption[Boolean],webhookId:net.katsstuff.ackcord.util.JsonOption[String]):net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage"></a><a id="&lt;init&gt;:RawPartialMessage"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#&lt;init&gt;(id:net.katsstuff.ackcord.data.MessageId,channelId:net.katsstuff.ackcord.data.ChannelId,author:Option[net.katsstuff.ackcord.data.Author[_]],content:Option[String],timestamp:Option[java.time.OffsetDateTime],editedTimestamp:Option[java.time.OffsetDateTime],tts:Option[Boolean],mentionEveryone:Option[Boolean],mentions:Option[Seq[net.katsstuff.ackcord.data.User]],mentionRoles:Option[Seq[net.katsstuff.ackcord.data.RoleId]],attachment:Option[Seq[net.katsstuff.ackcord.data.Attachment]],embeds:Option[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]],reactions:Option[Seq[net.katsstuff.ackcord.data.Reaction]],nonce:Option[net.katsstuff.ackcord.data.RawSnowflake],pinned:Option[Boolean],webhookId:Option[String]):net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#&lt;init&gt;(id:net.katsstuff.ackcord.data.MessageId,channelId:net.katsstuff.ackcord.data.ChannelId,author:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.Author[_]],content:net.katsstuff.ackcord.util.JsonOption[String],timestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime],editedTimestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime],tts:net.katsstuff.ackcord.util.JsonOption[Boolean],mentionEveryone:net.katsstuff.ackcord.util.JsonOption[Boolean],mentions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.User]],mentionRoles:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.RoleId]],attachment:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Attachment]],embeds:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]],reactions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Reaction]],nonce:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.RawSnowflake],pinned:net.katsstuff.ackcord.util.JsonOption[Boolean],webhookId:net.katsstuff.ackcord.util.JsonOption[String]):net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -489,7 +493,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">RawPartialMessage</span><span class="params">(<span name="id">id: <a href="../../data/index.html#MessageId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Message]" class="extmbr" name="net.katsstuff.ackcord.data.MessageId">MessageId</a></span>, <span name="channelId">channelId: <a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>, <span name="author">author: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>, <span name="content">content: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="timestamp">timestamp: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="editedTimestamp">editedTimestamp: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="tts">tts: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentionEveryone">mentionEveryone: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentions">mentions: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>, <span name="mentionRoles">mentionRoles: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>, <span name="attachment">attachment: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>, <span name="embeds">embeds: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>, <span name="reactions">reactions: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>, <span name="nonce">nonce: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>, <span name="pinned">pinned: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="webhookId">webhookId: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
+        <span class="name">RawPartialMessage</span><span class="params">(<span name="id">id: <a href="../../data/index.html#MessageId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Message]" class="extmbr" name="net.katsstuff.ackcord.data.MessageId">MessageId</a></span>, <span name="channelId">channelId: <a href="../../data/index.html#ChannelId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Channel]" class="extmbr" name="net.katsstuff.ackcord.data.ChannelId">ChannelId</a></span>, <span name="author">author: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>, <span name="content">content: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="timestamp">timestamp: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="editedTimestamp">editedTimestamp: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="tts">tts: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentionEveryone">mentionEveryone: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="mentions">mentions: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>, <span name="mentionRoles">mentionRoles: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>, <span name="attachment">attachment: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>, <span name="embeds">embeds: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>, <span name="reactions">reactions: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>, <span name="nonce">nonce: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>, <span name="pinned">pinned: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>, <span name="webhookId">webhookId: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>)</span>
       </span>
       
       
@@ -515,7 +519,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -531,7 +535,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -547,7 +551,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -568,9 +572,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#attachment" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="attachment:Option[Seq[net.katsstuff.ackcord.data.Attachment]]"></a><a id="attachment:Option[Seq[Attachment]]"></a>
+      <a id="attachment:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Attachment]]"></a><a id="attachment:util.JsonOption[Seq[Attachment]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#attachment:Option[Seq[net.katsstuff.ackcord.data.Attachment]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#attachment:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Attachment]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -579,14 +583,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">attachment</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>
+        <span class="name">attachment</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Attachment.html" class="extype" name="net.katsstuff.ackcord.data.Attachment">Attachment</a>]]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#author" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="author:Option[net.katsstuff.ackcord.data.Author[_]]"></a><a id="author:Option[Author[_]]"></a>
+      <a id="author:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.Author[_]]"></a><a id="author:util.JsonOption[Author[_]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#author:Option[net.katsstuff.ackcord.data.Author[_]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#author:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.Author[_]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -595,7 +599,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">author</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>
+        <span class="name">author</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/Author.html" class="extype" name="net.katsstuff.ackcord.data.Author">Author</a>[_]]</span>
       </span>
       
       
@@ -627,7 +631,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -640,9 +644,9 @@
               
         </dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#content" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="content:Option[String]"></a>
+      <a id="content:net.katsstuff.ackcord.util.JsonOption[String]"></a><a id="content:util.JsonOption[String]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#content:Option[String]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#content:net.katsstuff.ackcord.util.JsonOption[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -651,14 +655,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">content</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">content</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#editedTimestamp" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="editedTimestamp:Option[java.time.OffsetDateTime]"></a><a id="editedTimestamp:Option[OffsetDateTime]"></a>
+      <a id="editedTimestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime]"></a><a id="editedTimestamp:util.JsonOption[OffsetDateTime]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#editedTimestamp:Option[java.time.OffsetDateTime]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#editedTimestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -667,14 +671,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">editedTimestamp</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>
+        <span class="name">editedTimestamp</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#embeds" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="embeds:Option[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]]"></a><a id="embeds:Option[Seq[ReceivedEmbed]]"></a>
+      <a id="embeds:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]]"></a><a id="embeds:util.JsonOption[Seq[ReceivedEmbed]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#embeds:Option[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#embeds:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.ReceivedEmbed]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -683,7 +687,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">embeds</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>
+        <span class="name">embeds</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/ReceivedEmbed.html" class="extype" name="net.katsstuff.ackcord.data.ReceivedEmbed">ReceivedEmbed</a>]]</span>
       </span>
       
       
@@ -699,7 +703,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -715,7 +719,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -772,14 +776,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#mentionEveryone" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mentionEveryone:Option[Boolean]"></a>
+      <a id="mentionEveryone:net.katsstuff.ackcord.util.JsonOption[Boolean]"></a><a id="mentionEveryone:util.JsonOption[Boolean]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentionEveryone:Option[Boolean]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentionEveryone:net.katsstuff.ackcord.util.JsonOption[Boolean]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -788,14 +792,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">mentionEveryone</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+        <span class="name">mentionEveryone</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#mentionRoles" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mentionRoles:Option[Seq[net.katsstuff.ackcord.data.RoleId]]"></a><a id="mentionRoles:Option[Seq[RoleId]]"></a>
+      <a id="mentionRoles:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.RoleId]]"></a><a id="mentionRoles:util.JsonOption[Seq[RoleId]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentionRoles:Option[Seq[net.katsstuff.ackcord.data.RoleId]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentionRoles:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.RoleId]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -804,14 +808,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">mentionRoles</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>
+        <span class="name">mentionRoles</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/index.html#RoleId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Role]" class="extmbr" name="net.katsstuff.ackcord.data.RoleId">RoleId</a>]]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#mentions" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="mentions:Option[Seq[net.katsstuff.ackcord.data.User]]"></a><a id="mentions:Option[Seq[User]]"></a>
+      <a id="mentions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.User]]"></a><a id="mentions:util.JsonOption[Seq[User]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentions:Option[Seq[net.katsstuff.ackcord.data.User]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#mentions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.User]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -820,7 +824,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">mentions</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>
+        <span class="name">mentions</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/User.html" class="extype" name="net.katsstuff.ackcord.data.User">User</a>]]</span>
       </span>
       
       
@@ -836,14 +840,14 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#nonce" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="nonce:Option[net.katsstuff.ackcord.data.RawSnowflake]"></a><a id="nonce:Option[RawSnowflake]"></a>
+      <a id="nonce:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.RawSnowflake]"></a><a id="nonce:util.JsonOption[RawSnowflake]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#nonce:Option[net.katsstuff.ackcord.data.RawSnowflake]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#nonce:net.katsstuff.ackcord.util.JsonOption[net.katsstuff.ackcord.data.RawSnowflake]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -852,7 +856,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">nonce</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>
+        <span class="name">nonce</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="../../data/index.html#RawSnowflake=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.RawSnowflakeTag]" class="extmbr" name="net.katsstuff.ackcord.data.RawSnowflake">RawSnowflake</a>]</span>
       </span>
       
       
@@ -868,7 +872,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -887,7 +891,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -895,9 +899,9 @@
               
         </dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#pinned" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="pinned:Option[Boolean]"></a>
+      <a id="pinned:net.katsstuff.ackcord.util.JsonOption[Boolean]"></a><a id="pinned:util.JsonOption[Boolean]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#pinned:Option[Boolean]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#pinned:net.katsstuff.ackcord.util.JsonOption[Boolean]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -906,14 +910,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">pinned</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+        <span class="name">pinned</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#reactions" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="reactions:Option[Seq[net.katsstuff.ackcord.data.Reaction]]"></a><a id="reactions:Option[Seq[Reaction]]"></a>
+      <a id="reactions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Reaction]]"></a><a id="reactions:util.JsonOption[Seq[Reaction]]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#reactions:Option[Seq[net.katsstuff.ackcord.data.Reaction]]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#reactions:net.katsstuff.ackcord.util.JsonOption[Seq[net.katsstuff.ackcord.data.Reaction]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -922,7 +926,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">reactions</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>
+        <span class="name">reactions</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Seq">Seq</span>[<a href="../../data/Reaction.html" class="extype" name="net.katsstuff.ackcord.data.Reaction">Reaction</a>]]</span>
       </span>
       
       
@@ -943,9 +947,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#timestamp" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="timestamp:Option[java.time.OffsetDateTime]"></a><a id="timestamp:Option[OffsetDateTime]"></a>
+      <a id="timestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime]"></a><a id="timestamp:util.JsonOption[OffsetDateTime]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#timestamp:Option[java.time.OffsetDateTime]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#timestamp:net.katsstuff.ackcord.util.JsonOption[java.time.OffsetDateTime]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -954,14 +958,14 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">timestamp</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>
+        <span class="name">timestamp</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>
       </span>
       
       
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#tts" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="tts:Option[Boolean]"></a>
+      <a id="tts:net.katsstuff.ackcord.util.JsonOption[Boolean]"></a><a id="tts:util.JsonOption[Boolean]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#tts:Option[Boolean]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#tts:net.katsstuff.ackcord.util.JsonOption[Boolean]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -970,7 +974,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">tts</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
+        <span class="name">tts</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a>]</span>
       </span>
       
       
@@ -986,7 +990,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1008,7 +1012,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1030,7 +1034,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1043,9 +1047,9 @@
               
         </dd></dl></div>
     </li><li name="net.katsstuff.ackcord.websocket.gateway.GatewayEvent.RawPartialMessage#webhookId" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="webhookId:Option[String]"></a>
+      <a id="webhookId:net.katsstuff.ackcord.util.JsonOption[String]"></a><a id="webhookId:util.JsonOption[String]"></a>
       <span class="permalink">
-      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#webhookId:Option[String]" title="Permalink">
+      <a href="../../../../../net/katsstuff/ackcord/websocket/gateway/GatewayEvent$$RawPartialMessage.html#webhookId:net.katsstuff.ackcord.util.JsonOption[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -1054,7 +1058,7 @@
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">webhookId</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">webhookId</span><span class="result">: <a href="../../util/JsonOption.html" class="extype" name="net.katsstuff.ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       
@@ -1069,17 +1073,17 @@
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

@@ -150,6 +150,22 @@
                         <a class="object" href="GuildStreams$.html" title=""></a>
                         <a href="GuildStreams$.html" title="">GuildStreams</a>
                       </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="JsonNull$.html" title=""></a>
+                        <a href="JsonNull$.html" title="">JsonNull</a>
+                      </li><li class="current-entities indented4">
+                        <a class="object" href="JsonOption$.html" title=""></a>
+                        <a class="trait" href="JsonOption.html" title=""></a>
+                        <a href="JsonOption.html" title="">JsonOption</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="class" href="JsonSome.html" title=""></a>
+                        <a href="JsonSome.html" title="">JsonSome</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="JsonUndefined$.html" title=""></a>
+                        <a href="JsonUndefined$.html" title="">JsonUndefined</a>
+                      </li><li class="current-entities indented4">
                         <a class="object" href="MapWithMaterializer$.html" title=""></a>
                         <a class="class" href="MapWithMaterializer.html" title=""></a>
                         <a href="MapWithMaterializer.html" title="">MapWithMaterializer</a>
@@ -165,6 +181,10 @@
                         <a class="object" href="RepeatLast$.html" title=""></a>
                         <a class="class" href="RepeatLast.html" title=""></a>
                         <a href="RepeatLast.html" title="">RepeatLast</a>
+                      </li><li class="current-entities indented4">
+                        <span class="separator"></span>
+                        <a class="object" href="StreamInstances$.html" title=""></a>
+                        <a href="StreamInstances$.html" title="">StreamInstances</a>
                       </li><li class="current-entities indented4">
                         <a class="object" href="Streamable$.html" title=""></a>
                         <a class="trait" href="Streamable.html" title="Typeclass for converting some type F[A] to a Source[A, NotUsed]"></a>
@@ -194,7 +214,7 @@
         <span class="kind">class</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildRouter</span><span class="result"> extends <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a> with <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></span>
+        <span class="name">GuildRouter</span><span class="result"> extends <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a> with <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></span>
       </span>
       </h4>
 
@@ -213,11 +233,11 @@ to for the gateway channel events.</p><p>Global events like <a href="../APIMessa
 It sends the shutdown to all it's children, and when all the children have
 stopped, it stops itself. The child actors will not receive any further
 events once a shutdown has been started.
-</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix-/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/util/GuildRouter.scala" target="_blank">GuildRouter.scala</a></dd></dl><div class="toggleContainer block">
+</p></div><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/ackCordCore/src/main/scala/net/katsstuff/ackcord/util/GuildRouter.scala" target="_blank">GuildRouter.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
                 <span class="toggle diagram-link">
                   Type Hierarchy
@@ -285,7 +305,7 @@ events once a shutdown has been started.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildRouter</span><span class="params">(<span name="props">props: (<a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a>) ⇒ <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>, <span name="notGuildHandler">notGuildHandler: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>)</span>
+        <span class="name">GuildRouter</span><span class="params">(<span name="props">props: (<a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a>) ⇒ <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>, <span name="notGuildHandler">notGuildHandler: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">props</dt><dd class="cmt"><p>The function to obtain a props used for constructing handlers</p></dd><dt class="param">notGuildHandler</dt><dd class="cmt"><p>For some messages that could be directed to a guild
@@ -308,7 +328,7 @@ events once a shutdown has been started.
         <span class="kind">type</span>
       </span>
       <span class="symbol">
-        <span class="name">Receive</span><span class="result alias"> = <a href="http://www.scala-lang.org/api/2.12.5/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a>]</span>
+        <span class="name">Receive</span><span class="result alias"> = <a href="http://www.scala-lang.org/api/2.12.8/scala/PartialFunction.html#scala.PartialFunction" class="extype" name="scala.PartialFunction">PartialFunction</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -332,7 +352,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -348,7 +368,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -364,7 +384,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -380,7 +400,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPostRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -399,7 +419,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPostStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -418,7 +438,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPreRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -437,7 +457,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundPreStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -456,7 +476,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">aroundReceive</span><span class="params">(<span name="receive">receive: <span class="extype" name="akka.actor.Actor.Receive">akka.actor.Actor.Receive</span></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../akka/index.html" class="extype" name="akka">akka</a>] </dd><dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -507,7 +527,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -531,7 +551,7 @@ events once a shutdown has been started.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">context</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorContext.html#akka.actor.ActorContext" class="extype" name="akka.actor.ActorContext">ActorContext</a></span>
+        <span class="name">context</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorContext.html#akka.actor.ActorContext" class="extype" name="akka.actor.ActorContext">ActorContext</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -547,7 +567,7 @@ events once a shutdown has been started.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">createMsgs</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="java.util.UUID">UUID</span>, <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>
+        <span class="name">createMsgs</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<span class="extype" name="java.util.UUID">UUID</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>
       </span>
       
       
@@ -563,7 +583,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -579,7 +599,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -595,7 +615,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -636,7 +656,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">getGuild</span><span class="params">(<span name="guildId">guildId: <a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">getGuild</span><span class="params">(<span name="guildId">guildId: <a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>)</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       
@@ -652,7 +672,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">handleLazy</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="later">later: <a href="http://typelevel.org/cats/api/cats/Eval.html#cats.Eval" class="extype" name="cats.Eval">Eval</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.A">A</span>]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.A">A</span>) ⇒ <span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.B">B</span>]</span>
+        <span class="name">handleLazy</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="later">later: <a href="http://typelevel.org/cats/api/cats/Eval.html#cats.Eval" class="extype" name="cats.Eval">Eval</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.A">A</span>]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.A">A</span>) ⇒ <span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazy.B">B</span>]</span>
       </span>
       
       
@@ -668,7 +688,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">handleLazyOpt</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="later">later: <a href="http://typelevel.org/cats/api/cats/Eval.html#cats.Eval" class="extype" name="cats.Eval">Eval</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.A">A</span>]]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.A">A</span>) ⇒ <span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.B">B</span>]</span>
+        <span class="name">handleLazyOpt</span><span class="tparams">[<span name="A">A</span>, <span name="B">B</span>]</span><span class="params">(<span name="later">later: <a href="http://typelevel.org/cats/api/cats/Eval.html#cats.Eval" class="extype" name="cats.Eval">Eval</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.A">A</span>]]]</span>)</span><span class="params">(<span name="f">f: (<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.A">A</span>) ⇒ <span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.B">B</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="net.katsstuff.ackcord.util.GuildRouter.handleLazyOpt.B">B</span>]</span>
       </span>
       
       
@@ -684,7 +704,7 @@ events once a shutdown has been started.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">handlers</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a>, <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>
+        <span class="name">handlers</span><span class="result">: <span class="extype" name="scala.collection.mutable.HashMap">HashMap</span>[<a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a>, <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a>]</span>
       </span>
       
       
@@ -700,7 +720,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -719,7 +739,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -735,7 +755,7 @@ events once a shutdown has been started.
         <span class="kind">var</span>
       </span>
       <span class="symbol">
-        <span class="name">isShuttingDown</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isShuttingDown</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       
@@ -751,7 +771,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">log</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>
+        <span class="name">log</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ActorLogging</dd></dl></div>
@@ -767,7 +787,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -783,7 +803,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -802,7 +822,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -821,7 +841,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">postRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -843,7 +863,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">postStop</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -865,7 +885,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">preRestart</span><span class="params">(<span name="reason">reason: <span class="extype" name="scala.Throwable">Throwable</span></span>, <span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a>]</span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -887,7 +907,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">preStart</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd><dt>Annotations</dt><dd>
@@ -925,7 +945,7 @@ events once a shutdown has been started.
         <span class="kind">val</span>
       </span>
       <span class="symbol">
-        <span class="name">self</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">self</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -941,7 +961,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sendToAll</span><span class="params">(<span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">sendToAll</span><span class="params">(<span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       
@@ -957,7 +977,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sendToGuild</span><span class="params">(<span name="guildId">guildId: <a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">sendToGuild</span><span class="params">(<span name="guildId">guildId: <a href="../data/index.html#GuildId=net.katsstuff.ackcord.data.package.SnowflakeType[net.katsstuff.ackcord.data.Guild]" class="extmbr" name="net.katsstuff.ackcord.data.GuildId">GuildId</a></span>, <span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       
@@ -973,7 +993,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sendToNotGuild</span><span class="params">(<span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">sendToNotGuild</span><span class="params">(<span name="msg">msg: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       
@@ -989,7 +1009,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">sender</span><span class="params">()</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
+        <span class="name">sender</span><span class="params">()</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorRef.html#akka.actor.ActorRef" class="extype" name="akka.actor.ActorRef">ActorRef</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -1005,7 +1025,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">supervisorStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/SupervisorStrategy.html#akka.actor.SupervisorStrategy" class="extype" name="akka.actor.SupervisorStrategy">SupervisorStrategy</a></span>
+        <span class="name">supervisorStrategy</span><span class="result">: <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/SupervisorStrategy.html#akka.actor.SupervisorStrategy" class="extype" name="akka.actor.SupervisorStrategy">SupervisorStrategy</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -1053,7 +1073,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">unhandled</span><span class="params">(<span name="message">message: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Actor</dd></dl></div>
@@ -1069,7 +1089,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1091,7 +1111,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.5/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1113,7 +1133,7 @@ events once a shutdown has been started.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.5/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.5/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -1136,13 +1156,13 @@ events once a shutdown has been started.
 
         <div id="inheritedMembers">
         <div class="parent" name="akka.actor.ActorLogging">
-              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></h3>
+              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/ActorLogging.html#akka.actor.ActorLogging" class="extype" name="akka.actor.ActorLogging">ActorLogging</a></h3>
             </div><div class="parent" name="akka.actor.Actor">
-              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.11/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a></h3>
+              <h3>Inherited from <a href="http://doc.akka.io/api/akka/2.5.18/akka/actor/Actor.html#akka.actor.Actor" class="extype" name="akka.actor.Actor">Actor</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.5/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>
