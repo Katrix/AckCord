@@ -22,4 +22,4 @@ before_cache:
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION compile
-  - ./scalafmt -i --test --non-interactiv
+  - ./scalafmt -i --test --non-interactive
