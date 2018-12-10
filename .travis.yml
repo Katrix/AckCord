@@ -1,0 +1,25 @@
+sudo: false
+
+notifications:
+  email: false
+
+language: scala
+
+jdk: openjdk8
+
+scala:
+  - 2.12.8
+
+cache:
+  directories:
+    - $HOME/.ivy2/cache
+    - $HOME/.sbt
+
+before_cache:
+  # Tricks to avoid unnecessary cache updates
+  - find $HOME/.sbt -name "*.lock" | xargs rm
+  - find $HOME/.ivy2 -name "ivydata-*.properties" | xargs rm
+
+script:
+  - sbt ++$TRAVIS_SCALA_VERSION compile
+  - ./scalafmt -i --test --non-interactiv
