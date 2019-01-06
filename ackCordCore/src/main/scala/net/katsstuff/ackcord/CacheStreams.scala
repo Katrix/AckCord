@@ -88,39 +88,34 @@ object CacheStreams {
       //We only handle events when we are ready to, and we have received the ready event.
       def isReady: Boolean = state != null
 
-      update =>
-        {
-          val newState = update match {
-            case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
-              val builder = new CacheSnapshotBuilder(
-                null, //The event will populate this,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-                mutable.Map.empty,
-              )
+      {
+        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
+          val builder = new CacheSnapshotBuilder(
+            null, //The event will populate this,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+            mutable.Map.empty,
+          )
 
-              readyEvent.handle(builder)
+          readyEvent.handle(builder)
 
-              val snapshot = builder.toImmutable
-              CacheState(snapshot, snapshot)
-            case handlerEvent: CacheUpdate[_] if isReady =>
-              val builder = CacheSnapshotBuilder(state.current)
-              handlerEvent.handle(builder)
+          val snapshot = builder.toImmutable
+          state = CacheState(snapshot, snapshot)
+          List(readyEvent -> state)
+        case handlerEvent: CacheUpdate[_] if isReady =>
+          val builder = CacheSnapshotBuilder(state.current)
+          handlerEvent.handle(builder)
 
-              state.update(builder.toImmutable)
-            case _ if !isReady =>
-              log.error("Received event before ready")
-              state
-          }
-
-          state = newState
-
-          List(update -> newState)
-        }
+          state = state.update(builder.toImmutable)
+          List(handlerEvent -> state)
+        case _ if !isReady =>
+          log.error("Received event before ready")
+          Nil
+      }
     }
 }
