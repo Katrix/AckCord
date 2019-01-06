@@ -25,8 +25,7 @@ package net.katsstuff.ackcord
 
 import scala.language.higherKinds
 
-import cats.Monad
-import net.katsstuff.ackcord.commands.{CmdCategory, CmdDescription, CmdFilter, CmdRefiner, RawCmd}
+import net.katsstuff.ackcord.commands.{CmdDescription, CmdRefiner, RawCmd}
 import net.katsstuff.ackcord.data.Message
 
 /**
@@ -57,28 +56,4 @@ abstract class CommandHandler[F[_], G[_], A](
     * @param c A cache snapshot associated with the command.
     */
   def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): G[Unit]
-}
-
-/**
-  * A handler for a specific command that runs a [[RequestDSL]] when the command is received.
-  *
-  * @tparam A The parameter type.
-  */
-@deprecated("Use CommandHandler instead", since = "0.11")
-abstract class CommandHandlerDSL[A](
-    val category: CmdCategory,
-    val aliases: Seq[String],
-    val filters: Seq[CmdFilter] = Nil,
-    val description: Option[CmdDescription] = None
-) {
-
-  /**
-    * Runs the [[RequestDSL]] whenever the command for this handler is received.
-    * @param c A cache snapshot associated with the command.
-    */
-  def handle[F[_]](msg: Message, args: A, remaining: List[String])(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F],
-      S: Streamable[F]
-  ): RequestDSL[Unit]
 }

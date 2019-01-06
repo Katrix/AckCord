@@ -59,36 +59,4 @@ object CoreCommands {
     val (materialized, streams) = CmdStreams.cmdStreams(settings, apiMessages)
     materialized -> Commands(streams, requests)
   }
-
-  /**
-    * Create a new command handler using a cache.
-    * @param needMention If this handler should require mentions before
-    *                    the commands.
-    * @param categories The categories this handler should know about.
-    * @param cache The cache to use for subscribing to created messages.
-    * @param requests A request helper object which will be passed to handlers.
-    */
-  @deprecated("Use the method that takes AbstractCommandSettings", since = "0.11")
-  def create(
-      needMention: Boolean,
-      categories: Set[CmdCategory],
-      cache: Cache,
-      requests: RequestHelper
-  ): Commands[Id] = create(CommandSettings(needMention, categories.map(_.prefix)), cache, requests)
-
-  /**
-    * Create a new command handler using an [[APIMessage]] source.
-    * @param needMention If this handler should require mentions before
-    *                    the commands.
-    * @param categories The categories this handler should know about.
-    * @param apiMessages The source of [[APIMessage]]s.
-    * @param requests A request helper object which will be passed to handlers.
-    */
-  @deprecated("Use the method that takes AbstractCommandSettings", since = "0.11")
-  def create[A](
-      needMention: Boolean,
-      categories: Set[CmdCategory],
-      apiMessages: Source[APIMessage, A],
-      requests: RequestHelper
-  ): (A, Commands[Id]) = create(CommandSettings(needMention, categories.map(_.prefix)), apiMessages, requests)
 }

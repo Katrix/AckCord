@@ -46,13 +46,6 @@ case class Commands[F[_]](
   import requests.mat
 
   /**
-    * A source that represents the parsed commands. Can be
-    * materialized as many times as needed.
-    */
-  @deprecated("Use subscribeRaw instead", since = "0.11")
-  def subscribe: Source[RawCmdMessage[F], NotUsed] = subscribeRaw
-
-  /**
     * Subscribe to a specific command using a refiner.
     * @return A source representing the individual command.
     */
@@ -66,16 +59,6 @@ case class Commands[F[_]](
         case Left(Some(error)) => error
         case Right(cmd)        => cmd
       }
-
-  /**
-    * Subscribe to a specific command using a category, aliases, and filters.
-    * @return A source representing the individual command.
-    */
-  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
-  def subscribeCmd(category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
-      implicit streamable: Streamable[F],
-      F: Monad[F]
-  ): Source[CmdMessage[F], NotUsed] = subscribeCmd(CmdInfo(category.prefix, aliases, filters))
 
   /**
     * Subscribe to a specific command using a refiner and a parser.
@@ -97,18 +80,6 @@ case class Commands[F[_]](
         case error: GenericCmdError[F] => F.pure(error)
       }
       .flatMapConcat(streamable.toSource)
-
-  /**
-    * Subscribe to a specific command using a category, aliases, filters,
-    * and a parser.
-    * @return A source representing the individual parsed command.
-    */
-  @deprecated("Use the method that takes a CmdPredicate instead", since = "0.11")
-  def subscribeCmdParsed[A](category: CmdCategory, aliases: Seq[String], filters: Seq[CmdFilter] = Seq.empty)(
-      implicit parser: MessageParser[A],
-      F: Monad[F],
-      streamable: Streamable[F]
-  ): Source[ParsedCmdMessage[F, A], NotUsed] = subscribeCmdParsed(CmdInfo(category.prefix, aliases, filters))
 
   /**
     * Subscribe to a command using a unparsed command factory.

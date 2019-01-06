@@ -62,11 +62,7 @@ sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
   * @param c The cache for this command.
   */
 case class RawCmd[F[_]](msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot[F])
-    extends RawCmdMessage[F] {
-
-  @deprecated("CmdCategory is deprecated. Use the prefix instead", since = "0.11")
-  def category: CmdCategory = CmdCategory(prefix, "")
-}
+    extends RawCmdMessage[F]
 
 /**
   * Bot was mentioned, but no command was used.

@@ -66,9 +66,6 @@ class ClientSettings(
 
   implicit val executionContext: ExecutionContextExecutor = system.dispatcher
 
-  @deprecated("Use createClient instead", since = "0.11")
-  def build(): Future[DiscordClient[Id]] = createClient()
-
   /**
     * Create a [[DiscordClient]] from these settings.
     */
@@ -104,9 +101,6 @@ class ClientSettings(
       uri => CoreDiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
     )
   }
-
-  @deprecated("Use createClientAutoShards instead", since = "0.11")
-  def buildAutoShards(): Future[DiscordClient[Id]] = createClientAutoShards()
 
   /**
     * Create a [[DiscordClient]] from these settings while letting Discord
