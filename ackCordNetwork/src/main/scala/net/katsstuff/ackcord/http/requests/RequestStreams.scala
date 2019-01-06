@@ -374,4 +374,8 @@ object RequestStreams {
 
     Flow.fromGraph(graph)
   }
+
+  def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] = Flow[A].flatMapConcat { a =>
+    Source.single(a).via(inner)
+  }
 }
