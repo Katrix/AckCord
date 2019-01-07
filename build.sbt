@@ -7,6 +7,7 @@ lazy val ackCordVersion  = "0.11.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.8",
+  crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -18,6 +19,7 @@ lazy val commonSettings = Seq(
     "-Ywarn-unused-import",
     "-Ypartial-unification"
   ),
+  scalacOptions ++= (if (scalaVersion.value.startsWith("2.11")) Seq("-Xexperimental") else Nil),
   libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7"),
   //Fixes repository not specified error
   publishTo := {

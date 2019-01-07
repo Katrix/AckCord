@@ -41,7 +41,7 @@ case class Cache(
     publish: Sink[CacheUpdate[Any], NotUsed],
     subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    gatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    gatewaySubscribe: Source[GatewayMessage[Any], NotUsed]
 )(implicit val mat: Materializer) {
 
   /**

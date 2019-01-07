@@ -160,7 +160,7 @@ case class GetChannelMessagesData(
       "around" -> around.map(_.asString),
       "before" -> before.map(_.asString),
       "after"  -> after.map(_.asString),
-      "limit"  -> limit.map(_.toString),
+      "limit"  -> limit.map(_.toString)
     ).flatMap {
       case (name, Some(value)) => Some(name -> value)
       case (_, None)           => None

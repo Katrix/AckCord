@@ -25,6 +25,7 @@ package net.katsstuff.ackcord.http.rest
 
 import scala.concurrent.Future
 import scala.language.higherKinds
+import scala.util.{Failure, Success}
 
 import akka.NotUsed
 import akka.actor.ActorSystem
@@ -67,7 +68,9 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
         )
       else baseFlow
 
-    withLogging.mapAsyncUnordered(parallelism)(json => Future.fromTry(json.as(responseDecoder).toTry))
+    withLogging.mapAsyncUnordered(parallelism) { json =>
+      Future.fromTry(json.as(responseDecoder).fold(Failure.apply, Success.apply))
+    }
   }
 
   /**

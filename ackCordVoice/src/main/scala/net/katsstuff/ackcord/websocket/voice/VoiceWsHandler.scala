@@ -103,7 +103,7 @@ class VoiceWsHandler(
         jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
       else jsonFlow
 
-    withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
+    withLogging.map(parser.parse(_).right.flatMap(_.as[VoiceMessage[_]]))
   }
 
   def createMessage: Flow[VoiceMessage[_], Message, NotUsed] = {

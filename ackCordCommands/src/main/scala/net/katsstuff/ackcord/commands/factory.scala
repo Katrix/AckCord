@@ -75,7 +75,7 @@ sealed trait CmdFactory[F[_], A, +Mat] {
 case class BaseCmdFactory[F[_], +Mat](
     refiner: CmdRefiner[F],
     sink: RequestHelper => Sink[Cmd[F], Mat],
-    description: Option[CmdDescription] = None,
+    description: Option[CmdDescription] = None
 ) extends CmdFactory[F, Cmd[F], Mat]
 object BaseCmdFactory {
 
@@ -84,7 +84,7 @@ object BaseCmdFactory {
   def requestRunner[F[_]: Monad: Streamable](
       refiner: CmdRefiner[F],
       run: CacheSnapshot[F] => (RequestRunner[SourceRequest, F], Cmd[F]) => SourceRequest[Unit],
-      description: Option[CmdDescription] = None,
+      description: Option[CmdDescription] = None
   ): BaseCmdFactory[F, NotUsed] =
     flowRequestRunner(
       refiner,
@@ -95,7 +95,7 @@ object BaseCmdFactory {
   def flowRequestRunner[F[_]: Monad: Streamable, Mat](
       refiner: CmdRefiner[F],
       flow: RequestRunner[SourceRequest, F] => Flow[Cmd[F], SourceRequest[Unit], Mat],
-      description: Option[CmdDescription] = None,
+      description: Option[CmdDescription] = None
   ): BaseCmdFactory[F, Mat] = {
     val sink: RequestHelper => Sink[Cmd[F], Mat] = implicit requests => {
       val runner = RequestRunner[Source[?, NotUsed], F]
@@ -116,7 +116,7 @@ object BaseCmdFactory {
 case class ParsedCmdFactory[F[_], A, +Mat](
     refiner: CmdRefiner[F],
     sink: RequestHelper => Sink[ParsedCmd[F, A], Mat],
-    description: Option[CmdDescription] = None,
+    description: Option[CmdDescription] = None
 )(implicit val parser: MessageParser[A])
     extends CmdFactory[F, ParsedCmd[F, A], Mat]
 object ParsedCmdFactory {
@@ -126,7 +126,7 @@ object ParsedCmdFactory {
   def requestRunner[F[_]: Monad: Streamable, A](
       refiner: CmdRefiner[F],
       run: CacheSnapshot[F] => (RequestRunner[SourceRequest, F], ParsedCmd[F, A]) => SourceRequest[Unit],
-      description: Option[CmdDescription] = None,
+      description: Option[CmdDescription] = None
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, NotUsed] =
     flowRequestRunner[F, A, NotUsed](
       refiner,
@@ -137,7 +137,7 @@ object ParsedCmdFactory {
   def flowRequestRunner[F[_]: Monad: Streamable, A, Mat](
       refiner: CmdRefiner[F],
       flow: RequestRunner[SourceRequest, F] => Flow[ParsedCmd[F, A], SourceRequest[Unit], Mat],
-      description: Option[CmdDescription] = None,
+      description: Option[CmdDescription] = None
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[F, A, Mat] = {
     val sink: RequestHelper => Sink[ParsedCmd[F, A], Mat] = implicit requests => {
       val runner = RequestRunner[SourceRequest, F]

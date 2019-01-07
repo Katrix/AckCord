@@ -151,8 +151,8 @@ object RawHandlers extends Handlers {
   implicit val rawGuildMemberUpdateHandler: CacheUpdateHandler[GuildMemberUpdateData] = updateHandler {
     case (builder, obj @ GuildMemberUpdateData(guildId, roles, user, nick), log) =>
       val newGuildEither = for {
-        guild       <- builder.getGuild(guildId).value.toRight(s"Can't find guild for user update $obj")
-        guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj")
+        guild       <- builder.getGuild(guildId).value.toRight(s"Can't find guild for user update $obj").right
+        guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj").right
       } yield {
         val newGuildMember = guildMember.copy(nick = nick, roleIds = roles)
         guild.copy(members = guild.members.updated(user.id, newGuildMember))
@@ -220,7 +220,7 @@ object RawHandlers extends Handlers {
           embeds = obj.embeds.getOrElse(message.embeds),
           reactions = obj.reactions.getOrElse(message.reactions),
           nonce = obj.nonce.orElseIfUndefined(message.nonce),
-          pinned = obj.pinned.getOrElse(message.pinned),
+          pinned = obj.pinned.getOrElse(message.pinned)
         )
 
         builder.messageMap.getOrElseUpdate(obj.channelId, mutable.Map.empty).put(message.id, newMessage)

@@ -83,16 +83,19 @@ abstract class AbstractCmdInfo[F[_]: Monad] extends CmdRefiner[F] {
           val filtersNotPassed = processedFilters.collect {
             case (passed, filter) if !passed => filter
           }
-          if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
-          else {
-            val toSendNotPassed = behavior match {
-              case FilterBehavior.SendNone => Nil
-              case FilterBehavior.SendOne  => Seq(filtersNotPassed.head)
-              case FilterBehavior.SendAll  => filtersNotPassed
-            }
+          //Type to make Scala 2.11 happy
+          val res: Either[Option[CmdMessage[F] with CmdError[F]], Cmd[F]] =
+            if (filtersNotPassed.isEmpty) Right(Cmd(raw.msg, raw.args, raw.c))
+            else {
+              val toSendNotPassed = behavior match {
+                case FilterBehavior.SendNone => Nil
+                case FilterBehavior.SendOne  => Seq(filtersNotPassed.head)
+                case FilterBehavior.SendAll  => filtersNotPassed
+              }
 
-            Left(Some(FilteredCmd(toSendNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
-          }
+              Left(Some(FilteredCmd(toSendNotPassed, raw)): Option[CmdMessage[F] with CmdError[F]])
+            }
+          res
         }
       }
       .flatten

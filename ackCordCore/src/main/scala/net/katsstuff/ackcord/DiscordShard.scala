@@ -25,6 +25,7 @@ package net.katsstuff.ackcord
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 import akka.Done
 import akka.actor._
@@ -216,18 +217,18 @@ object DiscordShard extends FailFastCirceSupport {
         val c          = json.hcursor
         val startLimit = c.downField("session_start_limit")
         val res = for {
-          gateway <- c.get[String]("url")
-          shards  <- c.get[Int]("shards")
+          gateway <- c.get[String]("url").right
+          shards  <- c.get[Int]("shards").right
           // TODO: Use these
-          total      <- startLimit.get[Int]("total")
-          remaining  <- startLimit.get[Int]("remaining")
-          resetAfter <- startLimit.get[Int]("reset_after")
+          total      <- startLimit.get[Int]("total").right
+          remaining  <- startLimit.get[Int]("remaining").right
+          resetAfter <- startLimit.get[Int]("reset_after").right
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
           (gateway: Uri, shards)
         }
 
-        Future.fromTry(res.toTry)
+        Future.fromTry(res.fold(Failure.apply, Success.apply))
       }
   }
 }

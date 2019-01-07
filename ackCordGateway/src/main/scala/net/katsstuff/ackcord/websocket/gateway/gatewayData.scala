@@ -278,7 +278,7 @@ sealed trait ComplexGatewayEvent[D, HandlerType] {
   /**
     * Maps the data in this event without evaluating it.
     */
-  def mapData[A](f: D => A): Eval[Decoder.Result[A]] = data.map(_.map(f))
+  def mapData[A](f: D => A): Eval[Decoder.Result[A]] = data.map(_.right.map(f))
 }
 
 /**

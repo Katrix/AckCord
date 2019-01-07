@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.util
 
 import scala.language.{higherKinds, implicitConversions}
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.matching.Regex
 
 import akka.NotUsed
@@ -131,6 +131,12 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
 trait MessageParserInstances {
 
+  //Scala 2.11
+  private def tryToEither[B](t: Try[B]): Either[Throwable, B] = t match {
+    case Success(value)     => Right(value)
+    case Failure(exception) => Left(exception)
+  }
+
   /**
     * Create a parser from a string
     * @param f The function to transform the string with
@@ -162,7 +168,7 @@ trait MessageParserInstances {
         strings: List[String]
     )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
       if (strings.nonEmpty)
-        EitherT.fromEither[F](f(strings.head).toEither).bimap(_.getMessage, strings.tail -> _)
+        EitherT.fromEither[F](tryToEither(f(strings.head))).bimap(_.getMessage, strings.tail -> _)
       else
         EitherT.leftT[F, (List[String], A)]("No more arguments left")
   }
@@ -178,7 +184,7 @@ trait MessageParserInstances {
         strings: List[String]
     )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
       if (strings.nonEmpty)
-        EitherT.fromEither[F](f(strings.head).toEither).bimap(_ => errorMessage, strings.tail -> _)
+        EitherT.fromEither[F](tryToEither(f(strings.head))).bimap(_ => errorMessage, strings.tail -> _)
       else
         EitherT.leftT[F, (List[String], A)]("No more arguments left")
   }

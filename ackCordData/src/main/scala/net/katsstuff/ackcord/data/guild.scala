@@ -436,7 +436,7 @@ case class ActivityAsset(
     largeImage: Option[String],
     largeText: Option[String],
     smallImage: Option[String],
-    smallText: Option[String],
+    smallText: Option[String]
 )
 
 /**

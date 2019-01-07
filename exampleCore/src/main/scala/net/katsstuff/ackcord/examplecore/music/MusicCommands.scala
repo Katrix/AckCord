@@ -81,18 +81,18 @@ class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: Act
   val StopCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("s", "stop"),
     mapper = StopMusic.apply,
-    description = CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel"),
+    description = CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")
   )
 
   val NextCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("n", "next"),
     mapper = NextTrack.apply,
-    description = CmdDescription(name = "Next track", description = "Skip to the next track"),
+    description = CmdDescription(name = "Next track", description = "Skip to the next track")
   )
 
   val PauseCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("p", "pause"),
     mapper = TogglePause.apply,
-    description = CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player"),
+    description = CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")
   )
 }

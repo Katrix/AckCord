@@ -43,6 +43,7 @@ trait Handlers {
   implicit val voiceStateUpdateHandler: CacheUpdateHandler[VoiceState] = updateHandler { (builder, obj, log) =>
     val optGuild = obj.guildId
       .toRight("Can't handle VoiceState update with missing guild")
+      .right
       .flatMap(builder.getGuild(_).value.toRight(s"No guild found for voice state $obj"))
 
     optGuild match {

@@ -60,16 +60,16 @@ object OAuth extends FailFastCirceSupport {
         "token_type"    -> a.tokenType.asJson,
         "expires_in"    -> a.expiresIn.asJson,
         "refresh_token" -> a.refreshToken.asJson,
-        "scope"         -> a.scopes.map(_.name).mkString(" ").asJson,
+        "scope"         -> a.scopes.map(_.name).mkString(" ").asJson
     )
 
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
       for {
-        accessToken  <- c.get[String]("access_token")
-        tokenType    <- c.get[String]("token_type")
-        expiresIn    <- c.get[Int]("expires_in")
-        refreshToken <- c.get[String]("refresh_token")
-        scopes       <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
+        accessToken  <- c.get[String]("access_token").right
+        tokenType    <- c.get[String]("token_type").right
+        expiresIn    <- c.get[Int]("expires_in").right
+        refreshToken <- c.get[String]("refresh_token").right
+        scopes       <- c.get[String]("scope").right.map(s => s.split(" ").toSeq.flatMap(Scope.fromString)).right
       } yield AccessToken(accessToken, tokenType, expiresIn, refreshToken, scopes)
   }
 
@@ -80,15 +80,15 @@ object OAuth extends FailFastCirceSupport {
         "access_token" -> a.accessToken.asJson,
         "token_type"   -> a.tokenType.asJson,
         "expires_in"   -> a.expiresIn.asJson,
-        "scope"        -> a.scopes.map(_.name).mkString(" ").asJson,
+        "scope"        -> a.scopes.map(_.name).mkString(" ").asJson
     )
 
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
       for {
-        accessToken <- c.get[String]("access_token")
-        tokenType   <- c.get[String]("token_type")
-        expiresIn   <- c.get[Int]("expires_in")
-        scopes      <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
+        accessToken <- c.get[String]("access_token").right
+        tokenType   <- c.get[String]("token_type").right
+        expiresIn   <- c.get[Int]("expires_in").right
+        scopes      <- c.get[String]("scope").right.map(s => s.split(" ").toSeq.flatMap(Scope.fromString)).right
       } yield ClientAccessToken(accessToken, tokenType, expiresIn, scopes)
   }
 

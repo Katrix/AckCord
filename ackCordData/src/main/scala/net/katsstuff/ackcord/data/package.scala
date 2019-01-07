@@ -286,7 +286,7 @@ package object data {
       ManageNicknames,
       ManageRoles,
       ManageWebhooks,
-      ManageEmojis,
+      ManageEmojis
     )
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {

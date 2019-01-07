@@ -58,8 +58,8 @@ object VoiceWsProtocol extends DiscordProtocol {
 
   implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] = (c: HCursor) => {
     for {
-      mode      <- c.get[String]("mode")
-      secretKey <- c.get[Seq[Int]]("secret_key")
+      mode      <- c.get[String]("mode").right
+      secretKey <- c.get[Seq[Int]]("secret_key").right
     } yield SessionDescriptionData(mode, ByteString(secretKey.map(_.toByte): _*))
   }
 
@@ -84,13 +84,13 @@ object VoiceWsProtocol extends DiscordProtocol {
     )
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
-    c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>
+    c.get[Int]("heartbeat_interval").right.map(Hello).left.flatMap { _ =>
       val dCursor = c.downField("d")
 
-      val op = c.get[VoiceOpCode]("op")
+      val op = c.get[VoiceOpCode]("op").right
 
       def mkMsg[Data: Decoder, B](create: Data => B): Either[DecodingFailure, B] =
-        dCursor.as[Data].map(create)
+        dCursor.as[Data].right.map(create)
 
       //We use the apply method on the companion object here
       op.flatMap {
@@ -105,7 +105,7 @@ object VoiceWsProtocol extends DiscordProtocol {
         case VoiceOpCode.Resumed            => Right(Resumed)
         case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
         case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
-        case VoiceOpCode.Hello              => dCursor.downField("heartbeat_interval").as[Int].map(Hello)
+        case VoiceOpCode.Hello              => dCursor.downField("heartbeat_interval").as[Int].right.map(Hello)
       }
     }
   }

@@ -72,7 +72,7 @@ class ClientSettings(
   def createClient(): Future[DiscordClient[Id]] = {
     val streamLogger = Logger("StreamLogger")
     implicit val mat: ActorMaterializer =
-      ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy { e =>
+      ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy { e: Throwable =>
         streamLogger.error("Error in stream", e)
         Supervision.Resume
       })(system)
