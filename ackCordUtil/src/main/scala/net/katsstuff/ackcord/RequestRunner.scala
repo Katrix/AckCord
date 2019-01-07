@@ -3,6 +3,7 @@ package net.katsstuff.ackcord
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.language.higherKinds
+import scala.util.{Failure, Success}
 
 import akka.NotUsed
 import akka.stream.scaladsl.{Sink, Source}
@@ -105,7 +106,11 @@ object RequestRunner {
     override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): Future[F[A]] =
       streamable.toSource(request.hasPermissions).runWith(Sink.head).flatMap {
         case false => Future.failed(new RequestPermissionException(request))
-        case true  => requests.singleFuture(request).flatMap(res => Future.fromTry(res.eitherData.toTry)).map(F.pure)
+        case true =>
+          requests
+            .singleFuture(request)
+            .flatMap(res => Future.fromTry(res.eitherData.fold(Failure.apply, Success.apply)))
+            .map(F.pure)
       }
 
     override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
