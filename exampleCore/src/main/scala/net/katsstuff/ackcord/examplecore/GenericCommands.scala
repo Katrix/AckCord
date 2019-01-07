@@ -27,18 +27,19 @@ import java.nio.file.Paths
 import java.time.temporal.ChronoUnit
 
 import scala.language.higherKinds
-
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.Sink
 import cats._
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.commands._
-import net.katsstuff.ackcord.data.raw.RawChannel
+import net.katsstuff.ackcord.data.raw.{RawChannel, RawMessage}
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
-import net.katsstuff.ackcord.http.requests.{FailedRequest, RequestResponse}
+import net.katsstuff.ackcord.http.requests.{FailedRequest, Request, RequestResponse}
 import net.katsstuff.ackcord.http.rest.{CreateMessage, GetChannel}
 import net.katsstuff.ackcord.syntax._
+
+import scala.concurrent.Future
 
 class GenericCommands[F[_]: Streamable: Monad] {
 
@@ -132,19 +133,26 @@ class GenericCommands[F[_]: Streamable: Monad] {
     )
   )
 
-  val RatelimitTestCmdFactory: ParsedCmdFactory[F, Int, NotUsed] = ParsedCmdFactory[F, Int, NotUsed](
-    refiner = CmdInfo(prefix = "!", aliases = Seq("ratelimitTest")),
-    sink = requests =>
-      ParsedCmdFlow[F, Int]
-        .flatMapConcat(implicit c => cmd => Streamable[F].optionToSource(cmd.msg.channelId.tResolve.map(_ -> cmd.args)))
-        .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
-        .to(requests.sinkIgnore),
-    description = Some(
-      CmdDescription(
-        name = "Ratelimit test",
-        description = "Send a bunch of messages at the same time to test rate limits.",
-        usage = "<messages to send>"
+  def RatelimitTestCmdFactory(
+      name: String,
+      aliases: Seq[String],
+      sink: Sink[Request[RawMessage, NotUsed], Future[Done]]
+  ): ParsedCmdFactory[F, Int, NotUsed] =
+    ParsedCmdFactory[F, Int, NotUsed](
+      refiner = CmdInfo(prefix = "!", aliases = aliases),
+      sink = requests =>
+        ParsedCmdFlow[F, Int]
+          .flatMapConcat { implicit c => cmd =>
+            Streamable[F].optionToSource(cmd.msg.channelId.tResolve.map(_ -> cmd.args))
+          }
+          .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
+          .to(sink),
+      description = Some(
+        CmdDescription(
+          name = name,
+          description = "Send a bunch of messages at the same time to test rate limits.",
+          usage = "<messages to send>"
+        )
       )
     )
-  )
 }

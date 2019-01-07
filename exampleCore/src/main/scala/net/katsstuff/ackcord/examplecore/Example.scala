@@ -95,7 +95,16 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
       SendFileCmdFactory,
       InfoChannelCmdFactory,
       TimeDiffCmdFactory,
-      RatelimitTestCmdFactory,
+      RatelimitTestCmdFactory(
+        "Ratelimit test",
+        Seq("ratelimitTest"),
+        requests.sinkIgnore
+      ),
+      RatelimitTestCmdFactory(
+        "Ordered Ratelimit test",
+        Seq("ratelimitTestOrdered"),
+        requests.sinkIgnore(RequestHelper.RequestProperties.ordered)
+      ),
       KillCmdFactory(self)
     )
   }
