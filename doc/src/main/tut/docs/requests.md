@@ -27,7 +27,7 @@ val token = "<token>"
 val settings = ClientSettings(token)
 import settings.executionContext
 
-val futureClient = settings.build()
+val futureClient = settings.createClient()
 
 futureClient.foreach { client =>
   client.onEvent {

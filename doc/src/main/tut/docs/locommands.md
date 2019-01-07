@@ -48,7 +48,7 @@ def rawCommandEcho[F[_]: Monad: Streamable] = Flow[RawCmdMessage[F]].collect {
     Streamable[F].optionToSource(msg.tGuildChannel.map(_.sendMessage(s"ECHO: ${args.mkString(" ")}")))
 }.flatMapConcat(identity).to(requests.sinkIgnore)
 
-commands.subscribe.to(rawCommandEcho).run()
+commands.subscribeRaw.to(rawCommandEcho).run()
 ```
 
 ## CmdFactory
