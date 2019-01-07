@@ -40,7 +40,7 @@ import net.katsstuff.ackcord.CacheSnapshot
   * @param requests A request helper object which will be passed to handlers.
   */
 case class Commands[F[_]](
-    @deprecatedName('subscribe) subscribeRaw: Source[RawCmdMessage[F], NotUsed],
+    subscribeRaw: Source[RawCmdMessage[F], NotUsed],
     requests: RequestHelper
 ) {
   import requests.mat
