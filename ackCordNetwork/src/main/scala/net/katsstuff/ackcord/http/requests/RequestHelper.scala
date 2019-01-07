@@ -32,6 +32,7 @@ import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{Materializer, OverflowStrategy}
 import akka.{Done, NotUsed}
+import net.katsstuff.ackcord.http.requests.RequestHelper.RequestProperties
 
 /**
   * A class holding all the relevant information to create a request stream.
@@ -42,7 +43,8 @@ import akka.{Done, NotUsed}
   * @define backpressures Backpressures before it hits a ratelimit.
   * @define ordered Once a response for one request has been received, the next
   *                 one is sent. The next one is sent regardless of if the
-  *                 previous request failed.
+  *                 previous request failed. Ordered requests still have a few
+  *                 kinks that need to be removed before they always work.
   */
 case class RequestHelper(
     credentials: HttpCredentials,
@@ -67,125 +69,7 @@ case class RequestHelper(
   private lazy val rawFlow =
     RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
 
-  /**
-    * A generic flow for making requests. You should use this one most of
-    * the time. $backpressures
-    */
-  def flow[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    rawFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
-
-  /**
-    * A generic sink for making requests and ignoring the results.
-    * $backpressures
-    */
-  def sinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
-    flow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
-
-  /**
-    * A generic flow for making requests. Only returns successful requests.
-    * $backpressures
-    */
-  def flowSuccess[Data, Ctx]: Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
-    flow[Data, Ctx].collect {
-      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
-    }
-
   private lazy val rawOrderedFlow = RequestStreams.addOrdering(rawFlow)
-
-  /**
-    * A flow for making requests which will ensure that only one request is
-    * made at a time. $backpressures
-    *
-    * $ordered
-    */
-  def orderedFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    rawOrderedFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
-
-  /**
-    * A sink for making requests and ignoring the results which will ensure
-    * that only one request is made at a time. $backpressures
-    */
-  def orderedSinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
-    orderedFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
-
-  /**
-    * A flow for making requests which will ensure that only one request is
-    * made at a time. Only returns successful requests. $backpressures
-    */
-  def orderedFlowSuccess[Data, Ctx]: Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
-    orderedFlow[Data, Ctx].collect {
-      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
-    }
-
-  /**
-    * Sends a single request.
-    * @param request The request to send.
-    * @return A source of the single request answer.
-    */
-  def single[Data, Ctx](request: Request[Data, Ctx]): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source.single(request).via(flow)
-
-  /**
-    * Sends many requests
-    * @param requests The requests to send.
-    * @return A source of the request answers.
-    */
-  def many[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source(requests).via(flow)
-
-  /**
-    * Sends many requests in order. $ordered
-    * @param requests The requests to send.
-    * @return A source of the request answers.
-    */
-  def orderedMany[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source(requests).via(orderedFlow)
-
-  /**
-    * Sends a single request and gets the response as a future.
-    * @param request The request to send.
-    */
-  def singleFuture[Data, Ctx](request: Request[Data, Ctx]): Future[RequestAnswer[Data, Ctx]] =
-    single(request).runWith(Sink.head)
-
-  /**
-    * Sends many requests and gets the responses as a future.
-    * @param requests The requests to send.
-    */
-  def manyFuture[Data, Ctx](
-      requests: immutable.Seq[Request[Data, Ctx]]
-  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
-    many(requests).runWith(Sink.seq)
-
-  /**
-    * Sends many requests in order and gets the responses as a future. $ordered
-    * @param requests The requests to send.
-    */
-  def orderedManyFuture[Data, Ctx](
-      requests: immutable.Seq[Request[Data, Ctx]]
-  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
-    orderedMany(requests).runWith(Sink.seq)
-
-  /**
-    * Sends a single request and ignores the result.
-    * @param request The request to send.
-    */
-  def singleIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit =
-    single(request).runWith(Sink.ignore)
-
-  /**
-    * Sends many requests and ignores the result.
-    * @param requests The requests to send.
-    */
-  def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
-    many(requests).runWith(Sink.ignore)
-
-  /**
-    * Sends many requests in order and ignores the result. $ordered
-    * @param requests The requests to send.
-    */
-  def manyOrderedIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
-    orderedMany(requests).runWith(Sink.ignore)
 
   private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
     credentials,
@@ -197,9 +81,157 @@ case class RequestHelper(
     ratelimitActor
   )
 
+  private lazy val rawOrderedRetryFlow = RequestStreams.addOrdering(rawRetryFlow)
+
+  /**
+    * A generic flow for making requests. You should use this one most of
+    * the time. $backpressures
+    */
+  def flow[Data, Ctx](
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+    val flowToUse = properties match {
+      case RequestProperties(false, false) => rawFlow
+      case RequestProperties(true, false)  => rawRetryFlow
+      case RequestProperties(false, true)  => rawOrderedFlow
+      case RequestProperties(true, true)   => rawOrderedRetryFlow
+    }
+
+    flowToUse.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
+  }
+
+  /**
+    * A generic sink for making requests and ignoring the results.
+    * $backpressures
+    */
+  def sinkIgnore[Data, Ctx](
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Sink[Request[Data, Ctx], Future[Done]] =
+    flow[Data, Ctx](properties).toMat(Sink.ignore)(Keep.right)
+
+  /**
+    * A generic flow for making requests. Only returns successful requests.
+    * $backpressures
+    */
+  def flowSuccess[Data, Ctx](
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
+    flow[Data, Ctx](properties).collect {
+      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
+    }
+
+  /**
+    * A flow for making requests which will ensure that only one request is
+    * made at a time. $backpressures
+    *
+    * $ordered
+    */
+  @deprecated("Prefer flow with a custom RequestProperties", since = "0.12.0")
+  def orderedFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
+    rawOrderedFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
+
+  /**
+    * A sink for making requests and ignoring the results which will ensure
+    * that only one request is made at a time. $backpressures
+    */
+  @deprecated("Prefer sinkIgnore with a custom RequestProperties", since = "0.12.0")
+  def orderedSinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
+    orderedFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
+
+  /**
+    * A flow for making requests which will ensure that only one request is
+    * made at a time. Only returns successful requests. $backpressures
+    */
+  @deprecated("Prefer flowSuccess with a custom RequestProperties", since = "0.12.0")
+  def orderedFlowSuccess[Data, Ctx]: Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
+    orderedFlow[Data, Ctx].collect {
+      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
+    }
+
+  /**
+    * Sends a single request.
+    * @param request The request to send.
+    * @return A source of the single request answer.
+    */
+  def single[Data, Ctx](request: Request[Data, Ctx])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Source[RequestAnswer[Data, Ctx], NotUsed] = Source.single(request).via(flow(properties))
+
+  /**
+    * Sends many requests
+    * @param requests The requests to send.
+    * @return A source of the request answers.
+    */
+  def many[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Source[RequestAnswer[Data, Ctx], NotUsed] =
+    Source(requests).via(flow(properties))
+
+  /**
+    * Sends many requests in order. $ordered
+    * @param requests The requests to send.
+    * @return A source of the request answers.
+    */
+  @deprecated("Prefer many with a custom RequestProperties", since = "0.12.0")
+  def orderedMany[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestAnswer[Data, Ctx], NotUsed] =
+    Source(requests).via(orderedFlow)
+
+  /**
+    * Sends a single request and gets the response as a future.
+    * @param request The request to send.
+    */
+  def singleFuture[Data, Ctx](request: Request[Data, Ctx])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Future[RequestAnswer[Data, Ctx]] =
+    single(request)(properties).runWith(Sink.head)
+
+  /**
+    * Sends many requests and gets the responses as a future.
+    * @param requests The requests to send.
+    */
+  def manyFuture[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
+    many(requests)(properties).runWith(Sink.seq)
+
+  /**
+    * Sends many requests in order and gets the responses as a future. $ordered
+    * @param requests The requests to send.
+    */
+  @deprecated("Prefer manyFuture with a custom RequestProperties", since = "0.12.0")
+  def orderedManyFuture[Data, Ctx](
+      requests: immutable.Seq[Request[Data, Ctx]]
+  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
+    orderedMany(requests).runWith(Sink.seq)
+
+  /**
+    * Sends a single request and ignores the result.
+    * @param request The request to send.
+    */
+  def singleIgnore[Data, Ctx](request: Request[Data, Ctx])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Unit = single(request)(properties).runWith(Sink.ignore)
+
+  /**
+    * Sends many requests and ignores the result.
+    * @param requests The requests to send.
+    */
+  def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Unit = many(requests)(properties).runWith(Sink.ignore)
+
+  /**
+    * Sends many requests in order and ignores the result. $ordered
+    * @param requests The requests to send.
+    */
+  @deprecated("Prefer menyIgnore with a custom RequestProperties", since = "0.12.0")
+  def manyOrderedIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
+    orderedMany(requests).runWith(Sink.ignore)
+
   /**
     * A request flow that will retry failed requests. $backpressures
     */
+  @deprecated("Prefer flow with a custom RequestProperties", since = "0.12.0")
   def retryFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
     rawRetryFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed]]
 
@@ -207,15 +239,15 @@ case class RequestHelper(
     * A sink for making requests and ignoring the results that will retry on error.
     * $backpressures
     */
+  @deprecated("Prefer sinkIgnore with a custom RequestProperties", since = "0.12.0")
   def retrySinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
     retryFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
-
-  private lazy val rawOrderedRetryFlow = RequestStreams.addOrdering(rawRetryFlow)
 
   /**
     * An ordered request flow that will retry failed requests. $ordered
     * $backpressures
     */
+  @deprecated("Prefer flow with a custom RequestProperties", since = "0.12.0")
   def orderedRetryFlow[Data, Ctx]: Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] =
     rawOrderedRetryFlow.asInstanceOf[Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed]]
 
@@ -223,6 +255,7 @@ case class RequestHelper(
     * A sink for making requests and ignoring the results that will retry on error.
     * $ordered $backpressures
     */
+  @deprecated("Prefer sinkIgnore with a custom RequestProperties", since = "0.12.0")
   def orderedRetrySinkIgnore[Data, Ctx]: Sink[Request[Data, Ctx], Future[Done]] =
     orderedRetryFlow[Data, Ctx].toMat(Sink.ignore)(Keep.right)
 
@@ -233,6 +266,7 @@ case class RequestHelper(
     * @param request The request to send.
     * @return A source of the retried request.
     */
+  @deprecated("Prefer single with a custom RequestProperties", since = "0.12.0")
   def singleRetry[Data, Ctx](request: Request[Data, Ctx]): Source[RequestResponse[Data, Ctx], NotUsed] =
     Source.single(request).via(retryFlow)
 
@@ -242,6 +276,7 @@ case class RequestHelper(
     * @param requests The requests to send.
     * @return A source of the retried requests.
     */
+  @deprecated("Prefer many with a custom RequestProperties", since = "0.12.0")
   def manyRetry[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Source[RequestResponse[Data, Ctx], NotUsed] =
     Source(requests).via(retryFlow)
 
@@ -251,6 +286,7 @@ case class RequestHelper(
     * @param requests The requests to send.
     * @return A source of the retried requests.
     */
+  @deprecated("Prefer many with a custom RequestProperties", since = "0.12.0")
   def orderedManyRetry[Data, Ctx](
       requests: immutable.Seq[Request[Data, Ctx]]
   ): Source[RequestResponse[Data, Ctx], NotUsed] =
@@ -260,6 +296,7 @@ case class RequestHelper(
     * Sends a single request with retries if it fails, and gets the response as a future.
     * @param request The request to send.
     */
+  @deprecated("Prefer singleFuture with a custom RequestProperties", since = "0.12.0")
   def singleRetryFuture[Data, Ctx](request: Request[Data, Ctx]): Future[RequestResponse[Data, Ctx]] =
     singleRetry(request).runWith(Sink.head)
 
@@ -267,6 +304,7 @@ case class RequestHelper(
     * Sends many requests with retries if they fail, and gets the response as a future.
     * @param requests The requests to send.
     */
+  @deprecated("Prefer manyFuture with a custom RequestProperties", since = "0.12.0")
   def manyRetryFuture[Data, Ctx](
       requests: immutable.Seq[Request[Data, Ctx]]
   ): Future[immutable.Seq[RequestResponse[Data, Ctx]]] =
@@ -277,6 +315,7 @@ case class RequestHelper(
     * response as a future. $ordered
     * @param requests The requests to send.
     */
+  @deprecated("Prefer manyFuture with a custom RequestProperties", since = "0.12.0")
   def orderedManyRetryFuture[Data, Ctx](
       requests: immutable.Seq[Request[Data, Ctx]]
   ): Future[immutable.Seq[RequestResponse[Data, Ctx]]] =
@@ -286,12 +325,14 @@ case class RequestHelper(
     * Sends a single request with retries if it fails, and ignores the result.
     * @param request The request to send.
     */
+  @deprecated("Prefer singleIgnore with a custom RequestProperties", since = "0.12.0")
   def singleRetryIgnore[Data, Ctx](request: Request[Data, Ctx]): Unit = singleRetry(request).runWith(Sink.ignore)
 
   /**
     * Sends many requests with retries if they fail, and ignores the result.
     * @param requests The requests to send.
     */
+  @deprecated("Prefer manyIgnore with a custom RequestProperties", since = "0.12.0")
   def manyRetryIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
     manyRetry(requests).runWith(Sink.ignore)
 
@@ -300,10 +341,29 @@ case class RequestHelper(
     * result. $ordered
     * @param requests The requests to send.
     */
+  @deprecated("Prefer manyIgnore with a custom RequestProperties", since = "0.12.0")
   def orderedManyRetryIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]]): Unit =
     orderedManyRetry(requests).runWith(Sink.ignore)
 }
 object RequestHelper {
+
+  case class RequestProperties(
+      retry: Boolean = false,
+      ordered: Boolean = false
+  )
+  object RequestProperties {
+    val default      = RequestProperties()
+    val retry        = RequestProperties(retry = true)
+    val ordered      = RequestProperties(ordered = true)
+    val retryOrdered = RequestProperties(retry = true, ordered = true)
+
+    object Implicits {
+      implicit val default: RequestProperties      = RequestProperties.default
+      implicit val retry: RequestProperties        = RequestProperties.retry
+      implicit val ordered: RequestProperties      = RequestProperties.ordered
+      implicit val retryOrdered: RequestProperties = RequestProperties.retryOrdered
+    }
+  }
 
   def create(
       credentials: HttpCredentials,

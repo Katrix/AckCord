@@ -105,7 +105,7 @@ object RequestRunner {
     override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): Future[F[A]] =
       streamable.toSource(request.hasPermissions).runWith(Sink.head).flatMap {
         case false => Future.failed(new RequestPermissionException(request))
-        case true  => requests.singleRetryFuture(request).map(res => F.pure(res.data))
+        case true  => requests.singleFuture(request).flatMap(res => Future.fromTry(res.eitherData.toTry)).map(F.pure)
       }
 
     override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(

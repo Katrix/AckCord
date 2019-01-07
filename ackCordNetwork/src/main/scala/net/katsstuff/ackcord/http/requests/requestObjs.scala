@@ -213,7 +213,13 @@ sealed trait RequestAnswer[+Data, Ctx] {
   /**
     * An option that contains the response data if this is a success, or None if it's a failure.
     */
+  @deprecated("Prefer eitherData instead", since = "0.12.0")
   def optData: Option[Data]
+
+  /**
+    * An either that either contains the data, or the exception if this is a failure.
+    */
+  def eitherData: Either[Throwable, Data]
 
   /**
     * Apply a function to this answer, if it's a successful response.
@@ -249,6 +255,8 @@ case class RequestResponse[+Data, Ctx](
 
   override def optData: Option[Data] = Some(data)
 
+  override def eitherData: Either[Throwable, Data] = Right(data)
+
   override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
 
   override def filter(f: Data => Boolean): RequestAnswer[Data, Ctx] =
@@ -267,6 +275,10 @@ sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
     * if one does not exist.
     */
   def asException: Throwable
+
+  override def optData: Option[Nothing] = None
+
+  override def eitherData: Either[Throwable, Nothing] = Left(asException)
 }
 
 /**
@@ -286,8 +298,6 @@ case class RequestRatelimited[Ctx](
   override def remainingRequests: Int          = 0
   override def asException: RatelimitException = new RatelimitException(global, tilReset, uri)
 
-  override def optData: None.type = None
-
   override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
   override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestRatelimited[Ctx] = this
@@ -304,8 +314,6 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
   override def tilReset: FiniteDuration = -1.millis
   override def remainingRequests: Int   = -1
   override def uriRequestLimit: Int     = -1
-
-  override def optData: None.type = None
 
   override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
@@ -326,8 +334,6 @@ case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String)
   override def tilReset: FiniteDuration = -1.millis
   override def remainingRequests: Int   = -1
   override def uriRequestLimit: Int     = -1
-
-  override def optData: None.type = None
 
   override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this
