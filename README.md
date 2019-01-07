@@ -9,10 +9,10 @@ For more info see the see the [microsite](https://ackcord.katsstuff.net/), the e
 
 While AckCord is still in active development, you can try AckCord by adding some of these to your `build.sbt` file.
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord"                 % "0.11.0" //For high level API, includes all the other modules
-libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "0.11.0" //Low level core API
-libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.11.0" //Low to mid level Commands API
-libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.11.0" //Low level lavaplayer API
+libraryDependencies += "net.katsstuff" %% "ackcord"                 % "0.12.0" //For high level API, includes all the other modules
+libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "0.12.0" //Low level core API
+libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.12.0" //Low to mid level Commands API
+libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.12.0" //Low level lavaplayer API
 ```
 
 Lastly, join our Discord server (we got cookies).
