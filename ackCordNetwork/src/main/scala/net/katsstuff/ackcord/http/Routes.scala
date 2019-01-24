@@ -58,7 +58,7 @@ object Routes {
 
   case class Route(rawRoute: String, applied: Uri) {
     require(
-      rawRoute.count(_ == '/') == applied.toString().count(_ == '/'),
+      rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
     )
 
@@ -176,7 +176,7 @@ object Routes {
   val createMessage: ChannelId => RequestRoute                  = channelMessages.toRequest(POST)
   val editMessage: (MessageId, ChannelId) => RequestRoute       = channelMessage.toRequest(PATCH)
   val deleteMessage: (MessageId, ChannelId) => RequestRoute     = channelMessage.toRequest(DELETE)
-  val bulkDeleteMessages: (ChannelId) => RequestRoute           = channelMessages / "bulk-delete" toRequest POST
+  val bulkDeleteMessages: ChannelId => RequestRoute             = channelMessages / "bulk-delete" toRequest POST
 
   val reactions: (MessageId, ChannelId) => Route = channelMessage / "reactions"
   val emojiReactions: (Emoji, MessageId, ChannelId) => Route =
