@@ -41,10 +41,11 @@ class HttpException(statusCode: StatusCode, extraInfo: Option[String])
   *                 goes away.
   * @param uri The Uri for the request.
   */
-class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri) extends Exception {
-  if (global) "Encountered global ratelimit"
-  else s"Encountered ratelimit at $uri"
-}
+class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri)
+    extends Exception(
+      if (global) "Encountered global ratelimit"
+      else s"Encountered ratelimit at $uri"
+    )
 
 /**
   * An exception that signals that a request was dropped.
