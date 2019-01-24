@@ -8,10 +8,10 @@ If you want to work with commands from the low level API, you have to add a depe
 
 As before we create out client as usual. Note the extra import for the commands package.
 ```tut:silent
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.commands._
+import ackcord._
+import ackcord.data._
+import ackcord.syntax._
+import ackcord.commands._
 import cats.Monad
 import akka.NotUsed
 import akka.actor.ActorSystem

@@ -11,10 +11,10 @@ In the high level API you can either just listen to the raw command events, or y
 As before we create out client as usual, but with a small twist. This time we also pass in command settings to our client settings, which is where we specify our categories. We also import the commands package.
 ```tut:silent
 import akka.NotUsed
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.commands._
+import ackcord._
+import ackcord.data._
+import ackcord.syntax._
+import ackcord.commands._
 import cats.Monad
 val token = "<token>"
 val GeneralCommands = "!"

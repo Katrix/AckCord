@@ -18,8 +18,8 @@ Often times when overriding methods, an implicit cache snapshot will already be 
 
 As before we create out client as usual.
 ```tut:silent
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
+import ackcord._
+import ackcord.data._
 val token = "<token>"
 val settings = ClientSettings(token)
 import settings.executionContext

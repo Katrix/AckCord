@@ -7,7 +7,7 @@ title: Making Requests
 What use is a Discord library if you can't make REST requests? There are two parts to this, creating a request, and running it. Both have many ways to do things. In AckCord, you don't do request by calling methods. Instead you first create a request object which describes everything about your request. The headers to use, the body to use. The uri to make the request to, and son on.
 
 ## Creating a request
-First we need a request object to send. There are two main ways to get such a request object. The first one is to create `Request` objects with requests from the `net.katsstuff.ackcord.http.rest` and `net.katsstuff.ackcord.http.images` packages manually. The second is to import `net.katsstuff.ackcord.syntax._` and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.
+First we need a request object to send. There are two main ways to get such a request object. The first one is to create `Request` objects with requests from the `ackcord.http.rest` and `ackcord.http.images` packages manually. The second is to import `ackcord.syntax._` and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.
 
 ## Running the request
 To run requests you would either use a `RequestHelper`, or a `RequestRunner`. 
@@ -19,10 +19,10 @@ To run requests you would either use a `RequestHelper`, or a `RequestRunner`.
 ## Example
 
 ```tut:silent
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.http.rest.CreateMessage
+import ackcord._
+import ackcord.data._
+import ackcord.syntax._
+import ackcord.http.rest.CreateMessage
 val token = "<token>"
 val settings = ClientSettings(token)
 import settings.executionContext

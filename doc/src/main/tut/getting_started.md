@@ -28,8 +28,8 @@ It depends on your knowledge with Scala and Akka. If you know what Akka Streams 
 
 Most of these examples assume these two imports.
 ```tut:silent
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
+import ackcord._
+import ackcord.data._
 ```
 
 AckCord comes with two (3 if you count handling dispatch events yourself) major APIs. A high level and a low level API. Let's see how you would log in from both the high level and the low level API.
@@ -67,8 +67,8 @@ clientSettings.system.terminate()
 ```
 
 ```tut:reset:invisible
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
+import ackcord._
+import ackcord.data._
 
 val token = "<token>"
 ```
@@ -120,8 +120,8 @@ The cache can be gotten from the `cache` method on the `DiscordClient[F]`.
 
 ```tut:reset:invisible
 import akka.actor.ActorRef
-import net.katsstuff.ackcord._
-import net.katsstuff.ackcord.data._
+import ackcord._
+import ackcord.data._
 
 val clientSettings = ClientSettings("<token>")
 import clientSettings.executionContext
