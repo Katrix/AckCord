@@ -1,9 +1,10 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion     = "2.5.19"
-lazy val akkaHttpVersion = "10.1.7"
-lazy val circeVersion    = "0.11.1"
-lazy val ackCordVersion  = "0.12.0"
+lazy val akkaVersion          = "2.5.19"
+lazy val akkaHttpVersion      = "10.1.7"
+lazy val circeVersion         = "0.11.1"
+lazy val akkaHttpCirceVersion = "1.24.3"
+lazy val ackCordVersion       = "0.12.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.12.8",
@@ -42,7 +43,7 @@ lazy val publishSettings = Seq(
   ),
   moduleName := {
     val old = moduleName.value
-    if(old.toLowerCase.startsWith("ackcord")) old else s"ackcord-$old"
+    if (old.toLowerCase.startsWith("ackcord")) old else s"ackcord-$old"
   },
   homepage := Some(url("https://github.com/Katrix/AckCord")),
   developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
@@ -71,31 +72,21 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
 lazy val dataJVM = data.jvm
 lazy val dataJS  = data.js
 
-lazy val network = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "network",
-    version := ackCordVersion,
-    libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
-    ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
-    description := "The base network module of AckCord"
-  )
-  .dependsOn(dataJVM)
-
 lazy val requests = project
   .settings(
     commonSettings,
     publishSettings,
     name := "requests",
     version := ackCordVersion,
-    description := "The request module of AckCord"
+    description := "The request module of AckCord",
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+    ),
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion
   )
-  .dependsOn(network)
+  .dependsOn(dataJVM)
 
 lazy val gateway = project
   .settings(
@@ -103,9 +94,15 @@ lazy val gateway = project
     publishSettings,
     name := "gateway",
     version := ackCordVersion,
-    description := "The gateway module of AckCord"
+    description := "The gateway module of AckCord",
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+    ),
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
   )
-  .dependsOn(network)
+  .dependsOn(dataJVM)
 
 lazy val voice = project
   .settings(
@@ -113,9 +110,15 @@ lazy val voice = project
     publishSettings,
     name := "voice",
     version := ackCordVersion,
-    description := "The voice websocket module of AckCord"
+    description := "The voice websocket module of AckCord",
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+    ),
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
   )
-  .dependsOn(network)
+  .dependsOn(dataJVM)
 
 lazy val util = project
   .settings(
@@ -244,7 +247,6 @@ lazy val doc = project
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       dataJVM,
-      network,
       requests,
       gateway,
       voice,
@@ -275,7 +277,6 @@ lazy val ackCordRoot = project
   .aggregate(
     dataJVM,
     dataJS,
-    network,
     requests,
     gateway,
     voice,

@@ -22,27 +22,24 @@
  * SOFTWARE.
  */
 package ackcord.util
-
 import com.typesafe.config.Config
 
 import akka.actor.ActorSystem
 
 /**
-  * Settings that AckCord used. See the reference config for more info.
+  * Settings that AckCord uses for voice stuff. See the reference config for more info.
   */
-class AckCordSettings(config: Config) {
+class AckCordVoiceSettings(config: Config) {
   import config._
 
-  val LogReceivedWs: Boolean   = getBoolean("ackcord.logging.payloads.log-received-ws")
-  val LogSentWs: Boolean       = getBoolean("ackcord.logging.payloads.log-sent-ws")
-  val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
-  val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
+  val LogReceivedWs: Boolean = getBoolean("ackcord.logging.payloads.log-received-ws")
+  val LogSentWs: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-ws")
 
   val UDPMaxPacketsBeforeDrop: Int = getInt("ackcord.voice.max-packets-before-drop")
   val UDPMaxBurstAmount: Int       = getInt("ackcord.voice.max-burst-amount")
   val UDPSendRequestAmount: Int    = getInt("ackcord.voice.send-request-amount")
 }
-object AckCordSettings {
+object AckCordVoiceSettings {
 
-  def apply()(implicit system: ActorSystem): AckCordSettings = new AckCordSettings(system.settings.config)
+  def apply()(implicit system: ActorSystem): AckCordVoiceSettings = new AckCordVoiceSettings(system.settings.config)
 }

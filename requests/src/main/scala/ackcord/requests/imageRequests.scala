@@ -27,7 +27,6 @@ import scala.language.higherKinds
 
 import ackcord.CacheSnapshot
 import ackcord.data._
-import ackcord.util.MapWithMaterializer
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}

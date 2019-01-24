@@ -30,7 +30,7 @@ import scala.util.{Failure, Success}
 
 import ackcord.CacheSnapshot
 import ackcord.data._
-import ackcord.util.{AckCordSettings, MapWithMaterializer}
+import ackcord.util.AckCordRequestSettings
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
@@ -61,7 +61,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
       .mapAsyncUnordered(parallelism)(identity)
 
     val withLogging =
-      if (AckCordSettings().LogReceivedREST)
+      if (AckCordRequestSettings().LogReceivedREST)
         baseFlow.log(
           s"Received REST response",
           json => s"From ${route.uri} with method ${route.method.value} and content ${json.noSpaces}"

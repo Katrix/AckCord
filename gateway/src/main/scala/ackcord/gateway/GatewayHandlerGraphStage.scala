@@ -28,7 +28,7 @@ import scala.concurrent.{Future, Promise}
 
 import ackcord.gateway.GatewayHandlerGraphStage.Restart
 import ackcord.gateway.GatewayProtocol._
-import ackcord.util.AckCordSettings
+import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
@@ -240,7 +240,7 @@ object GatewayHandlerGraphStage {
       }
       .flatMapConcat(identity)
 
-    val withLogging = if (AckCordSettings().LogReceivedWs) {
+    val withLogging = if (AckCordGatewaySettings().LogReceivedWs) {
       jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else jsonFlow
 
@@ -262,7 +262,7 @@ object GatewayHandlerGraphStage {
       TextMessage(json)
     }
 
-    if (AckCordSettings().LogSentWs) flow.log("Sending payload", _.text) else flow
+    if (AckCordGatewaySettings().LogSentWs) flow.log("Sending payload", _.text) else flow
   }
 
   private def wsFlow(

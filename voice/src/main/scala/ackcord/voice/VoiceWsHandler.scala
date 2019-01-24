@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import ackcord.data.{RawSnowflake, UserId}
-import ackcord.util.{AckCordSettings, JsonSome, JsonUndefined}
+import ackcord.util.{AckCordVoiceSettings, JsonSome, JsonUndefined}
 import ackcord.voice.VoiceUDPHandler._
 import ackcord.{AckCord, AudioAPIMessage}
 import akka.NotUsed
@@ -102,7 +102,7 @@ class VoiceWsHandler(
       .flatMapConcat(identity)
 
     val withLogging =
-      if (AckCordSettings().LogReceivedWs)
+      if (AckCordVoiceSettings().LogReceivedWs)
         jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
       else jsonFlow
 
@@ -113,7 +113,7 @@ class VoiceWsHandler(
     val baseFlow = Flow[VoiceMessage[_]].map(_.asJson.noSpaces)
 
     val withLogging =
-      if (AckCordSettings().LogSentWs)
+      if (AckCordVoiceSettings().LogSentWs)
         baseFlow.log("Sending payload")
       else baseFlow
 

@@ -32,7 +32,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 import ackcord.AckCord
-import ackcord.util.{AckCordSettings, MapWithMaterializer}
+import ackcord.util.AckCordRequestSettings
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
@@ -169,7 +169,7 @@ object RequestStreams {
     val baseFlow = Flow[Request[Data, Ctx]]
 
     val withLogging =
-      if (AckCordSettings().LogSentREST)
+      if (AckCordRequestSettings().LogSentREST)
         baseFlow.log(
           "Sent REST request", { request =>
             val loggingBody = request.bodyForLogging.fold("")(body => s" and content $body")

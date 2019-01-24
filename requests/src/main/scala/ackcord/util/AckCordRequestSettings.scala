@@ -22,30 +22,20 @@
  * SOFTWARE.
  */
 package ackcord.util
+import com.typesafe.config.Config
 
-import akka.NotUsed
-import akka.stream._
-import akka.stream.scaladsl.Flow
-import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
+import akka.actor.ActorSystem
 
-class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphStage[FlowShape[In, Out]] {
-  val in: Inlet[In]    = Inlet("MapWithMaterializer.in")
-  val out: Outlet[Out] = Outlet("MapWithMaterializer.out")
-  override def shape   = FlowShape(in, out)
+/**
+  * Settings that AckCord uses for requests. See the reference config for more info.
+  */
+class AckCordRequestSettings(config: Config) {
+  import config._
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
-    new GraphStageLogic(shape) with InHandler with OutHandler {
-      override def onPush(): Unit = push(out, f(materializer)(grab(in)))
-      override def onPull(): Unit = pull(in)
-
-      setHandlers(in, out, this)
-    }
+  val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
+  val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
 }
-object MapWithMaterializer {
+object AckCordRequestSettings {
 
-  /**
-    * Map a flow with a materializer from inside the graph.
-    */
-  def flow[In, Out](f: Materializer => In => Out): Flow[In, Out, NotUsed] =
-    Flow.fromGraph(new MapWithMaterializer(f))
+  def apply()(implicit system: ActorSystem): AckCordRequestSettings = new AckCordRequestSettings(system.settings.config)
 }

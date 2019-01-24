@@ -32,7 +32,7 @@ import com.iwebpp.crypto.TweetNaclFast
 
 import ackcord.AudioAPIMessage
 import ackcord.data.{RawSnowflake, UserId}
-import ackcord.util.AckCordSettings
+import ackcord.util.AckCordVoiceSettings
 import akka.actor.{ActorRef, ActorSystem, FSM, Props, Stash}
 import akka.io.{IO, UdpConnected}
 import akka.util.ByteString
@@ -195,7 +195,7 @@ class VoiceUDPHandler(
     val payload = createPayload(data, secret)
     queue.enqueue(payload) //This is removed as soon as we receive the ack if it's the only thing in the queue
 
-    val maxSize = AckCordSettings().UDPMaxPacketsBeforeDrop
+    val maxSize = AckCordVoiceSettings().UDPMaxPacketsBeforeDrop
 
     if (queue.lengthCompare(1) == 0) {
       socket ! UdpConnected.Send(payload, UDPAck)
@@ -210,7 +210,7 @@ class VoiceUDPHandler(
   def queuePackets(data: Seq[ByteString], secret: TweetNaclFast.SecretBox, socket: ActorRef): Unit = {
     queuePacket(data.head, secret, socket)
 
-    val maxSize = AckCordSettings().UDPMaxPacketsBeforeDrop
+    val maxSize = AckCordVoiceSettings().UDPMaxPacketsBeforeDrop
 
     val combinedSize = queue.size + data.tail.size
     val withDropped = if (combinedSize > maxSize) {
@@ -224,10 +224,10 @@ class VoiceUDPHandler(
   }
 
   def shouldSendDataRequest: Boolean =
-    burstSender != null && !hasSentRequest && queue.lengthCompare(AckCordSettings().UDPSendRequestAmount) <= 0
+    burstSender != null && !hasSentRequest && queue.lengthCompare(AckCordVoiceSettings().UDPSendRequestAmount) <= 0
 
   def sendDataRequest(): Unit = {
-    burstSender ! DataRequest(AckCordSettings().UDPMaxBurstAmount - queue.size)
+    burstSender ! DataRequest(AckCordVoiceSettings().UDPMaxBurstAmount - queue.size)
     hasSentRequest = true
   }
 
