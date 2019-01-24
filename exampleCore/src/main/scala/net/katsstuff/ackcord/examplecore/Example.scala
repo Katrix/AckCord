@@ -41,9 +41,9 @@ import net.katsstuff.ackcord.commands.{
   RawCmd
 }
 import net.katsstuff.ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
-import net.katsstuff.ackcord.http.requests.{BotAuthentication, RequestHelper}
+import net.katsstuff.ackcord.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
-import net.katsstuff.ackcord.websocket.gateway.GatewaySettings
+import net.katsstuff.ackcord.gateway.GatewaySettings
 import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
 
 object Example {

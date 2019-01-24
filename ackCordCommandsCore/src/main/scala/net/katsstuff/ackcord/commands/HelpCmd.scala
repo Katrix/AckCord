@@ -36,7 +36,7 @@ import cats.data.EitherT
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, CommandRegistration, TerminateCommand}
 import net.katsstuff.ackcord.data.raw.RawMessage
-import net.katsstuff.ackcord.http.rest.{CreateMessage, CreateMessageData}
+import net.katsstuff.ackcord.requests.{CreateMessage, CreateMessageData}
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data.Message

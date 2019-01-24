@@ -31,7 +31,7 @@ import akka.NotUsed
 import cats.{Functor, Monad, Traverse}
 import cats.data.OptionT
 import net.katsstuff.ackcord.data._
-import net.katsstuff.ackcord.http.rest._
+import net.katsstuff.ackcord.requests._
 import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 
 package object syntax {

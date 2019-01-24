@@ -26,7 +26,6 @@ package net.katsstuff.ackcord
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-
 import akka.Done
 import akka.actor._
 import akka.http.scaladsl.Http
@@ -38,7 +37,7 @@ import akka.stream.{Materializer, ThrottleMode}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.Json
 import net.katsstuff.ackcord.DiscordShard.{CreateGateway, RestartShard}
-import net.katsstuff.ackcord.http.Routes
+import net.katsstuff.ackcord.requests.Routes
 
 /**
   * The core actor that controls all the other used actors of AckCord

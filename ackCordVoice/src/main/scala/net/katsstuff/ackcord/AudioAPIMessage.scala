@@ -26,7 +26,7 @@ package net.katsstuff.ackcord
 import akka.actor.ActorRef
 import akka.util.ByteString
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
-import net.katsstuff.ackcord.websocket.voice.VoiceUDPHandler.RTPHeader
+import net.katsstuff.ackcord.voice.VoiceUDPHandler.RTPHeader
 
 /**
   * The base trait for all audio events. Note that the audio API does not

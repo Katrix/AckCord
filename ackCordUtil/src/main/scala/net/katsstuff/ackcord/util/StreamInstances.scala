@@ -2,14 +2,14 @@ package net.katsstuff.ackcord.util
 
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Merge, Sink, Source}
-import cats.{Alternative, Contravariant, Functor, MonadError}
+import cats.{Alternative, Contravariant, Functor, MonadError, StackSafeMonad}
 
 object StreamInstances {
 
   type SourceRequest[A] = Source[A, NotUsed]
 
   implicit val sourceInstance: MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
-    new MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] {
+    new MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] with StackSafeMonad[SourceRequest] {
 
       override def empty[A]: SourceRequest[A] = Source.empty[A]
 
@@ -24,8 +24,6 @@ object StreamInstances {
 
       override def combineK[A](x: SourceRequest[A], y: SourceRequest[A]): SourceRequest[A] =
         Source.combine(x, y)(Merge.apply(_))
-
-      override def tailRecM[A, B](a: A)(f: A => SourceRequest[Either[A, B]]): SourceRequest[B] = ???
 
       override def raiseError[A](e: Throwable): SourceRequest[A] = Source.failed(e)
       override def handleErrorWith[A](fa: SourceRequest[A])(f: Throwable => SourceRequest[A]): SourceRequest[A] =

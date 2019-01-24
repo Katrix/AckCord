@@ -33,7 +33,7 @@ import net.katsstuff.ackcord.cachehandlers.{Handlers, NOOPHandler, PresenceUpdat
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
 import net.katsstuff.ackcord.data.raw.RawBan
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
+import net.katsstuff.ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 
 object GatewayHandlerCache {
 
@@ -49,7 +49,7 @@ object GatewayHandlerCache {
   }
 
   def eventToCacheUpdate(event: ComplexGatewayEvent[_, _], log: LoggingAdapter): Option[APIMessageCacheUpdate[_]] = {
-    import net.katsstuff.ackcord.websocket.gateway.{GatewayEvent => gateway}
+    import net.katsstuff.ackcord.gateway.{GatewayEvent => gatewayEv}
     import net.katsstuff.ackcord.{APIMessage => api, APIMessageCacheUpdate => CacheUpdate}
 
     def handleLazy[A](
@@ -73,11 +73,11 @@ object GatewayHandlerCache {
       }
 
     event match {
-      case gateway.Ready(later) =>
+      case gatewayEv.Ready(later) =>
         handleLazy(later)(data => CacheUpdate(data, state => Some(api.Ready(state)), ReadyHandler))
-      case gateway.Resumed(later) =>
+      case gatewayEv.Resumed(later) =>
         handleLazy(later)(data => CacheUpdate(data, state => Some(api.Resumed(state)), NOOPHandler))
-      case gateway.ChannelCreate(later) =>
+      case gatewayEv.ChannelCreate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -85,7 +85,7 @@ object GatewayHandlerCache {
             RawHandlers.rawChannelUpdateHandler
           )
         }
-      case gateway.ChannelUpdate(later) =>
+      case gatewayEv.ChannelUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -93,7 +93,7 @@ object GatewayHandlerCache {
             RawHandlers.rawChannelUpdateHandler
           )
         }
-      case gateway.ChannelDelete(later) =>
+      case gatewayEv.ChannelDelete(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -101,7 +101,7 @@ object GatewayHandlerCache {
             RawHandlers.rawChannelDeleteHandler
           )
         }
-      case gateway.ChannelPinsUpdate(later) =>
+      case gatewayEv.ChannelPinsUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -113,7 +113,7 @@ object GatewayHandlerCache {
             NOOPHandler
           )
         }
-      case gateway.GuildCreate(later) =>
+      case gatewayEv.GuildCreate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -121,7 +121,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildUpdateHandler
           )
         }
-      case gateway.GuildUpdate(later) =>
+      case gatewayEv.GuildUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -129,7 +129,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildUpdateHandler
           )
         }
-      case gateway.GuildDelete(later) =>
+      case gatewayEv.GuildDelete(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -137,7 +137,7 @@ object GatewayHandlerCache {
             RawHandlers.deleteGuildDataHandler
           )
         }
-      case gateway.GuildBanAdd(later) =>
+      case gatewayEv.GuildBanAdd(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             (data.guildId, RawBan(None, data.user)),
@@ -149,7 +149,7 @@ object GatewayHandlerCache {
             RawHandlers.rawBanUpdateHandler
           )
         }
-      case gateway.GuildBanRemove(later) =>
+      case gatewayEv.GuildBanRemove(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -161,7 +161,7 @@ object GatewayHandlerCache {
             RawHandlers.rawBanDeleteHandler
           )
         }
-      case gateway.GuildEmojisUpdate(later) =>
+      case gatewayEv.GuildEmojisUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -173,7 +173,7 @@ object GatewayHandlerCache {
             RawHandlers.guildEmojisUpdateDataHandler
           )
         }
-      case gateway.GuildIntegrationsUpdate(later) =>
+      case gatewayEv.GuildIntegrationsUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -181,7 +181,7 @@ object GatewayHandlerCache {
             NOOPHandler
           )
         }
-      case gateway.GuildMemberAdd(later) =>
+      case gatewayEv.GuildMemberAdd(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -193,7 +193,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildMemberWithGuildUpdateHandler
           )
         }
-      case gateway.GuildMemberRemove(later) =>
+      case gatewayEv.GuildMemberRemove(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -201,7 +201,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildMemberDeleteHandler
           )
         }
-      case gateway.GuildMemberUpdate(later) =>
+      case gatewayEv.GuildMemberUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -221,7 +221,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildMemberUpdateHandler
           )
         }
-      case gateway.GuildMemberChunk(later) =>
+      case gatewayEv.GuildMemberChunk(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -233,7 +233,7 @@ object GatewayHandlerCache {
             RawHandlers.rawGuildMemberChunkHandler
           )
         }
-      case gateway.GuildRoleCreate(later) =>
+      case gatewayEv.GuildRoleCreate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -245,7 +245,7 @@ object GatewayHandlerCache {
             RawHandlers.roleUpdateHandler
           )
         }
-      case gateway.GuildRoleUpdate(later) =>
+      case gatewayEv.GuildRoleUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -257,7 +257,7 @@ object GatewayHandlerCache {
             RawHandlers.roleUpdateHandler
           )
         }
-      case gateway.GuildRoleDelete(later) =>
+      case gatewayEv.GuildRoleDelete(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -269,7 +269,7 @@ object GatewayHandlerCache {
             RawHandlers.roleDeleteHandler
           )
         }
-      case gateway.MessageCreate(later) =>
+      case gatewayEv.MessageCreate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -277,7 +277,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageUpdateHandler
           )
         }
-      case gateway.MessageUpdate(later) =>
+      case gatewayEv.MessageUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -285,7 +285,7 @@ object GatewayHandlerCache {
             RawHandlers.rawPartialMessageUpdateHandler
           )
         }
-      case gateway.MessageDelete(later) =>
+      case gatewayEv.MessageDelete(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -297,7 +297,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageDeleteHandler
           )
         }
-      case gateway.MessageDeleteBulk(later) =>
+      case gatewayEv.MessageDeleteBulk(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -308,7 +308,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageDeleteBulkHandler
           )
         }
-      case gateway.MessageReactionAdd(later) =>
+      case gatewayEv.MessageReactionAdd(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -321,7 +321,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageReactionUpdateHandler
           )
         }
-      case gateway.MessageReactionRemove(later) =>
+      case gatewayEv.MessageReactionRemove(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -334,7 +334,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageReactionRemoveHandler
           )
         }
-      case gateway.MessageReactionRemoveAll(later) =>
+      case gatewayEv.MessageReactionRemoveAll(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -346,7 +346,7 @@ object GatewayHandlerCache {
             RawHandlers.rawMessageReactionRemoveAllHandler
           )
         }
-      case gateway.PresenceUpdate(later) =>
+      case gatewayEv.PresenceUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -359,7 +359,7 @@ object GatewayHandlerCache {
             PresenceUpdateHandler
           )
         }
-      case gateway.TypingStart(later) =>
+      case gatewayEv.TypingStart(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -371,15 +371,15 @@ object GatewayHandlerCache {
             RawHandlers.lastTypedHandler
           )
         }
-      case gateway.UserUpdate(later) =>
+      case gatewayEv.UserUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(data, state => Some(api.UserUpdate(data, state)), RawHandlers.userUpdateHandler)
         }
-      case gateway.VoiceStateUpdate(later) =>
+      case gatewayEv.VoiceStateUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(data, state => Some(api.VoiceStateUpdate(data, state)), Handlers.voiceStateUpdateHandler)
         }
-      case gateway.VoiceServerUpdate(later) =>
+      case gatewayEv.VoiceServerUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,
@@ -391,7 +391,7 @@ object GatewayHandlerCache {
             NOOPHandler
           )
         }
-      case gateway.WebhookUpdate(later) =>
+      case gatewayEv.WebhookUpdate(later) =>
         handleLazy(later) { data =>
           CacheUpdate(
             data,

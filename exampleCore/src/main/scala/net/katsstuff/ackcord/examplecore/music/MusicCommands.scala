@@ -37,7 +37,7 @@ import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdFilter, CmdInfo, ParsedCmdFactory, ParsedCmdFlow}
 import net.katsstuff.ackcord.data.{GuildId, TChannel, UserId, VoiceState}
 import net.katsstuff.ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
-import net.katsstuff.ackcord.http.rest.CreateMessage
+import net.katsstuff.ackcord.requests.CreateMessage
 import net.katsstuff.ackcord.syntax._
 
 class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: ActorRef)(

@@ -189,7 +189,7 @@ object APIMessage {
 
   /**
     * Sent to the client if the client requests to get all members
-    * (even offline ones) for large guilds using [[net.katsstuff.ackcord.websocket.gateway.RequestGuildMembers]].
+    * (even offline ones) for large guilds using [[net.katsstuff.ackcord.gateway.RequestGuildMembers]].
     * @param guild The guild requested for.
     * @param members The guild members in this chunk.
     */

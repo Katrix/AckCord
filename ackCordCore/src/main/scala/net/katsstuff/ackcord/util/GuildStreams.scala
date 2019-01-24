@@ -31,7 +31,7 @@ import io.circe.Decoder
 import net.katsstuff.ackcord.{APIMessage, MemoryCacheSnapshot}
 import net.katsstuff.ackcord.data.{ChannelId, GuildId}
 import net.katsstuff.ackcord.syntax._
-import net.katsstuff.ackcord.websocket.gateway.{ComplexGatewayEvent, GatewayEvent}
+import net.katsstuff.ackcord.gateway.{ComplexGatewayEvent, GatewayEvent}
 
 object GuildStreams {
 
@@ -66,10 +66,10 @@ object GuildStreams {
     * A flow which tries to find out which guild a given GatewayEvent event belongs to.
     *
     * Handles
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.GuildEvent]]
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ComplexGuildEvent]]
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent]]
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.GuildEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.ComplexGuildEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.ChannelEvent]]
     */
   def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](
       log: LoggingAdapter
@@ -162,13 +162,13 @@ object GuildStreams {
     * specific guild.
     *
     * Handles
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.GuildEvent]]
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.OptGuildEvent]]
-    * - [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ChannelEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.GuildEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    * - [[net.katsstuff.ackcord.gateway.GatewayEvent.ChannelEvent]]
     *
-    * Global events like [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.Ready]],
-    * [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.Resumed]] and
-    * [[net.katsstuff.ackcord.websocket.gateway.GatewayEvent.UserUpdate]] are sent no matter what.
+    * Global events like [[net.katsstuff.ackcord.gateway.GatewayEvent.Ready]],
+    * [[net.katsstuff.ackcord.gateway.GatewayEvent.Resumed]] and
+    * [[net.katsstuff.ackcord.gateway.GatewayEvent.UserUpdate]] are sent no matter what.
     *
     * @param guildId The only guildID to allow through.
     */

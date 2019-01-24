@@ -28,7 +28,7 @@ import scala.collection.mutable
 import net.katsstuff.ackcord.SnowflakeMap
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw._
-import net.katsstuff.ackcord.websocket.gateway.GatewayEvent._
+import net.katsstuff.ackcord.gateway.GatewayEvent._
 
 object RawHandlers extends Handlers {
 

@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.cachehandlers
 
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.CacheSnapshot.BotUser
-import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.ReadyData
+import net.katsstuff.ackcord.gateway.GatewayEvent.ReadyData
 import shapeless._
 
 //We handle this one separately as is it's kind of special

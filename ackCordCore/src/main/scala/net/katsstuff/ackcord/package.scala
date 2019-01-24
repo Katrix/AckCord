@@ -2,36 +2,35 @@ package net.katsstuff
 
 import scala.concurrent.Future
 import scala.language.{higherKinds, implicitConversions}
-
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import cats.{Alternative, Contravariant, Functor, MonadError}
 import net.katsstuff.ackcord.util.StreamInstances
 
 package object ackcord {
 
-  val RequestHelper: http.requests.RequestHelper.type = http.requests.RequestHelper
-  type RequestHelper = http.requests.RequestHelper
+  val RequestHelper: requests.RequestHelper.type = requests.RequestHelper
+  type RequestHelper = requests.RequestHelper
 
-  val BotAuthentication: http.requests.BotAuthentication.type = http.requests.BotAuthentication
-  type BotAuthentication = http.requests.BotAuthentication.type
+  val BotAuthentication: requests.BotAuthentication.type = requests.BotAuthentication
+  type BotAuthentication = requests.BotAuthentication.type
 
-  val Request: http.requests.Request.type = http.requests.Request
-  type Request[Data, Ctx] = http.requests.Request[Data, Ctx]
+  val Request: requests.Request.type = requests.Request
+  type Request[Data, Ctx] = requests.Request[Data, Ctx]
 
-  val GatewaySettings: websocket.gateway.GatewaySettings.type = websocket.gateway.GatewaySettings
-  type GatewaySettings = websocket.gateway.GatewaySettings
+  val GatewaySettings: gateway.GatewaySettings.type = gateway.GatewaySettings
+  type GatewaySettings = gateway.GatewaySettings
 
-  val GatewayLogin: websocket.gateway.GatewayHandler.Login.type = websocket.gateway.GatewayHandler.Login
-  type GatewayLogin = websocket.gateway.GatewayHandler.Login.type
+  val GatewayLogin: gateway.GatewayHandler.Login.type = gateway.GatewayHandler.Login
+  type GatewayLogin = gateway.GatewayHandler.Login.type
 
-  val GatewayLogout: websocket.gateway.GatewayHandler.Logout.type = websocket.gateway.GatewayHandler.Logout
-  type GatewayLogout = websocket.gateway.GatewayHandler.Logout.type
+  val GatewayLogout: gateway.GatewayHandler.Logout.type = gateway.GatewayHandler.Logout
+  type GatewayLogout = gateway.GatewayHandler.Logout.type
 
-  val VoiceLogin: websocket.voice.VoiceWsHandler.Login.type = websocket.voice.VoiceWsHandler.Login
-  type VoiceLogin = websocket.voice.VoiceWsHandler.Login.type
+  val VoiceLogin: voice.VoiceWsHandler.Login.type = voice.VoiceWsHandler.Login
+  type VoiceLogin = voice.VoiceWsHandler.Login.type
 
-  val VoiceLogout: websocket.voice.VoiceWsHandler.Logout.type = websocket.voice.VoiceWsHandler.Logout
-  type VoiceLogout = websocket.voice.VoiceWsHandler.Logout.type
+  val VoiceLogout: voice.VoiceWsHandler.Logout.type = voice.VoiceWsHandler.Logout
+  type VoiceLogout = voice.VoiceWsHandler.Logout.type
 
   val Streamable: util.Streamable.type = util.Streamable
   type Streamable[F[_]] = util.Streamable[F]

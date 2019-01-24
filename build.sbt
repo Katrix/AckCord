@@ -83,33 +83,13 @@ lazy val ackCordNetwork = project
   )
   .dependsOn(ackCordDataJVM)
 
-lazy val ackCordRest = project
+lazy val ackCordRequests = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-rest",
+    name := "ackcord-Requests",
     version := ackCordVersion,
-    description := "The REST module of AckCord"
-  )
-  .dependsOn(ackCordNetwork)
-
-lazy val ackCordImages = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "ackcord-images",
-    version := ackCordVersion,
-    description := "The image requests module of AckCord"
-  )
-  .dependsOn(ackCordNetwork)
-
-lazy val ackCordOAuth = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "ackcord-oauth",
-    version := ackCordVersion,
-    description := "The OAuth requests module of AckCord"
+    description := "The request module of AckCord"
   )
   .dependsOn(ackCordNetwork)
 
@@ -141,7 +121,7 @@ lazy val ackCordUtil = project
     version := ackCordVersion,
     description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
   )
-  .dependsOn(ackCordRest, ackCordImages, ackCordOAuth, ackCordGateway, ackCordVoice)
+  .dependsOn(ackCordRequests, ackCordGateway, ackCordVoice)
 
 lazy val ackCordCommands = project
   .settings(
@@ -261,9 +241,7 @@ lazy val doc = project
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       ackCordDataJVM,
       ackCordNetwork,
-      ackCordRest,
-      ackCordImages,
-      ackCordOAuth,
+      ackCordRequests,
       ackCordGateway,
       ackCordVoice,
       ackCordUtil,
@@ -294,9 +272,7 @@ lazy val ackCordRoot = project
     ackCordDataJVM,
     ackCordDataJS,
     ackCordNetwork,
-    ackCordRest,
-    ackCordImages,
-    ackCordOAuth,
+    ackCordRequests,
     ackCordGateway,
     ackCordVoice,
     ackCordUtil,

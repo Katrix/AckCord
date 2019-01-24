@@ -34,8 +34,7 @@ import net.katsstuff.ackcord.MemoryCacheSnapshot
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import net.katsstuff.ackcord.data.raw.RawMessage
-import net.katsstuff.ackcord.http.requests.{Request, RequestHelper}
-import net.katsstuff.ackcord.http.rest.CreateMessageData
+import net.katsstuff.ackcord.requests.{CreateMessageData, Request, RequestHelper}
 
 class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 

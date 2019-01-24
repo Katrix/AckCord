@@ -29,7 +29,7 @@ import scala.language.higherKinds
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
 import cats.Monad
-import net.katsstuff.ackcord.http.requests.RequestHelper
+import net.katsstuff.ackcord.requests.RequestHelper
 import net.katsstuff.ackcord.util.{MessageParser, Streamable}
 import net.katsstuff.ackcord.CacheSnapshot
 

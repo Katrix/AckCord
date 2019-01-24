@@ -35,8 +35,7 @@ import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.data.raw.{RawChannel, RawMessage}
 import net.katsstuff.ackcord.data.{EmbedField, GuildChannel, OutgoingEmbed}
-import net.katsstuff.ackcord.http.requests.{FailedRequest, Request, RequestResponse}
-import net.katsstuff.ackcord.http.rest.{CreateMessage, GetChannel}
+import net.katsstuff.ackcord.requests.{CreateMessage, FailedRequest, GetChannel, Request, RequestResponse}
 import net.katsstuff.ackcord.syntax._
 
 import scala.concurrent.Future

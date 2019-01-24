@@ -25,7 +25,7 @@ package net.katsstuff.ackcord.cachehandlers
 
 import akka.event.LoggingAdapter
 import net.katsstuff.ackcord.data.{Presence, User}
-import net.katsstuff.ackcord.websocket.gateway.GatewayEvent.PresenceUpdateData
+import net.katsstuff.ackcord.gateway.GatewayEvent.PresenceUpdateData
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {

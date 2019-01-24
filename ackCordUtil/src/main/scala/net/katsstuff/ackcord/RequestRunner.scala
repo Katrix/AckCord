@@ -9,7 +9,7 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Sink, Source}
 import cats.data.OptionT
 import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
-import net.katsstuff.ackcord.http.requests.{Request, RequestHelper, RequestResponse}
+import net.katsstuff.ackcord.requests.{Request, RequestHelper, RequestResponse}
 import net.katsstuff.ackcord.util.StreamInstances.SourceRequest
 import net.katsstuff.ackcord.util.Streamable
 

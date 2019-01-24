@@ -43,7 +43,7 @@ import cats.Monad
 import net.katsstuff.ackcord.commands.ParsedCmdFactory
 import net.katsstuff.ackcord.data.raw.RawMessage
 import net.katsstuff.ackcord.data.{ChannelId, GuildId, TChannel}
-import net.katsstuff.ackcord.http.requests.RequestHelper
+import net.katsstuff.ackcord.requests.RequestHelper
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
 import net.katsstuff.ackcord.syntax._

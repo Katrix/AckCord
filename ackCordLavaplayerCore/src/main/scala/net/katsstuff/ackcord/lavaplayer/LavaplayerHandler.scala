@@ -24,20 +24,18 @@
 package net.katsstuff.ackcord.lavaplayer
 
 import scala.concurrent.{Future, Promise}
-
 import com.sedmelluq.discord.lavaplayer.player.event._
 import com.sedmelluq.discord.lavaplayer.player.{AudioLoadResultHandler, AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
-
 import akka.actor.{ActorLogging, ActorRef, FSM, PoisonPill, Props, Status}
 import akka.stream.scaladsl.Source
 import net.katsstuff.ackcord.lavaplayer.AudioSender.{StartSendAudio, StopSendAudio}
 import net.katsstuff.ackcord.lavaplayer.LavaplayerHandler._
-import net.katsstuff.ackcord.websocket.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
-import net.katsstuff.ackcord.websocket.voice.VoiceWsHandler
+import net.katsstuff.ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
+import net.katsstuff.ackcord.voice.VoiceWsHandler
 
 /**
   * An actor to manage a music connection.
