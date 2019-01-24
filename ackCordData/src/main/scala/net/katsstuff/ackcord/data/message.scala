@@ -26,9 +26,10 @@ package net.katsstuff.ackcord.data
 import java.time.OffsetDateTime
 import java.util.Base64
 
+import cats.data.OptionT
+
 import scala.language.higherKinds
 import scala.util.Try
-
 import cats.instances.list._
 import cats.syntax.flatMap._
 import cats.syntax.functor._
@@ -271,7 +272,19 @@ case class Message(
     application: Option[MessageApplication]
 ) extends GetTChannel {
 
+  /**
+    * Get the guild this message was sent to, if it was sent to a guild.
+    */
+  def guild[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, Guild] =
+    guildId.fold(OptionT.none[F, Guild])(c.getGuild(_).orElse(tGuildChannel.map(_.guildId).flatMap(c.getGuild)))
+
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
+
+  /**
+    * Gets the author of this message, ignoring the case where the author might be a webhook.
+    */
+  def authorUser[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
+    authorUserId.fold(OptionT.none[F, User])(c.getUser)
 
   private val channelRegex = """<#(\d+)>""".r
 

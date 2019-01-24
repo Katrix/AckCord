@@ -25,7 +25,11 @@ package net.katsstuff.ackcord.data
 
 import java.time.OffsetDateTime
 
-import net.katsstuff.ackcord.SnowflakeMap
+import cats.{Applicative, Functor}
+import cats.data.OptionT
+import net.katsstuff.ackcord.{CacheSnapshot, SnowflakeMap}
+
+import scala.language.higherKinds
 
 /**
   * Different type of channels
@@ -97,7 +101,28 @@ object PermissionOverwriteType {
   * @param allow The permissions granted by this overwrite.
   * @param deny The permissions denied by this overwrite.
   */
-case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission)
+case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission) {
+
+  /**
+    * If this overwrite applies to a user, get's that user, otherwise returns None.
+    */
+  def user[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
+    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else OptionT.none[F, User]
+
+  /**
+    * If this overwrite applies to a user, get that user's member, otherwise returns None.
+    * @param guild The guild this overwrite belongs to.
+    */
+  def member(guild: Guild): Option[GuildMember] =
+    if (`type` == PermissionOverwriteType.Member) guild.members.get(UserId(id)) else None
+
+  /**
+    * If this overwrite applies to a role, get that role, otherwise returns None.
+    * @param guild The guild this overwrite belongs to.
+    */
+  def role(guild: Guild): Option[Role] =
+    if (`type` == PermissionOverwriteType.Role) guild.roles.get(RoleId(id)) else None
+}
 
 /**
   * Base channel type
@@ -130,6 +155,12 @@ sealed trait TChannel extends Channel {
     * The id might not point to a valid or existing message.
     */
   def lastMessageId: Option[MessageId]
+
+  /**
+    * Gets the last message for this channel if it exists.
+    */
+  def lastMessage[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, Message] =
+    lastMessageId.fold(OptionT.none[F, Message])(c.getMessage(id, _))
 }
 
 /**
@@ -166,6 +197,14 @@ sealed trait GuildChannel extends Channel with GetGuild {
     * The id of the category this channel is in.
     */
   def parentId: Option[ChannelId]
+
+  /**
+    * Gets the category for this channel if it has one.
+    */
+  def category[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, GuildCategory] =
+    c.getGuildChannel(guildId, id).collect {
+      case cat: GuildCategory => cat
+    }
 }
 
 /**
@@ -255,4 +294,9 @@ case class GroupDMChannel(
 ) extends Channel
     with TChannel {
   override def channelType: ChannelType = ChannelType.GroupDm
+
+  /**
+    * Gets the owner for this group DM.
+    */
+  def owner[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(ownerId)
 }

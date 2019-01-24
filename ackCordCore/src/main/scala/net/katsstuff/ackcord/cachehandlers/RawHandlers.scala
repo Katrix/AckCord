@@ -71,7 +71,7 @@ object RawHandlers extends Handlers {
       name = obj.name,
       icon = obj.icon,
       splash = obj.splash,
-      owner = obj.owner,
+      isOwner = obj.owner,
       ownerId = obj.ownerId,
       permissions = obj.permissions,
       region = obj.region,

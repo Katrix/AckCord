@@ -25,8 +25,9 @@ package net.katsstuff.ackcord.data
 
 import java.time.{Instant, OffsetDateTime}
 
-import scala.language.higherKinds
+import cats.data.OptionT
 
+import scala.language.higherKinds
 import cats.{Applicative, Functor, Monad, Traverse}
 import net.katsstuff.ackcord.{CacheSnapshot, SnowflakeMap}
 
@@ -173,7 +174,7 @@ object MFALevel {
   * @param name The name of the guild.
   * @param icon The icon hash.
   * @param splash The splash hash.
-  * @param owner If the current user is the owner of the guild.
+  * @param isOwner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
   * @param permissions The permissions of the current user without overwrites.
   * @param region The voice region
@@ -206,7 +207,7 @@ case class Guild(
     name: String,
     icon: Option[String],
     splash: Option[String],
-    owner: Option[Boolean],
+    isOwner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
@@ -244,6 +245,36 @@ case class Guild(
     * Get the everyone mention for this guild.
     */
   def mentionEveryone: String = "@everyone"
+
+  /**
+    * Get the owner this this guild.
+    */
+  def owner[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(ownerId)
+
+  /**
+    * Get the AFK channel of this guild.
+    */
+  def afkChannel: Option[VGuildChannel] = afkChannelId.flatMap(channels.get).collect {
+    case ch: VGuildChannel => ch
+  }
+
+  /**
+    * Get the AFK channel of this guild.
+    */
+  def embedChannel: Option[GuildChannel] = embedChannelId.flatMap(channels.get)
+
+  /**
+    * Get the widget channel of this guild.
+    */
+  def widgetChannel: Option[GuildChannel] = widgetChannelId.flatMap(channels.get)
+
+  /**
+    * Get the system channel of this guild. This is the first channel new users
+    * see when they join the guild.
+    */
+  def systemChannel: Option[TGuildChannel] = systemChannelId.flatMap(channels.get).collect {
+    case ch: TGuildChannel => ch
+  }
 }
 
 /**
@@ -418,6 +449,12 @@ case class Emoji(
     * Returns a string representation of this emoji used in requests.
     */
   def asString: String = if (!managed) s"$name:$id" else s"$name"
+
+  /**
+    * Get the creator of this emoji if it has one.
+    */
+  def creator[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
+    userId.fold(OptionT.none[F, User])(c.getUser)
 }
 
 /**
@@ -592,6 +629,12 @@ case class GuildEmbed(enabled: Boolean, channelId: Option[ChannelId])
 /**
   * Represents a banned user.
   * @param reason Why the user was banned.
-  * @param user The user that was baned.
+  * @param userId The user that was baned.
   */
-case class Ban(reason: Option[String], user: UserId)
+case class Ban(reason: Option[String], userId: UserId) {
+
+  /**
+    * Get the user this ban applies to.
+    */
+  def user[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(userId)
+}

@@ -24,7 +24,12 @@
 
 package net.katsstuff.ackcord.data
 
+import cats.Monad
+import cats.data.OptionT
+import net.katsstuff.ackcord.CacheSnapshot
 import net.katsstuff.ackcord.data.raw.RawRole
+
+import scala.language.higherKinds
 
 /**
   * Root audit log object. Received from [[net.katsstuff.ackcord.http.rest.GetGuildAuditLog]]
@@ -54,7 +59,7 @@ case class AuditLogEntry(
     actionType: AuditLogEvent,
     options: Option[OptionalAuditLogInfo],
     reason: Option[String]
-)
+) extends GetUser
 
 /**
   * A type of change that an entry can represent
@@ -209,7 +214,14 @@ object AuditLogChange {
   /**
     * Owner id changed
     */
-  case class OwnerId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId]
+  case class OwnerId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
+
+    def oldOwner[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
+      OptionT.fromOption[F](oldValue).flatMap(c.getUser)
+
+    def newOwner[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
+      OptionT.fromOption[F](newValue).flatMap(c.getUser)
+  }
 
   /**
     * Region changed
@@ -219,7 +231,18 @@ object AuditLogChange {
   /**
     * AFK channelId changed
     */
-  case class AfkChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId]
+  case class AfkChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId] {
+
+    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, VGuildChannel] =
+      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel).collect {
+        case ch: VGuildChannel => ch
+      }
+
+    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, VGuildChannel] =
+      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel).collect {
+        case ch: VGuildChannel => ch
+      }
+  }
 
   /**
     * AFK timeout changed
@@ -281,7 +304,15 @@ object AuditLogChange {
   /**
     * Widget channelId changed
     */
-  case class WidgetChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId]
+  case class WidgetChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
+      extends AuditLogChange[ChannelId] {
+
+    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildChannel] =
+      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel)
+
+    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildChannel] =
+      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel)
+  }
 
   /**
     * Channel position changed
@@ -355,12 +386,31 @@ object AuditLogChange {
   /**
     * Invite channelId changed
     */
-  case class InviteChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId]
+  case class InviteChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
+      extends AuditLogChange[ChannelId] {
+
+    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, TGuildChannel] =
+      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel).collect {
+        case ch: TGuildChannel => ch
+      }
+
+    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, TGuildChannel] =
+      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel).collect {
+        case ch: TGuildChannel => ch
+      }
+  }
 
   /**
     * Inviter userId changed
     */
-  case class InviterId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId]
+  case class InviterId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
+
+    def oldInvited[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
+      OptionT.fromOption[F](oldValue).flatMap(c.getUser)
+
+    def newInvited[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
+      OptionT.fromOption[F](newValue).flatMap(c.getUser)
+  }
 
   /**
     * Max uses of an invite changed
