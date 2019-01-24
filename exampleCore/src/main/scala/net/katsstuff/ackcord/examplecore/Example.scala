@@ -30,7 +30,6 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated
 import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision}
-import cats.Id
 import net.katsstuff.ackcord.commands.{
   AbstractCmdInfo,
   CommandSettings,
@@ -44,7 +43,7 @@ import net.katsstuff.ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
 import net.katsstuff.ackcord.requests.{BotAuthentication, RequestHelper}
 import net.katsstuff.ackcord.util.GuildRouter
 import net.katsstuff.ackcord.gateway.GatewaySettings
-import net.katsstuff.ackcord.{APIMessage, Cache, DiscordShard}
+import net.katsstuff.ackcord.{Id, APIMessage, Cache, DiscordShard}
 
 object Example {
 

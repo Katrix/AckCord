@@ -12,7 +12,7 @@ import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.commands._
-import cats.{Id, Monad}
+import cats.Monad
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}

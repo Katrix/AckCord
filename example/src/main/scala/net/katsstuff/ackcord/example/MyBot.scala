@@ -28,7 +28,6 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 import akka.NotUsed
-import cats.Id
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.commands._
 import net.katsstuff.ackcord.syntax._

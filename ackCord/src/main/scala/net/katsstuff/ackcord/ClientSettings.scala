@@ -31,7 +31,6 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import akka.actor.ActorSystem
 import akka.event.slf4j.Logger
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, Supervision}
-import cats.Id
 import net.katsstuff.ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import net.katsstuff.ackcord.data.PresenceStatus
 import net.katsstuff.ackcord.data.raw.RawActivity

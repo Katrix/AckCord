@@ -30,7 +30,6 @@ Most of these examples assume these two imports.
 ```tut:silent
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
-import cats.Id
 ```
 
 AckCord comes with two (3 if you count handling dispatch events yourself) major APIs. A high level and a low level API. Let's see how you would log in from both the high level and the low level API.
@@ -70,7 +69,6 @@ clientSettings.system.terminate()
 ```tut:reset:invisible
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
-import cats.Id
 
 val token = "<token>"
 ```
@@ -124,7 +122,6 @@ The cache can be gotten from the `cache` method on the `DiscordClient[F]`.
 import akka.actor.ActorRef
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
-import cats.Id
 
 val clientSettings = ClientSettings("<token>")
 import clientSettings.executionContext

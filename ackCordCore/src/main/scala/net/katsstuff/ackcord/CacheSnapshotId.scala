@@ -25,7 +25,6 @@ package net.katsstuff.ackcord
 
 import java.time.Instant
 
-import cats.Id
 import cats.catsInstancesForId
 import cats.data.OptionT
 import net.katsstuff.ackcord.data._

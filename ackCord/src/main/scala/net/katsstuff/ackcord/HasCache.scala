@@ -26,7 +26,6 @@ package net.katsstuff.ackcord
 
 import scala.language.higherKinds
 
-import cats.Id
 import net.katsstuff.ackcord.commands.{Cmd, ParsedCmd, RawCmd}
 
 trait HasCache[F[_], A] {

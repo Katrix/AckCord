@@ -31,7 +31,7 @@ import scala.language.higherKinds
 
 import akka.actor.{Actor, ActorRef}
 import akka.{Done, NotUsed}
-import cats.{Id, Monad}
+import cats.Monad
 import cats.data.EitherT
 import net.katsstuff.ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import net.katsstuff.ackcord.commands.HelpCmd.{AddCmd, CommandRegistration, TerminateCommand}

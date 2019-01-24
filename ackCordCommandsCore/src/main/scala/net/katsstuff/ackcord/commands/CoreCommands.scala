@@ -24,7 +24,7 @@
 package net.katsstuff.ackcord.commands
 
 import akka.stream.scaladsl.Source
-import cats.Id
+import net.katsstuff.ackcord.Id
 import net.katsstuff.ackcord._
 
 object CoreCommands {

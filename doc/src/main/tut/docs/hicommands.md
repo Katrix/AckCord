@@ -15,7 +15,7 @@ import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.syntax._
 import net.katsstuff.ackcord.commands._
-import cats.{Monad, Id}
+import cats.Monad
 val token = "<token>"
 val GeneralCommands = "!"
 // IMPORTANT: We specify needsMention = true here. This is the default option.

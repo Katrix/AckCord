@@ -29,8 +29,8 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
-import cats.{Id, Monad}
-import net.katsstuff.ackcord.MemoryCacheSnapshot
+import cats.Monad
+import net.katsstuff.ackcord.{Id, MemoryCacheSnapshot}
 import net.katsstuff.ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
 import net.katsstuff.ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import net.katsstuff.ackcord.data.raw.RawMessage

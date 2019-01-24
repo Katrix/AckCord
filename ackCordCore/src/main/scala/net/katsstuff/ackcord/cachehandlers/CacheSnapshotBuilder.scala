@@ -27,7 +27,7 @@ import java.time.Instant
 
 import scala.collection.mutable
 
-import cats.Id
+import net.katsstuff.ackcord.Id
 import net.katsstuff.ackcord.CacheSnapshot.BotUser
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.{MemoryCacheSnapshot, CacheSnapshotId, SnowflakeMap}

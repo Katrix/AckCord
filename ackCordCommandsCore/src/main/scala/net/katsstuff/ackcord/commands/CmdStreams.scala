@@ -26,7 +26,7 @@ package net.katsstuff.ackcord.commands
 import akka.NotUsed
 import akka.stream.{ActorAttributes, Materializer, Supervision}
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
-import cats.Id
+import net.katsstuff.ackcord.Id
 import net.katsstuff.ackcord.{APIMessage, MemoryCacheSnapshot}
 
 object CmdStreams {

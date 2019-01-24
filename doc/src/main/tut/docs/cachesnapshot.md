@@ -20,7 +20,6 @@ As before we create out client as usual.
 ```tut:silent
 import net.katsstuff.ackcord._
 import net.katsstuff.ackcord.data._
-import cats.Id
 val token = "<token>"
 val settings = ClientSettings(token)
 import settings.executionContext

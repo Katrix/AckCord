@@ -32,6 +32,8 @@ import net.katsstuff.ackcord.util.StreamInstances
 
 package object ackcord {
 
+  type Id[A] = A
+
   val RequestHelper: requests.RequestHelper.type = requests.RequestHelper
   type RequestHelper = requests.RequestHelper
 
