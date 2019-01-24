@@ -356,6 +356,9 @@ object Routes {
   val applicationIconImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
     (applicationId, hash, format, size) =>
       cdn / "app-icons" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
+  val applicationAssetImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
+    (applicationId, hash, format, size) =>
+      cdn / "app-assets" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
 
   //OAuth
   val oAuth2: Route                       = base / "oauth2"

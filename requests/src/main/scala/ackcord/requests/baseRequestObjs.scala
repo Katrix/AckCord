@@ -134,8 +134,10 @@ trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceRespons
 
   def reason: Option[String]
 
-  override def extraHeaders: Seq[HttpHeader] =
+  override def extraHeaders: Seq[HttpHeader] = {
+    require(reason.forall(_.length <= 512), "The reason to put in an audit log entry can't be more than 512 characters")
     reason.fold[Seq[HttpHeader]](Nil)(str => Seq(`X-Audit-Log-Reason`(str)))
+  }
 }
 
 /**

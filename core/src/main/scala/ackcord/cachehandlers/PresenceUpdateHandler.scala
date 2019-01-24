@@ -60,7 +60,9 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
               bot = partialUser.bot,
               mfaEnabled = partialUser.mfaEnabled,
               verified = partialUser.verified,
-              email = partialUser.email
+              email = partialUser.email,
+              flags = partialUser.flags,
+              premiumType = partialUser.premiumType
             )
 
             builder.userMap.put(newUser.id, newUser)

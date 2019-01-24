@@ -61,6 +61,10 @@ trait DiscordProtocol {
   implicit val messageTypeDecoder: Decoder[MessageType] =
     Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
 
+  implicit val premiumTypeEncoder: Encoder[PremiumType] = Encoder[Int].contramap(PremiumType.idFor)
+  implicit val premiumTypeDecoder: Decoder[PremiumType] =
+    Decoder[Int].emap(PremiumType.forId(_).toRight("Not a valid premium type"))
+
   implicit val permissionValueTypeEncoder: Encoder[PermissionOverwriteType] =
     Encoder[String].contramap(PermissionOverwriteType.nameOf)
   implicit val permissionValueTypeDecoder: Decoder[PermissionOverwriteType] =
@@ -82,6 +86,9 @@ trait DiscordProtocol {
 
   implicit val permissionEncoder: Encoder[Permission] = Encoder[Long].contramap(identity)
   implicit val permissionDecoder: Decoder[Permission] = Decoder[Long].emap(i => Right(Permission.fromLong(i)))
+
+  implicit val userFlagsEncoder: Encoder[UserFlags] = Encoder[Int].contramap(identity)
+  implicit val userFlagsDecoder: Decoder[UserFlags] = Decoder[Int].emap(i => Right(UserFlags.fromInt(i)))
 
   implicit val offsetDateTimeEncoder: Encoder[OffsetDateTime] = Encoder[String].contramap(_.toString)
   implicit val offsetDateTimeDecoder: Decoder[OffsetDateTime] =

@@ -332,4 +332,51 @@ package object data {
       */
     def isNone: Boolean = permission == 0
   }
+
+  type UserFlags = Int @@ UserFlags.type
+  object UserFlags {
+
+    private[data] def apply(int: Int): Int @@ UserFlags.type = tagS[UserFlags.type](int)
+
+    /**
+      * Create a UserFlag that has all the flags passed in.
+      */
+    def apply(flags: UserFlags*): UserFlags = flags.fold(None)(_ ++ _)
+
+    /**
+      * Create a UserFlag from an int.
+      */
+    def fromInt(int: Int): Int @@ UserFlags.type = apply(int)
+
+    val None            = UserFlags(0)
+    val HypeSquadEvents = UserFlags(1 << 2)
+    val HouseBravery    = UserFlags(1 << 6)
+    val HouseBrilliance = UserFlags(1 << 7)
+    val HouseBalance    = UserFlags(1 << 8)
+  }
+  implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
+
+    /**
+      * Add a flag to this flag.
+      * @param other The other flag.
+      */
+    def ++(other: UserFlags): UserFlags = UserFlags(flags | other)
+
+    /**
+      * Remove a flag from this flag.
+      * @param other The flag to remove.
+      */
+    def --(other: UserFlags): UserFlags = UserFlags(flags & ~other)
+
+    /**
+      * Check if these flags has a flag.
+      * @param other The flag to check against.
+      */
+    def hasFlag(other: UserFlags): Boolean = (flags & other) == other
+
+    /**
+      * Check if these flags is not empty.
+      */
+    def isNone: Boolean = flags == 0
+  }
 }

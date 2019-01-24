@@ -574,7 +574,9 @@ case class PartialUser(
     bot: Option[Boolean],
     mfaEnabled: Option[Boolean],
     verified: Option[Boolean],
-    email: Option[String]
+    email: Option[String],
+    flags: Option[UserFlags],
+    premiumType: Option[PremiumType]
 )
 
 /**

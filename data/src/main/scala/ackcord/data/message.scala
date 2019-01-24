@@ -109,6 +109,22 @@ object MessageType {
   }
 }
 
+trait PremiumType
+object PremiumType {
+  case object NitroClassic extends PremiumType
+  case object Nitro        extends PremiumType
+
+  def forId(id: Int): Option[PremiumType] = id match {
+    case 1 => Some(NitroClassic)
+    case 2 => Some(Nitro)
+  }
+
+  def idFor(tpe: PremiumType): Int = tpe match {
+    case NitroClassic => 1
+    case Nitro        => 2
+  }
+}
+
 /**
   * A author of a message. While a message is normally sent by a [[User]],
   * it can also be sent by a [[WebhookAuthor]].
@@ -157,7 +173,9 @@ case class User(
     bot: Option[Boolean],
     mfaEnabled: Option[Boolean],
     verified: Option[Boolean],
-    email: Option[String]
+    email: Option[String],
+    flags: Option[UserFlags],
+    premiumType: Option[PremiumType]
 ) extends Author[User] {
 
   /**

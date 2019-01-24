@@ -161,6 +161,20 @@ case class GetApplicationIconImage[Ctx](
 }
 
 /**
+  * Get the asset of an application. Allowed formats are PNG, JPEG and WebP.
+  */
+case class GetApplicationAssetImage[Ctx](
+    desiredSize: Int,
+    format: ImageFormat,
+    applicationId: RawSnowflake,
+    assetId: String,
+    context: Ctx = NotUsed: NotUsed
+) extends ImageRequest[Ctx] {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute              = Routes.applicationAssetImage(applicationId, assetId, format, desiredSize)
+}
+
+/**
   * Get the widget image for a specific guild.
   * @param guildId The guild to get the widget for.
   * @param style Which style should be gotten.
