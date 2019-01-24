@@ -1,8 +1,8 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-lazy val akkaVersion     = "2.5.18"
-lazy val akkaHttpVersion = "10.1.5"
-lazy val circeVersion    = "0.10.1"
+lazy val akkaVersion     = "2.5.19"
+lazy val akkaHttpVersion = "10.1.7"
+lazy val circeVersion    = "0.11.1"
 lazy val ackCordVersion  = "0.12.0"
 
 lazy val commonSettings = Seq(
@@ -20,7 +20,7 @@ lazy val commonSettings = Seq(
     "-Ypartial-unification"
   ),
   scalacOptions ++= (if (scalaVersion.value.startsWith("2.11")) Seq("-Xexperimental") else Nil),
-  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7"),
+  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
   //Fixes repository not specified error
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -59,7 +59,7 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.10.0-M1"
+      "io.circe" %%% "circe-derivation"     % "0.11.0-M1"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -78,7 +78,7 @@ lazy val ackCordNetwork = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.22.0",
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
     description := "The base network module of AckCord"
   )
   .dependsOn(ackCordDataJVM)
