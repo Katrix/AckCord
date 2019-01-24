@@ -79,7 +79,7 @@ object VoiceWsProtocol extends DiscordProtocol {
     (a: VoiceMessage[Data]) =>
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
-        "d"  -> JsonSome(a.dataEncoder(a.nowD)),
+        "d"  -> JsonSome(a.dataEncoder(a.d)),
         "s"  -> a.s.map(_.asJson)
     )
 

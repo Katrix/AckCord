@@ -31,13 +31,33 @@ import io.circe.{Decoder, Encoder, Json}
 import net.katsstuff.ackcord.data._
 import net.katsstuff.ackcord.data.raw._
 import net.katsstuff.ackcord.util.{JsonOption, JsonSome, JsonUndefined}
-import net.katsstuff.ackcord.websocket.WsMessage
 import net.katsstuff.ackcord.websocket.gateway.GatewayProtocol._
 
 /**
   * Base trait for all gateway messages.
   */
-sealed trait GatewayMessage[D] extends WsMessage[D, GatewayOpCode] {
+sealed trait GatewayMessage[D] {
+
+  /**
+    * The op code for the message.
+    */
+  def op: GatewayOpCode
+
+  /**
+    * The data for the message.
+    */
+  def d: Eval[Decoder.Result[D]]
+
+  /**
+    * A sequence number for the message if there is one.
+    */
+  def s: JsonOption[Int] = JsonUndefined
+
+  /**
+    * An encoder for the message.
+    */
+  def dataEncoder: Encoder[D]
+
   def t: JsonOption[ComplexGatewayEvent[D, _]] = JsonUndefined
 }
 

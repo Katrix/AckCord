@@ -26,24 +26,22 @@ package net.katsstuff.ackcord.websocket.voice
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
-
 import akka.NotUsed
 import akka.pattern.pipe
-import akka.actor.{ActorRef, ActorSystem, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Timers}
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws._
 import akka.stream.scaladsl.{Compression, Flow, Keep, Sink, Source, SourceQueueWithComplete}
-import akka.stream.{ActorAttributes, Attributes, Materializer, OverflowStrategy, Supervision}
+import akka.stream._
 import akka.util.ByteString
 import io.circe
 import io.circe.syntax._
 import io.circe.{Error, parser}
 import net.katsstuff.ackcord.data.{RawSnowflake, UserId}
 import net.katsstuff.ackcord.util.{AckCordSettings, JsonSome, JsonUndefined}
-import net.katsstuff.ackcord.websocket.AbstractWsHandler
 import net.katsstuff.ackcord.websocket.voice.VoiceUDPHandler._
 import net.katsstuff.ackcord.{AckCord, AudioAPIMessage}
 
@@ -67,14 +65,18 @@ class VoiceWsHandler(
     sendTo: Option[ActorRef],
     sendSoundTo: Option[ActorRef]
 )(implicit val mat: Materializer)
-    extends AbstractWsHandler[VoiceMessage[_], ResumeData] {
+    extends Actor
+    with Timers
+    with ActorLogging {
 
-  import AbstractWsHandler._
   import VoiceWsHandler._
   import VoiceWsProtocol._
   import context.dispatcher
 
   implicit private val system: ActorSystem = context.system
+
+  private var shuttingDown               = false
+  private var resume: Option[ResumeData] = None
 
   private var ssrc: Int                  = -1
   private var previousNonce: Option[Int] = None
@@ -117,7 +119,7 @@ class VoiceWsHandler(
     withLogging.map(TextMessage.apply)
   }
 
-  override def wsUri: Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
+  def wsUri: Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
   /**
     * The flow to use to send and receive messages with
@@ -369,6 +371,16 @@ object VoiceWsHandler {
   case object SendHeartbeat
 
   private case object ConnectionDied
+
+  /**
+    * Send this to a [[VoiceWsHandler]] to make it go from inactive to active
+    */
+  case object Login
+
+  /**
+    * Send this to a [[VoiceWsHandler]] to stop it gracefully.
+    */
+  case object Logout
 
   /**
     * Sent to [[VoiceWsHandler]]. Used to set the client as speaking or not.

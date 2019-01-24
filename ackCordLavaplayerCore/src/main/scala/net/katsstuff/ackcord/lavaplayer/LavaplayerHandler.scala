@@ -84,7 +84,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
     case Event(ConnectVChannel(vChannelId, force), HasVoiceWs(voiceWs, inVChannelId, firstSender)) =>
       if (vChannelId != inVChannelId) {
         if (force) {
-          voiceWs ! Logout
+          voiceWs ! VoiceLogout
           firstSender ! Status.Failure(new ForcedConnectedException(inVChannelId))
           stay using Connecting(None, None, None, vChannelId, sender())
         } else {
@@ -134,7 +134,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
 
     case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _, _)) =>
       context.watchWith(voiceWs, PoisonPill)
-      voiceWs ! Logout
+      voiceWs ! VoiceLogout
       stay()
 
     case Event(DiscordShard.StopShard, _)                         => stop()
@@ -150,7 +150,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
 
     case Event(DisconnectVChannel, CanSendAudio(voiceWs, dataSender, _)) =>
       dataSender ! StopSendAudio
-      voiceWs ! Logout
+      voiceWs ! VoiceLogout
       dataSender ! PoisonPill
 
       Source
@@ -168,7 +168,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
         if (force) {
           log.debug("Moving to new vChannel")
           dataSender ! StopSendAudio
-          voiceWs ! Logout
+          voiceWs ! VoiceLogout
           dataSender ! PoisonPill
 
           Source
@@ -190,7 +190,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
 
     case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, dataSender, _)) =>
       context.watchWith(voiceWs, PoisonPill)
-      voiceWs ! Logout
+      voiceWs ! VoiceLogout
       dataSender ! StopSendAudio
       stay()
 
@@ -214,7 +214,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
         VoiceWsHandler.props(endPoint, RawSnowflake(guildId), userId, sessionId, token, Some(self), None),
         "VoiceWS"
       )
-    voiceWs ! Login
+    voiceWs ! VoiceLogin
     log.debug("Music Connected")
     stay using HasVoiceWs(voiceWs, vChannelId, sender)
   }

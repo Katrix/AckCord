@@ -21,11 +21,17 @@ package object ackcord {
   val GatewaySettings: websocket.gateway.GatewaySettings.type = websocket.gateway.GatewaySettings
   type GatewaySettings = websocket.gateway.GatewaySettings
 
-  val Login: websocket.AbstractWsHandler.Login.type = websocket.AbstractWsHandler.Login
-  type Login = websocket.AbstractWsHandler.Login.type
+  val GatewayLogin: websocket.gateway.GatewayHandler.Login.type = websocket.gateway.GatewayHandler.Login
+  type GatewayLogin = websocket.gateway.GatewayHandler.Login.type
 
-  val Logout: websocket.AbstractWsHandler.Logout.type = websocket.AbstractWsHandler.Logout
-  type Logout = websocket.AbstractWsHandler.Logout.type
+  val GatewayLogout: websocket.gateway.GatewayHandler.Logout.type = websocket.gateway.GatewayHandler.Logout
+  type GatewayLogout = websocket.gateway.GatewayHandler.Logout.type
+
+  val VoiceLogin: websocket.voice.VoiceWsHandler.Login.type = websocket.voice.VoiceWsHandler.Login
+  type VoiceLogin = websocket.voice.VoiceWsHandler.Login.type
+
+  val VoiceLogout: websocket.voice.VoiceWsHandler.Logout.type = websocket.voice.VoiceWsHandler.Logout
+  type VoiceLogout = websocket.voice.VoiceWsHandler.Logout.type
 
   val Streamable: util.Streamable.type = util.Streamable
   type Streamable[F[_]] = util.Streamable[F]

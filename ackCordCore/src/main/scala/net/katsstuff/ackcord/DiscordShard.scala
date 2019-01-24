@@ -65,10 +65,10 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
   override def receive: Receive = {
     case DiscordShard.StopShard =>
       isShuttingDown = true
-      gatewayHandler.forward(Logout)
+      gatewayHandler.forward(GatewayLogin)
 
     case DiscordShard.StartShard =>
-      gatewayHandler.forward(Login)
+      gatewayHandler.forward(GatewayLogin)
 
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
@@ -86,11 +86,11 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
 
     case CreateGateway =>
       gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log), "GatewayHandler")
-      gatewayHandler ! Login
+      gatewayHandler ! GatewayLogin
 
     case RestartShard =>
       isRestarting = true
-      gatewayHandler.forward(Logout)
+      gatewayHandler.forward(GatewayLogout)
   }
 }
 object DiscordShard extends FailFastCirceSupport {

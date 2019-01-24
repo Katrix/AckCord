@@ -25,18 +25,15 @@ package net.katsstuff.ackcord.websocket.gateway
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-
 import akka.NotUsed
-import akka.actor.{ActorSystem, Props, Status}
+import akka.actor.{Actor, ActorLogging, ActorSystem, Props, Status, Timers}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.pattern.pipe
 import akka.stream.scaladsl._
-import akka.stream.{ActorAttributes, KillSwitches, Materializer, SharedKillSwitch, Supervision}
+import akka.stream._
 import net.katsstuff.ackcord.AckCord
-import net.katsstuff.ackcord.websocket.AbstractWsHandler
-import net.katsstuff.ackcord.websocket.gateway.GatewayHandler.ConnectionDied
 
 /**
   * Responsible for normal websocket communication with Discord.
@@ -53,11 +50,17 @@ class GatewayHandler(
     source: Source[GatewayMessage[_], NotUsed],
     sink: Sink[Dispatch[_], NotUsed]
 )(implicit val mat: Materializer)
-    extends AbstractWsHandler[GatewayMessage[_], ResumeData] {
-  import AbstractWsHandler._
+    extends Actor
+    with Timers
+    with ActorLogging {
+  import GatewayHandler._
   import context.dispatcher
 
   implicit private val system: ActorSystem = context.system
+
+  var shuttingDown               = false
+  var resume: Option[ResumeData] = None
+
   private var killSwitch: SharedKillSwitch = _
   private var retryCount                   = 0
 
@@ -161,6 +164,16 @@ object GatewayHandler {
       source: Source[GatewayMessage[_], NotUsed],
       sink: Sink[Dispatch[_], NotUsed]
   )(implicit mat: Materializer): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
+
+  /**
+    * Send this to a [[GatewayHandler]] to make it go from inactive to active
+    */
+  case object Login
+
+  /**
+    * Send this to a [[GatewayHandler]] to stop it gracefully.
+    */
+  case object Logout
 
   private case class ConnectionDied(resume: Option[ResumeData])
 }

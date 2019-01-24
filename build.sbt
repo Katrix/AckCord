@@ -113,16 +113,6 @@ lazy val ackCordOAuth = project
   )
   .dependsOn(ackCordNetwork)
 
-lazy val ackCordWebsocket = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "ackcord-websockets",
-    version := ackCordVersion,
-    description := "The base websockets module of AckCord"
-  )
-  .dependsOn(ackCordNetwork)
-
 lazy val ackCordGateway = project
   .settings(
     commonSettings,
@@ -131,7 +121,7 @@ lazy val ackCordGateway = project
     version := ackCordVersion,
     description := "The gateway module of AckCord"
   )
-  .dependsOn(ackCordWebsocket)
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordVoice = project
   .settings(
@@ -141,7 +131,7 @@ lazy val ackCordVoice = project
     version := ackCordVersion,
     description := "The voice websocket module of AckCord"
   )
-  .dependsOn(ackCordWebsocket)
+  .dependsOn(ackCordNetwork)
 
 lazy val ackCordUtil = project
   .settings(
@@ -274,7 +264,6 @@ lazy val doc = project
       ackCordRest,
       ackCordImages,
       ackCordOAuth,
-      ackCordWebsocket,
       ackCordGateway,
       ackCordVoice,
       ackCordUtil,
@@ -308,7 +297,6 @@ lazy val ackCordRoot = project
     ackCordRest,
     ackCordImages,
     ackCordOAuth,
-    ackCordWebsocket,
     ackCordGateway,
     ackCordVoice,
     ackCordUtil,
