@@ -358,8 +358,9 @@ object Routes {
       cdn / "app-icons" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
 
   //OAuth
-  val oAuth2: Route          = base / "oauth2"
-  val oAuth2Authorize: Route = oAuth2 / "authorize"
-  val oAuth2Token: Route     = oAuth2 / "token"
-  val oAuth2Revoke: Route    = oAuth2Token / "revoke"
+  val oAuth2: Route                       = base / "oauth2"
+  val oAuth2Authorize: Route              = oAuth2 / "authorize"
+  val oAuth2Token: Route                  = oAuth2 / "token"
+  val oAuth2Revoke: Route                 = oAuth2Token / "revoke"
+  val getCurrentApplication: RequestRoute = (oAuth2 / "applications" / "@me").toRequest(GET)
 }

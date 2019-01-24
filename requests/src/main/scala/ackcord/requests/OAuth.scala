@@ -26,6 +26,10 @@ package ackcord.requests
 
 import scala.concurrent.Future
 
+import ackcord.data.RawSnowflake
+import ackcord.data.raw.PartialUser
+import ackcord.data.DiscordProtocol._
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
@@ -140,24 +144,65 @@ object OAuth extends FailFastCirceSupport {
   def implicitGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String): Uri =
     baseGrant(clientId, scopes, state, redirectUri, "token")
 
-  def tokenExchange(clientId: String, clientSecret: String, grantType: GrantType, code: String, redirectUri: String)(
+  def baseExchange(
+      clientId: String,
+      clientSecret: String,
+      grantType: GrantType,
+      code: Option[String],
+      refreshToken: Option[String],
+      redirectUri: String,
+      scopes: Seq[Scope]
+  )(
       implicit system: ActorSystem,
       mat: Materializer
   ): Future[AccessToken] = {
     import system.dispatcher
-    val formData = FormData("grant_type" -> grantType.name, "code" -> code, "redirect_uri" -> redirectUri)
+    val baseFormData = Map(
+      "grant_type"   -> grantType.name,
+      "redirect_uri" -> redirectUri,
+      "scope"        -> scopes.map(_.name).mkString(" ")
+    )
+
+    val formDataWithCode = code.fold(baseFormData)(code => baseFormData + ("code" -> code))
+    val formDataWithRefresh =
+      refreshToken.fold(formDataWithCode)(token => formDataWithCode + ("refresh_token" -> token))
 
     val request = HttpRequest(
       method = HttpMethods.POST,
       uri = Routes.oAuth2Token.applied,
       headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
-      entity = formData.toEntity
+      entity = FormData(formDataWithRefresh).toEntity
     )
 
     Http()
       .singleRequest(request)
       .flatMap(Unmarshal(_).to[AccessToken])
   }
+
+  def tokenExchange(
+      clientId: String,
+      clientSecret: String,
+      grantType: GrantType,
+      code: String,
+      redirectUri: String,
+      scopes: Seq[Scope]
+  )(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Future[AccessToken] = baseExchange(clientId, clientSecret, grantType, Some(code), None, redirectUri, scopes)
+
+  def refreshTokenExchange(
+      clientId: String,
+      clientSecret: String,
+      grantType: GrantType,
+      refreshToken: String,
+      redirectUri: String,
+      scopes: Seq[Scope]
+  )(
+      implicit system: ActorSystem,
+      mat: Materializer
+  ): Future[AccessToken] =
+    baseExchange(clientId, clientSecret, grantType, None, Some(refreshToken), redirectUri, scopes)
 
   def clientCredentialsGrant(clientId: String, clientSecret: String, scopes: Seq[Scope])(
       implicit system: ActorSystem,
@@ -177,5 +222,23 @@ object OAuth extends FailFastCirceSupport {
     Http()
       .singleRequest(request)
       .flatMap(Unmarshal(_).to[ClientAccessToken])
+  }
+
+  case class ApplicationInformation(
+      id: RawSnowflake,
+      name: String,
+      icon: Option[String],
+      description: String,
+      rpcOrigins: Option[Seq[String]],
+      botPublic: Boolean,
+      botRequireCodeGrant: Boolean,
+      owner: PartialUser
+  )
+
+  case class GetCurrentApplicationInformation[Ctx](context: Ctx = NotUsed: NotUsed)
+      extends NoParamsNiceResponseRequest[ApplicationInformation, Ctx] {
+    override def responseDecoder: Decoder[ApplicationInformation] =
+      derivation.deriveDecoder(derivation.renaming.snakeCase)
+    override def route: RequestRoute = Routes.getCurrentApplication
   }
 }
