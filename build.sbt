@@ -40,6 +40,10 @@ lazy val publishSettings = Seq(
       Some("scm:git:github.com/Katrix/AckCord")
     )
   ),
+  moduleName := {
+    val old = moduleName.value
+    if(old.toLowerCase.startsWith("ackcord")) old else s"ackcord-$old"
+  },
   homepage := Some(url("https://github.com/Katrix/AckCord")),
   developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
   autoAPIMappings := true
@@ -47,12 +51,12 @@ lazy val publishSettings = Seq(
 
 lazy val noPublishSettings = Seq(publish := {}, publishLocal := {}, publishArtifact := false)
 
-lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
+lazy val data = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-data",
+    name := "data",
     version := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
     libraryDependencies ++= Seq(
@@ -64,14 +68,14 @@ lazy val ackCordData = crossProject(JSPlatform, JVMPlatform)
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
 
-lazy val ackCordDataJVM = ackCordData.jvm
-lazy val ackCordDataJS  = ackCordData.js
+lazy val dataJVM = data.jvm
+lazy val dataJS  = data.js
 
-lazy val ackCordNetwork = project
+lazy val network = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-network",
+    name := "network",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
@@ -81,76 +85,76 @@ lazy val ackCordNetwork = project
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % "1.24.3",
     description := "The base network module of AckCord"
   )
-  .dependsOn(ackCordDataJVM)
+  .dependsOn(dataJVM)
 
-lazy val ackCordRequests = project
+lazy val requests = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-Requests",
+    name := "requests",
     version := ackCordVersion,
     description := "The request module of AckCord"
   )
-  .dependsOn(ackCordNetwork)
+  .dependsOn(network)
 
-lazy val ackCordGateway = project
+lazy val gateway = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-gateway",
+    name := "gateway",
     version := ackCordVersion,
     description := "The gateway module of AckCord"
   )
-  .dependsOn(ackCordNetwork)
+  .dependsOn(network)
 
-lazy val ackCordVoice = project
+lazy val voice = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-voice",
+    name := "voice",
     version := ackCordVersion,
     description := "The voice websocket module of AckCord"
   )
-  .dependsOn(ackCordNetwork)
+  .dependsOn(network)
 
-lazy val ackCordUtil = project
+lazy val util = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-util",
+    name := "util",
     version := ackCordVersion,
     description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
   )
-  .dependsOn(ackCordRequests, ackCordGateway, ackCordVoice)
+  .dependsOn(requests, gateway, voice)
 
-lazy val ackCordCommands = project
+lazy val commands = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-commands",
+    name := "commands",
     version := ackCordVersion,
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
-  .dependsOn(ackCordUtil)
+  .dependsOn(util)
 
-lazy val ackCordLavaplayer = project
+lazy val lavaplayer = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-lavaplayer",
+    name := "lavaplayer",
     version := ackCordVersion,
     //Workaround for https://github.com/sbt/sbt/issues/4479
     resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
     libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.10",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
-  .dependsOn(ackCordVoice)
+  .dependsOn(voice)
 
-lazy val ackCordCore = project
+lazy val core = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-core",
+    name := "core",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
@@ -158,27 +162,27 @@ lazy val ackCordCore = project
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
-  .dependsOn(ackCordUtil)
+  .dependsOn(util)
 
-lazy val ackCordCommandsCore = project
+lazy val commandsCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-commands-core",
+    name := "commands-core",
     version := ackCordVersion,
     description := "ackCord-commands-core provides the glue code between ackcord-core and ackcord-commands"
   )
-  .dependsOn(ackCordCore, ackCordCommands)
+  .dependsOn(core, commands)
 
-lazy val ackCordLavaplayerCore = project
+lazy val lavaplayerCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord-lavaplayer-core",
+    name := "lavaplayer-core",
     version := ackCordVersion,
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
-  .dependsOn(ackCordCore, ackCordLavaplayer)
+  .dependsOn(core, lavaplayer)
 
 lazy val ackCord = project
   .settings(
@@ -189,24 +193,24 @@ lazy val ackCord = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
   )
-  .dependsOn(ackCordCore, ackCordCommandsCore, ackCordLavaplayerCore)
+  .dependsOn(core, commandsCore, lavaplayerCore)
 
 lazy val exampleCore = project
   .settings(
     commonSettings,
     noPublishSettings,
-    name := "ackcord-exampleCore",
+    name := "exampleCore",
     version := "1.0",
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
-  .dependsOn(ackCordCore, ackCordCommandsCore, ackCordLavaplayerCore)
+  .dependsOn(core, commandsCore, lavaplayerCore)
 
 lazy val example = project
   .settings(
     commonSettings,
     noPublishSettings,
-    name := "ackcord-example",
+    name := "example",
     version := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
   )
@@ -239,17 +243,17 @@ lazy val doc = project
     scalacOptions in Tut ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
-      ackCordDataJVM,
-      ackCordNetwork,
-      ackCordRequests,
-      ackCordGateway,
-      ackCordVoice,
-      ackCordUtil,
-      ackCordCommands,
-      ackCordLavaplayer,
-      ackCordCore,
-      ackCordCommandsCore,
-      ackCordLavaplayerCore,
+      dataJVM,
+      network,
+      requests,
+      gateway,
+      voice,
+      util,
+      commands,
+      lavaplayer,
+      core,
+      commandsCore,
+      lavaplayerCore,
       ackCord
     ),
     docsMappingsAPIDir := "api",
@@ -269,18 +273,18 @@ lazy val doc = project
 lazy val ackCordRoot = project
   .in(file("."))
   .aggregate(
-    ackCordDataJVM,
-    ackCordDataJS,
-    ackCordNetwork,
-    ackCordRequests,
-    ackCordGateway,
-    ackCordVoice,
-    ackCordUtil,
-    ackCordCommands,
-    ackCordLavaplayer,
-    ackCordCore,
-    ackCordCommandsCore,
-    ackCordLavaplayerCore,
+    dataJVM,
+    dataJS,
+    network,
+    requests,
+    gateway,
+    voice,
+    util,
+    commands,
+    lavaplayer,
+    core,
+    commandsCore,
+    lavaplayerCore,
     ackCord,
     exampleCore,
     example
