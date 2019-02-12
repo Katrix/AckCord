@@ -11,7 +11,7 @@ While the modules listed at the start are the main modules you want to depend on
 
 ### Make sure to add the following line to your SBT file :
 ```scala
-resolvers += Resolver.bintrayRepo("sedmelluq", "com.sedmelluq")
+resolvers += Resolver.JCenterRepository
 ```
 
 ---

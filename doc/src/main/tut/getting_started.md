@@ -13,7 +13,7 @@ AckCord is a Scala library for Discord, using Akka. AckCord's focus is on lettin
 
 While AckCord is still in active development, you can try AckCord by adding some of these to your `build.sbt` file.
 ```scala
-resolvers += Resolver.bintrayRepo("sedmelluq", "com.sedmelluq")
+resolvers += Resolver.JCenterRepository
 libraryDependencies += "net.katsstuff" %% "ackcord"                 % "{{versions.ackcord}}" //For high level API, includes all the other modules
 libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "{{versions.ackcord}}" //Low level core API
 libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "{{versions.ackcord}}" //Low to mid level Commands API
