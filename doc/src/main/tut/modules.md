@@ -9,6 +9,13 @@ While the modules listed at the start are the main modules you want to depend on
 
 {% assign versions = site.data.versions %}
 
+### Make sure to add the following line to your SBT file :
+```scala
+resolvers += Resolver.JCenterRepository
+```
+
+---
+
 ## ackcord-data
 ```scala
 libraryDependencies += "net.katsstuff" %%% "ackcord-data" % "{{versions.ackcord}}"
