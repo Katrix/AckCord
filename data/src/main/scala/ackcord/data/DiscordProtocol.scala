@@ -428,5 +428,10 @@ trait DiscordProtocol {
 
   implicit val rawBanEncoder: Encoder[RawBan] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawBanDecoder: Decoder[RawBan] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val clientStatusEncoder: Encoder[ClientStatus] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val clientStatusDecoder: Decoder[ClientStatus] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object DiscordProtocol extends DiscordProtocol

@@ -29,7 +29,7 @@ import akka.event.LoggingAdapter
 
 object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData)(implicit log: LoggingAdapter): Unit = {
-    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _) = obj
+    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _, clientStatus) = obj
 
     builder.guildMap.get(guildId).foreach { oldGuild =>
       //Add the user
@@ -69,7 +69,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
           }
       }
 
-      val newPresence = Presence(partialUser.id, rawActivity.map(_.toActivity), status)
+      val newPresence = Presence(partialUser.id, rawActivity.map(_.toActivity), status, clientStatus)
 
       val oldMembers = oldGuild.members
       val newMembers = oldMembers

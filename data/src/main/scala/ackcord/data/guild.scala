@@ -593,12 +593,24 @@ object PresenceStatus {
 }
 
 /**
+  * The status of a user per platform. Not present if the user is offline,
+  * or invisible.
+  */
+case class ClientStatus(
+    desktop: Option[PresenceStatus],
+    mobile: Option[PresenceStatus],
+    web: Option[PresenceStatus]
+)
+
+/**
   * The presence for a user
   * @param userId The user id
   * @param activity The activity of the presence
   * @param status The status of the user
+  * @param clientStatus The status of the user over several platforms
   */
-case class Presence(userId: UserId, activity: Option[Activity], status: PresenceStatus) extends GetUser
+case class Presence(userId: UserId, activity: Option[Activity], status: PresenceStatus, clientStatus: ClientStatus)
+    extends GetUser
 
 /**
   * A server integration

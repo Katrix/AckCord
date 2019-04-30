@@ -785,7 +785,8 @@ object GatewayEvent {
       game: Option[RawActivity],
       guildId: GuildId,
       status: PresenceStatus,
-      activities: Seq[RawActivity]
+      activities: Seq[RawActivity],
+      clientStatus: ClientStatus
   )
 
   /**
