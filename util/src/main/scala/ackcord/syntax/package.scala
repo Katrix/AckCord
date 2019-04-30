@@ -1354,6 +1354,7 @@ package object syntax {
       *                     the `gdm.join` scope.
       * @param nicks A map specifying the nicknames for the users in this group DM.
       */
+    @deprecated("Deprecated by Discord", since = "0.13")
     def createGroupDM[Ctx](
         accessTokens: Seq[String],
         nicks: SnowflakeMap[User, String],

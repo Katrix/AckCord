@@ -1055,7 +1055,7 @@ case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User
 /**
   * Create a group DM. By default the client is limited to 10 active group DMs.
   */
-@deprecated("Deprecated by Discord")
+@deprecated("Deprecated by Discord", since = "0.13")
 case class CreateGroupDm[Ctx](params: CreateGroupDMData, context: Ctx = NotUsed: NotUsed)
     extends RESTRequest[CreateGroupDMData, RawChannel, Option[GroupDMChannel], Ctx] {
   override def route: RequestRoute = Routes.createDM

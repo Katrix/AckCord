@@ -213,12 +213,6 @@ sealed trait RequestAnswer[+Data, Ctx] {
   def rawRoute: String
 
   /**
-    * An option that contains the response data if this is a success, or None if it's a failure.
-    */
-  @deprecated("Prefer eitherData instead", since = "0.12.0")
-  def optData: Option[Data]
-
-  /**
     * An either that either contains the data, or the exception if this is a failure.
     */
   def eitherData: Either[Throwable, Data]
@@ -255,8 +249,6 @@ case class RequestResponse[+Data, Ctx](
 
   override def withContext[NewCtx](context: NewCtx): RequestResponse[Data, NewCtx] = copy(context = context)
 
-  override def optData: Option[Data] = Some(data)
-
   override def eitherData: Either[Throwable, Data] = Right(data)
 
   override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
@@ -277,8 +269,6 @@ sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
     * if one does not exist.
     */
   def asException: Throwable
-
-  override def optData: Option[Nothing] = None
 
   override def eitherData: Either[Throwable, Nothing] = Left(asException)
 }
