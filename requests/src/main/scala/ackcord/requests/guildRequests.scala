@@ -485,11 +485,11 @@ case class GetGuildBan[Ctx](guildId: GuildId, userId: UserId, context: Ctx = Not
 }
 
 /**
-  * @param `delete-message-days` The number of days to delete messages for
-  *                              this banned user.
+  * @param deleteMessageDays The number of days to delete messages for
+  *                          this banned user.
   * @param reason The reason for the ban.
   */
-case class CreateGuildBanData(`delete-message-days`: Int, reason: String)
+case class CreateGuildBanData(deleteMessageDays: Option[Int], reason: Option[String])
 
 /**
   * Ban a user from a guild.
@@ -497,12 +497,19 @@ case class CreateGuildBanData(`delete-message-days`: Int, reason: String)
 case class CreateGuildBan[Ctx](
     guildId: GuildId,
     userId: UserId,
-    params: CreateGuildBanData,
+    queryParams: CreateGuildBanData,
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoResponseReasonRequest[CreateGuildBan[Ctx], CreateGuildBanData, Ctx] {
-  override def route: RequestRoute                        = Routes.createGuildMemberBan(userId, guildId)
-  override def paramsEncoder: Encoder[CreateGuildBanData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+) extends NoParamsResponseReasonRequest[CreateGuildBan[Ctx], Ctx] {
+  override def route: RequestRoute = {
+    val raw = Routes.createGuildMemberBan(userId, guildId)
+    val queryParamsSeq = Seq(
+      queryParams.deleteMessageDays.map("delete-message-days" -> _.toString),
+      queryParams.reason.map("reason"                         -> _)
+    ).flatten
+
+    raw.copy(uri = raw.uri.withQuery(Uri.Query(queryParamsSeq: _*)))
+  }
 
   override def requiredPermissions: Permission = Permission.BanMembers
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
@@ -514,8 +521,8 @@ object CreateGuildBan {
   def mk[Ctx](
       guildId: GuildId,
       userId: UserId,
-      deleteMessageDays: Int,
-      reason: String,
+      deleteMessageDays: Option[Int],
+      reason: Option[String],
       context: Ctx = NotUsed: NotUsed
   ): CreateGuildBan[Ctx] = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays, reason), context)
 }
