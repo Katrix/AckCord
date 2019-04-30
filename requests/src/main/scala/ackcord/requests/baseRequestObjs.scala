@@ -49,7 +49,7 @@ import io.circe._
   * @tparam RawResponse The response type of the request
   * @tparam NiceResponse A nicer and less raw type of response created from the response.
   */
-trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawResponse, Ctx] {
+trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawResponse, Ctx] { self =>
 
   override def parseResponse(
       parallelism: Int
@@ -72,6 +72,30 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
       Future.fromTry(json.as(responseDecoder).fold(Failure.apply, Success.apply))
     }
   }
+
+  override def withContext[NewCtx](newContext: NewCtx): BaseRESTRequest[RawResponse, NiceResponse, NewCtx] =
+    new BaseRESTRequest[RawResponse, NiceResponse, NewCtx] {
+
+      override def parseResponse(parallelism: Int)(
+          implicit system: ActorSystem
+      ): Flow[ResponseEntity, RawResponse, NotUsed] = self.parseResponse(parallelism)
+
+      override def responseDecoder: Decoder[RawResponse] = self.responseDecoder
+
+      override def toNiceResponse(response: RawResponse): NiceResponse = self.toNiceResponse(response)
+
+      override def bodyForLogging: Option[String] = self.bodyForLogging
+
+      override def route: RequestRoute = self.route
+
+      override def requestBody: MessageEntity = self.requestBody
+
+      override def context: NewCtx = newContext
+
+      override def requiredPermissions: Permission = self.requiredPermissions
+
+      override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+    }
 
   /**
     * A decoder to decode the response.
