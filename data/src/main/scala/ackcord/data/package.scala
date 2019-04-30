@@ -41,6 +41,17 @@ package object data {
   object SnowflakeType {
     def apply[A](long: Long): Long @@ SnowflakeTag[A] = tagS[SnowflakeTag[A]](long)
     def apply[A](content: String): SnowflakeType[A]   = apply[A](JLong.parseUnsignedLong(content))
+
+    /**
+      * Creates a snowflake tag for the earliest moment in time. Use this
+      * for pagination.
+      */
+    def epoch[A]: SnowflakeType[A] = apply("0")
+
+    /**
+      * Creates a snowflake for a specific moment. Use this for pagination.
+      */
+    def fromInstant[A](instant: Instant): SnowflakeType[A] = apply(instant.toEpochMilli - DiscordEpoch << 22)
   }
 
   private val DiscordEpoch = 1420070400000L
