@@ -7,9 +7,22 @@ position: 2
 # {{page.title}}
 While the modules listed at the start are the main modules you want to depend on, AckCord has many more if you feel that you don't need the full package.
 
+Here is a map of all the modules, and how they depend on each other
+```
+      +----> gateway ----+      +-> commands ---> commands-core ---+   
+      |                  |      |                       ^          |   
+      |                  |      |                       |          |   
+      |                  v      |                       |          v   
+ data +----> requests -> util --+-> core ---------------+-----> ackcord
+      |                  ^                              |          ^   
+      |                  |                              |          |   
+      |                  |                              v          |   
+      +----> voice ------+--------> lavaplayer -> lavaplayer-core -+   
+```
+
 {% assign versions = site.data.versions %}
 
-### Make sure to add the following line to your SBT file :
+**Make sure to add the following line to your SBT file :**
 ```scala
 resolvers += Resolver.JCenterRepository
 ```

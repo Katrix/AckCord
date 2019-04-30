@@ -16,6 +16,19 @@ libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.12.0" /
 libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.12.0" //Low level lavaplayer API
 ```
 
+The AckCord module map
+```
+      +----> gateway ----+      +-> commands ---> commands-core ---+   
+      |                  |      |                       ^          |   
+      |                  |      |                       |          |   
+      |                  v      |                       |          v   
+ data +----> requests -> util --+-> core ---------------+-----> ackcord
+      |                  ^                              |          ^   
+      |                  |                              |          |   
+      |                  |                              v          |   
+      +----> voice ------+--------> lavaplayer -> lavaplayer-core -+   
+```
+
 Lastly, join our Discord server (we got cookies).
 
 [![](https://discordapp.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/5UH627u) 
