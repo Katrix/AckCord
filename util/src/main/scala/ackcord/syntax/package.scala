@@ -774,14 +774,17 @@ package object syntax {
       * @param days The number of days to prune for.
       */
     def fetchPruneCount[Ctx](days: Int, context: Ctx = NotUsed: NotUsed) =
-      GetGuildPruneCount(guild.id, GuildPruneData(days), context)
+      GetGuildPruneCount(guild.id, GuildPruneCountData(days), context)
 
     /**
       * Begin a prune.
       * @param days The number of days to prune for.
       */
-    def beginPrune[Ctx](days: Int, context: Ctx = NotUsed: NotUsed) =
-      BeginGuildPrune(guild.id, GuildPruneData(days), context)
+    def beginPrune[Ctx](
+        days: Int,
+        computePruneCount: Boolean = guild.memberCount < 1000,
+        context: Ctx = NotUsed: NotUsed
+    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount)), context)
 
     /**
       * Fetch the voice regions for this guild.

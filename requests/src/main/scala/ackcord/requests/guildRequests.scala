@@ -680,45 +680,55 @@ case class DeleteGuildRole[Ctx](
 /**
   * @param days The amount of days to prune for.
   */
-case class GuildPruneData(days: Int)
+case class GuildPruneCountData(days: Int)
 
 /**
   * @param pruned The number of members that would be removed.
   */
-case class GuildPruneResponse(pruned: Int)
-
-trait GuildPrune[Ctx] extends NoNiceResponseRequest[GuildPruneData, GuildPruneResponse, Ctx] {
-  override def paramsEncoder: Encoder[GuildPruneData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-
-  override def responseDecoder: Decoder[GuildPruneResponse] = derivation.deriveDecoder(derivation.renaming.snakeCase)
-}
+case class GuildPruneCountResponse(pruned: Int)
 
 /**
   * Check how many members would be removed if a prune was started now.
   */
-case class GetGuildPruneCount[Ctx](guildId: GuildId, params: GuildPruneData, context: Ctx = NotUsed: NotUsed)
-    extends GuildPrune[Ctx] {
+case class GetGuildPruneCount[Ctx](guildId: GuildId, params: GuildPruneCountData, context: Ctx = NotUsed: NotUsed)
+    extends NoNiceResponseRequest[GuildPruneCountData, GuildPruneCountResponse, Ctx] {
   override def route: RequestRoute = Routes.getGuildPruneCount(guildId)
 
   override def requiredPermissions: Permission = Permission.KickMembers
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
     hasPermissionsGuild(guildId, requiredPermissions)
+
+  override def paramsEncoder: Encoder[GuildPruneCountData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+
+  override def responseDecoder: Decoder[GuildPruneCountResponse] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object GetGuildPruneCount {
   def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
-    new GetGuildPruneCount(guildId, GuildPruneData(days), context)
+    new GetGuildPruneCount(guildId, GuildPruneCountData(days), context)
 }
+
+/**
+  * @param days The amount of days to prune for.
+  * @param computePruneCount If the pruned return field should be present.
+  */
+case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean])
+
+/**
+  * @param pruned The number of members that were removed.
+  */
+case class BeginGuildPruneResponse(pruned: Option[Int])
 
 /**
   * Begin a guild prune.
   */
 case class BeginGuildPrune[Ctx](
     guildId: GuildId,
-    params: GuildPruneData,
+    params: BeginGuildPruneData,
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends GuildPrune[Ctx]
-    with NoNiceResponseReasonRequest[BeginGuildPrune[Ctx], GuildPruneData, GuildPruneResponse, Ctx] {
+) extends NoNiceResponseRequest[BeginGuildPruneData, BeginGuildPruneResponse, Ctx]
+    with NoNiceResponseReasonRequest[BeginGuildPrune[Ctx], BeginGuildPruneData, BeginGuildPruneResponse, Ctx] {
   override def route: RequestRoute = Routes.beginGuildPrune(guildId)
 
   override def requiredPermissions: Permission = Permission.KickMembers
@@ -726,10 +736,20 @@ case class BeginGuildPrune[Ctx](
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): BeginGuildPrune[Ctx] = copy(reason = Some(reason))
+
+  override def paramsEncoder: Encoder[BeginGuildPruneData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+
+  override def responseDecoder: Decoder[BeginGuildPruneResponse] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object BeginGuildPrune {
-  def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): BeginGuildPrune[Ctx] =
-    new BeginGuildPrune(guildId, GuildPruneData(days), context)
+  def mk[Ctx](
+      guildId: GuildId,
+      days: Int,
+      computePruneCount: Boolean = true,
+      context: Ctx = NotUsed: NotUsed
+  ): BeginGuildPrune[Ctx] =
+    new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount)), context)
 }
 
 /**
