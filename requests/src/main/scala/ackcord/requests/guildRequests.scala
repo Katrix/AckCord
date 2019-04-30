@@ -943,7 +943,11 @@ case class DeleteInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed
 
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 
-  override def requiredPermissions: Permission = Permission.ManageChannels
+  //Can't say this without more context, so we're optimistic
+  override def requiredPermissions: Permission = Permission.None
+
+  //We don't track invites, so we'll have to stay optimistic with this one too
+  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = Monad[F].pure(true)
 
   override def withReason(reason: String): DeleteInvite[Ctx] = copy(reason = Some(reason))
 }
