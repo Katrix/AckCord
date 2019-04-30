@@ -77,6 +77,11 @@ trait DiscordProtocol {
   implicit val auditLogEventDecoder: Decoder[AuditLogEvent] =
     Decoder[Int].emap(AuditLogEvent.fromId(_).toRight(s"No valid event type"))
 
+  implicit val connectionVisibilityEncoder: Encoder[ConnectionVisibility] =
+    Encoder[Int].contramap(ConnectionVisibility.idOf)
+  implicit val connectionVisibilityDecoder: Decoder[ConnectionVisibility] =
+    Decoder[Int].emap(ConnectionVisibility.fromId(_).toRight("Not a valid premium type"))
+
   implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
   implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] =
     Decoder[String].emap(s => Right(SnowflakeType[A](s)))

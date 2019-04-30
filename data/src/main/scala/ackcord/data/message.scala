@@ -198,14 +198,40 @@ case class User(
   * @param `type` The connection type (twitch, youtube).
   * @param revoked If the connection has been revoked.
   * @param integrations Integrations of the connection.
+  * @param verified If the connection is verified.
+  * @param friendSync If friend sync is enabled for the connection.
+  * @param showActivity If things related this this connection will be included in presence updates.
+  * @param visibility The visibility of the connection
   */
 case class Connection(
     id: String,
     name: String,
     `type`: String,
     revoked: Boolean,
-    integrations: Seq[Integration] //TODO: Partial
+    integrations: Seq[Integration], //TODO: Partial
+    verified: Boolean,
+    friendSync: Boolean,
+    showActivity: Boolean,
+    visibility: ConnectionVisibility
 )
+sealed trait ConnectionVisibility
+object ConnectionVisibility {
+
+  //We use a different name here so that people don't accidentially switch up this and Option.None
+  case object NoneVisibility extends ConnectionVisibility
+  case object Everyone       extends ConnectionVisibility
+
+  def fromId(id: Int): Option[ConnectionVisibility] = id match {
+    case 0 => Some(NoneVisibility)
+    case 1 => Some(Everyone)
+    case _ => None
+  }
+
+  def idOf(tpe: ConnectionVisibility): Int = tpe match {
+    case NoneVisibility => 0
+    case Everyone       => 1
+  }
+}
 
 sealed trait MessageActivityType
 object MessageActivityType {
