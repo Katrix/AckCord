@@ -382,6 +382,11 @@ case class RawMessage(
   * @param members The guild members in the guild.
   * @param channels The channels in the guild.
   * @param presences The presences in the guild.
+  * @param maxPresences The maximum amount of presences in the guild.
+  * @param maxMembers The maximum amount of members in the guild.
+  * @param vanityUrlCode The vanity url code for the guild.
+  * @param description A descriptiom fpr the guild.
+  * @param banner A banner hash for the guild.
   */
 case class RawGuild(
     id: GuildId,
@@ -414,7 +419,12 @@ case class RawGuild(
     voiceStates: Option[Seq[VoiceState]],
     members: Option[Seq[RawGuildMember]],
     channels: Option[Seq[RawChannel]],
-    presences: Option[Seq[RawPresence]]
+    presences: Option[Seq[RawPresence]],
+    maxPresences: Option[Int],
+    maxMembers: Option[Int],
+    vanityUrlCode: Option[String],
+    description: Option[String],
+    banner: Option[String]
 ) {
 
   /**
@@ -464,7 +474,12 @@ case class RawGuild(
         SnowflakeMap.withKey(voiceStates)(_.userId),
         SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
-        SnowflakeMap(presences.map(p => p.user.id -> p.toPresence))
+        SnowflakeMap(presences.map(p => p.user.id -> p.toPresence)),
+        maxPresences.getOrElse(5000), // The default is 5000
+        maxMembers,
+        vanityUrlCode,
+        description,
+        banner
       )
     }
   }

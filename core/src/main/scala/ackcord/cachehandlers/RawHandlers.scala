@@ -99,7 +99,12 @@ object RawHandlers extends Handlers {
         .get,
       members = SnowflakeMap.withKey(members)(_.userId),
       channels = SnowflakeMap.withKey(channels)(_.id),
-      presences = SnowflakeMap.withKey(presences)(_.userId)
+      presences = SnowflakeMap.withKey(presences)(_.userId),
+      maxPresences = obj.maxPresences.getOrElse(5000), //5000 is the default
+      maxMembers = obj.maxMembers,
+      vanityUrlCode = obj.vanityUrlCode,
+      description = obj.description,
+      banner = obj.banner
     )
 
     builder.guildMap.put(guild.id, guild)

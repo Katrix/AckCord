@@ -349,6 +349,8 @@ object Routes {
     cdn / "icons" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
   val guildSplashImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
     cdn / "splashes" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
+  val guildBannerImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
+    cdn / "banners" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
   val defaultUserAvatarImage: (Int, ImageFormat, Int) => RequestRoute = (discriminator, format, size) =>
     cdn / "embed" / "avatars" / s"${discriminator % 5}" ++ imageExtra(format, size) toRequest GET
   val userAvatarImage: (UserId, String, ImageFormat, Int) => RequestRoute = (userId, hash, format, size) =>

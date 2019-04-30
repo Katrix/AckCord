@@ -201,6 +201,11 @@ object MFALevel {
   * @param members The guild members in the guild.
   * @param channels The channels in the guild.
   * @param presences The presences in the guild.
+  * @param maxPresences The maximum amount of presences in the guild.
+  * @param maxMembers The maximum amount of members in the guild.
+  * @param vanityUrlCode The vanity url code for the guild.
+  * @param description A descriptiom fpr the guild.
+  * @param banner A banner hash for the guild.
   */
 case class Guild(
     id: GuildId,
@@ -232,7 +237,12 @@ case class Guild(
     voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
     members: SnowflakeMap[User, GuildMember],
     channels: SnowflakeMap[Channel, GuildChannel],
-    presences: SnowflakeMap[User, Presence]
+    presences: SnowflakeMap[User, Presence],
+    maxPresences: Int,
+    maxMembers: Option[Int],
+    vanityUrlCode: Option[String],
+    description: Option[String],
+    banner: Option[String]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 

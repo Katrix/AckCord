@@ -121,6 +121,17 @@ case class GetGuildSplashImage[Ctx](
   override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, desiredSize)
 }
 
+case class GetGuildBannerImage[Ctx](
+    desiredSize: Int,
+    format: ImageFormat,
+    guildId: GuildId,
+    bannerHash: String,
+    context: Ctx = NotUsed: NotUsed
+) extends ImageRequest[Ctx] {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute              = Routes.guildBannerImage(guildId, bannerHash, format, desiredSize)
+}
+
 /**
   * Get the default avatar of a user. Always returns a PNG.
   */
