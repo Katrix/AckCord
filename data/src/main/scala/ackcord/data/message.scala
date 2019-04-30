@@ -269,7 +269,7 @@ case class MessageActivity(activityType: MessageActivityType, partyId: Option[St
   * @param icon Id of icon of the application
   * @param name Name of the application
   */
-case class MessageApplication(id: RawSnowflake, coverImage: String, description: String, icon: String, name: String)
+case class MessageApplication(id: RawSnowflake, coverImage: Option[String], description: String, icon: String, name: String)
 
 /**
   * A message sent to a channel.
