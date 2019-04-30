@@ -80,6 +80,7 @@ case class ModifyChannelData(
   require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
   require(bitrate.forall(b => b >= 8000 && b <= 128000), "Bitrate must be between 8000 and 128000 bits")
   require(userLimit.forall(b => b >= 0 && b <= 99), "User limit must be between 0 and 99 users")
+  require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
 }
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {

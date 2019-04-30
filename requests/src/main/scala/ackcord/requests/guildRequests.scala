@@ -175,6 +175,7 @@ case class CreateGuildChannelData(
     nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
   require(name.length >= 2 && name.length <= 100, "A channel name has to be between 2 and 100 characters")
+  require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
 }
 object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
