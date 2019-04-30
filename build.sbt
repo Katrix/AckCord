@@ -1,9 +1,9 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion          = "2.5.19"
-lazy val akkaHttpVersion      = "10.1.7"
+lazy val akkaVersion          = "2.5.22"
+lazy val akkaHttpVersion      = "10.1.8"
 lazy val circeVersion         = "0.11.1"
-lazy val akkaHttpCirceVersion = "1.24.3"
+lazy val akkaHttpCirceVersion = "1.25.2"
 lazy val ackCordVersion       = "0.12.0"
 
 lazy val commonSettings = Seq(
@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
     "-Ypartial-unification"
   ),
   scalacOptions ++= (if (scalaVersion.value.startsWith("2.11")) Seq("-Xexperimental") else Nil),
-  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.9"),
+  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
   //Fixes repository not specified error
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
@@ -64,7 +64,7 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.11.0-M1"
+      "io.circe" %%% "circe-derivation"     % "0.12.0-M1"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -148,7 +148,7 @@ lazy val lavaplayer = project
     version := ackCordVersion,
     //Workaround for https://github.com/sbt/sbt/issues/4479
     resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.10",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.17",
     description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
   )
   .dependsOn(voice)
@@ -161,7 +161,7 @@ lazy val core = project
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.0.4"     % Test
+      "org.scalatest"     %% "scalatest"    % "3.0.7"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
