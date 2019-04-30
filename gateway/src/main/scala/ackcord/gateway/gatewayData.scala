@@ -313,13 +313,16 @@ object GatewayEvent {
     * @param user The client user.
     * @param guilds The guilds for this shard. Not available at first.
     * @param sessionId The session id.
+    * @param shard The shard info, the first index is the shard id, while the
+    *              second is the total amount of shards.
     */
   case class ReadyData(
       v: Int,
       user: User,
       guilds: Seq[UnavailableGuild],
       sessionId: String,
-      _trace: Seq[String]
+      _trace: Seq[String],
+      shard: Seq[Int]
   )
 
   /**
