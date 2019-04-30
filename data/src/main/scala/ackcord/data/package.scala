@@ -349,10 +349,14 @@ package object data {
     def fromInt(int: Int): Int @@ UserFlags.type = apply(int)
 
     val None            = UserFlags(0)
+    val DiscordEmployee = UserFlags(1 << 0)
+    val DiscordPartner  = UserFlags(1 << 1)
     val HypeSquadEvents = UserFlags(1 << 2)
+    val BugHunter       = UserFlags(1 << 3)
     val HouseBravery    = UserFlags(1 << 6)
     val HouseBrilliance = UserFlags(1 << 7)
     val HouseBalance    = UserFlags(1 << 8)
+    val EarlySupporter  = UserFlags(1 << 9)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 
