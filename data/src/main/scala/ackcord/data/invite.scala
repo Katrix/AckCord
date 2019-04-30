@@ -30,13 +30,17 @@ import java.time.OffsetDateTime
   * @param code An invite code.
   * @param guild The guild the invite is for.
   * @param channel The channel the invite is for.
+  * @param targetUser The target user of this invite.
+  * @param targetUserType The target user type of this invite.
   * @param approximatePresenceCount Approximate amount of people online.
   * @param approximateMemberCount Approximate amount of total members.
   */
 case class Invite(
     code: String,
-    guild: InviteGuild,
+    guild: Option[InviteGuild],
     channel: InviteChannel,
+    targetUser: Option[InviteTargetUser],
+    targetUserType: Option[Int],
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int]
 )
@@ -56,7 +60,7 @@ case class Invite(
   */
 case class InviteWithMetadata(
     code: String,
-    guild: InviteGuild,
+    guild: Option[InviteGuild],
     channel: InviteChannel,
     inviter: User,
     uses: Int,
@@ -83,3 +87,17 @@ case class InviteGuild(id: GuildId, name: String, splash: Option[String], icon: 
   * @param `type` The type of channel
   */
 case class InviteChannel(id: ChannelId, name: String, `type`: ChannelType)
+
+/**
+  * The target user of an invite.
+  * @param id The user id
+  * @param name The name of the user
+  * @param avatar The avatar hash of the user
+  * @param discriminator The discriminator of the user
+  */
+case class InviteTargetUser(
+    id: UserId,
+    name: String,
+    avatar: Option[String],
+    discriminator: String
+)
