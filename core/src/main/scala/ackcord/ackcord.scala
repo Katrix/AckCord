@@ -49,12 +49,6 @@ package object ackcord {
   val GatewayLogout: gateway.GatewayHandler.Logout.type = gateway.GatewayHandler.Logout
   type GatewayLogout = gateway.GatewayHandler.Logout.type
 
-  val VoiceLogin: voice.VoiceWsHandler.Login.type = voice.VoiceWsHandler.Login
-  type VoiceLogin = voice.VoiceWsHandler.Login.type
-
-  val VoiceLogout: voice.VoiceWsHandler.Logout.type = voice.VoiceWsHandler.Logout
-  type VoiceLogout = voice.VoiceWsHandler.Logout.type
-
   val Streamable: util.Streamable.type = util.Streamable
   type Streamable[F[_]] = util.Streamable[F]
 

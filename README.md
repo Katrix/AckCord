@@ -18,15 +18,16 @@ libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.12.0" /
 
 The AckCord module map
 ```
-      +----> gateway ----+      +-> commands ---> commands-core ---+   
-      |                  |      |                       ^          |   
-      |                  |      |                       |          |   
-      |                  v      |                       |          v   
+      +----> voice ---------------> lavaplayer -> lavaplayer-core -+ 
+      |                                                 ^          |   
+      |                                                 |          |   
+      |                                                 |          v   
  data +----> requests -> util --+-> core ---------------+-----> ackcord
-      |                  ^                              |          ^   
-      |                  |                              |          |   
-      |                  |                              v          |   
-      +----> voice ------+--------> lavaplayer -> lavaplayer-core -+   
+      |                         |    ^                  |          ^   
+      |                         |    |                  |          |
+      +----> gateway -----------|----+                  |          |   
+                                |                       v          |
+                                +-> commands ---> commands-core ---+
 ```
 
 Lastly, join our Discord server (we got cookies).

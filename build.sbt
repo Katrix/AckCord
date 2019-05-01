@@ -128,7 +128,7 @@ lazy val util = project
     version := ackCordVersion,
     description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
   )
-  .dependsOn(requests, gateway, voice)
+  .dependsOn(requests)
 
 lazy val commands = project
   .settings(
@@ -165,7 +165,7 @@ lazy val core = project
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
-  .dependsOn(util)
+  .dependsOn(util, gateway)
 
 lazy val commandsCore = project
   .settings(
