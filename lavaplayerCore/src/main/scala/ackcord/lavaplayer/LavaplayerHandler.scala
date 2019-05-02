@@ -23,21 +23,25 @@
  */
 package ackcord.lavaplayer
 
-import scala.concurrent.{Future, Promise}
+import java.util.concurrent.atomic.AtomicBoolean
 
+import scala.concurrent.{Future, Promise}
+import scala.concurrent.duration._
 import com.sedmelluq.discord.lavaplayer.player.event._
 import com.sedmelluq.discord.lavaplayer.player.{AudioLoadResultHandler, AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
-
 import ackcord._
 import ackcord.data._
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
-import ackcord.lavaplayer.AudioSender.{StartSendAudio, StopSendAudio}
 import ackcord.lavaplayer.LavaplayerHandler._
-import ackcord.voice.VoiceWsHandler
+import ackcord.util.Switch
+import ackcord.voice.{AudioAPIMessage, VoiceUDPFlow, VoiceWsHandler}
+import akka.NotUsed
 import akka.actor.{ActorLogging, ActorRef, FSM, PoisonPill, Props, Status}
-import akka.stream.scaladsl.Source
+import akka.stream.{KillSwitches, SharedKillSwitch, SourceShape}
+import akka.stream.scaladsl.{GraphDSL, Sink, Source}
+import akka.util.ByteString
 
 /**
   * An actor to manage a music connection.
@@ -81,9 +85,11 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
         stay()
       }
 
-    case Event(ConnectVChannel(vChannelId, force), HasVoiceWs(voiceWs, inVChannelId, firstSender)) =>
+    case Event(ConnectVChannel(vChannelId, force), HasVoiceWs(voiceWs, inVChannelId, firstSender, _, killSwitch)) =>
       if (vChannelId != inVChannelId) {
         if (force) {
+          killSwitch.shutdown()
+
           voiceWs ! VoiceWsHandler.Logout
           firstSender ! Status.Failure(new ForcedConnectedException(inVChannelId))
           stay using Connecting(None, None, None, vChannelId, sender())
@@ -120,19 +126,18 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
       stay using con.copy(endPoint = Some(usedEndpoint), token = Some(vToken))
 
-    case Event(AudioAPIMessage.Ready(udpHandler, _, _), HasVoiceWs(voiceWs, vChannelId, sendEventsTo)) =>
+    case Event(
+        AudioAPIMessage.Ready(_, _),
+        HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, killSwitch)
+        ) =>
       log.debug("Audio ready")
-      val audioSender =
-        if (useBursting)
-          context.actorOf(BurstingAudioSender.props(player, udpHandler, voiceWs), "BurstingDataSender")
-        else
-          context.actorOf(AudioSender.props(player, udpHandler, voiceWs), "DataSender")
 
       sendEventsTo ! MusicReady
 
-      goto(Active) using CanSendAudio(voiceWs, audioSender, vChannelId)
+      goto(Active) using CanSendAudio(voiceWs, vChannelId, toggle, killSwitch)
 
-    case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _, _)) =>
+    case Event(DiscordShard.StopShard, HasVoiceWs(voiceWs, _, _, _, killSwitch)) =>
+      killSwitch.shutdown()
       context.watchWith(voiceWs, PoisonPill)
       voiceWs ! VoiceWsHandler.Logout
       stay()
@@ -144,14 +149,14 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
   }
 
   when(Active) {
-    case Event(SetPlaying(speaking), CanSendAudio(_, dataSender, _)) =>
-      dataSender ! (if (speaking) StartSendAudio else StopSendAudio)
+    case Event(SetPlaying(speaking), CanSendAudio(voiceWs, _, toggle, _)) =>
+      toggle.set(speaking)
+      voiceWs ! VoiceWsHandler.SetSpeaking(speaking)
       stay()
 
-    case Event(DisconnectVChannel, CanSendAudio(voiceWs, dataSender, _)) =>
-      dataSender ! StopSendAudio
+    case Event(DisconnectVChannel, CanSendAudio(voiceWs, _, _, killSwitch)) =>
+      killSwitch.shutdown()
       voiceWs ! VoiceWsHandler.Logout
-      dataSender ! PoisonPill
 
       Source
         .single(
@@ -163,13 +168,13 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       log.debug("Left voice channel")
       goto(Inactive) using Idle
 
-    case Event(ConnectVChannel(vChannelId, force), CanSendAudio(voiceWs, dataSender, inVChannelId)) =>
+    case Event(ConnectVChannel(vChannelId, force), CanSendAudio(voiceWs, inVChannelId, _, killSwitch)) =>
       if (vChannelId != inVChannelId) {
         if (force) {
           log.debug("Moving to new vChannel")
-          dataSender ! StopSendAudio
+
+          killSwitch.shutdown()
           voiceWs ! VoiceWsHandler.Logout
-          dataSender ! PoisonPill
 
           Source
             .single(
@@ -188,10 +193,10 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
         stay()
       }
 
-    case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, dataSender, _)) =>
+    case Event(DiscordShard.StopShard, CanSendAudio(voiceWs, _, _, killSwitch)) =>
       context.watchWith(voiceWs, PoisonPill)
       voiceWs ! VoiceWsHandler.Logout
-      dataSender ! StopSendAudio
+      killSwitch.shutdown()
       stay()
 
     case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
@@ -201,6 +206,26 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
 
   initialize()
 
+  private def soundProducer(toggle: AtomicBoolean) = {
+    val killSwitch = KillSwitches.shared("StopMusic")
+
+    //FIXME: Don't think the switch is working completely properly. Could probably save some cycles if we fixed it
+    val source = Source.fromGraph(GraphDSL.create() { implicit b =>
+      import GraphDSL.Implicits._
+
+      val switch  = b.add(new Switch[ByteString](toggle, List.fill(5)(VoiceUDPFlow.silence), Nil))
+      val silence = b.add(Source.maybe[ByteString])
+      val music   = b.add(LavaplayerSource.source(player).throttle(1, 20.millis).via(killSwitch.flow))
+
+      music ~> switch.in0
+      silence ~> switch.in1
+
+      SourceShape(switch.out)
+    })
+
+    (killSwitch, source)
+  }
+
   def connect(
       vChannelId: ChannelId,
       endPoint: String,
@@ -209,14 +234,25 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       token: String,
       sender: ActorRef
   ): State = {
+    val toggle                 = new AtomicBoolean(true)
+    val (killSwitch, producer) = soundProducer(toggle)
     val voiceWs =
       context.actorOf(
-        VoiceWsHandler.props(endPoint, RawSnowflake(guildId), userId, sessionId, token, Some(self), None),
+        VoiceWsHandler.props(
+          endPoint,
+          RawSnowflake(guildId),
+          userId,
+          sessionId,
+          token,
+          Some(self),
+          soundProducer = producer,
+          Sink.ignore.mapMaterializedValue(_ => NotUsed)
+        ),
         "VoiceWS"
       )
     voiceWs ! VoiceWsHandler.Login
     log.debug("Music Connected")
-    stay using HasVoiceWs(voiceWs, vChannelId, sender)
+    stay using HasVoiceWs(voiceWs, vChannelId, sender, toggle, killSwitch)
   }
 }
 object LavaplayerHandler {
@@ -236,8 +272,19 @@ object LavaplayerHandler {
       vChannelId: ChannelId,
       sender: ActorRef
   ) extends StateData
-  private case class HasVoiceWs(voiceWs: ActorRef, vChannelId: ChannelId, sender: ActorRef)        extends StateData
-  private case class CanSendAudio(voiceWs: ActorRef, audioSender: ActorRef, vChannelId: ChannelId) extends StateData
+  private case class HasVoiceWs(
+      voiceWs: ActorRef,
+      vChannelId: ChannelId,
+      sender: ActorRef,
+      toggle: AtomicBoolean,
+      killSwitch: SharedKillSwitch
+  ) extends StateData
+  private case class CanSendAudio(
+      voiceWs: ActorRef,
+      vChannelId: ChannelId,
+      toggle: AtomicBoolean,
+      killSwitch: SharedKillSwitch
+  ) extends StateData
 
   /**
     * Connect to a voice channel.

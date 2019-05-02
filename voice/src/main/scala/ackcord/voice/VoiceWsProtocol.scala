@@ -94,11 +94,11 @@ object VoiceWsProtocol extends DiscordProtocol {
       //We use the apply method on the companion object here
       op.flatMap {
         case VoiceOpCode.Identify           => mkMsg(Identify)
-        case VoiceOpCode.SelectProtocol     => mkMsg(SelectProtocol)
+        case VoiceOpCode.SelectProtocol     => mkMsg(SelectProtocol.apply)
         case VoiceOpCode.Ready              => mkMsg(Ready)
         case VoiceOpCode.Heartbeat          => mkMsg(Heartbeat)
         case VoiceOpCode.SessionDescription => mkMsg(SessionDescription)
-        case VoiceOpCode.Speaking           => mkMsg(Speaking)
+        case VoiceOpCode.Speaking           => mkMsg(Speaking.apply)
         case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
         case VoiceOpCode.Resume             => mkMsg(Resume)
         case VoiceOpCode.Resumed            => Right(Resumed)

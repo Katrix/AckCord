@@ -21,16 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord
+package ackcord.voice
 
 import ackcord.data.{RawSnowflake, UserId}
-import ackcord.voice.VoiceUDPHandler.RTPHeader
-import akka.actor.ActorRef
 import akka.util.ByteString
 
 /**
   * The base trait for all audio events. Note that the audio API does not
-  * have any connections to any [[CacheSnapshot]]s.
+  * have any connections to any [[ackcord.CacheSnapshot]]s.
   * As such you have to find the objects for the IDs yourself.
   */
 sealed trait AudioAPIMessage {
@@ -64,9 +62,8 @@ object AudioAPIMessage {
 
   /**
     * Sent to the listener when everything is ready to send voice data.
-    * @param udpHandler The udp handler. Used for sending data.
     */
-  case class Ready(udpHandler: ActorRef, serverId: RawSnowflake, userId: UserId) extends AudioAPIMessage
+  case class Ready(serverId: RawSnowflake, userId: UserId) extends AudioAPIMessage
 
   /**
     * Sent to the data receiver when a user speaks.

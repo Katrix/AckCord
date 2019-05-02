@@ -18,7 +18,7 @@ libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.12.0" /
 
 The AckCord module map
 ```
-      +----> voice ---------------> lavaplayer -> lavaplayer-core -+ 
+      +----> voice -----------------------------> lavaplayer-core -+ 
       |                                                 ^          |   
       |                                                 |          |   
       |                                                 |          v   

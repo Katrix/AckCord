@@ -97,6 +97,14 @@ case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProt
   override def op: VoiceOpCode                          = VoiceOpCode.SelectProtocol
   override def dataEncoder: Encoder[SelectProtocolData] = Encoder[SelectProtocolData]
 }
+object SelectProtocol {
+  def apply(
+      protocol: String,
+      address: String,
+      port: Int,
+      mode: String
+  ): SelectProtocol = SelectProtocol(SelectProtocolData(protocol, SelectProtocolConnectionData(address, port, mode)))
+}
 
 /**
   * Data of [[Ready]]
@@ -155,6 +163,10 @@ case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOpt
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode                    = VoiceOpCode.Speaking
   override def dataEncoder: Encoder[SpeakingData] = Encoder[SpeakingData]
+}
+object Speaking {
+  def apply(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId]): Speaking =
+    Speaking(SpeakingData(speaking, delay, ssrc, userId))
 }
 
 /**

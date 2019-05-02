@@ -84,7 +84,8 @@ lazy val requests = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
+    libraryDependencies += "com.typesafe.akka" %% "akka-http"       % akkaHttpVersion //Need to add this because of akka-http-circe
   )
   .dependsOn(dataJVM)
 
@@ -116,7 +117,8 @@ lazy val voice = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
+    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe"     % akkaHttpCirceVersion,
+    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
   )
   .dependsOn(dataJVM)
 
@@ -139,19 +141,6 @@ lazy val commands = project
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
   .dependsOn(util)
-
-lazy val lavaplayer = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "lavaplayer",
-    version := ackCordVersion,
-    //Workaround for https://github.com/sbt/sbt/issues/4479
-    resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.17",
-    description := "ackCord-lavaplayer provides the basic code needed to use lavaplayer together with AckCord"
-  )
-  .dependsOn(voice)
 
 lazy val core = project
   .settings(
@@ -183,9 +172,12 @@ lazy val lavaplayerCore = project
     publishSettings,
     name := "lavaplayer-core",
     version := ackCordVersion,
+    //Workaround for https://github.com/sbt/sbt/issues/4479
+    resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.17",
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
-  .dependsOn(core, lavaplayer)
+  .dependsOn(core, voice)
 
 lazy val ackCord = project
   .settings(
@@ -252,7 +244,6 @@ lazy val doc = project
       voice,
       util,
       commands,
-      lavaplayer,
       core,
       commandsCore,
       lavaplayerCore,
@@ -282,7 +273,6 @@ lazy val ackCordRoot = project
     voice,
     util,
     commands,
-    lavaplayer,
     core,
     commandsCore,
     lavaplayerCore,

@@ -34,10 +34,6 @@ class AckCordVoiceSettings(config: Config) {
 
   val LogReceivedWs: Boolean = getBoolean("ackcord.logging.payloads.log-received-ws")
   val LogSentWs: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-ws")
-
-  val UDPMaxPacketsBeforeDrop: Int = getInt("ackcord.voice.max-packets-before-drop")
-  val UDPMaxBurstAmount: Int       = getInt("ackcord.voice.max-burst-amount")
-  val UDPSendRequestAmount: Int    = getInt("ackcord.voice.send-request-amount")
 }
 object AckCordVoiceSettings {
 

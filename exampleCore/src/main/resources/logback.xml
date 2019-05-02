@@ -26,7 +26,7 @@
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%-5level] [%date{ISO8601}] [%logger{36}] [%X{sourceThread}] [%X{akkaSource}] %msg%n</pattern>
+            <pattern>[%-5level] [%date{HH:mm:ss.SSS}] [%logger{36}] [%X{sourceThread}] [%X{akkaSource}] %msg%n</pattern>
         </encoder>
     </appender>
 

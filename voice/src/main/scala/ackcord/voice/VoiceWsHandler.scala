@@ -23,14 +23,11 @@
  */
 package ackcord.voice
 
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.util.control.NonFatal
+import java.net.InetSocketAddress
 
+import ackcord.AckCord
 import ackcord.data.{RawSnowflake, UserId}
 import ackcord.util.{AckCordVoiceSettings, JsonSome, JsonUndefined}
-import ackcord.voice.VoiceUDPHandler._
-import ackcord.{AckCord, AudioAPIMessage}
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Status, Timers}
 import akka.event.Logging
@@ -46,6 +43,10 @@ import io.circe
 import io.circe.syntax._
 import io.circe.{Error, parser}
 
+import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
+import scala.util.control.NonFatal
+
 /**
   * Responsible for handling the websocket connection part of voice data.
   * @param address The address to connect to, not including the websocket protocol.
@@ -54,7 +55,8 @@ import io.circe.{Error, parser}
   * @param sessionId The session id received in [[ackcord.APIMessage.VoiceStateUpdate]]
   * @param token The token received in [[ackcord.APIMessage.VoiceServerUpdate]]
   * @param sendTo The actor to send all [[AudioAPIMessage]]s to unless noted otherwise
-  * @param sendSoundTo The actor to send [[AudioAPIMessage.ReceivedData]] to.
+  * @param soundProducer A source which will produce the sound to send.
+  * @param soundConsumer A sink which will consume [[AudioAPIMessage.ReceivedData]].
   * @param mat The [[https://doc.akka.io/api/akka/current/akka/stream/Materializer.html Materializer]] to use
   */
 class VoiceWsHandler(
@@ -64,7 +66,8 @@ class VoiceWsHandler(
     sessionId: String,
     token: String,
     sendTo: Option[ActorRef],
-    sendSoundTo: Option[ActorRef]
+    soundProducer: Source[ByteString, NotUsed],
+    soundConsumer: Sink[AudioAPIMessage.ReceivedData, NotUsed]
 )(implicit val mat: Materializer)
     extends Actor
     with Timers
@@ -81,25 +84,25 @@ class VoiceWsHandler(
 
   private var ssrc: Int                  = -1
   private var previousNonce: Option[Int] = None
-  private var connectionActor: ActorRef  = _
 
-  private var sendFirstSinkAck: Option[ActorRef]      = None
-  var queue: SourceQueueWithComplete[VoiceMessage[_]] = _
+  private var killSwitch: UniqueKillSwitch          = _
+  private var secretKeyPromise: Promise[ByteString] = _
 
-  var receivedAck = true
+  private var sendFirstSinkAck: Option[ActorRef]              = None
+  private var queue: SourceQueueWithComplete[VoiceMessage[_]] = _
+
+  private var receivedAck = true
 
   def heartbeatTimerKey: String = "SendHeartbeats"
 
   def restartLoginKey: String = "RestartLogin"
 
   def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
-    val jsonFlow = Flow[Message]
-      .collect {
-        case t: TextMessage => t.textStream.fold("")(_ + _)
-        case b: BinaryMessage =>
-          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
-      }
-      .flatMapConcat(identity)
+    val jsonFlow = Flow[Message].flatMapConcat {
+      case t: TextMessage => t.textStream.fold("")(_ + _)
+      case b: BinaryMessage =>
+        b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
+    }
 
     val withLogging =
       if (AckCordVoiceSettings().LogReceivedWs)
@@ -202,7 +205,7 @@ class VoiceWsHandler(
         log.info("UDP connection stopped when shut down in inactive state. Stopping.")
         context.stop(self)
       }
-      connectionActor = null
+      killSwitch = null
   }
 
   def active: Receive = {
@@ -214,13 +217,13 @@ class VoiceWsHandler(
         queue = null
         timers.cancel(heartbeatTimerKey)
 
-        if (connectionActor == null)
+        if (killSwitch == null)
           stopOrGotoInactive()
         else
           log.info("Websocket connection completed. Waiting for UDP connection.")
 
       case ConnectionDied =>
-        connectionActor = null
+        killSwitch = null
 
         if (queue == null)
           stopOrGotoInactive()
@@ -250,29 +253,33 @@ class VoiceWsHandler(
           self ! Restart(fresh = false, 0.millis)
         }
 
-      case FoundIP(localAddress, localPort) =>
+      case VoiceUDPFlow.FoundIP(localAddress, localPort) =>
         log.info("Found IP and port")
         queue.offer(
           SelectProtocol(
-            SelectProtocolData("udp", SelectProtocolConnectionData(localAddress, localPort, "xsalsa20_poly1305"))
+            protocol = "udp",
+            address = localAddress,
+            port = localPort,
+            mode = "xsalsa20_poly1305"
           )
         )
 
       case SetSpeaking(speaking) =>
         if (queue != null)
-          queue.offer(Speaking(SpeakingData(speaking, JsonSome(0), JsonUndefined, JsonUndefined)))
+          queue.offer(Speaking(speaking = speaking, delay = JsonSome(0), ssrc = JsonUndefined, userId = JsonUndefined))
 
       case Logout =>
         log.info("Logging out")
         queue.complete()
-        connectionActor ! Disconnect
+        killSwitch.shutdown()
         shuttingDown = true
 
       case Restart(fresh, waitDur) =>
         log.info("Restarting")
         queue.complete()
-        if (connectionActor != null)
-          connectionActor ! Disconnect
+        if (killSwitch != null) {
+          killSwitch.shutdown()
+        }
         timers.startSingleTimer(restartLoginKey, Login, waitDur)
         if (fresh)
           resume = None
@@ -302,12 +309,28 @@ class VoiceWsHandler(
     case Right(Ready(ReadyData(readySsrc, port, _, _))) =>
       log.debug("Received ready")
       ssrc = readySsrc
-      connectionActor = context.actorOf(
-        VoiceUDPHandler.props(address, port, ssrc, sendTo, sendSoundTo, serverId, userId),
-        "VoiceUDPHandler"
-      )
-      connectionActor ! DoIPDiscovery(self)
-      context.watchWith(connectionActor, ConnectionDied)
+      secretKeyPromise = Promise[ByteString]
+
+      val (killSwitch, (futIp, watchDone)) = soundProducer
+        .viaMat(KillSwitches.single)(Keep.right)
+        .viaMat(
+          VoiceUDPFlow
+            .flow(
+              new InetSocketAddress(address, port),
+              ssrc,
+              serverId,
+              userId,
+              secretKeyPromise.future
+            )
+            .watchTermination()(Keep.both)
+        )(Keep.both)
+        .to(soundConsumer)
+        .run()
+
+      this.killSwitch = killSwitch
+
+      futIp.pipeTo(self)
+      watchDone.map(_ => ConnectionDied).pipeTo(self)
 
       sender() ! AckSink
 
@@ -332,7 +355,8 @@ class VoiceWsHandler(
 
     case Right(SessionDescription(SessionDescriptionData(_, secretKey))) =>
       log.debug("Received session description")
-      connectionActor ! StartConnection(secretKey)
+      sendTo.foreach(_ ! AudioAPIMessage.Ready(serverId, userId))
+      secretKeyPromise.success(secretKey)
       sender() ! AckSink
 
     case Right(Speaking(SpeakingData(isSpeaking, delay, userSsrc, JsonSome(speakingUserId)))) =>
@@ -361,9 +385,10 @@ object VoiceWsHandler {
       sessionId: String,
       token: String,
       sendTo: Option[ActorRef],
-      sendSoundTo: Option[ActorRef]
+      soundProducer: Source[ByteString, NotUsed],
+      soundConsumer: Sink[AudioAPIMessage, NotUsed]
   )(implicit mat: Materializer): Props =
-    Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, sendSoundTo))
+    Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, soundProducer, soundConsumer))
 
   private case object InitSink
   private case object AckSink

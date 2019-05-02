@@ -9,15 +9,16 @@ While the modules listed at the start are the main modules you want to depend on
 
 Here is a map of all the modules, and how they depend on each other
 ```
-      +----> gateway ----+      +-> commands ---> commands-core ---+   
-      |                  |      |                       ^          |   
-      |                  |      |                       |          |   
-      |                  v      |                       |          v   
+      +----> voice -----------------------------> lavaplayer-core -+ 
+      |                                                 ^          |   
+      |                                                 |          |   
+      |                                                 |          v   
  data +----> requests -> util --+-> core ---------------+-----> ackcord
-      |                  ^                              |          ^   
-      |                  |                              |          |   
-      |                  |                              v          |   
-      +----> voice ------+--------> lavaplayer -> lavaplayer-core -+   
+      |                         |    ^                  |          ^   
+      |                         |    |                  |          |
+      +----> gateway -----------|----+                  |          |   
+                                |                       v          |
+                                +-> commands ---> commands-core ---+
 ```
 
 {% assign versions = site.data.versions %}
