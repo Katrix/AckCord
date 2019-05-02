@@ -33,35 +33,11 @@ libraryDependencies += "net.katsstuff" %%% "ackcord-data" % "{{versions.ackcord}
 ```
 Provides access to all the data objects, encoders and decoders used by AckCord. This module is also crosscompiled for Scala.Js. Wonderful if you want to build a web panel for your bot in Scala, and don't want to redefine all the data objects.
 
-## ackcord-network
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-network" % "{{versions.ackcord}}"
-```
-The base network module of AckCord. You probably don't want to depend on this alone unless you're adding new requests to AckCord.
-
-## ackcord-rest
+## ackcord-requests
 ```scala
 libraryDependencies += "net.katsstuff" %% "ackcord-rest" % "{{versions.ackcord}}"
 ```
-Contains all the rest requests in AckCord.
-
-## ackcord-image
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-image" % "{{versions.ackcord}}"
-```
-Contains all the image requests in AckCord. Here for completion sake, although if you only depend on this you should probably find a more light weight solution.
-
-## ackcord-oauth
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-oatuh" % "{{versions.ackcord}}"
-```
-Contains the building blocks for making an OAuth application using AckCord.
-
-## ackcord-websockets
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-websockets" % "{{versions.ackcord}}"
-```
-The base websockets module of AckCord. It makes even less sense to depend on this alone than the network module.
+Contains all the requests in AckCord.
 
 ## ackcord-gateway
 ```scala
@@ -75,23 +51,11 @@ libraryDependencies += "net.katsstuff" %% "ackcord-voice" % "{{versions.ackcord}
 ```
 Contains all the code for the voice stuff in AckCord.
 
-## ackcord-util
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-util" % "{{versions.ackcord}}"
-```
-Misc utilities for AckCord that does not rely on the memory cache snapshot. If you want to build from the gateway and on, or want a custom cache implementation, this is probably what you want to depend on.
-
 ## ackcord-commands
 ```scala
 libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "{{versions.ackcord}}"
 ```
 The base commands API module. Does not work without an implementation.
-
-## ackcord-lavaplayuer
-```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer" % "{{versions.ackcord}}"
-```
-AckCord provides a module to use Lavaplayer to send audio to Discord. Does not work without an implementation.
 
 ## ackcord-core
 ```scala
@@ -109,7 +73,7 @@ Provides an implementation for the commands module using core.
 ```scala
 libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "{{versions.ackcord}}"
 ```
-Provides an implementation for the lavaplayer module using core.
+Provides an implementation to the the voice module using lavaplayer and core.
 
 To use, first create an instance of the `LavaplayerHandler` actor. This actor should be shared for an entire guild. Check the objects in the companion object of `LavaplayerHandler` for the valid messages you can send it.
 
