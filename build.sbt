@@ -122,16 +122,6 @@ lazy val voice = project
   )
   .dependsOn(dataJVM)
 
-lazy val util = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "util",
-    version := ackCordVersion,
-    description := "The module that contains all utilities for AckCord that can be represented without a concrete cache"
-  )
-  .dependsOn(requests)
-
 lazy val commands = project
   .settings(
     commonSettings,
@@ -141,7 +131,7 @@ lazy val commands = project
     libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.4.0",
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
-  .dependsOn(util)
+  .dependsOn(requests)
 
 lazy val core = project
   .settings(
@@ -155,7 +145,7 @@ lazy val core = project
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
-  .dependsOn(util, gateway)
+  .dependsOn(requests, gateway)
 
 lazy val commandsCore = project
   .settings(
@@ -243,7 +233,6 @@ lazy val doc = project
       requests,
       gateway,
       voice,
-      util,
       commands,
       core,
       commandsCore,
@@ -272,7 +261,6 @@ lazy val ackCordRoot = project
     requests,
     gateway,
     voice,
-    util,
     commands,
     core,
     commandsCore,

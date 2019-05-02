@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import java.nio.file.Path
 
 import ackcord.data._
@@ -33,6 +31,8 @@ import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.data.OptionT
 import cats.{Functor, Monad, Traverse}
+
+import scala.language.higherKinds
 
 package object syntax {
 
