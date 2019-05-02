@@ -30,7 +30,7 @@ import ackcord.data.raw.RawMessage
 import ackcord.data.{Message, User}
 import ackcord.requests.{CreateMessage, Request, RequestHelper}
 import ackcord.syntax._
-import ackcord.util.{MessageParser, Streamable}
+import ackcord.util.Streamable
 import akka.NotUsed
 import akka.stream.FlowShape
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL}
@@ -124,8 +124,7 @@ object CmdHelper {
           OptionT.fromOption(if (msg.mentions.contains(botUser.id)) Some(msg.content.split(" ").toList) else None)
 
         quickCheck.flatMap { args =>
-          MessageParser[User]
-            .parse(args)
+          MessageParser.parseEitherT(args, MessageParser[User])
             .toOption
             .subflatMap {
               case (remaining, user) if user.id == botUser.id => Some(remaining)

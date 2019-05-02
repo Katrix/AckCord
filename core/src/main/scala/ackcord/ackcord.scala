@@ -52,9 +52,6 @@ package object ackcord {
   val Streamable: util.Streamable.type = util.Streamable
   type Streamable[F[_]] = util.Streamable[F]
 
-  val MessageParser: util.MessageParser.type = util.MessageParser
-  type MessageParser[A] = util.MessageParser[A]
-
   val JsonOption: util.JsonOption.type = util.JsonOption
   type JsonOption[A] = util.JsonOption[A]
 

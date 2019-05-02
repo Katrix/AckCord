@@ -30,6 +30,7 @@ import java.time.Instant
 import ackcord.CacheSnapshot.BotUser
 import ackcord.data._
 import cats.data.OptionT
+import cats.~>
 import shapeless.tag._
 
 /**
@@ -207,6 +208,8 @@ trait CacheSnapshot[F[_]] {
     * Get the presence of a user for a specific guild
     */
   def getPresence(guildId: GuildId, userId: UserId): OptionT[F, Presence]
+
+  def mapK[G[_]](f: F ~> G): CacheSnapshot[G] = new CacheSnapshot.MappedCacheSnapshot(this, f)
 }
 
 object CacheSnapshot {
@@ -215,4 +218,73 @@ object CacheSnapshot {
     * Phantom type for the bot (client) user. Used for syntax.
     */
   sealed trait BotUser
+
+  class MappedCacheSnapshot[F[_], G[_]](val original: CacheSnapshot[F], f: F ~> G) extends CacheSnapshot[G] {
+
+    override type MapType[K, V] = original.MapType[K, V]
+
+    override def dmChannelMap: G[original.MapType[Channel, DMChannel]] = f(original.dmChannelMap)
+
+    override def groupDmChannelMap: G[original.MapType[Channel, GroupDMChannel]] = f(original.groupDmChannelMap)
+
+    override def unavailableGuildMap: G[original.MapType[Guild, UnavailableGuild]] = f(original.unavailableGuildMap)
+
+    override def guildMap: G[original.MapType[Guild, Guild]] = f(original.guildMap)
+
+    override def messageMap: G[original.MapType[Channel, original.MapType[Message, Message]]] = f(original.messageMap)
+
+    override def lastTypedMap: G[original.MapType[Channel, original.MapType[User, Instant]]] = f(original.lastTypedMap)
+
+    override def userMap: G[original.MapType[User, User]] = f(original.userMap)
+
+    override def banMap: G[original.MapType[Guild, original.MapType[User, Ban]]] = f(original.banMap)
+
+    override def botUser: G[User @@ BotUser] = f(original.botUser)
+
+    override def getDmChannel(id: ChannelId): OptionT[G, DMChannel] = original.getDmChannel(id).mapK(f)
+
+    override def getUserDmChannel(id: UserId): OptionT[G, DMChannel] = original.getUserDmChannel(id).mapK(f)
+
+    override def getGroupDmChannel(id: ChannelId): OptionT[G, GroupDMChannel] = original.getGroupDmChannel(id).mapK(f)
+
+    override def getGuild(id: GuildId): OptionT[G, Guild] = original.getGuild(id).mapK(f)
+
+    override def getGuildWithUnavailable(id: GuildId): OptionT[G, UnknownStatusGuild] =
+      original.getGuildWithUnavailable(id).mapK(f)
+
+    override def getChannelMessages(channelId: ChannelId): original.MapType[Message, Message] =
+      original.getChannelMessages(channelId)
+
+    override def getMessage(channelId: ChannelId, messageId: MessageId): OptionT[G, Message] =
+      original.getMessage(channelId, messageId).mapK(f)
+
+    override def getMessage(messageId: MessageId): OptionT[G, Message] = original.getMessage(messageId).mapK(f)
+
+    override def getGuildChannel(guildId: GuildId, id: ChannelId): OptionT[G, GuildChannel] =
+      original.getGuildChannel(guildId, id).mapK(f)
+
+    override def getGuildChannel(id: ChannelId): OptionT[G, GuildChannel] = original.getGuildChannel(id).mapK(f)
+
+    override def getChannel(id: ChannelId): OptionT[G, Channel] = original.getChannel(id).mapK(f)
+
+    override def getTChannel(id: ChannelId): OptionT[G, TChannel] = original.getTChannel(id).mapK(f)
+
+    override def getRole(id: RoleId): OptionT[G, Role] = original.getRole(id).mapK(f)
+
+    override def getRole(guildId: GuildId, roleId: RoleId): OptionT[G, Role] = original.getRole(roleId).mapK(f)
+
+    override def getEmoji(id: EmojiId): OptionT[G, Emoji] = original.getEmoji(id).mapK(f)
+
+    override def getLastTyped(channelId: ChannelId, userId: UserId): OptionT[G, Instant] =
+      original.getLastTyped(channelId, userId).mapK(f)
+
+    override def getUser(id: UserId): OptionT[G, User] = original.getUser(id).mapK(f)
+
+    override def getBan(guildId: GuildId, userId: UserId): OptionT[G, Ban] = original.getBan(guildId, userId).mapK(f)
+
+    override def getPresence(guildId: GuildId, userId: UserId): OptionT[G, Presence] =
+      original.getPresence(guildId, userId).mapK(f)
+
+    override def mapK[H[_]](g: G ~> H): CacheSnapshot[H] = new MappedCacheSnapshot(original, f.andThen(g))
+  }
 }

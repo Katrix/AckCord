@@ -21,20 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.util
-
-import scala.language.{higherKinds, implicitConversions}
-
-import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
+package ackcord.commands
 
 import ackcord.CacheSnapshot
+import ackcord.commands.MessageParser.RemainingAsString
 import ackcord.data._
-import ackcord.util.MessageParser.RemainingAsString
 import akka.NotUsed
-import cats.Monad
-import cats.data.{EitherT, OptionT}
-import shapeless._
+import cats.data.{EitherT, OptionT, StateT}
+import cats.mtl.syntax.all._
+import cats.mtl.{ApplicativeHandle, MonadState}
+import cats.syntax.all._
+import cats.{Monad, MonadError}
+
+import scala.language.{higherKinds, implicitConversions}
+import scala.util.matching.Regex
+import scala.util.{Failure, Success, Try}
 
 /**
   * MessageParser is a typeclass to simplify parsing messages. It can derive
@@ -44,27 +45,14 @@ import shapeless._
 trait MessageParser[A] { self =>
 
   /**
-    * Parse a message into the needed types.
-    * @param strings The content of the message where each string is
-    *                separated by a space.
-    * @param c The cache to use.
-    * @return Left with an error message if it failed to parse, or Right with
-    *         the remaining arguments, and the parsed value.
+    * A program to parse a message into the needed types.
     */
   def parse[F[_]](
-      strings: List[String]
-  )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)]
-
-  /**
-    * Parse a message into the needed types, tossing away the remaining string.
-    * @param strings The content of the message where each string is
-    *                separated by a space.
-    * @param c The cache to use.
-    * @return Left with an error message if it failed to parse, or Right with
-    *         the parsed value.
-    */
-  def parseResult[F[_]](strings: List[String])(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, A] =
-    parse(strings).map(_._2)
+      implicit c: CacheSnapshot[F],
+      F: Monad[F],
+      E: ApplicativeHandle[F, String],
+      S: MonadState[F, List[String]]
+  ): F[A]
 
   /**
     * Create a new parser by filtering the values created by this parser.
@@ -73,21 +61,11 @@ trait MessageParser[A] { self =>
     */
   def filterWithError(f: A => Boolean, error: String): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-      self.parse(strings).ensure(error) { case (_, obj) => f(obj) }
-  }
-
-  /**
-    * Create a new parser by applying a function to the result of this parser
-    * @param f The function to apply
-    * @tparam B The new parser type
-    */
-  def map[B](f: A => B): MessageParser[B] = new MessageParser[B] {
-    override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], B)] =
-      self.parse(strings).map { case (tail, obj) => tail -> f(obj) }
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[A] = self.parse[F].flatMap(res => if (f(res)) res.pure else error.raise)
   }
 
   /**
@@ -99,11 +77,14 @@ trait MessageParser[A] { self =>
     */
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], B)] =
-      self.parse(strings).subflatMap {
-        case (tail, obj) if pf.isDefinedAt(obj) => Right(tail -> pf(obj))
-        case (_, _)                             => Left(error)
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[B] =
+      self.parse.flatMap {
+        case obj if pf.isDefinedAt(obj) => pf(obj).pure
+        case _                          => error.raise
       }
   }
 }
@@ -115,28 +96,88 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
   def apply[A](implicit parser: MessageParser[A]): MessageParser[A] = parser
 
+  implicit val messageParserMonad: MonadError[MessageParser, String] = new MonadError[MessageParser, String] {
+    override def pure[A](x: A): MessageParser[A] = new MessageParser[A] {
+      override def parse[F[_]](
+          implicit c: CacheSnapshot[F],
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[A] = F.pure(x)
+    }
+
+    override def flatMap[A, B](fa: MessageParser[A])(f: A => MessageParser[B]): MessageParser[B] =
+      new MessageParser[B] {
+        override def parse[F[_]](
+            implicit c: CacheSnapshot[F],
+            F: Monad[F],
+            E: ApplicativeHandle[F, String],
+            S: MonadState[F, List[String]]
+        ): F[B] = fa.parse.flatMap(f(_).parse)
+      }
+
+    override def tailRecM[A, B](a: A)(f: A => MessageParser[Either[A, B]]): MessageParser[B] = new MessageParser[B] {
+      override def parse[F[_]](
+          implicit c: CacheSnapshot[F],
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[B] = F.tailRecM(a)(f(_).parse)
+    }
+
+    override def raiseError[A](e: String): MessageParser[A] = new MessageParser[A] {
+      override def parse[F[_]](
+          implicit c: CacheSnapshot[F],
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[A] = e.raise
+    }
+
+    override def handleErrorWith[A](fa: MessageParser[A])(f: String => MessageParser[A]): MessageParser[A] =
+      new MessageParser[A] {
+        override def parse[F[_]](
+            implicit c: CacheSnapshot[F],
+            F: Monad[F],
+            E: ApplicativeHandle[F, String],
+            S: MonadState[F, List[String]]
+        ): F[A] = fa.parse.handleWith[String](f(_).parse)
+      }
+  }
+
   /**
     * Parse a message as an type
-    * @param message The message to parse
+    * @param args The message to parse
     * @param parser The parser to use
     * @param c The cache to use
     * @tparam A The type to parse the message as
     * @return Left with an error message if it failed to parse, or Right with the parsed type
     */
-  def parseResult[F[_], A](
-      message: String
-  )(implicit parser: MessageParser[A], c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, A] =
-    parser.parseResult(message.split(" ").toList)
+  def parseResultEitherT[F[_], A](
+      args: List[String],
+      parser: MessageParser[A]
+  )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, A] = parseEitherT(args, parser).map(_._2)
+
+  def parseEitherT[F[_], A](
+      args: List[String],
+      parser: MessageParser[A]
+  )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] = {
+    import cats.mtl.instances.handle._
+    import cats.mtl.instances.state._
+    import cats.mtl.instances.statet._
+
+    implicit val cMapped: CacheSnapshot[StateT[EitherT[F, String, ?], List[String], ?]] =
+      c.mapK(EitherT.liftK[F, String].andThen(StateT.liftK[EitherT[F, String, ?], List[String]]))
+
+    parser.parse[StateT[EitherT[F, String, ?], List[String], ?]].run(args)
+  }
 
 }
 
 trait MessageParserInstances {
 
-  //Scala 2.11
-  private def tryToEither[B](t: Try[B]): Either[Throwable, B] = t match {
-    case Success(value)     => Right(value)
-    case Failure(exception) => Left(exception)
-  }
+  private def eitherToF[F[_], A](either: Either[String, A])(implicit E: ApplicativeHandle[F, String]): F[A] =
+    either.fold(_.raise, E.applicative.pure)
 
   /**
     * Create a parser from a string
@@ -145,10 +186,14 @@ trait MessageParserInstances {
     */
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-      if (strings.nonEmpty) EitherT.rightT[F, String](strings.tail -> f(strings.head))
-      else EitherT.leftT[F, (List[String], A)]("No more arguments left")
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[A] = S.get.flatMap {
+      case Nil          => E.raise("No more arguments left")
+      case head :: tail => S.set(tail).as(f(head))
+    }
   }
 
   /**
@@ -164,14 +209,19 @@ trait MessageParserInstances {
     * @tparam A The type to parse
     */
   def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
-
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-      if (strings.nonEmpty)
-        EitherT.fromEither[F](tryToEither(f(strings.head))).bimap(_.getMessage, strings.tail -> _)
-      else
-        EitherT.leftT[F, (List[String], A)]("No more arguments left")
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[A] = S.get.flatMap {
+      case Nil => E.raise("No more arguments left")
+      case head :: tail =>
+        S.set(tail).as(f(head)).flatMap {
+          case Success(value) => value.pure
+          case Failure(e)     => e.getMessage.raise
+        }
+    }
   }
 
   /**
@@ -180,22 +230,18 @@ trait MessageParserInstances {
     * @param f The function to transform the string with.
     * @tparam A The type to parse
     */
-  def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
-    override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-      if (strings.nonEmpty)
-        EitherT.fromEither[F](tryToEither(f(strings.head))).bimap(_ => errorMessage, strings.tail -> _)
-      else
-        EitherT.leftT[F, (List[String], A)]("No more arguments left")
+  def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = fromTry(f).adaptError {
+    case _ => errorMessage
   }
 
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {
       override def parse[F[_]](
-          strings: List[String]
-      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], RemainingAsString)] =
-        EitherT.rightT[F, String](Nil -> RemainingAsString(strings.mkString(" ")))
+          implicit c: CacheSnapshot[F],
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[RemainingAsString] = S.get.map(s => RemainingAsString(s.mkString(" "))) <* S.set(Nil)
     }
 
   implicit val stringParser: MessageParser[String]   = fromString(identity)
@@ -222,19 +268,26 @@ trait MessageParserInstances {
       getObj: SnowflakeType[C] => HighFunc[CacheSnapshot, OptionT[?[_], C]]
   ): MessageParser[C] = new MessageParser[C] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], C)] = {
-      if (strings.nonEmpty) {
-        val head = strings.head
-        for {
-          m <- EitherT.fromOption[F](regex.findFirstMatchIn(head), s"Invalid $name specified")
-          _ <- EitherT.cond[F](m.start == 0 && m.end == head.length, (), s"Invalid $name specified")
-          obj <- {
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[C] = S.get.flatMap {
+      case Nil => "No more arguments left".raise
+      case head :: tail =>
+        val optMatch = regex
+          .findFirstMatchIn(head)
+          .filter(m => m.start == 0 && m.end == head.length)
+          .toRight(s"Invalid $name specified")
+
+        val res = eitherToF(optMatch)
+          .flatMap { m =>
             val snowflake = SnowflakeType[C](RawSnowflake(m.group(1)))
-            getObj(snowflake)(c).toRight(s"${name.capitalize} not found")
+            getObj(snowflake)(c).toRight(s"${name.capitalize} not found").value
           }
-        } yield strings.tail -> obj
-      } else EitherT.leftT[F, (List[String], C)]("No more arguments left")
+          .flatMap(e => eitherToF(e))
+
+        res <* S.set(tail)
     }
   }
 
@@ -295,9 +348,11 @@ trait MessageParserInstances {
     */
   val allStringsParser: MessageParser[List[String]] = new MessageParser[List[String]] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], List[String])] =
-      EitherT.rightT[F, String](Nil -> strings)
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[List[String]] = S.get <* S.set(Nil)
   }
 
   /**
@@ -305,30 +360,34 @@ trait MessageParserInstances {
     */
   implicit val notUsedParser: MessageParser[NotUsed] = new MessageParser[NotUsed] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], NotUsed)] =
-      if (strings.isEmpty) EitherT.rightT[F, String](Nil -> NotUsed)
-      else EitherT.leftT[F, (List[String], NotUsed)](s"Found dangling arguments: ${strings.mkString(", ")}")
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[NotUsed] =
+      S.inspect(_.isEmpty)
+        .ifM(
+          F.pure(NotUsed),
+          S.get.flatMap(args => E.raise(s"Found dangling arguments: ${args.mkString(", ")}"))
+        )
   }
 
   implicit def optionParser[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
     new MessageParser[Option[A]] {
       override def parse[F[_]](
-          strings: List[String]
-      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Option[A])] =
-        parser.parse(strings).map(t => t._1 -> (Some(t._2): Option[A])).recover {
-          case _ => strings -> None
-        }
+          implicit c: CacheSnapshot[F],
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[Option[A]] =
+        parser.parse.map[Option[A]](Some.apply).handle[String](_ => None)
+
     }
 }
 
 trait DeriveMessageParser {
-  implicit val hNilParser: MessageParser[HNil] = new MessageParser[HNil] {
-    override def parse[F[_]](
-        string: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], HNil)] =
-      EitherT.rightT[F, String](string -> HNil)
-  }
+  import shapeless._
+  implicit val hNilParser: MessageParser[HNil] = Monad[MessageParser].pure(HNil)
 
   implicit def hListParser[Head, Tail <: HList](
       implicit
@@ -336,19 +395,25 @@ trait DeriveMessageParser {
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :: Tail] = new MessageParser[Head :: Tail] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Head :: Tail)] =
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[Head :: Tail] =
       for {
-        t1 <- headParser.value.parse(strings)
-        t2 <- tailParser.value.parse(t1._1)
-      } yield t2._1 -> (t1._2 :: t2._2)
+        h <- headParser.value.parse
+        t <- tailParser.value.parse
+      } yield h :: t
+
   }
 
   implicit val cNilParser: MessageParser[CNil] = new MessageParser[CNil] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], CNil)] =
-      throw new IllegalStateException("Tried to parse CNil")
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[CNil] = throw new IllegalStateException("Tried to parse CNil")
   }
 
   implicit def coProductParser[Head, Tail <: Coproduct](
@@ -357,15 +422,15 @@ trait DeriveMessageParser {
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :+: Tail] = new MessageParser[Head :+: Tail] {
     override def parse[F[_]](
-        strings: List[String]
-    )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Head :+: Tail)] = {
-      //TODO: Check if we can remove the type annotations here
-      val head: EitherT[F, String, (List[String], Head :+: Tail)] =
-        headParser.value.parse(strings).map(t => t._1 -> Inl(t._2))
-      lazy val tail: EitherT[F, String, (List[String], Head :+: Tail)] =
-        tailParser.value.parse(strings).map(t => t._1 -> Inr(t._2))
+        implicit c: CacheSnapshot[F],
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[Head :+: Tail] = {
+      val head2 = headParser.value.parse.map[Head :+: Tail](Inl.apply)
+      val tail2 = tailParser.value.parse.map[Head :+: Tail](Inr.apply)
 
-      head.orElse(tail)
+      head2.handleWith[String](_ => tail2)
     }
   }
 
@@ -373,12 +438,6 @@ trait DeriveMessageParser {
     implicit def deriveParser[A, Repr](
         implicit gen: Generic.Aux[A, Repr],
         ser: Lazy[MessageParser[Repr]]
-    ): MessageParser[A] =
-      new MessageParser[A] {
-        override def parse[F[_]](
-            strings: List[String]
-        )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], A)] =
-          ser.value.parse(strings).map { case (remaining, repr) => remaining -> gen.from(repr) }
-      }
+    ): MessageParser[A] = ser.value.map(gen.from)
   }
 }

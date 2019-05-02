@@ -138,6 +138,7 @@ lazy val commands = project
     publishSettings,
     name := "commands",
     version := ackCordVersion,
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.4.0",
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
   .dependsOn(util)

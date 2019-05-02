@@ -23,13 +23,10 @@
  */
 package ackcord.commands
 
-import scala.language.higherKinds
-
 import java.util.Locale
 
 import scala.collection.mutable
 import scala.concurrent.Future
-
 import ackcord._
 import ackcord.commands.HelpCmd.Args.{CommandArgs, PageArgs}
 import ackcord.commands.HelpCmd.{AddCmd, CommandRegistration, TerminateCommand}
@@ -39,8 +36,7 @@ import ackcord.requests._
 import ackcord.syntax._
 import akka.actor.{Actor, ActorRef}
 import akka.{Done, NotUsed}
-import cats.Monad
-import cats.data.EitherT
+import cats.syntax.all._
 
 /**
   * A base for help commands. Commands need to be registered manually
@@ -142,19 +138,8 @@ object HelpCmd {
     case class PageArgs(page: Int)          extends Args
 
     //We write out the parser ourself as string parses any string
-    implicit val parser: MessageParser[Args] = new MessageParser[Args] {
-      override def parse[F[_]](
-          strings: List[String]
-      )(implicit c: CacheSnapshot[F], F: Monad[F]): EitherT[F, String, (List[String], Args)] = {
-        if (strings.nonEmpty) {
-          val head :: tail = strings
-          MessageParser.intParser
-            .parse(strings)
-            .map(t => t._1 -> PageArgs(t._2))
-            .leftFlatMap(_ => EitherT.rightT[F, String]((tail, CommandArgs(head))))
-        } else EitherT.leftT[F, (List[String], Args)]("Not enough arguments")
-      }
-    }
+    implicit val parser: MessageParser[Args] =
+      MessageParser.intParser.map[Args](PageArgs).orElse(MessageParser.stringParser.map(CommandArgs))
   }
 
   /**

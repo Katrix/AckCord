@@ -26,7 +26,7 @@ package ackcord.commands
 import scala.language.higherKinds
 
 import ackcord.requests.RequestHelper
-import ackcord.util.{MessageParser, Streamable}
+import ackcord.util.Streamable
 import ackcord.{CacheSnapshot, RequestRunner}
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink, Source}
