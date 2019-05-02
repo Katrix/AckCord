@@ -378,7 +378,8 @@ case class ModifyGuildMember[Ctx](
       ifDefined(params.nick, Permission.ManageNicknames),
       ifDefined(params.roles, Permission.ManageRoles),
       ifDefined(params.mute, Permission.MuteMembers),
-      ifDefined(params.deaf, Permission.DeafenMembers)
+      ifDefined(params.deaf, Permission.DeafenMembers),
+      ifDefined(params.channelId, Permission.MoveMembers)
     )
   }
   override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
