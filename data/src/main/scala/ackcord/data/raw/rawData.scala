@@ -80,26 +80,42 @@ case class RawChannel(
     */
   def toChannel: Option[Channel] = {
     `type` match {
-      case ChannelType.GuildText =>
+      case ChannelType.GuildText | ChannelType.GuildNews =>
         for {
           guildId              <- guildId
           name                 <- name
           position             <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
-          TGuildChannel(
-            id,
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            topic,
-            lastMessageId,
-            rateLimitPerUser,
-            nsfw.getOrElse(false),
-            parentId,
-            lastPinTimestamp
-          )
+          if(`type` == ChannelType.GuildNews) {
+            NewsTGuildChannel(
+              id,
+              guildId,
+              name,
+              position,
+              SnowflakeMap.withKey(permissionOverwrites)(_.id),
+              topic,
+              lastMessageId,
+              nsfw.getOrElse(false),
+              parentId,
+              lastPinTimestamp
+            )
+          }
+          else {
+            NormalTGuildChannel(
+              id,
+              guildId,
+              name,
+              position,
+              SnowflakeMap.withKey(permissionOverwrites)(_.id),
+              topic,
+              lastMessageId,
+              rateLimitPerUser,
+              nsfw.getOrElse(false),
+              parentId,
+              lastPinTimestamp
+            )
+          }
         }
       case ChannelType.DM =>
         for {
@@ -154,30 +170,63 @@ case class RawChannel(
             parentId
           )
         }
-    }
-  }
-
-  def toGuildChannel(guildId: GuildId): Option[GuildChannel] = {
-    `type` match {
-      case ChannelType.GuildText =>
+      case ChannelType.GuildStore =>
         for {
+          guildId              <- guildId
           name                 <- name
           position             <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
-          TGuildChannel(
+          GuildStoreChannel(
             id,
             guildId,
             name,
             position,
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            topic,
-            lastMessageId,
-            rateLimitPerUser,
             nsfw.getOrElse(false),
-            parentId,
-            lastPinTimestamp
+            parentId
           )
+        }
+    }
+  }
+
+  def toGuildChannel(guildId: GuildId): Option[GuildChannel] = {
+    `type` match {
+      case ChannelType.GuildText | ChannelType.GuildNews =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          if(`type` == ChannelType.GuildNews) {
+            NewsTGuildChannel(
+              id,
+              guildId,
+              name,
+              position,
+              SnowflakeMap.withKey(permissionOverwrites)(_.id),
+              topic,
+              lastMessageId,
+              nsfw.getOrElse(false),
+              parentId,
+              lastPinTimestamp
+            )
+          }
+          else {
+            NormalTGuildChannel(
+              id,
+              guildId,
+              name,
+              position,
+              SnowflakeMap.withKey(permissionOverwrites)(_.id),
+              topic,
+              lastMessageId,
+              rateLimitPerUser,
+              nsfw.getOrElse(false),
+              parentId,
+              lastPinTimestamp
+            )
+          }
         }
       case ChannelType.DM => throw new IllegalStateException("Not a guild channel")
       case ChannelType.GuildVoice =>
@@ -208,6 +257,22 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildCategory(
+            id,
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            nsfw.getOrElse(false),
+            parentId
+          )
+        }
+      case ChannelType.GuildStore =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+        } yield {
+          GuildStoreChannel(
             id,
             guildId,
             name,

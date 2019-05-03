@@ -277,7 +277,8 @@ object RawHandlers extends Handlers {
   //Delete
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, _) =>
     rawChannel.`type` match {
-      case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory =>
+      case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildNews |
+          ChannelType.GuildStore =>
         rawChannel.guildId.flatMap(builder.getGuild(_).value).foreach { guild =>
           builder.guildMap.put(guild.id, guild.copy(channels = guild.channels - rawChannel.id))
         }

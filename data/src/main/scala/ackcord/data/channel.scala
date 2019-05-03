@@ -41,6 +41,8 @@ object ChannelType {
   case object GuildVoice    extends ChannelType
   case object GroupDm       extends ChannelType
   case object GuildCategory extends ChannelType
+  case object GuildNews     extends ChannelType
+  case object GuildStore    extends ChannelType
 
   /**
     * Get a channel type from an id
@@ -51,6 +53,8 @@ object ChannelType {
     case 2 => Some(GuildVoice)
     case 3 => Some(GroupDm)
     case 4 => Some(GuildCategory)
+    case 5 => Some(GuildNews)
+    case 6 => Some(GuildStore)
     case _ => None
   }
 
@@ -63,6 +67,8 @@ object ChannelType {
     case GuildVoice    => 2
     case GroupDm       => 3
     case GuildCategory => 4
+    case GuildNews     => 5
+    case GuildStore    => 6
   }
 }
 
@@ -208,13 +214,52 @@ sealed trait GuildChannel extends Channel with GetGuild {
 }
 
 /**
-  * A text channel in a guild
-  *
-  * @param rateLimitPerUser The amount of time a user has to wait before
-  *                         sending messages after each other. Bots are not
-  *                         affected.
+  * A texual channel in a guild
   */
-case class TGuildChannel(
+sealed trait TGuildChannel extends GuildChannel with TChannel {
+
+  /**
+    * The topic for this channel.
+    */
+  def topic: Option[String]
+
+  /**
+    * The amount of time a user has to wait before sending messages after each
+    * other. Bots are not affected.
+    */
+  def rateLimitPerUser: Option[Int]
+
+  /**
+    * When the last pinned message was pinned.
+    */
+  def lastPinTimestamp: Option[OffsetDateTime]
+}
+
+/**
+  * A news channel in a guild. For the most part you can treat this like any
+  * other text channel.
+  */
+case class NewsTGuildChannel(
+    id: ChannelId,
+    guildId: GuildId,
+    name: String,
+    position: Int,
+    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    topic: Option[String],
+    lastMessageId: Option[MessageId],
+    nsfw: Boolean,
+    parentId: Option[ChannelId],
+    lastPinTimestamp: Option[OffsetDateTime]
+) extends TGuildChannel {
+  override def channelType: ChannelType = ChannelType.GuildText
+
+  def rateLimitPerUser: Option[Int] = None
+}
+
+/**
+  * A normal text channel in a guild
+  */
+case class NormalTGuildChannel(
     id: ChannelId,
     guildId: GuildId,
     name: String,
@@ -226,8 +271,7 @@ case class TGuildChannel(
     nsfw: Boolean,
     parentId: Option[ChannelId],
     lastPinTimestamp: Option[OffsetDateTime]
-) extends GuildChannel
-    with TChannel {
+) extends TGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
 
@@ -263,6 +307,21 @@ case class GuildCategory(
     parentId: Option[ChannelId]
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildCategory
+}
+
+/**
+  * A store channel in a guild
+  */
+case class GuildStoreChannel(
+    id: ChannelId,
+    guildId: GuildId,
+    name: String,
+    position: Int,
+    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    nsfw: Boolean,
+    parentId: Option[ChannelId]
+) extends GuildChannel {
+  override def channelType: ChannelType = ChannelType.GuildStore
 }
 
 /**
