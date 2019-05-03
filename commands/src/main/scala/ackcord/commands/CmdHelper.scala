@@ -124,7 +124,8 @@ object CmdHelper {
           OptionT.fromOption(if (msg.mentions.contains(botUser.id)) Some(msg.content.split(" ").toList) else None)
 
         quickCheck.flatMap { args =>
-          MessageParser.parseEitherT(args, MessageParser[User])
+          MessageParser
+            .parseEitherT(args, MessageParser[User])
             .toOption
             .subflatMap {
               case (remaining, user) if user.id == botUser.id => Some(remaining)

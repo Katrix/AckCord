@@ -74,7 +74,8 @@ case class Commands[F[_]](
       .collect[F[ParsedCmdMessage[F, A]]] {
         case Cmd(msg, args, cache) =>
           implicit val c: CacheSnapshot[F] = cache
-          MessageParser.parseEitherT(args, parser)
+          MessageParser
+            .parseEitherT(args, parser)
             .fold(e => CmdParseError(msg, e, cache), res => ParsedCmd(msg, res._2, res._1, cache))
         case filtered: FilteredCmd[F]  => F.pure(filtered)
         case error: GenericCmdError[F] => F.pure(error)

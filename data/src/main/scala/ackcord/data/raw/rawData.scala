@@ -87,7 +87,7 @@ case class RawChannel(
           position             <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
-          if(`type` == ChannelType.GuildNews) {
+          if (`type` == ChannelType.GuildNews) {
             NewsTGuildChannel(
               id,
               guildId,
@@ -100,8 +100,7 @@ case class RawChannel(
               parentId,
               lastPinTimestamp
             )
-          }
-          else {
+          } else {
             NormalTGuildChannel(
               id,
               guildId,
@@ -198,7 +197,7 @@ case class RawChannel(
           position             <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
-          if(`type` == ChannelType.GuildNews) {
+          if (`type` == ChannelType.GuildNews) {
             NewsTGuildChannel(
               id,
               guildId,
@@ -211,8 +210,7 @@ case class RawChannel(
               parentId,
               lastPinTimestamp
             )
-          }
-          else {
+          } else {
             NormalTGuildChannel(
               id,
               guildId,
@@ -630,7 +628,8 @@ case class RawActivity(
   */
 case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Option[PresenceStatus]) {
 
-  def toPresence: Presence = Presence(user.id, game.map(_.toActivity), status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
+  def toPresence: Presence =
+    Presence(user.id, game.map(_.toActivity), status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
 }
 
 /**

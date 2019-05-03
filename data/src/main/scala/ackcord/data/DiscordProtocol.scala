@@ -333,8 +333,10 @@ trait DiscordProtocol {
   implicit val inviteChannelEncoder: Encoder[InviteChannel] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val inviteChannelDecoder: Decoder[InviteChannel] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val inviteTargetUserEncoder: Encoder[InviteTargetUser] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val inviteTargetUserDecoder: Decoder[InviteTargetUser] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val inviteTargetUserEncoder: Encoder[InviteTargetUser] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val inviteTargetUserDecoder: Decoder[InviteTargetUser] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val inviteEncoder: Encoder[Invite] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val inviteDecoder: Decoder[Invite] = derivation.deriveDecoder(derivation.renaming.snakeCase)
