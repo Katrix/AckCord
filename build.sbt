@@ -64,7 +64,7 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.12.0-M1"
+      "io.circe" %%% "circe-derivation"     % "0.11.0-M1"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
