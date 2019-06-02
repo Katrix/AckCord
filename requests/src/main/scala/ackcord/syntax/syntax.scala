@@ -1011,7 +1011,13 @@ package object syntax {
     /**
       * Fetch an audit log for a this guild.
       */
-    def fetchAuditLog[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildAuditLog(guild.id, context)
+    def fetchAuditLog[Ctx](
+        userId: Option[UserId] = None,
+        actionType: Option[AuditLogEvent] = None,
+        before: Option[RawSnowflake] = None,
+        limit: Option[Int] = None,
+        context: Ctx = NotUsed: NotUsed
+    ) = GetGuildAuditLog(guild.id, GetGuildAuditLogData(userId, actionType, before, limit), context)
 
     /**
       * Fetch the webhooks in this guild.

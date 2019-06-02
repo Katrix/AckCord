@@ -23,12 +23,11 @@
  */
 package ackcord.requests
 
-import scala.language.implicitConversions
-
 import ackcord.AckCord
 import ackcord.data._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.{HttpMethod, Uri}
+import shapeless._
 
 /**
   * All the routes used by AckCord
@@ -55,7 +54,12 @@ object Routes {
     */
   type Emoji = String
 
-  case class Route(rawRoute: String, applied: Uri) {
+  trait RequestRouteBuilder {
+    def rawRoute: String
+    def applied: Uri
+  }
+
+  case class Route(rawRoute: String, applied: Uri) extends RequestRouteBuilder {
     require(
       rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
@@ -67,300 +71,431 @@ object Routes {
       if (next.isEmpty) this
       else Route(s"$rawRoute/$next", s"$applied/$next")
 
-    def /(parameter: MinorParameter): Route =
-      Route(s"$rawRoute/${parameter.name}", s"$applied/${parameter.value}")
+    def /[A](parameter: MinorParameter[A]): RouteFunction[A] =
+      RouteFunction(value => Route(s"$rawRoute/${parameter.name}", s"$applied/${parameter.print(value)}"))
 
-    def /(parameter: MajorParameter): Route =
-      Route(s"$rawRoute/${parameter.value}", s"$applied/${parameter.value}")
+    def /[A](parameter: MajorParameter[A]): RouteFunction[A] =
+      RouteFunction(value => Route(s"$rawRoute/$value", s"$applied/${parameter.print(value)}"))
 
     def /(other: Route): Route =
       if (other.rawRoute.isEmpty) this
       else Route(s"$rawRoute/${other.rawRoute}", s"$applied/${other.applied}")
 
     def ++(other: String) = Route(s"$rawRoute$other", s"$applied$other")
+
+    def ++[A](parameter: ConcatParameter[A]): RouteFunction[A] =
+      RouteFunction(value => Route(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}"))
+
+    def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
+      QueryRouteFunction {
+        case Some(value) => QueryRoute(rawRoute, s"$applied?${query.name}=${query.print(value)}", hasFirstQuery = true)
+        case None        => QueryRoute(rawRoute, applied, hasFirstQuery = false)
+      }
   }
 
-  sealed trait Parameter
-  case class MinorParameter(name: String, value: String)
-  case class MajorParameter(value: String)
+  case class QueryRoute(rawRoute: String, applied: Uri, hasFirstQuery: Boolean) extends RequestRouteBuilder {
+    require(
+      rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
+      "Raw route and applied route are unbalanced"
+    )
 
-  implicit def guildIdParam(id: GuildId): MajorParameter                  = MajorParameter(id.asString)
-  implicit def channelIdParam(id: ChannelId): MajorParameter              = MajorParameter(id.asString)
-  implicit def webhookIdParam(id: SnowflakeType[Webhook]): MajorParameter = MajorParameter(id.asString)
+    def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 
-  implicit def messageIdParam(id: MessageId): MinorParameter = MinorParameter("messageId", id.asString)
-  def emojiParam(emoji: Emoji): MinorParameter               = MinorParameter("emoji", emoji)
-  implicit def emojiIdParam(id: EmojiId): MinorParameter     = MinorParameter("emojiId", id.asString)
-  implicit def userIdParam(id: UserId): MinorParameter       = MinorParameter("userId", id.asString)
-  implicit def permissionOverwriteIdParam(id: UserOrRoleId): MinorParameter =
-    MinorParameter("permissionOverwriteId", id.asString)
-  implicit def roldIdParam(id: RoleId): MinorParameter               = MinorParameter("roldId", id.asString)
-  implicit def integrationIdParam(id: IntegrationId): MinorParameter = MinorParameter("integrationId", id.asString)
-  def inviteCodeParam(code: InviteCode): MinorParameter              = MinorParameter("inviteCode", code)
-  def tokenParam(token: String): MinorParameter                      = MinorParameter("token", token)
-  def hashParam(hash: String): MinorParameter                        = MinorParameter("hash", hash)
-  implicit def rawSnowflakeIdParam(id: RawSnowflake): MinorParameter = MinorParameter("applicationId", id.asString)
+    def ++(other: String) = QueryRoute(s"$rawRoute$other", s"$applied$other", hasFirstQuery)
 
-  implicit class Func1ToRequestSyntax[T1](val f: T1 => Route) extends AnyVal {
-    def toRequest(method: HttpMethod): T1 => RequestRoute = f.andThen(RequestRoute(_, method))
+    def ++[A](parameter: ConcatParameter[A]): QueryRouteFunction[A] =
+      QueryRouteFunction(
+        value => QueryRoute(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}", hasFirstQuery)
+      )
 
-    def /(next: String): T1 => Route = f.andThen(_ / next)
-
-    def /(parameter: MinorParameter): T1 => Route = f.andThen(_ / parameter)
-
-    def /(parameter: MajorParameter): T1 => Route = f.andThen(_ / parameter)
-
-    def /(other: Route): T1 => Route = f.andThen(_ / other)
-
-    def ++(other: String): T1 => Route = f.andThen(_ ++ other)
+    def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
+      QueryRouteFunction {
+        case Some(value) =>
+          val seperator = if (hasFirstQuery) "&" else "?"
+          QueryRoute(
+            rawRoute,
+            s"$applied$seperator${query.name}=${query.print(value)}",
+            hasFirstQuery = true
+          )
+        case None => this
+      }
   }
 
-  implicit class Func2ToRequestSyntax[T1, T2](val f: (T1, T2) => Route) extends AnyVal {
-    def toRequest(method: HttpMethod): (T1, T2) => RequestRoute = f.andThen(RequestRoute(_, method))
+  case class RouteFunction[A](route: A => Route) {
 
-    def /(next: String): (T1, T2) => Route = f.andThen(_ / next)
+    def toRequest[Repr <: HList](
+        method: HttpMethod
+    )(
+        implicit unflatten: FlattenUnflatten[A, Repr],
+        toFn: shapeless.ops.function.FnFromProduct[Repr => RequestRoute]
+    ): toFn.Out = {
+      val f = (repr: Repr) => route(unflatten.toIn(repr)).toRequest(method)
+      toFn.apply(f)
+    }
 
-    def /(parameter: MinorParameter): (T1, T2) => Route = f.andThen(_ / parameter)
+    def /(next: String): RouteFunction[A] = RouteFunction(route.andThen(_ / next))
 
-    def /(parameter: MajorParameter): (T1, T2) => Route = f.andThen(_ / parameter)
+    def /[B](parameter: MinorParameter[B]): RouteFunction[(A, B)] = {
+      val uncurried = Function.uncurried(route.andThen(_ / parameter).andThen(_.route))
+      RouteFunction(uncurried.tupled)
+    }
 
-    def /(other: Route): (T1, T2) => Route = f.andThen(_ / other)
+    def /[B](parameter: MajorParameter[B]): RouteFunction[(A, B)] = {
+      val uncurried = Function.uncurried(route.andThen(_ / parameter).andThen(_.route))
+      RouteFunction(uncurried.tupled)
+    }
 
-    def ++(other: String): (T1, T2) => Route = f.andThen(_ ++ other)
+    def /(other: Route): RouteFunction[A] = RouteFunction(route.andThen(_ / other))
+
+    def ++(other: String): RouteFunction[A] = RouteFunction(route.andThen(_ ++ other))
+
+    def ++[B](parameter: ConcatParameter[B]): RouteFunction[(A, B)] = {
+      val uncurried = Function.uncurried(route.andThen(_ ++ parameter).andThen(_.route))
+      RouteFunction(uncurried.tupled)
+    }
+
+    def +?[B](query: QueryParameter[B]): QueryRouteFunction[(A, Option[B])] = {
+      val uncurried = Function.uncurried(route.andThen(_ +? query).andThen(_.route))
+      QueryRouteFunction(uncurried.tupled)
+    }
   }
 
-  implicit class Func3ToRequestSyntax[T1, T2, T3](val f: (T1, T2, T3) => Route) extends AnyVal {
-    def toRequest(method: HttpMethod): (T1, T2, T3) => RequestRoute = f.andThen(RequestRoute(_, method))
+  case class QueryRouteFunction[A](route: A => QueryRoute) {
+    def toRequest[Repr <: HList](
+        method: HttpMethod
+    )(
+        implicit unflatten: FlattenUnflatten[A, Repr],
+        toFn: shapeless.ops.function.FnFromProduct[Repr => RequestRoute]
+    ): toFn.Out = {
+      val f = (repr: Repr) => route(unflatten.toIn(repr)).toRequest(method)
+      toFn.apply(f)
+    }
 
-    def /(next: String): (T1, T2, T3) => Route = f.andThen(_ / next)
+    def ++(other: String): QueryRouteFunction[A] = QueryRouteFunction(route.andThen(_ ++ other))
 
-    def /(parameter: MinorParameter): (T1, T2, T3) => Route = f.andThen(_ / parameter)
+    def ++[B](parameter: ConcatParameter[B]): QueryRouteFunction[(A, B)] = {
+      val uncurried = Function.uncurried(route.andThen(_ ++ parameter).andThen(_.route))
+      QueryRouteFunction(uncurried.tupled)
+    }
 
-    def /(parameter: MajorParameter): (T1, T2, T3) => Route = f.andThen(_ / parameter)
-
-    def /(other: Route): (T1, T2, T3) => Route = f.andThen(_ / other)
-
-    def ++(other: String): (T1, T2, T3) => Route = f.andThen(_ ++ other)
+    def +?[B](query: QueryParameter[B]): QueryRouteFunction[(A, Option[B])] = {
+      val uncurried = Function.uncurried(route.andThen(_ +? query).andThen(_.route))
+      QueryRouteFunction(uncurried.tupled)
+    }
   }
 
-  implicit class Func2Syntax[T1, T2, R](val f: (T1, T2) => R) extends AnyVal {
-    def andThen[A](g: R => A): (T1, T2) => A = (t1, t2) => g(f(t1, t2))
+  class MajorParameter[A](val print: A => String)
+  class MinorParameter[A](val name: String, val print: A => String)
+  class QueryParameter[A](val name: String, val print: A => String)
+  class ConcatParameter[A](val print: A => String)
+
+  def query[A](name: String, print: A => String, requireFn: A => Unit = (_: A) => ()): QueryParameter[A] = {
+    val realPrint: A => String = a => {
+      requireFn(a)
+      print(a)
+    }
+    new QueryParameter[A](name, realPrint)
   }
 
-  implicit class Func3Syntax[T1, T2, T3, R](val f: (T1, T2, T3) => R) extends AnyVal {
-    def andThen[A](g: R => A): (T1, T2, T3) => A = (t1, t2, t3) => g(f(t1, t2, t3))
-  }
+  def upcast[A, B >: A](a: A): B = a
+
+  val guildId: MajorParameter[GuildId]                  = new MajorParameter(_.asString)
+  val channelId: MajorParameter[ChannelId]              = new MajorParameter(_.asString)
+  val webhookId: MajorParameter[SnowflakeType[Webhook]] = new MajorParameter(_.asString)
+
+  val messageId: MinorParameter[MessageId]                = new MinorParameter("messageId", _.asString)
+  val emoji: MinorParameter[Emoji]                        = new MinorParameter("emoji", identity)
+  val emojiId: MinorParameter[EmojiId]                    = new MinorParameter("emojiId", _.asString)
+  val userId: MinorParameter[UserId]                      = new MinorParameter("userId", _.asString)
+  val permissionOverwriteId: MinorParameter[UserOrRoleId] = new MinorParameter("permissionOverwriteId", _.asString)
+  val roleId: MinorParameter[RoleId]                      = new MinorParameter("roleId", _.asString)
+  val integrationId: MinorParameter[IntegrationId]        = new MinorParameter("integrationId", _.asString)
+  val inviteCodeParam: MinorParameter[String]             = new MinorParameter("inviteCode", identity)
+  val token: MinorParameter[String]                       = new MinorParameter("token", identity)
+  val hash: MinorParameter[String]                        = new MinorParameter("hash", identity)
+  val applicationId: MinorParameter[RawSnowflake]         = new MinorParameter("applicationId", _.asString)
 
   //Audit log
 
-  val guilds: Route           = base / "guilds"
-  val guild: GuildId => Route = guildId => guilds / guildId
+  val guilds: Route                 = base / "guilds"
+  val guild: RouteFunction[GuildId] = guilds / guildId
 
-  val getGuildAuditLogs: GuildId => RequestRoute = guild / "audit-logs" toRequest GET
+  val getGuildAuditLogs: (
+      GuildId,
+      Option[UserId],
+      Option[AuditLogEvent],
+      Option[RawSnowflake],
+      Option[Int]
+  ) => RequestRoute = {
+    val base = guild / "audit-logs"
+    val queries = base +?
+      query[UserId]("user_id", _.asString) +?
+      query[AuditLogEvent]("action_type", AuditLogEvent.idOf(_).toString) +?
+      query[RawSnowflake]("before", _.asString) +?
+      query[Int]("limit", _.toString, a => require(a >= 1 && a <= 100, "Limit must be between 1 and 100"))
+
+    upcast(queries.toRequest(GET))
+  }
 
   //Channel routes
 
-  val channel: ChannelId => Route = channelId => base / "channels" / channelId
+  val channel: RouteFunction[ChannelId] = base / "channels" / channelId
 
-  val getChannel: ChannelId => RequestRoute         = channel.toRequest(GET)
-  val modifyChannelPut: ChannelId => RequestRoute   = channel.toRequest(PUT)
-  val modifyChannelPatch: ChannelId => RequestRoute = channel.toRequest(PATCH)
-  val deleteCloseChannel: ChannelId => RequestRoute = channel.toRequest(DELETE)
+  val getChannel: ChannelId => RequestRoute         = upcast(channel.toRequest(GET))
+  val modifyChannelPut: ChannelId => RequestRoute   = upcast(channel.toRequest(PUT))
+  val modifyChannelPatch: ChannelId => RequestRoute = upcast(channel.toRequest(PATCH))
+  val deleteCloseChannel: ChannelId => RequestRoute = upcast(channel.toRequest(DELETE))
 
-  val channelMessages: ChannelId => Route             = channel / "messages"
-  val channelMessage: (MessageId, ChannelId) => Route = (messageId, channelId) => channelMessages(channelId) / messageId
+  val channelMessages: RouteFunction[ChannelId]             = channel / "messages"
+  val channelMessage: RouteFunction[(ChannelId, MessageId)] = channelMessages / messageId
 
-  val getChannelMessages: ChannelId => RequestRoute             = channelMessages.toRequest(GET)
-  val getChannelMessage: (MessageId, ChannelId) => RequestRoute = channelMessage.toRequest(GET)
-  val createMessage: ChannelId => RequestRoute                  = channelMessages.toRequest(POST)
-  val editMessage: (MessageId, ChannelId) => RequestRoute       = channelMessage.toRequest(PATCH)
-  val deleteMessage: (MessageId, ChannelId) => RequestRoute     = channelMessage.toRequest(DELETE)
-  val bulkDeleteMessages: ChannelId => RequestRoute             = channelMessages / "bulk-delete" toRequest POST
+  //We handle queries later for this one to ensure mutually exclusive params
+  val getChannelMessages: ChannelId => RequestRoute             = upcast(channelMessages.toRequest(GET))
+  val getChannelMessage: (ChannelId, MessageId) => RequestRoute = upcast(channelMessage.toRequest(GET))
+  val createMessage: ChannelId => RequestRoute                  = upcast(channelMessages.toRequest(POST))
+  val editMessage: (ChannelId, MessageId) => RequestRoute       = upcast(channelMessage.toRequest(PATCH))
+  val deleteMessage: (ChannelId, MessageId) => RequestRoute     = upcast(channelMessage.toRequest(DELETE))
+  val bulkDeleteMessages: ChannelId => RequestRoute             = upcast(channelMessages / "bulk-delete" toRequest POST)
 
-  val reactions: (MessageId, ChannelId) => Route = channelMessage / "reactions"
-  val emojiReactions: (Emoji, MessageId, ChannelId) => Route =
-    Function.uncurried(emoji => (reactions / emojiParam(emoji)).curried)
-  val modifyMeReaction: (Emoji, MessageId, ChannelId) => Route = emojiReactions / "@me"
+  val reactions: RouteFunction[(ChannelId, MessageId)]                 = channelMessage / "reactions"
+  val emojiReactions: RouteFunction[((ChannelId, MessageId), Emoji)]   = reactions / emoji
+  val modifyMeReaction: RouteFunction[((ChannelId, MessageId), Emoji)] = emojiReactions / "@me"
 
-  val createReaction: (Emoji, MessageId, ChannelId) => RequestRoute    = modifyMeReaction.toRequest(PUT)
-  val deleteOwnReaction: (Emoji, MessageId, ChannelId) => RequestRoute = modifyMeReaction.toRequest(DELETE)
-  val deleteUserReaction: (UserId, Emoji, MessageId, ChannelId) => RequestRoute =
-    Function.uncurried(userId => (emojiReactions / userId toRequest DELETE).curried)
+  val createReaction: (ChannelId, MessageId, Emoji) => RequestRoute    = upcast(modifyMeReaction.toRequest(PUT))
+  val deleteOwnReaction: (ChannelId, MessageId, Emoji) => RequestRoute = upcast(modifyMeReaction.toRequest(DELETE))
+  val deleteUserReaction: (ChannelId, MessageId, Emoji, UserId) => RequestRoute = upcast(
+    emojiReactions / userId toRequest DELETE
+  )
 
-  val getReactions: (Emoji, MessageId, ChannelId) => RequestRoute = emojiReactions.toRequest(GET)
-  val deleteAllReactions: (MessageId, ChannelId) => RequestRoute  = reactions.toRequest(DELETE)
+  val getReactions: (ChannelId, MessageId, Emoji, Option[UserId], Option[UserId], Option[Int]) => RequestRoute = {
+    val queries = emojiReactions +?
+      query[UserId]("before", _.asString) +?
+      query[UserId]("after", _.asString) +?
+      query[Int]("limit", _.toString, a => require(a >= 1 && a <= 100, "Limit must be between 1 and 100"))
 
-  val channelPermissions: (UserOrRoleId, ChannelId) => Route = (overwrite, channelId) =>
-    channel(channelId) / "permissions" / overwrite
+    upcast(queries.toRequest(GET))
+  }
+  val deleteAllReactions: (ChannelId, MessageId) => RequestRoute = upcast(reactions.toRequest(DELETE))
 
-  val editChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute   = channelPermissions.toRequest(PUT)
-  val deleteChannelPermissions: (UserOrRoleId, ChannelId) => RequestRoute = channelPermissions.toRequest(DELETE)
+  val channelPermissions: RouteFunction[(ChannelId, UserOrRoleId)] = channel / "permissions" / permissionOverwriteId
 
-  val channelInvites: ChannelId => Route = channel / "invites"
+  val editChannelPermissions: (ChannelId, UserOrRoleId) => RequestRoute   = upcast(channelPermissions.toRequest(PUT))
+  val deleteChannelPermissions: (ChannelId, UserOrRoleId) => RequestRoute = upcast(channelPermissions.toRequest(DELETE))
 
-  val getChannelInvites: ChannelId => RequestRoute    = channelInvites.toRequest(GET)
-  val createChannelInvites: ChannelId => RequestRoute = channelInvites.toRequest(POST)
+  val channelInvites: RouteFunction[ChannelId] = channel / "invites"
 
-  val triggerTyping: ChannelId => RequestRoute = channel / "typing" toRequest POST
+  val getChannelInvites: ChannelId => RequestRoute    = upcast(channelInvites.toRequest(GET))
+  val createChannelInvites: ChannelId => RequestRoute = upcast(channelInvites.toRequest(POST))
 
-  val pinnedMessage: ChannelId => Route           = channel / "pins"
-  val getPinnedMessage: ChannelId => RequestRoute = pinnedMessage.toRequest(GET)
+  val triggerTyping: ChannelId => RequestRoute = upcast(channel / "typing" toRequest POST)
 
-  val channelPinnedMessage: (MessageId, ChannelId) => Route = (messageId, channelId) =>
-    pinnedMessage(channelId) / messageId
-  val addPinnedChannelMessage: (MessageId, ChannelId) => RequestRoute    = channelPinnedMessage.toRequest(PUT)
-  val deletePinnedChannelMessage: (MessageId, ChannelId) => RequestRoute = channelPinnedMessage.toRequest(DELETE)
+  val pinnedMessage: RouteFunction[ChannelId]     = channel / "pins"
+  val getPinnedMessage: ChannelId => RequestRoute = upcast(pinnedMessage.toRequest(GET))
 
-  val groupDmRecipient: (UserId, ChannelId) => Route              = (userId, channelId) => channel(channelId) / userId
-  val groupDmAddRecipient: (UserId, ChannelId) => RequestRoute    = groupDmRecipient.toRequest(PUT)
-  val groupDmRemoveRecipient: (UserId, ChannelId) => RequestRoute = groupDmRecipient.toRequest(DELETE)
+  val channelPinnedMessage: RouteFunction[(ChannelId, MessageId)]     = pinnedMessage / messageId
+  val addPinnedChannelMessage: (ChannelId, MessageId) => RequestRoute = upcast(channelPinnedMessage.toRequest(PUT))
+  val deletePinnedChannelMessage: (ChannelId, MessageId) => RequestRoute = upcast(
+    channelPinnedMessage.toRequest(DELETE)
+  )
+
+  val groupDmRecipient: RouteFunction[(ChannelId, UserId)]        = channel / userId
+  val groupDmAddRecipient: (ChannelId, UserId) => RequestRoute    = upcast(groupDmRecipient.toRequest(PUT))
+  val groupDmRemoveRecipient: (ChannelId, UserId) => RequestRoute = upcast(groupDmRecipient.toRequest(DELETE))
 
   //Emoji routes
 
-  val guildEmojis: GuildId => Route             = guild / "emojis"
-  val listGuildEmojis: GuildId => RequestRoute  = guildEmojis.toRequest(GET)
-  val createGuildEmoji: GuildId => RequestRoute = guildEmojis.toRequest(POST)
+  val guildEmojis: RouteFunction[GuildId]       = guild / "emojis"
+  val listGuildEmojis: GuildId => RequestRoute  = upcast(guildEmojis.toRequest(GET))
+  val createGuildEmoji: GuildId => RequestRoute = upcast(guildEmojis.toRequest(POST))
 
-  val guildEmoji: (EmojiId, GuildId) => Route              = (emojiId, guildId) => guildEmojis(guildId) / emojiId
-  val getGuildEmoji: (EmojiId, GuildId) => RequestRoute    = guildEmoji.toRequest(GET)
-  val modifyGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.toRequest(PATCH)
-  val deleteGuildEmoji: (EmojiId, GuildId) => RequestRoute = guildEmoji.toRequest(DELETE)
+  val guildEmoji: RouteFunction[(GuildId, EmojiId)]        = guildEmojis / emojiId
+  val getGuildEmoji: (GuildId, EmojiId) => RequestRoute    = upcast(guildEmoji.toRequest(GET))
+  val modifyGuildEmoji: (GuildId, EmojiId) => RequestRoute = upcast(guildEmoji.toRequest(PATCH))
+  val deleteGuildEmoji: (GuildId, EmojiId) => RequestRoute = upcast(guildEmoji.toRequest(DELETE))
 
   //Guild routes
-  val createGuild: RequestRoute            = guilds.toRequest(POST)
-  val getGuild: GuildId => RequestRoute    = guild.toRequest(GET)
-  val modifyGuild: GuildId => RequestRoute = guild.toRequest(PATCH)
-  val deleteGuild: GuildId => RequestRoute = guild.toRequest(DELETE)
+  val createGuild: RequestRoute            = upcast(guilds.toRequest(POST))
+  val getGuild: GuildId => RequestRoute    = upcast(guild.toRequest(GET))
+  val modifyGuild: GuildId => RequestRoute = upcast(guild.toRequest(PATCH))
+  val deleteGuild: GuildId => RequestRoute = upcast(guild.toRequest(DELETE))
 
-  val guildChannels: GuildId => Route                       = guild / "channels"
-  val getGuildChannels: GuildId => RequestRoute             = guildChannels.toRequest(GET)
-  val createGuildChannel: GuildId => RequestRoute           = guildChannels.toRequest(POST)
-  val modifyGuildChannelsPositions: GuildId => RequestRoute = guildChannels.toRequest(PATCH)
+  val guildChannels: RouteFunction[GuildId]                 = guild / "channels"
+  val getGuildChannels: GuildId => RequestRoute             = upcast(guildChannels.toRequest(GET))
+  val createGuildChannel: GuildId => RequestRoute           = upcast(guildChannels.toRequest(POST))
+  val modifyGuildChannelsPositions: GuildId => RequestRoute = upcast(guildChannels.toRequest(PATCH))
 
-  val guildMembers: GuildId => Route                       = guild / "members"
-  val guildMember: (UserId, GuildId) => Route              = (userId, guildId) => guildMembers(guildId) / userId
-  val getGuildMember: (UserId, GuildId) => RequestRoute    = guildMember.toRequest(GET)
-  val listGuildMembers: GuildId => RequestRoute            = guildMembers.toRequest(GET)
-  val addGuildMember: (UserId, GuildId) => RequestRoute    = guildMember.toRequest(PUT)
-  val modifyGuildMember: (UserId, GuildId) => RequestRoute = guildMember.toRequest(PATCH)
-  val removeGuildMember: (UserId, GuildId) => RequestRoute = guildMember.toRequest(DELETE)
-  val modifyCurrentNick: GuildId => RequestRoute           = guildMembers / "@me" / "nick" toRequest PATCH
+  val guildMembers: RouteFunction[GuildId]              = guild / "members"
+  val guildMember: RouteFunction[(GuildId, UserId)]     = guildMembers / userId
+  val getGuildMember: (GuildId, UserId) => RequestRoute = upcast(guildMember.toRequest(GET))
+  val listGuildMembers: (GuildId, Option[Int], Option[UserId]) => RequestRoute = {
+    val queries = guildMembers +?
+      query[Int]("limit", _.toString, a => require(a >= 1 && a <= 1000, "Limit must be between 1 and 1000")) +?
+      query[UserId]("after", _.asString)
 
-  val guildMemberRole: (RoleId, UserId, GuildId) => Route =
-    Function.uncurried(roleId => (guildMember / "roles" / roleId).curried)
+    upcast(queries.toRequest(GET))
+  }
+  val addGuildMember: (GuildId, UserId) => RequestRoute    = upcast(guildMember.toRequest(PUT))
+  val modifyGuildMember: (GuildId, UserId) => RequestRoute = upcast(guildMember.toRequest(PATCH))
+  val removeGuildMember: (GuildId, UserId) => RequestRoute = upcast(guildMember.toRequest(DELETE))
+  val modifyCurrentNick: GuildId => RequestRoute           = upcast(guildMembers / "@me" / "nick" toRequest PATCH)
 
-  val addGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute    = guildMemberRole.toRequest(PUT)
-  val removeGuildMemberRole: (RoleId, UserId, GuildId) => RequestRoute = guildMemberRole.toRequest(DELETE)
+  val guildMemberRole: RouteFunction[((GuildId, UserId), RoleId)] = guildMember / "roles" / roleId
 
-  val guildBans: GuildId => Route                = guild / "bans"
-  val guildMemberBan: (UserId, GuildId) => Route = (userId, guildId) => guildBans(guildId) / userId
+  val addGuildMemberRole: (GuildId, UserId, RoleId) => RequestRoute    = upcast(guildMemberRole.toRequest(PUT))
+  val removeGuildMemberRole: (GuildId, UserId, RoleId) => RequestRoute = upcast(guildMemberRole.toRequest(DELETE))
 
-  val getGuildBans: GuildId => RequestRoute                   = guildBans.toRequest(GET)
-  val getGuildBan: (UserId, GuildId) => RequestRoute          = guildMemberBan.toRequest(GET)
-  val createGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(PUT)
-  val removeGuildMemberBan: (UserId, GuildId) => RequestRoute = guildMemberBan.toRequest(DELETE)
+  val guildBans: RouteFunction[GuildId]                = guild / "bans"
+  val guildMemberBan: RouteFunction[(GuildId, UserId)] = guildBans / userId
 
-  val guildRoles: GuildId => Route                      = guild / "roles"
-  val getGuildRole: GuildId => RequestRoute             = guildRoles.toRequest(GET)
-  val createGuildRole: GuildId => RequestRoute          = guildRoles.toRequest(POST)
-  val modifyGuildRolePositions: GuildId => RequestRoute = guildRoles.toRequest(PATCH)
+  val getGuildBans: GuildId => RequestRoute          = upcast(guildBans.toRequest(GET))
+  val getGuildBan: (GuildId, UserId) => RequestRoute = upcast(guildMemberBan.toRequest(GET))
+  val createGuildMemberBan: (GuildId, UserId, Option[Int], Option[String]) => RequestRoute = {
+    val queries = guildMemberBan +?
+      query[Int](
+        "delete-message-days",
+        _.toString,
+        a => require(a >= 0 && a <= 7, "Delete message days must be between 0 and 7")
+      ) +?
+      query[String]("reason", identity)
 
-  val guildRole: (RoleId, GuildId) => Route              = (roleId, guildId) => guildRoles(guildId) / roleId
-  val modifyGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.toRequest(PATCH)
-  val deleteGuildRole: (RoleId, GuildId) => RequestRoute = guildRole.toRequest(DELETE)
+    upcast(queries.toRequest(PUT))
+  }
+  val removeGuildMemberBan: (GuildId, UserId) => RequestRoute = upcast(guildMemberBan.toRequest(DELETE))
 
-  val guildPrune: GuildId => Route                = guild / "prune"
-  val getGuildPruneCount: GuildId => RequestRoute = guildPrune.toRequest(GET)
-  val beginGuildPrune: GuildId => RequestRoute    = guildPrune.toRequest(POST)
+  val guildRoles: RouteFunction[GuildId]                = guild / "roles"
+  val getGuildRole: GuildId => RequestRoute             = upcast(guildRoles.toRequest(GET))
+  val createGuildRole: GuildId => RequestRoute          = upcast(guildRoles.toRequest(POST))
+  val modifyGuildRolePositions: GuildId => RequestRoute = upcast(guildRoles.toRequest(PATCH))
 
-  val getGuildVoiceRegions: GuildId => RequestRoute = guild / "regions" toRequest GET
-  val getGuildInvites: GuildId => RequestRoute      = guild / "invites" toRequest GET
+  val guildRole: RouteFunction[(GuildId, RoleId)]        = guildRoles / roleId
+  val modifyGuildRole: (GuildId, RoleId) => RequestRoute = upcast(guildRole.toRequest(PATCH))
+  val deleteGuildRole: (GuildId, RoleId) => RequestRoute = upcast(guildRole.toRequest(DELETE))
 
-  val guildIntegrations: GuildId => Route              = guild / "integrations"
-  val getGuildIntegrations: GuildId => RequestRoute    = guildIntegrations.toRequest(GET)
-  val createGuildIntegrations: GuildId => RequestRoute = guildIntegrations.toRequest(POST)
+  val daysQuery: QueryParameter[Int] =
+    query[Int]("days", _.toString, a => require(a >= 1, "Can't prune for zero or negative days"))
 
-  val guildIntegration: (IntegrationId, GuildId) => Route = (integrationId, guildId) =>
-    guildIntegrations(guildId) / integrationId
-  val modifyGuildIntegration: (IntegrationId, GuildId) => RequestRoute = guildIntegration.toRequest(PATCH)
-  val deleteGuildIntegration: (IntegrationId, GuildId) => RequestRoute = guildIntegration.toRequest(DELETE)
-  val syncGuildIntegration: (IntegrationId, GuildId) => RequestRoute   = guildIntegration / "sync" toRequest PATCH
+  val guildPrune: QueryRouteFunction[(GuildId, Option[Int])]     = guild / "prune" +? daysQuery
+  val getGuildPruneCount: (GuildId, Option[Int]) => RequestRoute = upcast(guildPrune.toRequest(GET))
+  val beginGuildPrune: (GuildId, Option[Int], Option[Boolean]) => RequestRoute = {
+    upcast(guildPrune +? query[Boolean]("compute_prune_count", _.toString) toRequest POST)
+  }
 
-  val guildEmbed: GuildId => Route               = guild / "embed"
-  val getGuildEmbed: GuildId => RequestRoute     = guildEmbed.toRequest(GET)
-  val modifyGuildEmbed: GuildId => RequestRoute  = guildEmbed.toRequest(PATCH)
-  val getGuildVanityUrl: GuildId => RequestRoute = guild / "vanity-url" toRequest GET
+  val getGuildVoiceRegions: GuildId => RequestRoute = upcast(guild / "regions" toRequest GET)
+  val getGuildInvites: GuildId => RequestRoute      = upcast(guild / "invites" toRequest GET)
 
-  val getGuildWidgetImage: (WidgetImageStyle, GuildId) => RequestRoute =
-    (style, guildId) => guild(guildId) / "widget.png" ++ s"?style=${style.name}" toRequest GET
+  val guildIntegrations: RouteFunction[GuildId]        = guild / "integrations"
+  val getGuildIntegrations: GuildId => RequestRoute    = upcast(guildIntegrations.toRequest(GET))
+  val createGuildIntegrations: GuildId => RequestRoute = upcast(guildIntegrations.toRequest(POST))
+
+  val guildIntegration: RouteFunction[(GuildId, IntegrationId)]        = guildIntegrations / integrationId
+  val modifyGuildIntegration: (GuildId, IntegrationId) => RequestRoute = upcast(guildIntegration.toRequest(PATCH))
+  val deleteGuildIntegration: (GuildId, IntegrationId) => RequestRoute = upcast(guildIntegration.toRequest(DELETE))
+  val syncGuildIntegration: (GuildId, IntegrationId) => RequestRoute   = upcast(guildIntegration / "sync" toRequest PATCH)
+
+  val guildEmbed: RouteFunction[GuildId]         = guild / "embed"
+  val getGuildEmbed: GuildId => RequestRoute     = upcast(guildEmbed.toRequest(GET))
+  val modifyGuildEmbed: GuildId => RequestRoute  = upcast(guildEmbed.toRequest(PATCH))
+  val getGuildVanityUrl: GuildId => RequestRoute = upcast(guild / "vanity-url" toRequest GET)
+
+  val style: QueryParameter[WidgetImageStyle] = new QueryParameter("style", _.name)
+
+  val getGuildWidgetImage: (GuildId, Option[WidgetImageStyle]) => RequestRoute = upcast(
+    guild / "widget.png" +? style toRequest GET
+  )
 
   //Invites
   val invites: Route                           = base / "invites"
-  val inviteCode: InviteCode => Route          = code => invites / inviteCodeParam(code)
-  val getInvite: InviteCode => RequestRoute    = inviteCode.toRequest(GET)
-  val deleteInvite: InviteCode => RequestRoute = inviteCode.toRequest(DELETE)
+  val inviteCode: RouteFunction[String]        = invites / inviteCodeParam
+  val getInvite: InviteCode => RequestRoute    = upcast(inviteCode.toRequest(GET))
+  val deleteInvite: InviteCode => RequestRoute = upcast(inviteCode.toRequest(DELETE))
 
   //Users
   val users: Route                 = base / "users"
   val currentUser: Route           = users / "@me"
-  val getCurrentUser: RequestRoute = currentUser.toRequest(GET)
+  val getCurrentUser: RequestRoute = upcast(currentUser.toRequest(GET))
 
-  val getUser: UserId => RequestRoute     = userId => users / userId toRequest GET
-  val modifyCurrentUser: RequestRoute     = currentUser.toRequest(PATCH)
-  val currentUserGuilds: Route            = currentUser / "guilds"
-  val getCurrentUserGuilds: RequestRoute  = currentUserGuilds.toRequest(GET)
-  val leaveGuild: GuildId => RequestRoute = guildId => currentUserGuilds / guildId toRequest DELETE
+  val getUser: UserId => RequestRoute = upcast(users / userId toRequest GET)
+  val modifyCurrentUser: RequestRoute = upcast(currentUser.toRequest(PATCH))
+  val currentUserGuilds: Route        = currentUser / "guilds"
+  val getCurrentUserGuilds: (Option[GuildId], Option[GuildId], Option[Int]) => RequestRoute = {
+    val queries = currentUserGuilds +?
+      query[GuildId]("before", _.asString) +?
+      query[GuildId]("after", _.asString) +?
+      query[Int]("limit", _.toString, a => require(a >= 1 && a <= 100, "Limit must be between 1 and 100"))
+
+    upcast(queries.toRequest(GET))
+  }
+  val leaveGuild: GuildId => RequestRoute = upcast(currentUserGuilds / guildId toRequest DELETE)
 
   val userDMs: Route           = currentUser / "channels"
-  val getUserDMs: RequestRoute = userDMs.toRequest(GET)
-  val createDM: RequestRoute   = userDMs.toRequest(POST)
+  val getUserDMs: RequestRoute = upcast(userDMs.toRequest(GET))
+  val createDM: RequestRoute   = upcast(userDMs.toRequest(POST))
 
-  val getUserConnections: RequestRoute = currentUser / "connections" toRequest GET
+  val getUserConnections: RequestRoute = upcast(currentUser / "connections" toRequest GET)
 
   //Voice
-  val listVoiceRegions: RequestRoute = base / "voice" / "regions" toRequest GET
+  val listVoiceRegions: RequestRoute = upcast(base / "voice" / "regions" toRequest GET)
 
   //WebHook
-  val webhook: SnowflakeType[Webhook] => Route = id => base / "webhooks" / id
-  val webhookWithToken: (String, SnowflakeType[Webhook]) => Route = (token, webhookId) =>
-    webhook(webhookId) / tokenParam(token)
-  val channelWebhooks: ChannelId => Route = channel / "webhooks"
+  val webhook: RouteFunction[SnowflakeType[Webhook]]                    = base / "webhooks" / webhookId
+  val webhookWithToken: RouteFunction[(SnowflakeType[Webhook], String)] = webhook / token
+  val channelWebhooks: RouteFunction[ChannelId]                         = channel / "webhooks"
 
-  val createWebhook: ChannelId => RequestRoute                                 = channelWebhooks.toRequest(POST)
-  val getChannelWebhooks: ChannelId => RequestRoute                            = channelWebhooks.toRequest(GET)
-  val getGuildWebhooks: GuildId => RequestRoute                                = guild / "webhooks" toRequest GET
-  val getWebhook: SnowflakeType[Webhook] => RequestRoute                       = webhook.toRequest(GET)
-  val getWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute    = webhookWithToken.toRequest(GET)
-  val modifyWebhook: SnowflakeType[Webhook] => RequestRoute                    = webhook.toRequest(PATCH)
-  val modifyWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(PATCH)
-  val deleteWebhook: SnowflakeType[Webhook] => RequestRoute                    = webhook.toRequest(DELETE)
-  val deleteWebhookWithToken: (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken.toRequest(DELETE)
-  val executeWebhook: (String, SnowflakeType[Webhook]) => RequestRoute         = webhookWithToken.toRequest(POST)
-  val executeSlackWebhook: (String, SnowflakeType[Webhook]) => RequestRoute    = webhookWithToken / "slack" toRequest POST
-  val executeGithubWebhook
-    : (String, SnowflakeType[Webhook]) => RequestRoute = webhookWithToken / "github" toRequest POST
+  val createWebhook: ChannelId => RequestRoute                              = upcast(channelWebhooks.toRequest(POST))
+  val getChannelWebhooks: ChannelId => RequestRoute                         = upcast(channelWebhooks.toRequest(GET))
+  val getGuildWebhooks: GuildId => RequestRoute                             = upcast(guild / "webhooks" toRequest GET)
+  val getWebhook: SnowflakeType[Webhook] => RequestRoute                    = upcast(webhook.toRequest(GET))
+  val getWebhookWithToken: (SnowflakeType[Webhook], String) => RequestRoute = upcast(webhookWithToken.toRequest(GET))
+  val modifyWebhook: SnowflakeType[Webhook] => RequestRoute                 = upcast(webhook.toRequest(PATCH))
+  val modifyWebhookWithToken: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    webhookWithToken.toRequest(PATCH)
+  )
+  val deleteWebhook: SnowflakeType[Webhook] => RequestRoute = upcast(webhook.toRequest(DELETE))
+  val deleteWebhookWithToken: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    webhookWithToken.toRequest(DELETE)
+  )
 
-  def imageExtra(format: ImageFormat, size: Int): String = s".${format.extension}?size=$size"
+  val waitQuery: QueryParameter[Boolean] = query[Boolean]("wait", _.toString)
+
+  val executeWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+    webhookWithToken +? waitQuery toRequest POST
+  )
+  val executeSlackWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+    webhookWithToken / "slack" +? waitQuery toRequest POST
+  )
+  val executeGithubWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+    webhookWithToken / "github" +? waitQuery toRequest POST
+  )
+
+  val size: QueryParameter[Int]               = new QueryParameter("size", _.toString)
+  val extension: ConcatParameter[ImageFormat] = new ConcatParameter(_.extension)
+  val discriminator: MinorParameter[Int]      = new MinorParameter("discriminator", i => (i % 5).toString)
 
   //Images
-  val emojiImage: (EmojiId, ImageFormat, Int) => RequestRoute = (emojiId, format, size) =>
-    cdn / "emojis" / emojiId ++ imageExtra(format, size) toRequest GET
-  val guildIconImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
-    cdn / "icons" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
-  val guildSplashImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
-    cdn / "splashes" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
-  val guildBannerImage: (GuildId, String, ImageFormat, Int) => RequestRoute = (guildId, hash, format, size) =>
-    cdn / "banners" / guildId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
-  val defaultUserAvatarImage: (Int, ImageFormat, Int) => RequestRoute = (discriminator, format, size) =>
-    cdn / "embed" / "avatars" / s"${discriminator % 5}" ++ imageExtra(format, size) toRequest GET
-  val userAvatarImage: (UserId, String, ImageFormat, Int) => RequestRoute = (userId, hash, format, size) =>
-    cdn / "avatars" / userId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
-  val applicationIconImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
-    (applicationId, hash, format, size) =>
-      cdn / "app-icons" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
-  val applicationAssetImage: (RawSnowflake, String, ImageFormat, Int) => RequestRoute =
-    (applicationId, hash, format, size) =>
-      cdn / "app-assets" / applicationId / hashParam(hash) ++ imageExtra(format, size) toRequest GET
+  val emojiImage: (EmojiId, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "emojis" / emojiId ++ extension +? size toRequest GET
+  )
+  val guildIconImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "icons" / guildId / hash ++ extension +? size toRequest GET
+  )
+  val guildSplashImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
+  )
+  val guildBannerImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "banners" / guildId / hash ++ extension +? size toRequest GET
+  )
+  val defaultUserAvatarImage: (Int, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "embed" / "avatars" / discriminator ++ extension +? size toRequest GET
+  )
+  val userAvatarImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "avatars" / userId / hash ++ extension +? size toRequest GET
+  )
+  val applicationIconImage: (RawSnowflake, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "app-icons" / applicationId / hash ++ extension +? size toRequest GET
+  )
+  val applicationAssetImage: (RawSnowflake, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "app-assets" / applicationId / hash ++ extension +? size toRequest GET
+  )
 
   //OAuth
   val oAuth2: Route                       = base / "oauth2"

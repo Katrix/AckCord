@@ -34,12 +34,23 @@ import io.circe.Decoder
 
 //Place for future audit log requests if they should ever appear
 
+case class GetGuildAuditLogData(
+    userId: Option[UserId] = None,
+    actionType: Option[AuditLogEvent] = None,
+    before: Option[RawSnowflake] = None,
+    limit: Option[Int] = None,
+)
+
 /**
   * Get an audit log for a given guild.
   */
-case class GetGuildAuditLog[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[AuditLog, Ctx] {
-  override def route: RequestRoute = Routes.getGuildAuditLogs(guildId)
+case class GetGuildAuditLog[Ctx](
+    guildId: GuildId,
+    queryParams: GetGuildAuditLogData,
+    context: Ctx = NotUsed: NotUsed
+) extends NoParamsNiceResponseRequest[AuditLog, Ctx] {
+  override def route: RequestRoute =
+    Routes.getGuildAuditLogs(guildId, queryParams.userId, queryParams.actionType, queryParams.before, queryParams.limit)
 
   override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
 

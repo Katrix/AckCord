@@ -89,7 +89,7 @@ case class GetCustomEmojiImage[Ctx](
     emojiId: EmojiId,
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
-  override def route: RequestRoute              = Routes.emojiImage(emojiId, format, desiredSize)
+  override def route: RequestRoute              = Routes.emojiImage(emojiId, format, Some(desiredSize))
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.GIF)
 }
 
@@ -104,7 +104,7 @@ case class GetGuildIconImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildIconImage(guildId, iconHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
 }
 
 /**
@@ -118,7 +118,7 @@ case class GetGuildSplashImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
 case class GetGuildBannerImage[Ctx](
@@ -129,7 +129,7 @@ case class GetGuildBannerImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildBannerImage(guildId, bannerHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
 }
 
 /**
@@ -139,7 +139,7 @@ case class GetDefaultUserAvatarImage[Ctx](desiredSize: Int, discriminator: Int, 
     extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
   override def format: ImageFormat              = ImageFormat.PNG
-  override def route: RequestRoute              = Routes.defaultUserAvatarImage(discriminator, format, desiredSize)
+  override def route: RequestRoute              = Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
 }
 
 /**
@@ -154,7 +154,7 @@ case class GetUserAvatarImage[Ctx](
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] =
     Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
-  override def route: RequestRoute = Routes.userAvatarImage(userId, avatarHash, format, desiredSize)
+  override def route: RequestRoute = Routes.userAvatarImage(userId, avatarHash, format, Some(desiredSize))
 }
 
 /**
@@ -168,7 +168,7 @@ case class GetApplicationIconImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, desiredSize)
+  override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
 }
 
 /**
@@ -182,7 +182,7 @@ case class GetApplicationAssetImage[Ctx](
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.applicationAssetImage(applicationId, assetId, format, desiredSize)
+  override def route: RequestRoute              = Routes.applicationAssetImage(applicationId, assetId, format, Some(desiredSize))
 }
 
 /**
@@ -195,7 +195,7 @@ case class GetGuildWidgetImage[Ctx](
     style: WidgetImageStyle = WidgetImageStyle.Shield,
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
-  override def route: RequestRoute = Routes.getGuildWidgetImage(style, guildId)
+  override def route: RequestRoute = Routes.getGuildWidgetImage(guildId, Some(style))
 
   //Dummy fields which aren't used
   override def desiredSize: Int                 = 16

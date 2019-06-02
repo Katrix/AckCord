@@ -106,7 +106,7 @@ case class GetWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: N
   */
 case class GetWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed)
     extends NoParamsNiceResponseRequest[Webhook, Ctx] {
-  override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
+  override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -153,7 +153,7 @@ case class ModifyWebhookWithToken[Ctx](
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyWebhookWithToken[Ctx], ModifyWebhookData, Webhook, Ctx] {
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
-  override def route: RequestRoute = Routes.getWebhookWithToken(token, id)
+  override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
   override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   override def responseDecoder: Decoder[Webhook]         = Decoder[Webhook]
@@ -187,7 +187,7 @@ case class DeleteWebhookWithToken[Ctx](
     context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
 ) extends NoParamsResponseReasonRequest[DeleteWebhookWithToken[Ctx], Ctx] {
-  override def route: RequestRoute = Routes.deleteWebhookWithToken(token, id)
+  override def route: RequestRoute = Routes.deleteWebhookWithToken(id, token)
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 
