@@ -387,7 +387,7 @@ trait MessageParserInstances {
 
 trait DeriveMessageParser {
   import shapeless._
-  implicit val hNilParser: MessageParser[HNil] = Monad[MessageParser].pure(HNil)
+  implicit lazy val hNilParser: MessageParser[HNil] = Monad[MessageParser].pure(HNil)
 
   implicit def hListParser[Head, Tail <: HList](
       implicit

@@ -66,7 +66,7 @@ object CmdFilter {
     override def isAllowed[F[_]](userId: UserId, guildId: GuildId)(
         implicit c: CacheSnapshot[F],
         F: Monad[F]
-    ): F[Boolean] = Monad[F].pure(true)
+    ): F[Boolean] = Monad[F].pure(context == Context.Guild) //We must be in a guild as we were passed a guild id
 
     override def isAllowed[F[_]](msg: Message)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
       msg.channelId.resolve.exists {
