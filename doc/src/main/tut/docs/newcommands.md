@@ -1,10 +1,15 @@
 ---
 layout: docs
-title: New incubating commands
+title: New experimental commands
 ---
 
 # {{page.title}}
 **Notice: This feature is considered experimental at this time, and may change drastically or be dropped altogether.**
+
+To use the new commands API, add this to your build file.
+```scala
+libraryDependencies += "net.katsstuff" %% "ackcord-commands-new" % "{{versions.ackcord}}"
+```
 
 Aside from the low and high level command APIs, AckCord also comes with a third much more experimental commands API. The goal of this commands API is to be as easy to use as the high level API, while being as powerful as the low level API. The API is very closely related to Play's action builders. If you are familiar with them, you'll feel right at home.
 
