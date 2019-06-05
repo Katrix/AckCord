@@ -25,13 +25,13 @@ package ackcord.examplecore
 
 import scala.util.{Failure, Success}
 
+import ackcord._
 import ackcord.commands._
-import ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
+import ackcord.examplecore.ExampleMain.NewCommandsEntry
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.GatewaySettings
 import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
-import ackcord.{APIMessage, Cache, DiscordShard, Id}
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
 import akka.event.slf4j.Logger
@@ -100,6 +100,44 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
       KillCmdFactory(self)
     )
   }
+
+  val controllerCommands: Seq[NewCommandsEntry[NotUsed]] = {
+    val controller = new NewCommandsController(requests)
+    Seq(
+      NewCommandsEntry("%", Seq("hello"), controller.hello, newcommands.CommandDescription("Hello", "Say hello")),
+      NewCommandsEntry(
+        "%",
+        Seq("copy"),
+        controller.copy,
+        newcommands.CommandDescription("Copy", "Make the bot say what you said")
+      ),
+      NewCommandsEntry(
+        "%",
+        Seq("parseNum"),
+        controller.parsingNumbers,
+        newcommands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
+      ),
+      NewCommandsEntry(
+        "%",
+        Seq("adminOnly"),
+        controller.adminsOnly,
+        newcommands.CommandDescription("Elevanted command", "Command only admins can use")
+      ),
+      NewCommandsEntry(
+        "%",
+        Seq("timeDiff"),
+        controller.timeDiff,
+        newcommands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
+      ),
+      NewCommandsEntry(
+        "%",
+        Seq("ping"),
+        controller.ping,
+        newcommands.CommandDescription("Ping", "Checks if the bot is alive")
+      ),
+    )
+  }
+
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
   val helpCmd                = ExampleHelpCmdFactory(helpCmdActor)
 
@@ -111,10 +149,19 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
       requests
     )
 
+  val commandConnector = new newcommands.CommandConnector[Id](
+    cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => m.message -> m.cache.current),
+    requests
+  )
+
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]): Mat =
     ExampleMain.registerCmd(cmdObj, helpCmdActor)(parsedCmdFactory)
 
+  def registerNewCommand[Mat](entry: NewCommandsEntry[Mat]): Mat =
+    ExampleMain.registerNewCommand(commandConnector, helpCmdActor)(entry)
+
   genericCmds.foreach(registerCmd)
+  controllerCommands.foreach(registerNewCommand)
   registerCmd(helpCmd)
 
   //Here is an example for a raw simple command
@@ -180,6 +227,40 @@ object ExampleMain {
     import scala.concurrent.ExecutionContext.Implicits.global
     complete.foreach { _ =>
       println(s"Command completed: ${parsedCmdFactory.description.get.name}")
+    }
+    materialized
+  }
+
+  //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
+  case class NewCommandsEntry[Mat](
+      symbol: String,
+      aliases: Seq[String],
+      command: newcommands.Command[Id, _, Mat],
+      description: newcommands.CommandDescription
+  )
+
+  def registerNewCommand[Mat](connector: newcommands.CommandConnector[Id], helpCmdActor: ActorRef)(
+      entry: NewCommandsEntry[Mat]
+  ): Mat = {
+    val (materialized, complete) =
+      connector.runNewCommand(connector.prefix(entry.symbol, entry.aliases, mustMention = true), entry.command)
+
+    //Due to the new commands being a complete break from the old ones, being
+    // completely incompatible with some other stuff, we need to do a bit of
+    // translation and hackery here
+    helpCmdActor ! HelpCmd.AddCmd(
+      commands.CmdInfo(entry.symbol, entry.aliases),
+      commands.CmdDescription(
+        entry.description.name,
+        entry.description.description,
+        entry.description.usage,
+        entry.description.extra
+      ),
+      complete
+    )
+    import scala.concurrent.ExecutionContext.Implicits.global
+    complete.foreach { _ =>
+      println(s"Command completed: ${entry.description.name}")
     }
     materialized
   }

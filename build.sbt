@@ -133,6 +133,17 @@ lazy val commands = project
   )
   .dependsOn(requests)
 
+lazy val commandsNew = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "commands-new",
+    version := ackCordVersion,
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.4.0",
+    description := "ackCord-commands-new is an experiment to for better commands in AckCord"
+  )
+  .dependsOn(requests)
+
 lazy val core = project
   .settings(
     commonSettings,
@@ -190,7 +201,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
-  .dependsOn(core, commandsCore, lavaplayerCore)
+  .dependsOn(core, commandsCore, lavaplayerCore, commandsNew)
 
 lazy val example = project
   .settings(
