@@ -97,7 +97,8 @@ class CommandConnector[F[_]: Streamable: Monad](
     * @return A source of command errors that can be used however you want.
     */
   def newCommandWithErrors[A, Mat](
-      prefix: PrefixParser, command: Command[F, A, Mat]
+      prefix: PrefixParser,
+      command: Command[F, A, Mat]
   ): Source[CommandError[F], (Mat, Future[Done])] = {
     val commandMessageSource = messages
       .flatMapConcat(t => Streamable[F].toSource(prefix(t._2, t._1).tupleLeft(t)))
