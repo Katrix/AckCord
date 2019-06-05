@@ -23,8 +23,6 @@
  */
 package ackcord.examplecore.music
 
-import scala.language.higherKinds
-
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.duration._
@@ -34,7 +32,6 @@ import com.sedmelluq.discord.lavaplayer.player.event._
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack, AudioTrackEndReason}
-
 import ackcord._
 import ackcord.commands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
@@ -47,19 +44,14 @@ import akka.actor.{ActorLogging, ActorSystem, FSM, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import cats.Monad
+import cats.arrow.FunctionK
 
-trait CmdRegisterFunc[F[_]] {
-  def apply[Mat](factory: ParsedCmdFactory[F, _, Mat]): F[Mat]
-}
-
-class MusicHandler[F[_]](
+class MusicHandler(
     requests: RequestHelper,
-    registerCmd: CmdRegisterFunc[F],
+    registerCmd: FunctionK[MusicHandler.MatCmdFactory, Id],
     guildId: GuildId,
     cache: Cache
-)(implicit streamable: Streamable[F], F: Monad[F])
-    extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
+) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
@@ -79,7 +71,7 @@ class MusicHandler[F[_]](
 
   {
     implicit val timeout = Timeout(30.seconds)
-    val cmds             = new MusicCommands[F](guildId, self)
+    val cmds             = new MusicCommands(guildId, self)
     import cmds._
     Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd(_))
   }
@@ -292,11 +284,10 @@ class MusicHandler[F[_]](
   }
 }
 object MusicHandler {
-  def props[F[_]](requests: RequestHelper, registerCmd: CmdRegisterFunc[F], cache: Cache)(
-      implicit streamable: Streamable[F],
-      F: Monad[F]
-  ): GuildId => Props =
+  def props(requests: RequestHelper, registerCmd: FunctionK[MatCmdFactory, Id], cache: Cache): GuildId => Props =
     guildId => Props(new MusicHandler(requests, registerCmd, guildId, cache))
+
+  type MatCmdFactory[A] = ParsedCmdFactory[Id, _, A]
 
   final val UseBurstingSender = true
 

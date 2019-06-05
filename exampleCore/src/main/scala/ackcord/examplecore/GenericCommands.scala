@@ -23,8 +23,6 @@
  */
 package ackcord.examplecore
 
-import scala.language.higherKinds
-
 import java.nio.file.Paths
 import java.time.temporal.ChronoUnit
 
@@ -39,22 +37,21 @@ import ackcord.syntax._
 import akka.actor.{ActorRef, PoisonPill}
 import akka.stream.scaladsl.Sink
 import akka.{Done, NotUsed}
-import cats._
 
-class GenericCommands[F[_]: Streamable: Monad] {
+object GenericCommands {
 
-  val PingCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
+  val PingCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory[Id, NotUsed, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("ping")),
     sink = requests =>
       //Completely manual
-      ParsedCmdFlow[F, NotUsed]
+      ParsedCmdFlow[Id, NotUsed]
         .map(_ => cmd => CreateMessage.mkContent(cmd.msg.channelId, "Pong"))
         .to(requests.sinkIgnore),
     description =
       Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
   )
 
-  val SendFileCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory[F, NotUsed, NotUsed](
+  val SendFileCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory[Id, NotUsed, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("sendFile")),
     sink = requests => {
       val embed = OutgoingEmbed(
@@ -64,8 +61,8 @@ class GenericCommands[F[_]: Streamable: Monad] {
       )
 
       //Using mapConcat for optional values
-      ParsedCmdFlow[F, NotUsed]
-        .flatMapConcat(implicit c => cmd => Streamable[F].optionToSource(cmd.msg.channelId.tResolve))
+      ParsedCmdFlow[Id, NotUsed]
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.toList)
         .map(_.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed)))
         .to(requests.sinkIgnore)
     },
@@ -73,27 +70,26 @@ class GenericCommands[F[_]: Streamable: Monad] {
       Some(CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing"))
   )
 
-  val InfoChannelCmdFactory: ParsedCmdFactory[F, GuildChannel, NotUsed] = ParsedCmdFactory[F, GuildChannel, NotUsed](
+  val InfoChannelCmdFactory: ParsedCmdFactory[Id, GuildChannel, NotUsed] = ParsedCmdFactory[Id, GuildChannel, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("infoChannel")),
     sink = requests => {
       //Using the context
-      ParsedCmdFlow[F, GuildChannel]
+      ParsedCmdFlow[Id, GuildChannel]
         .map { implicit c => cmd =>
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
         .via(requests.flow)
-        .flatMapConcat {
-          answer =>
-            val GetChannelInfo(guildId, senderChannelId, c) = answer.context
-            implicit val cache: CacheSnapshot[F]            = c
-            val content = answer match {
-              case response: RequestResponse[RawChannel, GetChannelInfo[F]] =>
-                val data = response.data
-                s"Info for ${data.name}:\n$data"
-              case _: FailedRequest[_] => "Error encountered"
-            }
+        .mapConcat { answer =>
+          val ctx                               = answer.context
+          implicit val cache: CacheSnapshot[Id] = ctx.c
+          val content = answer match {
+            case response: RequestResponse[RawChannel, GetChannelInfo[Id]] =>
+              val data = response.data
+              s"Info for ${data.name}:\n$data"
+            case _: FailedRequest[_] => "Error encountered"
+          }
 
-            Streamable[F].optionToSource(senderChannelId.tResolve[F](guildId).map(_.sendMessage(content)))
+          ctx.senderChannelId.tResolve[Id](ctx.guildId).map(_.sendMessage(content)).value.toList
         }
         .to(requests.sinkIgnore)
     },
@@ -105,15 +101,15 @@ class GenericCommands[F[_]: Streamable: Monad] {
     )
   )
 
-  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[F, NotUsed, NotUsed] =
-    ParsedCmdFactory[F, NotUsed, NotUsed](
+  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[Id, NotUsed, NotUsed] =
+    ParsedCmdFactory[Id, NotUsed, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = Seq("kill", "die")),
       //We use system.actorOf to keep the actor alive when this actor shuts down
       sink = requests => Sink.actorRef(requests.system.actorOf(KillCmd.props(mainActor), "KillCmd"), PoisonPill),
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[F, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[F, NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[Id, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("timeDiff")),
     run = implicit c =>
       (runner, cmd) => {
@@ -137,13 +133,13 @@ class GenericCommands[F[_]: Streamable: Monad] {
       name: String,
       aliases: Seq[String],
       sink: Sink[Request[RawMessage, NotUsed], Future[Done]]
-  ): ParsedCmdFactory[F, Int, NotUsed] =
-    ParsedCmdFactory[F, Int, NotUsed](
+  ): ParsedCmdFactory[Id, Int, NotUsed] =
+    ParsedCmdFactory[Id, Int, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = aliases),
       sink = requests =>
-        ParsedCmdFlow[F, Int]
-          .flatMapConcat { implicit c => cmd =>
-            Streamable[F].optionToSource(cmd.msg.channelId.tResolve.map(_ -> cmd.args))
+        ParsedCmdFlow[Id, Int]
+          .mapConcat { implicit c => cmd =>
+            cmd.msg.channelId.tResolve.map(_ -> cmd.args).value.toList
           }
           .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
           .to(sink),

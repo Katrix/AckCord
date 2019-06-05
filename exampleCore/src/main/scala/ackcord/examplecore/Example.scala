@@ -27,6 +27,7 @@ import scala.util.{Failure, Success}
 
 import ackcord.commands._
 import ackcord.examplecore.music.{CmdRegisterFunc, MusicHandler}
+import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.GatewaySettings
 import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
@@ -36,6 +37,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated
 import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision}
+import cats.arrow.FunctionK
 
 object Example {
 
@@ -79,8 +81,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token))
 
   val genericCmds: Seq[ParsedCmdFactory[Id, _, NotUsed]] = {
-    val commands = new GenericCommands[Id]
-    import commands._
+    import GenericCommands._
     Seq(
       PingCmdFactory,
       SendFileCmdFactory,
@@ -100,7 +101,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
   val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
-  val helpCmd                = ExampleHelpCmdFactory[Id](helpCmdActor)
+  val helpCmd                = ExampleHelpCmdFactory(helpCmdActor)
 
   //We set up a commands object, which parses potential commands
   val cmdObj: Commands[Id] =
@@ -124,8 +125,8 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     .runForeach(_ => self ! DiscordShard.RestartShard)
 
   val guildRouterMusic: ActorRef = {
-    val registerCmdObj = new CmdRegisterFunc[Id] {
-      def apply[Mat](a: ParsedCmdFactory[Id, _, Mat]): Id[Mat] = registerCmd(a)
+    val registerCmdObj = new FunctionK[MusicHandler.MatCmdFactory, Id] {
+      override def apply[A](fa: MusicHandler.MatCmdFactory[A]): Id[A] = registerCmd(fa)
     }
 
     context.actorOf(

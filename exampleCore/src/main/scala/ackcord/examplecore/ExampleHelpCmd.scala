@@ -23,8 +23,6 @@
  */
 package ackcord.examplecore
 
-import scala.language.higherKinds
-
 import ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
@@ -34,7 +32,6 @@ import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
-import cats.Monad
 
 class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
@@ -114,8 +111,8 @@ object ExampleHelpCmd {
 }
 
 object ExampleHelpCmdFactory {
-  def apply[F[_]: Monad](helpCmdActor: ActorRef): ParsedCmdFactory[F, Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
-    refiner = CmdInfo[F](prefix = "!", aliases = Seq("help")),
+  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Id, Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
+    refiner = CmdInfo[Id](prefix = "!", aliases = Seq("help")),
     sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
     description = Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
   )

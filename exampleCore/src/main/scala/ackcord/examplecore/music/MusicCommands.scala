@@ -23,8 +23,6 @@
  */
 package ackcord.examplecore.music
 
-import scala.language.higherKinds
-
 import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord._
@@ -38,16 +36,15 @@ import akka.pattern.ask
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.util.Timeout
 import akka.{Done, NotUsed}
-import cats.Monad
 import cats.data.OptionT
 
-class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: ActorRef)(
+class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
     implicit timeout: Timeout,
     ec: ExecutionContext
 ) {
 
-  val QueueCmdFactory: ParsedCmdFactory[F, String, NotUsed] = ParsedCmdFactory.requestRunner(
-    refiner = CmdInfo[F](prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
+  val QueueCmdFactory: ParsedCmdFactory[Id, String, NotUsed] = ParsedCmdFactory.requestRunner(
+    refiner = CmdInfo[Id](prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
     run = implicit c =>
       (runner, cmd) => {
         import runner._
@@ -66,32 +63,36 @@ class MusicCommands[F[_]: Streamable: Monad](guildId: GuildId, musicHandler: Act
     description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play"))
   )
 
-  private def simpleCommand[A](aliases: Seq[String], description: CmdDescription, mapper: TChannel => A) =
-    ParsedCmdFactory(
-      refiner = CmdInfo[F](prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
+  private def simpleCommand[A](
+      aliases: Seq[String],
+      description: CmdDescription,
+      mapper: TChannel => A
+  ): ParsedCmdFactory[Id, NotUsed, Future[Done]] =
+    ParsedCmdFactory[Id, NotUsed, Future[Done]](
+      refiner = CmdInfo[Id](prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
       sink = requests =>
-        ParsedCmdFlow[F, NotUsed]
-          .flatMapConcat { implicit c => cmd =>
-            Streamable[F].optionToSource(cmd.msg.tGuildChannel[F](guildId)).map(mapper)
+        ParsedCmdFlow[Id, NotUsed]
+          .mapConcat { implicit c => cmd =>
+            cmd.msg.tGuildChannel[Id](guildId).map(mapper).value.toList
           }
           .ask[MusicHandler.CommandAck.type](requests.parallelism)(musicHandler)
           .toMat(Sink.ignore)(Keep.right),
       description = Some(description)
     )
 
-  val StopCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
+  val StopCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("s", "stop"),
     mapper = StopMusic.apply,
     description = CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")
   )
 
-  val NextCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
+  val NextCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("n", "next"),
     mapper = NextTrack.apply,
     description = CmdDescription(name = "Next track", description = "Skip to the next track")
   )
 
-  val PauseCmdFactory: ParsedCmdFactory[F, NotUsed, Future[Done]] = simpleCommand(
+  val PauseCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("p", "pause"),
     mapper = TogglePause.apply,
     description = CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")
