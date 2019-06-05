@@ -276,6 +276,7 @@ lazy val ackCordRoot = project
     commands,
     core,
     commandsCore,
+    commandsNew,
     lavaplayerCore,
     ackCord,
     exampleCore,
