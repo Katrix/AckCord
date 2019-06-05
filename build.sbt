@@ -1,6 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion          = "2.5.22"
+lazy val akkaVersion          = "2.5.23"
 lazy val akkaHttpVersion      = "10.1.8"
 lazy val circeVersion         = "0.11.1"
 lazy val akkaHttpCirceVersion = "1.25.2"
@@ -128,7 +128,7 @@ lazy val commands = project
     publishSettings,
     name := "commands",
     version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.4.0",
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.5.0",
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
   .dependsOn(requests)
@@ -139,7 +139,7 @@ lazy val commandsNew = project
     publishSettings,
     name := "commands-new",
     version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.4.0",
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.5.0",
     description := "ackCord-commands-new is an experiment to for better commands in AckCord"
   )
   .dependsOn(requests)
