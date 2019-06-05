@@ -38,7 +38,7 @@ case class GetGuildAuditLogData(
     userId: Option[UserId] = None,
     actionType: Option[AuditLogEvent] = None,
     before: Option[RawSnowflake] = None,
-    limit: Option[Int] = None,
+    limit: Option[Int] = None
 )
 
 /**
