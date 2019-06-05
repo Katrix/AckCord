@@ -134,7 +134,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
         Seq("ping"),
         controller.ping,
         newcommands.CommandDescription("Ping", "Checks if the bot is alive")
-      ),
+      )
     )
   }
 
