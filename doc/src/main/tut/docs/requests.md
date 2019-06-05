@@ -22,7 +22,7 @@ To run requests you would either use a `RequestHelper`, or a `RequestRunner`.
 import ackcord._
 import ackcord.data._
 import ackcord.syntax._
-import ackcord.http.rest.CreateMessage
+import ackcord.requests.CreateMessage
 val token = "<token>"
 val settings = ClientSettings(token)
 import settings.executionContext

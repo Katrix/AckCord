@@ -27,5 +27,8 @@ options:
   - title: Low level API commands
     url: docs/locommands.html
 
+  - title: New incubating commands
+    url: docs/newcommands.html
+
   - title: The many modules of AckCord
     url: modules.html

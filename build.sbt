@@ -247,6 +247,7 @@ lazy val doc = project
       commands,
       core,
       commandsCore,
+      commandsNew,
       lavaplayerCore,
       ackCord
     ),
@@ -262,7 +263,7 @@ lazy val doc = project
       "-diagrams"
     )
   )
-  .dependsOn(ackCord)
+  .dependsOn(ackCord, commandsNew)
 
 lazy val ackCordRoot = project
   .in(file("."))
