@@ -117,7 +117,7 @@ class CommandConnector[F[_]: Streamable: Monad](
             MessageParser
               .parseResultEitherT(args, command.parser)
               .map { a =>
-                CommandMessage.DefaultCommandMessage(requests, cache, channel.get, message, a): CommandMessage[F, A]
+                CommandMessage.Default(requests, cache, channel.get, message, a): CommandMessage[F, A]
               }
               .leftMap(e => CommandError(e, channel.get, cache))
               .value
@@ -164,7 +164,7 @@ class CommandConnector[F[_]: Streamable: Monad](
   def newCommand[A, Mat](prefix: PrefixParser, command: Command[F, A, Mat]): RunnableGraph[(Mat, Future[Done])] =
     newCommandWithErrors(prefix, command)
       .map {
-        case CommandError(error, channel, cache) =>
+        case CommandError(error, channel, _) =>
           channel.sendMessage(error)
       }
       .to(requests.sinkIgnore)

@@ -24,17 +24,14 @@
 package ackcord.newcommands
 
 import ackcord.CacheSnapshot
-import ackcord.data.{DMChannel, GroupDMChannel, GuildChannel, GuildId, Message, Permission, TChannel, UserId}
+import ackcord.data.{Guild, GuildId, GuildMember, Message, Permission, TChannel, TGuildChannel, User, UserId}
 import ackcord.requests.{Request, RequestHelper}
-import ackcord.syntax._
 import ackcord.util.Streamable
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Partition, Sink, Source}
 import akka.stream.{FlowShape, SourceShape}
 import cats.data.OptionT
-import cats.syntax.all._
-import cats.{Functor, Monad, ~>}
-
+import cats.{Applicative, Monad, ~>}
 import scala.language.higherKinds
 
 /**
@@ -313,101 +310,112 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
 object CommandBuilder {
 
   /**
-    * A command function that only allows commands in a specific context.
+    * A command function that only allows commands sent from a guild, and that
+    * lets you build the result command message.
     */
-  def onlyIn[F[_]: Streamable: Functor, M[A] <: CommandMessage[F, A]](context: Context): CommandFunction[F, M, M] =
-    new CommandFunction[F, M, M] {
-      override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] = Flow[M[A]].flatMapConcat { m =>
-        implicit val c: CacheSnapshot[F] = m.cache
+  def onlyInGuildWith[F[_]: Streamable: Applicative, I[A] <: CommandMessage[F, A], O[_]](
+      create: (TGuildChannel, Guild) => I ~> O
+  ): CommandFunction[F, I, O] =
+    new CommandFunction[F, I, O] {
 
-        lazy val e = Left(Some(CommandError(s"This command can only be used in a $context", m.tChannel, m.cache)))
+      type Result[A] = Either[Option[CommandError[F]], O[A]]
 
-        val res = m.message.channelId.resolve.fold[Either[Option[CommandError[F]], M[A]]](Right(m)) {
-          case _: GuildChannel =>
-            if (context == Context.Guild) Right(m) else e
-          case _ @(_: DMChannel | _: GroupDMChannel) => if (context == Context.DM) Right(m) else e
-          case _                                     => Right(m)
+      override def flow[A]: Flow[I[A], Result[A], NotUsed] =
+        Flow[I[A]].flatMapConcat { m =>
+          implicit val c: CacheSnapshot[F] = m.cache
+
+          lazy val e: Result[A] = Left(Some(CommandError.mk(s"This command can only be used in a guild", m)))
+
+          val res = m.tChannel match {
+            case chG: TGuildChannel =>
+              chG.guild.fold[Result[A]](e) { g =>
+                Right(create(chG, g)(m))
+              }
+            case _ => Applicative[F].pure(e)
+          }
+
+          Streamable[F].toSource(res)
         }
-
-        Streamable[F].toSource(res)
-      }
     }
 
   /**
-    * A command function that only allow commands sent from a guild.
+    * A command function that lets you add the guild member to a command message.
     */
-  def onlyInGuild[F[_]: Streamable: Functor, M[A] <: CommandMessage[F, A]]: CommandFunction[F, M, M] =
-    onlyIn[F, M](Context.Guild)
+  def withGuildMember[F[_]: Streamable: Applicative, I[A] <: GuildCommandMessage[F, A] with UserCommandMessage[F, A], O[
+      _
+  ]](create: GuildMember => I ~> O): CommandTransformer[F, I, O] = new CommandTransformer[F, I, O] {
+    override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
+      Flow[I[A]].mapConcat { m =>
+        m.guild.members.get(m.user.id).map(member => create(member)(m)).toList
+      }
+  }
 
   /**
-    * A command function that only allow commands sent from a DM.
+    * A command function that only allows commands sent from a guild, and that
+    * returns a command message with the guild.
     */
-  def onlyInDm[F[_]: Streamable: Functor, M[A] <: CommandMessage[F, A]]: CommandFunction[F, M, M] =
-    onlyIn[F, M](Context.DM)
+  def onlyInGuild[F[_]: Streamable: Applicative]: CommandFunction[F, CommandMessage[F, ?], GuildCommandMessage[F, ?]] =
+    onlyInGuildWith[F, CommandMessage[F, ?], GuildCommandMessage[F, ?]](
+      (chG, g) => λ[CommandMessage[F, ?] ~> GuildCommandMessage[F, ?]](fa => GuildCommandMessage.Default(chG, g, fa))
+    )
 
   /**
     * A command function that only allow commands sent from one specific guild.
     */
-  def inOneGuild[F[_]: Streamable: Monad, M[A] <: CommandMessage[F, A]](guildId: GuildId): CommandFunction[F, M, M] =
+  def inOneGuild[F[_], M[A] <: GuildCommandMessage[F, A]](
+      guildId: GuildId
+  ): CommandFunction[F, M, M] =
     new CommandFunction[F, M, M] {
-      override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] = Flow[M[A]].flatMapConcat {
-        implicit m =>
-          implicit val c: CacheSnapshot[F] = m.cache
-          Streamable[F].toSource(
-            m.message
-              .tGuildChannel(guildId)
-              .isDefined
-              .ifM[Either[Option[CommandError[F]], M[A]]](Monad[F].pure(Right(m)), Monad[F].pure(Left(None)))
-          )
-      }
+      override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] =
+        Flow[M[A]].map(m => Either.cond(m.guild.id == guildId, m, None))
     }
 
   /**
     * A command function that requires that those who use this command need
     * some set of permissions.
     */
-  def needPermission[F[_]: Streamable: Monad, M[A] <: CommandMessage[F, A]](
+  def needPermission[F[_], M[A] <: GuildCommandMessage[F, A]](
       neededPermission: Permission
   ): CommandFunction[F, M, M] = new CommandFunction[F, M, M] {
-    override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] = Flow[M[A]].flatMapConcat { m =>
-      implicit val c: CacheSnapshot[F] = m.cache
+    override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] =
+      Flow[M[A]].map { m =>
+        val guild = m.guild
 
-      val allowed = for {
-        channel      <- m.message.channelId.tResolve
-        guildChannel <- OptionT.fromOption(channel.asGuildChannel)
-        guild        <- guildChannel.guild
-        member       <- OptionT.fromOption(guild.members.get(UserId(m.message.authorId)))
-        hasPerms <- OptionT.liftF(
-          Monad[F].map(member.channelPermissions(m.message.channelId))(_.hasPermissions(neededPermission))
-        )
-      } yield hasPerms
+        val allowed = guild.members
+          .get(UserId(m.message.authorId))
+          .exists(_.channelPermissionsId(guild, m.message.channelId).hasPermissions(neededPermission))
 
-      Streamable[F].toSource(
-        allowed
-          .getOrElse(false)
-          .ifM[Either[Option[CommandError[F]], M[A]]](
-            Monad[F].pure(Right(m)),
-            Monad[F]
-              .pure(Left(Some(CommandError("You don't have permission to use this command", m.tChannel, m.cache))))
-          )
-      )
-    }
+        if (allowed) Right(m)
+        else Left(Some(CommandError("You don't have permission to use this command", m.tChannel, m.cache)))
+      }
   }
 
   /**
     * A command function that disallows bots from using it.
     */
-  def nonBot[F[_]: Streamable: Monad, M[A] <: CommandMessage[F, A]]: CommandFunction[F, M, M] =
-    new CommandFunction[F, M, M] {
-      override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] = Flow[M[A]].flatMapConcat { m =>
-        implicit val c: CacheSnapshot[F] = m.cache
-        Streamable[F].toSource(
-          m.message.authorUser
-            .exists(!_.bot.getOrElse(false))
-            .ifM[Either[Option[CommandError[F]], M[A]]](Monad[F].pure(Right(m)), Monad[F].pure(Left(None)))
-        )
-      }
+  def nonBotWith[F[_]: Streamable: Monad, I[A] <: CommandMessage[F, A], O[_]](
+      create: User => I ~> O
+  ): CommandFunction[F, I, O] =
+    new CommandFunction[F, I, O] {
+      override def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O[A]], NotUsed] =
+        Flow[I[A]].flatMapConcat { m =>
+          implicit val c: CacheSnapshot[F] = m.cache
+          val res = m.message.authorUser
+            .filter(!_.bot.getOrElse(false))
+            .toRight(None)
+            .map(u => create(u)(m))
+            .value
+          Streamable[F].toSource(res)
+        }
     }
+
+  /**
+    * A command function that disallows bots from using it, and contains the user.
+    */
+  def nonBot[F[_]: Streamable: Monad]: CommandFunction[F, CommandMessage[F, ?], UserCommandMessage[F, ?]] =
+    nonBotWith[F, CommandMessage[F, ?], UserCommandMessage[F, ?]](
+      user => λ[CommandMessage[F, ?] ~> UserCommandMessage[F, ?]](m => UserCommandMessage.Default(user, m))
+    )
 
   /**
     * Creates a raw command builder without any extra processing.
@@ -421,15 +429,6 @@ object CommandBuilder {
       override def flow[A]: Flow[CommandMessage[F, A], Either[Option[CommandError[F]], CommandMessage[F, A]], NotUsed] =
         Flow[CommandMessage[F, A]].map(Right.apply)
     }
-}
-
-/**
-  * Represents a place a command can be used.
-  */
-sealed trait Context
-object Context {
-  case object Guild extends Context
-  case object DM    extends Context
 }
 
 /**
@@ -468,25 +467,95 @@ object CommandMessage {
 
   implicit def findCache[F[_], A](implicit message: CommandMessage[F, A]): CacheSnapshot[F] = message.cache
 
-  case class DefaultCommandMessage[F[_], A](
+  case class Default[F[_], A](
       requests: RequestHelper,
       cache: CacheSnapshot[F],
       tChannel: TChannel,
       message: Message,
       parsed: A
   ) extends CommandMessage[F, A]
+}
 
-  class WrappedCommandMessage[F[_], A](m: CommandMessage[F, A]) extends CommandMessage[F, A] {
-    override def requests: RequestHelper = m.requests
+class WrappedCommandMessage[F[_], A](m: CommandMessage[F, A]) extends CommandMessage[F, A] {
+  override def requests: RequestHelper = m.requests
 
-    override def cache: CacheSnapshot[F] = m.cache
+  override def cache: CacheSnapshot[F] = m.cache
 
-    override def tChannel: TChannel = m.tChannel
+  override def tChannel: TChannel = m.tChannel
 
-    override def message: Message = m.message
+  override def message: Message = m.message
 
-    override def parsed: A = m.parsed
-  }
+  override def parsed: A = m.parsed
+}
+
+/**
+  * A message sent with the invocation of a guild command
+  * @tparam F The cache effect type
+  * @tparam A The parsed argument type
+  */
+trait GuildCommandMessage[F[_], +A] extends CommandMessage[F, A] {
+  override def tChannel: TGuildChannel
+
+  /**
+    * The guild this command was used in.
+    */
+  def guild: Guild
+}
+object GuildCommandMessage {
+
+  case class Default[F[_], A](
+      override val tChannel: TGuildChannel,
+      guild: Guild,
+      m: CommandMessage[F, A]
+  ) extends WrappedCommandMessage(m)
+      with GuildCommandMessage[F, A]
+
+  case class WithUser[F[_], A](
+      override val tChannel: TGuildChannel,
+      guild: Guild,
+      user: User,
+      m: CommandMessage[F, A]
+  ) extends WrappedCommandMessage(m)
+      with GuildCommandMessage[F, A]
+      with UserCommandMessage[F, A]
+}
+
+/**
+  * A message sent with the invocation of command used by a user
+  * @tparam F The cache effect type
+  * @tparam A The parsed argument type
+  */
+trait UserCommandMessage[F[_], +A] extends CommandMessage[F, A] {
+
+  /**
+    * The user that used this command.
+    */
+  def user: User
+}
+object UserCommandMessage {
+
+  case class Default[F[_], A](user: User, m: CommandMessage[F, A])
+      extends WrappedCommandMessage(m)
+      with UserCommandMessage[F, A]
+}
+
+trait GuildMemberCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with UserCommandMessage[F, A] {
+
+  /**
+    * The guild member that used this command.
+    */
+  def guildMember: GuildMember
+}
+object GuildMemberCommandMessage {
+
+  case class Default[F[_], A](
+      override val tChannel: TGuildChannel,
+      guild: Guild,
+      user: User,
+      guildMember: GuildMember,
+      m: CommandMessage[F, A]
+  ) extends WrappedCommandMessage(m)
+      with GuildMemberCommandMessage[F, A]
 }
 
 /**
@@ -497,6 +566,10 @@ object CommandMessage {
   * @tparam F The cache's effect type
   */
 case class CommandError[F[_]](error: String, channel: TChannel, cache: CacheSnapshot[F])
+object CommandError {
+  def mk[F[_], A](error: String, message: CommandMessage[F, A]): CommandError[F] =
+    CommandError(error, message.tChannel, message.cache)
+}
 
 /**
   * A constructed command execution.

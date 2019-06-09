@@ -87,6 +87,29 @@ object MyBot extends App {
         }
       }
 
+      client.registerCmd[NotUsed, SourceRequest](
+        prefix = GeneralCommands,
+        aliases = Seq("guildInfo"),
+        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+      ) {
+        client.withCache[SourceRequest, ParsedCmd[Id, NotUsed]] { implicit c => cmd =>
+          for {
+            user        <- liftOptionT(cmd.msg.authorUser)
+            channel     <- liftOptionT(cmd.msg.tGuildChannel)
+            guild       <- liftOptionT(channel.guild)
+            guildMember <- optionPure(guild.memberFromUser(user))
+            guildName   = guild.name
+            channelName = channel.name
+            userNick    = guildMember.nick.getOrElse(user.username)
+            _ <- run(
+              channel.sendMessage(
+                s"This guild is named $guildName, the channel is named $channelName and you are called $userNick"
+              )
+            )
+          } yield ()
+        }
+      }
+
       client.registerCmd[NotUsed, Id](
         prefix = GeneralCommands,
         aliases = Seq("ping"),

@@ -13,11 +13,21 @@ import cats.syntax.all._
 class NewCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
 
   val hello: Command[List[String]] = Command.withRequest { implicit m =>
-    m.tChannel.sendMessage("Hello")
+    m.tChannel.sendMessage(s"Hello ${m.user.username}")
   }
 
   val copy: Command[Int] = Command.parsing[Int].withRequestOpt { implicit m =>
     m.message.tGuildChannel.value.map(_.sendMessage(s"You said ${m.parsed}"))
+  }
+
+  val guildInfo: Command[List[String]] = GuildCommand.withRequest { implicit m =>
+    val guildName   = m.guild.name
+    val channelName = m.tChannel.name
+    val userNick    = m.guildMember.nick.getOrElse(m.user.username)
+
+    m.tChannel.sendMessage(
+      s"This guild is named $guildName, the channel is named $channelName and you are called $userNick"
+    )
   }
 
   val parsingNumbers: Command[(Int, Int)] =
@@ -25,8 +35,8 @@ class NewCommandsController(requests: RequestHelper) extends CommandController[I
       m.message.tGuildChannel.map(_.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
     }
 
-  private val ElevatedCommand: CommandBuilder[CommandMessage, List[String]] =
-    Command.andThen(CommandFunction.needPermission[CommandMessage](Permission.Administrator))
+  private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, List[String]] =
+    GuildCommand.andThen(CommandFunction.needPermission[GuildUserCommandMessage](Permission.Administrator))
 
   val adminsOnly: Command[List[String]] = ElevatedCommand.withSideEffects { _ =>
     println("Command executed by an admin")
