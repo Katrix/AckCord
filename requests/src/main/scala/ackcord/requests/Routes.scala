@@ -54,12 +54,7 @@ object Routes {
     */
   type Emoji = String
 
-  trait RequestRouteBuilder {
-    def rawRoute: String
-    def applied: Uri
-  }
-
-  case class Route(rawRoute: String, applied: Uri) extends RequestRouteBuilder {
+  case class Route(rawRoute: String, applied: Uri) {
     require(
       rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
@@ -88,12 +83,17 @@ object Routes {
 
     def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
       QueryRouteFunction {
-        case Some(value) => QueryRoute(rawRoute, s"$applied?${query.name}=${query.print(value)}", hasFirstQuery = true)
-        case None        => QueryRoute(rawRoute, applied, hasFirstQuery = false)
+        case Some(value) =>
+          QueryRoute(
+            rawRoute,
+            applied,
+            Vector(query.name -> query.print(value))
+          )
+        case None => QueryRoute(rawRoute, applied, Vector.empty)
       }
   }
 
-  case class QueryRoute(rawRoute: String, applied: Uri, hasFirstQuery: Boolean) extends RequestRouteBuilder {
+  case class QueryRoute(rawRoute: String, applied: Uri, queryParts: Vector[(String, String)]) {
     require(
       rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
@@ -101,21 +101,20 @@ object Routes {
 
     def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 
-    def ++(other: String) = QueryRoute(s"$rawRoute$other", s"$applied$other", hasFirstQuery)
+    def ++(other: String) = QueryRoute(s"$rawRoute$other", s"$applied$other", queryParts)
 
     def ++[A](parameter: ConcatParameter[A]): QueryRouteFunction[A] =
       QueryRouteFunction(
-        value => QueryRoute(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}", hasFirstQuery)
+        value => QueryRoute(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}", queryParts)
       )
 
     def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
       QueryRouteFunction {
         case Some(value) =>
-          val seperator = if (hasFirstQuery) "&" else "?"
           QueryRoute(
             rawRoute,
-            s"$applied$seperator${query.name}=${query.print(value)}",
-            hasFirstQuery = true
+            applied,
+            queryParts :+ (query.name -> query.print(value))
           )
         case None => this
       }

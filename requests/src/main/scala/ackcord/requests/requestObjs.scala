@@ -28,7 +28,7 @@ import scala.language.higherKinds
 import scala.concurrent.duration._
 
 import ackcord.CacheSnapshot
-import ackcord.requests.Routes.RequestRouteBuilder
+import ackcord.requests.Routes.{QueryRoute, Route}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
@@ -49,8 +49,15 @@ object RequestRoute {
     * Create a [[RequestRoute]] from a [[Routes.Route]] using the raw and applied
     * values for the this route.
     */
-  def apply(route: RequestRouteBuilder, method: HttpMethod): RequestRoute =
+  def apply(route: Route, method: HttpMethod): RequestRoute =
     RequestRoute(route.rawRoute, route.applied, method)
+
+  /**
+    * Create a [[RequestRoute]] from a [[Routes.QueryRoute]] using the raw and applied
+    * values for the this route, and adding the query at the end.
+    */
+  def apply(queryRoute: QueryRoute, method: HttpMethod): RequestRoute =
+    RequestRoute(queryRoute.rawRoute, queryRoute.applied.withQuery(Uri.Query(queryRoute.queryParts: _*)), method)
 }
 
 /**

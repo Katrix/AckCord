@@ -25,7 +25,6 @@ package ackcord.requests
 
 import scala.language.higherKinds
 
-import java.net.URLEncoder
 import java.nio.file.{Files, Path}
 
 import ackcord.CacheSnapshot
@@ -278,8 +277,7 @@ object CreateMessage {
 
 /**
   * Create a reaction for a message.
-  * @param emoji The emoji to send, if this is a Unicode emoji, then you
-  *              need to url encode it first.
+  * @param emoji The emoji to send.
   */
 case class CreateReaction[Ctx](
     channelId: ChannelId,
@@ -299,12 +297,13 @@ object CreateReaction {
     * An utility method to create a reaction request with a unicode emoji.
     * This method will do the URL encoding for you.
     */
+  @deprecated("Url encoding is now done automatically", since = "0.14.0")
   def unicodeEmoji[Ctx](
       channelId: ChannelId,
       messageId: MessageId,
       unicodeEmoji: String,
       context: Ctx = NotUsed: NotUsed
-  ): CreateReaction[Ctx] = CreateReaction(channelId, messageId, URLEncoder.encode(unicodeEmoji, "UTF-8"), context)
+  ): CreateReaction[Ctx] = CreateReaction(channelId, messageId, unicodeEmoji, context)
 }
 
 /**
