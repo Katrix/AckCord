@@ -66,8 +66,7 @@ package object requests {
       guild         <- gChannel.guild
       botUser       <- OptionT.liftF(c.botUser)
       botUserMember <- OptionT.fromOption[F](guild.members.get(botUser.id))
-      channelPerms  <- OptionT.liftF(botUserMember.channelPermissions(channelId))
-    } yield channelPerms.hasPermissions(permissions)
+    } yield botUserMember.channelPermissionsId(guild, channelId).hasPermissions(permissions)
 
     opt.getOrElse(false)
   }

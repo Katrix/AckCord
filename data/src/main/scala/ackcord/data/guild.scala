@@ -29,7 +29,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import cats.data.OptionT
-import cats.{Applicative, Functor, Monad, Traverse}
+import cats.{Applicative, Functor, Monad}
 
 /**
   * A guild which that status of is unknown.
@@ -318,12 +318,6 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user
     */
-  def permissions[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): F[Permission] =
-    guildId.resolve.map(permissions).getOrElse(Permission.None)
-
-  /**
-    * Calculate the permissions of this user
-    */
   def permissions(guild: Guild): Permission = {
     if (guild.ownerId == userId) Permission.All
     else {
@@ -337,50 +331,51 @@ case class GuildMember(
   }
 
   /**
+    * Calculate the permissions of this user
+    */
+  @deprecated("Prefer calling permissions instead, resolving the guild yourself", "0.14")
+  def permissions[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): F[Permission] =
+    guild.map(permissions(_)).getOrElse(Permission.None)
+
+  /**
     * Calculate the permissions of this user in a channel.
     */
-  def permissionsWithOverrides[F[_]](guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F]
-  ): F[Permission] = {
-    if (guildPermissions.hasPermissions(Permission.Administrator)) Applicative[F].pure(Permission.All)
+  def permissionsWithOverridesId(guild: Guild, guildPermissions: Permission, channelId: ChannelId): Permission = {
+    if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
     else {
+      val res = guild.channels.get(channelId).map { channel =>
+        if (guild.ownerId == userId) Permission.All
+        else {
+          val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
+          val everyoneAllow     = everyoneOverwrite.map(_.allow)
+          val everyoneDeny      = everyoneOverwrite.map(_.deny)
 
-      val res = guildId.resolve.subflatMap { guild =>
-        guild.channels.get(channelId).map { channel =>
-          if (guild.ownerId == userId) Permission.All
-          else {
-            val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
-            val everyoneAllow     = everyoneOverwrite.map(_.allow)
-            val everyoneDeny      = everyoneOverwrite.map(_.deny)
+          val rolesForUser   = roleIds.flatMap(guild.roles.get)
+          val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+          val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
+          val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
 
-            val rolesForUser   = roleIds.flatMap(guild.roles.get)
-            val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
-            val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
-            val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
+          val userOverwrite = channel.permissionOverwrites.get(userId)
+          val userAllow     = userOverwrite.map(_.allow)
+          val userDeny      = userOverwrite.map(_.deny)
 
-            val userOverwrite = channel.permissionOverwrites.get(userId)
-            val userAllow     = userOverwrite.map(_.allow)
-            val userDeny      = userOverwrite.map(_.deny)
+          def mapOrElse(
+              permission: Permission,
+              opt: Option[Permission],
+              f: (Permission, Permission) => Permission
+          ): Permission =
+            opt.map(f(permission, _)).getOrElse(permission)
 
-            def mapOrElse(
-                permission: Permission,
-                opt: Option[Permission],
-                f: (Permission, Permission) => Permission
-            ): Permission =
-              opt.map(f(permission, _)).getOrElse(permission)
+          def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.addPermissions(_))
+          def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
+            mapOrElse(permission, opt, _.removePermissions(_))
 
-            def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
-              mapOrElse(permission, opt, _.addPermissions(_))
-            def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
-              mapOrElse(permission, opt, _.removePermissions(_))
+          val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
+          val withRole     = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
+          val withUser     = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
 
-            val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
-            val withRole     = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
-            val withUser     = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
-
-            withUser
-          }
+          withUser
         }
       }
 
@@ -391,44 +386,61 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
+  @deprecated("Prefer calling permissionsWithOverridesId instead, resolving the guild yourself", "0.14")
+  def permissionsWithOverrides[F[_]](guildPermissions: Permission, channelId: ChannelId)(
+      implicit c: CacheSnapshot[F],
+      F: Monad[F]
+  ): F[Permission] = guild.map(permissionsWithOverridesId(_, guildPermissions, channelId)).getOrElse(guildPermissions)
+
+  /**
+    * Calculate the permissions of this user in a channel given a guild.
+    */
+  def channelPermissionsId(guild: Guild, channelId: ChannelId): Permission =
+    permissionsWithOverridesId(guild, permissions(guild), channelId)
+
+  /**
+    * Calculate the permissions of this user in a channel given a guild.
+    */
+  @deprecated("Prefer calling channelPermissionsId instead, resolving the guild yourself", "0.14")
   def channelPermissions[F[_]](channelId: ChannelId)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Permission] =
-    Monad[F].flatMap(permissions)(perms => permissionsWithOverrides(perms, channelId))
+    guild.map(channelPermissionsId(_, channelId)).getOrElseF(permissions)
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  def hasRoleAbove[F[_]](others: Seq[RoleId])(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = {
-    guild
-      .semiflatMap { guild =>
-        val ownerId = guild.ownerId
-        if (this.userId == ownerId) Monad[F].pure(true)
-        else {
-          def maxRolesPosition(roles: Seq[RoleId]): F[Int] = {
-            val seq = {
-              import cats.instances.list._
-              Traverse[List].traverse(roles.toList)(_.resolve(guildId).map(_.position).value)
-            }
-            Monad[F].map(seq) { optList =>
-              val positions = optList.flatten
-              if (positions.isEmpty) 0 else positions.max
-            }
-          }
-
-          Monad[F].map2(maxRolesPosition(this.roleIds), maxRolesPosition(others))(_ > _)
-        }
+  def hasRoleAboveId(guild: Guild, others: Seq[RoleId]): Boolean = {
+    val ownerId = guild.ownerId
+    if (this.userId == ownerId) true
+    else {
+      def maxRolesPosition(roles: Seq[RoleId]): Int = {
+        val optList   = roles.toList.map(guild.roles.get(_).map(_.position))
+        val positions = optList.flatten
+        if (positions.isEmpty) 0 else positions.max
       }
-      .exists(identity)
+
+      maxRolesPosition(this.roleIds) > maxRolesPosition(others)
+    }
   }
 
   /**
     * Check if this user has any roles above the passed in roles.
     */
+  @deprecated("Prefer calling hasRoleAboveId instead, resolving the guild yourself", "0.14")
+  def hasRolesAbove[F[_]](others: Seq[RoleId])(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+    guild.map(hasRoleAboveId(_, others)).exists(identity)
+
+  /**
+    * Check if this user has any roles above the passed in roles.
+    */
+  def hasRoleAboveId(guild: Guild, other: GuildMember): Boolean =
+    if (other.userId == guild.ownerId) false else hasRoleAboveId(guild, other.roleIds)
+
+  /**
+    * Check if this user has any roles above the passed in roles.
+    */
+  @deprecated("Prefer calling hasRoleAboveId instead, resolving the guild yourself", "0.14")
   def hasRoleAbove[F[_]](other: GuildMember)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
-    guild
-      .semiflatMap { guild =>
-        if (other.userId == guild.ownerId) Monad[F].pure(false) else hasRoleAbove(other.roleIds)
-      }
-      .exists(identity)
+    guild.map(hasRoleAboveId(_, other)).exists(identity)
 }
 
 /**
