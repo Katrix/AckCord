@@ -428,7 +428,7 @@ trait MessageParserInstances {
         )
   }
 
-  implicit def optionParser[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
+  implicit def optional[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
     new MessageParser[Option[A]] {
       override def parse[F[_]](
           implicit c: CacheSnapshot[F],
