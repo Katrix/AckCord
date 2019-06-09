@@ -29,7 +29,7 @@ import java.time.OffsetDateTime
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import cats.data.OptionT
-import cats.{Applicative, Functor}
+import cats.{Applicative, Monad}
 
 /**
   * Different type of channels
@@ -207,8 +207,8 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * Gets the category for this channel if it has one.
     */
-  def category[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, GuildCategory] =
-    c.getGuildChannel(guildId, id).collect {
+  def category[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildCategory] =
+    OptionT.fromOption[F](parentId).flatMap(c.getGuildChannel(guildId, _)).collect {
       case cat: GuildCategory => cat
     }
 }
