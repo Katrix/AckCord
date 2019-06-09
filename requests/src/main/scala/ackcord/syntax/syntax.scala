@@ -163,18 +163,9 @@ package object syntax {
   implicit class GuildChannelSyntax(private val channel: GuildChannel) extends AnyVal {
 
     /**
-      * Get the category of this channel.
-      */
-    def category[F[_]](implicit snapshot: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildCategory] =
-      for {
-        guild <- channel.guild
-        cat   <- OptionT.fromOption[F](category(guild))
-      } yield cat
-
-    /**
       * Get the category of this channel using a preexisting guild.
       */
-    def category(guild: Guild): Option[GuildCategory] =
+    def categoryFromGuild(guild: Guild): Option[GuildCategory] =
       for {
         catId <- channel.parentId
         cat <- guild.channels.collectFirst {
