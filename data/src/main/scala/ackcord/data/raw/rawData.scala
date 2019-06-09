@@ -537,7 +537,7 @@ case class RawGuild(
         SnowflakeMap.withKey(voiceStates)(_.userId),
         SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
-        SnowflakeMap(presences.map(p => p.user.id -> p.toPresence)),
+        SnowflakeMap(presences.flatMap(p => p.toPresence.toOption.map(p.user.id -> _))), //We throw away the errors here
         maxPresences.getOrElse(5000), // The default is 5000
         maxMembers,
         vanityUrlCode,
@@ -613,10 +613,13 @@ case class RawActivity(
       "Unsupported field sent to Discord in activity"
     )
 
-  def toActivity: Activity = `type` match {
-    case 0 => PresenceGame(name, timestamps, applicationId, details, state, party.map(_.toParty), assets)
-    case 1 => PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets)
-    case 2 => PresenceListening(name, timestamps, details, assets)
+  def toActivity: Either[String, Activity] = `type` match {
+    case 0 => Right(PresenceGame(name, timestamps, applicationId, details, state, party.map(_.toParty), assets))
+    case 1 =>
+      Right(PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets))
+    case 2 => Right(PresenceListening(name, timestamps, details, assets))
+    case 3 => Right(PresenceWatching(name, timestamps, details, assets))
+    case _ => Left(s"Got unknown presence type ${`type`}")
   }
 }
 
@@ -628,8 +631,15 @@ case class RawActivity(
   */
 case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Option[PresenceStatus]) {
 
-  def toPresence: Presence =
-    Presence(user.id, game.map(_.toActivity), status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
+  def toPresence: Either[String, Presence] = {
+    import cats.instances.option._
+    import cats.instances.either._
+    Traverse[Option]
+      .traverse(game)(_.toActivity)
+      .map(
+        activity => Presence(user.id, activity, status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
+      )
+  }
 }
 
 /**

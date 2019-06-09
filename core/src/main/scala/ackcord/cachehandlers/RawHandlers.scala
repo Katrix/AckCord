@@ -60,7 +60,12 @@ object RawHandlers extends Handlers {
       rawMember.user -> rawMember.toGuildMember(obj.id)
     }.unzip
 
-    val presences = rawPresences.map(_.toPresence)
+    val presences = rawPresences.map(_.toPresence).flatMap {
+      case Right(value) => Seq(value)
+      case Left(e) =>
+        log.warning(e)
+        Nil
+    }
     val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id))
 
     val oldGuild = builder.getGuild(obj.id)

@@ -576,6 +576,16 @@ case class PresenceListening(
 ) extends Activity
 
 /**
+  * The presence of someone watching something
+  */
+case class PresenceWatching(
+    name: String,
+    timestamps: Option[ActivityTimestamps],
+    details: Option[String],
+    assets: Option[ActivityAsset]
+) extends Activity
+
+/**
   * The different statuses a user can have
   */
 sealed trait PresenceStatus

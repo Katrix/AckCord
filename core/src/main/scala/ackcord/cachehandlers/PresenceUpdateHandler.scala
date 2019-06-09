@@ -69,7 +69,14 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
           }
       }
 
-      val newPresence = Presence(partialUser.id, rawActivity.map(_.toActivity), status, clientStatus)
+      val newActivity = rawActivity.map(_.toActivity).flatMap {
+        case Right(activity) => Some(activity)
+        case Left(e) =>
+          log.warning(e)
+          None
+      }
+
+      val newPresence = Presence(partialUser.id, newActivity, status, clientStatus)
 
       val oldMembers = oldGuild.members
       val newMembers = oldMembers
