@@ -76,12 +76,28 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
-    (a: VoiceMessage[Data]) =>
+    (a: VoiceMessage[Data]) => {
+      val data = a match {
+        case Identify(d)            => d.asJson
+        case SelectProtocol(d)      => d.asJson
+        case Ready(d)               => d.asJson
+        case Heartbeat(d)           => d.asJson
+        case SessionDescription(d)  => d.asJson
+        case Speaking(d)            => d.asJson
+        case HeartbeatACK(d)        => d.asJson
+        case Resume(d)              => d.asJson
+        case Hello(_)               => Json.obj()
+        case Resumed                => Json.obj()
+        case IgnoreMessage12        => Json.obj()
+        case IgnoreClientDisconnect => Json.obj()
+      }
+
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
-        "d"  -> JsonSome(a.dataEncoder(a.d)),
+        "d"  -> JsonSome(data),
         "s"  -> a.s.map(_.asJson)
-    )
+      )
+    }
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
     c.get[Int]("heartbeat_interval").right.map(Hello).left.flatMap { _ =>

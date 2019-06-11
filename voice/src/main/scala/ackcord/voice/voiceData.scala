@@ -51,6 +51,7 @@ sealed trait VoiceMessage[D] {
   /**
     * An encoder for the message.
     */
+  @deprecated("Prefer getting this statically", since = "0.14.0")
   def dataEncoder: Encoder[D]
 
   /**
