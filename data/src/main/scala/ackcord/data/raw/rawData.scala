@@ -289,6 +289,7 @@ case class RawChannel(
   * @param nick The nickname of this user in this guild.
   * @param roles The roles of this user.
   * @param joinedAt When this user joined the guild.
+  * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
   */
@@ -296,11 +297,13 @@ case class PartialRawGuildMember(
     nick: Option[String],
     roles: Seq[RoleId],
     joinedAt: OffsetDateTime,
+    premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean
 ) {
 
-  def toGuildMember(userId: UserId, guildId: GuildId) = GuildMember(userId, guildId, nick, roles, joinedAt, deaf, mute)
+  def toGuildMember(userId: UserId, guildId: GuildId) =
+    GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
 }
 
 //Remember to edit RawGuildMemberWithGuild when editing this
@@ -310,6 +313,7 @@ case class PartialRawGuildMember(
   * @param nick The nickname of this user in this guild.
   * @param roles The roles of this user.
   * @param joinedAt When this user joined the guild.
+  * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
   */
@@ -318,6 +322,7 @@ case class RawGuildMember(
     nick: Option[String],
     roles: Seq[RoleId],
     joinedAt: OffsetDateTime,
+    premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean
 ) {
@@ -325,7 +330,7 @@ case class RawGuildMember(
   /**
     * Convert this to a normal guild member.
     */
-  def toGuildMember(guildId: GuildId) = GuildMember(user.id, guildId, nick, roles, joinedAt, deaf, mute)
+  def toGuildMember(guildId: GuildId) = GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
 }
 
 /**
@@ -450,6 +455,8 @@ case class RawMessage(
   * @param vanityUrlCode The vanity url code for the guild.
   * @param description A descriptiom fpr the guild.
   * @param banner A banner hash for the guild.
+  * @param premiumTier The premium tier of the guild.
+  * @param premiumSubscriptionCount How many users that are boosting the server.
   */
 case class RawGuild(
     id: GuildId,
@@ -487,7 +494,9 @@ case class RawGuild(
     maxMembers: Option[Int],
     vanityUrlCode: Option[String],
     description: Option[String],
-    banner: Option[String]
+    banner: Option[String],
+    premiumTier: PremiumTier,
+    premiumSubscriptionCount: Option[Int]
 ) {
 
   /**
@@ -542,7 +551,9 @@ case class RawGuild(
         maxMembers,
         vanityUrlCode,
         description,
-        banner
+        banner,
+        premiumTier,
+        premiumSubscriptionCount
       )
     }
   }

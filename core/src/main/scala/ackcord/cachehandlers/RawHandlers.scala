@@ -109,7 +109,9 @@ object RawHandlers extends Handlers {
       maxMembers = obj.maxMembers,
       vanityUrlCode = obj.vanityUrlCode,
       description = obj.description,
-      banner = obj.banner
+      banner = obj.banner,
+      premiumTier = obj.premiumTier,
+      premiumSubscriptionCount = obj.premiumSubscriptionCount
     )
 
     builder.guildMap.put(guild.id, guild)
@@ -202,6 +204,7 @@ object RawHandlers extends Handlers {
             rawMember.nick,
             rawMember.roles,
             rawMember.joinedAt,
+            rawMember.premiumSince,
             rawMember.deaf,
             rawMember.mute
           )

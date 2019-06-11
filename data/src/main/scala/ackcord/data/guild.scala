@@ -131,6 +131,16 @@ object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
   def idFor(lvl: MFALevel): Int = lvl.value
 }
 
+sealed abstract class PremiumTier(val value: Int) extends IntEnumEntry
+object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
+  case object None  extends PremiumTier(0)
+  case object Tier1 extends PremiumTier(1)
+  case object Tier2 extends PremiumTier(2)
+  case object Tier3 extends PremiumTier(3)
+
+  override def values: immutable.IndexedSeq[PremiumTier] = findValues
+}
+
 /**
   * A guild or server in Discord.
   * @param id The id of the guild.
@@ -169,6 +179,8 @@ object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
   * @param vanityUrlCode The vanity url code for the guild.
   * @param description A descriptiom fpr the guild.
   * @param banner A banner hash for the guild.
+  * @param premiumTier The premium tier of the guild.
+  * @param premiumSubscriptionCount How many users that are boosting the server.
   */
 case class Guild(
     id: GuildId,
@@ -205,7 +217,9 @@ case class Guild(
     maxMembers: Option[Int],
     vanityUrlCode: Option[String],
     description: Option[String],
-    banner: Option[String]
+    banner: Option[String],
+    premiumTier: PremiumTier,
+    premiumSubscriptionCount: Option[Int]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 
@@ -264,6 +278,7 @@ case class UnavailableGuild(id: GuildId, unavailable: Boolean) extends UnknownSt
   * @param nick The nickname of this user in this guild.
   * @param roleIds The roles of this user.
   * @param joinedAt When this user joined the guild.
+  * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
   */
@@ -273,6 +288,7 @@ case class GuildMember(
     nick: Option[String],
     roleIds: Seq[RoleId],
     joinedAt: OffsetDateTime,
+    premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean
 ) extends GetUser

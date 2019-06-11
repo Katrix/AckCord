@@ -407,7 +407,11 @@ object GatewayEvent {
     * @param channelId The channel where the change happened.
     * @param timestamp The time the most recent pinned message was pinned.
     */
-  case class ChannelPinsUpdateData(guildId: Option[GuildId], channelId: ChannelId, timestamp: JsonOption[OffsetDateTime])
+  case class ChannelPinsUpdateData(
+      guildId: Option[GuildId],
+      channelId: ChannelId,
+      timestamp: JsonOption[OffsetDateTime]
+  )
 
   /**
     * Sent to the shard when a message is pinned or unpinned in a text
@@ -455,7 +459,8 @@ object GatewayEvent {
     * outage, or if the client leaves or is kicked from a guild.
     * @param data The deleted or unavailable guild.
     */
-  case class GuildDelete(rawData: Json, data: Later[Decoder.Result[UnavailableGuild]]) extends GuildEvent[UnavailableGuild] {
+  case class GuildDelete(rawData: Json, data: Later[Decoder.Result[UnavailableGuild]])
+      extends GuildEvent[UnavailableGuild] {
     override def name: String                           = "GUILD_DELETE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.id)
   }
@@ -526,15 +531,16 @@ object GatewayEvent {
       nick: Option[String],
       roles: Seq[RoleId],
       joinedAt: OffsetDateTime,
+      premiumSince: Option[OffsetDateTime],
       deaf: Boolean,
       mute: Boolean
   ) {
-    def toRawGuildMember: RawGuildMember = RawGuildMember(user, nick, roles, joinedAt, deaf, mute)
+    def toRawGuildMember: RawGuildMember = RawGuildMember(user, nick, roles, joinedAt, premiumSince, deaf, mute)
   }
 
   object RawGuildMemberWithGuild {
     def apply(guildId: GuildId, m: RawGuildMember): RawGuildMemberWithGuild =
-      new RawGuildMemberWithGuild(guildId, m.user, m.nick, m.roles, m.joinedAt, m.deaf, m.mute)
+      new RawGuildMemberWithGuild(guildId, m.user, m.nick, m.roles, m.joinedAt, m.premiumSince, m.deaf, m.mute)
   }
 
   /**
@@ -609,7 +615,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when a new role is created.
     */
-  case class GuildRoleCreate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]]) extends GuildEvent[GuildRoleModifyData] {
+  case class GuildRoleCreate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]])
+      extends GuildEvent[GuildRoleModifyData] {
     override def name: String = "GUILD_ROLE_CREATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -618,7 +625,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when a role is updated.
     */
-  case class GuildRoleUpdate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]]) extends GuildEvent[GuildRoleModifyData] {
+  case class GuildRoleUpdate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]])
+      extends GuildEvent[GuildRoleModifyData] {
     override def name: String                           = "GUILD_ROLE_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
@@ -632,7 +640,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when a role is deleted.
     */
-  case class GuildRoleDelete(rawData: Json, data: Later[Decoder.Result[GuildRoleDeleteData]]) extends GuildEvent[GuildRoleDeleteData] {
+  case class GuildRoleDelete(rawData: Json, data: Later[Decoder.Result[GuildRoleDeleteData]])
+      extends GuildEvent[GuildRoleDeleteData] {
     override def name: String = "GUILD_ROLE_DELETE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -671,7 +680,8 @@ object GatewayEvent {
     * Sent to the shard when a message is updated.
     * @param data The new message.
     */
-  case class MessageUpdate(rawData: Json, data: Later[Decoder.Result[RawPartialMessage]]) extends ChannelEvent[RawPartialMessage] {
+  case class MessageUpdate(rawData: Json, data: Later[Decoder.Result[RawPartialMessage]])
+      extends ChannelEvent[RawPartialMessage] {
     override def name: String                               = "MESSAGE_UPDATE"
     override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
   }
@@ -794,7 +804,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when the presence of a user updates.
     */
-  case class PresenceUpdate(rawData: Json, data: Later[Decoder.Result[PresenceUpdateData]]) extends GuildEvent[PresenceUpdateData] {
+  case class PresenceUpdate(rawData: Json, data: Later[Decoder.Result[PresenceUpdateData]])
+      extends GuildEvent[PresenceUpdateData] {
     override def name: String = "PRESENCE_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -811,7 +822,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when a user starts typing in a channel.
     */
-  case class TypingStart(rawData: Json, data: Later[Decoder.Result[TypingStartData]]) extends ChannelEvent[TypingStartData] {
+  case class TypingStart(rawData: Json, data: Later[Decoder.Result[TypingStartData]])
+      extends ChannelEvent[TypingStartData] {
     override def name: String = "TYPING_START"
 
     override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
@@ -829,7 +841,8 @@ object GatewayEvent {
     * Sent to the shard when a user joins/leaves/moves voice channels.
     * @param data New voice states.
     */
-  case class VoiceStateUpdate(rawData: Json, data: Later[Decoder.Result[VoiceState]]) extends OptGuildEvent[VoiceState] {
+  case class VoiceStateUpdate(rawData: Json, data: Later[Decoder.Result[VoiceState]])
+      extends OptGuildEvent[VoiceState] {
     override def name: String                                   = "VOICE_STATUS_UPDATE"
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
@@ -853,7 +866,8 @@ object GatewayEvent {
   /**
     * Sent to the shard when guilds webhooks are updated.
     */
-  case class WebhookUpdate(rawData: Json, data: Later[Decoder.Result[WebhookUpdateData]]) extends GuildEvent[WebhookUpdateData] {
+  case class WebhookUpdate(rawData: Json, data: Later[Decoder.Result[WebhookUpdateData]])
+      extends GuildEvent[WebhookUpdateData] {
     override def name: String = "WEBHOOK_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)

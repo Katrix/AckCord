@@ -78,14 +78,18 @@ object ImageData {
   */
 sealed abstract class MessageType(val value: Int) extends IntEnumEntry
 object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
-  case object Default              extends MessageType(0)
-  case object RecipientAdd         extends MessageType(1)
-  case object RecipientRemove      extends MessageType(2)
-  case object Call                 extends MessageType(3)
-  case object ChannelNameChange    extends MessageType(4)
-  case object ChannelIconChange    extends MessageType(5)
-  case object ChannelPinnedMessage extends MessageType(6)
-  case object GuildMemberJoin      extends MessageType(7)
+  case object Default                      extends MessageType(0)
+  case object RecipientAdd                 extends MessageType(1)
+  case object RecipientRemove              extends MessageType(2)
+  case object Call                         extends MessageType(3)
+  case object ChannelNameChange            extends MessageType(4)
+  case object ChannelIconChange            extends MessageType(5)
+  case object ChannelPinnedMessage         extends MessageType(6)
+  case object GuildMemberJoin              extends MessageType(7)
+  case object UserPremiumGuildSubscription extends MessageType(8)
+  case object UserPremiumGuildTier1        extends MessageType(9)
+  case object UserPremiumGuildTier2        extends MessageType(10)
+  case object UserPremiumGuildTier3        extends MessageType(11)
 
   override def values: immutable.IndexedSeq[MessageType] = findValues
 
