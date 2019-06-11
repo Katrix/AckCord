@@ -37,50 +37,58 @@ trait DiscordProtocol {
 
   implicit val circeConfiguration: Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
 
-  implicit val channelTypeEncoder: Encoder[ChannelType] = Encoder[Int].contramap(ChannelType.idFor)
-  implicit val channelTypeDecoder: Decoder[ChannelType] =
-    Decoder[Int].emap(ChannelType.forId(_).toRight("Not a valid channel type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val channelTypeEncoder: Encoder[ChannelType] = Encoder[ChannelType]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val channelTypeDecoder: Decoder[ChannelType] = Decoder[ChannelType]
 
-  implicit val verificationLevelEncoder: Encoder[VerificationLevel] = Encoder[Int].contramap(VerificationLevel.idFor)
-  implicit val verificationLevelDecoder: Decoder[VerificationLevel] =
-    Decoder[Int].emap(VerificationLevel.forId(_).toRight("Not a valid verification level"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val verificationLevelEncoder: Encoder[VerificationLevel] = Encoder[VerificationLevel]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val verificationLevelDecoder: Decoder[VerificationLevel] = Decoder[VerificationLevel]
 
-  implicit val notificationLevelEncoder: Encoder[NotificationLevel] = Encoder[Int].contramap(NotificationLevel.idFor)
-  implicit val notificationLevelDecoder: Decoder[NotificationLevel] =
-    Decoder[Int].emap(NotificationLevel.forId(_).toRight("Not a valid notification level"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val notificationLevelEncoder: Encoder[NotificationLevel] = Encoder[NotificationLevel]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val notificationLevelDecoder: Decoder[NotificationLevel] = Decoder[NotificationLevel]
 
-  implicit val filterLevelEncoder: Encoder[FilterLevel] = Encoder[Int].contramap(FilterLevel.idFor)
-  implicit val filterLevelDecoder: Decoder[FilterLevel] =
-    Decoder[Int].emap(FilterLevel.forId(_).toRight("Not a valid filter level"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val filterLevelEncoder: Encoder[FilterLevel] = Encoder[FilterLevel]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val filterLevelDecoder: Decoder[FilterLevel] = Decoder[FilterLevel]
 
-  implicit val mfaLevelEncoder: Encoder[MFALevel] = Encoder[Int].contramap(MFALevel.idFor)
-  implicit val mfaLevelDecoder: Decoder[MFALevel] =
-    Decoder[Int].emap(MFALevel.forId(_).toRight("Not a valid MFA level"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val mfaLevelEncoder: Encoder[MFALevel] = Encoder[MFALevel]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val mfaLevelDecoder: Decoder[MFALevel] = Decoder[MFALevel]
 
-  implicit val messageTypeEncoder: Encoder[MessageType] = Encoder[Int].contramap(MessageType.idFor)
-  implicit val messageTypeDecoder: Decoder[MessageType] =
-    Decoder[Int].emap(MessageType.forId(_).toRight("Not a valid message type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val messageTypeEncoder: Encoder[MessageType] = Encoder[MessageType]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val messageTypeDecoder: Decoder[MessageType] = Decoder[MessageType]
 
-  implicit val premiumTypeEncoder: Encoder[PremiumType] = Encoder[Int].contramap(PremiumType.idFor)
-  implicit val premiumTypeDecoder: Decoder[PremiumType] =
-    Decoder[Int].emap(PremiumType.forId(_).toRight("Not a valid premium type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val premiumTypeEncoder: Encoder[PremiumType] = Encoder[PremiumType]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val premiumTypeDecoder: Decoder[PremiumType] = Decoder[PremiumType]
 
-  implicit val permissionValueTypeEncoder: Encoder[PermissionOverwriteType] =
-    Encoder[String].contramap(PermissionOverwriteType.nameOf)
-  implicit val permissionValueTypeDecoder: Decoder[PermissionOverwriteType] =
-    Decoder[String].emap(PermissionOverwriteType.forName(_).toRight("Not a permission value type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val permissionValueTypeEncoder: Encoder[PermissionOverwriteType] = Encoder[PermissionOverwriteType]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val permissionValueTypeDecoder: Decoder[PermissionOverwriteType] = Decoder[PermissionOverwriteType]
 
-  implicit val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[String].contramap(PresenceStatus.nameOf)
-  implicit val presenceStatusDecoder: Decoder[PresenceStatus] =
-    Decoder[String].emap(PresenceStatus.forName(_).toRight("Not a presence status"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[PresenceStatus]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val presenceStatusDecoder: Decoder[PresenceStatus] = Decoder[PresenceStatus]
 
-  implicit val auditLogEventDecoder: Decoder[AuditLogEvent] =
-    Decoder[Int].emap(AuditLogEvent.fromId(_).toRight(s"No valid event type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val auditLogEventDecoder: Decoder[AuditLogEvent] = Decoder[AuditLogEvent]
 
-  implicit val connectionVisibilityEncoder: Encoder[ConnectionVisibility] =
-    Encoder[Int].contramap(ConnectionVisibility.idOf)
-  implicit val connectionVisibilityDecoder: Decoder[ConnectionVisibility] =
-    Decoder[Int].emap(ConnectionVisibility.fromId(_).toRight("Not a valid premium type"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val connectionVisibilityEncoder: Encoder[ConnectionVisibility] = Encoder[ConnectionVisibility]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val connectionVisibilityDecoder: Decoder[ConnectionVisibility] = Decoder[ConnectionVisibility]
 
   implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
   implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] =
@@ -102,10 +110,10 @@ trait DiscordProtocol {
   implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
   implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
 
-  implicit val messageActivityTypeEncoder: Encoder[MessageActivityType] =
-    Encoder[Int].contramap(MessageActivityType.idOf)
-  implicit val messageActivityTypeDecoder: Decoder[MessageActivityType] =
-    Decoder[Int].emap(MessageActivityType.fromId(_).toRight("Not a valid MFA level"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val messageActivityTypeEncoder: Encoder[MessageActivityType] = Encoder[MessageActivityType]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val messageActivityTypeDecoder: Decoder[MessageActivityType] = Decoder[MessageActivityType]
 
   implicit val rawChannelEncoder: Encoder[RawChannel] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawChannelDecoder: Decoder[RawChannel] = derivation.deriveDecoder(derivation.renaming.snakeCase)

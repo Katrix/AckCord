@@ -229,7 +229,7 @@ object Routes {
     val base = guild / "audit-logs"
     val queries = base +?
       query[UserId]("user_id", _.asString) +?
-      query[AuditLogEvent]("action_type", AuditLogEvent.idOf(_).toString) +?
+      query[AuditLogEvent]("action_type", _.value.toString) +?
       query[RawSnowflake]("before", _.asString) +?
       query[Int]("limit", _.toString, a => require(a >= 1 && a <= 100, "Limit must be between 1 and 100"))
 
@@ -396,7 +396,7 @@ object Routes {
   val modifyGuildEmbed: GuildId => RequestRoute  = upcast(guildEmbed.toRequest(PATCH))
   val getGuildVanityUrl: GuildId => RequestRoute = upcast(guild / "vanity-url" toRequest GET)
 
-  val style: QueryParameter[WidgetImageStyle] = new QueryParameter("style", _.name)
+  val style: QueryParameter[WidgetImageStyle] = new QueryParameter("style", _.value)
 
   val getGuildWidgetImage: (GuildId, Option[WidgetImageStyle]) => RequestRoute = upcast(
     guild / "widget.png" +? style toRequest GET

@@ -28,6 +28,7 @@ import scala.language.higherKinds
 import java.time.OffsetDateTime
 import java.util.Base64
 
+import scala.collection.immutable
 import scala.util.Try
 
 import ackcord.CacheSnapshot
@@ -37,6 +38,7 @@ import cats.syntax.flatMap._
 import cats.syntax.functor._
 import cats.syntax.traverse._
 import cats.{Applicative, Monad}
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 sealed trait ImageFormat {
   def extensions: Seq[String]
@@ -74,55 +76,38 @@ object ImageData {
 /**
   * An enum of all the different message types.
   */
-trait MessageType
-object MessageType {
-  case object Default              extends MessageType
-  case object RecipientAdd         extends MessageType
-  case object RecipientRemove      extends MessageType
-  case object Call                 extends MessageType
-  case object ChannelNameChange    extends MessageType
-  case object ChannelIconChange    extends MessageType
-  case object ChannelPinnedMessage extends MessageType
-  case object GuildMemberJoin      extends MessageType
+sealed abstract class MessageType(val value: Int) extends IntEnumEntry
+object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
+  case object Default              extends MessageType(0)
+  case object RecipientAdd         extends MessageType(1)
+  case object RecipientRemove      extends MessageType(2)
+  case object Call                 extends MessageType(3)
+  case object ChannelNameChange    extends MessageType(4)
+  case object ChannelIconChange    extends MessageType(5)
+  case object ChannelPinnedMessage extends MessageType(6)
+  case object GuildMemberJoin      extends MessageType(7)
 
-  def forId(id: Int): Option[MessageType] = id match {
-    case 0 => Some(Default)
-    case 1 => Some(RecipientAdd)
-    case 2 => Some(RecipientRemove)
-    case 3 => Some(Call)
-    case 4 => Some(ChannelNameChange)
-    case 5 => Some(ChannelIconChange)
-    case 6 => Some(ChannelPinnedMessage)
-    case 7 => Some(GuildMemberJoin)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[MessageType] = findValues
 
-  def idFor(tpe: MessageType): Int = tpe match {
-    case Default              => 0
-    case RecipientAdd         => 1
-    case RecipientRemove      => 2
-    case Call                 => 3
-    case ChannelNameChange    => 4
-    case ChannelIconChange    => 5
-    case ChannelPinnedMessage => 6
-    case GuildMemberJoin      => 7
-  }
+  @deprecated("Prefer MessageType.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[MessageType] = withValueOpt(id)
+
+  @deprecated("Prefer MessageType#value", since = "0.14.0")
+  def idFor(tpe: MessageType): Int = tpe.value
 }
 
-trait PremiumType
-object PremiumType {
-  case object NitroClassic extends PremiumType
-  case object Nitro        extends PremiumType
+sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
+object PremiumType extends IntEnum[PremiumType] with IntCirceEnum[PremiumType] {
+  case object NitroClassic extends PremiumType(1)
+  case object Nitro        extends PremiumType(2)
 
-  def forId(id: Int): Option[PremiumType] = id match {
-    case 1 => Some(NitroClassic)
-    case 2 => Some(Nitro)
-  }
+  override def values: immutable.IndexedSeq[PremiumType] = findValues
 
-  def idFor(tpe: PremiumType): Int = tpe match {
-    case NitroClassic => 1
-    case Nitro        => 2
-  }
+  @deprecated("Prefer PremiumType.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[PremiumType] = withValueOpt(id)
+
+  @deprecated("Prefer PremiumType#value", since = "0.14.0")
+  def idFor(tpe: PremiumType): Int = tpe.value
 }
 
 /**
@@ -214,46 +199,36 @@ case class Connection(
     showActivity: Boolean,
     visibility: ConnectionVisibility
 )
-sealed trait ConnectionVisibility
-object ConnectionVisibility {
+sealed abstract class ConnectionVisibility(val value: Int) extends IntEnumEntry
+object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceEnum[ConnectionVisibility] {
 
   //We use a different name here so that people don't accidentially switch up this and Option.None
-  case object NoneVisibility extends ConnectionVisibility
-  case object Everyone       extends ConnectionVisibility
+  case object NoneVisibility extends ConnectionVisibility(0)
+  case object Everyone       extends ConnectionVisibility(1)
 
-  def fromId(id: Int): Option[ConnectionVisibility] = id match {
-    case 0 => Some(NoneVisibility)
-    case 1 => Some(Everyone)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
 
-  def idOf(tpe: ConnectionVisibility): Int = tpe match {
-    case NoneVisibility => 0
-    case Everyone       => 1
-  }
+  @deprecated("Prefer ConnectionVisibility.withValueOpt", since = "0.14.0")
+  def fromId(id: Int): Option[ConnectionVisibility] = withValueOpt(id)
+
+  @deprecated("Prefer ConnectionVisibility#value", since = "0.14.0")
+  def idOf(tpe: ConnectionVisibility): Int = tpe.value
 }
 
-sealed trait MessageActivityType
-object MessageActivityType {
-  case object Join        extends MessageActivityType
-  case object Spectate    extends MessageActivityType
-  case object Listen      extends MessageActivityType
-  case object JoinRequest extends MessageActivityType
+sealed abstract class MessageActivityType(val value: Int) extends IntEnumEntry
+object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnum[MessageActivityType] {
+  case object Join        extends MessageActivityType(1)
+  case object Spectate    extends MessageActivityType(2)
+  case object Listen      extends MessageActivityType(3)
+  case object JoinRequest extends MessageActivityType(5)
 
-  def fromId(id: Int): Option[MessageActivityType] = id match {
-    case 1 => Some(Join)
-    case 2 => Some(Spectate)
-    case 3 => Some(Listen)
-    case 5 => Some(JoinRequest)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[MessageActivityType] = findValues
 
-  def idOf(tpe: MessageActivityType): Int = tpe match {
-    case Join        => 1
-    case Spectate    => 2
-    case Listen      => 3
-    case JoinRequest => 5
-  }
+  @deprecated("Prefer MessageActivityType.withValueOpt", since = "0.14.0")
+  def fromId(id: Int): Option[MessageActivityType] = withValueOpt(id)
+
+  @deprecated("Prefer MessageActivityType#value", since = "0.14.0")
+  def idOf(tpe: MessageActivityType): Int = tpe.value
 }
 
 /**

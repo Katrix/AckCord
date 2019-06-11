@@ -27,9 +27,12 @@ import scala.language.higherKinds
 
 import java.time.{Instant, OffsetDateTime}
 
+import scala.collection.immutable
+
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import cats.data.OptionT
 import cats.{Applicative, Functor, Monad}
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry, StringCirceEnum, StringEnum, StringEnumEntry}
 
 /**
   * A guild which that status of is unknown.
@@ -42,130 +45,90 @@ sealed trait UnknownStatusGuild {
 /**
   * The different verification levels that can be used for a guild.
   */
-trait VerificationLevel
-object VerificationLevel {
+sealed abstract class VerificationLevel(val value: Int) extends IntEnumEntry
+object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnum[VerificationLevel] {
 
-  /**
-    * Unrestricted access
-    */
-  case object NoVerification extends VerificationLevel
+  /** Unrestricted access */
+  case object NoVerification extends VerificationLevel(0)
 
-  /**
-    * Must have a verified email address
-    */
-  case object Low extends VerificationLevel
+  /** Must have a verified email address */
+  case object Low extends VerificationLevel(1)
 
-  /**
-    * Must be a registered user for more than 5 minutes
-    */
-  case object Medium extends VerificationLevel
+  /** Must be a registered user for more than 5 minutes */
+  case object Medium extends VerificationLevel(2)
 
-  /**
-    * Must be a member of the guild for more than 10 minutes
-    */
-  case object High extends VerificationLevel
+  /** Must be a member of the guild for more than 10 minutes */
+  case object High extends VerificationLevel(3)
 
-  /**
-    * Must have a verified phone number
-    */
-  case object VeryHigh extends VerificationLevel
+  /** Must have a verified phone number */
+  case object VeryHigh extends VerificationLevel(4)
 
-  def forId(id: Int): Option[VerificationLevel] = id match {
-    case 0 => Some(NoVerification)
-    case 1 => Some(Low)
-    case 2 => Some(Medium)
-    case 3 => Some(High)
-    case 4 => Some(VeryHigh)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[VerificationLevel] = findValues
 
-  def idFor(lvl: VerificationLevel): Int = lvl match {
-    case NoVerification => 0
-    case Low            => 1
-    case Medium         => 2
-    case High           => 3
-    case VeryHigh       => 4
-  }
+  @deprecated("Prefer VerificationLevel.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[VerificationLevel] = withValueOpt(id)
+
+  @deprecated("Prefer VerificationLevel#value", since = "0.14.0")
+  def idFor(lvl: VerificationLevel): Int = lvl.value
 }
 
 /**
   * The different notification levels that can be used for a guild
   */
-trait NotificationLevel
-object NotificationLevel {
+sealed abstract class NotificationLevel(val value: Int) extends IntEnumEntry
+object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnum[NotificationLevel] {
 
-  /**
-    * All messages trigger a notification
-    */
-  case object AllMessages extends NotificationLevel
+  /** All messages trigger a notification */
+  case object AllMessages extends NotificationLevel(0)
 
-  /**
-    * Only mentions trigger a notification
-    */
-  case object OnlyMentions extends NotificationLevel
+  /** Only mentions trigger a notification */
+  case object OnlyMentions extends NotificationLevel(1)
 
-  def forId(id: Int): Option[NotificationLevel] = id match {
-    case 0 => Some(AllMessages)
-    case 1 => Some(OnlyMentions)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[NotificationLevel] = findValues
 
-  def idFor(lvl: NotificationLevel): Int = lvl match {
-    case AllMessages  => 0
-    case OnlyMentions => 1
-  }
+  @deprecated("Prefer NotificationLevel.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[NotificationLevel] = withValueOpt(id)
+
+  @deprecated("Prefer NotificationLevel#value", since = "0.14.0")
+  def idFor(lvl: NotificationLevel): Int = lvl.value
 }
 
 /**
   * The different explicit content filter levels to use for a guild.
   */
-trait FilterLevel
-object FilterLevel {
+sealed abstract class FilterLevel(val value: Int) extends IntEnumEntry
+object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnum[FilterLevel] {
 
-  /**
-    * No filtering is done.
-    */
-  case object Disabled extends FilterLevel
+  /** No filtering is done. */
+  case object Disabled extends FilterLevel(0)
 
-  /**
-    * Messages from members without roles are filtered
-    */
-  case object MembersWithoutRoles extends FilterLevel
+  /** Messages from members without roles are filtered */
+  case object MembersWithoutRoles extends FilterLevel(1)
 
-  /**
-    * All messages are filtered
-    */
-  case object AllMembers extends FilterLevel
+  /** All messages are filtered */
+  case object AllMembers extends FilterLevel(2)
 
-  def forId(id: Int): Option[FilterLevel] = id match {
-    case 0 => Some(Disabled)
-    case 1 => Some(MembersWithoutRoles)
-    case 2 => Some(AllMembers)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[FilterLevel] = findValues
 
-  def idFor(lvl: FilterLevel): Int = lvl match {
-    case Disabled            => 0
-    case MembersWithoutRoles => 1
-    case AllMembers          => 2
-  }
+  @deprecated("Prefer FilterLevel.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[FilterLevel] = withValueOpt(id)
+
+  @deprecated("Prefer FilterLevel#value", since = "0.14.0")
+  def idFor(lvl: FilterLevel): Int = lvl.value
 }
 
-trait MFALevel
-object MFALevel {
-  case object NoneMFA  extends MFALevel
-  case object Elevated extends MFALevel
+sealed abstract class MFALevel(val value: Int) extends IntEnumEntry
+object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
+  case object NoneMFA  extends MFALevel(0)
+  case object Elevated extends MFALevel(1)
 
-  def forId(id: Int): Option[MFALevel] = id match {
-    case 0 => Some(NoneMFA)
-    case 1 => Some(Elevated)
-    case _ => None
-  }
+  override def values: immutable.IndexedSeq[MFALevel] = findValues
 
-  def idFor(lvl: MFALevel): Int = lvl match {
-    case NoneMFA  => 0
-    case Elevated => 1
-  }
+  @deprecated("Prefer MFALevel.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[MFALevel] = withValueOpt(id)
+
+  @deprecated("Prefer MFALevel#value", since = "0.14.0")
+  def idFor(lvl: MFALevel): Int = lvl.value
 }
 
 /**
@@ -588,30 +551,21 @@ case class PresenceWatching(
 /**
   * The different statuses a user can have
   */
-sealed trait PresenceStatus
-object PresenceStatus {
-  case object Online       extends PresenceStatus
-  case object DoNotDisturb extends PresenceStatus
-  case object Idle         extends PresenceStatus
-  case object Invisible    extends PresenceStatus
-  case object Offline      extends PresenceStatus
+sealed abstract class PresenceStatus(val value: String) extends StringEnumEntry
+object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnum[PresenceStatus] {
+  case object Online       extends PresenceStatus("online")
+  case object DoNotDisturb extends PresenceStatus("dnd")
+  case object Idle         extends PresenceStatus("idle")
+  case object Invisible    extends PresenceStatus("invisible")
+  case object Offline      extends PresenceStatus("offline")
 
-  def nameOf(status: PresenceStatus): String = status match {
-    case Online       => "online"
-    case DoNotDisturb => "dnd"
-    case Idle         => "idle"
-    case Invisible    => "invisible"
-    case Offline      => "offline"
-  }
+  override def values: immutable.IndexedSeq[PresenceStatus] = findValues
 
-  def forName(name: String): Option[PresenceStatus] = name match {
-    case "online"    => Some(Online)
-    case "dnd"       => Some(DoNotDisturb)
-    case "idle"      => Some(Idle)
-    case "invisible" => Some(Invisible)
-    case "offline"   => Some(Offline)
-    case _           => None
-  }
+  @deprecated("Prefer PresenceStatus#value instead", since = "0.14.0")
+  def nameOf(status: PresenceStatus): String = status.value
+
+  @deprecated("Prefer PresenceStatus.withValueOpt", since = "0.14.0")
+  def forName(name: String): Option[PresenceStatus] = withValueOpt(name)
 }
 
 /**

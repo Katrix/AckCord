@@ -26,10 +26,13 @@ package ackcord.data
 
 import scala.language.higherKinds
 
+import scala.collection.immutable
+
 import ackcord.CacheSnapshot
 import ackcord.data.raw.RawRole
 import cats.Monad
 import cats.data.OptionT
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 /**
   * Root audit log object. Received from [[ackcord.requests.GetGuildAuditLog]]
@@ -64,93 +67,42 @@ case class AuditLogEntry(
 /**
   * A type of change that an entry can represent
   */
-sealed trait AuditLogEvent
-object AuditLogEvent {
-  case object GuildUpdate            extends AuditLogEvent
-  case object ChannelCreate          extends AuditLogEvent
-  case object ChannelUpdate          extends AuditLogEvent
-  case object ChannelDelete          extends AuditLogEvent
-  case object ChannelOverwriteCreate extends AuditLogEvent
-  case object ChannelOverwriteUpdate extends AuditLogEvent
-  case object ChannelOverwriteDelete extends AuditLogEvent
-  case object MemberKick             extends AuditLogEvent
-  case object MemberPrune            extends AuditLogEvent
-  case object MemberBanAdd           extends AuditLogEvent
-  case object MemberBanRemove        extends AuditLogEvent
-  case object MemberUpdate           extends AuditLogEvent
-  case object MemberRoleUpdate       extends AuditLogEvent
-  case object RoleCreate             extends AuditLogEvent
-  case object RoleUpdate             extends AuditLogEvent
-  case object RoleDelete             extends AuditLogEvent
-  case object InviteCreate           extends AuditLogEvent
-  case object InviteUpdate           extends AuditLogEvent
-  case object InviteDelete           extends AuditLogEvent
-  case object WebhookCreate          extends AuditLogEvent
-  case object WebhookUpdate          extends AuditLogEvent
-  case object WebhookDelete          extends AuditLogEvent
-  case object EmojiCreate            extends AuditLogEvent
-  case object EmojiUpdate            extends AuditLogEvent
-  case object EmojiDelete            extends AuditLogEvent
-  case object MessageDelete          extends AuditLogEvent
+sealed abstract class AuditLogEvent(val value: Int) extends IntEnumEntry
+object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEvent] {
+  case object GuildUpdate            extends AuditLogEvent(1)
+  case object ChannelCreate          extends AuditLogEvent(10)
+  case object ChannelUpdate          extends AuditLogEvent(11)
+  case object ChannelDelete          extends AuditLogEvent(12)
+  case object ChannelOverwriteCreate extends AuditLogEvent(13)
+  case object ChannelOverwriteUpdate extends AuditLogEvent(14)
+  case object ChannelOverwriteDelete extends AuditLogEvent(15)
+  case object MemberKick             extends AuditLogEvent(20)
+  case object MemberPrune            extends AuditLogEvent(21)
+  case object MemberBanAdd           extends AuditLogEvent(22)
+  case object MemberBanRemove        extends AuditLogEvent(23)
+  case object MemberUpdate           extends AuditLogEvent(24)
+  case object MemberRoleUpdate       extends AuditLogEvent(25)
+  case object RoleCreate             extends AuditLogEvent(30)
+  case object RoleUpdate             extends AuditLogEvent(31)
+  case object RoleDelete             extends AuditLogEvent(32)
+  case object InviteCreate           extends AuditLogEvent(40)
+  case object InviteUpdate           extends AuditLogEvent(41)
+  case object InviteDelete           extends AuditLogEvent(42)
+  case object WebhookCreate          extends AuditLogEvent(50)
+  case object WebhookUpdate          extends AuditLogEvent(51)
+  case object WebhookDelete          extends AuditLogEvent(52)
+  case object EmojiCreate            extends AuditLogEvent(60)
+  case object EmojiUpdate            extends AuditLogEvent(61)
+  case object EmojiDelete            extends AuditLogEvent(62)
+  case object MessageDelete          extends AuditLogEvent(72)
 
-  def idOf(event: AuditLogEvent): Int = event match {
-    case GuildUpdate            => 1
-    case ChannelCreate          => 10
-    case ChannelUpdate          => 11
-    case ChannelDelete          => 12
-    case ChannelOverwriteCreate => 13
-    case ChannelOverwriteUpdate => 14
-    case ChannelOverwriteDelete => 15
-    case MemberKick             => 20
-    case MemberPrune            => 21
-    case MemberBanAdd           => 22
-    case MemberBanRemove        => 23
-    case MemberUpdate           => 24
-    case MemberRoleUpdate       => 25
-    case RoleCreate             => 30
-    case RoleUpdate             => 31
-    case RoleDelete             => 32
-    case InviteCreate           => 40
-    case InviteUpdate           => 41
-    case InviteDelete           => 42
-    case WebhookCreate          => 50
-    case WebhookUpdate          => 51
-    case WebhookDelete          => 52
-    case EmojiCreate            => 60
-    case EmojiUpdate            => 61
-    case EmojiDelete            => 62
-    case MessageDelete          => 72
-  }
+  override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 
-  def fromId(id: Int): Option[AuditLogEvent] = id match {
-    case 1  => Some(GuildUpdate)
-    case 10 => Some(ChannelCreate)
-    case 11 => Some(ChannelUpdate)
-    case 12 => Some(ChannelDelete)
-    case 13 => Some(ChannelOverwriteCreate)
-    case 14 => Some(ChannelOverwriteUpdate)
-    case 15 => Some(ChannelOverwriteDelete)
-    case 20 => Some(MemberKick)
-    case 21 => Some(MemberPrune)
-    case 22 => Some(MemberBanAdd)
-    case 23 => Some(MemberBanRemove)
-    case 24 => Some(MemberUpdate)
-    case 25 => Some(MemberRoleUpdate)
-    case 30 => Some(RoleCreate)
-    case 31 => Some(RoleUpdate)
-    case 32 => Some(RoleDelete)
-    case 40 => Some(InviteCreate)
-    case 41 => Some(InviteUpdate)
-    case 42 => Some(InviteDelete)
-    case 50 => Some(WebhookCreate)
-    case 51 => Some(WebhookUpdate)
-    case 52 => Some(WebhookDelete)
-    case 60 => Some(EmojiCreate)
-    case 61 => Some(EmojiUpdate)
-    case 62 => Some(EmojiDelete)
-    case 72 => Some(MessageDelete)
-    case _  => None
-  }
+  @deprecated("Prefer AuditLogEvent#value", since = "0.14.0")
+  def idOf(event: AuditLogEvent): Int = event.value
+
+  @deprecated("Prefer AuditLogEvent.withValueOpt", since = "0.14.0")
+  def fromId(id: Int): Option[AuditLogEvent] = withValueOpt(id)
 }
 
 /**

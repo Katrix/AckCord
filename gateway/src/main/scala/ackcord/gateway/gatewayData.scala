@@ -25,12 +25,15 @@ package ackcord.gateway
 
 import java.time.{Instant, OffsetDateTime}
 
+import scala.collection.immutable
+
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.gateway.GatewayProtocol._
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.{Eval, Later, Now}
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 import io.circe.{Decoder, Encoder, Json}
 
 /**
@@ -241,10 +244,14 @@ case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
 
 /**
   * All the different opcodes used by the gateway.
-  * @param code The number of the opcode.
+  * @param value The number of the opcode.
   */
-sealed abstract case class GatewayOpCode(code: Int)
-object GatewayOpCode {
+sealed abstract class GatewayOpCode(val value: Int) extends IntEnumEntry {
+
+  @deprecated("Prefer GatewayOpCode#value", since = "0.14.0")
+  def code: Int = value
+}
+object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnum[GatewayOpCode] {
   object Dispatch            extends GatewayOpCode(0)
   object Heartbeat           extends GatewayOpCode(1)
   object Identify            extends GatewayOpCode(2)
@@ -258,24 +265,14 @@ object GatewayOpCode {
   object Hello               extends GatewayOpCode(10)
   object HeartbeatACK        extends GatewayOpCode(11)
 
+
+  override def values: immutable.IndexedSeq[GatewayOpCode] = findValues
+
   /**
     * Get an opcode from a number if it exists.
     */
-  def forCode(code: Int): Option[GatewayOpCode] = code match {
-    case 0  => Some(Dispatch)
-    case 1  => Some(Heartbeat)
-    case 2  => Some(Identify)
-    case 3  => Some(StatusUpdate)
-    case 4  => Some(VoiceStateUpdate)
-    case 5  => Some(VoiceServerPing)
-    case 6  => Some(Resume)
-    case 7  => Some(Reconnect)
-    case 8  => Some(RequestGuildMembers)
-    case 9  => Some(InvalidSession)
-    case 10 => Some(Hello)
-    case 11 => Some(HeartbeatACK)
-    case _  => None
-  }
+  @deprecated("Prefer GatewayOpCode.withValueOpt", since = "0.14.0")
+  def forCode(code: Int): Option[GatewayOpCode] = withValueOpt(code)
 }
 
 /**

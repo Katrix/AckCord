@@ -23,11 +23,14 @@
  */
 package ackcord.voice
 
+import scala.collection.immutable
+
 import ackcord.data._
 import ackcord.util.{JsonOption, JsonUndefined}
 import ackcord.voice.VoiceWsProtocol._
 import akka.NotUsed
 import akka.util.ByteString
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 import io.circe.{Encoder, Json}
 
 /**
@@ -233,10 +236,14 @@ case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
 
 /**
   * Voice opcode used by voice websocket
-  * @param code The int value of the code
+  * @param value The int value of the code
   */
-sealed abstract case class VoiceOpCode(code: Int)
-object VoiceOpCode {
+sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry {
+
+  @deprecated("Prefer VoiceOpCode#value", since = "0.14.0")
+  def code: Int = value
+}
+object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnum[VoiceOpCode] {
   object Identify           extends VoiceOpCode(0)
   object SelectProtocol     extends VoiceOpCode(1)
   object Ready              extends VoiceOpCode(2)
@@ -250,19 +257,8 @@ object VoiceOpCode {
   object Op12Ignore         extends VoiceOpCode(12) //This should be ignored
   object ClientDisconnect   extends VoiceOpCode(13)
 
-  def forCode(code: Int): Option[VoiceOpCode] = code match {
-    case 0  => Some(Identify)
-    case 1  => Some(SelectProtocol)
-    case 2  => Some(Ready)
-    case 3  => Some(Heartbeat)
-    case 4  => Some(SessionDescription)
-    case 5  => Some(Speaking)
-    case 6  => Some(HeartbeatACK)
-    case 7  => Some(Resume)
-    case 8  => Some(Hello)
-    case 9  => Some(Resumed)
-    case 12 => Some(Op12Ignore)
-    case 13 => Some(ClientDisconnect)
-    case _  => None
-  }
+  override def values: immutable.IndexedSeq[VoiceOpCode] = findValues
+
+  @deprecated("Prefer VoiceOpCode.withValueOpt", since = "0.14.0")
+  def forCode(code: Int): Option[VoiceOpCode] = withValueOpt(code)
 }

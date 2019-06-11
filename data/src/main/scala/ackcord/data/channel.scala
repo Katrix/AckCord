@@ -27,76 +27,65 @@ import scala.language.higherKinds
 
 import java.time.OffsetDateTime
 
+import scala.collection.immutable
+
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import cats.data.OptionT
 import cats.{Applicative, Monad}
+import enumeratum.values._
 
 /**
   * Different type of channels
   */
-sealed trait ChannelType
-object ChannelType {
-  case object GuildText     extends ChannelType
-  case object DM            extends ChannelType
-  case object GuildVoice    extends ChannelType
-  case object GroupDm       extends ChannelType
-  case object GuildCategory extends ChannelType
-  case object GuildNews     extends ChannelType
-  case object GuildStore    extends ChannelType
+sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
+object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
+  case object GuildText     extends ChannelType(0)
+  case object DM            extends ChannelType(1)
+  case object GuildVoice    extends ChannelType(2)
+  case object GroupDm       extends ChannelType(3)
+  case object GuildCategory extends ChannelType(4)
+  case object GuildNews     extends ChannelType(5)
+  case object GuildStore    extends ChannelType(6)
+
+  override def values: immutable.IndexedSeq[ChannelType] = findValues
 
   /**
     * Get a channel type from an id
     */
-  def forId(id: Int): Option[ChannelType] = id match {
-    case 0 => Some(GuildText)
-    case 1 => Some(DM)
-    case 2 => Some(GuildVoice)
-    case 3 => Some(GroupDm)
-    case 4 => Some(GuildCategory)
-    case 5 => Some(GuildNews)
-    case 6 => Some(GuildStore)
-    case _ => None
-  }
+  @deprecated("Prefer ChannelType.withValueOpt", since = "0.14.0")
+  def forId(id: Int): Option[ChannelType] = withValueOpt(id)
 
   /**
     * Get id for a channel type
     */
-  def idFor(channelType: ChannelType): Int = channelType match {
-    case GuildText     => 0
-    case DM            => 1
-    case GuildVoice    => 2
-    case GroupDm       => 3
-    case GuildCategory => 4
-    case GuildNews     => 5
-    case GuildStore    => 6
-  }
+  @deprecated("Prefer ChannelType#value", since = "0.14.0")
+  def idFor(channelType: ChannelType): Int = channelType.value
 }
 
 /**
   * Permission overwrites can apply to both users and role. This tells you what's
   * being overwritten for a specific overwrite.
   */
-sealed trait PermissionOverwriteType
-object PermissionOverwriteType {
-  case object Role   extends PermissionOverwriteType
-  case object Member extends PermissionOverwriteType
+sealed abstract class PermissionOverwriteType(val value: String) extends StringEnumEntry
+object PermissionOverwriteType
+    extends StringEnum[PermissionOverwriteType]
+    with StringCirceEnum[PermissionOverwriteType] {
+  case object Role   extends PermissionOverwriteType("role")
+  case object Member extends PermissionOverwriteType("member")
+
+  override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
 
   /**
     * Get a overwrite type from a name.
     */
-  def forName(name: String): Option[PermissionOverwriteType] = name match {
-    case "role"   => Some(Role)
-    case "member" => Some(Member)
-    case _        => None
-  }
+  @deprecated("Prefer PermissionOverwriteType.withValueOpt", since = "0.14.0")
+  def forName(name: String): Option[PermissionOverwriteType] = withValueOpt(name)
 
   /**
     * Get the name of an overwrite type
     */
-  def nameOf(tpe: PermissionOverwriteType): String = tpe match {
-    case Role   => "role"
-    case Member => "member"
-  }
+  @deprecated("Prefer PermissionOverwriteType#value", since = "0.14.0")
+  def nameOf(tpe: PermissionOverwriteType): String = tpe.value
 }
 
 /**

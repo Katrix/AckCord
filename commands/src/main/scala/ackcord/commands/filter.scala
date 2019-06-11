@@ -123,10 +123,7 @@ object CmdFilter {
         guildChannel <- OptionT.fromOption(channel.asGuildChannel)
         guild        <- guildChannel.guild
         member       <- OptionT.fromOption(guild.members.get(UserId(msg.authorId)))
-        hasPerms <- OptionT.liftF(
-          Monad[F].map(member.channelPermissions(msg.channelId))(_.hasPermissions(neededPermission))
-        )
-      } yield hasPerms
+      } yield member.channelPermissionsId(guild, msg.channelId).hasPermissions(neededPermission)
 
       allowed.getOrElse(false)
     }

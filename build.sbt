@@ -66,6 +66,10 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-generic-extras" % circeVersion,
       "io.circe" %%% "circe-derivation"     % "0.11.0-M1"
     ),
+    libraryDependencies ++= Seq(
+      "com.beachape" %%% "enumeratum"       % "1.5.13",
+      "com.beachape" %%% "enumeratum-circe" % "1.5.21",
+    ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
 

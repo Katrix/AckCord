@@ -23,17 +23,24 @@
  */
 package ackcord.data
 
+import scala.collection.immutable
+
+import enumeratum.values.{StringEnum, StringEnumEntry}
+
 /**
   * A style the widget image might be shown as.
   * See examples here. https://discordapp.com/developers/docs/resources/guild#get-guild-widget-image
   */
-sealed trait WidgetImageStyle {
-  def name: String
+sealed abstract class WidgetImageStyle(val value: String) extends StringEnumEntry {
+  @deprecated("Prefer value instead", since = "0.14.0")
+  def name: String = value
 }
-object WidgetImageStyle {
-  case object Shield  extends WidgetImageStyle { def name = "shield"  }
-  case object Banner1 extends WidgetImageStyle { def name = "banner1" }
-  case object Banner2 extends WidgetImageStyle { def name = "banner2" }
-  case object Banner3 extends WidgetImageStyle { def name = "banner3" }
-  case object Banner4 extends WidgetImageStyle { def name = "banner4" }
+object WidgetImageStyle extends StringEnum[WidgetImageStyle] {
+  case object Shield  extends WidgetImageStyle("shield" )
+  case object Banner1 extends WidgetImageStyle("banner1")
+  case object Banner2 extends WidgetImageStyle("banner2")
+  case object Banner3 extends WidgetImageStyle("banner3")
+  case object Banner4 extends WidgetImageStyle("banner4")
+
+  override def values: immutable.IndexedSeq[WidgetImageStyle] = findValues
 }

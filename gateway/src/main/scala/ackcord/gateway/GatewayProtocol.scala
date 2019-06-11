@@ -34,9 +34,10 @@ import io.circe.{derivation, _}
 
 object GatewayProtocol extends DiscordProtocol {
 
-  implicit val opCodeEncoder: Encoder[GatewayOpCode] = Encoder[Int].contramap(_.code)
-  implicit val opCodeDecoder: Decoder[GatewayOpCode] =
-    Decoder[Int].emap(GatewayOpCode.forCode(_).toRight("Not an opCode"))
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val opCodeEncoder: Encoder[GatewayOpCode] = Encoder[GatewayOpCode]
+  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
+  val opCodeDecoder: Decoder[GatewayOpCode] = Decoder[GatewayOpCode]
 
   implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
