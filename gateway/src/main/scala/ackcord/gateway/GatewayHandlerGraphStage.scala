@@ -39,6 +39,7 @@ import akka.stream._
 import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Keep, Merge}
 import akka.stream.stage._
 import akka.util.ByteString
+import cats.syntax.all._
 import io.circe
 import io.circe.parser
 import io.circe.syntax._
@@ -102,7 +103,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case Hello(data) => handleHello(data)
           case dispatch @ Dispatch(seq, event) =>
             resume = event match {
-              case GatewayEvent.Ready(readyData) =>
+              case GatewayEvent.Ready(_, readyData) =>
                 readyData.value match {
                   case Right(ready) => ResumeData(settings.token, ready.sessionId, seq)
                   case Left(e) =>
@@ -195,7 +196,7 @@ object GatewayHandlerGraphStage {
         .viaMat(parseMessage)(Keep.left)
         .collect {
           case Right(msg) => msg
-          case Left(e)    => throw e
+          case Left(e)    => throw new GatewayJsonException(e.show, e)
         }
         .named("GatewayMessageProcessing")
 

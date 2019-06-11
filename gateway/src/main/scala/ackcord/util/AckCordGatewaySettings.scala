@@ -35,6 +35,10 @@ class AckCordGatewaySettings(config: Config) {
 
   val LogReceivedWs: Boolean = getBoolean("ackcord.logging.payloads.log-received-ws")
   val LogSentWs: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-ws")
+
+  val LogJsonTraces: Boolean    = getBoolean("ackcord.logging.traces.log-json-traces")
+  val OnlyUniqueTraces: Boolean = getBoolean("ackcord.logging.traces.only-unique-traces")
+  val NumTraces: Int            = getInt("ackcord.logging.traces.num-traces")
 }
 object AckCordGatewaySettings {
 
