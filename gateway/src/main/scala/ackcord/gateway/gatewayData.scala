@@ -403,10 +403,11 @@ object GatewayEvent {
   }
 
   /**
+    * @param guildId The id of the guild where this change happened.
     * @param channelId The channel where the change happened.
     * @param timestamp The time the most recent pinned message was pinned.
     */
-  case class ChannelPinsUpdateData(channelId: ChannelId, timestamp: JsonOption[OffsetDateTime])
+  case class ChannelPinsUpdateData(guildId: Option[GuildId], channelId: ChannelId, timestamp: JsonOption[OffsetDateTime])
 
   /**
     * Sent to the shard when a message is pinned or unpinned in a text

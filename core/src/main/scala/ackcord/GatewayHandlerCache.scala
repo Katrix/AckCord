@@ -101,10 +101,8 @@ object GatewayHandlerCache {
             CacheUpdate(
               data,
               state =>
-                state.current
-                  .getTChannel(data.channelId)
-                  .map(c => api.ChannelPinsUpdate(c, data.timestamp.toOption, state))
-                  .value,
+                getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                  .map(c => api.ChannelPinsUpdate(c, data.timestamp.toOption, state)),
               NOOPHandler
             )
           case gatewayEv.GuildCreate(_, GetLazy(data)) =>

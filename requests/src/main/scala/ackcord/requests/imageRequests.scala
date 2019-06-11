@@ -103,8 +103,9 @@ case class GetGuildIconImage[Ctx](
     iconHash: String,
     context: Ctx = NotUsed: NotUsed
 ) extends ImageRequest[Ctx] {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
+  override def route: RequestRoute = Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
 }
 
 /**
