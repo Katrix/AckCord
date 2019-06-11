@@ -67,7 +67,7 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
   override def receive: Receive = {
     case DiscordShard.StopShard =>
       isShuttingDown = true
-      gatewayHandler.forward(GatewayLogin)
+      gatewayHandler.forward(GatewayLogout)
 
     case DiscordShard.StartShard =>
       gatewayHandler.forward(GatewayLogin)
