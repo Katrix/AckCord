@@ -119,6 +119,15 @@ object MyBot extends App {
         println(s"Received ping command}")
       }
 
+      client.registerCmd[NotUsed, Id](
+        prefix = GeneralCommands,
+        aliases = Seq("kill", "die"),
+        filters = Seq(CmdFilter.NonBot), //Ideally you're create a new filter type here to only allow the owner to shut down the bot
+        description = Some(CmdDescription("Kill", "Stops the bot"))
+      ) { _ =>
+        client.shutdown()
+      }
+
       val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
       AudioSourceManagers.registerRemoteSources(playerManager)
 
