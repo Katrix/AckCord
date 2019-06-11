@@ -49,6 +49,20 @@ abstract class HelpCmd extends Actor {
 
   val commands = mutable.HashSet.empty[CommandRegistration]
 
+  protected def handler: Option[ActorRef] = None
+
+  /**
+    * If this help command should send an event to the handler when a command
+    * is stopped.
+    */
+  protected def sendEndedEvent: Boolean = false
+
+  /**
+    * If this help command should send an event to the handler when all it's
+    * commands have ended.
+    */
+  protected def sendEmptyEvent: Boolean = false
+
   override def receive: Receive = {
     case ParsedCmd(msg, Some(CommandArgs(cmd)), _, c) =>
       implicit val cache: MemoryCacheSnapshot = c.asInstanceOf[MemoryCacheSnapshot]
@@ -94,7 +108,16 @@ abstract class HelpCmd extends Actor {
         self ! TerminateCommand(registration)
       }
 
-    case TerminateCommand(registration) => commands -= registration
+    case TerminateCommand(registration) =>
+      commands -= registration
+
+      if (sendEndedEvent) {
+        handler.foreach(_ ! HelpCmd.CommandTerminated(registration))
+      }
+
+      if (commands.forall(_.description.extra.contains("ignore-help-last")) && sendEmptyEvent) {
+        handler.foreach(_ ! HelpCmd.NoCommandsRemaining)
+      }
   }
 
   /**
@@ -149,4 +172,17 @@ object HelpCmd {
     * @param commandEnd A future that is completed when the command is removed.
     */
   case class AddCmd(info: AbstractCmdInfo[Id], description: CmdDescription, commandEnd: Future[Done])
+
+  /**
+    * Sent to a handler from the help command when a command is unregistered.
+    * @param registration The registration info for the command
+    */
+  case class CommandTerminated(registration: CommandRegistration)
+
+  /**
+    * Sent from the help command when all the commands it's been managing have
+    * been unregistered. Commands that have the extra property named
+    * `ignore-help-last` will be ignored from the consideration of all commands.
+    */
+  case object NoCommandsRemaining
 }

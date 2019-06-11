@@ -33,7 +33,7 @@ import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 
-class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
+class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpCmd {
 
   implicit val system: ActorSystem = context.system
   import context.dispatcher
@@ -41,6 +41,10 @@ class ExampleHelpCmd(requests: RequestHelper) extends HelpCmd {
 
   private val msgQueue =
     Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
+
+  override protected def handler: Option[ActorRef] = Some(mainActor)
+
+  override protected def sendEmptyEvent: Boolean = true
 
   override def receive: Receive = {
     val withInit: Receive = {
@@ -107,13 +111,20 @@ object ExampleHelpCmd {
   case object InitAck
   case object Ack
 
-  def props(requests: RequestHelper): Props = Props(new ExampleHelpCmd(requests))
+  def props(requests: RequestHelper, mainActor: ActorRef): Props = Props(new ExampleHelpCmd(requests, mainActor))
 }
 
 object ExampleHelpCmdFactory {
   def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Id, Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
     refiner = CmdInfo[Id](prefix = "!", aliases = Seq("help")),
     sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
-    description = Some(CmdDescription(name = "Help", description = "This command right here", usage = "<page|command>"))
+    description = Some(
+      CmdDescription(
+        name = "Help",
+        description = "This command right here",
+        usage = "<page|command>",
+        extra = Map("ignore-help-last" -> "") //Ignores the help command when returning if all commands have been unregistered
+      )
+    )
   )
 }

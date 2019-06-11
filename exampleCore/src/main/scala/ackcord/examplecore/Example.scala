@@ -23,6 +23,7 @@
  */
 package ackcord.examplecore
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 import ackcord._
@@ -32,11 +33,21 @@ import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.GatewaySettings
 import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
-import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props, Terminated}
+import akka.{Done, NotUsed}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, CoordinatedShutdown, Props, Terminated}
 import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision}
+import akka.pattern.ask
+import akka.pattern.gracefulStop
+import akka.stream.{
+  ActorMaterializer,
+  ActorMaterializerSettings,
+  KillSwitches,
+  Materializer,
+  SharedKillSwitch,
+  Supervision
+}
+import akka.util.Timeout
 import cats.arrow.FunctionK
 
 object Example {
@@ -77,6 +88,7 @@ object Example {
 class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
   import cache.mat
   implicit val system: ActorSystem = context.system
+  import context.dispatcher
 
   val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token))
 
@@ -113,6 +125,12 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
       ),
       NewCommandsEntry(
         "%",
+        Seq("guildInfo"),
+        controller.guildInfo,
+        newcommands.CommandDescription("Guild info", "Prints info about the current guild")
+      ),
+      NewCommandsEntry(
+        "%",
         Seq("parseNum"),
         controller.parsingNumbers,
         newcommands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
@@ -138,19 +156,28 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
 
-  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests), "HelpCmd")
+  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests, self), "HelpCmd")
   val helpCmd                = ExampleHelpCmdFactory(helpCmdActor)
 
+  val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
+
   //We set up a commands object, which parses potential commands
+  //If you wanted to be fancy, you could use a valve here to stop new commands when shutting down
+  //Here we just shut everything down at once
   val cmdObj: Commands[Id] =
-    CoreCommands.create(
-      CommandSettings(needsMention = true, prefixes = Set("!", "&")),
-      cache,
-      requests
-    )
+    CoreCommands
+      .create(
+        CommandSettings[Id](needsMention = true, prefixes = Set("!", "&")),
+        cache.subscribeAPI.via(killSwitch.flow),
+        requests
+      )
+      ._2
 
   val commandConnector = new newcommands.CommandConnector[Id](
-    cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => m.message -> m.cache.current),
+    cache.subscribeAPI
+      .collectType[APIMessage.MessageCreate]
+      .map(m => m.message -> m.cache.current)
+      .via(killSwitch.flow),
     requests
   )
 
@@ -188,19 +215,56 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard)(classOf[APIMessage.Ready])
   shard ! DiscordShard.StartShard
 
-  private var shutdownCount  = 0
-  private var isShuttingDown = false
+  private var shutdownCount        = 0
+  private var isShuttingDown       = false
+  private var tempSender: ActorRef = _
+
+  private val shutdown = CoordinatedShutdown(system)
+
+  shutdown.addTask("before-service-unbind", "begin-deathwatch") { () =>
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("before-service-unbind"))
+    (self ? ExampleMain.BeginDeathwatch).mapTo[Done]
+  }
+
+  shutdown.addTask("service-unbind", "unregister-commands") { () =>
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("service-unbind"))
+    (self ? ExampleMain.UnregisterCommands).mapTo[Done]
+  }
+
+  shutdown.addTask("service-requests-done", "stop-help-command") { () =>
+    val timeout = shutdown.timeout("service-requests-done")
+    gracefulStop(helpCmdActor, timeout).map(_ => Done)
+  }
+
+  shutdown.addTask("service-stop", "stop-discord") { () =>
+    Future {
+      self ! DiscordShard.StopShard
+      Done
+    }
+  }
 
   override def receive: Receive = {
     case DiscordShard.RestartShard =>
       shard.forward(DiscordShard.RestartShard)
 
-    case DiscordShard.StopShard =>
+    case HelpCmd.NoCommandsRemaining =>
+      if (isShuttingDown) {
+        tempSender ! Done
+      }
+
+    case ExampleMain.BeginDeathwatch =>
       isShuttingDown = true
 
       context.watch(shard)
       context.watch(guildRouterMusic)
 
+      sender() ! Done
+
+    case ExampleMain.UnregisterCommands =>
+      tempSender = sender()
+      killSwitch.shutdown()
+
+    case DiscordShard.StopShard =>
       shard ! DiscordShard.StopShard
       guildRouterMusic ! DiscordShard.StopShard
 
@@ -216,12 +280,12 @@ object ExampleMain {
   def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
-  def registerCmd[Mat](commands: Commands[Id], helpCmdActor: ActorRef)(
+  def registerCmd[Mat](commands: Commands[Id], helpActor: ActorRef)(
       parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]
   ): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
-      case (info: AbstractCmdInfo[Id], Some(description)) => helpCmdActor ! HelpCmd.AddCmd(info, description, complete)
+      case (info: AbstractCmdInfo[Id], Some(description)) => helpActor ! HelpCmd.AddCmd(info, description, complete)
       case _                                              =>
     }
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -231,6 +295,9 @@ object ExampleMain {
     materialized
   }
 
+  case object BeginDeathwatch
+  case object UnregisterCommands
+
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
       symbol: String,
@@ -239,7 +306,7 @@ object ExampleMain {
       description: newcommands.CommandDescription
   )
 
-  def registerNewCommand[Mat](connector: newcommands.CommandConnector[Id], helpCmdActor: ActorRef)(
+  def registerNewCommand[Mat](connector: newcommands.CommandConnector[Id], helpActor: ActorRef)(
       entry: NewCommandsEntry[Mat]
   ): Mat = {
     val (materialized, complete) =
@@ -248,7 +315,7 @@ object ExampleMain {
     //Due to the new commands being a complete break from the old ones, being
     // completely incompatible with some other stuff, we need to do a bit of
     // translation and hackery here
-    helpCmdActor ! HelpCmd.AddCmd(
+    helpActor ! HelpCmd.AddCmd(
       commands.CmdInfo(entry.symbol, entry.aliases),
       commands.CmdDescription(
         entry.description.name,

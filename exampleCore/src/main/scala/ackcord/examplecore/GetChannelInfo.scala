@@ -25,24 +25,7 @@ package ackcord.examplecore
 
 import scala.language.higherKinds
 
-import ackcord.commands.ParsedCmd
+import ackcord.CacheSnapshot
 import ackcord.data.{ChannelId, GuildId}
-import ackcord.{CacheSnapshot, DiscordShard}
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 
-class KillCmd(main: ActorRef) extends Actor with ActorLogging {
-
-  override def receive: Receive = {
-    case ParsedCmd(_, _, _, _) =>
-      log.info("Received shutdown command")
-      main ! DiscordShard.StopShard
-      context.watch(main)
-    case Terminated(_) =>
-      log.info("Everything shut down")
-      context.system.terminate()
-  }
-}
-object KillCmd {
-  def props(main: ActorRef): Props = Props(new KillCmd(main))
-}
 case class GetChannelInfo[F[_]](guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot[F])
