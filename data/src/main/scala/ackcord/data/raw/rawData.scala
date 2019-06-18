@@ -647,6 +647,7 @@ case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Opt
     import cats.instances.either._
     Traverse[Option]
       .traverse(game)(_.toActivity)
+      .right
       .map(
         activity => Presence(user.id, activity, status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
       )

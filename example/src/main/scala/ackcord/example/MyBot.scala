@@ -90,7 +90,7 @@ object MyBot extends App {
       client.registerCmd[NotUsed, SourceRequest](
         prefix = GeneralCommands,
         aliases = Seq("guildInfo"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
+        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
       ) {
         client.withCache[SourceRequest, ParsedCmd[Id, NotUsed]] { implicit c => cmd =>
           for {

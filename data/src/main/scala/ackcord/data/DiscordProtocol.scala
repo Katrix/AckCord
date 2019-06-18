@@ -376,10 +376,12 @@ trait DiscordProtocol {
 
   implicit val webhookDecoder: Decoder[Webhook] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  implicit val auditLogDecoder: Decoder[AuditLog] = {
-    import io.circe.generic.extras.auto._
-    io.circe.generic.extras.semiauto.deriveDecoder
-  }
+  implicit val auditLogDecoder: Decoder[AuditLog] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val auditLogEntryDecoder: Decoder[AuditLogEntry] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val optionalAuditLogInfoDecoder: Decoder[OptionalAuditLogInfo] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   //Scala 2.11
   //noinspection ConvertExpressionToSAM
