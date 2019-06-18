@@ -35,7 +35,7 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 
 ## The Commands object
 Just like the job of the `Cache` object is to keep track of the current events and state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
-```scala mdoc
+```scala mdoc:silent
 val GeneralCommands = "!"
 val commands = CoreCommands.create(CommandSettings[Id](prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
 ```
@@ -62,7 +62,7 @@ There are a few more helpers that you can use when writing commands. The first o
 
 ## Putting it all together
 So now that we know what all the different things to, let's create our factories.
-```scala mdoc
+```scala mdoc:silent
 def getUsernameCmdFactory[F[_]: Monad: Streamable] = ParsedCmdFactory.requestRunner[F, User](
   refiner = CmdInfo(prefix = GeneralCommands, aliases = Seq("getUsername")),
   run = implicit c => (runner, cmd) => {

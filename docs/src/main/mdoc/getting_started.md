@@ -90,7 +90,7 @@ import system.dispatcher
 ```
 
 Next we create the `Cache`, and the `RequestHelper`. The `Cache` helps you know when stuff happens, and keeps around the changes from old things that have happened. The `RequestHelper` helps you make stuff happen. I'd recommend looking into the settings used when creating both the `Cache` and `RequestHelper` if you want to fine tune your bot.
-```scala mdoc
+```scala mdoc:silent
 val cache = Cache.create
 val requests = RequestHelper.create(BotAuthentication(token))
 ```

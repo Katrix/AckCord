@@ -1,5 +1,3 @@
-import java.io.File
-
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 lazy val akkaVersion          = "2.5.23"
@@ -239,14 +237,7 @@ lazy val docs = project
     micrositeGithubRepo := "AckCord",
     micrositeGitterChannel := false,
     micrositeShareOnSocial := false,
-    scalacOptions in Tut --= Seq(
-      "-deprecation",
-      "-feature",
-      "-unchecked",
-      "-Xlint",
-      "-Ywarn-dead-code",
-      "-Ywarn-unused-import"
-    ),
+    excludeFilter in ghpagesCleanSite := "CNAME",
     scalacOptions in Compile ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(

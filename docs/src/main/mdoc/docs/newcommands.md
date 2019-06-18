@@ -45,7 +45,7 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 Just like the low level commands API has the `Commands` object, the new API has the `CommandConnector` object. It serves most of the same purposes as the `Commands` object, with the exception that the connector does not do any parsing to figure out what "looks like" a command. To create it we need to pass is a `RequestHelper` and a source of eligible messages that can be commands. In most cases this is just any message sent to any guild.
 
 We can create the connector like so
-```scala mdoc
+```scala mdoc:silent
 val connector = new CommandConnector(
   cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => m.message -> m.cache.current), 
   requests
@@ -83,7 +83,7 @@ At the moment (this might very well change in the future, remember, still experi
 Now that we have our controller, and the connector, let's connect stuff. When connecting the commands, you need to give it a prefix parser. Calling `CommandConnector#prefix` will suffice for most cases. This takes a prefix symbol, a list of aliases, and if the command needs a mention or not.
 
 Let's connect our commands.
-```scala mdoc
+```scala mdoc:silent
 val controller = new OurController(requests)
 connector.runNewCommand(connector.prefix("!", Seq("ping"), true), controller.ping)
 connector.runNewCommand(connector.prefix("!", Seq("intPrinter"), true), controller.intPrinter)
