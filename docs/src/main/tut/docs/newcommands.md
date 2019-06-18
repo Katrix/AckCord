@@ -19,11 +19,13 @@ import ackcord._
 import ackcord.data._
 import ackcord.syntax._
 import ackcord.newcommands._
-import cats.Monad
+import cats.{Monad, ~>}
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Flow, Sink, Keep}
+import java.time.temporal.ChronoUnit
+import scala.concurrent.Future
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
 implicit val mat: Materializer = ActorMaterializer()
@@ -106,7 +108,7 @@ class GuildCommandsController(requests: RequestHelper) extends CommandController
   //therefore also includes the user that used the command. To carry along that 
   //information we need we must create a natural transformation from the previous
   //command message type, to our new type.
-  val OurGuildCommand = Command.andThen(CommandFunction.onlyInGuildWith { (chG, g) =>
+  val OurGuildCommand = Command.andThen(CommandFunction.onlyInGuild { (chG, g) =>
     λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
   })
   
