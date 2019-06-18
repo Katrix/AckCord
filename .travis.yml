@@ -34,17 +34,15 @@ install:
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION compile
+  - ./scalafmt -i --test --non-interactive
 
 stages:
   - name: test
-  - name: format
   - name: deploy
     if: branch = master AND type != pull_request
 
 jobs:
   include:
-    - stage: format
-      script: ./scalafmt -i --test --non-interactive
     - stage: deploy
       script:
         - bash scripts/publishMicrosite.sh
