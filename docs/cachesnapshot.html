@@ -16,7 +16,7 @@
 
 <p>As before we create out client as usual.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
 <span class="k">val</span> <span class="n">settings</span> <span class="k">=</span> <span class="nc">ClientSettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
@@ -26,11 +26,12 @@
 <span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="c1">//client.login()
 </span><span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Using the <code class="highlighter-rouge">withCache</code> method. (Note: <code class="highlighter-rouge">withCache</code>, type inference and IntelliJ don’t always play nice together)</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="n">client</span><span class="o">.</span><span class="n">onEvent</span> <span class="o">{</span>
     <span class="n">client</span><span class="o">.</span><span class="n">withCache</span><span class="o">[</span><span class="kt">Id</span>, <span class="kt">APIMessage</span><span class="o">]</span> <span class="o">{</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="o">{</span>
         <span class="k">case</span> <span class="nc">APIMessage</span><span class="o">.</span><span class="nc">Ready</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">)</span>
@@ -39,11 +40,12 @@
     <span class="o">}</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Ok course you could also create an instance of <code class="highlighter-rouge">EventHandler</code>, and register that instead.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="n">client</span><span class="o">.</span><span class="n">registerHandler</span> <span class="o">{</span>
     <span class="k">new</span> <span class="nc">EventHandler</span><span class="o">[</span><span class="kt">Id</span>, <span class="kt">Id</span>, <span class="kt">APIMessage.Ready</span><span class="o">]</span> <span class="o">{</span>
       <span class="k">override</span> <span class="k">def</span> <span class="n">handle</span><span class="o">(</span><span class="n">message</span><span class="k">:</span> <span class="kt">APIMessage.Ready</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">c</span><span class="k">:</span> <span class="kt">CacheSnapshot</span><span class="o">[</span><span class="kt">Id</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> 
@@ -51,7 +53,8 @@
     <span class="o">}</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>As for the flows, I’ll get back to those when talking about commands.</p>
 

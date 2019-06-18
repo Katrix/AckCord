@@ -16,7 +16,7 @@
 
 <h2 id="example">Example</h2>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
 <span class="k">import</span> <span class="nn">ackcord.requests.CreateMessage</span>
@@ -48,16 +48,18 @@
   
   <span class="c1">//client.login()
 </span><span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <h2 id="access-to-the-low-level-api">Access to the low level API</h2>
 
 <p>Accessing the low level API from the high level API is as simple as getting the <code class="highlighter-rouge">RequestHelper</code> instance in the <code class="highlighter-rouge">DiscordClient[F]</code> instance.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="k">val</span> <span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">requests</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 </section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/highlight/highlight.pack.js"></script><script>hljs.configure({languages:['scala','java','bash']});
 hljs.initHighlighting();

@@ -7,12 +7,13 @@
 
 <p>While AckCord is still in active development, you can try AckCord by adding some of these to your <code class="highlighter-rouge">build.sbt</code> file.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">resolvers</span> <span class="o">+=</span> <span class="nc">Resolver</span><span class="o">.</span><span class="nc">JCenterRepository</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">resolvers</span> <span class="o">+=</span> <span class="nc">Resolver</span><span class="o">.</span><span class="nc">JCenterRepository</span>
 <span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord"</span>                 <span class="o">%</span> <span class="s">"0.14.0"</span> <span class="c1">//For high level API, includes all the other modules
 </span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord-core"</span>            <span class="o">%</span> <span class="s">"0.14.0"</span> <span class="c1">//Low level core API
 </span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord-commands-core"</span>   <span class="o">%</span> <span class="s">"0.14.0"</span> <span class="c1">//Low to mid level Commands API
 </span><span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord-lavaplayer-core"</span> <span class="o">%</span> <span class="s">"0.14.0"</span> <span class="c1">//Low level lavaplayer API
-</span></code></pre></div></div>
+</span></code></pre>
+</div>
 
 <p>From there on you go with the API you have decided to use.</p>
 
@@ -24,17 +25,19 @@
 
 <p>Most of these examples assume these two imports.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>AckCord comes with two (3 if you count handling dispatch events yourself) major APIs. A high level and a low level API. Let’s see how you would log in from both the high level and the low level API.</p>
 
 <p>First we need a token.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span> <span class="c1">//Your Discord token
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span> <span class="c1">//Your Discord token
 // token: String = "&lt;token&gt;"
-</span></code></pre></div></div>
+</span></code></pre>
+</div>
 
 <p>NOTE: For all codeblocks in this documentation, I’ll comment out all logins as this is real code being run.</p>
 
@@ -42,7 +45,7 @@
 
 <p>To use the high level API of AckCord, you create the <code class="highlighter-rouge">ClientSettings</code> you want to use, and call build. This returns a future client. Using that client you can then listen for specific messages and events. Once you have set everything up, you call login.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//Keep your settings around. It contains useful objects.
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="c1">//Keep your settings around. It contains useful objects.
 </span><span class="k">val</span> <span class="n">clientSettings</span> <span class="k">=</span> <span class="nc">ClientSettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
 <span class="c1">// clientSettings: ClientSettings = GatewaySettings(
 //   "&lt;token&gt;",
@@ -56,7 +59,6 @@
 // )
 </span><span class="k">import</span> <span class="nn">clientSettings.executionContext</span>
 
-
 <span class="k">val</span> <span class="n">futureClient</span> <span class="k">=</span> <span class="n">clientSettings</span><span class="o">.</span><span class="n">createClient</span><span class="o">()</span>
 <span class="c1">// futureClient: concurrent.Future[DiscordClient[Id]] = Future(&lt;not completed&gt;)
 </span>
@@ -68,7 +70,8 @@
   
   <span class="c1">//client.login()
 </span><span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <h2 id="logging-in-from-the-low-level-api">Logging in from the low level API</h2>
 
@@ -76,7 +79,7 @@
 
 <p>First we need an actor system and materializer.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
 <span class="k">import</span> <span class="nn">akka.stream.</span><span class="o">{</span><span class="nc">ActorMaterializer</span><span class="o">,</span> <span class="nc">Materializer</span><span class="o">}</span>
 <span class="k">import</span> <span class="nn">akka.stream.scaladsl.Sink</span>
 
@@ -84,39 +87,27 @@
 <span class="c1">//I'd recommend using a supplying a custom supervision to log exceptions here
 </span><span class="k">implicit</span> <span class="k">val</span> <span class="n">mat</span><span class="k">:</span> <span class="kt">Materializer</span> <span class="o">=</span> <span class="nc">ActorMaterializer</span><span class="o">()</span>
 <span class="k">import</span> <span class="nn">system.dispatcher</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Next we create the <code class="highlighter-rouge">Cache</code>, and the <code class="highlighter-rouge">RequestHelper</code>. The <code class="highlighter-rouge">Cache</code> helps you know when stuff happens, and keeps around the changes from old things that have happened. The <code class="highlighter-rouge">RequestHelper</code> helps you make stuff happen. I’d recommend looking into the settings used when creating both the <code class="highlighter-rouge">Cache</code> and <code class="highlighter-rouge">RequestHelper</code> if you want to fine tune your bot.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="n">cache</span> <span class="k">=</span> <span class="nc">Cache</span><span class="o">.</span><span class="n">create</span>
-<span class="c1">// cache: Cache = Cache(
-//   Sink(SinkShape(MergeHub.in(1561622790))),
-//   Source(SourceShape(BroadcastHub.out(1910035331))),
-//   Sink(SinkShape(MergeHub.in(241472349))),
-//   Source(SourceShape(BroadcastHub.out(690161521)))
-// )
-</span><span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="nc">RequestHelper</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">))</span>
-<span class="c1">// requests: RequestHelper = RequestHelper(
-//   GenericHttpCredentials("Bot", "&lt;token&gt;", Map()),
-//   Actor[akka://AckCord/user/$a#395440215],
-//   4,
-//   3,
-//   32,
-//   Backpressure(LogLevel(4)),
-//   2 minutes
-// )
-</span></code></pre></div></div>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">cache</span> <span class="k">=</span> <span class="nc">Cache</span><span class="o">.</span><span class="n">create</span>
+<span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="nc">RequestHelper</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">))</span>
+</code></pre>
+</div>
 
 <p>Now that we have all the pieces we want, we can create our event listener. In the low level API, events are represented as a <code class="highlighter-rouge">Source</code> you can materialize as many times as you want.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">cache</span><span class="o">.</span><span class="n">subscribeAPI</span><span class="o">.</span><span class="n">collect</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">cache</span><span class="o">.</span><span class="n">subscribeAPI</span><span class="o">.</span><span class="n">collect</span> <span class="o">{</span>
   <span class="k">case</span> <span class="nc">APIMessage</span><span class="o">.</span><span class="nc">Ready</span><span class="o">(</span><span class="n">c</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">c</span>
 <span class="o">}.</span><span class="n">to</span><span class="o">(</span><span class="nc">Sink</span><span class="o">.</span><span class="n">foreach</span><span class="o">(</span><span class="k">_</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">))).</span><span class="n">run</span><span class="o">()</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Finally we can create our <code class="highlighter-rouge">GatewaySettings</code> and start the shard.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="n">gatewaySettings</span> <span class="k">=</span> <span class="nc">GatewaySettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">gatewaySettings</span> <span class="k">=</span> <span class="nc">GatewaySettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
 <span class="c1">// gatewaySettings: GatewaySettings = GatewaySettings(
 //   "&lt;token&gt;",
 //   50,
@@ -131,7 +122,8 @@
  <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="nc">DiscordShard</span><span class="o">.</span><span class="n">connect</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">,</span> <span class="n">actorName</span> <span class="k">=</span> <span class="s">"DiscordShard"</span><span class="o">)</span>
  <span class="c1">//shard ! DiscordShard.StartShard
 </span><span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <h2 id="access-to-the-low-level-api-from-the-high-level-api">Access to the low level API from the high level API</h2>
 
@@ -139,11 +131,12 @@
 The shard actors can be gotten from the <code class="highlighter-rouge">shards</code> method on the <code class="highlighter-rouge">DiscordClient[F]</code>.
 The cache can be gotten from the <code class="highlighter-rouge">cache</code> method on the <code class="highlighter-rouge">DiscordClient[F]</code>.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="k">val</span> <span class="n">shards</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">ActorRef</span><span class="o">]</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">shards</span>
   <span class="k">val</span> <span class="n">cache</span><span class="k">:</span> <span class="kt">Cache</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cache</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 </section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/highlight/highlight.pack.js"></script><script>hljs.configure({languages:['scala','java','bash']});
 hljs.initHighlighting();

@@ -6,7 +6,7 @@
 
 <p>As before we create out client as usual, but with a small twist. This time we also pass in command settings to our client settings, which is where we specify our categories. We also import the commands package.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.NotUsed</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.NotUsed</span>
 <span class="k">import</span> <span class="nn">ackcord._</span>
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
@@ -23,11 +23,12 @@
 <span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="c1">//client.login()
 </span><span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>When you register a parsed command, you also pass in a refiner and a description for the command.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="n">registerParsedCommand</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">](</span><span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">registerParsedCommand</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">](</span><span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
   <span class="n">commands</span><span class="o">.</span><span class="n">registerCmd</span><span class="o">[</span><span class="kt">NotUsed</span>, <span class="kt">Id</span><span class="o">](</span>
   	<span class="n">refiner</span> <span class="k">=</span> <span class="nc">CmdInfo</span><span class="o">[</span><span class="kt">F</span><span class="o">](</span><span class="n">prefix</span> <span class="k">=</span> <span class="nc">GeneralCommands</span><span class="o">,</span> <span class="n">aliases</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="s">"ping"</span><span class="o">),</span> <span class="n">filters</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">NonBot</span><span class="o">,</span> <span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">InGuild</span><span class="o">)),</span>
     <span class="n">description</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="nc">CmdDescription</span><span class="o">(</span><span class="s">"Ping"</span><span class="o">,</span> <span class="s">"Check if the bot is alive"</span><span class="o">))</span>
@@ -36,15 +37,15 @@
   <span class="o">}</span>
 <span class="o">}</span>
 
-
 <span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="n">registerParsedCommand</span><span class="o">(</span><span class="n">client</span><span class="o">)</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Notice the type <code class="highlighter-rouge">CommandsHelper[F]</code> there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other <code class="highlighter-rouge">CommandsHelper[F]</code>. Let’s see how, in addition to see how raw commands are done.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nc">TestCommands</span> <span class="k">=</span> <span class="s">"?"</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="nc">TestCommands</span> <span class="k">=</span> <span class="s">"?"</span>
 <span class="c1">// TestCommands: String = "?"
 </span><span class="k">def</span> <span class="n">registerRawCommand</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">](</span><span class="n">client</span><span class="k">:</span> <span class="kt">DiscordClient</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
   <span class="n">commands</span><span class="o">.</span><span class="n">onRawCmd</span> <span class="o">{</span>
@@ -60,24 +61,27 @@
     <span class="o">}</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <p>Here we create the new commands helper. Note that <code class="highlighter-rouge">?</code> is the only valid prefix here. <code class="highlighter-rouge">!</code> would not be valid.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="k">val</span> <span class="o">(</span><span class="n">shutdown</span><span class="o">,</span> <span class="n">newHelper</span><span class="o">)</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">newCommandsHelper</span><span class="o">(</span><span class="nc">CommandSettings</span><span class="o">(</span><span class="n">prefixes</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">(</span><span class="nc">TestCommands</span><span class="o">),</span> <span class="n">needsMention</span> <span class="k">=</span> <span class="kc">true</span><span class="o">))</span>
   <span class="n">registerRawCommand</span><span class="o">(</span><span class="n">client</span><span class="o">,</span> <span class="n">newHelper</span><span class="o">)</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 <h2 id="access-to-the-low-level-api">Access to the low level API</h2>
 
 <p>Accessing the low level API from the high level commands API is as simple as getting the <code class="highlighter-rouge">Commands[F]</code> instance that is backing the <code class="highlighter-rouge">CommandsHelper[F]</code> instance is as simple as calling the <code class="highlighter-rouge">commands</code> method on a <code class="highlighter-rouge">CommandsHelper[F]</code>.</p>
 
-<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="k">val</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">Commands</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">commands</span>
 <span class="o">}</span>
-</code></pre></div></div>
+</code></pre>
+</div>
 
 </section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/highlight/highlight.pack.js"></script><script>hljs.configure({languages:['scala','java','bash']});
 hljs.initHighlighting();
