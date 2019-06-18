@@ -18,7 +18,7 @@ To run requests you would either use a `RequestHelper`, or a `RequestRunner`.
 
 ## Example
 
-```tut:silent
+```scala mdoc:silent
 import ackcord._
 import ackcord.data._
 import ackcord.syntax._
@@ -55,12 +55,12 @@ futureClient.foreach { client =>
 
 ## Access to the low level API
 Accessing the low level API from the high level API is as simple as getting the `RequestHelper` instance in the `DiscordClient[F]` instance.
-```tut
+```scala mdoc
 futureClient.foreach { client =>
   val requests: RequestHelper = client.requests
 }
 ```
 
-```tut:invisible
+```scala mdoc:invisible
 settings.system.terminate()
 ```

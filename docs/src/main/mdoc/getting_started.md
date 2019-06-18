@@ -28,7 +28,7 @@ It depends on your knowledge with Scala and Akka. If you know what Akka Streams 
 ## The simplest bot
 
 Most of these examples assume these two imports.
-```tut:silent
+```scala mdoc:silent
 import ackcord._
 import ackcord.data._
 ```
@@ -36,7 +36,7 @@ import ackcord.data._
 AckCord comes with two (3 if you count handling dispatch events yourself) major APIs. A high level and a low level API. Let's see how you would log in from both the high level and the low level API.
 
 First we need a token.
-```tut
+```scala mdoc
 val token = "<token>" //Your Discord token
 ```
 
@@ -45,8 +45,9 @@ NOTE: For all codeblocks in this documentation, I'll comment out all logins as t
 ## Logging in from the high level API
 
 To use the high level API of AckCord, you create the `ClientSettings` you want to use, and call build. This returns a future client. Using that client you can then listen for specific messages and events. Once you have set everything up, you call login.
-```tut
-val clientSettings = ClientSettings(token) //Keep your settings around. It contains useful objects.
+```scala mdoc
+//Keep your settings around. It contains useful objects.
+val clientSettings = ClientSettings(token)
 import clientSettings.executionContext
 
 val futureClient = clientSettings.createClient()
@@ -63,11 +64,11 @@ futureClient.foreach { client =>
 
 ## Logging in from the low level API
 
-```tut:invisible
+```scala mdoc:invisible
 clientSettings.system.terminate()
 ```
 
-```tut:reset:invisible
+```scala mdoc:reset:invisible
 import ackcord._
 import ackcord.data._
 
@@ -77,8 +78,8 @@ val token = "<token>"
 When working with the low level API, you're the one responsible for setting stuff up, and knowing how it works.
 
 First we need an actor system and materializer.
-```tut:silent
-import akka.actor.{ActorSystem, ActorRef}
+```scala mdoc:silent
+import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Sink
 
@@ -89,20 +90,20 @@ import system.dispatcher
 ```
 
 Next we create the `Cache`, and the `RequestHelper`. The `Cache` helps you know when stuff happens, and keeps around the changes from old things that have happened. The `RequestHelper` helps you make stuff happen. I'd recommend looking into the settings used when creating both the `Cache` and `RequestHelper` if you want to fine tune your bot.
-```tut
+```scala mdoc
 val cache = Cache.create
 val requests = RequestHelper.create(BotAuthentication(token))
 ```
 
 Now that we have all the pieces we want, we can create our event listener. In the low level API, events are represented as a `Source` you can materialize as many times as you want.
-```tut:silent
+```scala mdoc:silent
 cache.subscribeAPI.collect {
   case APIMessage.Ready(c) => c
 }.to(Sink.foreach(_ => println("Now ready"))).run()
 ```
 
 Finally we can create our `GatewaySettings` and start the shard.
-```tut
+```scala mdoc
 val gatewaySettings = GatewaySettings(token)
 DiscordShard.fetchWsGateway.foreach { wsUri =>
  val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, actorName = "DiscordShard")
@@ -110,7 +111,7 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 }
 ```
 
-```tut:invisible
+```scala mdoc:invisible
 system.terminate()
 ```
 
@@ -119,7 +120,7 @@ Accessing the low level API from the high level API is simple.
 The shard actors can be gotten from the `shards` method on the `DiscordClient[F]`.
 The cache can be gotten from the `cache` method on the `DiscordClient[F]`.
 
-```tut:reset:invisible
+```scala mdoc:reset:invisible
 import akka.actor.ActorRef
 import ackcord._
 import ackcord.data._
@@ -130,13 +131,13 @@ import clientSettings.executionContext
 val futureClient = clientSettings.createClient()
 ```
 
-```tut
+```scala mdoc
 futureClient.foreach { client =>
   val shards: Seq[ActorRef] = client.shards
   val cache: Cache = client.cache
 }
 ```
 
-```tut:invisible
+```scala mdoc:invisible
 clientSettings.system.terminate()
 ```

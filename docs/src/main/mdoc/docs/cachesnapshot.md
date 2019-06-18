@@ -17,7 +17,7 @@ Often times when overriding methods, an implicit cache snapshot will already be 
 ### Example
 
 As before we create out client as usual.
-```tut:silent
+```scala mdoc:silent
 import ackcord._
 import ackcord.data._
 val token = "<token>"
@@ -32,10 +32,10 @@ futureClient.foreach { client =>
 
 Using the `withCache` method. (Note: `withCache`, type inference and IntelliJ don't always play nice together)
 
-```tut
+```scala mdoc
 futureClient.foreach { client =>
   client.onEvent {
-    client.withCache[Id, APIMessage] { implicit c => {
+    client.withCache[Id, APIMessage] { _ => {
         case APIMessage.Ready(_) => println("Now ready")
         case _                   => 
       }
@@ -45,8 +45,7 @@ futureClient.foreach { client =>
 ```
 
 Ok course you could also create an instance of `EventHandler`, and register that instead.
-```tut
-import cats._
+```scala mdoc
 futureClient.foreach { client =>
   client.registerHandler {
     new EventHandler[Id, Id, APIMessage.Ready] {
@@ -59,6 +58,6 @@ futureClient.foreach { client =>
 
 As for the flows, I'll get back to those when talking about commands.
 
-```tut:invisible
+```scala mdoc:invisible
 settings.system.terminate()
 ```

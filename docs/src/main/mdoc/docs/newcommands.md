@@ -14,16 +14,15 @@ libraryDependencies += "net.katsstuff" %% "ackcord-commands-new" % "{{versions.a
 Aside from the low and high level command APIs, AckCord also comes with a third much more experimental commands API. The goal of this commands API is to be as easy to use as the high level API, while being as powerful as the low level API. The API is very closely related to Play's action builders. If you are familiar with them, you'll feel right at home.
 
 As before we create out client as usual. Note the extra import for the commands package. At the time of this writing, you need to add an explicit dependency on the new api. You will also have to fiddle a tiny bit with streams to use the new API from the high level API.
-```tut:silent
+```scala mdoc:silent
 import ackcord._
 import ackcord.data._
 import ackcord.syntax._
 import ackcord.newcommands._
-import cats.{Monad, ~>}
+import cats.~>
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.stream.scaladsl.{Flow, Sink, Keep}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 
@@ -46,7 +45,7 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 Just like the low level commands API has the `Commands` object, the new API has the `CommandConnector` object. It serves most of the same purposes as the `Commands` object, with the exception that the connector does not do any parsing to figure out what "looks like" a command. To create it we need to pass is a `RequestHelper` and a source of eligible messages that can be commands. In most cases this is just any message sent to any guild.
 
 We can create the connector like so
-```tut
+```scala mdoc
 val connector = new CommandConnector(
   cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => m.message -> m.cache.current), 
   requests
@@ -57,7 +56,7 @@ val connector = new CommandConnector(
 Now that we have our connector, we need some commands. The easiest way to create commands is to create them in a `CommandController`. The controller just serves as a collection of commands, and makes creating them easier. 
 
 Let's start with creating two basic commands. One command that doesn't care about arguments and one that takes an int.
-```tut:silent
+```scala mdoc:silent
 class OurController(requests: RequestHelper) extends CommandController[Id](requests) {
   
   //The command builder includes a few convenience functions for common things.
@@ -84,7 +83,7 @@ At the moment (this might very well change in the future, remember, still experi
 Now that we have our controller, and the connector, let's connect stuff. When connecting the commands, you need to give it a prefix parser. Calling `CommandConnector#prefix` will suffice for most cases. This takes a prefix symbol, a list of aliases, and if the command needs a mention or not.
 
 Let's connect our commands.
-```tut
+```scala mdoc
 val controller = new OurController(requests)
 connector.runNewCommand(connector.prefix("!", Seq("ping"), true), controller.ping)
 connector.runNewCommand(connector.prefix("!", Seq("intPrinter"), true), controller.intPrinter)
@@ -97,7 +96,7 @@ Ok, so we constructed a prefix parser using the method on the connector, but wha
 Ok, so we created our command, and can use them. However, so far they're not that much more useful than the old commands (other than getting rid of a bit of the boilerplate), where the new system really shines is composing command builders (the value called `Command` that we used to create the commands) that do different things, or hold different amount of data.
 
 Let's create two new commands that interact with the guild they are used in. (I won't register them here, you already know how that works).
-```tut:silent
+```scala mdoc:silent
 class GuildCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
 
   //Here we're composing a command function with out builder. This lets us 
@@ -127,7 +126,7 @@ class GuildCommandsController(requests: RequestHelper) extends CommandController
   //contains the user, guild, guild channel and guild member
   val myName = GuildCommand.withRequest { implicit m =>
     val name = m.guildMember.nick.getOrElse(m.user.username)
-    m.tChannel.sendMessage("You name is $name")
+    m.tChannel.sendMessage(s"You name is $name")
   }
 }
 ```
@@ -136,7 +135,7 @@ class GuildCommandsController(requests: RequestHelper) extends CommandController
 So far you've seen how to send a single request with commands, and how to do side effects in commands, but how do you do arbitrary async stuff in a command? That's where the `async` method on the command builder comes in. It let's your command execution return a type `F[Unit]` as long as F is streamable.
 
 Let's see an example with `Future`.
-```tut:silent
+```scala mdoc:silent
 class AsyncCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
 
   val timeDiff: Command[List[String]] = Command.async[Future] { implicit m =>
@@ -152,6 +151,6 @@ class AsyncCommandsController(requests: RequestHelper) extends CommandController
 ```
 
 
-```tut:invisible
+```scala mdoc:invisible
 system.terminate()
 ```

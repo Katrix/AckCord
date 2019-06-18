@@ -247,7 +247,7 @@ lazy val docs = project
       "-Ywarn-dead-code",
       "-Ywarn-unused-import"
     ),
-    scalacOptions in Tut ++= Seq("-language:higherKinds"),
+    scalacOptions in Compile ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       dataJVM,
@@ -264,7 +264,9 @@ lazy val docs = project
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern"),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), docsMappingsAPIDir),
-    fork in tut := true,
+    micrositeCompilingDocsTool := WithMdoc,
+    fork in mdoc := true,
+    mdocIn := sourceDirectory.value / "main" / "mdoc",
     fork in (ScalaUnidoc, unidoc) := true,
     scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
       "-doc-source-url",

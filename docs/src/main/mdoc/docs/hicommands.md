@@ -9,7 +9,7 @@ The high level AckCord API comes with built in command support. Before reading t
 In the high level API you can either just listen to the raw command events, or you can register a parsed command.
 
 As before we create out client as usual, but with a small twist. This time we also pass in command settings to our client settings, which is where we specify our categories. We also import the commands package.
-```tut:silent
+```scala mdoc:silent
 import akka.NotUsed
 import ackcord._
 import ackcord.data._
@@ -30,7 +30,7 @@ futureClient.foreach { client =>
 ```
 
 When you register a parsed command, you also pass in a refiner and a description for the command.
-```tut
+```scala mdoc
 def registerParsedCommand[F[_]: Monad: Streamable](commands: CommandsHelper[F]): Unit = {
   commands.registerCmd[NotUsed, Id](
   	refiner = CmdInfo[F](prefix = GeneralCommands, aliases = Seq("ping"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
@@ -47,7 +47,7 @@ futureClient.foreach { client =>
 
 Notice the type `CommandsHelper[F]` there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other `CommandsHelper[F]`. Let's see how, in addition to see how raw commands are done.
 
-```tut
+```scala mdoc
 val TestCommands = "?"
 def registerRawCommand[F[_]: Monad: Streamable](client: DiscordClient[F], commands: CommandsHelper[F]): Unit = {
   commands.onRawCmd {
@@ -67,20 +67,20 @@ def registerRawCommand[F[_]: Monad: Streamable](client: DiscordClient[F], comman
 ```
 
 Here we create the new commands helper. Note that `?` is the only valid prefix here. `!` would not be valid.
-```tut
+```scala mdoc
 futureClient.foreach { client =>
   val (shutdown, newHelper) = client.newCommandsHelper(CommandSettings(prefixes = Set(TestCommands), needsMention = true))
   registerRawCommand(client, newHelper)
 }
 ```
 
-```tut:invisible
+```scala mdoc:invisible
 settings.system.terminate()
 ```
 
 ## Access to the low level API
 Accessing the low level API from the high level commands API is as simple as getting the `Commands[F]` instance that is backing the `CommandsHelper[F]` instance is as simple as calling the `commands` method on a `CommandsHelper[F]`.
-```tut
+```scala mdoc
 futureClient.foreach { client =>
   val commands: Commands[Id] = client.commands
 }

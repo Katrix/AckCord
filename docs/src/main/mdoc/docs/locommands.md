@@ -7,7 +7,7 @@ title: Low level API commands
 If you want to work with commands from the low level API, you have to add a dependency on the commands module. Before reading this, make sure you understand the shared command concepts.
 
 As before we create out client as usual. Note the extra import for the commands package.
-```tut:silent
+```scala mdoc:silent
 import ackcord._
 import ackcord.data._
 import ackcord.syntax._
@@ -16,7 +16,7 @@ import cats.Monad
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.{ActorMaterializer, Materializer}
-import akka.stream.scaladsl.{Flow, Sink, Keep}
+import akka.stream.scaladsl.{Flow, Keep}
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
 implicit val mat: Materializer = ActorMaterializer()
@@ -35,13 +35,13 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 
 ## The Commands object
 Just like the job of the `Cache` object is to keep track of the current events and state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
-```tut
+```scala mdoc
 val GeneralCommands = "!"
 val commands = CoreCommands.create(CommandSettings[Id](prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
 ```
 
 Let's create a raw command, using the `Source` found the the `Commands` object.
-```tut
+```scala mdoc
 def rawCommandEcho[F[_]: Monad: Streamable] = Flow[RawCmdMessage[F]].collect {
   case RawCmd(msg, GeneralCommands, "echo", args, c) =>
     implicit val cache: CacheSnapshot[F] = c
@@ -62,7 +62,7 @@ There are a few more helpers that you can use when writing commands. The first o
 
 ## Putting it all together
 So now that we know what all the different things to, let's create our factories.
-```tut
+```scala mdoc
 def getUsernameCmdFactory[F[_]: Monad: Streamable] = ParsedCmdFactory.requestRunner[F, User](
   refiner = CmdInfo(prefix = GeneralCommands, aliases = Seq("getUsername")),
   run = implicit c => (runner, cmd) => {
@@ -81,6 +81,6 @@ commands.subscribe(getUsernameCmdFactory[Id])(Keep.left)
 ## Help command
 AckCord also provides the basics for a help command if you want something like that in the form of the abstract actor `HelpCmd`. You use it by sending `HelpCmd.AddCmd` with the factory for the command, and the lifetime of the command. You get the lifetime of the command as a result of registering the command.
 
-```tut:invisible
+```scala mdoc:invisible
 system.terminate()
 ```
