@@ -54,7 +54,7 @@ val connector = new CommandConnector(
 ## The CommandController
 Now that we have our connector, we need some commands. The easiest way to create commands is to create them in a `CommandController`. The controller just serves as a collection of commands, and makes creating them easier. 
 
-Let's create three commands. One command that doesn't care about arguments, one that checks the guild, and one that takes an int.
+Let's start with creating two basic commands. One command that doesn't care about arguments and one that takes an int.
 ```tut:silent
 class OurController(requests: RequestHelper) extends CommandController[Id](requests) {
   
@@ -66,19 +66,11 @@ class OurController(requests: RequestHelper) extends CommandController[Id](reque
     m.tChannel.sendMessage("Pong")
   }
   
-  //Here we're composing a command function with out builder. This lets us 
-  //include more information in the command message, 
-  //filter out valid commands (like we're doing here), or many other things.
-  val memberCount = Command.andThen(CommandFunction.onlyInGuild).withRequest { implicit m =>
-    val guildChannel = m.tChannel.asTGuildChannel.get
-    val guild = guildChannel.guild.value.get //The implicit command message provides the cache snapshot
-    guildChannel.sendMessage(s"Member count for guild is ${guild.memberCount}")
-  }
-  
   //By default the command just gives us back all the strings passed to it. We 
   //can change this behavior and parse a specific type with the parsing command.
-  val intPrinter = Command.parsing[Int].withRequest { implicit m =>
-    m.tChannel.sendMessage(s"You sent ${m.parsed}")
+  //Here we're also using the side effects method to do arbitrary work inside the execution of the command
+  val intPrinter = Command.parsing[Int].withSideEffects { implicit m =>
+    println(s"You sent ${m.parsed}")
   }
 }
 ```
@@ -93,12 +85,70 @@ Let's connect our commands.
 ```tut
 val controller = new OurController(requests)
 connector.runNewCommand(connector.prefix("!", Seq("ping"), true), controller.ping)
-connector.runNewCommand(connector.prefix("!", Seq("memberCount"), true), controller.memberCount)
 connector.runNewCommand(connector.prefix("!", Seq("intPrinter"), true), controller.intPrinter)
 ```
 
 ### The prefix parser (advanced)
 Ok, so we constructed a prefix parser using the method on the connector, but what is it exactly? In simple terms it's a function `(CacheSnapshot[F], Message) => F[MessageParser[Unit]]`. Given the current cache snapshot, and the message for a command, it returns a `MessageParser` that will consume some of the content of a message. If it succeeds in consuming that input, it will let the command execute using the remaining content not consumed by the prefix parser. This way you can control exactly how you want your commands to be parsed. The default parsing is `<mention if specifiec> <symbol><one of aliases>`.
+
+## More information in the command
+Ok, so we created our command, and can use them. However, so far they're not that much more useful than the old commands (other than getting rid of a bit of the boilerplate), where the new system really shines is composing command builders (the value called `Command` that we used to create the commands) that do different things, or hold different amount of data.
+
+Let's create two new commands that interact with the guild they are used in. (I won't register them here, you already know how that works).
+```tut:silent
+class GuildCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
+
+  //Here we're composing a command function with out builder. This lets us 
+  //include more information in the command message, 
+  //filter out valid commands (like we're doing here), or many other things.
+  //
+  //The default command builder (Command) already blocks bot accounts, and 
+  //therefore also includes the user that used the command. To carry along that 
+  //information we need we must create a natural transformation from the previous
+  //command message type, to our new type.
+  val OurGuildCommand = Command.andThen(CommandFunction.onlyInGuildWith { (chG, g) =>
+    λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
+  })
+  
+  //We can now use our new command builder like normal
+  val memberCount = OurGuildCommand.withRequest { implicit m =>
+    val guildChannel = m.tChannel //Now a guild channel
+    val guild = m.guild
+    val guildOwner = guild.owner.value //The implicit command message provides the cache snapshot
+    guildChannel.sendMessage(
+      s"Member count for guild is ${guild.memberCount} and owner is ${guildOwner.fold("Unknown")(_.username)}"
+    )
+  }
+  
+  //AckCord also comes with a few extra command builders out of the box that 
+  //you would probably recreate anyway. One of these is GuildCommand that 
+  //contains the user, guild, guild channel and guild member
+  val myName = GuildCommand.withRequest { implicit m =>
+    val name = m.guildMember.nick.getOrElse(m.user.username)
+    m.tChannel.sendMessage("You name is $name")
+  }
+}
+```
+
+## Async stuff in commands
+So far you've seen how to send a single request with commands, and how to do side effects in commands, but how do you do arbitrary async stuff in a command? That's where the `async` method on the command builder comes in. It let's your command execution return a type `F[Unit]` as long as F is streamable.
+
+Let's see an example with `Future`.
+```tut:silent
+class AsyncCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
+
+  val timeDiff: Command[List[String]] = Command.async[Future] { implicit m =>
+    //The ExecutionContext is provided by the controller
+    for {
+      answer  <- requests.singleFuture(m.tChannel.sendMessage("Msg"))
+      sentMsg <- Future.fromTry(answer.eitherData.toTry)
+      time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)
+      _ <- requests.singleFuture(m.tChannel.sendMessage(s"$time ms between command and response"))
+    } yield ()
+  }
+}
+```
+
 
 ```tut:invisible
 system.terminate()
