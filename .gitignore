@@ -30,3 +30,7 @@ project/target
 
 #mac
 .DS_Store
+
+#travis
+/travis-deploy-key
+/travis-deploy-key.pub
