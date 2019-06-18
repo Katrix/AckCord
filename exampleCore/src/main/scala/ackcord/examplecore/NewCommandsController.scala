@@ -2,6 +2,8 @@ package ackcord.examplecore
 
 import java.time.temporal.ChronoUnit
 
+import scala.concurrent.Future
+
 import ackcord._
 import ackcord.syntax._
 import ackcord.newcommands._
@@ -58,5 +60,15 @@ class NewCommandsController(requests: RequestHelper) extends CommandController[I
     Flow[CommandMessage[List[String]]]
       .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
       .to(requests.sinkIgnore)
+  }
+
+  val timeDiff2: Command[List[String]] = Command.async[Future] { implicit m =>
+    //The ExecutionContext is provided by the controller
+    for {
+      answer  <- requests.singleFuture(m.tChannel.sendMessage("Msg"))
+      sentMsg <- Future.fromTry(answer.eitherData.toTry)
+      time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)
+      _ <- requests.singleFuture(m.tChannel.sendMessage(s"$time ms between command and response"))
+    } yield ()
   }
 }
