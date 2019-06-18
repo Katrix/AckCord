@@ -37,10 +37,10 @@
 <span class="c1">// GeneralCommands: String = "!"
 </span><span class="k">val</span> <span class="n">commands</span> <span class="k">=</span> <span class="nc">CoreCommands</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">CommandSettings</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">prefixes</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">(</span><span class="nc">GeneralCommands</span><span class="o">),</span> <span class="n">needsMention</span> <span class="k">=</span> <span class="kc">true</span><span class="o">),</span> <span class="n">cache</span><span class="o">,</span> <span class="n">requests</span><span class="o">)</span>
 <span class="c1">// commands: Commands[Id] = Commands(
-//   Source(SourceShape(BroadcastHub.out(1067305850))),
+//   Source(SourceShape(BroadcastHub.out(1505869950))),
 //   RequestHelper(
 //     GenericHttpCredentials("Bot", "&lt;token&gt;", Map()),
-//     Actor[akka://AckCord/user/$a#-1925029159],
+//     Actor[akka://AckCord/user/$a#-1939135199],
 //     4,
 //     3,
 //     32,
@@ -93,7 +93,7 @@
 
 
 <span class="n">commands</span><span class="o">.</span><span class="n">subscribe</span><span class="o">(</span><span class="n">getUsernameCmdFactory</span><span class="o">[</span><span class="kt">Id</span><span class="o">])(</span><span class="nc">Keep</span><span class="o">.</span><span class="n">left</span><span class="o">)</span>
-<span class="c1">// res2: concurrent.Future[akka.Done] = Future(Failure(akka.stream.AbruptStageTerminationException: GraphStage [akka.stream.impl.fusing.GraphStages$TerminationWatcher$$anon$3@4b6a7f1e] terminated abruptly, caused by for example materializer or actor system termination.))
+<span class="c1">// res2: concurrent.Future[akka.Done] = Future(Failure(akka.stream.AbruptStageTerminationException: GraphStage [akka.stream.impl.fusing.GraphStages$TerminationWatcher$$anon$3@439aac67] terminated abruptly, caused by for example materializer or actor system termination.))
 </span></code></pre></div></div>
 
 <h2 id="help-command">Help command</h2>
