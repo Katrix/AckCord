@@ -1,3 +1,5 @@
+import java.io.File
+
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
 lazy val akkaVersion          = "2.5.23"
@@ -89,7 +91,8 @@ lazy val requests = project
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
-    libraryDependencies += "com.typesafe.akka" %% "akka-http"       % akkaHttpVersion //Need to add this because of akka-http-circe
+    libraryDependencies += "com.typesafe.akka" %% "akka-http"       % akkaHttpVersion, //Need to add this because of akka-http-circe
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
   .dependsOn(dataJVM)
 
@@ -106,6 +109,7 @@ lazy val gateway = project
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
   .dependsOn(dataJVM)
 
@@ -122,7 +126,8 @@ lazy val voice = project
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "de.heikoseeberger" %% "akka-http-circe"     % akkaHttpCirceVersion,
-    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test
+    libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern")
   )
   .dependsOn(dataJVM)
 
@@ -192,7 +197,8 @@ lazy val ackCord = project
     name := "ackcord",
     version := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much"
+    description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
   .dependsOn(core, commandsCore, lavaplayerCore)
 
@@ -219,7 +225,7 @@ lazy val example = project
 
 lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
-lazy val doc = project
+lazy val docs = project
   .enablePlugins(MicrositesPlugin, ScalaUnidocPlugin, GhpagesPlugin)
   .settings(commonSettings: _*)
   .settings(
@@ -255,6 +261,7 @@ lazy val doc = project
       lavaplayerCore,
       ackCord
     ),
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern"),
     docsMappingsAPIDir := "api",
     addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), docsMappingsAPIDir),
     fork in tut := true,
@@ -263,8 +270,7 @@ lazy val doc = project
       "-doc-source-url",
       "https://github.com/Katrix/Ackcord/tree/master€{FILE_PATH}.scala",
       "-sourcepath",
-      baseDirectory.in(LocalRootProject).value.getAbsolutePath,
-      "-diagrams"
+      baseDirectory.in(LocalRootProject).value.getAbsolutePath
     )
   )
   .dependsOn(ackCord, commandsNew)
