@@ -38,7 +38,6 @@ sealed trait APIMessage {
     * how the cache looked like before this message.
     */
   def cache: CacheState
-  foobar
 }
 object APIMessage {
 
