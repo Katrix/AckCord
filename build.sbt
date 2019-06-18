@@ -288,6 +288,8 @@ lazy val ackCordRoot = project
   )
   .settings(
     noPublishSettings,
+    //Fix some stupid issue where we were cross building to both 2.12.7 and 2.12.8
+    crossScalaVersions := (dataJVM / crossScalaVersions).value,
     //Fixes repository not specified error
     publishTo := {
       val nexus = "https://oss.sonatype.org/"
