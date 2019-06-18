@@ -36,6 +36,8 @@ script:
   - sbt ++$TRAVIS_SCALA_VERSION compile
 
 stages:
+  - name: test
+  - name: format
   - name: deploy
     if: branch = master AND type != pull_request
 
