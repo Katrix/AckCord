@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -122,7 +122,7 @@
                         <a class="class" href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user."></a>
                         <a href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user.">CommandDescription</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="CommandError$.html" title=""></a>
                         <a class="class" href="CommandError.html" title="Represents an error encountered when executing an command."></a>
                         <a href="CommandError.html" title="Represents an error encountered when executing an command.">CommandError</a>
                       </li><li class="current-entities indented2">
@@ -138,13 +138,17 @@
                         <a class="trait" href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type."></a>
                         <a href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
                       </li><li class="current-entities indented2">
-                        <a class="object" href="Context$.html" title=""></a>
-                        <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
-                        <a href="Context.html" title="Represents a place a command can be used.">Context</a>
-                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="DeriveMessageParser.html" title=""></a>
                         <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command"></a>
+                        <a href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command">GuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildMemberCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildMemberCommandMessage.html" title=""></a>
+                        <a href="GuildMemberCommandMessage.html" title="">GuildMemberCommandMessage</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="MessageParser$.html" title=""></a>
                         <a class="trait" href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages."></a>
@@ -153,6 +157,18 @@
                         <span class="separator"></span>
                         <a class="trait" href="MessageParserInstances.html" title=""></a>
                         <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="UserCommandMessage$.html" title=""></a>
+                        <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
+                        <a href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user">UserCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="VoiceGuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="VoiceGuildCommandMessage.html" title=""></a>
+                        <a href="VoiceGuildCommandMessage.html" title="">VoiceGuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WrappedCommandMessage.html" title=""></a>
+                        <a href="WrappedCommandMessage.html" title="">WrappedCommandMessage</a>
                       </li>
               </ul>
             </div>
@@ -193,17 +209,7 @@
               Known Subclasses
             </span>
             <div class="subClasses hiddenContent"><a href="CommandBuilder.html" class="extype" name="ackcord.newcommands.CommandBuilder">CommandBuilder</a>, <a href="CommandTransformer.html" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a></div>
-          </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 351.50 155.00" height="155pt" width="352pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 347.5,-151 347.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="ackcord.newcommands.CommandFunction (this trait)" xlink:href="#inheritance-diagram"><path d="M235.167,-86C235.167,-86 97.8333,-86 97.8333,-86 93.6667,-86 89.5,-81.8333 89.5,-77.6667 89.5,-77.6667 89.5,-69.3333 89.5,-69.3333 89.5,-65.1667 93.6667,-61 97.8333,-61 97.8333,-61 235.167,-61 235.167,-61 239.333,-61 243.5,-65.1667 243.5,-69.3333 243.5,-69.3333 243.5,-77.6667 243.5,-77.6667 243.5,-81.8333 239.333,-86 235.167,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="99.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="120.5" text-anchor="start">CommandFunction[F, I, O]</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.newcommands.CommandBuilder" xlink:href="CommandBuilder.html#inheritance-diagram"><path d="M144.667,-25C144.667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 144.667,-0 144.667,-0 148.833,-0 153,-4.16667 153,-8.33333 153,-8.33333 153,-16.6667 153,-16.6667 153,-20.8333 148.833,-25 144.667,-25" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31.5" text-anchor="start">CommandBuilder[F, M, A]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="CommandBuilder[F, M, A] is a subtype of CommandFunction[F, I, O]"><path d="M142.495,-56.7633C127.32,-46.8155 108.04,-34.1764 94.2442,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="141.521,-59.0547 148.719,-60.8435 144.208,-54.9567 141.521,-59.0547" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="ackcord.newcommands.CommandTransformer" xlink:href="CommandTransformer.html#inheritance-diagram"><path d="M335.167,-25C335.167,-25 179.833,-25 179.833,-25 175.667,-25 171.5,-20.8333 171.5,-16.6667 171.5,-16.6667 171.5,-8.33333 171.5,-8.33333 171.5,-4.16667 175.667,-0 179.833,-0 179.833,-0 335.167,-0 335.167,-0 339.333,-0 343.5,-4.16667 343.5,-8.33333 343.5,-8.33333 343.5,-16.6667 343.5,-16.6667 343.5,-20.8333 339.333,-25 335.167,-25" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-19.5" x="181.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="202.5" text-anchor="start">CommandTransformer[F, I, O]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="CommandTransformer[F, I, O] is a subtype of CommandFunction[F, I, O]"><path d="M190.362,-57.0291C205.767,-47.0415 225.485,-34.2572 239.559,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="189.019,-54.9796 184.479,-60.8435 191.685,-59.0911 189.019,-54.9796" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="scala.AnyRef"><path d="M194.667,-147C194.667,-147 138.333,-147 138.333,-147 134.167,-147 130,-142.833 130,-138.667 130,-138.667 130,-130.333 130,-130.333 130,-126.167 134.167,-122 138.333,-122 138.333,-122 194.667,-122 194.667,-122 198.833,-122 203,-126.167 203,-130.333 203,-130.333 203,-138.667 203,-138.667 203,-142.833 198.833,-147 194.667,-147" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-141.5" x="140.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="161.5" text-anchor="start">AnyRef</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="CommandFunction[F, I, O] is a subtype of AnyRef"><path d="M166.5,-114.76C166.5,-105.367 166.5,-94.2882 166.5,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="164.05,-114.843 166.5,-121.843 168.95,-114.844 164.05,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+          </div></div>
         
 
       <div id="mbrsel">

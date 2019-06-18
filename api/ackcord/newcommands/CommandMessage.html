@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -122,7 +122,7 @@
                         <a class="class" href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user."></a>
                         <a href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user.">CommandDescription</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="CommandError$.html" title=""></a>
                         <a class="class" href="CommandError.html" title="Represents an error encountered when executing an command."></a>
                         <a href="CommandError.html" title="Represents an error encountered when executing an command.">CommandError</a>
                       </li><li class="current-entities indented2">
@@ -138,13 +138,17 @@
                         <a class="trait" href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type."></a>
                         <a href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
                       </li><li class="current-entities indented2">
-                        <a class="object" href="Context$.html" title=""></a>
-                        <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
-                        <a href="Context.html" title="Represents a place a command can be used.">Context</a>
-                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="DeriveMessageParser.html" title=""></a>
                         <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command"></a>
+                        <a href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command">GuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildMemberCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildMemberCommandMessage.html" title=""></a>
+                        <a href="GuildMemberCommandMessage.html" title="">GuildMemberCommandMessage</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="MessageParser$.html" title=""></a>
                         <a class="trait" href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages."></a>
@@ -153,6 +157,18 @@
                         <span class="separator"></span>
                         <a class="trait" href="MessageParserInstances.html" title=""></a>
                         <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="UserCommandMessage$.html" title=""></a>
+                        <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
+                        <a href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user">UserCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="VoiceGuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="VoiceGuildCommandMessage.html" title=""></a>
+                        <a href="VoiceGuildCommandMessage.html" title="">VoiceGuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WrappedCommandMessage.html" title=""></a>
+                        <a href="WrappedCommandMessage.html" title="">WrappedCommandMessage</a>
                       </li>
               </ul>
             </div>
@@ -192,18 +208,8 @@
             <span class="toggle">
               Known Subclasses
             </span>
-            <div class="subClasses hiddenContent"><a href="CommandMessage$$DefaultCommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage.DefaultCommandMessage">DefaultCommandMessage</a>, <a href="CommandMessage$$WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage.WrappedCommandMessage">WrappedCommandMessage</a></div>
-          </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 388.50 155.00" height="155pt" width="389pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 384.5,-151 384.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="ackcord.newcommands.CommandMessage (this trait)" xlink:href="#inheritance-diagram"><path d="M253.667,-86C253.667,-86 122.333,-86 122.333,-86 118.167,-86 114,-81.8333 114,-77.6667 114,-77.6667 114,-69.3333 114,-69.3333 114,-65.1667 118.167,-61 122.333,-61 122.333,-61 253.667,-61 253.667,-61 257.833,-61 262,-65.1667 262,-69.3333 262,-69.3333 262,-77.6667 262,-77.6667 262,-81.8333 257.833,-86 253.667,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="124" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="145" text-anchor="start">CommandMessage[F, A]</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="ackcord.newcommands.CommandMessage.DefaultCommandMessage" xlink:href="CommandMessage$$DefaultCommandMessage.html#inheritance-diagram"><path d="M169.667,-25C169.667,-25 8.33333,-25 8.33333,-25 4.16667,-25 1.42109e-14,-20.8333 1.42109e-14,-16.6667 1.42109e-14,-16.6667 1.42109e-14,-8.33333 1.42109e-14,-8.33333 1.42109e-14,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 169.667,-0 169.667,-0 173.833,-0 178,-4.16667 178,-8.33333 178,-8.33333 178,-16.6667 178,-16.6667 178,-20.8333 173.833,-25 169.667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31" text-anchor="start">DefaultCommandMessage[F, A]</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="DefaultCommandMessage[F, A] is a subtype of CommandMessage[F, A]"><path d="M162.04,-57.0291C145.281,-47.0415 123.83,-34.2572 108.519,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="161.173,-59.3645 168.441,-60.8435 163.682,-55.1553 161.173,-59.3645" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="ackcord.newcommands.CommandMessage.WrappedCommandMessage" xlink:href="CommandMessage$$WrappedCommandMessage.html#inheritance-diagram"><path d="M372.167,-25C372.167,-25 203.833,-25 203.833,-25 199.667,-25 195.5,-20.8333 195.5,-16.6667 195.5,-16.6667 195.5,-8.33333 195.5,-8.33333 195.5,-4.16667 199.667,-0 203.833,-0 203.833,-0 372.167,-0 372.167,-0 376.333,-0 380.5,-4.16667 380.5,-8.33333 380.5,-8.33333 380.5,-16.6667 380.5,-16.6667 380.5,-20.8333 376.333,-25 372.167,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-19.5" x="206" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="227" text-anchor="start">WrappedCommandMessage[F, A]</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="WrappedCommandMessage[F, A] is a subtype of CommandMessage[F, A]"><path d="M214.222,-57.0291C231.15,-47.0415 252.818,-34.2572 268.284,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="212.541,-55.1763 207.757,-60.8435 215.031,-59.3965 212.541,-55.1763" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="scala.AnyRef"><path d="M216.167,-147C216.167,-147 159.833,-147 159.833,-147 155.667,-147 151.5,-142.833 151.5,-138.667 151.5,-138.667 151.5,-130.333 151.5,-130.333 151.5,-126.167 155.667,-122 159.833,-122 159.833,-122 216.167,-122 216.167,-122 220.333,-122 224.5,-126.167 224.5,-130.333 224.5,-130.333 224.5,-138.667 224.5,-138.667 224.5,-142.833 220.333,-147 216.167,-147" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-141.5" x="162" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="183" text-anchor="start">AnyRef</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="CommandMessage[F, A] is a subtype of AnyRef"><path d="M188,-114.76C188,-105.367 188,-94.2882 188,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="185.55,-114.843 188,-121.843 190.45,-114.844 185.55,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+            <div class="subClasses hiddenContent"><a href="CommandMessage$$Default.html" class="extype" name="ackcord.newcommands.CommandMessage.Default">Default</a>, <a href="GuildCommandMessage.html" class="extype" name="ackcord.newcommands.GuildCommandMessage">GuildCommandMessage</a>, <a href="GuildCommandMessage$$Default.html" class="extype" name="ackcord.newcommands.GuildCommandMessage.Default">Default</a>, <a href="GuildCommandMessage$$WithUser.html" class="extype" name="ackcord.newcommands.GuildCommandMessage.WithUser">WithUser</a>, <a href="GuildMemberCommandMessage.html" class="extype" name="ackcord.newcommands.GuildMemberCommandMessage">GuildMemberCommandMessage</a>, <a href="GuildMemberCommandMessage$$Default.html" class="extype" name="ackcord.newcommands.GuildMemberCommandMessage.Default">Default</a>, <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>, <a href="UserCommandMessage$$Default.html" class="extype" name="ackcord.newcommands.UserCommandMessage.Default">Default</a>, <a href="VoiceGuildCommandMessage.html" class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage">VoiceGuildCommandMessage</a>, <a href="VoiceGuildCommandMessage$$Default.html" class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default">Default</a>, <a href="VoiceGuildCommandMessage$$WithGuildMember.html" class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember">WithGuildMember</a>, <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a></div>
+          </div></div>
         
 
       <div id="mbrsel">

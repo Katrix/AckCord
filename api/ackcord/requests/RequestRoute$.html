@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -917,9 +917,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="ackcord.requests.RequestRoute#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="apply(route:ackcord.requests.Routes.RequestRouteBuilder,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute"></a><a id="apply(RequestRouteBuilder,HttpMethod):RequestRoute"></a>
+      <a id="apply(queryRoute:ackcord.requests.Routes.QueryRoute,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute"></a><a id="apply(QueryRoute,HttpMethod):RequestRoute"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/RequestRoute$.html#apply(route:ackcord.requests.Routes.RequestRouteBuilder,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute" title="Permalink">
+      <a href="../../ackcord/requests/RequestRoute$.html#apply(queryRoute:ackcord.requests.Routes.QueryRoute,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -928,7 +928,24 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">apply</span><span class="params">(<span name="route">route: <a href="Routes$$RequestRouteBuilder.html" class="extype" name="ackcord.requests.Routes.RequestRouteBuilder">RequestRouteBuilder</a></span>, <span name="method">method: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/HttpMethod.html#akka.http.scaladsl.model.HttpMethod" class="extype" name="akka.http.scaladsl.model.HttpMethod">HttpMethod</a></span>)</span><span class="result">: <a href="RequestRoute.html" class="extype" name="ackcord.requests.RequestRoute">RequestRoute</a></span>
+        <span class="name">apply</span><span class="params">(<span name="queryRoute">queryRoute: <a href="Routes$$QueryRoute.html" class="extype" name="ackcord.requests.Routes.QueryRoute">QueryRoute</a></span>, <span name="method">method: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/HttpMethod.html#akka.http.scaladsl.model.HttpMethod" class="extype" name="akka.http.scaladsl.model.HttpMethod">HttpMethod</a></span>)</span><span class="result">: <a href="RequestRoute.html" class="extype" name="ackcord.requests.RequestRoute">RequestRoute</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Create a <a href="RequestRoute.html" class="extype" name="ackcord.requests.RequestRoute">RequestRoute</a> from a <a href="Routes$$QueryRoute.html" class="extype" name="ackcord.requests.Routes.QueryRoute">Routes.QueryRoute</a> using the raw and applied
+values for the this route, and adding the query at the end.</p>
+    </li><li name="ackcord.requests.RequestRoute#apply" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="apply(route:ackcord.requests.Routes.Route,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute"></a><a id="apply(Route,HttpMethod):RequestRoute"></a>
+      <span class="permalink">
+      <a href="../../ackcord/requests/RequestRoute$.html#apply(route:ackcord.requests.Routes.Route,method:akka.http.scaladsl.model.HttpMethod):ackcord.requests.RequestRoute" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">apply</span><span class="params">(<span name="route">route: <a href="Routes$$Route.html" class="extype" name="ackcord.requests.Routes.Route">Route</a></span>, <span name="method">method: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/HttpMethod.html#akka.http.scaladsl.model.HttpMethod" class="extype" name="akka.http.scaladsl.model.HttpMethod">HttpMethod</a></span>)</span><span class="result">: <a href="RequestRoute.html" class="extype" name="ackcord.requests.RequestRoute">RequestRoute</a></span>
       </span>
       
       <p class="shortcomment cmt">Create a <a href="RequestRoute.html" class="extype" name="ackcord.requests.RequestRoute">RequestRoute</a> from a <a href="Routes$$Route.html" class="extype" name="ackcord.requests.Routes.Route">Routes.Route</a> using the raw and applied

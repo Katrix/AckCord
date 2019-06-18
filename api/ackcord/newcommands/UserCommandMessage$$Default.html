@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -101,10 +101,10 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="ackcord">ackcord</a></dd></dl></div>
-    </li><li name="ackcord.newcommands.Context" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="Context"></a><a id="Context:Context"></a>
+    </li><li name="ackcord.newcommands.UserCommandMessage" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="UserCommandMessage"></a><a id="UserCommandMessage:UserCommandMessage"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/index.html#Context" title="Permalink">
+      <a href="../../ackcord/newcommands/index.html#UserCommandMessage" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -113,29 +113,25 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="" href="Context$.html"><span class="name">Context</span></a>
+        <a title="" href="UserCommandMessage$.html"><span class="name">UserCommandMessage</span></a>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="ackcord.newcommands">newcommands</a></dd></dl></div>
     </li><li class="current-entities indented3">
                         <span class="separator"></span>
-                        <a class="object" href="Context$$DM$.html" title=""></a>
-                        <a href="Context$$DM$.html" title="">DM</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="object" href="" title=""></a>
-                        <a href="" title="">Guild</a>
+                        <a class="class" href="" title=""></a>
+                        <a href="" title="">Default</a>
                       </li>
               </ul>
             </div>
           </div>
           <div id="content">
-            <body class="object value">
+            <body class="class type">
       <div id="definition">
-        <div class="big-circle object">o</div>
-        <p id="owner"><a href="../index.html" class="extype" name="ackcord">ackcord</a>.<a href="index.html" class="extype" name="ackcord.newcommands">newcommands</a>.<a href="Context$.html" class="extype" name="ackcord.newcommands.Context">Context</a></p>
-        <h1>Guild<span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html" title="Permalink">
+        <div class="big-circle class">c</div>
+        <p id="owner"><a href="../index.html" class="extype" name="ackcord">ackcord</a>.<a href="index.html" class="extype" name="ackcord.newcommands">newcommands</a>.<a href="UserCommandMessage$.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a></p>
+        <h1>Default<span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
@@ -145,10 +141,10 @@
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">object</span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">Guild</span><span class="result"> extends <a href="Context.html" class="extype" name="ackcord.newcommands.Context">Context</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">Default</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="user">user: <a href="../data/User.html" class="extype" name="ackcord.data.User">User</a></span>, <span name="m">m: <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</span>)</span><span class="result"> extends <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>] with <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -157,7 +153,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="Context.html" class="extype" name="ackcord.newcommands.Context">Context</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>], <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>], <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -183,7 +179,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="ackcord.newcommands.Context.Guild"><span>Guild</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="ackcord.newcommands.Context"><span>Context</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="ackcord.newcommands.UserCommandMessage.Default"><span>Default</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.Product"><span>Product</span></li><li class="in" name="scala.Equals"><span>Equals</span></li><li class="in" name="ackcord.newcommands.UserCommandMessage"><span>UserCommandMessage</span></li><li class="in" name="ackcord.newcommands.WrappedCommandMessage"><span>WrappedCommandMessage</span></li><li class="in" name="ackcord.newcommands.CommandMessage"><span>CommandMessage</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -201,7 +197,26 @@
 
       <div id="template">
         <div id="allMembers">
-        
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="ackcord.newcommands.UserCommandMessage.Default#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(user:ackcord.data.User,m:ackcord.newcommands.CommandMessage[F,A]):ackcord.newcommands.UserCommandMessage.Default[F,A]"></a><a id="&lt;init&gt;:Default[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#&lt;init&gt;(user:ackcord.data.User,m:ackcord.newcommands.CommandMessage[F,A]):ackcord.newcommands.UserCommandMessage.Default[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">Default</span><span class="params">(<span name="user">user: <a href="../data/User.html" class="extype" name="ackcord.data.User">User</a></span>, <span name="m">m: <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</span>)</span>
+      </span>
+      
+      
+    </li></ol>
+            </div>
 
         
 
@@ -213,7 +228,7 @@
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -229,7 +244,7 @@
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html###():Int" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -245,7 +260,7 @@
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -261,7 +276,7 @@
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -274,10 +289,27 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="ackcord.newcommands.WrappedCommandMessage#cache" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="cache:ackcord.CacheSnapshot[F]"></a><a id="cache:CacheSnapshot[F]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#cache:ackcord.CacheSnapshot[F]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">cache</span><span class="result">: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A cache snapshot taken when the command was used.</p><div class="fullcomment"><div class="comment cmt"><p>A cache snapshot taken when the command was used.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a> → <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a></dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#clone():Object" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -301,7 +333,7 @@
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -314,26 +346,10 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
-    </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
-      <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#equals(x$1:Any):Boolean" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
-      </span>
-      
-      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#finalize():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -355,7 +371,7 @@
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#getClass():Class[_]" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -374,7 +390,7 @@
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -387,10 +403,43 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="ackcord.newcommands.UserCommandMessage.Default#m" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="m:ackcord.newcommands.CommandMessage[F,A]"></a><a id="m:CommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#m:ackcord.newcommands.CommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">m</span><span class="result">: <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.WrappedCommandMessage#message" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="message:ackcord.data.Message"></a><a id="message:Message"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#message:ackcord.data.Message" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">message</span><span class="result">: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The message that invoked the command.</p><div class="fullcomment"><div class="comment cmt"><p>The message that invoked the command.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a> → <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a></dd></dl></div>
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -406,7 +455,7 @@
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#notify():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -425,7 +474,7 @@
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#notifyAll():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -441,10 +490,44 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.newcommands.WrappedCommandMessage#parsed" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="parsed:A"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#parsed:A" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">parsed</span><span class="result">: <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span></span>
+      </span>
+      
+      <p class="shortcomment cmt">The parsed arguments of this command.</p><div class="fullcomment"><div class="comment cmt"><p>The parsed arguments of this command.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a> → <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a></dd></dl></div>
+    </li><li name="ackcord.newcommands.WrappedCommandMessage#requests" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="requests:ackcord.requests.RequestHelper"></a><a id="requests:requests.RequestHelper"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#requests:ackcord.requests.RequestHelper" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">requests</span><span class="result">: <a href="../requests/RequestHelper.html" class="extype" name="ackcord.requests.RequestHelper">requests.RequestHelper</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Easy access to a request helper.</p><div class="fullcomment"><div class="comment cmt"><p>Easy access to a request helper.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a> → <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -457,10 +540,44 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="ackcord.newcommands.WrappedCommandMessage#tChannel" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="tChannel:ackcord.data.TChannel"></a><a id="tChannel:TChannel"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#tChannel:ackcord.data.TChannel" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">tChannel</span><span class="result">: <a href="../data/TChannel.html" class="extype" name="ackcord.data.TChannel">TChannel</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The channel the command was used from.</p><div class="fullcomment"><div class="comment cmt"><p>The channel the command was used from.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a> → <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a></dd></dl></div>
+    </li><li name="ackcord.newcommands.UserCommandMessage.Default#user" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="user:ackcord.data.User"></a><a id="user:User"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#user:ackcord.data.User" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">user</span><span class="result">: <a href="../data/User.html" class="extype" name="ackcord.data.User">User</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The user that used this command.</p><div class="fullcomment"><div class="comment cmt"><p>The user that used this command.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.newcommands.UserCommandMessage.Default">Default</a> → <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a></dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#wait():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -482,7 +599,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -504,7 +621,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/Context$$Guild$.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/UserCommandMessage$$Default.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -543,8 +660,12 @@
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
-            </div><div class="parent" name="ackcord.newcommands.Context">
-              <h3>Inherited from <a href="Context.html" class="extype" name="ackcord.newcommands.Context">Context</a></h3>
+            </div><div class="parent" name="ackcord.newcommands.UserCommandMessage">
+              <h3>Inherited from <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</h3>
+            </div><div class="parent" name="ackcord.newcommands.WrappedCommandMessage">
+              <h3>Inherited from <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</h3>
+            </div><div class="parent" name="ackcord.newcommands.CommandMessage">
+              <h3>Inherited from <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.Default.A">A</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

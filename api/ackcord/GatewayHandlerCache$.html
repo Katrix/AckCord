@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../lib/scheduler.js"></script>
       <script type="text/javascript" src="../lib/template.js"></script>
       <script type="text/javascript" src="../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../lib/modernizr.custom.js"></script><script type="text/javascript" src="../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../';
@@ -563,9 +563,9 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="ackcord.GatewayHandlerCache#eventToCacheUpdate" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="eventToCacheUpdate(event:ackcord.gateway.ComplexGatewayEvent[_,_],log:akka.event.LoggingAdapter):Option[ackcord.APIMessageCacheUpdate[_]]"></a><a id="eventToCacheUpdate(ComplexGatewayEvent[_,_],LoggingAdapter):Option[APIMessageCacheUpdate[_]]"></a>
+      <a id="eventToCacheUpdate(event:ackcord.gateway.ComplexGatewayEvent[_,_],log:akka.event.LoggingAdapter,settings:ackcord.util.AckCordGatewaySettings):Option[ackcord.APIMessageCacheUpdate[_]]"></a><a id="eventToCacheUpdate(ComplexGatewayEvent[_,_],LoggingAdapter,AckCordGatewaySettings):Option[APIMessageCacheUpdate[_]]"></a>
       <span class="permalink">
-      <a href="../ackcord/GatewayHandlerCache$.html#eventToCacheUpdate(event:ackcord.gateway.ComplexGatewayEvent[_,_],log:akka.event.LoggingAdapter):Option[ackcord.APIMessageCacheUpdate[_]]" title="Permalink">
+      <a href="../ackcord/GatewayHandlerCache$.html#eventToCacheUpdate(event:ackcord.gateway.ComplexGatewayEvent[_,_],log:akka.event.LoggingAdapter,settings:ackcord.util.AckCordGatewaySettings):Option[ackcord.APIMessageCacheUpdate[_]]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -574,7 +574,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eventToCacheUpdate</span><span class="params">(<span name="event">event: <a href="gateway/ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[_, _]</span>, <span name="log">log: <a href="https://doc.akka.io/api/akka/2.5.23/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="APIMessageCacheUpdate.html" class="extype" name="ackcord.APIMessageCacheUpdate">APIMessageCacheUpdate</a>[_]]</span>
+        <span class="name">eventToCacheUpdate</span><span class="params">(<span name="event">event: <a href="gateway/ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[_, _]</span>, <span name="log">log: <a href="https://doc.akka.io/api/akka/2.5.23/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>, <span name="settings">settings: <a href="util/AckCordGatewaySettings.html" class="extype" name="ackcord.util.AckCordGatewaySettings">AckCordGatewaySettings</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="APIMessageCacheUpdate.html" class="extype" name="ackcord.APIMessageCacheUpdate">APIMessageCacheUpdate</a>[_]]</span>
       </span>
       
       
@@ -709,9 +709,9 @@
               
         </dd></dl></div>
     </li><li name="ackcord.GatewayHandlerCache#props" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="props(wsUri:akka.http.scaladsl.model.Uri,settings:ackcord.GatewaySettings,cache:ackcord.Cache,log:akka.event.LoggingAdapter):akka.actor.Props"></a><a id="props(Uri,GatewaySettings,Cache,LoggingAdapter):Props"></a>
+      <a id="props(wsUri:akka.http.scaladsl.model.Uri,settings:ackcord.GatewaySettings,cache:ackcord.Cache,log:akka.event.LoggingAdapter,system:akka.actor.ActorSystem):akka.actor.Props"></a><a id="props(Uri,GatewaySettings,Cache,LoggingAdapter,ActorSystem):Props"></a>
       <span class="permalink">
-      <a href="../ackcord/GatewayHandlerCache$.html#props(wsUri:akka.http.scaladsl.model.Uri,settings:ackcord.GatewaySettings,cache:ackcord.Cache,log:akka.event.LoggingAdapter):akka.actor.Props" title="Permalink">
+      <a href="../ackcord/GatewayHandlerCache$.html#props(wsUri:akka.http.scaladsl.model.Uri,settings:ackcord.GatewaySettings,cache:ackcord.Cache,log:akka.event.LoggingAdapter,system:akka.actor.ActorSystem):akka.actor.Props" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -720,7 +720,7 @@
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=ackcord.gateway.GatewaySettings" class="extmbr" name="ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="ackcord.Cache">Cache</a></span>, <span name="log">log: <a href="https://doc.akka.io/api/akka/2.5.23/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>)</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.5.23/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
+        <span class="name">props</span><span class="params">(<span name="wsUri">wsUri: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>, <span name="settings">settings: <a href="index.html#GatewaySettings=ackcord.gateway.GatewaySettings" class="extmbr" name="ackcord.GatewaySettings">GatewaySettings</a></span>, <span name="cache">cache: <a href="Cache.html" class="extype" name="ackcord.Cache">Cache</a></span>, <span name="log">log: <a href="https://doc.akka.io/api/akka/2.5.23/akka/event/LoggingAdapter.html#akka.event.LoggingAdapter" class="extype" name="akka.event.LoggingAdapter">LoggingAdapter</a></span>, <span name="system">system: <a href="https://doc.akka.io/api/akka/2.5.23/akka/actor/ActorSystem.html#akka.actor.ActorSystem" class="extype" name="akka.actor.ActorSystem">ActorSystem</a></span>)</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.5.23/akka/actor/Props.html#akka.actor.Props" class="extype" name="akka.actor.Props">Props</a></span>
       </span>
       
       

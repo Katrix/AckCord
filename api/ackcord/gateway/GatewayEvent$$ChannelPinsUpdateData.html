@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,27 +368,17 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelPinsUpdateData</span><span class="params">(<span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="timestamp">timestamp: <a href="../util/JsonOption.html" class="extype" name="ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">ChannelPinsUpdateData</span><span class="params">(<span name="guildId">guildId: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>]</span>, <span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="timestamp">timestamp: <a href="../util/JsonOption.html" class="extype" name="ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">channelId</dt><dd class="cmt"><p>The channel where the change happened.</p></dd><dt class="param">timestamp</dt><dd class="cmt"><p>The time the most recent pinned message was pinned.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/gateway/src/main/scala/ackcord/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">guildId</dt><dd class="cmt"><p>The id of the guild where this change happened.</p></dd><dt class="param">channelId</dt><dd class="cmt"><p>The channel where the change happened.</p></dd><dt class="param">timestamp</dt><dd class="cmt"><p>The time the most recent pinned message was pinned.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/gateway/src/main/scala/ackcord/gateway/gatewayData.scala" target="_blank">gatewayData.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 204.50 118.00" height="118pt" width="205pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 200.5,-114 200.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData (this class)" xlink:href="#inheritance-diagram"><path d="M163.167,-49C163.167,-49 32.8333,-49 32.8333,-49 28.6667,-49 24.5,-44.8333 24.5,-40.6667 24.5,-40.6667 24.5,-32.3333 24.5,-32.3333 24.5,-28.1667 28.6667,-24 32.8333,-24 32.8333,-24 163.167,-24 163.167,-24 167.333,-24 171.5,-28.1667 171.5,-32.3333 171.5,-32.3333 171.5,-40.6667 171.5,-40.6667 171.5,-44.8333 167.333,-49 163.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="35" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="56" text-anchor="start">ChannelPinsUpdateData</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="scala.Product"><path d="M77.1667,-110C77.1667,-110 16.8333,-110 16.8333,-110 12.6667,-110 8.5,-105.833 8.5,-101.667 8.5,-101.667 8.5,-93.3333 8.5,-93.3333 8.5,-89.1667 12.6667,-85 16.8333,-85 16.8333,-85 77.1667,-85 77.1667,-85 81.3333,-85 85.5,-89.1667 85.5,-93.3333 85.5,-93.3333 85.5,-101.667 85.5,-101.667 85.5,-105.833 81.3333,-110 77.1667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="19" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="40" text-anchor="start">Product</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ChannelPinsUpdateData is a subtype of Product"><path d="M61.768,-79.4154C70.1712,-69.6942 80.4761,-57.7727 87.945,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="59.8002,-77.9455 57.076,-84.8435 63.5072,-81.1499 59.8002,-77.9455" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Serializable"><path d="M188.167,-110C188.167,-110 111.833,-110 111.833,-110 107.667,-110 103.5,-105.833 103.5,-101.667 103.5,-101.667 103.5,-93.3333 103.5,-93.3333 103.5,-89.1667 107.667,-85 111.833,-85 111.833,-85 188.167,-85 188.167,-85 192.333,-85 196.5,-89.1667 196.5,-93.3333 196.5,-93.3333 196.5,-101.667 196.5,-101.667 196.5,-105.833 192.333,-110 188.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="114" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="135" text-anchor="start">Serializable</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="ChannelPinsUpdateData is a subtype of Serializable"><path d="M134.942,-79.4154C126.375,-69.6942 115.867,-57.7727 108.252,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="133.26,-81.212 139.726,-84.8435 136.936,-77.9721 133.26,-81.212" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -434,9 +424,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(channelId:ackcord.data.ChannelId,timestamp:ackcord.util.JsonOption[java.time.OffsetDateTime]):ackcord.gateway.GatewayEvent.ChannelPinsUpdateData"></a><a id="&lt;init&gt;:ChannelPinsUpdateData"></a>
+      <a id="&lt;init&gt;(guildId:Option[ackcord.data.GuildId],channelId:ackcord.data.ChannelId,timestamp:ackcord.util.JsonOption[java.time.OffsetDateTime]):ackcord.gateway.GatewayEvent.ChannelPinsUpdateData"></a><a id="&lt;init&gt;:ChannelPinsUpdateData"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdateData.html#&lt;init&gt;(channelId:ackcord.data.ChannelId,timestamp:ackcord.util.JsonOption[java.time.OffsetDateTime]):ackcord.gateway.GatewayEvent.ChannelPinsUpdateData" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdateData.html#&lt;init&gt;(guildId:Option[ackcord.data.GuildId],channelId:ackcord.data.ChannelId,timestamp:ackcord.util.JsonOption[java.time.OffsetDateTime]):ackcord.gateway.GatewayEvent.ChannelPinsUpdateData" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,10 +435,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelPinsUpdateData</span><span class="params">(<span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="timestamp">timestamp: <a href="../util/JsonOption.html" class="extype" name="ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>)</span>
+        <span class="name">ChannelPinsUpdateData</span><span class="params">(<span name="guildId">guildId: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>]</span>, <span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="timestamp">timestamp: <a href="../util/JsonOption.html" class="extype" name="ackcord.util.JsonOption">util.JsonOption</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>)</span>
       </span>
       
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">channelId</dt><dd class="cmt"><p>The channel where the change happened.</p></dd><dt class="param">timestamp</dt><dd class="cmt"><p>The time the most recent pinned message was pinned.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">guildId</dt><dd class="cmt"><p>The id of the guild where this change happened.</p></dd><dt class="param">channelId</dt><dd class="cmt"><p>The channel where the change happened.</p></dd><dt class="param">timestamp</dt><dd class="cmt"><p>The time the most recent pinned message was pinned.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -620,6 +610,22 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData#guildId" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="guildId:Option[ackcord.data.GuildId]"></a><a id="guildId:Option[GuildId]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdateData.html#guildId:Option[ackcord.data.GuildId]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">guildId</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>]</span>
+      </span>
+      
+      
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">

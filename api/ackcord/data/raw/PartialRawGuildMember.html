@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../../lib/template.js"></script>
       <script type="text/javascript" src="../../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../../';
@@ -192,27 +192,17 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">PartialRawGuildMember</span><span class="params">(<span name="nick">nick: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../index.html#RoleId=ackcord.data.package.SnowflakeType[ackcord.data.Role]" class="extmbr" name="ackcord.data.RoleId">RoleId</a>]</span>, <span name="joinedAt">joinedAt: <span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span></span>, <span name="deaf">deaf: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="mute">mute: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">PartialRawGuildMember</span><span class="params">(<span name="nick">nick: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../index.html#RoleId=ackcord.data.package.SnowflakeType[ackcord.data.Role]" class="extmbr" name="ackcord.data.RoleId">RoleId</a>]</span>, <span name="joinedAt">joinedAt: <span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span></span>, <span name="premiumSince">premiumSince: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="deaf">deaf: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="mute">mute: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a user in a guild, without the user field.</p></div><dl class="paramcmts block"><dt class="param">nick</dt><dd class="cmt"><p>The nickname of this user in this guild.</p></dd><dt class="param">roles</dt><dd class="cmt"><p>The roles of this user.</p></dd><dt class="param">joinedAt</dt><dd class="cmt"><p>When this user joined the guild.</p></dd><dt class="param">deaf</dt><dd class="cmt"><p>If this user is deaf.</p></dd><dt class="param">mute</dt><dd class="cmt"><p>IF this user is mute.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/data/src/main/scala/ackcord/data/raw/rawData.scala" target="_blank">rawData.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>Represents a user in a guild, without the user field.</p></div><dl class="paramcmts block"><dt class="param">nick</dt><dd class="cmt"><p>The nickname of this user in this guild.</p></dd><dt class="param">roles</dt><dd class="cmt"><p>The roles of this user.</p></dd><dt class="param">joinedAt</dt><dd class="cmt"><p>When this user joined the guild.</p></dd><dt class="param">premiumSince</dt><dd class="cmt"><p>When this user boosted the server.</p></dd><dt class="param">deaf</dt><dd class="cmt"><p>If this user is deaf.</p></dd><dt class="param">mute</dt><dd class="cmt"><p>IF this user is mute.</p></dd></dl><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/data/src/main/scala/ackcord/data/raw/rawData.scala" target="_blank">rawData.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 203.50 118.00" height="118pt" width="204pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 199.5,-114 199.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.data.raw.PartialRawGuildMember (this class)" xlink:href="#inheritance-diagram"><path d="M161.167,-49C161.167,-49 32.8333,-49 32.8333,-49 28.6667,-49 24.5,-44.8333 24.5,-40.6667 24.5,-40.6667 24.5,-32.3333 24.5,-32.3333 24.5,-28.1667 28.6667,-24 32.8333,-24 32.8333,-24 161.167,-24 161.167,-24 165.333,-24 169.5,-28.1667 169.5,-32.3333 169.5,-32.3333 169.5,-40.6667 169.5,-40.6667 169.5,-44.8333 165.333,-49 161.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../../lib/class_diagram.png" y="-43.5" x="35" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="56" text-anchor="start">PartialRawGuildMember</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="scala.Product"><path d="M76.1667,-110C76.1667,-110 15.8333,-110 15.8333,-110 11.6667,-110 7.5,-105.833 7.5,-101.667 7.5,-101.667 7.5,-93.3333 7.5,-93.3333 7.5,-89.1667 11.6667,-85 15.8333,-85 15.8333,-85 76.1667,-85 76.1667,-85 80.3333,-85 84.5,-89.1667 84.5,-93.3333 84.5,-93.3333 84.5,-101.667 84.5,-101.667 84.5,-105.833 80.3333,-110 76.1667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="18" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="39" text-anchor="start">Product</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="PartialRawGuildMember is a subtype of Product"><path d="M60.768,-79.4154C69.1712,-69.6942 79.4761,-57.7727 86.945,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="58.8002,-77.9455 56.076,-84.8435 62.5072,-81.1499 58.8002,-77.9455" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Serializable"><path d="M187.167,-110C187.167,-110 110.833,-110 110.833,-110 106.667,-110 102.5,-105.833 102.5,-101.667 102.5,-101.667 102.5,-93.3333 102.5,-93.3333 102.5,-89.1667 106.667,-85 110.833,-85 110.833,-85 187.167,-85 187.167,-85 191.333,-85 195.5,-89.1667 195.5,-93.3333 195.5,-93.3333 195.5,-101.667 195.5,-101.667 195.5,-105.833 191.333,-110 187.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../../lib/trait_diagram.png" y="-104.5" x="113" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="134" text-anchor="start">Serializable</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="PartialRawGuildMember is a subtype of Serializable"><path d="M133.942,-79.4154C125.375,-69.6942 114.867,-57.7727 107.252,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="132.26,-81.212 138.726,-84.8435 135.936,-77.9721 132.26,-81.212" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -258,9 +248,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.data.raw.PartialRawGuildMember#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(nick:Option[String],roles:Seq[ackcord.data.RoleId],joinedAt:java.time.OffsetDateTime,deaf:Boolean,mute:Boolean):ackcord.data.raw.PartialRawGuildMember"></a><a id="&lt;init&gt;:PartialRawGuildMember"></a>
+      <a id="&lt;init&gt;(nick:Option[String],roles:Seq[ackcord.data.RoleId],joinedAt:java.time.OffsetDateTime,premiumSince:Option[java.time.OffsetDateTime],deaf:Boolean,mute:Boolean):ackcord.data.raw.PartialRawGuildMember"></a><a id="&lt;init&gt;:PartialRawGuildMember"></a>
       <span class="permalink">
-      <a href="../../../ackcord/data/raw/PartialRawGuildMember.html#&lt;init&gt;(nick:Option[String],roles:Seq[ackcord.data.RoleId],joinedAt:java.time.OffsetDateTime,deaf:Boolean,mute:Boolean):ackcord.data.raw.PartialRawGuildMember" title="Permalink">
+      <a href="../../../ackcord/data/raw/PartialRawGuildMember.html#&lt;init&gt;(nick:Option[String],roles:Seq[ackcord.data.RoleId],joinedAt:java.time.OffsetDateTime,premiumSince:Option[java.time.OffsetDateTime],deaf:Boolean,mute:Boolean):ackcord.data.raw.PartialRawGuildMember" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -269,10 +259,10 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">PartialRawGuildMember</span><span class="params">(<span name="nick">nick: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../index.html#RoleId=ackcord.data.package.SnowflakeType[ackcord.data.Role]" class="extmbr" name="ackcord.data.RoleId">RoleId</a>]</span>, <span name="joinedAt">joinedAt: <span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span></span>, <span name="deaf">deaf: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="mute">mute: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span>
+        <span class="name">PartialRawGuildMember</span><span class="params">(<span name="nick">nick: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="roles">roles: <span class="extype" name="scala.Seq">Seq</span>[<a href="../index.html#RoleId=ackcord.data.package.SnowflakeType[ackcord.data.Role]" class="extmbr" name="ackcord.data.RoleId">RoleId</a>]</span>, <span name="joinedAt">joinedAt: <span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span></span>, <span name="premiumSince">premiumSince: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>, <span name="deaf">deaf: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>, <span name="mute">mute: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>)</span>
       </span>
       
-      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">nick</dt><dd class="cmt"><p>The nickname of this user in this guild.</p></dd><dt class="param">roles</dt><dd class="cmt"><p>The roles of this user.</p></dd><dt class="param">joinedAt</dt><dd class="cmt"><p>When this user joined the guild.</p></dd><dt class="param">deaf</dt><dd class="cmt"><p>If this user is deaf.</p></dd><dt class="param">mute</dt><dd class="cmt"><p>IF this user is mute.</p></dd></dl></div>
+      <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">nick</dt><dd class="cmt"><p>The nickname of this user in this guild.</p></dd><dt class="param">roles</dt><dd class="cmt"><p>The roles of this user.</p></dd><dt class="param">joinedAt</dt><dd class="cmt"><p>When this user joined the guild.</p></dd><dt class="param">premiumSince</dt><dd class="cmt"><p>When this user boosted the server.</p></dd><dt class="param">deaf</dt><dd class="cmt"><p>If this user is deaf.</p></dd><dt class="param">mute</dt><dd class="cmt"><p>IF this user is mute.</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -562,6 +552,22 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.data.raw.PartialRawGuildMember#premiumSince" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="premiumSince:Option[java.time.OffsetDateTime]"></a><a id="premiumSince:Option[OffsetDateTime]"></a>
+      <span class="permalink">
+      <a href="../../../ackcord/data/raw/PartialRawGuildMember.html#premiumSince:Option[java.time.OffsetDateTime]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">premiumSince</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<span class="extype" name="java.time.OffsetDateTime">OffsetDateTime</span>]</span>
+      </span>
+      
+      
     </li><li name="ackcord.data.raw.PartialRawGuildMember#roles" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="roles:Seq[ackcord.data.RoleId]"></a><a id="roles:Seq[RoleId]"></a>
       <span class="permalink">

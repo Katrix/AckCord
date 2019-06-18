@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">PresenceUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">PresenceUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -379,17 +379,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>, <a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 399.00 118.00" height="118pt" width="399pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 395,-114 395,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.PresenceUpdate (this class)" xlink:href="#inheritance-diagram"><path d="M290.167,-49C290.167,-49 192.833,-49 192.833,-49 188.667,-49 184.5,-44.8333 184.5,-40.6667 184.5,-40.6667 184.5,-32.3333 184.5,-32.3333 184.5,-28.1667 188.667,-24 192.833,-24 192.833,-24 290.167,-24 290.167,-24 294.333,-24 298.5,-28.1667 298.5,-32.3333 298.5,-32.3333 298.5,-40.6667 298.5,-40.6667 298.5,-44.8333 294.333,-49 290.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="194.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="215.5" text-anchor="start">PresenceUpdate</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.GuildEvent" xlink:href="GatewayEvent$$GuildEvent.html#inheritance-diagram"><path d="M176.667,-110C176.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 1.42109e-14,-105.833 1.42109e-14,-101.667 1.42109e-14,-101.667 1.42109e-14,-93.3333 1.42109e-14,-93.3333 1.42109e-14,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 176.667,-85 176.667,-85 180.833,-85 185,-89.1667 185,-93.3333 185,-93.3333 185,-101.667 185,-101.667 185,-105.833 180.833,-110 176.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31.5" text-anchor="start">GuildEvent[PresenceUpdateData]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="PresenceUpdate is a subtype of GuildEvent[PresenceUpdateData]"><path d="M128.253,-82.3426C153.948,-72.1683 188.163,-58.62 212.237,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="127.189,-80.129 121.582,-84.9841 128.993,-84.6849 127.189,-80.129" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M271.667,-110C271.667,-110 211.333,-110 211.333,-110 207.167,-110 203,-105.833 203,-101.667 203,-101.667 203,-93.3333 203,-93.3333 203,-89.1667 207.167,-85 211.333,-85 211.333,-85 271.667,-85 271.667,-85 275.833,-85 280,-89.1667 280,-93.3333 280,-93.3333 280,-101.667 280,-101.667 280,-105.833 275.833,-110 271.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="213.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="234.5" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="PresenceUpdate is a subtype of Product"><path d="M241.5,-77.7603C241.5,-68.3675 241.5,-57.2882 241.5,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="239.05,-77.8435 241.5,-84.8435 243.95,-77.8435 239.05,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M382.667,-110C382.667,-110 306.333,-110 306.333,-110 302.167,-110 298,-105.833 298,-101.667 298,-101.667 298,-93.3333 298,-93.3333 298,-89.1667 302.167,-85 306.333,-85 306.333,-85 382.667,-85 382.667,-85 386.833,-85 391,-89.1667 391,-93.3333 391,-93.3333 391,-101.667 391,-101.667 391,-105.833 386.833,-110 382.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="308.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="329.5" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="PresenceUpdate is a subtype of Serializable"><path d="M317.953,-81.2936C300.451,-71.268 277.878,-58.338 261.807,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="316.859,-83.4901 324.151,-84.8435 319.294,-79.2382 316.859,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -435,9 +425,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.PresenceUpdate#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.PresenceUpdateData]]):ackcord.gateway.GatewayEvent.PresenceUpdate"></a><a id="&lt;init&gt;:PresenceUpdate"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.PresenceUpdateData]]):ackcord.gateway.GatewayEvent.PresenceUpdate"></a><a id="&lt;init&gt;:PresenceUpdate"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$PresenceUpdate.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.PresenceUpdateData]]):ackcord.gateway.GatewayEvent.PresenceUpdate" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$PresenceUpdate.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.PresenceUpdateData]]):ackcord.gateway.GatewayEvent.PresenceUpdate" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -446,7 +436,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">PresenceUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>]]</span>)</span>
+        <span class="name">PresenceUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$PresenceUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdateData">PresenceUpdateData</a>]]</span>)</span>
       </span>
       
       
@@ -743,6 +733,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.PresenceUpdate#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$PresenceUpdate.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.PresenceUpdate">PresenceUpdate</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildMemberAdd</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">GuildMemberAdd</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -378,17 +378,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>, <a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 422.50 118.00" height="118pt" width="423pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 418.5,-114 418.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.GuildMemberAdd (this class)" xlink:href="#inheritance-diagram"><path d="M315.167,-49C315.167,-49 214.833,-49 214.833,-49 210.667,-49 206.5,-44.8333 206.5,-40.6667 206.5,-40.6667 206.5,-32.3333 206.5,-32.3333 206.5,-28.1667 210.667,-24 214.833,-24 214.833,-24 315.167,-24 315.167,-24 319.333,-24 323.5,-28.1667 323.5,-32.3333 323.5,-32.3333 323.5,-40.6667 323.5,-40.6667 323.5,-44.8333 319.333,-49 315.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="217" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="238" text-anchor="start">GuildMemberAdd</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.GuildEvent" xlink:href="GatewayEvent$$GuildEvent.html#inheritance-diagram"><path d="M199.667,-110C199.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 199.667,-85 199.667,-85 203.833,-85 208,-89.1667 208,-93.3333 208,-93.3333 208,-101.667 208,-101.667 208,-105.833 203.833,-110 199.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">GuildEvent[RawGuildMemberWithGuild]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="GuildMemberAdd is a subtype of GuildEvent[RawGuildMemberWithGuild]"><path d="M142.279,-82.4723C170.082,-72.2837 207.257,-58.6606 233.38,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="141.154,-80.2751 135.425,-84.9841 142.84,-84.8759 141.154,-80.2751" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M295.167,-110C295.167,-110 234.833,-110 234.833,-110 230.667,-110 226.5,-105.833 226.5,-101.667 226.5,-101.667 226.5,-93.3333 226.5,-93.3333 226.5,-89.1667 230.667,-85 234.833,-85 234.833,-85 295.167,-85 295.167,-85 299.333,-85 303.5,-89.1667 303.5,-93.3333 303.5,-93.3333 303.5,-101.667 303.5,-101.667 303.5,-105.833 299.333,-110 295.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="237" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="258" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="GuildMemberAdd is a subtype of Product"><path d="M265,-77.7603C265,-68.3675 265,-57.2882 265,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="262.55,-77.8435 265,-84.8435 267.45,-77.8435 262.55,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M406.167,-110C406.167,-110 329.833,-110 329.833,-110 325.667,-110 321.5,-105.833 321.5,-101.667 321.5,-101.667 321.5,-93.3333 321.5,-93.3333 321.5,-89.1667 325.667,-85 329.833,-85 329.833,-85 406.167,-85 406.167,-85 410.333,-85 414.5,-89.1667 414.5,-93.3333 414.5,-93.3333 414.5,-101.667 414.5,-101.667 414.5,-105.833 410.333,-110 406.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="332" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="353" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="GuildMemberAdd is a subtype of Serializable"><path d="M341.453,-81.2936C323.951,-71.268 301.378,-58.338 285.307,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="340.359,-83.4901 347.651,-84.8435 342.794,-79.2382 340.359,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -434,9 +424,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.GuildMemberAdd#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild]]):ackcord.gateway.GatewayEvent.GuildMemberAdd"></a><a id="&lt;init&gt;:GuildMemberAdd"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild]]):ackcord.gateway.GatewayEvent.GuildMemberAdd"></a><a id="&lt;init&gt;:GuildMemberAdd"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$GuildMemberAdd.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild]]):ackcord.gateway.GatewayEvent.GuildMemberAdd" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildMemberAdd.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild]]):ackcord.gateway.GatewayEvent.GuildMemberAdd" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,7 +435,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildMemberAdd</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>]]</span>)</span>
+        <span class="name">GuildMemberAdd</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$RawGuildMemberWithGuild.html" class="extype" name="ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild">RawGuildMemberWithGuild</a>]]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>The new guild member, includes a guild id.</p></dd></dl></div>
@@ -742,6 +732,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.GuildMemberAdd#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildMemberAdd.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.GuildMemberAdd">GuildMemberAdd</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

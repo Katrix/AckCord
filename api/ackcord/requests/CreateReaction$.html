@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -1150,24 +1150,6 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
-    </li><li name="ackcord.requests.CreateReaction#unicodeEmoji" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="unicodeEmoji[Ctx](channelId:ackcord.data.ChannelId,messageId:ackcord.data.MessageId,unicodeEmoji:String,context:Ctx):ackcord.requests.CreateReaction[Ctx]"></a><a id="unicodeEmoji[Ctx](ChannelId,MessageId,String,Ctx):CreateReaction[Ctx]"></a>
-      <span class="permalink">
-      <a href="../../ackcord/requests/CreateReaction$.html#unicodeEmoji[Ctx](channelId:ackcord.data.ChannelId,messageId:ackcord.data.MessageId,unicodeEmoji:String,context:Ctx):ackcord.requests.CreateReaction[Ctx]" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">def</span>
-      </span>
-      <span class="symbol">
-        <span class="name">unicodeEmoji</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="messageId">messageId: <a href="../data/index.html#MessageId=ackcord.data.package.SnowflakeType[ackcord.data.Message]" class="extmbr" name="ackcord.data.MessageId">MessageId</a></span>, <span name="unicodeEmoji">unicodeEmoji: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="ackcord.requests.CreateReaction.unicodeEmoji.Ctx">Ctx</span> = <span class="symbol"><span class="name"><a href="../../akka/index.html">NotUsed: NotUsed</a></span></span></span>)</span><span class="result">: <a href="CreateReaction.html" class="extype" name="ackcord.requests.CreateReaction">CreateReaction</a>[<span class="extype" name="ackcord.requests.CreateReaction.unicodeEmoji.Ctx">Ctx</span>]</span>
-      </span>
-      
-      <p class="shortcomment cmt">An utility method to create a reaction request with a unicode emoji.</p><div class="fullcomment"><div class="comment cmt"><p>An utility method to create a reaction request with a unicode emoji.
-This method will do the URL encoding for you.
-</p></div></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
@@ -1242,7 +1224,31 @@ This method will do the URL encoding for you.
 
         
 
-        
+        <div class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="ackcord.requests.CreateReaction#unicodeEmoji" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="unicodeEmoji[Ctx](channelId:ackcord.data.ChannelId,messageId:ackcord.data.MessageId,unicodeEmoji:String,context:Ctx):ackcord.requests.CreateReaction[Ctx]"></a><a id="unicodeEmoji[Ctx](ChannelId,MessageId,String,Ctx):CreateReaction[Ctx]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/requests/CreateReaction$.html#unicodeEmoji[Ctx](channelId:ackcord.data.ChannelId,messageId:ackcord.data.MessageId,unicodeEmoji:String,context:Ctx):ackcord.requests.CreateReaction[Ctx]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.14.0) Url encoding is now done automatically">unicodeEmoji</span><span class="tparams">[<span name="Ctx">Ctx</span>]</span><span class="params">(<span name="channelId">channelId: <a href="../data/index.html#ChannelId=ackcord.data.package.SnowflakeType[ackcord.data.Channel]" class="extmbr" name="ackcord.data.ChannelId">ChannelId</a></span>, <span name="messageId">messageId: <a href="../data/index.html#MessageId=ackcord.data.package.SnowflakeType[ackcord.data.Message]" class="extmbr" name="ackcord.data.MessageId">MessageId</a></span>, <span name="unicodeEmoji">unicodeEmoji: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="context">context: <span class="extype" name="ackcord.requests.CreateReaction.unicodeEmoji.Ctx">Ctx</span> = <span class="symbol">NotUsed: NotUsed</span></span>)</span><span class="result">: <a href="CreateReaction.html" class="extype" name="ackcord.requests.CreateReaction">CreateReaction</a>[<span class="extype" name="ackcord.requests.CreateReaction.unicodeEmoji.Ctx">Ctx</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">An utility method to create a reaction request with a unicode emoji.</p><div class="fullcomment"><div class="comment cmt"><p>An utility method to create a reaction request with a unicode emoji.
+This method will do the URL encoding for you.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.14.0)</i> Url encoding is now done automatically</p></dd></dl></div>
+    </li></ol>
+            </div>
         </div>
 
         <div id="inheritedMembers">

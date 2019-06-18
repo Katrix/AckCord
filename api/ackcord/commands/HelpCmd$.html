@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -375,6 +375,22 @@
       </span>
       
       
+    </li><li name="ackcord.commands.HelpCmd.CommandTerminated" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="CommandTerminatedextendsProductwithSerializable"></a><a id="CommandTerminated:CommandTerminated"></a>
+      <span class="permalink">
+      <a href="../../ackcord/commands/HelpCmd$.html#CommandTerminatedextendsProductwithSerializable" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
+      </span>
+      <span class="symbol">
+        <a title="Sent to a handler from the help command when a command is unregistered." href="HelpCmd$$CommandTerminated.html"><span class="name">CommandTerminated</span></a><span class="params">(<span name="registration">registration: <a href="HelpCmd$$CommandRegistration.html" class="extype" name="ackcord.commands.HelpCmd.CommandRegistration">CommandRegistration</a></span>)</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Sent to a handler from the help command when a command is unregistered.</p><div class="fullcomment"><div class="comment cmt"><p>Sent to a handler from the help command when a command is unregistered.</p></div><dl class="paramcmts block"><dt class="param">registration</dt><dd class="cmt"><p>The registration info for the command</p></dd></dl></div>
     </li></ol>
             </div>
 
@@ -749,6 +765,26 @@
       </span>
       
       
+    </li><li name="ackcord.commands.HelpCmd.NoCommandsRemaining" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="NoCommandsRemaining"></a><a id="NoCommandsRemaining:NoCommandsRemaining"></a>
+      <span class="permalink">
+      <a href="../../ackcord/commands/HelpCmd$.html#NoCommandsRemaining" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="Sent from the help command when all the commands it's been managing have been unregistered." href="HelpCmd$$NoCommandsRemaining$.html"><span class="name">NoCommandsRemaining</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">Sent from the help command when all the commands it's been managing have
+been unregistered.</p><div class="fullcomment"><div class="comment cmt"><p>Sent from the help command when all the commands it's been managing have
+been unregistered. Commands that have the extra property named
+<code>ignore-help-last</code> will be ignored from the consideration of all commands.
+</p></div></div>
     </li>
               </ol>
             </div>

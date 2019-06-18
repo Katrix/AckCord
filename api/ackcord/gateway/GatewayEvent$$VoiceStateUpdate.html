@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">VoiceStateUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">VoiceStateUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -378,17 +378,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>, <a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 369.00 118.00" height="118pt" width="369pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 365,-114 365,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.VoiceStateUpdate (this class)" xlink:href="#inheritance-diagram"><path d="M262.667,-49C262.667,-49 160.333,-49 160.333,-49 156.167,-49 152,-44.8333 152,-40.6667 152,-40.6667 152,-32.3333 152,-32.3333 152,-28.1667 156.167,-24 160.333,-24 160.333,-24 262.667,-24 262.667,-24 266.833,-24 271,-28.1667 271,-32.3333 271,-32.3333 271,-40.6667 271,-40.6667 271,-44.8333 266.833,-49 262.667,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="162.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="183.5" text-anchor="start">VoiceStateUpdate</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.OptGuildEvent" xlink:href="GatewayEvent$$OptGuildEvent.html#inheritance-diagram"><path d="M146.667,-110C146.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 146.667,-85 146.667,-85 150.833,-85 155,-89.1667 155,-93.3333 155,-93.3333 155,-101.667 155,-101.667 155,-105.833 150.833,-110 146.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31.5" text-anchor="start">OptGuildEvent[VoiceState]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="VoiceStateUpdate is a subtype of OptGuildEvent[VoiceState]"><path d="M110.224,-82.0919C133.184,-71.9826 163.494,-58.6372 184.953,-49.1884" stroke="#d4d4d4" fill="none"></path><polygon points="109.074,-79.921 103.655,-84.9841 111.048,-84.4056 109.074,-79.921" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M241.667,-110C241.667,-110 181.333,-110 181.333,-110 177.167,-110 173,-105.833 173,-101.667 173,-101.667 173,-93.3333 173,-93.3333 173,-89.1667 177.167,-85 181.333,-85 181.333,-85 241.667,-85 241.667,-85 245.833,-85 250,-89.1667 250,-93.3333 250,-93.3333 250,-101.667 250,-101.667 250,-105.833 245.833,-110 241.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="183.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="204.5" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="VoiceStateUpdate is a subtype of Product"><path d="M211.5,-77.7603C211.5,-68.3675 211.5,-57.2882 211.5,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="209.05,-77.8435 211.5,-84.8435 213.95,-77.8435 209.05,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M352.667,-110C352.667,-110 276.333,-110 276.333,-110 272.167,-110 268,-105.833 268,-101.667 268,-101.667 268,-93.3333 268,-93.3333 268,-89.1667 272.167,-85 276.333,-85 276.333,-85 352.667,-85 352.667,-85 356.833,-85 361,-89.1667 361,-93.3333 361,-93.3333 361,-101.667 361,-101.667 361,-105.833 356.833,-110 352.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="278.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="299.5" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="VoiceStateUpdate is a subtype of Serializable"><path d="M287.953,-81.2936C270.451,-71.268 247.878,-58.338 231.807,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="286.859,-83.4901 294.151,-84.8435 289.294,-79.2382 286.859,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -434,9 +424,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.VoiceStateUpdate#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.data.VoiceState]]):ackcord.gateway.GatewayEvent.VoiceStateUpdate"></a><a id="&lt;init&gt;:VoiceStateUpdate"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.data.VoiceState]]):ackcord.gateway.GatewayEvent.VoiceStateUpdate"></a><a id="&lt;init&gt;:VoiceStateUpdate"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$VoiceStateUpdate.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.data.VoiceState]]):ackcord.gateway.GatewayEvent.VoiceStateUpdate" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$VoiceStateUpdate.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.data.VoiceState]]):ackcord.gateway.GatewayEvent.VoiceStateUpdate" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,7 +435,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">VoiceStateUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>]]</span>)</span>
+        <span class="name">VoiceStateUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/VoiceState.html" class="extype" name="ackcord.data.VoiceState">VoiceState</a>]]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>New voice states.</p></dd></dl></div>
@@ -742,6 +732,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.VoiceStateUpdate#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$VoiceStateUpdate.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.VoiceStateUpdate">VoiceStateUpdate</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

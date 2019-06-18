@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -125,6 +125,10 @@
                         <a class="object" href="GatewayHandlerGraphStage$.html" title=""></a>
                         <a class="class" href="GatewayHandlerGraphStage.html" title=""></a>
                         <a href="GatewayHandlerGraphStage.html" title="">GatewayHandlerGraphStage</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="GatewayJsonException.html" title=""></a>
+                        <a href="GatewayJsonException.html" title="">GatewayJsonException</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="GatewayMessage.html" title="Base trait for all gateway messages."></a>
@@ -242,7 +246,7 @@
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">GatewayOpCode</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">GatewayOpCode</span><span class="result"> extends <span class="extype" name="enumeratum.values.IntEnum">IntEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>] with <span class="extype" name="enumeratum.values.IntCirceEnum">IntCirceEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
       </span>
       </h4>
 
@@ -251,7 +255,7 @@
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><span class="extype" name="enumeratum.values.IntCirceEnum">IntCirceEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>], <span class="extype" name="enumeratum.values.CirceValueEnum">CirceValueEnum</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>, <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>], <span class="extype" name="enumeratum.values.IntEnum">IntEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>], <span class="extype" name="enumeratum.values.ValueEnum">ValueEnum</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>, <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -277,7 +281,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="ackcord.gateway.GatewayOpCode"><span>GatewayOpCode</span></li><li class="in" name="scala.Serializable"><span>Serializable</span></li><li class="in" name="java.io.Serializable"><span>Serializable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="ackcord.gateway.GatewayOpCode"><span>GatewayOpCode</span></li><li class="in" name="enumeratum.values.IntCirceEnum"><span>IntCirceEnum</span></li><li class="in" name="enumeratum.values.CirceValueEnum"><span>CirceValueEnum</span></li><li class="in" name="enumeratum.values.IntEnum"><span>IntEnum</span></li><li class="in" name="enumeratum.values.ValueEnum"><span>ValueEnum</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -368,6 +372,38 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="enumeratum.values.IntCirceEnum#circeDecoder" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="circeDecoder:io.circe.Decoder[EntryType]"></a><a id="circeDecoder:Decoder[GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#circeDecoder:io.circe.Decoder[EntryType]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">circeDecoder</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Decoder.html#io.circe.Decoder" class="extype" name="io.circe.Decoder">Decoder</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>IntCirceEnum → CirceValueEnum</dd></dl></div>
+    </li><li name="enumeratum.values.IntCirceEnum#circeEncoder" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="circeEncoder:io.circe.Encoder[EntryType]"></a><a id="circeEncoder:Encoder[GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#circeEncoder:io.circe.Encoder[EntryType]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">implicit </span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">circeEncoder</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Encoder.html#io.circe.Encoder" class="extype" name="io.circe.Encoder">Encoder</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>IntCirceEnum → CirceValueEnum</dd></dl></div>
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
@@ -446,22 +482,22 @@
     </span>)</span>
               
         </dd></dl></div>
-    </li><li name="ackcord.gateway.GatewayOpCode#forCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="forCode(code:Int):Option[ackcord.gateway.GatewayOpCode]"></a><a id="forCode(Int):Option[GatewayOpCode]"></a>
+    </li><li name="enumeratum.values.IntEnum#findValues" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="findValues:scala.collection.immutable.IndexedSeq[A]"></a><a id="findValues:IndexedSeq[GatewayOpCode]"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayOpCode$.html#forCode(code:Int):Option[ackcord.gateway.GatewayOpCode]" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#findValues:scala.collection.immutable.IndexedSeq[A]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier"></span>
+        <span class="modifier">macro </span>
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">forCode</span><span class="params">(<span name="code">code: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+        <span class="name">findValues</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/IndexedSeq.html#scala.collection.immutable.IndexedSeq" class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
       </span>
       
-      <p class="shortcomment cmt">Get an opcode from a number if it exists.</p>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected </dd><dt>Definition Classes</dt><dd>IntEnum</dd></dl></div>
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
@@ -602,6 +638,38 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayOpCode#values" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="values:scala.collection.immutable.IndexedSeq[ackcord.gateway.GatewayOpCode]"></a><a id="values:IndexedSeq[GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#values:scala.collection.immutable.IndexedSeq[ackcord.gateway.GatewayOpCode]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">values</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/IndexedSeq.html#scala.collection.immutable.IndexedSeq" class="extype" name="scala.collection.immutable.IndexedSeq">IndexedSeq</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a> → ValueEnum</dd></dl></div>
+    </li><li name="enumeratum.values.ValueEnum#valuesToEntriesMap" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="valuesToEntriesMap:scala.collection.immutable.Map[ValueType,EntryType]"></a><a id="valuesToEntriesMap:Map[Int,GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#valuesToEntriesMap:scala.collection.immutable.Map[ValueType,EntryType]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">lazy val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">valuesToEntriesMap</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/collection/immutable/Map.html#scala.collection.immutable.Map" class="extype" name="scala.collection.immutable.Map">Map</a>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>, <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ValueEnum</dd></dl></div>
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
@@ -670,6 +738,41 @@
     </span>)</span>
               
         </dd></dl></div>
+    </li><li name="enumeratum.values.ValueEnum#withValue" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="withValue(i:ValueType):EntryType"></a><a id="withValue(Int):GatewayOpCode"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#withValue(i:ValueType):EntryType" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">withValue</span><span class="params">(<span name="i">i: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a></span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ValueEnum</dd><dt>Annotations</dt><dd>
+                <span class="name">@SuppressWarnings</span><span class="args">()</span>
+              
+        </dd></dl></div>
+    </li><li name="enumeratum.values.ValueEnum#withValueOpt" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="withValueOpt(i:ValueType):Option[EntryType]"></a><a id="withValueOpt(Int):Option[GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#withValueOpt(i:ValueType):Option[EntryType]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">withValueOpt</span><span class="params">(<span name="i">i: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>ValueEnum</dd></dl></div>
     </li><li name="ackcord.gateway.GatewayOpCode.Dispatch" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
       <a id="Dispatch"></a><a id="Dispatch:Dispatch"></a>
       <span class="permalink">
@@ -868,14 +971,41 @@
 
         
 
-        
+        <div class="values members">
+              <h3>Deprecated Value Members</h3>
+              <ol><li name="ackcord.gateway.GatewayOpCode#forCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="forCode(code:Int):Option[ackcord.gateway.GatewayOpCode]"></a><a id="forCode(Int):Option[GatewayOpCode]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayOpCode$.html#forCode(code:Int):Option[ackcord.gateway.GatewayOpCode]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name deprecated" title="Deprecated: (Since version 0.14.0) Prefer GatewayOpCode.withValueOpt">forCode</span><span class="params">(<span name="code">code: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">Get an opcode from a number if it exists.</p><div class="fullcomment"><div class="comment cmt"><p>Get an opcode from a number if it exists.
+</p></div><dl class="attributes block"> <dt>Annotations</dt><dd>
+                <span class="name">@deprecated</span>
+              
+        </dd><dt>Deprecated</dt><dd class="cmt"><p><i>(Since version 0.14.0)</i> Prefer GatewayOpCode.withValueOpt</p></dd></dl></div>
+    </li></ol>
+            </div>
         </div>
 
         <div id="inheritedMembers">
-        <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
-            </div><div class="parent" name="java.io.Serializable">
-              <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
+        <div class="parent" name="enumeratum.values.IntCirceEnum">
+              <h3>Inherited from <span class="extype" name="enumeratum.values.IntCirceEnum">IntCirceEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</h3>
+            </div><div class="parent" name="enumeratum.values.CirceValueEnum">
+              <h3>Inherited from <span class="extype" name="enumeratum.values.CirceValueEnum">CirceValueEnum</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>, <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</h3>
+            </div><div class="parent" name="enumeratum.values.IntEnum">
+              <h3>Inherited from <span class="extype" name="enumeratum.values.IntEnum">IntEnum</span>[<a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</h3>
+            </div><div class="parent" name="enumeratum.values.ValueEnum">
+              <h3>Inherited from <span class="extype" name="enumeratum.values.ValueEnum">ValueEnum</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a>, <a href="GatewayOpCode.html" class="extype" name="ackcord.gateway.GatewayOpCode">GatewayOpCode</a>]</h3>
             </div><div class="parent" name="scala.AnyRef">
               <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">

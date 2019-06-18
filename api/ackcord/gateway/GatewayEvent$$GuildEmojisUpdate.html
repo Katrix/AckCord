@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildEmojisUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">GuildEmojisUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -379,17 +379,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$GuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEvent">GuildEvent</a>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>, <a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 409.00 118.00" height="118pt" width="409pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 405,-114 405,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.GuildEmojisUpdate (this class)" xlink:href="#inheritance-diagram"><path d="M305.667,-49C305.667,-49 197.333,-49 197.333,-49 193.167,-49 189,-44.8333 189,-40.6667 189,-40.6667 189,-32.3333 189,-32.3333 189,-28.1667 193.167,-24 197.333,-24 197.333,-24 305.667,-24 305.667,-24 309.833,-24 314,-28.1667 314,-32.3333 314,-32.3333 314,-40.6667 314,-40.6667 314,-44.8333 309.833,-49 305.667,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="199.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="220.5" text-anchor="start">GuildEmojisUpdate</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.GuildEvent" xlink:href="GatewayEvent$$GuildEvent.html#inheritance-diagram"><path d="M186.667,-110C186.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 1.42109e-14,-105.833 1.42109e-14,-101.667 1.42109e-14,-101.667 1.42109e-14,-93.3333 1.42109e-14,-93.3333 1.42109e-14,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 186.667,-85 186.667,-85 190.833,-85 195,-89.1667 195,-93.3333 195,-93.3333 195,-101.667 195,-101.667 195,-105.833 190.833,-110 186.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31.5" text-anchor="start">GuildEvent[GuildEmojisUpdateData]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="GuildEmojisUpdate is a subtype of GuildEvent[GuildEmojisUpdateData]"><path d="M134.115,-82.4723C160.709,-72.2837 196.267,-58.6606 221.255,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="133.219,-80.1919 127.558,-84.9841 134.972,-84.7676 133.219,-80.1919" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M281.667,-110C281.667,-110 221.333,-110 221.333,-110 217.167,-110 213,-105.833 213,-101.667 213,-101.667 213,-93.3333 213,-93.3333 213,-89.1667 217.167,-85 221.333,-85 221.333,-85 281.667,-85 281.667,-85 285.833,-85 290,-89.1667 290,-93.3333 290,-93.3333 290,-101.667 290,-101.667 290,-105.833 285.833,-110 281.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="223.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="244.5" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="GuildEmojisUpdate is a subtype of Product"><path d="M251.5,-77.7603C251.5,-68.3675 251.5,-57.2882 251.5,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="249.05,-77.8435 251.5,-84.8435 253.95,-77.8435 249.05,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M392.667,-110C392.667,-110 316.333,-110 316.333,-110 312.167,-110 308,-105.833 308,-101.667 308,-101.667 308,-93.3333 308,-93.3333 308,-89.1667 312.167,-85 316.333,-85 316.333,-85 392.667,-85 392.667,-85 396.833,-85 401,-89.1667 401,-93.3333 401,-93.3333 401,-101.667 401,-101.667 401,-105.833 396.833,-110 392.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="318.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="339.5" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="GuildEmojisUpdate is a subtype of Serializable"><path d="M327.953,-81.2936C310.451,-71.268 287.878,-58.338 271.807,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="326.859,-83.4901 334.151,-84.8435 329.294,-79.2382 326.859,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -435,9 +425,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.GuildEmojisUpdate#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.GuildEmojisUpdateData]]):ackcord.gateway.GatewayEvent.GuildEmojisUpdate"></a><a id="&lt;init&gt;:GuildEmojisUpdate"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.GuildEmojisUpdateData]]):ackcord.gateway.GatewayEvent.GuildEmojisUpdate"></a><a id="&lt;init&gt;:GuildEmojisUpdate"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$GuildEmojisUpdate.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.GuildEmojisUpdateData]]):ackcord.gateway.GatewayEvent.GuildEmojisUpdate" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildEmojisUpdate.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.GuildEmojisUpdateData]]):ackcord.gateway.GatewayEvent.GuildEmojisUpdate" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -446,7 +436,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildEmojisUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>]]</span>)</span>
+        <span class="name">GuildEmojisUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$GuildEmojisUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdateData">GuildEmojisUpdateData</a>]]</span>)</span>
       </span>
       
       
@@ -743,6 +733,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.GuildEmojisUpdate#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildEmojisUpdate.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.GuildEmojisUpdate">GuildEmojisUpdate</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

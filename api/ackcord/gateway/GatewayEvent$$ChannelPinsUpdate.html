@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelPinsUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">ChannelPinsUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -380,17 +380,7 @@ channel. This is not sent when a pinned message is deleted.
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>, <a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 424.50 118.00" height="118pt" width="425pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 420.5,-114 420.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.ChannelPinsUpdate (this class)" xlink:href="#inheritance-diagram"><path d="M322.167,-49C322.167,-49 211.833,-49 211.833,-49 207.667,-49 203.5,-44.8333 203.5,-40.6667 203.5,-40.6667 203.5,-32.3333 203.5,-32.3333 203.5,-28.1667 207.667,-24 211.833,-24 211.833,-24 322.167,-24 322.167,-24 326.333,-24 330.5,-28.1667 330.5,-32.3333 330.5,-32.3333 330.5,-40.6667 330.5,-40.6667 330.5,-44.8333 326.333,-49 322.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="214" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="235" text-anchor="start">ChannelPinsUpdate</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.ChannelEvent" xlink:href="GatewayEvent$$ChannelEvent.html#inheritance-diagram"><path d="M201.667,-110C201.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 201.667,-85 201.667,-85 205.833,-85 210,-89.1667 210,-93.3333 210,-93.3333 210,-101.667 210,-101.667 210,-105.833 205.833,-110 201.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">ChannelEvent[ChannelPinsUpdateData]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ChannelPinsUpdate is a subtype of ChannelEvent[ChannelPinsUpdateData]"><path d="M143.517,-82.4723C171.492,-72.2837 208.898,-58.6606 235.184,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="142.359,-80.2865 136.62,-84.9841 144.036,-84.8907 142.359,-80.2865" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M297.167,-110C297.167,-110 236.833,-110 236.833,-110 232.667,-110 228.5,-105.833 228.5,-101.667 228.5,-101.667 228.5,-93.3333 228.5,-93.3333 228.5,-89.1667 232.667,-85 236.833,-85 236.833,-85 297.167,-85 297.167,-85 301.333,-85 305.5,-89.1667 305.5,-93.3333 305.5,-93.3333 305.5,-101.667 305.5,-101.667 305.5,-105.833 301.333,-110 297.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="239" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="260" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="ChannelPinsUpdate is a subtype of Product"><path d="M267,-77.7603C267,-68.3675 267,-57.2882 267,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="264.55,-77.8435 267,-84.8435 269.45,-77.8435 264.55,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M408.167,-110C408.167,-110 331.833,-110 331.833,-110 327.667,-110 323.5,-105.833 323.5,-101.667 323.5,-101.667 323.5,-93.3333 323.5,-93.3333 323.5,-89.1667 327.667,-85 331.833,-85 331.833,-85 408.167,-85 408.167,-85 412.333,-85 416.5,-89.1667 416.5,-93.3333 416.5,-93.3333 416.5,-101.667 416.5,-101.667 416.5,-105.833 412.333,-110 408.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="334" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="355" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="ChannelPinsUpdate is a subtype of Serializable"><path d="M343.453,-81.2936C325.951,-71.268 303.378,-58.338 287.307,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="342.359,-83.4901 349.651,-84.8435 344.794,-79.2382 342.359,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -436,9 +426,9 @@ channel. This is not sent when a pinned message is deleted.
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.ChannelPinsUpdate#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.ChannelPinsUpdateData]]):ackcord.gateway.GatewayEvent.ChannelPinsUpdate"></a><a id="&lt;init&gt;:ChannelPinsUpdate"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.ChannelPinsUpdateData]]):ackcord.gateway.GatewayEvent.ChannelPinsUpdate"></a><a id="&lt;init&gt;:ChannelPinsUpdate"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdate.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.ChannelPinsUpdateData]]):ackcord.gateway.GatewayEvent.ChannelPinsUpdate" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdate.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.ChannelPinsUpdateData]]):ackcord.gateway.GatewayEvent.ChannelPinsUpdate" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -447,7 +437,7 @@ channel. This is not sent when a pinned message is deleted.
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelPinsUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>]]</span>)</span>
+        <span class="name">ChannelPinsUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$ChannelPinsUpdateData.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdateData">ChannelPinsUpdateData</a>]]</span>)</span>
       </span>
       
       
@@ -744,6 +734,23 @@ channel. This is not sent when a pinned message is deleted.
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.ChannelPinsUpdate#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelPinsUpdate.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.ChannelPinsUpdate">ChannelPinsUpdate</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

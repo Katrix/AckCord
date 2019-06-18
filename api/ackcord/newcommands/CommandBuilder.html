@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -122,7 +122,7 @@
                         <a class="class" href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user."></a>
                         <a href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user.">CommandDescription</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="CommandError$.html" title=""></a>
                         <a class="class" href="CommandError.html" title="Represents an error encountered when executing an command."></a>
                         <a href="CommandError.html" title="Represents an error encountered when executing an command.">CommandError</a>
                       </li><li class="current-entities indented2">
@@ -138,13 +138,17 @@
                         <a class="trait" href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type."></a>
                         <a href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
                       </li><li class="current-entities indented2">
-                        <a class="object" href="Context$.html" title=""></a>
-                        <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
-                        <a href="Context.html" title="Represents a place a command can be used.">Context</a>
-                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="DeriveMessageParser.html" title=""></a>
                         <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command"></a>
+                        <a href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command">GuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildMemberCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildMemberCommandMessage.html" title=""></a>
+                        <a href="GuildMemberCommandMessage.html" title="">GuildMemberCommandMessage</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="MessageParser$.html" title=""></a>
                         <a class="trait" href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages."></a>
@@ -153,6 +157,18 @@
                         <span class="separator"></span>
                         <a class="trait" href="MessageParserInstances.html" title=""></a>
                         <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="UserCommandMessage$.html" title=""></a>
+                        <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
+                        <a href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user">UserCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="VoiceGuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="VoiceGuildCommandMessage.html" title=""></a>
+                        <a href="VoiceGuildCommandMessage.html" title="">VoiceGuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WrappedCommandMessage.html" title=""></a>
+                        <a href="WrappedCommandMessage.html" title="">WrappedCommandMessage</a>
                       </li>
               </ul>
             </div>
@@ -189,17 +205,7 @@ creating commands.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandBuilder.F">F</span>, [β$0$]<a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.CommandBuilder.F">F</span>, <span class="extype" name="ackcord.newcommands.&lt;refinement&gt;.Λ$.β$0$">β$0$</span>], <span class="extype" name="ackcord.newcommands.CommandBuilder.M">M</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 306.00 118.00" height="118pt" width="306pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 302,-114 302,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="ackcord.newcommands.CommandBuilder (this trait)" xlink:href="#inheritance-diagram"><path d="M217.167,-49C217.167,-49 80.8333,-49 80.8333,-49 76.6667,-49 72.5,-44.8333 72.5,-40.6667 72.5,-40.6667 72.5,-32.3333 72.5,-32.3333 72.5,-28.1667 76.6667,-24 80.8333,-24 80.8333,-24 217.167,-24 217.167,-24 221.333,-24 225.5,-28.1667 225.5,-32.3333 225.5,-32.3333 225.5,-40.6667 225.5,-40.6667 225.5,-44.8333 221.333,-49 217.167,-49" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-43.5" x="83" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="104" text-anchor="start">CommandBuilder[F, M, A]</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.newcommands.CommandFunction" xlink:href="CommandFunction.html#inheritance-diagram"><path d="M289.667,-110C289.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 289.667,-85 289.667,-85 293.833,-85 298,-89.1667 298,-93.3333 298,-93.3333 298,-101.667 298,-101.667 298,-105.833 293.833,-110 289.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">CommandFunction[F, [β$0$]CommandMessage[F, β$0$], M]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="CommandBuilder[F, M, A] is a subtype of CommandFunction[F, [β$0$]CommandMessage[F, β$0$], M]"><path d="M149,-77.7603C149,-68.3675 149,-57.2882 149,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="146.55,-77.8435 149,-84.8435 151.45,-77.8435 146.55,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">

@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -85,10 +85,10 @@
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../../index.html" class="extype" name="_root_">root</a></dd></dl></div>
-    </li><li name="ackcord.requests" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="requests"></a><a id="requests:requests"></a>
+    </li><li name="ackcord.newcommands" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="newcommands"></a><a id="newcommands:newcommands"></a>
       <span class="permalink">
-      <a href="../ackcord/index.html#requests" title="Permalink">
+      <a href="../ackcord/index.html#newcommands" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -97,113 +97,114 @@
         <span class="kind">package</span>
       </span>
       <span class="symbol">
-        <a title="" href="index.html"><span class="name">requests</span></a>
+        <a title="" href="index.html"><span class="name">newcommands</span></a>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="ackcord">ackcord</a></dd></dl></div>
-    </li><li name="ackcord.requests.Routes" visbl="pub" class="indented3 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="Routes"></a><a id="Routes:Routes"></a>
-      <span class="permalink">
-      <a href="../../ackcord/requests/index.html#Routes" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier"></span>
-        <span class="kind">object</span>
-      </span>
-      <span class="symbol">
-        <a title="All the routes used by AckCord" href="Routes$.html"><span class="name">Routes</span></a>
-      </span>
-      
-      <p class="shortcomment cmt">All the routes used by AckCord
-</p><div class="fullcomment"><div class="comment cmt"><p>All the routes used by AckCord
-</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="index.html" class="extype" name="ackcord.requests">requests</a></dd></dl></div>
-    </li><li class="current-entities indented3">
+    </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$ConcatParameter.html" title=""></a>
-                        <a href="Routes$$ConcatParameter.html" title="">ConcatParameter</a>
-                      </li><li class="current-entities indented3">
+                        <a class="trait" href="Command.html" title="A constructed command execution."></a>
+                        <a href="Command.html" title="A constructed command execution.">Command</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandBuilder$.html" title=""></a>
+                        <a class="trait" href="CommandBuilder.html" title="A CommandFunction from a command message to an output."></a>
+                        <a href="CommandBuilder.html" title="A CommandFunction from a command message to an output.">CommandBuilder</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$MajorParameter.html" title=""></a>
-                        <a href="Routes$$MajorParameter.html" title="">MajorParameter</a>
-                      </li><li class="current-entities indented3">
+                        <a class="class" href="CommandConnector.html" title=""></a>
+                        <a href="CommandConnector.html" title="">CommandConnector</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$MinorParameter.html" title=""></a>
-                        <a href="Routes$$MinorParameter.html" title="">MinorParameter</a>
-                      </li><li class="current-entities indented3">
+                        <a class="class" href="CommandController.html" title="The base command controller that you will place your commands in."></a>
+                        <a href="CommandController.html" title="The base command controller that you will place your commands in.">CommandController</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$QueryParameter.html" title=""></a>
-                        <a href="Routes$$QueryParameter.html" title="">QueryParameter</a>
-                      </li><li class="current-entities indented3">
+                        <a class="class" href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user."></a>
+                        <a href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user.">CommandDescription</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandError$.html" title=""></a>
+                        <a class="class" href="CommandError.html" title="Represents an error encountered when executing an command."></a>
+                        <a href="CommandError.html" title="Represents an error encountered when executing an command.">CommandError</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandFunction$.html" title=""></a>
+                        <a class="trait" href="CommandFunction.html" title="A mapping over command builders."></a>
+                        <a href="CommandFunction.html" title="A mapping over command builders.">CommandFunction</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandMessage$.html" title=""></a>
+                        <a class="trait" href="CommandMessage.html" title="A message sent with an invocation of a command."></a>
+                        <a href="CommandMessage.html" title="A message sent with an invocation of a command.">CommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="CommandTransformer$.html" title=""></a>
+                        <a class="trait" href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type."></a>
+                        <a href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$QueryRoute.html" title=""></a>
-                        <a href="Routes$$QueryRoute.html" title="">QueryRoute</a>
-                      </li><li class="current-entities indented3">
+                        <a class="trait" href="DeriveMessageParser.html" title=""></a>
+                        <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command"></a>
+                        <a href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command">GuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildMemberCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildMemberCommandMessage.html" title=""></a>
+                        <a href="GuildMemberCommandMessage.html" title="">GuildMemberCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="MessageParser$.html" title=""></a>
+                        <a class="trait" href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages."></a>
+                        <a href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages.">MessageParser</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="class" href="Routes$$QueryRouteFunction.html" title=""></a>
-                        <a href="Routes$$QueryRouteFunction.html" title="">QueryRouteFunction</a>
-                      </li><li class="current-entities indented3">
+                        <a class="trait" href="MessageParserInstances.html" title=""></a>
+                        <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="UserCommandMessage$.html" title=""></a>
+                        <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
+                        <a href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user">UserCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="" title=""></a>
+                        <a class="trait" href="VoiceGuildCommandMessage.html" title=""></a>
+                        <a href="VoiceGuildCommandMessage.html" title="">VoiceGuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
-                        <a class="trait" href="" title=""></a>
-                        <a href="" title="">RequestRouteBuilder</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="class" href="Routes$$Route.html" title=""></a>
-                        <a href="Routes$$Route.html" title="">Route</a>
-                      </li><li class="current-entities indented3">
-                        <span class="separator"></span>
-                        <a class="class" href="Routes$$RouteFunction.html" title=""></a>
-                        <a href="Routes$$RouteFunction.html" title="">RouteFunction</a>
+                        <a class="class" href="WrappedCommandMessage.html" title=""></a>
+                        <a href="WrappedCommandMessage.html" title="">WrappedCommandMessage</a>
                       </li>
               </ul>
             </div>
           </div>
           <div id="content">
-            <body class="trait type">
+            <body class="object value">
       <div id="definition">
-        <div class="big-circle trait">t</div>
-        <p id="owner"><a href="../index.html" class="extype" name="ackcord">ackcord</a>.<a href="index.html" class="extype" name="ackcord.requests">requests</a>.<a href="Routes$.html" class="extype" name="ackcord.requests.Routes">Routes</a></p>
-        <h1>RequestRouteBuilder<span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html" title="Permalink">
+        <a href="VoiceGuildCommandMessage.html" title="See companion trait"><div class="big-circle object-companion-trait">o</div></a>
+        <p id="owner"><a href="../index.html" class="extype" name="ackcord">ackcord</a>.<a href="index.html" class="extype" name="ackcord.newcommands">newcommands</a></p>
+        <h1><a href="VoiceGuildCommandMessage.html" title="See companion trait">VoiceGuildCommandMessage</a><span class="permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span></h1>
-        <h3><span class="morelinks"></span></h3>
+        <h3><span class="morelinks"><div>
+            Companion <a href="VoiceGuildCommandMessage.html" title="See companion trait">trait VoiceGuildCommandMessage</a>
+          </div></span></h3>
       </div>
 
       <h4 id="signature" class="signature">
       <span class="modifier_kind">
         <span class="modifier"></span>
-        <span class="kind">trait</span>
+        <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <span class="name">RequestRouteBuilder</span><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">VoiceGuildCommandMessage</span>
       </span>
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/requests/src/main/scala/ackcord/requests/Routes.scala" target="_blank">Routes.scala</a></dd></dl><div class="toggleContainer block">
+          <div id="comment" class="fullcommenttop"><dl class="attributes block"> <dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/commandsNew/src/main/scala/ackcord/newcommands/commandBuilder.scala" target="_blank">commandBuilder.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block">
-            <span class="toggle">
-              Known Subclasses
-            </span>
-            <div class="subClasses hiddenContent"><a href="Routes$$QueryRoute.html" class="extype" name="ackcord.requests.Routes.QueryRoute">QueryRoute</a>, <a href="Routes$$Route.html" class="extype" name="ackcord.requests.Routes.Route">Route</a></div>
-          </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 196.00 155.00" height="155pt" width="196pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 151)" class="graph" id="graph0"><polygon points="-4,4 -4,-151 192,-151 192,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this trait" id="graph1_0"><g id="a_this trait|graph1_0"><a xlink:title="ackcord.requests.Routes.RequestRouteBuilder (this trait)" xlink:href="#inheritance-diagram"><path d="M155.167,-86C155.167,-86 38.8333,-86 38.8333,-86 34.6667,-86 30.5,-81.8333 30.5,-77.6667 30.5,-77.6667 30.5,-69.3333 30.5,-69.3333 30.5,-65.1667 34.6667,-61 38.8333,-61 38.8333,-61 155.167,-61 155.167,-61 159.333,-61 163.5,-65.1667 163.5,-69.3333 163.5,-69.3333 163.5,-77.6667 163.5,-77.6667 163.5,-81.8333 159.333,-86 155.167,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="41" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="62" text-anchor="start">RequestRouteBuilder</text></a></g></g><!-- node1 --><g class="node class" id="graph1_1"><g id="a_class|graph1_1"><a xlink:title="ackcord.requests.Routes.QueryRoute" xlink:href="Routes$$QueryRoute.html#inheritance-diagram"><path d="M85.6667,-25C85.6667,-25 8.33333,-25 8.33333,-25 4.16667,-25 -7.10543e-15,-20.8333 -7.10543e-15,-16.6667 -7.10543e-15,-16.6667 -7.10543e-15,-8.33333 -7.10543e-15,-8.33333 -7.10543e-15,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 85.6667,-0 85.6667,-0 89.8333,-0 94,-4.16667 94,-8.33333 94,-8.33333 94,-16.6667 94,-16.6667 94,-20.8333 89.8333,-25 85.6667,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-19.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31" text-anchor="start">QueryRoute</text></a></g></g><!-- node0&#45;&gt;node1 --><g class="edge inheritance" id="graph1_0_1"><g id="a_inheritance|graph1_0_1"><a xlink:title="QueryRoute is a subtype of RequestRouteBuilder"><path d="M82.5216,-55.4154C74.2832,-45.6942 64.1802,-33.7727 56.8579,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="80.7268,-57.0872 87.1216,-60.8435 84.465,-53.9192 80.7268,-57.0872" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node class" id="graph1_2"><g id="a_class|graph1_2"><a xlink:title="ackcord.requests.Routes.Route" xlink:href="Routes$$Route.html#inheritance-diagram"><path d="M173.167,-25C173.167,-25 120.833,-25 120.833,-25 116.667,-25 112.5,-20.8333 112.5,-16.6667 112.5,-16.6667 112.5,-8.33333 112.5,-8.33333 112.5,-4.16667 116.667,-0 120.833,-0 120.833,-0 173.167,-0 173.167,-0 177.333,-0 181.5,-4.16667 181.5,-8.33333 181.5,-8.33333 181.5,-16.6667 181.5,-16.6667 181.5,-20.8333 177.333,-25 173.167,-25" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-19.5" x="123" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="144" text-anchor="start">Route</text></a></g></g><!-- node0&#45;&gt;node2 --><g class="edge inheritance" id="graph1_0_2"><g id="a_inheritance|graph1_0_2"><a xlink:title="Route is a subtype of RequestRouteBuilder"><path d="M111.478,-55.4154C119.717,-45.6942 129.82,-33.7727 137.142,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="109.535,-53.9192 106.878,-60.8435 113.273,-57.0872 109.535,-53.9192" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node class" id="graph1_3"><g id="a_class|graph1_3"><a xlink:title="scala.AnyRef"><path d="M125.167,-147C125.167,-147 68.8333,-147 68.8333,-147 64.6667,-147 60.5,-142.833 60.5,-138.667 60.5,-138.667 60.5,-130.333 60.5,-130.333 60.5,-126.167 64.6667,-122 68.8333,-122 68.8333,-122 125.167,-122 125.167,-122 129.333,-122 133.5,-126.167 133.5,-130.333 133.5,-130.333 133.5,-138.667 133.5,-138.667 133.5,-142.833 129.333,-147 125.167,-147" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-141.5" x="71" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-132.1" x="92" text-anchor="start">AnyRef</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="RequestRouteBuilder is a subtype of AnyRef"><path d="M97,-114.76C97,-105.367 97,-94.2882 97,-86.1323" stroke="#d4d4d4" fill="none"></path><polygon points="94.5501,-114.843 97,-121.843 99.4501,-114.844 94.5501,-114.843" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -228,7 +229,7 @@
                   <span class="filtertype">Inherited<br />
                   </span>
                   <ol id="linearization">
-                    <li class="in" name="ackcord.requests.Routes.RequestRouteBuilder"><span>RequestRouteBuilder</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                    <li class="in" name="ackcord.newcommands.VoiceGuildCommandMessage"><span>VoiceGuildCommandMessage</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
                   </ol>
                 </div><div class="ancestors">
               <span class="filtertype"></span>
@@ -248,52 +249,52 @@
         <div id="allMembers">
         
 
-        
-
-        <div class="values members">
-              <h3>Abstract Value Members</h3>
-              <ol><li name="ackcord.requests.Routes.RequestRouteBuilder#applied" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="applied:akka.http.scaladsl.model.Uri"></a><a id="applied:Uri"></a>
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="ackcord.newcommands.VoiceGuildCommandMessage.Default" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="Default[F[_],A]extendsWrappedCommandMessage[F,A]withVoiceGuildCommandMessage[F,A]withProductwithSerializable"></a><a id="Default[F[_],A]:Default[F,A]"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#applied:akka.http.scaladsl.model.Uri" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#Default[F[_],A]extendsWrappedCommandMessage[F,A]withVoiceGuildCommandMessage[F,A]withProductwithSerializable" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">applied</span><span class="result">: <a href="https://doc.akka.io/api/akka-http/10.1.8/akka/http/scaladsl/model/Uri.html#akka.http.scaladsl.model.Uri" class="extype" name="akka.http.scaladsl.model.Uri">Uri</a></span>
+        <a title="" href="VoiceGuildCommandMessage$$Default.html"><span class="name">Default</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="tChannel">tChannel: <a href="../data/TGuildChannel.html" class="extype" name="ackcord.data.TGuildChannel">TGuildChannel</a></span>, <span name="guild">guild: <a href="../data/Guild.html" class="extype" name="ackcord.data.Guild">Guild</a></span>, <span name="user">user: <a href="../data/User.html" class="extype" name="ackcord.data.User">User</a></span>, <span name="voiceChannel">voiceChannel: <a href="../data/VGuildChannel.html" class="extype" name="ackcord.data.VGuildChannel">VGuildChannel</a></span>, <span name="m">m: <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.A">A</span>]</span>)</span><span class="result"> extends <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.A">A</span>] with <a href="VoiceGuildCommandMessage.html" class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage">VoiceGuildCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.Default.A">A</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       
       
-    </li><li name="ackcord.requests.Routes.RequestRouteBuilder#rawRoute" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="rawRoute:String"></a>
+    </li><li name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WithGuildMember[F[_],A]extendsWrappedCommandMessage[F,A]withVoiceGuildCommandMessage[F,A]withGuildMemberCommandMessage[F,A]withProductwithSerializable"></a><a id="WithGuildMember[F[_],A]:WithGuildMember[F,A]"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#rawRoute:String" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#WithGuildMember[F[_],A]extendsWrappedCommandMessage[F,A]withVoiceGuildCommandMessage[F,A]withGuildMemberCommandMessage[F,A]withProductwithSerializable" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
       <span class="modifier_kind">
-        <span class="modifier">abstract </span>
-        <span class="kind">def</span>
+        <span class="modifier"></span>
+        <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">rawRoute</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
+        <a title="" href="VoiceGuildCommandMessage$$WithGuildMember.html"><span class="name">WithGuildMember</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="params">(<span name="tChannel">tChannel: <a href="../data/TGuildChannel.html" class="extype" name="ackcord.data.TGuildChannel">TGuildChannel</a></span>, <span name="guild">guild: <a href="../data/Guild.html" class="extype" name="ackcord.data.Guild">Guild</a></span>, <span name="user">user: <a href="../data/User.html" class="extype" name="ackcord.data.User">User</a></span>, <span name="guildMember">guildMember: <a href="../data/GuildMember.html" class="extype" name="ackcord.data.GuildMember">GuildMember</a></span>, <span name="voiceChannel">voiceChannel: <a href="../data/VGuildChannel.html" class="extype" name="ackcord.data.VGuildChannel">VGuildChannel</a></span>, <span name="m">m: <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.A">A</span>]</span>)</span><span class="result"> extends <a href="WrappedCommandMessage.html" class="extype" name="ackcord.newcommands.WrappedCommandMessage">WrappedCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.A">A</span>] with <a href="VoiceGuildCommandMessage.html" class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage">VoiceGuildCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.A">A</span>] with <a href="GuildMemberCommandMessage.html" class="extype" name="ackcord.newcommands.GuildMemberCommandMessage">GuildMemberCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.WithGuildMember.A">A</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       
       
     </li></ol>
             </div>
 
+        
+
         <div class="values members">
-              <h3>Concrete Value Members</h3>
+              <h3>Value Members</h3>
               <ol>
                 <li name="scala.AnyRef#!=" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="!=(x$1:Any):Boolean"></a><a id="!=(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#!=(x$1:Any):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#!=(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -309,7 +310,7 @@
     </li><li name="scala.AnyRef###" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="##():Int"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html###():Int" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html###():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -325,7 +326,7 @@
     </li><li name="scala.AnyRef#==" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="==(x$1:Any):Boolean"></a><a id="==(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#==(x$1:Any):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#==(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -341,7 +342,7 @@
     </li><li name="scala.Any#asInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="asInstanceOf[T0]:T0"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#asInstanceOf[T0]:T0" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#asInstanceOf[T0]:T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -357,7 +358,7 @@
     </li><li name="scala.AnyRef#clone" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="clone():Object"></a><a id="clone():AnyRef"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#clone():Object" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#clone():Object" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -381,7 +382,7 @@
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="eq(x$1:AnyRef):Boolean"></a><a id="eq(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#eq(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#eq(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -397,7 +398,7 @@
     </li><li name="scala.AnyRef#equals" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="equals(x$1:Any):Boolean"></a><a id="equals(Any):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#equals(x$1:Any):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#equals(x$1:Any):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -413,7 +414,7 @@
     </li><li name="scala.AnyRef#finalize" visbl="prt" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="finalize():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#finalize():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#finalize():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -435,7 +436,7 @@
     </li><li name="scala.AnyRef#getClass" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="getClass():Class[_]"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#getClass():Class[_]" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#getClass():Class[_]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -454,7 +455,7 @@
     </li><li name="scala.AnyRef#hashCode" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="hashCode():Int"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#hashCode():Int" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#hashCode():Int" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -473,7 +474,7 @@
     </li><li name="scala.Any#isInstanceOf" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="isInstanceOf[T0]:Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#isInstanceOf[T0]:Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#isInstanceOf[T0]:Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -489,7 +490,7 @@
     </li><li name="scala.AnyRef#ne" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ne(x$1:AnyRef):Boolean"></a><a id="ne(AnyRef):Boolean"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#ne(x$1:AnyRef):Boolean" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#ne(x$1:AnyRef):Boolean" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -505,7 +506,7 @@
     </li><li name="scala.AnyRef#notify" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notify():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#notify():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#notify():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -524,7 +525,7 @@
     </li><li name="scala.AnyRef#notifyAll" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="notifyAll():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#notifyAll():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#notifyAll():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -543,7 +544,7 @@
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#synchronized[T0](x$1:=&gt;T0):T0" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -559,7 +560,7 @@
     </li><li name="scala.AnyRef#toString" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="toString():String"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#toString():String" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#toString():String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -575,7 +576,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait():Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#wait():Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#wait():Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -597,7 +598,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long,x$2:Int):Unit"></a><a id="wait(Long,Int):Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#wait(x$1:Long,x$2:Int):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -619,7 +620,7 @@
     </li><li name="scala.AnyRef#wait" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="wait(x$1:Long):Unit"></a><a id="wait(Long):Unit"></a>
       <span class="permalink">
-      <a href="../../ackcord/requests/Routes$$RequestRouteBuilder.html#wait(x$1:Long):Unit" title="Permalink">
+      <a href="../../ackcord/newcommands/VoiceGuildCommandMessage$.html#wait(x$1:Long):Unit" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>

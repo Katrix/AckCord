@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildBanAdd</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ComplexGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ComplexGuildEvent">ComplexGuildEvent</a>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>, (<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>, <a href="../data/raw/RawBan.html" class="extype" name="ackcord.data.raw.RawBan">RawBan</a>)] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">GuildBanAdd</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$ComplexGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ComplexGuildEvent">ComplexGuildEvent</a>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>, (<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>, <a href="../data/raw/RawBan.html" class="extype" name="ackcord.data.raw.RawBan">RawBan</a>)] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -378,17 +378,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$ComplexGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ComplexGuildEvent">ComplexGuildEvent</a>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>, (<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>, <a href="../data/raw/RawBan.html" class="extype" name="ackcord.data.raw.RawBan">RawBan</a>)], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>, (<a href="../data/index.html#GuildId=ackcord.data.package.SnowflakeType[ackcord.data.Guild]" class="extmbr" name="ackcord.data.GuildId">GuildId</a>, <a href="../data/raw/RawBan.html" class="extype" name="ackcord.data.raw.RawBan">RawBan</a>)], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 494.50 118.00" height="118pt" width="495pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 490.5,-114 490.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.GuildBanAdd (this class)" xlink:href="#inheritance-diagram"><path d="M378.167,-49C378.167,-49 295.833,-49 295.833,-49 291.667,-49 287.5,-44.8333 287.5,-40.6667 287.5,-40.6667 287.5,-32.3333 287.5,-32.3333 287.5,-28.1667 291.667,-24 295.833,-24 295.833,-24 378.167,-24 378.167,-24 382.333,-24 386.5,-28.1667 386.5,-32.3333 386.5,-32.3333 386.5,-40.6667 386.5,-40.6667 386.5,-44.8333 382.333,-49 378.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="298" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="319" text-anchor="start">GuildBanAdd</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.ComplexGuildEvent" xlink:href="GatewayEvent$$ComplexGuildEvent.html#inheritance-diagram"><path d="M271.667,-110C271.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 271.667,-85 271.667,-85 275.833,-85 280,-89.1667 280,-93.3333 280,-93.3333 280,-101.667 280,-101.667 280,-105.833 275.833,-110 271.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">ComplexGuildEvent[UserWithGuildId, (GuildId, RawBan)]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="GuildBanAdd is a subtype of ComplexGuildEvent[UserWithGuildId, (GuildId, RawBan)]"><path d="M185.546,-82.8592C219.699,-72.6307 265.939,-58.7823 298.31,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="184.454,-80.6288 178.451,-84.9841 185.86,-85.3228 184.454,-80.6288" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="scala.Product"><path d="M367.167,-110C367.167,-110 306.833,-110 306.833,-110 302.667,-110 298.5,-105.833 298.5,-101.667 298.5,-101.667 298.5,-93.3333 298.5,-93.3333 298.5,-89.1667 302.667,-85 306.833,-85 306.833,-85 367.167,-85 367.167,-85 371.333,-85 375.5,-89.1667 375.5,-93.3333 375.5,-93.3333 375.5,-101.667 375.5,-101.667 375.5,-105.833 371.333,-110 367.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="309" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="330" text-anchor="start">Product</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="GuildBanAdd is a subtype of Product"><path d="M337,-77.7603C337,-68.3675 337,-57.2882 337,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="334.55,-77.8435 337,-84.8435 339.45,-77.8435 334.55,-77.8435" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Serializable"><path d="M478.167,-110C478.167,-110 401.833,-110 401.833,-110 397.667,-110 393.5,-105.833 393.5,-101.667 393.5,-101.667 393.5,-93.3333 393.5,-93.3333 393.5,-89.1667 397.667,-85 401.833,-85 401.833,-85 478.167,-85 478.167,-85 482.333,-85 486.5,-89.1667 486.5,-93.3333 486.5,-93.3333 486.5,-101.667 486.5,-101.667 486.5,-105.833 482.333,-110 478.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="404" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="425" text-anchor="start">Serializable</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="GuildBanAdd is a subtype of Serializable"><path d="M413.453,-81.2936C395.951,-71.268 373.378,-58.338 357.307,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="412.359,-83.4901 419.651,-84.8435 414.794,-79.2382 412.359,-83.4901" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -434,9 +424,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.GuildBanAdd#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.UserWithGuildId]]):ackcord.gateway.GatewayEvent.GuildBanAdd"></a><a id="&lt;init&gt;:GuildBanAdd"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.UserWithGuildId]]):ackcord.gateway.GatewayEvent.GuildBanAdd"></a><a id="&lt;init&gt;:GuildBanAdd"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$GuildBanAdd.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.UserWithGuildId]]):ackcord.gateway.GatewayEvent.GuildBanAdd" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildBanAdd.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.gateway.GatewayEvent.UserWithGuildId]]):ackcord.gateway.GatewayEvent.GuildBanAdd" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,7 +435,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">GuildBanAdd</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>]]</span>)</span>
+        <span class="name">GuildBanAdd</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="GatewayEvent$$UserWithGuildId.html" class="extype" name="ackcord.gateway.GatewayEvent.UserWithGuildId">UserWithGuildId</a>]]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>The banned user with a guildId of what guild the user was banned from.</p></dd></dl></div>
@@ -741,6 +731,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.GuildBanAdd#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$GuildBanAdd.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.GuildBanAdd">GuildBanAdd</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

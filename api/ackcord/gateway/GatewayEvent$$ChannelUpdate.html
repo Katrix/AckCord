@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -368,7 +368,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>] with <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">ChannelUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>]]</span>)</span><span class="result"> extends <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>] with <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -378,17 +378,7 @@
             Linear Supertypes
           </span>
           <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="GatewayEvent$$ChannelEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.ChannelEvent">ChannelEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>], <a href="GatewayEvent$$OptGuildEvent.html" class="extype" name="ackcord.gateway.GatewayEvent.OptGuildEvent">OptGuildEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>], <a href="SimpleGatewayEvent.html" class="extype" name="ackcord.gateway.SimpleGatewayEvent">SimpleGatewayEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>], <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>, <a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
-        </div><div class="toggleContainer block diagram-container" id="inheritance-diagram-container">
-                <span class="toggle diagram-link">
-                  Type Hierarchy
-                </span>
-                <div class="diagram" id="inheritance-diagram"><svg class="class-diagram" id="graph1" viewBox="0.00 0.00 554.50 118.00" height="118pt" width="555pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 114)" class="graph" id="graph0"><polygon points="-4,4 -4,-114 550.5,-114 550.5,4 -4,4" stroke="none" fill="white"></polygon><g class="cluster" id="clust1"></g><g class="cluster" id="clust2"></g><!-- node0 --><g class="node this class" id="graph1_0"><g id="a_this class|graph1_0"><a xlink:title="ackcord.gateway.GatewayEvent.ChannelUpdate (this class)" xlink:href="#inheritance-diagram"><path d="M374.167,-49C374.167,-49 281.833,-49 281.833,-49 277.667,-49 273.5,-44.8333 273.5,-40.6667 273.5,-40.6667 273.5,-32.3333 273.5,-32.3333 273.5,-28.1667 277.667,-24 281.833,-24 281.833,-24 374.167,-24 374.167,-24 378.333,-24 382.5,-28.1667 382.5,-32.3333 382.5,-32.3333 382.5,-40.6667 382.5,-40.6667 382.5,-44.8333 378.333,-49 374.167,-49" stroke="#418565" fill="#418565"></path><image xlink:href="../../lib/class_diagram.png" y="-43.5" x="284" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-34.1" x="305" text-anchor="start">ChannelUpdate</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.gateway.GatewayEvent.OptGuildEvent" xlink:href="GatewayEvent$$OptGuildEvent.html#inheritance-diagram"><path d="M153.667,-110C153.667,-110 8.33333,-110 8.33333,-110 4.16667,-110 0,-105.833 0,-101.667 0,-101.667 0,-93.3333 0,-93.3333 0,-89.1667 4.16667,-85 8.33333,-85 8.33333,-85 153.667,-85 153.667,-85 157.833,-85 162,-89.1667 162,-93.3333 162,-93.3333 162,-101.667 162,-101.667 162,-105.833 157.833,-110 153.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="10" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="31" text-anchor="start">OptGuildEvent[RawChannel]</text></a></g></g><!-- node1&#45;&gt;node0 --><g class="edge inheritance" id="graph1_1_0"><g id="a_inheritance|graph1_1_0"><a xlink:title="ChannelUpdate is a subtype of OptGuildEvent[RawChannel]"><path d="M136.235,-83.3062C179.226,-73.0372 238.309,-58.9243 279.49,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="135.45,-80.9748 129.21,-84.9841 136.588,-85.7407 135.45,-80.9748" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="ackcord.gateway.GatewayEvent.ChannelEvent" xlink:href="GatewayEvent$$ChannelEvent.html#inheritance-diagram"><path d="M331.667,-110C331.667,-110 188.333,-110 188.333,-110 184.167,-110 180,-105.833 180,-101.667 180,-101.667 180,-93.3333 180,-93.3333 180,-89.1667 184.167,-85 188.333,-85 188.333,-85 331.667,-85 331.667,-85 335.833,-85 340,-89.1667 340,-93.3333 340,-93.3333 340,-101.667 340,-101.667 340,-105.833 335.833,-110 331.667,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="190" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="211" text-anchor="start">ChannelEvent[RawChannel]</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="ChannelUpdate is a subtype of ChannelEvent[RawChannel]"><path d="M278.754,-80.2278C290.121,-70.3652 304.356,-58.0149 314.593,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="277.116,-78.4054 273.435,-84.8435 280.328,-82.1065 277.116,-78.4054" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="scala.Product"><path d="M427.167,-110C427.167,-110 366.833,-110 366.833,-110 362.667,-110 358.5,-105.833 358.5,-101.667 358.5,-101.667 358.5,-93.3333 358.5,-93.3333 358.5,-89.1667 362.667,-85 366.833,-85 366.833,-85 427.167,-85 427.167,-85 431.333,-85 435.5,-89.1667 435.5,-93.3333 435.5,-93.3333 435.5,-101.667 435.5,-101.667 435.5,-105.833 431.333,-110 427.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="369" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="390" text-anchor="start">Product</text></a></g></g><!-- node3&#45;&gt;node0 --><g class="edge inheritance" id="graph1_3_0"><g id="a_inheritance|graph1_3_0"><a xlink:title="ChannelUpdate is a subtype of Product"><path d="M377.97,-80.2278C366.436,-70.3652 351.992,-58.0149 341.604,-49.1323" stroke="#d4d4d4" fill="none"></path><polygon points="376.455,-82.1564 383.368,-84.8435 379.64,-78.4322 376.455,-82.1564" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node trait" id="graph1_4"><g id="a_trait|graph1_4"><a xlink:title="scala.Serializable"><path d="M538.167,-110C538.167,-110 461.833,-110 461.833,-110 457.667,-110 453.5,-105.833 453.5,-101.667 453.5,-101.667 453.5,-93.3333 453.5,-93.3333 453.5,-89.1667 457.667,-85 461.833,-85 461.833,-85 538.167,-85 538.167,-85 542.333,-85 546.5,-89.1667 546.5,-93.3333 546.5,-93.3333 546.5,-101.667 546.5,-101.667 546.5,-105.833 542.333,-110 538.167,-110" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-104.5" x="464" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-95.1" x="485" text-anchor="start">Serializable</text></a></g></g><!-- node4&#45;&gt;node0 --><g class="edge inheritance" id="graph1_4_0"><g id="a_inheritance|graph1_4_0"><a xlink:title="ChannelUpdate is a subtype of Serializable"><path d="M459.483,-82.6017C429.74,-72.3992 389.807,-58.7012 361.78,-49.0875" stroke="#d4d4d4" fill="none"></path><polygon points="459.012,-85.0303 466.428,-84.9841 460.602,-80.3954 459.012,-85.0303" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+        </div></div>
         
 
       <div id="mbrsel">
@@ -434,9 +424,9 @@
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.gateway.GatewayEvent.ChannelUpdate#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.data.raw.RawChannel]]):ackcord.gateway.GatewayEvent.ChannelUpdate"></a><a id="&lt;init&gt;:ChannelUpdate"></a>
+      <a id="&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.data.raw.RawChannel]]):ackcord.gateway.GatewayEvent.ChannelUpdate"></a><a id="&lt;init&gt;:ChannelUpdate"></a>
       <span class="permalink">
-      <a href="../../ackcord/gateway/GatewayEvent$$ChannelUpdate.html#&lt;init&gt;(data:cats.Later[io.circe.Decoder.Result[ackcord.data.raw.RawChannel]]):ackcord.gateway.GatewayEvent.ChannelUpdate" title="Permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelUpdate.html#&lt;init&gt;(rawData:io.circe.Json,data:cats.Later[io.circe.Decoder.Result[ackcord.data.raw.RawChannel]]):ackcord.gateway.GatewayEvent.ChannelUpdate" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -445,7 +435,7 @@
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">ChannelUpdate</span><span class="params">(<span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>]]</span>)</span>
+        <span class="name">ChannelUpdate</span><span class="params">(<span name="rawData">rawData: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>, <span name="data">data: <a href="http://typelevel.org/cats/api/cats/Later.html#cats.Later" class="extype" name="cats.Later">Later</a>[<span class="extype" name="io.circe.Decoder.Result">Result</span>[<a href="../data/raw/RawChannel.html" class="extype" name="ackcord.data.raw.RawChannel">RawChannel</a>]]</span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">data</dt><dd class="cmt"><p>The channel that was edited. This will always be a guild channel.</p></dd></dl></div>
@@ -759,6 +749,23 @@
                 <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
+    </li><li name="ackcord.gateway.GatewayEvent.ChannelUpdate#rawData" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="rawData:io.circe.Json"></a><a id="rawData:Json"></a>
+      <span class="permalink">
+      <a href="../../ackcord/gateway/GatewayEvent$$ChannelUpdate.html#rawData:io.circe.Json" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">val</span>
+      </span>
+      <span class="symbol">
+        <span class="name">rawData</span><span class="result">: <a href="https://circe.github.io/circe/api/io/circe/Json.html#io.circe.Json" class="extype" name="io.circe.Json">Json</a></span>
+      </span>
+      
+      <p class="shortcomment cmt">The raw data this event was created from.</p><div class="fullcomment"><div class="comment cmt"><p>The raw data this event was created from. Used for debugging and error reporting.
+</p></div><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.gateway.GatewayEvent.ChannelUpdate">ChannelUpdate</a> → <a href="ComplexGatewayEvent.html" class="extype" name="ackcord.gateway.ComplexGatewayEvent">ComplexGatewayEvent</a></dd></dl></div>
     </li><li name="scala.AnyRef#synchronized" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="synchronized[T0](x$1:=&gt;T0):T0"></a><a id="synchronized[T0](⇒T0):T0"></a>
       <span class="permalink">

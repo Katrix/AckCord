@@ -19,7 +19,7 @@
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
       <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
-      <script type="text/javascript" src="../../lib/modernizr.custom.js"></script><script type="text/javascript" src="../../lib/diagrams.js" id="diagrams-js"></script>
+      
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
         var toRoot = '../../';
@@ -202,7 +202,7 @@
                         <a class="class" href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user."></a>
                         <a href="CommandDescription.html" title="Represents non essential information about a command intended to be displayed to an end user.">CommandDescription</a>
                       </li><li class="current-entities indented2">
-                        <span class="separator"></span>
+                        <a class="object" href="CommandError$.html" title=""></a>
                         <a class="class" href="CommandError.html" title="Represents an error encountered when executing an command."></a>
                         <a href="CommandError.html" title="Represents an error encountered when executing an command.">CommandError</a>
                       </li><li class="current-entities indented2">
@@ -218,13 +218,17 @@
                         <a class="trait" href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type."></a>
                         <a href="CommandTransformer.html" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
                       </li><li class="current-entities indented2">
-                        <a class="object" href="Context$.html" title=""></a>
-                        <a class="trait" href="Context.html" title="Represents a place a command can be used."></a>
-                        <a href="Context.html" title="Represents a place a command can be used.">Context</a>
-                      </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="DeriveMessageParser.html" title=""></a>
                         <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command"></a>
+                        <a href="GuildCommandMessage.html" title="A message sent with the invocation of a guild command">GuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="GuildMemberCommandMessage$.html" title=""></a>
+                        <a class="trait" href="GuildMemberCommandMessage.html" title=""></a>
+                        <a href="GuildMemberCommandMessage.html" title="">GuildMemberCommandMessage</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="MessageParser$.html" title=""></a>
                         <a class="trait" href="MessageParser.html" title="MessageParser is a typeclass to simplify parsing messages."></a>
@@ -233,6 +237,18 @@
                         <span class="separator"></span>
                         <a class="trait" href="MessageParserInstances.html" title=""></a>
                         <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="UserCommandMessage$.html" title=""></a>
+                        <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
+                        <a href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user">UserCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <a class="object" href="VoiceGuildCommandMessage$.html" title=""></a>
+                        <a class="trait" href="VoiceGuildCommandMessage.html" title=""></a>
+                        <a href="VoiceGuildCommandMessage.html" title="">VoiceGuildCommandMessage</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="class" href="WrappedCommandMessage.html" title=""></a>
+                        <a href="WrappedCommandMessage.html" title="">WrappedCommandMessage</a>
                       </li><li name="ackcord.requests" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="requests"></a><a id="requests:requests"></a>
       <span class="permalink">
@@ -325,17 +341,7 @@
       </h4>
 
       
-          <div id="comment" class="fullcommenttop"><div class="toggleContainer block diagram-container" id="content-diagram-container">
-                <span class="toggle diagram-link">
-                  Content Hierarchy
-                </span>
-                <div class="diagram" id="content-diagram"><svg class="package-diagram" id="graph1" viewBox="0.00 0.00 584.00 94.00" height="94pt" width="584pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg"><g transform="scale(1 1) rotate(0) translate(4 90)" class="graph" id="graph0"><polygon points="-4,4 -4,-90 580,-90 580,4 -4,4" stroke="none" fill="white"></polygon><!-- node0 --><g class="node trait" id="graph1_0"><g id="a_trait|graph1_0"><a xlink:title="ackcord.newcommands.CommandBuilder" xlink:href="CommandBuilder.html#inheritance-diagram"><path d="M144.667,-25C144.667,-25 8.33333,-25 8.33333,-25 4.16667,-25 0,-20.8333 0,-16.6667 0,-16.6667 0,-8.33333 0,-8.33333 0,-4.16667 4.16667,-0 8.33333,-0 8.33333,-0 144.667,-0 144.667,-0 148.833,-0 153,-4.16667 153,-8.33333 153,-8.33333 153,-16.6667 153,-16.6667 153,-20.8333 148.833,-25 144.667,-25" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-19.5" x="10.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="31.5" text-anchor="start">CommandBuilder[F, M, A]</text></a></g></g><!-- node1 --><g class="node trait" id="graph1_1"><g id="a_trait|graph1_1"><a xlink:title="ackcord.newcommands.CommandTransformer" xlink:href="CommandTransformer.html#inheritance-diagram"><path d="M335.167,-25C335.167,-25 179.833,-25 179.833,-25 175.667,-25 171.5,-20.8333 171.5,-16.6667 171.5,-16.6667 171.5,-8.33333 171.5,-8.33333 171.5,-4.16667 175.667,-0 179.833,-0 179.833,-0 335.167,-0 335.167,-0 339.333,-0 343.5,-4.16667 343.5,-8.33333 343.5,-8.33333 343.5,-16.6667 343.5,-16.6667 343.5,-20.8333 339.333,-25 335.167,-25" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-19.5" x="181.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="202.5" text-anchor="start">CommandTransformer[F, I, O]</text></a></g></g><!-- node2 --><g class="node trait" id="graph1_2"><g id="a_trait|graph1_2"><a xlink:title="ackcord.newcommands.CommandFunction" xlink:href="CommandFunction.html#inheritance-diagram"><path d="M192.167,-86C192.167,-86 54.8333,-86 54.8333,-86 50.6667,-86 46.5,-81.8333 46.5,-77.6667 46.5,-77.6667 46.5,-69.3333 46.5,-69.3333 46.5,-65.1667 50.6667,-61 54.8333,-61 54.8333,-61 192.167,-61 192.167,-61 196.333,-61 200.5,-65.1667 200.5,-69.3333 200.5,-69.3333 200.5,-77.6667 200.5,-77.6667 200.5,-81.8333 196.333,-86 192.167,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="56.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="77.5" text-anchor="start">CommandFunction[F, I, O]</text></a></g></g><!-- node2&#45;&gt;node0 --><g class="edge inheritance" id="graph1_2_0"><g id="a_inheritance|graph1_2_0"><a xlink:title="CommandBuilder[F, M, A] is a subtype of CommandFunction[F, I, O]"><path d="M109.673,-55.1423C101.969,-45.4716 92.5851,-33.6919 85.7664,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="107.936,-56.8949 114.214,-60.8435 111.769,-53.8418 107.936,-56.8949" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node2&#45;&gt;node1 --><g class="edge inheritance" id="graph1_2_1"><g id="a_inheritance|graph1_2_1"><a xlink:title="CommandTransformer[F, I, O] is a subtype of CommandFunction[F, I, O]"><path d="M156.224,-58.0919C179.184,-47.9826 209.494,-34.6372 230.953,-25.1884" stroke="#d4d4d4" fill="none"></path><polygon points="155.074,-55.921 149.655,-60.9841 157.048,-60.4056 155.074,-55.921" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node3 --><g class="node trait" id="graph1_3"><g id="a_trait|graph1_3"><a xlink:title="ackcord.newcommands.DeriveMessageParser" xlink:href="DeriveMessageParser.html#inheritance-diagram"><path d="M396.167,-86C396.167,-86 274.833,-86 274.833,-86 270.667,-86 266.5,-81.8333 266.5,-77.6667 266.5,-77.6667 266.5,-69.3333 266.5,-69.3333 266.5,-65.1667 270.667,-61 274.833,-61 274.833,-61 396.167,-61 396.167,-61 400.333,-61 404.5,-65.1667 404.5,-69.3333 404.5,-69.3333 404.5,-77.6667 404.5,-77.6667 404.5,-81.8333 400.333,-86 396.167,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="276.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="297.5" text-anchor="start">DeriveMessageParser</text></a></g></g><!-- node5 --><g class="node object" id="graph1_5"><g id="a_object|graph1_5"><a xlink:title="ackcord.newcommands.MessageParser" xlink:href="MessageParser$.html#inheritance-diagram"><path d="M464.667,-25C464.667,-25 370.333,-25 370.333,-25 366.167,-25 362,-20.8333 362,-16.6667 362,-16.6667 362,-8.33333 362,-8.33333 362,-4.16667 366.167,-0 370.333,-0 370.333,-0 464.667,-0 464.667,-0 468.833,-0 473,-4.16667 473,-8.33333 473,-8.33333 473,-16.6667 473,-16.6667 473,-20.8333 468.833,-25 464.667,-25" stroke="#103a51" fill="#103a51"></path><image xlink:href="../../lib/object_diagram.png" y="-19.5" x="372.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-10.1" x="393.5" text-anchor="start">MessageParser</text></a></g></g><!-- node3&#45;&gt;node5 --><g class="edge inheritance" id="graph1_3_5"><g id="a_inheritance|graph1_3_5"><a xlink:title="MessageParser is a subtype of DeriveMessageParser"><path d="M357.743,-56.4962C371.51,-46.5901 388.875,-34.0957 401.333,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="355.952,-54.7664 351.701,-60.8435 358.814,-58.7439 355.952,-54.7664" stroke="#d4d4d4" fill="none"></polygon></a></g></g><!-- node4 --><g class="node trait" id="graph1_4"><g id="a_trait|graph1_4"><a xlink:title="ackcord.newcommands.MessageParserInstances" xlink:href="MessageParserInstances.html#inheritance-diagram"><path d="M567.667,-86C567.667,-86 431.333,-86 431.333,-86 427.167,-86 423,-81.8333 423,-77.6667 423,-77.6667 423,-69.3333 423,-69.3333 423,-65.1667 427.167,-61 431.333,-61 431.333,-61 567.667,-61 567.667,-61 571.833,-61 576,-65.1667 576,-69.3333 576,-69.3333 576,-77.6667 576,-77.6667 576,-81.8333 571.833,-86 567.667,-86" stroke="#2e6d82" fill="#2e6d82"></path><image xlink:href="../../lib/trait_diagram.png" y="-80.5" x="433.5" preserveAspectRatio="xMinYMin meet" height="15px" width="15px"></image><text fill="#ffffff" font-size="8.00" font-family="Source Code Pro" y="-71.1" x="454.5" text-anchor="start">MessageParserInstances</text></a></g></g><!-- node4&#45;&gt;node5 --><g class="edge inheritance" id="graph1_4_5"><g id="a_inheritance|graph1_4_5"><a xlink:title="MessageParser is a subtype of MessageParserInstances"><path d="M477.257,-56.4962C463.49,-46.5901 446.125,-34.0957 433.667,-25.1323" stroke="#d4d4d4" fill="none"></path><polygon points="476.186,-58.7439 483.299,-60.8435 479.048,-54.7664 476.186,-58.7439" stroke="#d4d4d4" fill="none"></polygon></a></g></g></g></svg></div>
-                <div id="diagram-controls" class="hiddenContent">
-                  <button id="diagram-zoom-out" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button id="diagram-zoom-in" class="diagram-btn"><i class="material-icons"></i></button>
-                  <button title="Toggle full-screen" id="diagram-fs" class="diagram-btn to-full"><i class="material-icons"></i></button>
-                </div>
-              </div></div>
+          <div id="comment" class="fullcommenttop"></div>
         
 
       <div id="mbrsel">
@@ -521,22 +527,6 @@ displayed to an end user.
       <p class="shortcomment cmt">A <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a> that can't fail, but might return a different
 message type.</p><div class="fullcomment"><div class="comment cmt"><p>A <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a> that can't fail, but might return a different
 message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>The cache effect type</p></dd><dt class="tparam">I</dt><dd class="cmt"><p>The input message type</p></dd><dt class="tparam">O</dt><dd class="cmt"><p>The output message type</p></dd></dl></div>
-    </li><li name="ackcord.newcommands.Context" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
-      <a id="ContextextendsAnyRef"></a><a id="Context:Context"></a>
-      <span class="permalink">
-      <a href="../../ackcord/newcommands/index.html#ContextextendsAnyRef" title="Permalink">
-        <i class="material-icons"></i>
-      </a>
-    </span>
-      <span class="modifier_kind">
-        <span class="modifier">sealed </span>
-        <span class="kind">trait</span>
-      </span>
-      <span class="symbol">
-        <a title="Represents a place a command can be used." href="Context.html"><span class="name">Context</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
-      </span>
-      
-      <p class="shortcomment cmt">Represents a place a command can be used.</p>
     </li><li name="ackcord.newcommands.DeriveMessageParser" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
       <a id="DeriveMessageParserextendsAnyRef"></a><a id="DeriveMessageParser:DeriveMessageParser"></a>
       <span class="permalink">
@@ -550,6 +540,38 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
       </span>
       <span class="symbol">
         <a title="" href="DeriveMessageParser.html"><span class="name">DeriveMessageParser</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.GuildCommandMessage" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="GuildCommandMessage[F[_],+A]extendsCommandMessage[F,A]"></a><a id="GuildCommandMessage[F[_],+A]:GuildCommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#GuildCommandMessage[F[_],+A]extendsCommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A message sent with the invocation of a guild command" href="GuildCommandMessage.html"><span class="name">GuildCommandMessage</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.GuildCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.GuildCommandMessage.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A message sent with the invocation of a guild command</p><div class="fullcomment"><div class="comment cmt"><p>A message sent with the invocation of a guild command</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>The cache effect type</p></dd><dt class="tparam">A</dt><dd class="cmt"><p>The parsed argument type</p></dd></dl></div>
+    </li><li name="ackcord.newcommands.GuildMemberCommandMessage" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="GuildMemberCommandMessage[F[_],+A]extendsGuildCommandMessage[F,A]withUserCommandMessage[F,A]"></a><a id="GuildMemberCommandMessage[F[_],+A]:GuildMemberCommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#GuildMemberCommandMessage[F[_],+A]extendsGuildCommandMessage[F,A]withUserCommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="GuildMemberCommandMessage.html"><span class="name">GuildMemberCommandMessage</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="GuildCommandMessage.html" class="extype" name="ackcord.newcommands.GuildCommandMessage">GuildCommandMessage</a>[<span class="extype" name="ackcord.newcommands.GuildMemberCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.GuildMemberCommandMessage.A">A</span>] with <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>[<span class="extype" name="ackcord.newcommands.GuildMemberCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.GuildMemberCommandMessage.A">A</span>]</span>
       </span>
       
       
@@ -586,6 +608,54 @@ instances for any ADT, and makes it much easier to work with messages.</p></div>
       </span>
       
       
+    </li><li name="ackcord.newcommands.UserCommandMessage" visbl="pub" class="indented0 " data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="UserCommandMessage[F[_],+A]extendsCommandMessage[F,A]"></a><a id="UserCommandMessage[F[_],+A]:UserCommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#UserCommandMessage[F[_],+A]extendsCommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="A message sent with the invocation of command used by a user" href="UserCommandMessage.html"><span class="name">UserCommandMessage</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.UserCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.UserCommandMessage.A">A</span>]</span>
+      </span>
+      
+      <p class="shortcomment cmt">A message sent with the invocation of command used by a user</p><div class="fullcomment"><div class="comment cmt"><p>A message sent with the invocation of command used by a user</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>The cache effect type</p></dd><dt class="tparam">A</dt><dd class="cmt"><p>The parsed argument type</p></dd></dl></div>
+    </li><li name="ackcord.newcommands.VoiceGuildCommandMessage" visbl="pub" class="indented0 " data-isabs="true" fullComment="no" group="Ungrouped">
+      <a id="VoiceGuildCommandMessage[F[_],+A]extendsGuildCommandMessage[F,A]withUserCommandMessage[F,A]"></a><a id="VoiceGuildCommandMessage[F[_],+A]:VoiceGuildCommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#VoiceGuildCommandMessage[F[_],+A]extendsGuildCommandMessage[F,A]withUserCommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">trait</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="VoiceGuildCommandMessage.html"><span class="name">VoiceGuildCommandMessage</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">+A</span>]</span><span class="result"> extends <a href="GuildCommandMessage.html" class="extype" name="ackcord.newcommands.GuildCommandMessage">GuildCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.A">A</span>] with <a href="UserCommandMessage.html" class="extype" name="ackcord.newcommands.UserCommandMessage">UserCommandMessage</a>[<span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.VoiceGuildCommandMessage.A">A</span>]</span>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.WrappedCommandMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="WrappedCommandMessage[F[_],A]extendsCommandMessage[F,A]"></a><a id="WrappedCommandMessage[F[_],A]:WrappedCommandMessage[F,A]"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#WrappedCommandMessage[F[_],A]extendsCommandMessage[F,A]" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="WrappedCommandMessage.html"><span class="name">WrappedCommandMessage</span></a><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="A">A</span>]</span><span class="result"> extends <a href="CommandMessage.html" class="extype" name="ackcord.newcommands.CommandMessage">CommandMessage</a>[<span class="extype" name="ackcord.newcommands.WrappedCommandMessage.F">F</span>, <span class="extype" name="ackcord.newcommands.WrappedCommandMessage.A">A</span>]</span>
+      </span>
+      
+      
     </li></ol>
             </div>
 
@@ -607,6 +677,22 @@ instances for any ADT, and makes it much easier to work with messages.</p></div>
       </span>
       <span class="symbol">
         <a title="" href="CommandBuilder$.html"><span class="name">CommandBuilder</span></a>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.CommandError" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="CommandError"></a><a id="CommandError:CommandError"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#CommandError" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="CommandError$.html"><span class="name">CommandError</span></a><span class="result"> extends <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       
       
@@ -658,10 +744,10 @@ instances for any ADT, and makes it much easier to work with messages.</p></div>
       </span>
       
       
-    </li><li name="ackcord.newcommands.Context" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
-      <a id="Context"></a><a id="Context:Context"></a>
+    </li><li name="ackcord.newcommands.GuildCommandMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GuildCommandMessage"></a><a id="GuildCommandMessage:GuildCommandMessage"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/index.html#Context" title="Permalink">
+      <a href="../../ackcord/newcommands/index.html#GuildCommandMessage" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -670,7 +756,23 @@ instances for any ADT, and makes it much easier to work with messages.</p></div>
         <span class="kind">object</span>
       </span>
       <span class="symbol">
-        <a title="" href="Context$.html"><span class="name">Context</span></a>
+        <a title="" href="GuildCommandMessage$.html"><span class="name">GuildCommandMessage</span></a>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.GuildMemberCommandMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="GuildMemberCommandMessage"></a><a id="GuildMemberCommandMessage:GuildMemberCommandMessage"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#GuildMemberCommandMessage" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="GuildMemberCommandMessage$.html"><span class="name">GuildMemberCommandMessage</span></a>
       </span>
       
       
@@ -687,6 +789,38 @@ instances for any ADT, and makes it much easier to work with messages.</p></div>
       </span>
       <span class="symbol">
         <a title="" href="MessageParser$.html"><span class="name">MessageParser</span></a><span class="result"> extends <a href="MessageParserInstances.html" class="extype" name="ackcord.newcommands.MessageParserInstances">MessageParserInstances</a> with <a href="DeriveMessageParser.html" class="extype" name="ackcord.newcommands.DeriveMessageParser">DeriveMessageParser</a></span>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.UserCommandMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="UserCommandMessage"></a><a id="UserCommandMessage:UserCommandMessage"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#UserCommandMessage" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="UserCommandMessage$.html"><span class="name">UserCommandMessage</span></a>
+      </span>
+      
+      
+    </li><li name="ackcord.newcommands.VoiceGuildCommandMessage" visbl="pub" class="indented0 " data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="VoiceGuildCommandMessage"></a><a id="VoiceGuildCommandMessage:VoiceGuildCommandMessage"></a>
+      <span class="permalink">
+      <a href="../../ackcord/newcommands/index.html#VoiceGuildCommandMessage" title="Permalink">
+        <i class="material-icons"></i>
+      </a>
+    </span>
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a title="" href="VoiceGuildCommandMessage$.html"><span class="name">VoiceGuildCommandMessage</span></a>
       </span>
       
       
