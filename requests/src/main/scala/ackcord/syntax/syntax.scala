@@ -536,11 +536,6 @@ package object syntax {
   implicit class GuildSyntax(private val guild: Guild) extends AnyVal {
 
     /**
-      * Get the owner of this guild.
-      */
-    def owner[F[_]](implicit snapshot: CacheSnapshot[F]): OptionT[F, User] = snapshot.getUser(guild.ownerId)
-
-    /**
       * Modify this guild.
       * @param name The new name of the guild
       * @param region The new voice region for the guild
