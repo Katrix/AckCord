@@ -23,7 +23,7 @@
  */
 package ackcord.newcommands
 
-import ackcord.data.{Guild, GuildId, GuildMember, Permission, TGuildChannel, User}
+import ackcord.data.{Guild, GuildId, GuildMember, Permission, TGuildChannel, User, VGuildChannel}
 import ackcord.requests.RequestHelper
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.util.Streamable
@@ -45,8 +45,10 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
   type GuildCommandMessage[+A]       = ackcord.newcommands.GuildCommandMessage[F, A]
   type UserCommandMessage[+A]        = ackcord.newcommands.UserCommandMessage[F, A]
   type GuildMemberCommandMessage[+A] = ackcord.newcommands.GuildMemberCommandMessage[F, A]
+  type VoiceGuildCommandMessage[+A]  = ackcord.newcommands.VoiceGuildCommandMessage[F, A]
 
-  type GuildUserCommandMessage[+A] = GuildCommandMessage[A] with UserCommandMessage[A]
+  type GuildUserCommandMessage[+A]        = GuildCommandMessage[A] with UserCommandMessage[A]
+  type VoiceGuildMemberCommandMessage[+A] = GuildMemberCommandMessage[A] with VoiceGuildCommandMessage[A]
 
   type ComplexCommand[A, Mat] = ackcord.newcommands.Command[F, A, Mat]
   type Command[A]             = ackcord.newcommands.Command[F, A, NotUsed]
@@ -73,11 +75,10 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
     * The default command builder you will use to create most of your commands.
     * By default blocks bots from using the commands.
     */
-  val Command: CommandBuilder[UserCommandMessage, List[String]] = baseCommandBuilder.andThen(CommandFunction.nonBot)
-
-  Command.andThen(CommandFunction.onlyInGuildWith { (chG, g) =>
-    λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
-  })
+  val Command: CommandBuilder[UserCommandMessage, List[String]] =
+    baseCommandBuilder.andThen(CommandFunction.nonBot { user =>
+      λ[CommandMessage ~> UserCommandMessage](m => UserCommandMessage.Default(user, m))
+    })
 
   /**
     * Another default command builder for you to use. Can only be used in
@@ -85,7 +86,7 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
     */
   val GuildCommand: CommandBuilder[GuildMemberCommandMessage, List[String]] =
     Command
-      .andThen(CommandFunction.onlyInGuildWith { (chG, g) =>
+      .andThen(CommandFunction.onlyInGuild { (chG, g) =>
         λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
       })
       .andThen(CommandFunction.withGuildMember { member =>
@@ -95,16 +96,26 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
       })
 
   /**
+    * A command builder that only accepts users that are in a voice channel.
+    */
+  val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, List[String]] =
+    GuildCommand.andThen(CommandFunction.inVoiceChannel { vCh =>
+      λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](
+        m => VoiceGuildCommandMessage.WithGuildMember(m.tChannel, m.guild, m.user, m.guildMember, vCh, m)
+      )
+    })
+
+  /**
     * Various command functions to filter or transform command messages.
     */
   object CommandFunction {
 
     type Expander[M[_], H[_], A] = M[A]
 
-    def onlyInGuildWith[I[A] <: CommandMessage[A], O[_]](
+    def onlyInGuild[I[A] <: CommandMessage[A], O[_]](
         create: (TGuildChannel, Guild) => I ~> O
     ): CommandFunction[I, O] =
-      CommandBuilder.onlyInGuildWith[F, I, O](create)
+      CommandBuilder.onlyInGuild[F, I, O](create)
 
     /**
       * A command function that lets you add the guild member to a command message.
@@ -114,11 +125,9 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
     ): CommandTransformer[I, O] =
       CommandBuilder.withGuildMember[F, I, O](create)
 
-    /**
-      * Only allow commands sent from a guild.
-      */
-    def onlyInGuild: CommandFunction[CommandMessage, GuildCommandMessage] =
-      CommandBuilder.onlyInGuild
+    def inVoiceChannel[I[A] <: GuildUserCommandMessage[A], O[_]](
+        create: VGuildChannel => I ~> O
+    ): CommandFunction[I, O] = CommandBuilder.inVoiceChannel[F, I, O](create)
 
     /**
       * Only allow commands sent from one specific guild.
@@ -137,13 +146,7 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
     /**
       * Only non bots can use this command.
       */
-    def nonBot: CommandFunction[CommandMessage, UserCommandMessage] =
-      CommandBuilder.nonBot[F]
-
-    /**
-      * Only non bots can use this command.
-      */
-    def nonBotWith[I[A] <: CommandMessage[A], O[_]](create: User => I ~> O): CommandFunction[I, O] =
-      CommandBuilder.nonBotWith[F, I, O](create)
+    def nonBot[I[A] <: CommandMessage[A], O[_]](create: User => I ~> O): CommandFunction[I, O] =
+      CommandBuilder.nonBot[F, I, O](create)
   }
 }

@@ -24,7 +24,7 @@
 package ackcord.newcommands
 
 import ackcord.CacheSnapshot
-import ackcord.data.{Guild, GuildId, GuildMember, Message, Permission, TChannel, TGuildChannel, User, UserId}
+import ackcord.data._
 import ackcord.requests.{Request, RequestHelper}
 import ackcord.util.Streamable
 import akka.NotUsed
@@ -313,7 +313,7 @@ object CommandBuilder {
     * A command function that only allows commands sent from a guild, and that
     * lets you build the result command message.
     */
-  def onlyInGuildWith[F[_]: Streamable: Applicative, I[A] <: CommandMessage[F, A], O[_]](
+  def onlyInGuild[F[_]: Streamable: Applicative, I[A] <: CommandMessage[F, A], O[_]](
       create: (TGuildChannel, Guild) => I ~> O
   ): CommandFunction[F, I, O] =
     new CommandFunction[F, I, O] {
@@ -350,14 +350,23 @@ object CommandBuilder {
       }
   }
 
-  /**
-    * A command function that only allows commands sent from a guild, and that
-    * returns a command message with the guild.
-    */
-  def onlyInGuild[F[_]: Streamable: Applicative]: CommandFunction[F, CommandMessage[F, ?], GuildCommandMessage[F, ?]] =
-    onlyInGuildWith[F, CommandMessage[F, ?], GuildCommandMessage[F, ?]](
-      (chG, g) => λ[CommandMessage[F, ?] ~> GuildCommandMessage[F, ?]](fa => GuildCommandMessage.Default(chG, g, fa))
-    )
+  def inVoiceChannel[F[_]: Streamable: Monad, I[A] <: GuildCommandMessage[F, A] with UserCommandMessage[F, A], O[_]](
+      create: VGuildChannel => I ~> O
+  ): CommandFunction[F, I, O] = new CommandFunction[F, I, O] {
+    type Result[A] = Either[Option[CommandError[F]], O[A]]
+
+    override def flow[A]: Flow[I[A], Result[A], NotUsed] = Flow[I[A]].flatMapConcat { m =>
+      implicit val c: CacheSnapshot[F] = m.cache
+      val res: F[Result[A]] = OptionT
+        .fromOption[F](m.guild.voiceStates.get(m.user.id).flatMap(_.channelId))
+        .flatMap(_.vResolve(m.guild.id))
+        .toRight(Some(CommandError.mk(s"This command can only be used in a guild", m)): Option[CommandError[F]])
+        .map(vCh => create(vCh)(m))
+        .value
+
+      Streamable[F].toSource(res)
+    }
+  }
 
   /**
     * A command function that only allow commands sent from one specific guild.
@@ -393,7 +402,7 @@ object CommandBuilder {
   /**
     * A command function that disallows bots from using it.
     */
-  def nonBotWith[F[_]: Streamable: Monad, I[A] <: CommandMessage[F, A], O[_]](
+  def nonBot[F[_]: Streamable: Monad, I[A] <: CommandMessage[F, A], O[_]](
       create: User => I ~> O
   ): CommandFunction[F, I, O] =
     new CommandFunction[F, I, O] {
@@ -408,14 +417,6 @@ object CommandBuilder {
           Streamable[F].toSource(res)
         }
     }
-
-  /**
-    * A command function that disallows bots from using it, and contains the user.
-    */
-  def nonBot[F[_]: Streamable: Monad]: CommandFunction[F, CommandMessage[F, ?], UserCommandMessage[F, ?]] =
-    nonBotWith[F, CommandMessage[F, ?], UserCommandMessage[F, ?]](
-      user => λ[CommandMessage[F, ?] ~> UserCommandMessage[F, ?]](m => UserCommandMessage.Default(user, m))
-    )
 
   /**
     * Creates a raw command builder without any extra processing.
@@ -555,6 +556,36 @@ object GuildMemberCommandMessage {
       guildMember: GuildMember,
       m: CommandMessage[F, A]
   ) extends WrappedCommandMessage(m)
+      with GuildMemberCommandMessage[F, A]
+}
+
+trait VoiceGuildCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with UserCommandMessage[F, A] {
+
+  /**
+    * The voice channel the user that used this command is in.
+    */
+  def voiceChannel: VGuildChannel
+}
+object VoiceGuildCommandMessage {
+
+  case class Default[F[_], A](
+      override val tChannel: TGuildChannel,
+      guild: Guild,
+      user: User,
+      voiceChannel: VGuildChannel,
+      m: CommandMessage[F, A]
+  ) extends WrappedCommandMessage(m)
+      with VoiceGuildCommandMessage[F, A]
+
+  case class WithGuildMember[F[_], A](
+      override val tChannel: TGuildChannel,
+      guild: Guild,
+      user: User,
+      guildMember: GuildMember,
+      voiceChannel: VGuildChannel,
+      m: CommandMessage[F, A]
+  ) extends WrappedCommandMessage(m)
+      with VoiceGuildCommandMessage[F, A]
       with GuildMemberCommandMessage[F, A]
 }
 
