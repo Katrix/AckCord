@@ -87,7 +87,8 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
       }
 
     case CreateGateway =>
-      gatewayHandler = context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log, context.system), "GatewayHandler")
+      gatewayHandler =
+        context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log, context.system), "GatewayHandler")
       gatewayHandler ! GatewayLogin
 
     case RestartShard =>

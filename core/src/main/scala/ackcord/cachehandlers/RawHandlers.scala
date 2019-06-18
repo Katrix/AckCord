@@ -66,7 +66,7 @@ object RawHandlers extends Handlers {
         log.warning(e)
         Nil
     }
-    val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id))
+    val channels = rawChannels.flatMap(_.toGuildChannel(obj.id))
 
     val oldGuild = builder.getGuild(obj.id)
 
