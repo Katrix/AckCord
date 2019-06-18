@@ -32,6 +32,8 @@ import akka.NotUsed
 import cats.{Monad, ~>}
 import scala.language.higherKinds
 
+import scala.concurrent.ExecutionContext
+
 /**
   * The base command controller that you will place your commands in.
   * Contains partially applied types, and the Command builder object.
@@ -57,6 +59,7 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
     implicit val impRequest: RequestHelper = requests
     ackcord.RequestRunner.sourceRequestRunner[F]
   }
+  implicit val ec: ExecutionContext = requests.mat.executionContext
 
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot[F] = message.cache
 
