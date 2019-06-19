@@ -23,11 +23,7 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
-import cats.data.OptionT
-import cats.{Functor, Monad}
 
 trait GetGuild {
   def guildId: GuildId
@@ -35,7 +31,7 @@ trait GetGuild {
   /**
     * The guild for this object
     */
-  def guild[F[_]](implicit snapshot: CacheSnapshot[F]): OptionT[F, Guild] = snapshot.getGuild(guildId)
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
@@ -44,8 +40,8 @@ trait GetGuildOpt {
   /**
     * The guild for this object
     */
-  def guild[F[_]](implicit snapshot: CacheSnapshot[F], F: Monad[F]): OptionT[F, Guild] =
-    OptionT.fromOption(guildId).flatMap(snapshot.getGuild)
+  def guild(implicit snapshot: CacheSnapshot): Option[Guild] =
+    guildId.flatMap(snapshot.getGuild)
 }
 
 trait GetUser {
@@ -54,7 +50,7 @@ trait GetUser {
   /**
     * The user for this object
     */
-  def user[F[_]](implicit snapshot: CacheSnapshot[F]): OptionT[F, User] = snapshot.getUser(userId)
+  def user(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(userId)
 }
 
 trait GetTChannel {
@@ -63,12 +59,12 @@ trait GetTChannel {
   /**
     * Resolve the channelId of this object as a dm channel
     */
-  def dmChannel[F[_]](implicit snapshot: CacheSnapshot[F]): OptionT[F, DMChannel] = snapshot.getDmChannel(channelId)
+  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.getDmChannel(channelId)
 
   /**
     * Resolve the channelId of this object as a TGuildChannel
     */
-  def tGuildChannel[F[_]](implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
+  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] =
     snapshot.getGuildChannel(channelId).collect {
       case guildChannel: TGuildChannel => guildChannel
     }
@@ -76,9 +72,9 @@ trait GetTChannel {
   /**
     * Resolve the channelId of this object as a TGuildChannel using an provided guildId
     */
-  def tGuildChannel[F[_]](
+  def tGuildChannel(
       guildId: GuildId
-  )(implicit snapshot: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
+  )(implicit snapshot: CacheSnapshot): Option[TGuildChannel] =
     snapshot.getGuildChannel(guildId, channelId).collect {
       case guildChannel: TGuildChannel => guildChannel
     }
@@ -90,8 +86,8 @@ trait GetVChannelOpt {
   /**
     * Resolve the channelId of this object as a voice channel.
     */
-  def vChannel[F[_]](implicit snapshot: CacheSnapshot[F], F: Monad[F]): OptionT[F, Channel] =
-    OptionT.fromOption(channelId).flatMap(snapshot.getChannel).collect {
+  def vChannel(implicit snapshot: CacheSnapshot): Option[Channel] =
+    channelId.flatMap(snapshot.getChannel).collect {
       case vChannel: VGuildChannel => vChannel
     }
 }

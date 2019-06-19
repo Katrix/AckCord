@@ -23,8 +23,6 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import scala.concurrent.duration._
 
 import ackcord.CacheSnapshot
@@ -33,7 +31,6 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Flow
-import cats.{CoflatMap, Monad}
 
 /**
   * Used by requests for specifying an uri to send to,
@@ -97,7 +94,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
 
-    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+    override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
 
   /**
@@ -145,7 +142,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, B, NotUsed] =
       f(self.parseResponse(parallelism))
 
-    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+    override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
 
   /**
@@ -166,14 +163,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   /**
     * Check if a client has the needed permissions to execute this request.
     */
-  def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
-}
-object Request {
-  implicit def instance[Ctx]: CoflatMap[Request[?, Ctx]] =
-    new CoflatMap[Request[?, Ctx]] {
-      override def map[A, B](fa: Request[A, Ctx])(f: A => B): Request[B, Ctx]                     = fa.map(f)
-      override def coflatMap[A, B](fa: Request[A, Ctx])(f: Request[A, Ctx] => B): Request[B, Ctx] = fa.map(_ => f(fa))
-    }
+  def hasPermissions(implicit c: CacheSnapshot): Boolean
 }
 
 /**

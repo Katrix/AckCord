@@ -23,11 +23,7 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
-import cats.Monad
-import cats.data.OptionT
 
 /**
   * A webhook
@@ -53,10 +49,9 @@ case class Webhook(
   /**
     * Resolve the channel of this webhook as a guild channel
     */
-  def tGuildChannel[F[_]](implicit snapshot: CacheSnapshot[F], F: Monad[F]): OptionT[F, TChannel] =
-    OptionT
-      .fromOption(guildId)
-      .flatMap(g => snapshot.getGuildChannel(g, channelId))
+  def tGuildChannel(implicit snapshot: CacheSnapshot): Option[TGuildChannel] =
+    guildId
+      .flatMap(snapshot.getGuildChannel(_, channelId))
       .orElse(snapshot.getGuildChannel(channelId))
       .collect {
         case gChannel: TGuildChannel => gChannel

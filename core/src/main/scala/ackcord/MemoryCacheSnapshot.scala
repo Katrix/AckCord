@@ -42,7 +42,7 @@ case class MemoryCacheSnapshot(
     lastTypedMap: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
     userMap: SnowflakeMap[User, User],
     banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
-) extends CacheSnapshotId {
+) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = SnowflakeMap[K, V]
 

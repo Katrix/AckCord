@@ -23,16 +23,14 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import ackcord.commands.{Cmd, ParsedCmd, RawCmd}
 
-trait HasCache[F[_], A] {
-  def cache(a: A): CacheSnapshot[F]
+trait HasCache[A] {
+  def cache(a: A): CacheSnapshot
 }
 object HasCache {
-  implicit val apiMessageHasCache: HasCache[Id, APIMessage]             = (a: APIMessage) => a.cache.current
-  implicit def cmdHasCache[F[_]]: HasCache[F, Cmd[F]]                   = (a: Cmd[F]) => a.cache
-  implicit def parsedCmdHasCache[F[_], A]: HasCache[F, ParsedCmd[F, A]] = (a: ParsedCmd[F, A]) => a.cache
-  implicit def rawCmdHasCache[F[_]]: HasCache[F, RawCmd[F]]             = (a: RawCmd[F]) => a.c
+  implicit val apiMessageHasCache: HasCache[APIMessage]     = (a: APIMessage) => a.cache.current
+  implicit def cmdHasCache: HasCache[Cmd]                   = (a: Cmd) => a.cache
+  implicit def parsedCmdHasCache[A]: HasCache[ParsedCmd[A]] = (a: ParsedCmd[A]) => a.cache
+  implicit def rawCmdHasCache: HasCache[RawCmd]             = (a: RawCmd) => a.c
 }

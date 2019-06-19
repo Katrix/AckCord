@@ -49,7 +49,7 @@ object MyBot extends App {
   settings
     .createClient()
     .foreach { client =>
-      client.onEvent[Id] {
+      client.onEvent[cats.Id] {
         case APIMessage.Ready(_) => println("Now ready")
         case _                   => client.sourceRequesterRunner.unit
       }
@@ -66,7 +66,7 @@ object MyBot extends App {
             case APIMessage.ChannelDelete(channel, _) =>
               for {
                 guildChannel <- optionPure(channel.asGuildChannel)
-                guild        <- optionPure(guildChannel.guild.value)
+                guild        <- optionPure(guildChannel.guild)
                 _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
               } yield ()
             case _ => client.sourceRequesterRunner.unit
@@ -75,11 +75,11 @@ object MyBot extends App {
       }
 
       client.onRawCmd[SourceRequest] {
-        client.withCache[SourceRequest, RawCmd[Id]] { implicit c =>
+        client.withCache[SourceRequest, RawCmd] { implicit c =>
           {
             case RawCmd(message, GeneralCommands, "echo", args, _) =>
               for {
-                channel <- optionPure(message.tGuildChannel[Id].value)
+                channel <- optionPure(message.tGuildChannel)
                 _       <- run(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
               } yield ()
             case _ => client.sourceRequesterRunner.unit
@@ -92,11 +92,11 @@ object MyBot extends App {
         aliases = Seq("guildInfo"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
       ) {
-        client.withCache[SourceRequest, ParsedCmd[Id, NotUsed]] { implicit c => cmd =>
+        client.withCache[SourceRequest, ParsedCmd[NotUsed]] { implicit c => cmd =>
           for {
-            user        <- liftOptionT(cmd.msg.authorUser)
-            channel     <- liftOptionT(cmd.msg.tGuildChannel)
-            guild       <- liftOptionT(channel.guild)
+            user        <- optionPure(cmd.msg.authorUser)
+            channel     <- optionPure(cmd.msg.tGuildChannel)
+            guild       <- optionPure(channel.guild)
             guildMember <- optionPure(guild.memberFromUser(user))
             guildName   = guild.name
             channelName = channel.name
@@ -110,7 +110,7 @@ object MyBot extends App {
         }
       }
 
-      client.registerCmd[NotUsed, Id](
+      client.registerCmd[NotUsed, cats.Id](
         prefix = GeneralCommands,
         aliases = Seq("ping"),
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
@@ -119,7 +119,7 @@ object MyBot extends App {
         println(s"Received ping command}")
       }
 
-      client.registerCmd[NotUsed, Id](
+      client.registerCmd[NotUsed, cats.Id](
         prefix = GeneralCommands,
         aliases = Seq("kill", "die"),
         filters = Seq(CmdFilter.NonBot), //Ideally you're create a new filter type here to only allow the owner to shut down the bot
@@ -131,19 +131,19 @@ object MyBot extends App {
       val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
       AudioSourceManagers.registerRemoteSources(playerManager)
 
-      client.registerCmd[String, Id](
-        refiner = CmdInfo[Id](
+      client.registerCmd[String, cats.Id](
+        refiner = CmdInfo(
           prefix = MusicCommands,
           aliases = Seq("queue"),
           filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
         ),
         description = Some(CmdDescription("Queue", "Queue a track"))
       ) {
-        client.withCache[Id, ParsedCmd[Id, String]] { implicit c => cmd =>
+        client.withCache[cats.Id, ParsedCmd[String]] { implicit c => cmd =>
           for {
-            channel    <- cmd.msg.tGuildChannel.value
+            channel    <- cmd.msg.tGuildChannel
             authorId   <- cmd.msg.authorUserId
-            guild      <- channel.guild.value
+            guild      <- channel.guild
             vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
           } {
             val guildId     = guild.id

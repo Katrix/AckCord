@@ -23,13 +23,10 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import akka.NotUsed
-import cats.Monad
 import io.circe.Decoder
 
 //Place for future audit log requests if they should ever appear
@@ -55,6 +52,6 @@ case class GetGuildAuditLog[Ctx](
   override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
 
   override def requiredPermissions: Permission = Permission.ViewAuditLog
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }

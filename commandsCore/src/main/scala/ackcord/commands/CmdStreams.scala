@@ -37,21 +37,20 @@ object CmdStreams {
     * @param apiMessages A source of [[APIMessage]]s.
     */
   def cmdStreams[A](
-      settings: AbstractCommandSettings[Id],
+      settings: AbstractCommandSettings,
       apiMessages: Source[APIMessage, A]
-  )(implicit mat: Materializer): (A, Source[RawCmdMessage[Id], NotUsed]) = {
+  )(implicit mat: Materializer): (A, Source[RawCmdMessage, NotUsed]) = {
     apiMessages
       .collect {
         case APIMessage.MessageCreate(msg, c) =>
           implicit val cache: MemoryCacheSnapshot = c.current
 
-          CmdHelper.isValidCommand(settings.needMention(msg), msg).value.map { args =>
+          CmdHelper.isValidCommand(settings.needMention(msg), msg).map { args =>
             if (args == Nil) NoCmd(msg, c.current)
             else {
               settings
                 .getPrefix(args, msg)
-                .value
-                .fold[RawCmdMessage[Id]](NoCmdPrefix(msg, args.head, args.tail, cache)) {
+                .fold[RawCmdMessage](NoCmdPrefix(msg, args.head, args.tail, cache)) {
                   case (prefix, remaining) => RawCmd(msg, prefix, remaining.head, remaining.tail.toList, c.current)
                 }
             }

@@ -29,7 +29,7 @@ import scala.collection.mutable
 
 import ackcord.CacheSnapshot.BotUser
 import ackcord.data._
-import ackcord.{CacheSnapshotId, Id, MemoryCacheSnapshot, SnowflakeMap}
+import ackcord.{CacheSnapshotWithMaps, MemoryCacheSnapshot, SnowflakeMap}
 import shapeless.tag._
 
 /**
@@ -45,7 +45,7 @@ class CacheSnapshotBuilder(
     var lastTypedMap: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
     var userMap: mutable.Map[UserId, User],
     var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
-) extends CacheSnapshotId {
+) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
 
@@ -66,13 +66,13 @@ class CacheSnapshotBuilder(
       banMap = convertNested(banMap)
     )
   }
-  override def getChannelMessages(channelId: ChannelId): Id[mutable.Map[SnowflakeType[Message], Message]] =
+  override def getChannelMessages(channelId: ChannelId): mutable.Map[SnowflakeType[Message], Message] =
     messageMap.getOrElse(channelId, mutable.Map.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): Id[mutable.Map[SnowflakeType[User], Instant]] =
+  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[SnowflakeType[User], Instant] =
     lastTypedMap.getOrElse(channelId, mutable.Map.empty)
 
-  override def getGuildBans(id: GuildId): Id[mutable.Map[SnowflakeType[User], Ban]] =
+  override def getGuildBans(id: GuildId): mutable.Map[SnowflakeType[User], Ban] =
     banMap.getOrElse(id, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {

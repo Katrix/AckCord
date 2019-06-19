@@ -27,7 +27,7 @@ import ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}
-import ackcord.{Id, MemoryCacheSnapshot}
+import ackcord.MemoryCacheSnapshot
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.stream.OverflowStrategy
@@ -62,7 +62,7 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
         OutgoingEmbed(
           title = Some(s"Commands matching: $query"),
           fields = matches
-            .filter(_.info.filters(message).forall(_.isAllowed[Id](message)))
+            .filter(_.info.filters(message).forall(_.isAllowed(message)))
             .map(createContent(message, _))
         )
       )
@@ -115,8 +115,8 @@ object ExampleHelpCmd {
 }
 
 object ExampleHelpCmdFactory {
-  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Id, Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
-    refiner = CmdInfo[Id](prefix = "!", aliases = Seq("help")),
+  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
+    refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
     sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
     description = Some(
       CmdDescription(

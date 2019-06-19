@@ -21,14 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package ackcord
 
-import scala.language.higherKinds
-
 import ackcord.data.{ChannelId, GuildId, Permission}
-import cats.Monad
-import cats.data.OptionT
 
 package object requests {
 
@@ -38,14 +33,11 @@ package object requests {
     * @param permissions The needed permissions
     * @param c The cache
     */
-  def hasPermissionsGuild[F[_]](guildId: GuildId, permissions: Permission)(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F]
-  ): F[Boolean] = {
+  def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val res = for {
-      guild         <- c.getGuild(guildId)
-      botUser       <- OptionT.liftF(c.botUser)
-      botUserMember <- OptionT.fromOption[F](guild.members.get(botUser.id))
+      guild <- c.getGuild(guildId)
+      botUser = c.botUser
+      botUserMember <- guild.members.get(botUser.id)
     } yield botUserMember.permissions(guild).hasPermissions(permissions)
 
     res.getOrElse(false)
@@ -57,15 +49,12 @@ package object requests {
     * @param permissions The needed permissions
     * @param c The cache
     */
-  def hasPermissionsChannel[F[_]](channelId: ChannelId, permissions: Permission)(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F]
-  ): F[Boolean] = {
+  def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val opt = for {
-      gChannel      <- c.getGuildChannel(channelId)
-      guild         <- gChannel.guild
-      botUser       <- OptionT.liftF(c.botUser)
-      botUserMember <- OptionT.fromOption[F](guild.members.get(botUser.id))
+      gChannel <- c.getGuildChannel(channelId)
+      guild    <- gChannel.guild
+      botUser = c.botUser
+      botUserMember <- guild.members.get(botUser.id)
     } yield botUserMember.channelPermissionsId(guild, channelId).hasPermissions(permissions)
 
     opt.getOrElse(false)

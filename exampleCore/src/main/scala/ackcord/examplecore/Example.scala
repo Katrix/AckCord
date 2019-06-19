@@ -92,7 +92,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
 
   val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token))
 
-  val genericCmds: Seq[ParsedCmdFactory[Id, _, NotUsed]] = {
+  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
     import GenericCommands._
     Seq(
       PingCmdFactory,
@@ -146,16 +146,16 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   //We set up a commands object, which parses potential commands
   //If you wanted to be fancy, you could use a valve here to stop new commands when shutting down
   //Here we just shut everything down at once
-  val cmdObj: Commands[Id] =
+  val cmdObj: Commands =
     CoreCommands
       .create(
-        CommandSettings[Id](needsMention = true, prefixes = Set("!", "&")),
+        CommandSettings(needsMention = true, prefixes = Set("!", "&")),
         cache.subscribeAPI.via(killSwitch.flow),
         requests
       )
       ._2
 
-  val commandConnector = new newcommands.CommandConnector[Id](
+  val commandConnector = new newcommands.CommandConnector(
     cache.subscribeAPI
       .collectType[APIMessage.MessageCreate]
       .map(m => m.message -> m.cache.current)
@@ -163,7 +163,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     requests
   )
 
-  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]): Mat =
+  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
     ExampleMain.registerCmd(cmdObj, helpCmdActor)(parsedCmdFactory)
 
   def registerNewCommand[Mat](entry: NewCommandsEntry[Mat]): Mat =
@@ -181,8 +181,8 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     .runForeach(_ => self ! DiscordShard.RestartShard)
 
   val guildRouterMusic: ActorRef = {
-    val registerCmdObj = new FunctionK[MusicHandler.MatCmdFactory, Id] {
-      override def apply[A](fa: MusicHandler.MatCmdFactory[A]): Id[A] = registerCmd(fa)
+    val registerCmdObj = new FunctionK[MusicHandler.MatCmdFactory, cats.Id] {
+      override def apply[A](fa: MusicHandler.MatCmdFactory[A]): A = registerCmd(fa)
     }
 
     context.actorOf(
@@ -262,12 +262,12 @@ object ExampleMain {
   def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
     Props(new ExampleMain(settings, cache, shard))
 
-  def registerCmd[Mat](commands: Commands[Id], helpActor: ActorRef)(
-      parsedCmdFactory: ParsedCmdFactory[Id, _, Mat]
+  def registerCmd[Mat](commands: Commands, helpActor: ActorRef)(
+      parsedCmdFactory: ParsedCmdFactory[_, Mat]
   ): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
-      case (info: AbstractCmdInfo[Id], Some(description)) => helpActor ! HelpCmd.AddCmd(info, description, complete)
+      case (info: AbstractCmdInfo, Some(description)) => helpActor ! HelpCmd.AddCmd(info, description, complete)
       case _                                              =>
     }
     import scala.concurrent.ExecutionContext.Implicits.global
@@ -282,11 +282,11 @@ object ExampleMain {
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
-      command: newcommands.NamedCommand[Id, _, Mat],
-      description: newcommands.CommandDescription
+                                    command: newcommands.NamedComplexCommand[_, Mat],
+                                    description: newcommands.CommandDescription
   )
 
-  def registerNewCommand[Mat](connector: newcommands.CommandConnector[Id], helpActor: ActorRef)(
+  def registerNewCommand[Mat](connector: newcommands.CommandConnector, helpActor: ActorRef)(
       entry: NewCommandsEntry[Mat]
   ): Mat = {
     val (materialized, complete) =

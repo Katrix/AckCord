@@ -40,18 +40,18 @@ import akka.{Done, NotUsed}
 
 object GenericCommands {
 
-  val PingCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory[Id, NotUsed, NotUsed](
+  val PingCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("ping")),
     sink = requests =>
       //Completely manual
-      ParsedCmdFlow[Id, NotUsed]
+      ParsedCmdFlow[NotUsed]
         .map(_ => cmd => CreateMessage.mkContent(cmd.msg.channelId, "Pong"))
         .to(requests.sinkIgnore),
     description =
       Some(CmdDescription(name = "Ping", description = "Ping this bot and get a response. Used for testing"))
   )
 
-  val SendFileCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory[Id, NotUsed, NotUsed](
+  val SendFileCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory[NotUsed, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("sendFile")),
     sink = requests => {
       val embed = OutgoingEmbed(
@@ -61,8 +61,8 @@ object GenericCommands {
       )
 
       //Using mapConcat for optional values
-      ParsedCmdFlow[Id, NotUsed]
-        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.value.toList)
+      ParsedCmdFlow[NotUsed]
+        .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.toList)
         .map(_.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed)))
         .to(requests.sinkIgnore)
     },
@@ -70,26 +70,26 @@ object GenericCommands {
       Some(CmdDescription(name = "Send file", description = "Make the bot send an embed with a file. Used for testing"))
   )
 
-  val InfoChannelCmdFactory: ParsedCmdFactory[Id, GuildChannel, NotUsed] = ParsedCmdFactory[Id, GuildChannel, NotUsed](
+  val InfoChannelCmdFactory: ParsedCmdFactory[GuildChannel, NotUsed] = ParsedCmdFactory[GuildChannel, NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("infoChannel")),
     sink = requests => {
       //Using the context
-      ParsedCmdFlow[Id, GuildChannel]
+      ParsedCmdFlow[GuildChannel]
         .map { implicit c => cmd =>
           GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         }
         .via(requests.flow)
         .mapConcat { answer =>
           val ctx                               = answer.context
-          implicit val cache: CacheSnapshot[Id] = ctx.c
+          implicit val cache: CacheSnapshot = ctx.c
           val content = answer match {
-            case response: RequestResponse[RawChannel, GetChannelInfo[Id]] =>
+            case response: RequestResponse[RawChannel, GetChannelInfo] =>
               val data = response.data
               s"Info for ${data.name}:\n$data"
             case _: FailedRequest[_] => "Error encountered"
           }
 
-          ctx.senderChannelId.tResolve[Id](ctx.guildId).map(_.sendMessage(content)).value.toList
+          ctx.senderChannelId.tResolve(ctx.guildId).map(_.sendMessage(content)).toList
         }
         .to(requests.sinkIgnore)
     },
@@ -101,26 +101,26 @@ object GenericCommands {
     )
   )
 
-  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[Id, NotUsed, NotUsed] =
-    ParsedCmdFactory[Id, NotUsed, NotUsed](
+  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] =
+    ParsedCmdFactory[NotUsed, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = Seq("kill", "die")),
       //We use system.actorOf to keep the actor alive when this actor shuts down
       sink = requests =>
         Sink
-          .foreach[ParsedCmd[Id, NotUsed]] { _ =>
+          .foreach[ParsedCmd[NotUsed]] { _ =>
             CoordinatedShutdown(requests.system).run(CoordinatedShutdown.JvmExitReason)
           }
           .mapMaterializedValue(_ => NotUsed),
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))
     )
 
-  val TimeDiffCmdFactory: ParsedCmdFactory[Id, NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[Id, NotUsed](
+  val TimeDiffCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] = ParsedCmdFactory.requestRunner[NotUsed](
     refiner = CmdInfo(prefix = "!", aliases = Seq("timeDiff")),
     run = implicit c =>
       (runner, cmd) => {
         import runner._
         for {
-          channel <- liftOptionT(cmd.msg.channelId.tResolve)
+          channel <- optionPure(cmd.msg.channelId.tResolve)
           sentMsg <- run(channel.sendMessage("Msg"))
           time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
           _ <- run(channel.sendMessage(s"$time ms between command and response"))
@@ -138,13 +138,13 @@ object GenericCommands {
       name: String,
       aliases: Seq[String],
       sink: Sink[Request[RawMessage, NotUsed], Future[Done]]
-  ): ParsedCmdFactory[Id, Int, NotUsed] =
-    ParsedCmdFactory[Id, Int, NotUsed](
+  ): ParsedCmdFactory[Int, NotUsed] =
+    ParsedCmdFactory[Int, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = aliases),
-      sink = requests =>
-        ParsedCmdFlow[Id, Int]
+      sink = _ =>
+        ParsedCmdFlow[Int]
           .mapConcat { implicit c => cmd =>
-            cmd.msg.channelId.tResolve.map(_ -> cmd.args).value.toList
+            cmd.msg.channelId.tResolve.map(_ -> cmd.args).toList
           }
           .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
           .to(sink),

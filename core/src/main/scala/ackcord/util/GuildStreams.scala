@@ -55,7 +55,7 @@ object GuildStreams {
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>
           implicit val c: MemoryCacheSnapshot = msg.cache.current
-          msg.message.tGuildChannel.value.map(_.guildId)
+          msg.message.tGuildChannel.map(_.guildId)
         case APIMessage.VoiceStateUpdate(state, _) => state.guildId
       }
 

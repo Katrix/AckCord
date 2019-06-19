@@ -43,13 +43,13 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
     ec: ExecutionContext
 ) {
 
-  val QueueCmdFactory: ParsedCmdFactory[Id, String, NotUsed] = ParsedCmdFactory.requestRunner(
-    refiner = CmdInfo[Id](prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
+  val QueueCmdFactory: ParsedCmdFactory[String, NotUsed] = ParsedCmdFactory.requestRunner(
+    refiner = CmdInfo(prefix = "&", aliases = Seq("q", "queue"), filters = Seq(CmdFilter.InOneGuild(guildId))),
     run = implicit c =>
       (runner, cmd) => {
         import runner._
         for {
-          guild   <- liftOptionT(guildId.resolve)
+          guild   <- optionPure(guildId.resolve)
           channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
           _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
@@ -67,32 +67,32 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
       aliases: Seq[String],
       description: CmdDescription,
       mapper: TChannel => A
-  ): ParsedCmdFactory[Id, NotUsed, Future[Done]] =
-    ParsedCmdFactory[Id, NotUsed, Future[Done]](
-      refiner = CmdInfo[Id](prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
+  ): ParsedCmdFactory[NotUsed, Future[Done]] =
+    ParsedCmdFactory[NotUsed, Future[Done]](
+      refiner = CmdInfo(prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
       sink = requests =>
-        ParsedCmdFlow[Id, NotUsed]
+        ParsedCmdFlow[NotUsed]
           .mapConcat { implicit c => cmd =>
-            cmd.msg.tGuildChannel[Id](guildId).map(mapper).value.toList
+            cmd.msg.tGuildChannel(guildId).map(mapper).toList
           }
           .ask[MusicHandler.CommandAck.type](requests.parallelism)(musicHandler)
           .toMat(Sink.ignore)(Keep.right),
       description = Some(description)
     )
 
-  val StopCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
+  val StopCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("s", "stop"),
     mapper = StopMusic.apply,
     description = CmdDescription(name = "Stop music", description = "Stop music from playing, and leave the channel")
   )
 
-  val NextCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
+  val NextCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("n", "next"),
     mapper = NextTrack.apply,
     description = CmdDescription(name = "Next track", description = "Skip to the next track")
   )
 
-  val PauseCmdFactory: ParsedCmdFactory[Id, NotUsed, Future[Done]] = simpleCommand(
+  val PauseCmdFactory: ParsedCmdFactory[NotUsed, Future[Done]] = simpleCommand(
     aliases = Seq("p", "pause"),
     mapper = TogglePause.apply,
     description = CmdDescription(name = "Pause/Play", description = "Toggle pause on the current player")

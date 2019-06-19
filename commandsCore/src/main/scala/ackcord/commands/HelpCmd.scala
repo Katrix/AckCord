@@ -90,7 +90,7 @@ abstract class HelpCmd extends Actor {
       if (page > 0) {
         sendMessageAndAck(sender(), CreateMessage(msg.channelId, createReplyAll(msg, page - 1)))
       } else {
-        msg.channelId.tResolve.value match {
+        msg.channelId.tResolve match {
           case Some(channel) => sendMessageAndAck(sender(), channel.sendMessage(s"Invalid page $page"))
           case None          => sendAck(sender())
         }
@@ -152,7 +152,7 @@ abstract class HelpCmd extends Actor {
     Some(CreateMessageData(s"Unknown command $command"))
 }
 object HelpCmd {
-  case class CommandRegistration(info: AbstractCmdInfo[Id], description: CmdDescription)
+  case class CommandRegistration(info: AbstractCmdInfo, description: CmdDescription)
   private case class TerminateCommand(registration: CommandRegistration)
 
   sealed trait Args
@@ -171,7 +171,7 @@ object HelpCmd {
     * @param description The command description for the command
     * @param commandEnd A future that is completed when the command is removed.
     */
-  case class AddCmd(info: AbstractCmdInfo[Id], description: CmdDescription, commandEnd: Future[Done])
+  case class AddCmd(info: AbstractCmdInfo, description: CmdDescription, commandEnd: Future[Done])
 
   /**
     * Sent to a handler from the help command when a command is unregistered.

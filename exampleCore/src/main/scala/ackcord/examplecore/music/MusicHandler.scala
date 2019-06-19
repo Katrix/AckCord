@@ -40,7 +40,7 @@ import ackcord.data.{ChannelId, GuildId, TChannel}
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler._
 import ackcord.syntax._
-import akka.{Done, NotUsed}
+import akka.{Done, NotUsed, util}
 import akka.actor.{ActorLogging, ActorSystem, CoordinatedShutdown, FSM, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
@@ -49,7 +49,7 @@ import cats.arrow.FunctionK
 
 class MusicHandler(
     requests: RequestHelper,
-    registerCmd: FunctionK[MusicHandler.MatCmdFactory, Id],
+    registerCmd: FunctionK[MusicHandler.MatCmdFactory, cats.Id],
     guildId: GuildId,
     cache: Cache
 ) extends FSM[MusicHandler.MusicState, MusicHandler.StateData]
@@ -71,8 +71,8 @@ class MusicHandler(
   )
 
   {
-    implicit val timeout = Timeout(30.seconds)
-    val cmds             = new MusicCommands(guildId, self)
+    implicit val timeout: util.Timeout = Timeout(30.seconds)
+    val cmds                           = new MusicCommands(guildId, self)
     import cmds._
     Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd(_))
   }
@@ -300,10 +300,10 @@ class MusicHandler(
   }
 }
 object MusicHandler {
-  def props(requests: RequestHelper, registerCmd: FunctionK[MatCmdFactory, Id], cache: Cache): GuildId => Props =
+  def props(requests: RequestHelper, registerCmd: FunctionK[MatCmdFactory, cats.Id], cache: Cache): GuildId => Props =
     guildId => Props(new MusicHandler(requests, registerCmd, guildId, cache))
 
-  type MatCmdFactory[A] = ParsedCmdFactory[Id, _, A]
+  type MatCmdFactory[A] = ParsedCmdFactory[_, A]
 
   final val UseBurstingSender = true
 

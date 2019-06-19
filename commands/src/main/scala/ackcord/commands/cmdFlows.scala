@@ -23,8 +23,6 @@
  */
 package ackcord.commands
 
-import scala.language.higherKinds
-
 import scala.concurrent.Future
 
 import ackcord.CacheSnapshot
@@ -32,45 +30,42 @@ import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import akka.stream.{Graph, SourceShape}
 
-trait CmdFlowBase[A, F[_]] {
+trait CmdFlowBase[A] {
 
-  def getCache(a: A): CacheSnapshot[F]
+  def getCache(a: A): CacheSnapshot
 
-  def map[B](f: CacheSnapshot[F] => A => B): Flow[A, B, NotUsed] =
+  def map[B](f: CacheSnapshot => A => B): Flow[A, B, NotUsed] =
     Flow[A].map(a => f(getCache(a))(a))
 
-  def mapConcat[B](f: CacheSnapshot[F] => A => List[B]): Flow[A, B, NotUsed] =
+  def mapConcat[B](f: CacheSnapshot => A => List[B]): Flow[A, B, NotUsed] =
     Flow[A].mapConcat(a => f(getCache(a))(a))
 
-  def mapAsync[B](parallelism: Int)(f: CacheSnapshot[F] => A => Future[B]): Flow[A, B, NotUsed] =
+  def mapAsync[B](parallelism: Int)(f: CacheSnapshot => A => Future[B]): Flow[A, B, NotUsed] =
     Flow[A].mapAsync(parallelism)(a => f(getCache(a))(a))
 
-  def mapAsyncUnordered[B](parallelism: Int)(f: CacheSnapshot[F] => A => Future[B]): Flow[A, B, NotUsed] =
+  def mapAsyncUnordered[B](parallelism: Int)(f: CacheSnapshot => A => Future[B]): Flow[A, B, NotUsed] =
     Flow[A].mapAsyncUnordered(parallelism)(a => f(getCache(a))(a))
 
-  def flatMapConcat[B](f: CacheSnapshot[F] => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
+  def flatMapConcat[B](f: CacheSnapshot => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
     Flow[A].flatMapConcat(a => f(getCache(a))(a))
 
-  def flatMapMerge[B](breadth: Int)(f: CacheSnapshot[F] => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
+  def flatMapMerge[B](breadth: Int)(f: CacheSnapshot => A => Graph[SourceShape[B], NotUsed]): Flow[A, B, NotUsed] =
     Flow[A].flatMapMerge(breadth, a => f(getCache(a))(a))
 }
 
 /**
   * A class to extract the cache from a parsed cmd object.
   */
-class ParsedCmdFlow[F[_], A] extends CmdFlowBase[ParsedCmd[F, A], F] {
-  override def getCache(a: ParsedCmd[F, A]): CacheSnapshot[F] = a.cache
+class ParsedCmdFlow[A] extends CmdFlowBase[ParsedCmd[A]] {
+  override def getCache(a: ParsedCmd[A]): CacheSnapshot = a.cache
 }
 object ParsedCmdFlow {
-  def apply[F[_], A] = new ParsedCmdFlow[F, A]
+  def apply[A] = new ParsedCmdFlow[A]
 }
 
 /**
   * An object to extract the cache from a unparsed cmd object.
   */
-class CmdFlow[F[_]] extends CmdFlowBase[Cmd[F], F] {
-  override def getCache(a: Cmd[F]): CacheSnapshot[F] = a.cache
-}
-object CmdFlow {
-  def apply[F[_]] = new CmdFlow[F]
+object CmdFlow extends CmdFlowBase[Cmd] {
+  override def getCache(a: Cmd): CacheSnapshot = a.cache
 }

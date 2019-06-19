@@ -23,35 +23,33 @@
  */
 package ackcord.commands
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.Message
 
 /**
   * Top trait for all command messages.
   */
-sealed trait AllCmdMessages[F[_]]
+sealed trait AllCmdMessages
 
 /**
   * Trait for all command errors.
   */
-sealed trait CmdError[F[_]] extends AllCmdMessages[F]
+sealed trait CmdError extends AllCmdMessages
 
 /**
   * Trait for commands that have not been parsed into a specific command.
   */
-sealed trait RawCmdMessage[F[_]] extends AllCmdMessages[F]
+sealed trait RawCmdMessage extends AllCmdMessages
 
 /**
   * Trait for all unparsed command messages.
   */
-sealed trait CmdMessage[F[_]] extends AllCmdMessages[F]
+sealed trait CmdMessage extends AllCmdMessages
 
 /**
   * Trait for all parsed command messages.
   */
-sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
+sealed trait ParsedCmdMessage[+A] extends AllCmdMessages
 
 /**
   * A raw unparsed command.
@@ -61,20 +59,20 @@ sealed trait ParsedCmdMessage[F[_], +A] extends AllCmdMessages[F]
   * @param args The arguments of this command.
   * @param c The cache for this command.
   */
-case class RawCmd[F[_]](msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot[F])
-    extends RawCmdMessage[F]
+case class RawCmd(msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot)
+    extends RawCmdMessage
 
 /**
   * Bot was mentioned, but no command was used.
   */
-case class NoCmd[F[_]](msg: Message, c: CacheSnapshot[F]) extends RawCmdMessage[F] with CmdError[F]
+case class NoCmd(msg: Message, c: CacheSnapshot) extends RawCmdMessage with CmdError
 
 /**
   * An unknown prefix was used.
   */
-case class NoCmdPrefix[F[_]](msg: Message, command: String, args: List[String], c: CacheSnapshot[F])
-    extends RawCmdMessage[F]
-    with CmdError[F]
+case class NoCmdPrefix(msg: Message, command: String, args: List[String], c: CacheSnapshot)
+    extends RawCmdMessage
+    with CmdError
 
 /**
   * An unparsed specific command.
@@ -82,7 +80,7 @@ case class NoCmdPrefix[F[_]](msg: Message, command: String, args: List[String], 
   * @param args The args for this command.
   * @param cache The cache for this command.
   */
-case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshot[F]) extends CmdMessage[F]
+case class Cmd(msg: Message, args: List[String], cache: CacheSnapshot) extends CmdMessage
 
 /**
   * A parsed specific command.
@@ -91,8 +89,8 @@ case class Cmd[F[_]](msg: Message, args: List[String], cache: CacheSnapshot[F]) 
   * @param remaining The remaining arguments after the parser did it's thing.
   * @param cache The cache for this command.
   */
-case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshot[F])
-    extends ParsedCmdMessage[F, A]
+case class ParsedCmd[A](msg: Message, args: A, remaining: List[String], cache: CacheSnapshot)
+    extends ParsedCmdMessage[A]
 
 /**
   * A parse error for a parsed command.
@@ -100,26 +98,26 @@ case class ParsedCmd[F[_], A](msg: Message, args: A, remaining: List[String], ca
   * @param error The error message.
   * @param cache The cache for this command.
   */
-case class CmdParseError[F[_]](msg: Message, error: String, cache: CacheSnapshot[F])
-    extends ParsedCmdMessage[F, Nothing]
-    with CmdError[F]
+case class CmdParseError(msg: Message, error: String, cache: CacheSnapshot)
+    extends ParsedCmdMessage[Nothing]
+    with CmdError
 
 /**
   * A command that did not make it through some filters.
   * @param failedFilters The filters the command failed.
   * @param cmd The raw command object.
   */
-case class FilteredCmd[F[_]](failedFilters: Seq[CmdFilter], cmd: RawCmd[F])
-    extends CmdMessage[F]
-    with ParsedCmdMessage[F, Nothing]
-    with CmdError[F]
+case class FilteredCmd(failedFilters: Seq[CmdFilter], cmd: RawCmd)
+    extends CmdMessage
+    with ParsedCmdMessage[Nothing]
+    with CmdError
 
 /**
   * A generic command error.
   * @param error The error message.
   * @param cmd The raw command object.
   */
-case class GenericCmdError[F[_]](error: String, cmd: RawCmd[F])
-    extends CmdMessage[F]
-    with ParsedCmdMessage[F, Nothing]
-    with CmdError[F]
+case class GenericCmdError(error: String, cmd: RawCmd)
+    extends CmdMessage
+    with ParsedCmdMessage[Nothing]
+    with CmdError

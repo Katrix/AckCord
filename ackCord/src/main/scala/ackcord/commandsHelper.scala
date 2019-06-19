@@ -31,17 +31,16 @@ import ackcord.commands._
 import akka.Done
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
-import cats.Monad
 
 /**
   * An object which manages a [[ackcord.commands.Commands]] instance.
   */
-trait CommandsHelper[F[_]] {
+trait CommandsHelper {
 
   /**
     * The commands object specific to this command helper.
     */
-  def commands: Commands[F]
+  def commands: Commands
 
   /**
     * The request helper to use when sending messages from this command helper.
@@ -60,12 +59,12 @@ trait CommandsHelper[F[_]] {
     *         when it's done.
     */
   def onRawCmd[G[_]](
-      handler: RawCmd[F] => G[Unit]
+      handler: RawCmd => G[Unit]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.mat
     commands.subscribeRaw
-      .collectType[RawCmd[F]]
+      .collectType[RawCmd]
       .flatMapConcat(handler.andThen(streamable.toSource))
       .viaMat(KillSwitches.single)(Keep.right)
       .toMat(Sink.ignore)(Keep.both)
@@ -78,13 +77,13 @@ trait CommandsHelper[F[_]] {
     *         when it's done.
     */
   def registerHandler[G[_]](
-      handler: RawCommandHandler[F, G]
+      handler: RawCommandHandler[G]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.mat
     commands.subscribeRaw
       .collect {
-        case cmd: RawCmd[F] => handler.handle(cmd)(cmd.c)
+        case cmd: RawCmd => handler.handle(cmd)(cmd.c)
       }
       .flatMapConcat(streamable.toSource)
       .viaMat(KillSwitches.single)(Keep.right)
@@ -98,10 +97,10 @@ trait CommandsHelper[F[_]] {
     *         when it's done.
     */
   def registerHandler[G[_], A: MessageParser](
-      handler: CommandHandler[F, G, A]
-  )(implicit streamableG: Streamable[G], F: Monad[F], streamableF: Streamable[F]): (UniqueKillSwitch, Future[Done]) = {
-    val sink: RequestHelper => Sink[ParsedCmd[F, A], UniqueKillSwitch] = _ => {
-      ParsedCmdFlow[F, A]
+      handler: CommandHandler[G, A]
+  )(implicit streamableG: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
+    val sink: RequestHelper => Sink[ParsedCmd[A], UniqueKillSwitch] = _ => {
+      ParsedCmdFlow[A]
         .map(implicit c => cmd => handler.handle(cmd.msg, cmd.args, cmd.remaining))
         .flatMapConcat(streamableG.toSource)
         .viaMat(KillSwitches.single)(Keep.right)
@@ -128,9 +127,9 @@ trait CommandsHelper[F[_]] {
       filters: Seq[CmdFilter] = Nil,
       description: Option[CmdDescription] = None
   )(
-      handler: ParsedCmd[F, A] => G[Unit]
-  )(implicit F: Monad[F], streamableF: Streamable[F], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
-    registerCmd(CmdInfo[F](prefix, aliases, filters), description)(handler)
+      handler: ParsedCmd[A] => G[Unit]
+  )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
+    registerCmd(CmdInfo(prefix, aliases, filters), description)(handler)
 
   /**
     * Register a command which runs some code.
@@ -142,13 +141,13 @@ trait CommandsHelper[F[_]] {
     *         when it's done.
     */
   def registerCmd[A: MessageParser, G[_]](
-      refiner: CmdRefiner[F],
+      refiner: CmdRefiner,
       description: Option[CmdDescription]
   )(
-      handler: ParsedCmd[F, A] => G[Unit]
-  )(implicit F: Monad[F], streamableF: Streamable[F], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
+      handler: ParsedCmd[A] => G[Unit]
+  )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val sink = (_: RequestHelper) => {
-      ParsedCmdFlow[F, A]
+      ParsedCmdFlow[A]
         .map(_ => handler)
         .flatMapConcat(streamable.toSource)
         .viaMat(KillSwitches.single)(Keep.right)
@@ -160,4 +159,4 @@ trait CommandsHelper[F[_]] {
     commands.subscribe(factory)(Keep.right)
   }
 }
-case class SeperateCommandsHelper[F[_]](commands: Commands[F], requests: RequestHelper) extends CommandsHelper[F]
+case class SeperateCommandsHelper[F[_]](commands: Commands, requests: RequestHelper) extends CommandsHelper

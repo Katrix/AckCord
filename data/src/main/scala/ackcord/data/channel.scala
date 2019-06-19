@@ -23,15 +23,11 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import java.time.OffsetDateTime
 
 import scala.collection.immutable
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
-import cats.data.OptionT
-import cats.{Applicative, Monad}
 import enumeratum.values._
 
 /**
@@ -101,8 +97,8 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
   /**
     * If this overwrite applies to a user, get's that user, otherwise returns None.
     */
-  def user[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
-    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else OptionT.none[F, User]
+  def user(implicit c: CacheSnapshot): Option[User] =
+    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else None
 
   /**
     * If this overwrite applies to a user, get that user's member, otherwise returns None.
@@ -154,8 +150,8 @@ sealed trait TChannel extends Channel {
   /**
     * Gets the last message for this channel if it exists.
     */
-  def lastMessage[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, Message] =
-    lastMessageId.fold(OptionT.none[F, Message])(c.getMessage(id, _))
+  def lastMessage(implicit c: CacheSnapshot): Option[Message] =
+    lastMessageId.fold(None: Option[Message])(c.getMessage(id, _))
 }
 
 /**
@@ -196,8 +192,8 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * Gets the category for this channel if it has one.
     */
-  def category[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildCategory] =
-    OptionT.fromOption[F](parentId).flatMap(c.getGuildChannel(guildId, _)).collect {
+  def category(implicit c: CacheSnapshot): Option[GuildCategory] =
+    parentId.flatMap(c.getGuildChannel(guildId, _)).collect {
       case cat: GuildCategory => cat
     }
 }
@@ -346,5 +342,5 @@ case class GroupDMChannel(
   /**
     * Gets the owner for this group DM.
     */
-  def owner[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(ownerId)
+  def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
 }

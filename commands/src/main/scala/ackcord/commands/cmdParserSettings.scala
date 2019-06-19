@@ -23,24 +23,20 @@
  */
 package ackcord.commands
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.Message
-import cats.Applicative
-import cats.data.OptionT
 import cats.instances.option._
 import cats.syntax.all._
 
 /**
   * An object to control how messages are parsed into command objects.
   */
-trait AbstractCommandSettings[F[_]] {
+trait AbstractCommandSettings {
 
   /**
     * Checks if a given message needs a mention at the start.
     */
-  def needMention(message: Message)(implicit c: CacheSnapshot[F]): F[Boolean]
+  def needMention(message: Message)(implicit c: CacheSnapshot): Boolean
 
   /**
     * Extracts the prefix for a command, and the remaining arguments given a message.
@@ -50,7 +46,7 @@ trait AbstractCommandSettings[F[_]] {
     *         string in the tuple is the prefix, while the `Seq[String]` is
     *         the remaining arguments.
     */
-  def getPrefix(args: Seq[String], message: Message)(implicit c: CacheSnapshot[F]): OptionT[F, (String, Seq[String])]
+  def getPrefix(args: Seq[String], message: Message)(implicit c: CacheSnapshot): Option[(String, Seq[String])]
 }
 
 /**
@@ -60,18 +56,17 @@ trait AbstractCommandSettings[F[_]] {
   * @param needsMention If a mention should always be required.
   * @param prefixes All the valid prefixes for commands.
   */
-case class CommandSettings[F[_]: Applicative](
+case class CommandSettings(
     needsMention: Boolean,
     prefixes: Set[String]
-) extends AbstractCommandSettings[F] {
+) extends AbstractCommandSettings {
 
-  override def needMention(message: Message)(implicit c: CacheSnapshot[F]): F[Boolean] = needsMention.pure[F]
+  override def needMention(message: Message)(implicit c: CacheSnapshot): Boolean = needsMention
 
   override def getPrefix(args: Seq[String], message: Message)(
-      implicit c: CacheSnapshot[F]
-  ): OptionT[F, (String, Seq[String])] = OptionT.fromOption[F](
+      implicit c: CacheSnapshot
+  ): Option[(String, Seq[String])] =
     prefixes
       .find(prefix => args.headOption.exists(_.contains(prefix)))
       .fproduct(prefix => args.head.drop(prefix.length) +: args.tail)
-  )
 }

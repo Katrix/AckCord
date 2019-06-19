@@ -12,7 +12,7 @@ import ackcord.requests.CreateMessage
 import akka.stream.scaladsl.Flow
 import cats.syntax.all._
 
-class NewCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
+class NewCommandsController(requests: RequestHelper) extends CommandController(requests) {
 
   val hello: NamedCommand[List[String]] = Command
     .named("%", Seq("hello"), mustMention = true)
@@ -22,7 +22,7 @@ class NewCommandsController(requests: RequestHelper) extends CommandController[I
 
   val copy: NamedCommand[Int] =
     Command.named("%", Seq("copy"), mustMention = true).parsing[Int].withRequestOpt { implicit m =>
-      m.message.tGuildChannel.value.map(_.sendMessage(s"You said ${m.parsed}"))
+      m.message.tGuildChannel.map(_.sendMessage(s"You said ${m.parsed}"))
     }
 
   val guildInfo: NamedCommand[List[String]] =
@@ -40,12 +40,12 @@ class NewCommandsController(requests: RequestHelper) extends CommandController[I
     Command
       .named("%", Seq("parseNum"), mustMention = true)
       .parsing((MessageParser[Int], MessageParser[Int]).tupled)
-      .asyncOptRequest { implicit m =>
+      .withRequestOpt { implicit m =>
         m.message.tGuildChannel.map(_.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
       }
 
   private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, List[String]] =
-    GuildCommand.andThen(CommandFunction.needPermission[GuildUserCommandMessage](Permission.Administrator))
+    GuildCommand.andThen(CommandBuilder.needPermission[GuildUserCommandMessage](Permission.Administrator))
 
   val adminsOnly: NamedCommand[List[String]] =
     ElevatedCommand.named("%", Seq("adminOnly"), mustMention = true).withSideEffects { _ =>
@@ -56,7 +56,7 @@ class NewCommandsController(requests: RequestHelper) extends CommandController[I
     Command.named("%", Seq("timeDiff"), mustMention = true).async[SourceRequest] { implicit m =>
       import requestRunner._
       for {
-        channel <- liftOptionT(m.message.channelId.tResolve)
+        channel <- optionPure(m.message.channelId.tResolve)
         sentMsg <- run(channel.sendMessage("Msg"))
         _ <- {
           val time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)

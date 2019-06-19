@@ -23,8 +23,6 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
@@ -32,7 +30,6 @@ import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import akka.NotUsed
 import akka.http.scaladsl.model.Uri
-import cats.Monad
 import io.circe._
 import io.circe.syntax._
 
@@ -127,7 +124,7 @@ case class ModifyGuild[Ctx](
   override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyGuild[Ctx] = copy(reason = Some(reason))
@@ -210,7 +207,7 @@ case class CreateGuildChannel[Ctx](
   override def toNiceResponse(response: RawChannel): Option[GuildChannel] = response.toGuildChannel(guildId)
 
   override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): CreateGuildChannel[Ctx] = copy(reason = Some(reason))
@@ -238,7 +235,7 @@ case class ModifyGuildChannelPositions[Ctx](
   }
 
   override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyGuildChannelPositions[Ctx] = copy(reason = Some(reason))
@@ -324,7 +321,7 @@ case class AddGuildMember[Ctx](
       ifDefined(params.deaf, Permission.DeafenMembers)
     )
   }
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -379,7 +376,7 @@ case class ModifyGuildMember[Ctx](
       ifDefined(params.channelId, Permission.MoveMembers)
     )
   }
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
   override def withReason(reason: String): ModifyGuildMember[Ctx] = copy(reason = Some(reason))
 }
@@ -401,7 +398,7 @@ case class ModifyBotUsersNick[Ctx](
   override def responseDecoder: Decoder[String] = Decoder[String]
 
   override def requiredPermissions: Permission = Permission.ChangeNickname
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyBotUsersNick[Ctx] = copy(reason = Some(reason))
@@ -419,7 +416,7 @@ case class AddGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: Rol
   override def route: RequestRoute = Routes.addGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -431,7 +428,7 @@ case class RemoveGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: 
   override def route: RequestRoute = Routes.removeGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -447,7 +444,7 @@ case class RemoveGuildMember[Ctx](
   override def route: RequestRoute = Routes.removeGuildMember(guildId, userId)
 
   override def requiredPermissions: Permission = Permission.KickMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): RemoveGuildMember[Ctx] = copy(reason = Some(reason))
@@ -464,7 +461,7 @@ case class GetGuildBans[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
   override def toNiceResponse(response: Seq[RawBan]): Seq[Ban] = response.map(_.toBan)
 
   override def requiredPermissions: Permission = Permission.BanMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -479,7 +476,7 @@ case class GetGuildBan[Ctx](guildId: GuildId, userId: UserId, context: Ctx = Not
   override def toNiceResponse(response: RawBan): Ban = response.toBan
 
   override def requiredPermissions: Permission = Permission.BanMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -504,7 +501,7 @@ case class CreateGuildBan[Ctx](
     Routes.createGuildMemberBan(guildId, userId, queryParams.deleteMessageDays, queryParams.reason)
 
   override def requiredPermissions: Permission = Permission.BanMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): CreateGuildBan[Ctx] = copy(reason = Some(reason))
@@ -531,7 +528,7 @@ case class RemoveGuildBan[Ctx](
   override def route: RequestRoute = Routes.removeGuildMemberBan(guildId, userId)
 
   override def requiredPermissions: Permission = Permission.BanMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): RemoveGuildBan[Ctx] = copy(reason = Some(reason))
@@ -583,7 +580,7 @@ case class CreateGuildRole[Ctx](
     response.toRole(guildId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): CreateGuildRole[Ctx] = copy(reason = Some(reason))
@@ -614,7 +611,7 @@ case class ModifyGuildRolePositions[Ctx](
   override def toNiceResponse(response: Seq[RawRole]): Seq[Role] = response.map(_.toRole(guildId))
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyGuildRolePositions[Ctx] = copy(reason = Some(reason))
@@ -652,7 +649,7 @@ case class ModifyGuildRole[Ctx](
   override def toNiceResponse(response: RawRole): Role = response.toRole(guildId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): ModifyGuildRole[Ctx] = copy(reason = Some(reason))
@@ -670,7 +667,7 @@ case class DeleteGuildRole[Ctx](
   override def route: RequestRoute = Routes.deleteGuildRole(guildId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): DeleteGuildRole[Ctx] = copy(reason = Some(reason))
@@ -696,7 +693,7 @@ case class GetGuildPruneCount[Ctx](guildId: GuildId, queryParams: GuildPruneCoun
   override def route: RequestRoute = Routes.getGuildPruneCount(guildId, Some(queryParams.days))
 
   override def requiredPermissions: Permission = Permission.KickMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def responseDecoder: Decoder[GuildPruneCountResponse] =
@@ -732,7 +729,7 @@ case class BeginGuildPrune[Ctx](
     Routes.beginGuildPrune(guildId, Some(queryParams.days), queryParams.computePruneCount)
 
   override def requiredPermissions: Permission = Permission.KickMembers
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): BeginGuildPrune[Ctx] = copy(reason = Some(reason))
@@ -770,7 +767,7 @@ case class GetGuildInvites[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUse
   override def responseDecoder: Decoder[Seq[InviteWithMetadata]] = Decoder[Seq[InviteWithMetadata]]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -784,7 +781,7 @@ case class GetGuildIntegrations[Ctx](guildId: GuildId, context: Ctx = NotUsed: N
   override def responseDecoder: Decoder[Seq[Integration]] = Decoder[Seq[Integration]]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -807,7 +804,7 @@ case class CreateGuildIntegration[Ctx](
     derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -837,7 +834,7 @@ case class ModifyGuildIntegration[Ctx](
     derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -849,7 +846,7 @@ case class DeleteGuildIntegration[Ctx](guildId: GuildId, integrationId: Integrat
   override def route: RequestRoute = Routes.deleteGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -861,7 +858,7 @@ case class SyncGuildIntegration[Ctx](guildId: GuildId, integrationId: Integratio
   override def route: RequestRoute = Routes.syncGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -875,7 +872,7 @@ case class GetGuildEmbed[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
   override def responseDecoder: Decoder[GuildEmbed] = Decoder[GuildEmbed]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -890,7 +887,7 @@ case class ModifyGuildEmbed[Ctx](guildId: GuildId, params: GuildEmbed, context: 
   override def responseDecoder: Decoder[GuildEmbed] = Decoder[GuildEmbed]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -906,7 +903,7 @@ case class GetGuildVanityUrl[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotU
   override def responseDecoder: Decoder[VanityUrlResponse] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
@@ -938,7 +935,7 @@ case class DeleteInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed
   override def requiredPermissions: Permission = Permission.None
 
   //We don't track invites, so we'll have to stay optimistic with this one too
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = Monad[F].pure(true)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 
   override def withReason(reason: String): DeleteInvite[Ctx] = copy(reason = Some(reason))
 }
