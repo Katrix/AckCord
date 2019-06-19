@@ -116,43 +116,25 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   val controllerCommands: Seq[NewCommandsEntry[NotUsed]] = {
     val controller = new NewCommandsController(requests)
     Seq(
-      NewCommandsEntry("%", Seq("hello"), controller.hello, newcommands.CommandDescription("Hello", "Say hello")),
+      NewCommandsEntry(controller.hello, newcommands.CommandDescription("Hello", "Say hello")),
+      NewCommandsEntry(controller.copy, newcommands.CommandDescription("Copy", "Make the bot say what you said")),
       NewCommandsEntry(
-        "%",
-        Seq("copy"),
-        controller.copy,
-        newcommands.CommandDescription("Copy", "Make the bot say what you said")
-      ),
-      NewCommandsEntry(
-        "%",
-        Seq("guildInfo"),
         controller.guildInfo,
         newcommands.CommandDescription("Guild info", "Prints info about the current guild")
       ),
       NewCommandsEntry(
-        "%",
-        Seq("parseNum"),
         controller.parsingNumbers,
         newcommands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
       ),
       NewCommandsEntry(
-        "%",
-        Seq("adminOnly"),
         controller.adminsOnly,
         newcommands.CommandDescription("Elevanted command", "Command only admins can use")
       ),
       NewCommandsEntry(
-        "%",
-        Seq("timeDiff"),
         controller.timeDiff,
         newcommands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
       ),
-      NewCommandsEntry(
-        "%",
-        Seq("ping"),
-        controller.ping,
-        newcommands.CommandDescription("Ping", "Checks if the bot is alive")
-      )
+      NewCommandsEntry(controller.ping, newcommands.CommandDescription("Ping", "Checks if the bot is alive"))
     )
   }
 
@@ -300,9 +282,7 @@ object ExampleMain {
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
-      symbol: String,
-      aliases: Seq[String],
-      command: newcommands.Command[Id, _, Mat],
+      command: newcommands.NamedCommand[Id, _, Mat],
       description: newcommands.CommandDescription
   )
 
@@ -310,13 +290,13 @@ object ExampleMain {
       entry: NewCommandsEntry[Mat]
   ): Mat = {
     val (materialized, complete) =
-      connector.runNewCommand(connector.prefix(entry.symbol, entry.aliases, mustMention = true), entry.command)
+      connector.runNewNamedCommand(entry.command)
 
     //Due to the new commands being a complete break from the old ones, being
     // completely incompatible with some other stuff, we need to do a bit of
     // translation and hackery here
     helpActor ! HelpCmd.AddCmd(
-      commands.CmdInfo(entry.symbol, entry.aliases),
+      commands.CmdInfo(entry.command.symbol, entry.command.aliases),
       commands.CmdDescription(
         entry.description.name,
         entry.description.description,

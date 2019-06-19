@@ -53,6 +53,9 @@ abstract class CommandController[F[_]: Streamable: Monad](val requests: RequestH
   type ComplexCommand[A, Mat] = ackcord.newcommands.Command[F, A, Mat]
   type Command[A]             = ackcord.newcommands.Command[F, A, NotUsed]
 
+  type NamedComplexCommand[A, Mat] = ackcord.newcommands.NamedCommand[F, A, Mat]
+  type NamedCommand[A]             = ackcord.newcommands.NamedCommand[F, A, NotUsed]
+
   type CommandBuilder[+M[_], A]         = ackcord.newcommands.CommandBuilder[F, M, A]
   type CommandFunction[-I[_], +O[_]]    = ackcord.newcommands.CommandFunction[F, I, O]
   type CommandTransformer[-I[_], +O[_]] = ackcord.newcommands.CommandTransformer[F, I, O]

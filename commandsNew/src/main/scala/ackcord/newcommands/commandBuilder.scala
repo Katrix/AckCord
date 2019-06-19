@@ -35,22 +35,6 @@ import cats.{Applicative, Monad, ~>}
 import scala.language.higherKinds
 
 /**
-  * Represents non essential information about a command intended to be
-  * displayed to an end user.
-  *
-  * @param name The display name of a command.
-  * @param description The description of what a command does.
-  * @param usage How to use the command. Does not include the name or prefix.
-  * @param extra Extra stuff about the command that you yourself decide on.
-  */
-case class CommandDescription(
-    name: String,
-    description: String,
-    usage: String = "",
-    extra: Map[String, String] = Map.empty
-)
-
-/**
   * A mapping over command builders.
   * @tparam F The cache effect type
   * @tparam I The input message type
@@ -215,6 +199,32 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
     * The parser used for parsing the arguments this command takes.
     */
   def parser: MessageParser[A]
+
+  /**
+    * Converts this builder into a builder that will create [[NamedCommand]].
+    * These don't need to be provided a name when registering them.
+    * @param namedSymbol The symbol to use when invoking the command
+    * @param namedAliases The valid aliases to use when invoking the command
+    * @param mustMention If the command requires a mention
+    */
+  def named(
+      namedSymbol: String,
+      namedAliases: Seq[String],
+      mustMention: Boolean
+  ): NamedCommandBuilder[F, M, A] =
+    new NamedCommandBuilder[F, M, A] {
+      override def symbol: String = namedSymbol
+
+      override def aliases: Seq[String] = namedAliases
+
+      override def requiresMention: Boolean = mustMention
+
+      override def requests: RequestHelper = self.requests
+
+      override def parser: MessageParser[A] = self.parser
+
+      override def flow[B]: Flow[CommandMessage[F, B], Either[Option[CommandError[F]], M[B]], NotUsed] = self.flow[B]
+    }
 
   /**
     * Creates a new command builder parsing a specific type.
@@ -429,6 +439,117 @@ object CommandBuilder {
 
       override def flow[A]: Flow[CommandMessage[F, A], Either[Option[CommandError[F]], CommandMessage[F, A]], NotUsed] =
         Flow[CommandMessage[F, A]].map(Right.apply)
+    }
+}
+
+/**
+  * A [[CommandFunction]] from a command message to an output. Used for
+  * creating commands.
+  * @tparam F The cache effect type
+  * @tparam M The command message type used by the command.
+  * @tparam A The argument type of this command builder.
+  */
+trait NamedCommandBuilder[F[_], +M[_], A] extends CommandBuilder[F, M, A] { self =>
+
+  /**
+    * The prefix symbol to use for the command this builder will create.
+    */
+  def symbol: String
+
+  /**
+    * The valid aliases for the command this builder will create.
+    */
+  def aliases: Seq[String]
+
+  /**
+    * If the command this builder will create requires a mention when invoking it.
+    */
+  def requiresMention: Boolean
+
+  /**
+    * Creates a new command builder parsing a specific type.
+    * @tparam B The type to parse
+    */
+  override def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[F, M, B] =
+    new NamedCommandBuilder[F, M, B] {
+
+      override def symbol: String = self.symbol
+
+      override def aliases: Seq[String] = self.aliases
+
+      override def requiresMention: Boolean = self.requiresMention
+
+      override def requests: RequestHelper = self.requests
+
+      override def parser: MessageParser[B] = newParser
+
+      override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M[C]], NotUsed] = self.flow
+    }
+
+  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): NamedCommand[F, A, Mat] = new NamedCommand[F, A, Mat] {
+    override def symbol: String = self.symbol
+
+    override def aliases: Seq[String] = self.aliases
+
+    override def requiresMention: Boolean = self.requiresMention
+
+    override def parser: MessageParser[A] = self.parser
+
+    override def flow: Flow[CommandMessage[F, A], CommandError[F], Mat] = {
+      Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
+        import GraphDSL.Implicits._
+        val selfFlow = b.add(self.flow[A])
+
+        val selfPartition = b.add(Partition[Either[Option[CommandError[F]], M[A]]](2, {
+          case Left(_)  => 0
+          case Right(_) => 1
+        }))
+        val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
+        val selfOut = selfPartition.out(1).map(_.right.get)
+
+        selfFlow ~> selfPartition
+        selfOut ~> block
+
+        FlowShape(
+          selfFlow.in,
+          selfErr.outlet
+        )
+      })
+    }
+  }
+
+  override def async[G[_]](block: M[A] => G[Unit])(implicit streamable: Streamable[G]): NamedCommand[F, A, NotUsed] =
+    streamed(Flow[M[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
+
+  override def asyncOptRequest[G[_]](
+      block: M[A] => OptionT[G, Request[Any, Any]]
+  )(implicit streamable: Streamable[G]): NamedCommand[F, A, NotUsed] =
+    streamed(Flow[M[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
+
+  override def withRequest(block: M[A] => Request[Any, Any]): NamedCommand[F, A, NotUsed] =
+    streamed(Flow[M[A]].map(block).to(requests.sinkIgnore))
+
+  override def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): NamedCommand[F, A, NotUsed] =
+    streamed(Flow[M[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
+
+  override def withSideEffects(block: M[A] => Unit): NamedCommand[F, A, NotUsed] =
+    streamed(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
+
+  override def andThen[M2[_]](f: CommandFunction[F, M, M2]): NamedCommandBuilder[F, M2, A] =
+    new NamedCommandBuilder[F, M2, A] {
+
+      override def symbol: String = self.symbol
+
+      override def aliases: Seq[String] = self.aliases
+
+      override def requiresMention: Boolean = self.requiresMention
+
+      override def requests: RequestHelper = self.requests
+
+      override def parser: MessageParser[A] = self.parser
+
+      override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M2[C]], NotUsed] =
+        CommandFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
     }
 }
 

@@ -56,7 +56,7 @@ class CommandConnector[F[_]: Streamable: Monad](
     * Creates a prefix parser for a command.
     * @param symbol The symbol to parse before the command.
     * @param aliases A list of aliases for this command.
-    * @param mustMention If the command must need a mention before the prefix and alias.
+    * @param mustMention If the command requires a mention before the prefix and alias.
     */
   def prefix(
       symbol: String,
@@ -151,6 +151,19 @@ class CommandConnector[F[_]: Streamable: Monad](
   }
 
   /**
+    * Composes a named command's flow and the source of messages to consider
+    * for commands.
+    * @param command A named command the compose with.
+    * @tparam A The type of arguments this command uses.
+    * @tparam Mat The materialized result of running the command graph.
+    * @return A source of command errors that can be used however you want.
+    */
+  def newNamedCommandWithErrors[A, Mat](
+      command: NamedCommand[F, A, Mat]
+  ): Source[CommandError[F], (Mat, Future[Done])] =
+    newCommandWithErrors(prefix(command.symbol, command.aliases, command.requiresMention), command)
+
+  /**
     * Creates a [[RunnableGraph]] for a command.
     * @param prefix The prefix to parse before the command.
     * @param command The command to use when creating the graph.
@@ -170,6 +183,19 @@ class CommandConnector[F[_]: Streamable: Monad](
       .to(requests.sinkIgnore)
 
   /**
+    * Creates a [[RunnableGraph]] for a named command.
+    * @param command The named command to use when creating the graph.
+    * @tparam A The type of arguments this command uses.
+    * @tparam Mat The materialized result of running the command graph.
+    * @return A runnable graph representing the execution of this command.
+    *         Errors are sent as messages to the channel the command was used
+    *         from.
+    * @see [[newCommandWithErrors]]
+    */
+  def newNamedCommand[A, Mat](command: NamedCommand[F, A, Mat]): RunnableGraph[(Mat, Future[Done])] =
+    newCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
+
+  /**
     * Starts a command execution.
     * @param prefix The prefix to use for the command.
     * @param command The command to run.
@@ -182,4 +208,15 @@ class CommandConnector[F[_]: Streamable: Monad](
     import requests.mat
     newCommand(prefix, command).run()
   }
+
+  /**
+    * Starts a named command execution.
+    * @param command The named command to run.
+    * @tparam A The type of arguments this command uses.
+    * @tparam Mat The materialized result of running the command graph.
+    * @return The materialized result of running the command, in addition to
+    *         a future signaling when the command is done running.
+    */
+  def runNewNamedCommand[A, Mat](command: NamedCommand[F, A, Mat]): (Mat, Future[Done]) =
+    runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
 }
