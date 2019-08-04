@@ -43,6 +43,9 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
   case object GuildNews     extends ChannelType(5)
   case object GuildStore    extends ChannelType(6)
 
+  //Not API documented
+  case object LFG extends ChannelType(8)
+
   override def values: immutable.IndexedSeq[ChannelType] = findValues
 
   /**
@@ -135,6 +138,12 @@ sealed trait Channel {
     */
   def mention: String = s"<#$id>"
 }
+
+/**
+  * A channel that is of a type that AckCord knows about, but doesn't implement.
+  * Normally because it's not yet part of the public API.
+  */
+case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends Channel
 
 /**
   * A text channel that has text messages

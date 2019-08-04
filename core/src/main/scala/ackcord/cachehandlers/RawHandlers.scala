@@ -292,6 +292,7 @@ object RawHandlers extends Handlers {
         }
       case ChannelType.DM      => builder.dmChannelMap.remove(rawChannel.id)
       case ChannelType.GroupDm => builder.groupDmChannelMap.remove(rawChannel.id)
+      case ChannelType.LFG => //We do nothing here for now
     }
   }
 

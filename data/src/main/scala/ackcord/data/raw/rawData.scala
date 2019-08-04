@@ -186,6 +186,7 @@ case class RawChannel(
             parentId
           )
         }
+      case ChannelType.LFG => Some(UnsupportedChannel(id, ChannelType.LFG))
     }
   }
 
@@ -280,6 +281,7 @@ case class RawChannel(
             parentId
           )
         }
+      case ChannelType.LFG => None //We only keep on unsupported channel type around, and that should be as general as possible
     }
   }
 }
