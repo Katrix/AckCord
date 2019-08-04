@@ -523,6 +523,19 @@ case class PresenceWatching(
     assets: Option[ActivityAsset]
 ) extends Activity
 
+//TODO: Figure out what the public API for this is, and what it sends back
+case class PresenceCustom(
+    name: String,
+    state: Option[String], //TODO: Figure out if this is nullable
+) extends Activity {
+
+  override def timestamps: Option[ActivityTimestamps] = None
+
+  override def details: Option[String] = None
+
+  override def assets: Option[ActivityAsset] = None
+}
+
 /**
   * The different statuses a user can have
   */
