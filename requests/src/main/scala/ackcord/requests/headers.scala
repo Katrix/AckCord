@@ -26,7 +26,7 @@ package ackcord.requests
 import java.time.Instant
 
 import scala.concurrent.duration._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 import akka.http.scaladsl.model.headers.{GenericHttpCredentials, ModeledCustomHeader, ModeledCustomHeaderCompanion}
 
@@ -55,8 +55,32 @@ final class `X-RateLimit-Reset`(val resetAt: Instant) extends ModeledCustomHeade
 }
 object `X-RateLimit-Reset` extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] {
   override def name: String = "X-RateLimit-Reset"
-  override def parse(value: String): Try[`X-RateLimit-Reset`] =
-    Try(new `X-RateLimit-Reset`(Instant.ofEpochSecond(value.toLong)))
+  override def parse(value: String): Try[`X-RateLimit-Reset`] = {
+    val instant = Try(Instant.ofEpochSecond(value.toLong))
+      .orElse {
+        //If this fails we try to reparse it as a double, and hope the header has millisecond accuracy
+        Try(Instant.ofEpochMilli((value.toDouble * 1000).toLong))
+      }
+      .orElse {
+        //If both of those fail, we assume the header has the error message
+        Failure(new Exception(value))
+      }
+
+    instant.map(new `X-RateLimit-Reset`(_))
+  }
+}
+
+final class `X-RateLimit-Precision`(val precision: String) extends ModeledCustomHeader[`X-RateLimit-Precision`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Precision`] = `X-RateLimit-Precision`
+
+  override def value: String              = precision
+  override def renderInRequests: Boolean  = true
+  override def renderInResponses: Boolean = false
+}
+object `X-RateLimit-Precision` extends ModeledCustomHeaderCompanion[`X-RateLimit-Precision`] {
+  override def name: String = "X-RateLimit-Precision"
+
+  override def parse(value: String): Try[`X-RateLimit-Precision`] = Success(new `X-RateLimit-Precision`(value))
 }
 
 final class `X-Ratelimit-Global`(val isGlobal: Boolean) extends ModeledCustomHeader[`X-Ratelimit-Global`] {

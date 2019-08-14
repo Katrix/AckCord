@@ -75,6 +75,8 @@ object RequestStreams {
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
+  private val millisecondPrecisionHeader = `X-RateLimit-Precision`("millisecond")
+
   /**
     * A basic request flow which will send requests to Discord, and
     * receive responses. This flow does not account for ratelimits. Only
@@ -185,7 +187,7 @@ object RequestStreams {
         val httpRequest = HttpRequest(
           route.method,
           route.uri,
-          immutable.Seq(auth, userAgent) ++ request.extraHeaders,
+          immutable.Seq(auth, userAgent, millisecondPrecisionHeader) ++ request.extraHeaders,
           request.requestBody
         )
 
