@@ -89,7 +89,7 @@ object OAuth extends FailFastCirceSupport {
         "expires_in"    -> a.expiresIn.asJson,
         "refresh_token" -> a.refreshToken.asJson,
         "scope"         -> a.scopes.map(_.name).mkString(" ").asJson
-    )
+      )
 
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
       for {
@@ -109,7 +109,7 @@ object OAuth extends FailFastCirceSupport {
         "token_type"   -> a.tokenType.asJson,
         "expires_in"   -> a.expiresIn.asJson,
         "scope"        -> a.scopes.map(_.name).mkString(" ").asJson
-    )
+      )
 
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
       for {

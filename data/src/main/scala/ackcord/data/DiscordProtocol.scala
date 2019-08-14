@@ -160,7 +160,7 @@ trait DiscordProtocol {
   implicit val webhookAuthorDecoder: Decoder[WebhookAuthor] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val roleEncoder
-    : Encoder[Role] = derivation.deriveEncoder(derivation.renaming.snakeCase) //Encoding roles is fine, decoding them is not
+      : Encoder[Role] = derivation.deriveEncoder(derivation.renaming.snakeCase) //Encoding roles is fine, decoding them is not
 
   implicit val rawRoleEncoder: Encoder[RawRole] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawRoleDecoder: Decoder[RawRole] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -307,29 +307,28 @@ trait DiscordProtocol {
       tpe             <- c.get[MessageType]("type").right
       activity        <- c.get[Option[RawMessageActivity]]("activity").right
       application     <- c.get[Option[MessageApplication]]("application").right
-    } yield
-      RawMessage(
-        id,
-        channelId,
-        guildId,
-        author,
-        member,
-        content,
-        timestamp,
-        editedTimestamp,
-        tts,
-        mentionEveryone,
-        mentions,
-        mentionRoles,
-        attachment,
-        embeds,
-        reactions,
-        nonce,
-        pinned,
-        tpe,
-        activity,
-        application
-      )
+    } yield RawMessage(
+      id,
+      channelId,
+      guildId,
+      author,
+      member,
+      content,
+      timestamp,
+      editedTimestamp,
+      tts,
+      mentionEveryone,
+      mentions,
+      mentionRoles,
+      attachment,
+      embeds,
+      reactions,
+      nonce,
+      pinned,
+      tpe,
+      activity,
+      application
+    )
   }
 
   implicit val voiceStateEncoder: Encoder[VoiceState] = derivation.deriveEncoder(derivation.renaming.snakeCase)

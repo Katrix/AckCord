@@ -200,7 +200,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   /**
     * Converts this builder into a builder that will create [[NamedComplexCommand]].
     * These don't need to be provided a name when registering them.
- *
+    *
     * @param namedSymbol The symbol to use when invoking the command
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
@@ -363,7 +363,8 @@ object CommandBuilder {
 
     override def flow[A]: Flow[I[A], Result[A], NotUsed] = Flow[I[A]].map { m =>
       implicit val c: CacheSnapshot = m.cache
-      m.guild.voiceStates.get(m.user.id)
+      m.guild.voiceStates
+        .get(m.user.id)
         .flatMap(_.channelId)
         .flatMap(_.vResolve(m.guild.id))
         .toRight(Some(CommandError.mk(s"This command can only be used in a guild", m)): Option[CommandError])
@@ -476,39 +477,42 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
       override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
     }
 
-  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] = new NamedComplexCommand[A, Mat] {
-    override def symbol: String = self.symbol
+  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] =
+    new NamedComplexCommand[A, Mat] {
+      override def symbol: String = self.symbol
 
-    override def aliases: Seq[String] = self.aliases
+      override def aliases: Seq[String] = self.aliases
 
-    override def requiresMention: Boolean = self.requiresMention
+      override def requiresMention: Boolean = self.requiresMention
 
-    override def parser: MessageParser[A] = self.parser
+      override def parser: MessageParser[A] = self.parser
 
-    override def flow: Flow[CommandMessage[A], CommandError, Mat] = {
-      Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
-        import GraphDSL.Implicits._
-        val selfFlow = b.add(self.flow[A])
+      override def flow: Flow[CommandMessage[A], CommandError, Mat] = {
+        Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
+          import GraphDSL.Implicits._
+          val selfFlow = b.add(self.flow[A])
 
-        val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-        val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-        val selfOut = selfPartition.out(1).map(_.right.get)
+          val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }))
+          val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
+          val selfOut = selfPartition.out(1).map(_.right.get)
 
-        selfFlow ~> selfPartition
-        selfOut ~> block
+          selfFlow ~> selfPartition
+          selfOut ~> block
 
-        FlowShape(
-          selfFlow.in,
-          selfErr.outlet
-        )
-      })
+          FlowShape(
+            selfFlow.in,
+            selfErr.outlet
+          )
+        })
+      }
     }
-  }
 
-  override def async[G[_]](block: M[A] => G[Unit])(implicit streamable: Streamable[G]): NamedComplexCommand[A, NotUsed] =
+  override def async[G[_]](
+      block: M[A] => G[Unit]
+  )(implicit streamable: Streamable[G]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
 
   override def asyncOptRequest[G[_]](
@@ -643,9 +647,7 @@ trait UserCommandMessage[+A] extends CommandMessage[A] {
 }
 object UserCommandMessage {
 
-  case class Default[A](user: User, m: CommandMessage[A])
-      extends WrappedCommandMessage(m)
-      with UserCommandMessage[A]
+  case class Default[A](user: User, m: CommandMessage[A]) extends WrappedCommandMessage(m) with UserCommandMessage[A]
 }
 
 trait GuildMemberCommandMessage[+A] extends GuildCommandMessage[A] with UserCommandMessage[A] {

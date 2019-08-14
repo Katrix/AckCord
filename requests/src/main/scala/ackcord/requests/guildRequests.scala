@@ -186,7 +186,7 @@ object CreateGuildChannelData {
       "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
       "parent_id"             -> a.parentId.map(_.asJson),
       "nsfw"                  -> a.nsfw.map(_.asJson)
-  )
+    )
 }
 
 /**
@@ -349,7 +349,7 @@ object ModifyGuildMemberData {
       "mute"       -> a.mute.map(_.asJson),
       "deaf"       -> a.deaf.map(_.asJson),
       "channel_id" -> a.channelId.map(_.asJson)
-  )
+    )
 }
 
 /**

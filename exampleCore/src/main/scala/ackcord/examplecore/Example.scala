@@ -268,7 +268,7 @@ object ExampleMain {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
       case (info: AbstractCmdInfo, Some(description)) => helpActor ! HelpCmd.AddCmd(info, description, complete)
-      case _                                              =>
+      case _                                          =>
     }
     import scala.concurrent.ExecutionContext.Implicits.global
     complete.foreach { _ =>
@@ -282,8 +282,8 @@ object ExampleMain {
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
-                                    command: newcommands.NamedComplexCommand[_, Mat],
-                                    description: newcommands.CommandDescription
+      command: newcommands.NamedComplexCommand[_, Mat],
+      description: newcommands.CommandDescription
   )
 
   def registerNewCommand[Mat](connector: newcommands.CommandConnector, helpActor: ActorRef)(

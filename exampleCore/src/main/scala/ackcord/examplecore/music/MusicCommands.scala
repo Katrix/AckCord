@@ -59,7 +59,7 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
             })
           }
         } yield ()
-    },
+      },
     description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play"))
   )
 

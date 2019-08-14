@@ -281,7 +281,7 @@ object RawHandlers extends Handlers {
           builder.guildMap.put(guildId, newGuild)
         case None => log.warning(s"No guild for emoji $obj")
       }
-  }
+    }
 
   //Delete
   implicit val rawChannelDeleteHandler: CacheDeleteHandler[RawChannel] = deleteHandler { (builder, rawChannel, _) =>

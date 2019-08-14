@@ -105,7 +105,7 @@ object CmdHelper {
     * Check if a message is a valid command, and if it is, returns the arguments of the command.
     */
   def isValidCommand[F[_]](needMention: Boolean, msg: Message)(
-      implicit c: CacheSnapshot,
+      implicit c: CacheSnapshot
   ): Option[List[String]] = {
     if (needMention) {
       val botUser = c.botUser

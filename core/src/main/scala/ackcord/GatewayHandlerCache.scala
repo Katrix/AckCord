@@ -65,9 +65,9 @@ object GatewayHandlerCache {
     import ackcord.{APIMessage => api, APIMessageCacheUpdate => CacheUpdate}
 
     def getChannelUsingMaybeGuildId(
-                                     state: CacheSnapshotWithMaps,
-                                     guildId: Option[GuildId],
-                                     channelId: ChannelId
+        state: CacheSnapshotWithMaps,
+        guildId: Option[GuildId],
+        channelId: ChannelId
     ): Option[TChannel] =
       guildId.fold(state.getTChannel(channelId)) { guildId =>
         state.getGuildChannel(guildId, channelId).flatMap(_.asTChannel)
@@ -255,7 +255,7 @@ object GatewayHandlerCache {
               state =>
                 getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId).map { channel =>
                   api.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).toSeq), channel, state)
-              },
+                },
               RawHandlers.rawMessageDeleteBulkHandler
             )
           case gatewayEv.MessageReactionAdd(_, GetLazy(data)) =>

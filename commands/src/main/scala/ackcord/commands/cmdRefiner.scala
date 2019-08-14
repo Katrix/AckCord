@@ -68,14 +68,13 @@ abstract class AbstractCmdInfo extends CmdRefiner {
     implicit val cache: CacheSnapshot = raw.c
 
     val prefixMatch = prefix(raw.msg).toLowerCase(Locale.ROOT) == raw.prefix.toLowerCase(Locale.ROOT)
-    val aliasMatch = aliases(raw.msg).map(_.toLowerCase(Locale.ROOT)).contains(raw.cmd.toLowerCase(Locale.ROOT))
-
+    val aliasMatch  = aliases(raw.msg).map(_.toLowerCase(Locale.ROOT)).contains(raw.cmd.toLowerCase(Locale.ROOT))
 
     val canRun = prefixMatch && aliasMatch
 
     lazy val shouldRun = {
       implicit val cache: CacheSnapshot = raw.c
-      val behavior = filterBehavior(raw.msg)
+      val behavior                      = filterBehavior(raw.msg)
 
       val filtersNotPassed = filters(raw.msg).collect {
         case filter if !filter.isAllowed(raw.msg) => filter

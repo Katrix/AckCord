@@ -60,7 +60,7 @@ case class Commands(
     * @return A source representing the individual parsed command.
     */
   def subscribeCmdParsed[A](refiner: CmdRefiner)(
-      implicit parser: MessageParser[A],
+      implicit parser: MessageParser[A]
   ): Source[ParsedCmdMessage[A], NotUsed] =
     subscribeCmd(refiner)
       .collect[ParsedCmdMessage[A]] {

@@ -69,7 +69,7 @@ object VoiceWsProtocol extends DiscordProtocol {
       "delay"    -> a.delay.map(_.asJson),
       "ssrc"     -> a.ssrc.map(_.asJson),
       "user_id"  -> a.userId.map(_.asJson)
-  )
+    )
   implicit val speakingDataDecoder: Decoder[SpeakingData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)

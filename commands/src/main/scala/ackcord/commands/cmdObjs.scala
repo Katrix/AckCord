@@ -59,8 +59,7 @@ sealed trait ParsedCmdMessage[+A] extends AllCmdMessages
   * @param args The arguments of this command.
   * @param c The cache for this command.
   */
-case class RawCmd(msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot)
-    extends RawCmdMessage
+case class RawCmd(msg: Message, prefix: String, cmd: String, args: List[String], c: CacheSnapshot) extends RawCmdMessage
 
 /**
   * Bot was mentioned, but no command was used.
@@ -117,7 +116,4 @@ case class FilteredCmd(failedFilters: Seq[CmdFilter], cmd: RawCmd)
   * @param error The error message.
   * @param cmd The raw command object.
   */
-case class GenericCmdError(error: String, cmd: RawCmd)
-    extends CmdMessage
-    with ParsedCmdMessage[Nothing]
-    with CmdError
+case class GenericCmdError(error: String, cmd: RawCmd) extends CmdMessage with ParsedCmdMessage[Nothing] with CmdError

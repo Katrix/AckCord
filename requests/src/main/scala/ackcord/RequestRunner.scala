@@ -109,7 +109,7 @@ object RequestRunner {
 
   implicit def futureRequestRunner[F[_]](
       implicit requests: RequestHelper,
-      F: Alternative[F],
+      F: Alternative[F]
   ): RequestRunner[λ[A => Future[F[A]]]] = new RequestRunner[λ[A => Future[F[A]]]] {
     import requests.mat
     import requests.mat.executionContext

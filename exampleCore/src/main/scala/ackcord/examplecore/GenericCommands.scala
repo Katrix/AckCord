@@ -80,7 +80,7 @@ object GenericCommands {
         }
         .via(requests.flow)
         .mapConcat { answer =>
-          val ctx                               = answer.context
+          val ctx                           = answer.context
           implicit val cache: CacheSnapshot = ctx.c
           val content = answer match {
             case response: RequestResponse[RawChannel, GetChannelInfo] =>
@@ -125,7 +125,7 @@ object GenericCommands {
           time = ChronoUnit.MILLIS.between(cmd.msg.timestamp, sentMsg.timestamp)
           _ <- run(channel.sendMessage(s"$time ms between command and response"))
         } yield ()
-    },
+      },
     description = Some(
       CmdDescription(
         name = "Time diff",
