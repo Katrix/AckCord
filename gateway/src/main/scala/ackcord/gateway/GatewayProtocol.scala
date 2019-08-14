@@ -27,6 +27,7 @@ import java.time.OffsetDateTime
 
 import ackcord.data._
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
+import akka.NotUsed
 import cats.Later
 import cats.syntax.either._
 import io.circe.syntax._
@@ -42,11 +43,6 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val readyDataDecoder: Decoder[GatewayEvent.ReadyData] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
-
-  implicit val resumedDataEncoder: Encoder[GatewayEvent.ResumedData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val resumedDataDecoder: Decoder[GatewayEvent.ResumedData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] =
@@ -293,8 +289,9 @@ object GatewayProtocol extends DiscordProtocol {
 
         c.get[String]("t")
           .flatMap {
-            case "READY"                       => createDispatch(GatewayEvent.Ready)
-            case "RESUMED"                     => createDispatch(GatewayEvent.Resumed)
+            case "READY" => createDispatch(GatewayEvent.Ready)
+            case "RESUMED" =>
+              Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((a: NotUsed) => Json.obj()))
             case "CHANNEL_CREATE"              => createDispatch(GatewayEvent.ChannelCreate)
             case "CHANNEL_UPDATE"              => createDispatch(GatewayEvent.ChannelUpdate)
             case "CHANNEL_DELETE"              => createDispatch(GatewayEvent.ChannelDelete)

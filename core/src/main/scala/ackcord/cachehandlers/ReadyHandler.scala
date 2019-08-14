@@ -31,7 +31,7 @@ import shapeless.tag
 //We handle this one separately as is it's kind of special
 object ReadyHandler extends CacheHandler[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData)(implicit log: LoggingAdapter): Unit = {
-    val ReadyData(_, botUser, unavailableGuilds, _, _, _) = obj
+    val ReadyData(_, botUser, unavailableGuilds, _, _) = obj
 
     val guilds = unavailableGuilds.map(g => g.id -> g)
 

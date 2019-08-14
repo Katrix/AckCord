@@ -26,7 +26,7 @@ package ackcord.requests
 
 import scala.concurrent.Future
 
-import ackcord.data.RawSnowflake
+import ackcord.data.{GuildId, RawSnowflake, Team}
 import ackcord.data.raw.PartialUser
 import ackcord.data.DiscordProtocol._
 import akka.NotUsed
@@ -127,22 +127,36 @@ object OAuth extends FailFastCirceSupport {
     case object ClientCredentials extends GrantType("client_credentials")
   }
 
-  def baseGrant(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String, responseType: String): Uri =
+  sealed abstract class PromptType(val name: String)
+  object PromptType {
+    case object Consent    extends PromptType("consent")
+    case object NonePrompt extends PromptType("none")
+  }
+
+  def baseGrant(
+      clientId: String,
+      scopes: Seq[Scope],
+      state: String,
+      redirectUri: String,
+      responseType: String,
+      prompt: PromptType
+  ): Uri =
     Routes.oAuth2Authorize.applied.withQuery(
       Uri.Query(
         "response_type" -> responseType,
         "client_id"     -> clientId,
         "scope"         -> scopes.map(_.name).mkString(" "),
         "state"         -> state,
-        "redirect_uri"  -> redirectUri
+        "redirect_uri"  -> redirectUri,
+        "prompt"        -> prompt.name
       )
     )
 
-  def codeGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String): Uri =
-    baseGrant(clientId, scopes, state, redirectUri, "code")
+  def codeGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String, prompt: PromptType): Uri =
+    baseGrant(clientId, scopes, state, redirectUri, "code", prompt)
 
   def implicitGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String): Uri =
-    baseGrant(clientId, scopes, state, redirectUri, "token")
+    baseGrant(clientId, scopes, state, redirectUri, "token", PromptType.Consent)
 
   def baseExchange(
       clientId: String,
@@ -232,7 +246,14 @@ object OAuth extends FailFastCirceSupport {
       rpcOrigins: Option[Seq[String]],
       botPublic: Boolean,
       botRequireCodeGrant: Boolean,
-      owner: PartialUser
+      owner: PartialUser,
+      summary: String,
+      verifyKey: String,
+      team: Option[Team],
+      guildId: Option[GuildId],
+      primarySkuId: Option[RawSnowflake],
+      slug: Option[String],
+      coverImage: Option[String]
   )
 
   case class GetCurrentApplicationInformation[Ctx](context: Ctx = NotUsed: NotUsed)

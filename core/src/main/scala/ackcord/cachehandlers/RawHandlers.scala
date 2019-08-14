@@ -47,6 +47,7 @@ object RawHandlers extends Handlers {
           }
         case dmChannel: DMChannel           => builder.dmChannelMap.put(dmChannel.id, dmChannel)
         case groupDmChannel: GroupDMChannel => builder.groupDmChannelMap.put(groupDmChannel.id, groupDmChannel)
+        case _: UnsupportedChannel          =>
       }
   }
 
@@ -292,7 +293,7 @@ object RawHandlers extends Handlers {
         }
       case ChannelType.DM      => builder.dmChannelMap.remove(rawChannel.id)
       case ChannelType.GroupDm => builder.groupDmChannelMap.remove(rawChannel.id)
-      case ChannelType.LFG => //We do nothing here for now
+      case ChannelType.LFG     => //We do nothing here for now
     }
   }
 

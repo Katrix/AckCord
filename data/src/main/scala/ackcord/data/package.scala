@@ -245,7 +245,7 @@ package object data {
     val ManageGuild         = Permission(0x00000020)
     val AddReactions        = Permission(0x00000040)
     val ViewAuditLog        = Permission(0x00000080)
-    val ReadMessages        = Permission(0x00000400)
+    val ViewChannel         = Permission(0x00000400)
     val SendMessages        = Permission(0x00000800)
     val SendTtsMessages     = Permission(0x00001000)
     val ManageMessages      = Permission(0x00002000)
@@ -260,11 +260,16 @@ package object data {
     val DeafenMembers       = Permission(0x00800000)
     val MoveMembers         = Permission(0x01000000)
     val UseVad              = Permission(0x02000000)
+    val PrioritySpeaker     = Permission(0x00000100)
+    val Stream              = Permission(0x00000200)
     val ChangeNickname      = Permission(0x04000000)
     val ManageNicknames     = Permission(0x08000000)
     val ManageRoles         = Permission(0x10000000)
     val ManageWebhooks      = Permission(0x20000000)
     val ManageEmojis        = Permission(0x40000000)
+
+    @deprecated("Prefer ViewChannel instead", since = "1.15")
+    val ReadMessages: Permission = ViewChannel
 
     val None = Permission(0x00000000)
     val All = Permission(
@@ -276,7 +281,7 @@ package object data {
       ManageGuild,
       AddReactions,
       ViewAuditLog,
-      ReadMessages,
+      ViewChannel,
       SendMessages,
       SendTtsMessages,
       ManageMessages,
@@ -366,6 +371,7 @@ package object data {
     val HouseBrilliance = UserFlags(1 << 7)
     val HouseBalance    = UserFlags(1 << 8)
     val EarlySupporter  = UserFlags(1 << 9)
+    val TeamUser        = UserFlags(1 << 10)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 

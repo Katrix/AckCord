@@ -328,8 +328,10 @@ case class AddGuildMember[Ctx](
 /**
   * @param nick The nickname to give to the user.
   * @param roles The roles to give to the user.
-  * @param mute If the user should be muted.
-  * @param deaf If the user should be deafened.
+  * @param mute If the user should be muted. Will return an error if the user
+  *             is not in a voice channel.
+  * @param deaf If the user should be deafened. Will return an error if the user
+  *             is not in a voice channel.
   * @param channelId The id of the channel to move the user to.
   */
 case class ModifyGuildMemberData(

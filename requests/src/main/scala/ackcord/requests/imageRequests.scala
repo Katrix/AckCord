@@ -200,3 +200,20 @@ case class GetGuildWidgetImage[Ctx](
   override def format: ImageFormat              = ImageFormat.PNG
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
 }
+
+/**
+  * Get the icon for a team
+  * @param teamId The id of the team to get the icon for
+  * @param teamIcon The icon identifier
+  */
+case class GetTeamIconImage[Ctx](
+    desiredSize: Int,
+    format: ImageFormat,
+    teamId: SnowflakeType[Team],
+    teamIcon: String,
+    context: Ctx = NotUsed: NotUsed
+) extends ImageRequest[Ctx] {
+  override def route: RequestRoute = Routes.teamIconImage(teamId, teamIcon, format, Some(desiredSize))
+
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+}

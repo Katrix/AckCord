@@ -34,6 +34,7 @@ import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.{Eval, Later, Now}
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, Json}
 
 /**
@@ -100,6 +101,9 @@ case class Heartbeat(nowD: Option[Int]) extends EagerGatewayMessage[Option[Int]]
   * @param shard The shard info, the first index is the shard id, while the
   *              second is the total amount of shards.
   * @param presence The presence data to start with.
+  * @param guildSubscriptions If member presence events and similar should be
+  *                           received. AckCord has not been tested with this
+  *                           flag. Continue with caution.
   */
 case class IdentifyData(
     token: String,
@@ -107,7 +111,8 @@ case class IdentifyData(
     compress: Boolean,
     largeThreshold: Int,
     shard: Seq[Int],
-    presence: StatusData
+    presence: StatusData,
+    guildSubscriptions: Boolean
 )
 object IdentifyData {
 
@@ -223,7 +228,7 @@ case class InvalidSession(resumable: Boolean) extends EagerGatewayMessage[Boolea
   * @param heartbeatInterval The amount of milliseconds inbetween the time
   *                          to send a heartbeat.
   */
-case class HelloData(heartbeatInterval: Int, _trace: Seq[String])
+case class HelloData(heartbeatInterval: Int)
 
 /**
   * Sent by the gateway as a response to [[Identify]]
@@ -322,7 +327,6 @@ object GatewayEvent {
       user: User,
       guilds: Seq[UnavailableGuild],
       sessionId: String,
-      _trace: Seq[String],
       shard: Seq[Int]
   )
 
@@ -334,13 +338,13 @@ object GatewayEvent {
     override def name: String = "READY"
   }
 
-  case class ResumedData(_trace: Seq[String])
-
   /**
     * Sent to the shard when a previously interrupted connection is resumed.
     */
-  case class Resumed(rawData: Json, data: Later[Decoder.Result[ResumedData]]) extends SimpleGatewayEvent[ResumedData] {
+  case class Resumed(rawData: Json) extends SimpleGatewayEvent[NotUsed] {
     override def name: String = "RESUMED"
+
+    override def data: Later[Result[NotUsed]] = Later(Right(NotUsed))
   }
 
   /**

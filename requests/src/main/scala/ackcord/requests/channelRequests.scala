@@ -175,7 +175,7 @@ case class GetChannelMessages[Ctx](channelId: ChannelId, query: GetChannelMessag
   override def responseDecoder: Decoder[Seq[RawMessage]]               = Decoder[Seq[RawMessage]]
   override def toNiceResponse(response: Seq[RawMessage]): Seq[Message] = response.map(_.toMessage)
 
-  override def requiredPermissions: Permission = Permission.ReadMessages
+  override def requiredPermissions: Permission = Permission.ViewChannel
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 }

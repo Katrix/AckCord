@@ -213,6 +213,7 @@ object Routes {
   val token: MinorParameter[String]                       = new MinorParameter("token", identity)
   val hash: MinorParameter[String]                        = new MinorParameter("hash", identity)
   val applicationId: MinorParameter[RawSnowflake]         = new MinorParameter("applicationId", _.asString)
+  val teamId: MinorParameter[SnowflakeType[Team]]         = new MinorParameter("teamId", _.asString)
 
   //Audit log
 
@@ -494,6 +495,10 @@ object Routes {
   )
   val applicationAssetImage: (RawSnowflake, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "app-assets" / applicationId / hash ++ extension +? size toRequest GET
+  )
+
+  val teamIconImage: (SnowflakeType[Team], String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "team-icons" / teamId / hash ++ extension +? size toRequest GET
   )
 
   //OAuth

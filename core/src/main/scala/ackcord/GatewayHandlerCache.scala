@@ -29,6 +29,7 @@ import ackcord.data.{ChannelId, GuildId, TChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 import ackcord.syntax._
 import ackcord.util.AckCordGatewaySettings
+import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.Uri
@@ -77,8 +78,8 @@ object GatewayHandlerCache {
         val res = event match {
           case gatewayEv.Ready(_, GetLazy(data)) =>
             CacheUpdate(data, state => Some(api.Ready(state)), ReadyHandler)
-          case gatewayEv.Resumed(_, GetLazy(data)) =>
-            CacheUpdate(data, state => Some(api.Resumed(state)), NOOPHandler)
+          case gatewayEv.Resumed(_) =>
+            CacheUpdate(NotUsed, state => Some(api.Resumed(state)), NOOPHandler)
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
