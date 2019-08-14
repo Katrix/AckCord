@@ -52,6 +52,12 @@ case class RequestHelper(
     maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem, val mat: Materializer) {
 
+  private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any, Ctx], Future[Done]] = Sink.foreach {
+    case _: RequestResponse[_, _] =>
+    case request: FailedRequest[_] =>
+      request.asException.printStackTrace()
+  }
+
   private lazy val rawFlowWithoutRateLimits =
     RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
 
@@ -109,7 +115,7 @@ case class RequestHelper(
   def sinkIgnore[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
   ): Sink[Request[Data, Ctx], Future[Done]] =
-    flow[Data, Ctx](properties).toMat(Sink.ignore)(Keep.right)
+    flow[Data, Ctx](properties).toMat(ignoreOrReport)(Keep.right)
 
   /**
     * A generic flow for making requests. Only returns successful requests.
@@ -118,9 +124,15 @@ case class RequestHelper(
   def flowSuccess[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
   ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
-    flow[Data, Ctx](properties).collect {
-      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
-    }
+    flow[Data, Ctx](properties)
+      .map {
+        case RequestResponse(data, ctx, _, _, _, _, _) =>
+          Some(data -> ctx)
+        case request: FailedRequest[_] =>
+          request.asException.printStackTrace()
+          None
+      }
+      .collect { case Some(value) => value }
 
   /**
     * Sends a single request.
@@ -165,7 +177,8 @@ case class RequestHelper(
     */
   def singleIgnore[Data, Ctx](request: Request[Data, Ctx])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Unit = single(request)(properties).runWith(Sink.ignore)
+  ): Unit =
+    single(request)(properties).runWith(ignoreOrReport)
 
   /**
     * Sends many requests and ignores the result.
@@ -173,7 +186,7 @@ case class RequestHelper(
     */
   def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Unit = many(requests)(properties).runWith(Sink.ignore)
+  ): Unit = many(requests)(properties).runWith(ignoreOrReport)
 }
 object RequestHelper {
 
