@@ -27,7 +27,6 @@ import java.util.UUID
 
 import scala.annotation.tailrec
 import scala.collection.mutable
-import scala.concurrent.duration._
 
 import ackcord.util.AckCordRequestSettings
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status, Timers}
@@ -127,21 +126,18 @@ class Ratelimiter extends Actor with Timers with ActorLogging {
 
     case UpdateRatelimits(
         route,
-        bucket,
+        RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
         isGlobal,
-        timeTilReset,
-        remainingRequestsAmount,
-        requestLimit,
         identifier
         ) =>
       if (settings.LogRatelimitEvents) {
         log.debug(
           s"""|Updating ratelimits info: ${route.uriWithMajor} $identifier
               |Bucket: $bucket
+              |BucketLimit: $bucketLimit
               |Global: $isGlobal
               |TimeTilReset: $timeTilReset
               |RemainingAmount: $remainingRequestsAmount
-              |RequestLimit: $requestLimit
               |Current time: ${System.currentTimeMillis()}
               |""".stripMargin
         )
@@ -149,7 +145,7 @@ class Ratelimiter extends Actor with Timers with ActorLogging {
 
       //We don't update the remainingRequests map here as the information we get here is slightly outdated
 
-      routeLimits.put(bucket, requestLimit)
+      routeLimits.put(bucket, bucketLimit)
       uriToBucket.put(route.uriWithoutMajor, bucket)
 
       if (isGlobal) {
@@ -209,11 +205,8 @@ object Ratelimiter {
   case class WantToPass[A](route: RequestRoute, identifier: UUID, ret: A)
   case class UpdateRatelimits(
       route: RequestRoute,
-      bucket: String,
+      ratelimitInfo: RatelimitInfo,
       isGlobal: Boolean,
-      timeTilReset: FiniteDuration,
-      remainingRequests: Int,
-      requestLimit: Int,
       identifier: UUID
   )
 

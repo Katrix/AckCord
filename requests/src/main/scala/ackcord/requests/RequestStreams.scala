@@ -246,8 +246,15 @@ object RequestStreams {
 
                 val tilReset     = timeTilReset(relativeTime, httpResponse)
                 val tilRatelimit = remainingRequests(httpResponse)
-                val requestLimit = requestsForUri(httpResponse)
+                val bucketLimit  = requestsForUri(httpResponse)
                 val bucket       = requestBucket(httpResponse)
+
+                val ratelimitInfo = RatelimitInfo(
+                  tilReset,
+                  tilRatelimit,
+                  bucketLimit,
+                  bucket
+                )
 
                 httpResponse.status match {
                   case StatusCodes.TooManyRequests =>
@@ -256,10 +263,8 @@ object RequestStreams {
                       RequestRatelimited(
                         request.context,
                         isGlobalRatelimit(httpResponse),
-                        tilReset,
-                        requestLimit,
+                        ratelimitInfo,
                         route,
-                        bucket,
                         request.identifier
                       )
                     )
@@ -294,11 +299,8 @@ object RequestStreams {
                         RequestResponse(
                           data,
                           request.context,
-                          tilRatelimit,
-                          tilReset,
-                          requestLimit,
+                          ratelimitInfo,
                           route,
-                          bucket,
                           request.identifier
                         )
                       }
@@ -310,11 +312,8 @@ object RequestStreams {
                         RequestResponse(
                           data,
                           request.context,
-                          tilRatelimit,
-                          tilReset,
-                          requestLimit,
+                          ratelimitInfo,
                           route,
-                          bucket,
                           request.identifier
                         )
                       }
@@ -336,18 +335,11 @@ object RequestStreams {
           case _                                    => false
         }
 
-        val tilReset          = answer.tilReset
-        val remainingRequests = answer.remainingRequests
-        val requestLimit      = answer.uriRequestLimit
-
-        if (tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
+        if (answer.ratelimitInfo.isValid) {
           rateLimitActor ! Ratelimiter.UpdateRatelimits(
             answer.route,
-            answer.ratelimitBucket,
+            answer.ratelimitInfo,
             isGlobal,
-            tilReset,
-            remainingRequests,
-            requestLimit,
             answer.identifier
           )
         }

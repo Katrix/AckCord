@@ -188,6 +188,32 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 }
 
 /**
+  * Misc info needed to handle ratelimits correctly.
+  *
+  * @param tilReset The amount of time until this endpoint ratelimit is reset.
+  *                 Minus if unknown.
+  * @param tilRatelimit The amount of requests that can be made until this
+  *                     endpoint is ratelimited. -1 if unknown.
+  * @param bucketLimit The total amount of requests that can be sent to this
+  *                    to this endpoint until a ratelimit kicks in.
+  *                    -1 if unknown.
+  * @param bucket The ratelimit bucket for this request. Does not
+  *               include any parameters.
+  */
+case class RatelimitInfo(
+    tilReset: FiniteDuration,
+    tilRatelimit: Int,
+    bucketLimit: Int,
+    bucket: String
+) {
+
+  /**
+    * Returns if this ratelimit info does not contain any unknown placeholders.
+    */
+  def isValid: Boolean = tilReset > 0.millis && tilRatelimit != -1 && bucketLimit != -1
+}
+
+/**
   * Sent as a response to a request.
   */
 sealed trait RequestAnswer[+Data, Ctx] {
@@ -208,23 +234,18 @@ sealed trait RequestAnswer[+Data, Ctx] {
   def withContext[NewCtx](context: NewCtx): RequestAnswer[Data, NewCtx]
 
   /**
-    * The amount of time until this endpoint ratelimit is reset.
-    * Minus if unknown.
+    * Information about ratelimits gotten from this request.
     */
-  def tilReset: FiniteDuration
+  def ratelimitInfo: RatelimitInfo
 
-  /**
-    * The amount of requests that can be made until this endpoint is ratelimited.
-    * -1 if unknown.
-    */
-  def remainingRequests: Int
+  @deprecated("Prefer ratelimitInfo.tilReset", since = "0.15.0")
+  def tilReset: FiniteDuration = ratelimitInfo.tilReset
 
-  /**
-    * The total amount of requests that can be sent to this to this endpoint
-    * until a ratelimit kicks in.
-    * -1 if unknown.
-    */
-  def uriRequestLimit: Int
+  @deprecated("Prefer ratelimitInfo.tilRatelimit", since = "0.15.0")
+  def remainingRequests: Int = ratelimitInfo.tilRatelimit
+
+  @deprecated("Prefer ratelimitInfo.bucketLimit", since = "0.15.0")
+  def uriRequestLimit: Int = ratelimitInfo.bucketLimit
 
   /**
     * The route for this request
@@ -240,10 +261,8 @@ sealed trait RequestAnswer[+Data, Ctx] {
   @deprecated("Prefer route.uriWithMajor", since = "0.15.0")
   def rawRoute: String = route.uriWithMajor
 
-  /**
-    * The ratelimit bucket for this request. Does not include any parameters.
-    */
-  def ratelimitBucket: String
+  @deprecated("Prefer ratelimitInfo.ratelimitBucket", since = "0.15.0")
+  def ratelimitBucket: String = ratelimitInfo.bucket
 
   /**
     * An either that either contains the data, or the exception if this is a failure.
@@ -273,11 +292,8 @@ sealed trait RequestAnswer[+Data, Ctx] {
 case class RequestResponse[+Data, Ctx](
     data: Data,
     context: Ctx,
-    remainingRequests: Int,
-    tilReset: FiniteDuration,
-    uriRequestLimit: Int,
+    ratelimitInfo: RatelimitInfo,
     route: RequestRoute,
-    ratelimitBucket: String,
     identifier: UUID
 ) extends RequestAnswer[Data, Ctx] {
 
@@ -313,17 +329,16 @@ sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
 case class RequestRatelimited[Ctx](
     context: Ctx,
     global: Boolean,
-    tilReset: FiniteDuration,
-    uriRequestLimit: Int,
+    ratelimitInfo: RatelimitInfo,
     route: RequestRoute,
-    ratelimitBucket: String,
     identifier: UUID
 ) extends FailedRequest[Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
 
-  override def remainingRequests: Int          = 0
-  override def asException: RatelimitException = new RatelimitException(global, tilReset, route.uri, identifier)
+  override def remainingRequests: Int = 0
+  override def asException: RatelimitException =
+    new RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
 
   override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
@@ -339,10 +354,7 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, route: RequestRoute, id
 
   override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
 
-  override def tilReset: FiniteDuration = -1.millis
-  override def remainingRequests: Int   = -1
-  override def uriRequestLimit: Int     = -1
-  override def ratelimitBucket: String  = ""
+  override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
   override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
@@ -360,10 +372,7 @@ case class RequestDropped[Ctx](context: Ctx, route: RequestRoute, identifier: UU
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
 
-  override def tilReset: FiniteDuration = -1.millis
-  override def remainingRequests: Int   = -1
-  override def uriRequestLimit: Int     = -1
-  override def ratelimitBucket: String  = ""
+  override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
   override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this
