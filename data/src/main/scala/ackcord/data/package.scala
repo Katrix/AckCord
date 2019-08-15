@@ -23,13 +23,11 @@
  */
 package ackcord
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 
 import java.lang.{Long => JLong}
 import java.time.Instant
 
-import cats.Functor
-import cats.data.OptionT
 import shapeless.tag._
 
 package object data {
@@ -78,7 +76,7 @@ package object data {
     /**
       * Resolve the guild represented by this id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Guild] = c.getGuild(guildId)
+    def resolve(implicit c: CacheSnapshot): Option[Guild] = c.getGuild(guildId)
   }
 
   type ChannelId = SnowflakeType[Channel]
@@ -92,38 +90,38 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer one of the guildResolve methods instead.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Channel] = c.getChannel(channelId)
+    def resolve(implicit c: CacheSnapshot): Option[Channel] = c.getChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a guild channel. If a
       * guild id is know, prefer one of the other guildResolve methods instead.
       */
-    def guildResolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, GuildChannel] = c.getGuildChannel(channelId)
+    def guildResolve(implicit c: CacheSnapshot): Option[GuildChannel] = c.getGuildChannel(channelId)
 
     /**
       * Resolve the channel represented by this id relative to a guild id.
       */
-    def guildResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, GuildChannel] =
+    def guildResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
       c.getGuildChannel(guildId, channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel. If a
       * guild id is know, prefer the other tResolve method instead.
       */
-    def tResolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, TChannel] = c.getTChannel(channelId)
+    def tResolve(implicit c: CacheSnapshot): Option[TChannel] = c.getTChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, TGuildChannel] =
+    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
 
     /**
       * Resolve the channel represented by this id as a voice channel relative
       * to a guild id.
       */
-    def vResolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, VGuildChannel] =
+    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[VGuildChannel] =
       c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
   }
 
@@ -138,12 +136,12 @@ package object data {
       * Resolve the message represented by this id. If a channel id is known,
       * prefer the method that takes a channel id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Message] = c.getMessage(messageId)
+    def resolve(implicit c: CacheSnapshot): Option[Message] = c.getMessage(messageId)
 
     /**
       * Resolves the message represented by this id relative to a channel id.
       */
-    def resolve[F[_]](channelId: ChannelId)(implicit c: CacheSnapshot[F]): OptionT[F, Message] =
+    def resolve(channelId: ChannelId)(implicit c: CacheSnapshot): Option[Message] =
       c.getMessage(channelId, messageId)
   }
 
@@ -157,14 +155,14 @@ package object data {
     /**
       * Resolve the user represented by this id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(userId)
+    def resolve(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
 
     /**
       * Resolve the guild member represented by this id.
       * @param guildId The guild to find the guild member in
       */
-    def resolveMember[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, GuildMember] =
-      c.getGuild(guildId).subflatMap(_.members.get(userId))
+    def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
+      c.getGuild(guildId).flatMap(_.members.get(userId))
   }
 
   type RoleId = SnowflakeType[Role]
@@ -178,12 +176,12 @@ package object data {
       * Resolve the role this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Role] = c.getRole(roleId)
+    def resolve(implicit c: CacheSnapshot): Option[Role] = c.getRole(roleId)
 
     /**
       * Resolve the role this id represents relative to a guild id.
       */
-    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F]): OptionT[F, Role] =
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
       c.getRole(guildId, roleId)
   }
 
@@ -206,13 +204,13 @@ package object data {
       * Resolve the emoji this id represents. If a guild id is known, prefer
       * the method that takes a guild id.
       */
-    def resolve[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, Emoji] = c.getEmoji(emojiId)
+    def resolve(implicit c: CacheSnapshot): Option[Emoji] = c.getEmoji(emojiId)
 
     /**
       * Resolve the emoji this id represents relative to a guild id.
       */
-    def resolve[F[_]](guildId: GuildId)(implicit c: CacheSnapshot[F], F: Functor[F]): OptionT[F, Emoji] =
-      c.getGuild(guildId).subflatMap(_.emojis.get(emojiId))
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Emoji] =
+      c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
 
   type IntegrationId = SnowflakeType[Integration]
@@ -247,7 +245,7 @@ package object data {
     val ManageGuild         = Permission(0x00000020)
     val AddReactions        = Permission(0x00000040)
     val ViewAuditLog        = Permission(0x00000080)
-    val ReadMessages        = Permission(0x00000400)
+    val ViewChannel         = Permission(0x00000400)
     val SendMessages        = Permission(0x00000800)
     val SendTtsMessages     = Permission(0x00001000)
     val ManageMessages      = Permission(0x00002000)
@@ -262,11 +260,16 @@ package object data {
     val DeafenMembers       = Permission(0x00800000)
     val MoveMembers         = Permission(0x01000000)
     val UseVad              = Permission(0x02000000)
+    val PrioritySpeaker     = Permission(0x00000100)
+    val Stream              = Permission(0x00000200)
     val ChangeNickname      = Permission(0x04000000)
     val ManageNicknames     = Permission(0x08000000)
     val ManageRoles         = Permission(0x10000000)
     val ManageWebhooks      = Permission(0x20000000)
     val ManageEmojis        = Permission(0x40000000)
+
+    @deprecated("Prefer ViewChannel instead", since = "0.15")
+    val ReadMessages: Permission = ViewChannel
 
     val None = Permission(0x00000000)
     val All = Permission(
@@ -278,7 +281,7 @@ package object data {
       ManageGuild,
       AddReactions,
       ViewAuditLog,
-      ReadMessages,
+      ViewChannel,
       SendMessages,
       SendTtsMessages,
       ManageMessages,
@@ -368,6 +371,7 @@ package object data {
     val HouseBrilliance = UserFlags(1 << 7)
     val HouseBalance    = UserFlags(1 << 8)
     val EarlySupporter  = UserFlags(1 << 9)
+    val TeamUser        = UserFlags(1 << 10)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 

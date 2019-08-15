@@ -45,7 +45,7 @@ import akka.util.Timeout
 /**
   * Trait used to interface with Discord stuff from high level.
   */
-trait DiscordClient[F[_]] extends CommandsHelper[F] {
+trait DiscordClient extends CommandsHelper {
 
   /**
     * The shards of this client
@@ -60,7 +60,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   /**
     * The global commands object used by the client
     */
-  def commands: Commands[F]
+  def commands: Commands
 
   /**
     * The requests object used by the client
@@ -108,7 +108,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
   /**
     * A stream requester runner.
     */
-  val sourceRequesterRunner: RequestRunner[SourceRequest, F]
+  val sourceRequesterRunner: RequestRunner[SourceRequest]
 
   /**
     * Runs a partial function whenever [[APIMessage]]s are received.
@@ -135,8 +135,8 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     * @return A handler function
     */
   def withCache[G[_], ContainsCache](
-      handler: CacheSnapshot[F] => ContainsCache => G[Unit]
-  )(implicit hasCache: HasCache[F, ContainsCache]): ContainsCache => G[Unit] = msg => handler(hasCache.cache(msg))(msg)
+      handler: CacheSnapshot => ContainsCache => G[Unit]
+  )(implicit hasCache: HasCache[ContainsCache]): ContainsCache => G[Unit] = msg => handler(hasCache.cache(msg))(msg)
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.
@@ -144,7 +144,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     *         when it's done.
     */
   def registerHandler[G[_], A <: APIMessage](
-      handler: EventHandler[F, G, A]
+      handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
 
   /**
@@ -152,7 +152,7 @@ trait DiscordClient[F[_]] extends CommandsHelper[F] {
     * @param settings The settings to use for the commands object
     * @return A killswitch to stop this command helper, together with the command helper.
     */
-  def newCommandsHelper(settings: CommandSettings[F]): (UniqueKillSwitch, CommandsHelper[F])
+  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper)
 
   /**
     * Join a voice channel.

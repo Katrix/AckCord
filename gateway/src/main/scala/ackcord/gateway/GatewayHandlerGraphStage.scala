@@ -85,7 +85,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
               compress = true,
               largeThreshold = settings.largeThreshold,
               shard = Seq(settings.shardNum, settings.shardTotal),
-              presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk)
+              presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk),
+              guildSubscriptions = settings.guildSubscriptions
             )
 
             Identify(identifyObject)

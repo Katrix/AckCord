@@ -30,8 +30,6 @@ import scala.collection.immutable
 
 import ackcord.CacheSnapshot
 import ackcord.data.raw.RawRole
-import cats.Monad
-import cats.data.OptionT
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 /**
@@ -97,12 +95,6 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   case object MessageDelete          extends AuditLogEvent(72)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
-
-  @deprecated("Prefer AuditLogEvent#value", since = "0.14.0")
-  def idOf(event: AuditLogEvent): Int = event.value
-
-  @deprecated("Prefer AuditLogEvent.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[AuditLogEvent] = withValueOpt(id)
 }
 
 /**
@@ -168,11 +160,11 @@ object AuditLogChange {
     */
   case class OwnerId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
 
-    def oldOwner[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
-      OptionT.fromOption[F](oldValue).flatMap(c.getUser)
+    def oldOwner(implicit c: CacheSnapshot): Option[User] =
+      oldValue.flatMap(c.getUser)
 
-    def newOwner[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
-      OptionT.fromOption[F](newValue).flatMap(c.getUser)
+    def newOwner(implicit c: CacheSnapshot): Option[User] =
+      newValue.flatMap(c.getUser)
   }
 
   /**
@@ -185,13 +177,13 @@ object AuditLogChange {
     */
   case class AfkChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId] {
 
-    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, VGuildChannel] =
-      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel).collect {
+    def oldChannel(implicit c: CacheSnapshot): Option[VGuildChannel] =
+      oldValue.flatMap(c.getGuildChannel).collect {
         case ch: VGuildChannel => ch
       }
 
-    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, VGuildChannel] =
-      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel).collect {
+    def newChannel(implicit c: CacheSnapshot): Option[VGuildChannel] =
+      newValue.flatMap(c.getGuildChannel).collect {
         case ch: VGuildChannel => ch
       }
   }
@@ -259,11 +251,11 @@ object AuditLogChange {
   case class WidgetChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
       extends AuditLogChange[ChannelId] {
 
-    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildChannel] =
-      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel)
+    def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
+      oldValue.flatMap(c.getGuildChannel)
 
-    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildChannel] =
-      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel)
+    def newChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
+      newValue.flatMap(c.getGuildChannel)
   }
 
   /**
@@ -341,13 +333,13 @@ object AuditLogChange {
   case class InviteChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
       extends AuditLogChange[ChannelId] {
 
-    def oldChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, TGuildChannel] =
-      OptionT.fromOption[F](oldValue).flatMap(c.getGuildChannel).collect {
+    def oldChannel(implicit c: CacheSnapshot): Option[TGuildChannel] =
+      oldValue.flatMap(c.getGuildChannel).collect {
         case ch: TGuildChannel => ch
       }
 
-    def newChannel[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, TGuildChannel] =
-      OptionT.fromOption[F](newValue).flatMap(c.getGuildChannel).collect {
+    def newChannel[F[_]](implicit c: CacheSnapshot): Option[TGuildChannel] =
+      newValue.flatMap(c.getGuildChannel).collect {
         case ch: TGuildChannel => ch
       }
   }
@@ -357,11 +349,11 @@ object AuditLogChange {
     */
   case class InviterId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
 
-    def oldInvited[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
-      OptionT.fromOption[F](oldValue).flatMap(c.getUser)
+    def oldInvited(implicit c: CacheSnapshot): Option[User] =
+      oldValue.flatMap(c.getUser)
 
-    def newInvited[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, User] =
-      OptionT.fromOption[F](newValue).flatMap(c.getUser)
+    def newInvited(implicit c: CacheSnapshot): Option[User] =
+      newValue.flatMap(c.getUser)
   }
 
   /**

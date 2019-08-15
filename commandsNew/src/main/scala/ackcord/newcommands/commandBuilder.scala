@@ -31,27 +31,26 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Partition, Sink, Source}
 import akka.stream.{FlowShape, SourceShape}
 import cats.data.OptionT
-import cats.{Applicative, Monad, ~>}
+import cats.~>
 import scala.language.higherKinds
 
 /**
   * A mapping over command builders.
-  * @tparam F The cache effect type
   * @tparam I The input message type
   * @tparam O The output message type
   */
-trait CommandFunction[F[_], -I[_], +O[_]] { self =>
+trait CommandFunction[-I[_], +O[_]] { self =>
 
   /**
     * A flow that represents this mapping.
     */
-  def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O[A]], NotUsed]
+  def flow[A]: Flow[I[A], Either[Option[CommandError], O[A]], NotUsed]
 
   /**
     * Chains first this function, and then another one.
     */
-  def andThen[O2[_]](that: CommandFunction[F, O, O2]): CommandFunction[F, I, O2] = new CommandFunction[F, I, O2] {
-    override def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O2[A]], NotUsed] =
+  def andThen[O2[_]](that: CommandFunction[O, O2]): CommandFunction[I, O2] = new CommandFunction[I, O2] {
+    override def flow[A]: Flow[I[A], Either[Option[CommandError], O2[A]], NotUsed] =
       CommandFunction.flowViaEither(self.flow[A], that.flow[A])(Keep.right)
   }
 }
@@ -99,75 +98,34 @@ object CommandFunction {
       )
     })
   }
-
-  /**
-    * Source for short circuiting eithers.
-    */
-  def sourceViaEither[I, O, E, Mat1, Mat2, Mat3](
-      source: Source[Either[E, I], Mat1],
-      flow: Flow[I, Either[E, O], Mat2]
-  )(combine: (Mat1, Mat2) => Mat3): Source[Either[E, O], Mat3] = {
-    Source.fromGraph(GraphDSL.create(source, flow)(combine) { implicit b => (selfSource, thatFlow) =>
-      import GraphDSL.Implicits._
-
-      val selfPartition =
-        b.add(Partition[Either[E, I]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-      val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
-      val selfOut = selfPartition.out(1).map(_.right.get)
-
-      val thatPartition =
-        b.add(Partition[Either[E, O]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-      val thatErr = thatPartition.out(0)
-      val thatOut = thatPartition.out(1)
-
-      val resMerge = b.add(Merge[Either[E, O]](3))
-
-      // format: OFF
-      selfSource ~> selfPartition
-      selfOut       ~> thatFlow ~> thatPartition
-      selfErr       ~>                              resMerge
-      thatOut       ~> resMerge
-      thatErr       ~> resMerge
-      // format: ON
-
-      SourceShape(resMerge.out)
-    })
-  }
 }
 
 /**
   * A [[CommandFunction]] that can't fail, but might return a different
   * message type.
-  * @tparam F The cache effect type
   * @tparam I The input message type
   * @tparam O The output message type
   */
-trait CommandTransformer[F[_], -I[_], +O[_]] extends CommandFunction[F, I, O] { self =>
+trait CommandTransformer[-I[_], +O[_]] extends CommandFunction[I, O] { self =>
 
   /**
     * The flow representing this mapping without the eithers.
     */
   def flowMapper[A]: Flow[I[A], O[A], NotUsed]
 
-  override def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O[A]], NotUsed] = flowMapper.map(Right.apply)
+  override def flow[A]: Flow[I[A], Either[Option[CommandError], O[A]], NotUsed] = flowMapper.map(Right.apply)
 
-  override def andThen[O2[_]](that: CommandFunction[F, O, O2]): CommandFunction[F, I, O2] =
-    new CommandFunction[F, I, O2] {
-      override def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O2[A]], NotUsed] = flowMapper.via(that.flow)
+  override def andThen[O2[_]](that: CommandFunction[O, O2]): CommandFunction[I, O2] =
+    new CommandFunction[I, O2] {
+      override def flow[A]: Flow[I[A], Either[Option[CommandError], O2[A]], NotUsed] = flowMapper.via(that.flow)
     }
 
   /**
     * Chains first this transformer, and then another one. More efficient than
     * the base andThen function.
     */
-  def andThen[O2[_]](that: CommandTransformer[F, O, O2]): CommandTransformer[F, I, O2] =
-    new CommandTransformer[F, I, O2] {
+  def andThen[O2[_]](that: CommandTransformer[O, O2]): CommandTransformer[I, O2] =
+    new CommandTransformer[I, O2] {
       override def flowMapper[A]: Flow[I[A], O2[A], NotUsed] = self.flowMapper.via(that.flowMapper)
     }
 }
@@ -176,7 +134,7 @@ object CommandTransformer {
   /**
     * Converts a [[cats.arrow.FunctionK]] to an [[CommandTransformer]].
     */
-  def fromFuncK[F[_], I[_], O[_]](f: I ~> O): CommandTransformer[F, I, O] = new CommandTransformer[F, I, O] {
+  def fromFuncK[I[_], O[_]](f: I ~> O): CommandTransformer[I, O] = new CommandTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] = Flow[I[A]].map(f(_))
   }
 }
@@ -184,11 +142,10 @@ object CommandTransformer {
 /**
   * A [[CommandFunction]] from a command message to an output. Used for
   * creating commands.
-  * @tparam F The cache effect type
   * @tparam M The command message type used by the command.
   * @tparam A The argument type of this command builder.
   */
-trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F, ?], M] { self =>
+trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self =>
 
   /**
     * A request helper that belongs to this builder.
@@ -201,8 +158,9 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
   def parser: MessageParser[A]
 
   /**
-    * Converts this builder into a builder that will create [[NamedCommand]].
+    * Converts this builder into a builder that will create [[NamedComplexCommand]].
     * These don't need to be provided a name when registering them.
+    *
     * @param namedSymbol The symbol to use when invoking the command
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
@@ -211,8 +169,8 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
       namedSymbol: String,
       namedAliases: Seq[String],
       mustMention: Boolean
-  ): NamedCommandBuilder[F, M, A] =
-    new NamedCommandBuilder[F, M, A] {
+  ): NamedCommandBuilder[M, A] =
+    new NamedCommandBuilder[M, A] {
       override def symbol: String = namedSymbol
 
       override def aliases: Seq[String] = namedAliases
@@ -223,19 +181,19 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
 
       override def parser: MessageParser[A] = self.parser
 
-      override def flow[B]: Flow[CommandMessage[F, B], Either[Option[CommandError[F]], M[B]], NotUsed] = self.flow[B]
+      override def flow[B]: Flow[CommandMessage[B], Either[Option[CommandError], M[B]], NotUsed] = self.flow[B]
     }
 
   /**
     * Creates a new command builder parsing a specific type.
     * @tparam B The type to parse
     */
-  def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[F, M, B] = new CommandBuilder[F, M, B] {
+  def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] = new CommandBuilder[M, B] {
     override def requests: RequestHelper = self.requests
 
     override def parser: MessageParser[B] = newParser
 
-    override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M[C]], NotUsed] = self.flow
+    override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
   }
 
   /**
@@ -243,30 +201,11 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
     * @param sinkBlock The sink that will process this command.
     * @tparam Mat The materialized result of running this command.
     */
-  def streamed[Mat](sinkBlock: Sink[M[A], Mat]): Command[F, A, Mat] = new Command[F, A, Mat] {
+  def streamed[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] = new ComplexCommand[A, Mat] {
     override def parser: MessageParser[A] = self.parser
 
-    override def flow: Flow[CommandMessage[F, A], CommandError[F], Mat] = {
-      Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
-        import GraphDSL.Implicits._
-        val selfFlow = b.add(self.flow[A])
-
-        val selfPartition = b.add(Partition[Either[Option[CommandError[F]], M[A]]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-        val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-        val selfOut = selfPartition.out(1).map(_.right.get)
-
-        selfFlow ~> selfPartition
-        selfOut ~> block
-
-        FlowShape(
-          selfFlow.in,
-          selfErr.outlet
-        )
-      })
-    }
+    override def flow: Flow[CommandMessage[A], CommandError, Mat] =
+      CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
   }
 
   /**
@@ -274,7 +213,7 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
     * @param block The execution of the command.
     * @tparam G The streamable result type.
     */
-  def async[G[_]](block: M[A] => G[Unit])(implicit streamable: Streamable[G]): Command[F, A, NotUsed] =
+  def async[G[_]](block: M[A] => G[Unit])(implicit streamable: Streamable[G]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
@@ -284,36 +223,36 @@ trait CommandBuilder[F[_], +M[_], A] extends CommandFunction[F, CommandMessage[F
     */
   def asyncOptRequest[G[_]](
       block: M[A] => OptionT[G, Request[Any, Any]]
-  )(implicit streamable: Streamable[G]): Command[F, A, NotUsed] =
+  )(implicit streamable: Streamable[G]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
 
   /**
     * Creates a command that will do a single request
     * @param block The execution of the command.
     */
-  def withRequest(block: M[A] => Request[Any, Any]): Command[F, A, NotUsed] =
+  def withRequest(block: M[A] => Request[Any, Any]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].map(block).to(requests.sinkIgnore))
 
   /**
     * Creates a command that might do a single request
     * @param block The execution of the command.
     */
-  def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): Command[F, A, NotUsed] =
+  def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
 
   /**
     * Creates a command that might execute unknown side effects.
     * @param block The execution of the command.
     */
-  def withSideEffects(block: M[A] => Unit): Command[F, A, NotUsed] =
+  def withSideEffects(block: M[A] => Unit): ComplexCommand[A, NotUsed] =
     streamed(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
 
-  override def andThen[M2[_]](f: CommandFunction[F, M, M2]): CommandBuilder[F, M2, A] = new CommandBuilder[F, M2, A] {
+  override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
     override def requests: RequestHelper = self.requests
 
     override def parser: MessageParser[A] = self.parser
 
-    override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M2[C]], NotUsed] =
+    override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M2[C]], NotUsed] =
       CommandFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
   }
 }
@@ -323,69 +262,65 @@ object CommandBuilder {
     * A command function that only allows commands sent from a guild, and that
     * lets you build the result command message.
     */
-  def onlyInGuild[F[_]: Streamable: Applicative, I[A] <: CommandMessage[F, A], O[_]](
+  def onlyInGuild[I[A] <: CommandMessage[A], O[_]](
       create: (TGuildChannel, Guild) => I ~> O
-  ): CommandFunction[F, I, O] =
-    new CommandFunction[F, I, O] {
+  ): CommandFunction[I, O] =
+    new CommandFunction[I, O] {
 
-      type Result[A] = Either[Option[CommandError[F]], O[A]]
+      type Result[A] = Either[Option[CommandError], O[A]]
 
       override def flow[A]: Flow[I[A], Result[A], NotUsed] =
-        Flow[I[A]].flatMapConcat { m =>
-          implicit val c: CacheSnapshot[F] = m.cache
+        Flow[I[A]].map { m =>
+          implicit val c: CacheSnapshot = m.cache
 
           lazy val e: Result[A] = Left(Some(CommandError.mk(s"This command can only be used in a guild", m)))
 
-          val res = m.tChannel match {
+          m.tChannel match {
             case chG: TGuildChannel =>
               chG.guild.fold[Result[A]](e) { g =>
                 Right(create(chG, g)(m))
               }
-            case _ => Applicative[F].pure(e)
+            case _ => e
           }
-
-          Streamable[F].toSource(res)
         }
     }
 
   /**
     * A command function that lets you add the guild member to a command message.
     */
-  def withGuildMember[F[_]: Streamable: Applicative, I[A] <: GuildCommandMessage[F, A] with UserCommandMessage[F, A], O[
+  def withGuildMember[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[
       _
-  ]](create: GuildMember => I ~> O): CommandTransformer[F, I, O] = new CommandTransformer[F, I, O] {
+  ]](create: GuildMember => I ~> O): CommandTransformer[I, O] = new CommandTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]].mapConcat { m =>
         m.guild.members.get(m.user.id).map(member => create(member)(m)).toList
       }
   }
 
-  def inVoiceChannel[F[_]: Streamable: Monad, I[A] <: GuildCommandMessage[F, A] with UserCommandMessage[F, A], O[_]](
+  def inVoiceChannel[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[_]](
       create: VGuildChannel => I ~> O
-  ): CommandFunction[F, I, O] = new CommandFunction[F, I, O] {
-    type Result[A] = Either[Option[CommandError[F]], O[A]]
+  ): CommandFunction[I, O] = new CommandFunction[I, O] {
+    type Result[A] = Either[Option[CommandError], O[A]]
 
-    override def flow[A]: Flow[I[A], Result[A], NotUsed] = Flow[I[A]].flatMapConcat { m =>
-      implicit val c: CacheSnapshot[F] = m.cache
-      val res: F[Result[A]] = OptionT
-        .fromOption[F](m.guild.voiceStates.get(m.user.id).flatMap(_.channelId))
+    override def flow[A]: Flow[I[A], Result[A], NotUsed] = Flow[I[A]].map { m =>
+      implicit val c: CacheSnapshot = m.cache
+      m.guild.voiceStates
+        .get(m.user.id)
+        .flatMap(_.channelId)
         .flatMap(_.vResolve(m.guild.id))
-        .toRight(Some(CommandError.mk(s"This command can only be used in a guild", m)): Option[CommandError[F]])
+        .toRight(Some(CommandError.mk(s"This command can only be used in a guild", m)): Option[CommandError])
         .map(vCh => create(vCh)(m))
-        .value
-
-      Streamable[F].toSource(res)
     }
   }
 
   /**
     * A command function that only allow commands sent from one specific guild.
     */
-  def inOneGuild[F[_], M[A] <: GuildCommandMessage[F, A]](
+  def inOneGuild[M[A] <: GuildCommandMessage[A]](
       guildId: GuildId
-  ): CommandFunction[F, M, M] =
-    new CommandFunction[F, M, M] {
-      override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] =
+  ): CommandFunction[M, M] =
+    new CommandFunction[M, M] {
+      override def flow[A]: Flow[M[A], Either[Option[CommandError], M[A]], NotUsed] =
         Flow[M[A]].map(m => Either.cond(m.guild.id == guildId, m, None))
     }
 
@@ -393,10 +328,10 @@ object CommandBuilder {
     * A command function that requires that those who use this command need
     * some set of permissions.
     */
-  def needPermission[F[_], M[A] <: GuildCommandMessage[F, A]](
+  def needPermission[M[A] <: GuildCommandMessage[A]](
       neededPermission: Permission
-  ): CommandFunction[F, M, M] = new CommandFunction[F, M, M] {
-    override def flow[A]: Flow[M[A], Either[Option[CommandError[F]], M[A]], NotUsed] =
+  ): CommandFunction[M, M] = new CommandFunction[M, M] {
+    override def flow[A]: Flow[M[A], Either[Option[CommandError], M[A]], NotUsed] =
       Flow[M[A]].map { m =>
         val guild = m.guild
 
@@ -412,44 +347,67 @@ object CommandBuilder {
   /**
     * A command function that disallows bots from using it.
     */
-  def nonBot[F[_]: Streamable: Monad, I[A] <: CommandMessage[F, A], O[_]](
+  def nonBot[I[A] <: CommandMessage[A], O[_]](
       create: User => I ~> O
-  ): CommandFunction[F, I, O] =
-    new CommandFunction[F, I, O] {
-      override def flow[A]: Flow[I[A], Either[Option[CommandError[F]], O[A]], NotUsed] =
-        Flow[I[A]].flatMapConcat { m =>
-          implicit val c: CacheSnapshot[F] = m.cache
-          val res = m.message.authorUser
+  ): CommandFunction[I, O] =
+    new CommandFunction[I, O] {
+      override def flow[A]: Flow[I[A], Either[Option[CommandError], O[A]], NotUsed] =
+        Flow[I[A]].map { m =>
+          implicit val c: CacheSnapshot = m.cache
+          m.message.authorUser
             .filter(!_.bot.getOrElse(false))
             .toRight(None)
             .map(u => create(u)(m))
-            .value
-          Streamable[F].toSource(res)
         }
     }
 
   /**
     * Creates a raw command builder without any extra processing.
     */
-  def rawBuilder[F[_]](requestHelper: RequestHelper): CommandBuilder[F, CommandMessage[F, ?], List[String]] =
-    new CommandBuilder[F, CommandMessage[F, ?], List[String]] {
+  def rawBuilder(requestHelper: RequestHelper): CommandBuilder[CommandMessage, NotUsed] =
+    new CommandBuilder[CommandMessage, NotUsed] {
       override def requests: RequestHelper = requestHelper
 
-      override def parser: MessageParser[List[String]] = MessageParser.allStringsParser
+      override def parser: MessageParser[NotUsed] = MessageParser.notUsedParser
 
-      override def flow[A]: Flow[CommandMessage[F, A], Either[Option[CommandError[F]], CommandMessage[F, A]], NotUsed] =
-        Flow[CommandMessage[F, A]].map(Right.apply)
+      override def flow[A]: Flow[CommandMessage[A], Either[Option[CommandError], CommandMessage[A]], NotUsed] =
+        Flow[CommandMessage[A]].map(Right.apply)
     }
+
+  private[ackcord] def streamedFlow[M[_], A, Mat](
+      sinkBlock: Sink[M[A], Mat],
+      selfFlow: Flow[CommandMessage[A], Either[Option[CommandError], M[A]], NotUsed]
+  ): Flow[CommandMessage[A], CommandError, Mat] = {
+
+    Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
+      import GraphDSL.Implicits._
+      val selfFlowShape = b.add(selfFlow)
+
+      val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
+        case Left(_)  => 0
+        case Right(_) => 1
+      }))
+      val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
+      val selfOut = selfPartition.out(1).map(_.right.get)
+
+      selfFlowShape ~> selfPartition
+      selfOut ~> block
+
+      FlowShape(
+        selfFlowShape.in,
+        selfErr.outlet
+      )
+    })
+  }
 }
 
 /**
   * A [[CommandFunction]] from a command message to an output. Used for
   * creating commands.
-  * @tparam F The cache effect type
   * @tparam M The command message type used by the command.
   * @tparam A The argument type of this command builder.
   */
-trait NamedCommandBuilder[F[_], +M[_], A] extends CommandBuilder[F, M, A] { self =>
+trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
 
   /**
     * The prefix symbol to use for the command this builder will create.
@@ -470,8 +428,8 @@ trait NamedCommandBuilder[F[_], +M[_], A] extends CommandBuilder[F, M, A] { self
     * Creates a new command builder parsing a specific type.
     * @tparam B The type to parse
     */
-  override def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[F, M, B] =
-    new NamedCommandBuilder[F, M, B] {
+  override def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[M, B] =
+    new NamedCommandBuilder[M, B] {
 
       override def symbol: String = self.symbol
 
@@ -483,60 +441,44 @@ trait NamedCommandBuilder[F[_], +M[_], A] extends CommandBuilder[F, M, A] { self
 
       override def parser: MessageParser[B] = newParser
 
-      override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M[C]], NotUsed] = self.flow
+      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
     }
 
-  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): NamedCommand[F, A, Mat] = new NamedCommand[F, A, Mat] {
-    override def symbol: String = self.symbol
+  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] =
+    new NamedComplexCommand[A, Mat] {
+      override def symbol: String = self.symbol
 
-    override def aliases: Seq[String] = self.aliases
+      override def aliases: Seq[String] = self.aliases
 
-    override def requiresMention: Boolean = self.requiresMention
+      override def requiresMention: Boolean = self.requiresMention
 
-    override def parser: MessageParser[A] = self.parser
+      override def parser: MessageParser[A] = self.parser
 
-    override def flow: Flow[CommandMessage[F, A], CommandError[F], Mat] = {
-      Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
-        import GraphDSL.Implicits._
-        val selfFlow = b.add(self.flow[A])
-
-        val selfPartition = b.add(Partition[Either[Option[CommandError[F]], M[A]]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-        val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-        val selfOut = selfPartition.out(1).map(_.right.get)
-
-        selfFlow ~> selfPartition
-        selfOut ~> block
-
-        FlowShape(
-          selfFlow.in,
-          selfErr.outlet
-        )
-      })
+      override def flow: Flow[CommandMessage[A], CommandError, Mat] =
+        CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
     }
-  }
 
-  override def async[G[_]](block: M[A] => G[Unit])(implicit streamable: Streamable[G]): NamedCommand[F, A, NotUsed] =
+  override def async[G[_]](
+      block: M[A] => G[Unit]
+  )(implicit streamable: Streamable[G]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
 
   override def asyncOptRequest[G[_]](
       block: M[A] => OptionT[G, Request[Any, Any]]
-  )(implicit streamable: Streamable[G]): NamedCommand[F, A, NotUsed] =
+  )(implicit streamable: Streamable[G]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
 
-  override def withRequest(block: M[A] => Request[Any, Any]): NamedCommand[F, A, NotUsed] =
+  override def withRequest(block: M[A] => Request[Any, Any]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].map(block).to(requests.sinkIgnore))
 
-  override def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): NamedCommand[F, A, NotUsed] =
+  override def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
 
-  override def withSideEffects(block: M[A] => Unit): NamedCommand[F, A, NotUsed] =
+  override def withSideEffects(block: M[A] => Unit): NamedComplexCommand[A, NotUsed] =
     streamed(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
 
-  override def andThen[M2[_]](f: CommandFunction[F, M, M2]): NamedCommandBuilder[F, M2, A] =
-    new NamedCommandBuilder[F, M2, A] {
+  override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedCommandBuilder[M2, A] =
+    new NamedCommandBuilder[M2, A] {
 
       override def symbol: String = self.symbol
 
@@ -548,17 +490,16 @@ trait NamedCommandBuilder[F[_], +M[_], A] extends CommandBuilder[F, M, A] { self
 
       override def parser: MessageParser[A] = self.parser
 
-      override def flow[C]: Flow[CommandMessage[F, C], Either[Option[CommandError[F]], M2[C]], NotUsed] =
+      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M2[C]], NotUsed] =
         CommandFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
     }
 }
 
 /**
   * A message sent with an invocation of a command.
-  * @tparam F The cache effect type
   * @tparam A The parsed argument type
   */
-trait CommandMessage[F[_], +A] {
+trait CommandMessage[+A] {
 
   /**
     * Easy access to a request helper.
@@ -568,7 +509,7 @@ trait CommandMessage[F[_], +A] {
   /**
     * A cache snapshot taken when the command was used.
     */
-  def cache: CacheSnapshot[F]
+  def cache: CacheSnapshot
 
   /**
     * The channel the command was used from.
@@ -587,21 +528,21 @@ trait CommandMessage[F[_], +A] {
 }
 object CommandMessage {
 
-  implicit def findCache[F[_], A](implicit message: CommandMessage[F, A]): CacheSnapshot[F] = message.cache
+  implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 
-  case class Default[F[_], A](
+  case class Default[A](
       requests: RequestHelper,
-      cache: CacheSnapshot[F],
+      cache: CacheSnapshot,
       tChannel: TChannel,
       message: Message,
       parsed: A
-  ) extends CommandMessage[F, A]
+  ) extends CommandMessage[A]
 }
 
-class WrappedCommandMessage[F[_], A](m: CommandMessage[F, A]) extends CommandMessage[F, A] {
+class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
   override def requests: RequestHelper = m.requests
 
-  override def cache: CacheSnapshot[F] = m.cache
+  override def cache: CacheSnapshot = m.cache
 
   override def tChannel: TChannel = m.tChannel
 
@@ -612,10 +553,9 @@ class WrappedCommandMessage[F[_], A](m: CommandMessage[F, A]) extends CommandMes
 
 /**
   * A message sent with the invocation of a guild command
-  * @tparam F The cache effect type
   * @tparam A The parsed argument type
   */
-trait GuildCommandMessage[F[_], +A] extends CommandMessage[F, A] {
+trait GuildCommandMessage[+A] extends CommandMessage[A] {
   override def tChannel: TGuildChannel
 
   /**
@@ -625,29 +565,28 @@ trait GuildCommandMessage[F[_], +A] extends CommandMessage[F, A] {
 }
 object GuildCommandMessage {
 
-  case class Default[F[_], A](
+  case class Default[A](
       override val tChannel: TGuildChannel,
       guild: Guild,
-      m: CommandMessage[F, A]
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
-      with GuildCommandMessage[F, A]
+      with GuildCommandMessage[A]
 
-  case class WithUser[F[_], A](
+  case class WithUser[A](
       override val tChannel: TGuildChannel,
       guild: Guild,
       user: User,
-      m: CommandMessage[F, A]
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
-      with GuildCommandMessage[F, A]
-      with UserCommandMessage[F, A]
+      with GuildCommandMessage[A]
+      with UserCommandMessage[A]
 }
 
 /**
   * A message sent with the invocation of command used by a user
-  * @tparam F The cache effect type
   * @tparam A The parsed argument type
   */
-trait UserCommandMessage[F[_], +A] extends CommandMessage[F, A] {
+trait UserCommandMessage[+A] extends CommandMessage[A] {
 
   /**
     * The user that used this command.
@@ -656,12 +595,10 @@ trait UserCommandMessage[F[_], +A] extends CommandMessage[F, A] {
 }
 object UserCommandMessage {
 
-  case class Default[F[_], A](user: User, m: CommandMessage[F, A])
-      extends WrappedCommandMessage(m)
-      with UserCommandMessage[F, A]
+  case class Default[A](user: User, m: CommandMessage[A]) extends WrappedCommandMessage(m) with UserCommandMessage[A]
 }
 
-trait GuildMemberCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with UserCommandMessage[F, A] {
+trait GuildMemberCommandMessage[+A] extends GuildCommandMessage[A] with UserCommandMessage[A] {
 
   /**
     * The guild member that used this command.
@@ -670,17 +607,17 @@ trait GuildMemberCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with
 }
 object GuildMemberCommandMessage {
 
-  case class Default[F[_], A](
+  case class Default[A](
       override val tChannel: TGuildChannel,
       guild: Guild,
       user: User,
       guildMember: GuildMember,
-      m: CommandMessage[F, A]
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
-      with GuildMemberCommandMessage[F, A]
+      with GuildMemberCommandMessage[A]
 }
 
-trait VoiceGuildCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with UserCommandMessage[F, A] {
+trait VoiceGuildCommandMessage[+A] extends GuildCommandMessage[A] with UserCommandMessage[A] {
 
   /**
     * The voice channel the user that used this command is in.
@@ -689,25 +626,25 @@ trait VoiceGuildCommandMessage[F[_], +A] extends GuildCommandMessage[F, A] with 
 }
 object VoiceGuildCommandMessage {
 
-  case class Default[F[_], A](
+  case class Default[A](
       override val tChannel: TGuildChannel,
       guild: Guild,
       user: User,
       voiceChannel: VGuildChannel,
-      m: CommandMessage[F, A]
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
-      with VoiceGuildCommandMessage[F, A]
+      with VoiceGuildCommandMessage[A]
 
-  case class WithGuildMember[F[_], A](
+  case class WithGuildMember[A](
       override val tChannel: TGuildChannel,
       guild: Guild,
       user: User,
       guildMember: GuildMember,
       voiceChannel: VGuildChannel,
-      m: CommandMessage[F, A]
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
-      with VoiceGuildCommandMessage[F, A]
-      with GuildMemberCommandMessage[F, A]
+      with VoiceGuildCommandMessage[A]
+      with GuildMemberCommandMessage[A]
 }
 
 /**
@@ -715,23 +652,9 @@ object VoiceGuildCommandMessage {
   * @param error The errror message
   * @param channel The channel the error occoured in
   * @param cache A cache snapshot tied to the execution of the command
-  * @tparam F The cache's effect type
   */
-case class CommandError[F[_]](error: String, channel: TChannel, cache: CacheSnapshot[F])
+case class CommandError(error: String, channel: TChannel, cache: CacheSnapshot)
 object CommandError {
-  def mk[F[_], A](error: String, message: CommandMessage[F, A]): CommandError[F] =
+  def mk[F[_], A](error: String, message: CommandMessage[A]): CommandError =
     CommandError(error, message.tChannel, message.cache)
-}
-
-/**
-  * A constructed command execution.
-  * @tparam F The effect type of the cache
-  * @tparam A The argument type of the command
-  * @tparam Mat The materialized result of creating this command
-  */
-trait Command[F[_], A, Mat] {
-
-  def parser: MessageParser[A]
-
-  def flow: Flow[CommandMessage[F, A], CommandError[F], Mat]
 }

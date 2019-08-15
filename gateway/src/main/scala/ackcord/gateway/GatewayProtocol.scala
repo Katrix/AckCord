@@ -27,6 +27,7 @@ import java.time.OffsetDateTime
 
 import ackcord.data._
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
+import akka.NotUsed
 import cats.Later
 import cats.syntax.either._
 import io.circe.syntax._
@@ -34,19 +35,9 @@ import io.circe.{derivation, _}
 
 object GatewayProtocol extends DiscordProtocol {
 
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val opCodeEncoder: Encoder[GatewayOpCode] = Encoder[GatewayOpCode]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val opCodeDecoder: Decoder[GatewayOpCode] = Decoder[GatewayOpCode]
-
   implicit val readyDataEncoder: Encoder[GatewayEvent.ReadyData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val readyDataDecoder: Decoder[GatewayEvent.ReadyData] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
-
-  implicit val resumedDataEncoder: Encoder[GatewayEvent.ResumedData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val resumedDataDecoder: Decoder[GatewayEvent.ResumedData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val guildEmojisUpdateDataEncoder: Encoder[GatewayEvent.GuildEmojisUpdateData] =
@@ -123,7 +114,7 @@ object GatewayProtocol extends DiscordProtocol {
       "guild_id" -> a.guildId.fold(_.asJson, _.asJson),
       "query"    -> a.query.asJson,
       "limit"    -> a.limit.asJson
-  )
+    )
   implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
     for {
       guildId <- c.get[GuildId]("guild_id").map(Right.apply).orElse(c.get[Seq[GuildId]]("guild_id").map(Left.apply))
@@ -149,7 +140,7 @@ object GatewayProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "channel_id" -> JsonSome(a.channelId.asJson),
         "timestamp"  -> a.timestamp.map(_.asJson)
-    )
+      )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
@@ -229,25 +220,24 @@ object GatewayProtocol extends DiscordProtocol {
       nonce           <- c.downField("nonce").as[JsonOption[RawSnowflake]]
       pinned          <- c.downField("pinned").as[JsonOption[Boolean]]
       webhookId       <- c.downField("webhook_id").as[JsonOption[String]]
-    } yield
-      GatewayEvent.RawPartialMessage(
-        id,
-        channelId,
-        author,
-        content,
-        timestamp,
-        editedTimestamp,
-        tts,
-        mentionEveryone,
-        mentions,
-        mentionRoles,
-        attachment,
-        embeds,
-        reactions,
-        nonce,
-        pinned,
-        webhookId
-      )
+    } yield GatewayEvent.RawPartialMessage(
+      id,
+      channelId,
+      author,
+      content,
+      timestamp,
+      editedTimestamp,
+      tts,
+      mentionEveryone,
+      mentions,
+      mentionRoles,
+      attachment,
+      embeds,
+      reactions,
+      nonce,
+      pinned,
+      webhookId
+    )
   }
 
   implicit def wsMessageEncoder[D]: Encoder[GatewayMessage[D]] =
@@ -257,7 +247,7 @@ object GatewayProtocol extends DiscordProtocol {
         "d"  -> JsonSome(a.dataEncoder(a.d.value.toTry.get)),
         "s"  -> a.s.map(_.asJson),
         "t"  -> a.t.map(_.name.asJson)
-    )
+      )
 
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
     val dCursor = c.downField("d")
@@ -293,8 +283,9 @@ object GatewayProtocol extends DiscordProtocol {
 
         c.get[String]("t")
           .flatMap {
-            case "READY"                       => createDispatch(GatewayEvent.Ready)
-            case "RESUMED"                     => createDispatch(GatewayEvent.Resumed)
+            case "READY" => createDispatch(GatewayEvent.Ready)
+            case "RESUMED" =>
+              Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((a: NotUsed) => Json.obj()))
             case "CHANNEL_CREATE"              => createDispatch(GatewayEvent.ChannelCreate)
             case "CHANNEL_UPDATE"              => createDispatch(GatewayEvent.ChannelUpdate)
             case "CHANNEL_DELETE"              => createDispatch(GatewayEvent.ChannelDelete)

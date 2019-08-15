@@ -23,8 +23,6 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import java.time.OffsetDateTime
 import java.util.Base64
 
@@ -32,12 +30,6 @@ import scala.collection.immutable
 import scala.util.Try
 
 import ackcord.CacheSnapshot
-import cats.data.OptionT
-import cats.instances.list._
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import cats.syntax.traverse._
-import cats.{Applicative, Monad}
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 sealed trait ImageFormat {
@@ -92,12 +84,6 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
   case object UserPremiumGuildTier3        extends MessageType(11)
 
   override def values: immutable.IndexedSeq[MessageType] = findValues
-
-  @deprecated("Prefer MessageType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[MessageType] = withValueOpt(id)
-
-  @deprecated("Prefer MessageType#value", since = "0.14.0")
-  def idFor(tpe: MessageType): Int = tpe.value
 }
 
 sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
@@ -106,12 +92,6 @@ object PremiumType extends IntEnum[PremiumType] with IntCirceEnum[PremiumType] {
   case object Nitro        extends PremiumType(2)
 
   override def values: immutable.IndexedSeq[PremiumType] = findValues
-
-  @deprecated("Prefer PremiumType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[PremiumType] = withValueOpt(id)
-
-  @deprecated("Prefer PremiumType#value", since = "0.14.0")
-  def idFor(tpe: PremiumType): Int = tpe.value
 }
 
 /**
@@ -211,12 +191,6 @@ object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceE
   case object Everyone       extends ConnectionVisibility(1)
 
   override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
-
-  @deprecated("Prefer ConnectionVisibility.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[ConnectionVisibility] = withValueOpt(id)
-
-  @deprecated("Prefer ConnectionVisibility#value", since = "0.14.0")
-  def idOf(tpe: ConnectionVisibility): Int = tpe.value
 }
 
 sealed abstract class MessageActivityType(val value: Int) extends IntEnumEntry
@@ -227,12 +201,6 @@ object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnu
   case object JoinRequest extends MessageActivityType(5)
 
   override def values: immutable.IndexedSeq[MessageActivityType] = findValues
-
-  @deprecated("Prefer MessageActivityType.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[MessageActivityType] = withValueOpt(id)
-
-  @deprecated("Prefer MessageActivityType#value", since = "0.14.0")
-  def idOf(tpe: MessageActivityType): Int = tpe.value
 }
 
 /**
@@ -305,16 +273,16 @@ case class Message(
   /**
     * Get the guild this message was sent to, if it was sent to a guild.
     */
-  def guild[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, Guild] =
-    guildId.fold(OptionT.none[F, Guild])(c.getGuild(_).orElse(tGuildChannel.map(_.guildId).flatMap(c.getGuild)))
+  def guild(implicit c: CacheSnapshot): Option[Guild] =
+    guildId.fold(None: Option[Guild])(c.getGuild(_).orElse(tGuildChannel.map(_.guildId).flatMap(c.getGuild)))
 
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
   /**
     * Gets the author of this message, ignoring the case where the author might be a webhook.
     */
-  def authorUser[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
-    authorUserId.fold(OptionT.none[F, User])(c.getUser)
+  def authorUser(implicit c: CacheSnapshot): Option[User] =
+    authorUserId.fold(None: Option[User])(c.getUser)
 
   private val channelRegex = """<#(\d+)>""".r
 
@@ -332,26 +300,24 @@ case class Message(
   /**
     * Formats mentions in this message to their normal syntax with names.
     */
-  def formatMentions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[String] = {
-    for {
-      userList <- mentions.toList.traverse(_.resolve.value)
-      roleList <- mentionRoles.toList.traverse(_.resolve.value)
-      optGuildId <- channelId.resolve.collect {
-        case channel: GuildChannel => channel.guildId
-      }.value
-      channelList <- optGuildId.fold[F[List[Option[GuildChannel]]]](Applicative[F].pure(Nil))(
-        guildId => channelMentions.toList.traverse(_.guildResolve(guildId).value)
-      )
-    } yield {
-      val withUsers = userList.flatten
-        .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
-      val withRoles = roleList.flatten
-        .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
-      val withChannels = channelList.flatten
-        .foldRight(withRoles)((channel, content) => content.replace(channel.mention, s"@${channel.name}"))
-
-      withChannels
+  def formatMentions(implicit c: CacheSnapshot): String = {
+    val userList = mentions.toList.flatMap(_.resolve)
+    val roleList = mentionRoles.toList.flatMap(_.resolve)
+    val optGuildId = channelId.resolve.collect {
+      case channel: GuildChannel => channel.guildId
     }
+    val channelList = optGuildId.fold[List[Option[GuildChannel]]](Nil)(
+      guildId => channelMentions.toList.map(_.guildResolve(guildId))
+    )
+
+    val withUsers = userList
+      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
+    val withRoles = roleList
+      .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
+    val withChannels = channelList.flatten
+      .foldRight(withRoles)((channel, content) => content.replace(channel.mention, s"@${channel.name}"))
+
+    withChannels
   }
 }
 

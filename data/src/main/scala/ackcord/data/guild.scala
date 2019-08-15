@@ -23,15 +23,11 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import java.time.{Instant, OffsetDateTime}
 
 import scala.collection.immutable
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
-import cats.data.OptionT
-import cats.{Applicative, Functor, Monad}
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry, StringCirceEnum, StringEnum, StringEnumEntry}
 
 /**
@@ -64,12 +60,6 @@ object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnum[Ve
   case object VeryHigh extends VerificationLevel(4)
 
   override def values: immutable.IndexedSeq[VerificationLevel] = findValues
-
-  @deprecated("Prefer VerificationLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[VerificationLevel] = withValueOpt(id)
-
-  @deprecated("Prefer VerificationLevel#value", since = "0.14.0")
-  def idFor(lvl: VerificationLevel): Int = lvl.value
 }
 
 /**
@@ -85,12 +75,6 @@ object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnum[No
   case object OnlyMentions extends NotificationLevel(1)
 
   override def values: immutable.IndexedSeq[NotificationLevel] = findValues
-
-  @deprecated("Prefer NotificationLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[NotificationLevel] = withValueOpt(id)
-
-  @deprecated("Prefer NotificationLevel#value", since = "0.14.0")
-  def idFor(lvl: NotificationLevel): Int = lvl.value
 }
 
 /**
@@ -109,12 +93,6 @@ object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnum[FilterLevel] {
   case object AllMembers extends FilterLevel(2)
 
   override def values: immutable.IndexedSeq[FilterLevel] = findValues
-
-  @deprecated("Prefer FilterLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[FilterLevel] = withValueOpt(id)
-
-  @deprecated("Prefer FilterLevel#value", since = "0.14.0")
-  def idFor(lvl: FilterLevel): Int = lvl.value
 }
 
 sealed abstract class MFALevel(val value: Int) extends IntEnumEntry
@@ -123,12 +101,6 @@ object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
   case object Elevated extends MFALevel(1)
 
   override def values: immutable.IndexedSeq[MFALevel] = findValues
-
-  @deprecated("Prefer MFALevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[MFALevel] = withValueOpt(id)
-
-  @deprecated("Prefer MFALevel#value", since = "0.14.0")
-  def idFor(lvl: MFALevel): Int = lvl.value
 }
 
 sealed abstract class PremiumTier(val value: Int) extends IntEnumEntry
@@ -236,7 +208,7 @@ case class Guild(
   /**
     * Get the owner this this guild.
     */
-  def owner[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(ownerId)
+  def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
 
   /**
     * Get the AFK channel of this guild.
@@ -310,13 +282,6 @@ case class GuildMember(
   }
 
   /**
-    * Calculate the permissions of this user
-    */
-  @deprecated("Prefer calling permissions instead, resolving the guild yourself", "0.14")
-  def permissions[F[_]](implicit c: CacheSnapshot[F], F: Functor[F]): F[Permission] =
-    guild.map(permissions(_)).getOrElse(Permission.None)
-
-  /**
     * Calculate the permissions of this user in a channel.
     */
   def permissionsWithOverridesId(guild: Guild, guildPermissions: Permission, channelId: ChannelId): Permission = {
@@ -363,26 +328,10 @@ case class GuildMember(
   }
 
   /**
-    * Calculate the permissions of this user in a channel.
-    */
-  @deprecated("Prefer calling permissionsWithOverridesId instead, resolving the guild yourself", "0.14")
-  def permissionsWithOverrides[F[_]](guildPermissions: Permission, channelId: ChannelId)(
-      implicit c: CacheSnapshot[F],
-      F: Monad[F]
-  ): F[Permission] = guild.map(permissionsWithOverridesId(_, guildPermissions, channelId)).getOrElse(guildPermissions)
-
-  /**
     * Calculate the permissions of this user in a channel given a guild.
     */
   def channelPermissionsId(guild: Guild, channelId: ChannelId): Permission =
     permissionsWithOverridesId(guild, permissions(guild), channelId)
-
-  /**
-    * Calculate the permissions of this user in a channel given a guild.
-    */
-  @deprecated("Prefer calling channelPermissionsId instead, resolving the guild yourself", "0.14")
-  def channelPermissions[F[_]](channelId: ChannelId)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Permission] =
-    guild.map(channelPermissionsId(_, channelId)).getOrElseF(permissions)
 
   /**
     * Check if this user has any roles above the passed in roles.
@@ -404,22 +353,8 @@ case class GuildMember(
   /**
     * Check if this user has any roles above the passed in roles.
     */
-  @deprecated("Prefer calling hasRoleAboveId instead, resolving the guild yourself", "0.14")
-  def hasRolesAbove[F[_]](others: Seq[RoleId])(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
-    guild.map(hasRoleAboveId(_, others)).exists(identity)
-
-  /**
-    * Check if this user has any roles above the passed in roles.
-    */
   def hasRoleAboveId(guild: Guild, other: GuildMember): Boolean =
     if (other.userId == guild.ownerId) false else hasRoleAboveId(guild, other.roleIds)
-
-  /**
-    * Check if this user has any roles above the passed in roles.
-    */
-  @deprecated("Prefer calling hasRoleAboveId instead, resolving the guild yourself", "0.14")
-  def hasRoleAbove[F[_]](other: GuildMember)(implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
-    guild.map(hasRoleAboveId(_, other)).exists(identity)
 }
 
 /**
@@ -454,8 +389,8 @@ case class Emoji(
   /**
     * Get the creator of this emoji if it has one.
     */
-  def creator[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
-    userId.fold(OptionT.none[F, User])(c.getUser)
+  def creator(implicit c: CacheSnapshot): Option[User] =
+    userId.fold(None: Option[User])(c.getUser)
 }
 
 /**
@@ -564,6 +499,19 @@ case class PresenceWatching(
     assets: Option[ActivityAsset]
 ) extends Activity
 
+//TODO: Figure out what the public API for this is, and what it sends back
+case class PresenceCustom(
+    name: String,
+    state: Option[String] //TODO: Figure out if this is nullable
+) extends Activity {
+
+  override def timestamps: Option[ActivityTimestamps] = None
+
+  override def details: Option[String] = None
+
+  override def assets: Option[ActivityAsset] = None
+}
+
 /**
   * The different statuses a user can have
   */
@@ -576,12 +524,6 @@ object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnum[Pr
   case object Offline      extends PresenceStatus("offline")
 
   override def values: immutable.IndexedSeq[PresenceStatus] = findValues
-
-  @deprecated("Prefer PresenceStatus#value instead", since = "0.14.0")
-  def nameOf(status: PresenceStatus): String = status.value
-
-  @deprecated("Prefer PresenceStatus.withValueOpt", since = "0.14.0")
-  def forName(name: String): Option[PresenceStatus] = withValueOpt(name)
 }
 
 /**
@@ -650,5 +592,5 @@ case class Ban(reason: Option[String], userId: UserId) {
   /**
     * Get the user this ban applies to.
     */
-  def user[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(userId)
+  def user(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
 }

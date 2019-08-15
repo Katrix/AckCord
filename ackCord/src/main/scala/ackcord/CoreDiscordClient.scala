@@ -34,11 +34,11 @@ import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.{Done, NotUsed}
 
-case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands[Id], requests: RequestHelper)
-    extends DiscordClient[Id] {
+case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper)
+    extends DiscordClient {
   import cache.mat
 
-  override def newCommandsHelper(settings: CommandSettings[Id]): (UniqueKillSwitch, CommandsHelper[Id]) = {
+  override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
     val (killSwitch, newCommands) = CoreCommands.create(
       settings,
       cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
@@ -48,11 +48,11 @@ case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Comm
     killSwitch -> SeperateCommandsHelper(newCommands, requests)
   }
 
-  override val sourceRequesterRunner: RequestRunner[Source[?, NotUsed], Id] =
-    RequestRunner.sourceRequestRunner[Id](requests, cats.catsInstancesForId, Streamable.idStreamable)
+  override val sourceRequesterRunner: RequestRunner[Source[?, NotUsed]] =
+    RequestRunner.sourceRequestRunner(requests)
 
   override def registerHandler[G[_], A <: APIMessage](
-      handler: EventHandler[Id, G, A]
+      handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
     cache.subscribeAPI
       .collectType[A]

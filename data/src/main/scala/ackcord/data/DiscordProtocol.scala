@@ -37,59 +37,6 @@ trait DiscordProtocol {
 
   implicit val circeConfiguration: Configuration = Configuration.default.withSnakeCaseMemberNames.withDefaults
 
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val channelTypeEncoder: Encoder[ChannelType] = Encoder[ChannelType]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val channelTypeDecoder: Decoder[ChannelType] = Decoder[ChannelType]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val verificationLevelEncoder: Encoder[VerificationLevel] = Encoder[VerificationLevel]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val verificationLevelDecoder: Decoder[VerificationLevel] = Decoder[VerificationLevel]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val notificationLevelEncoder: Encoder[NotificationLevel] = Encoder[NotificationLevel]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val notificationLevelDecoder: Decoder[NotificationLevel] = Decoder[NotificationLevel]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val filterLevelEncoder: Encoder[FilterLevel] = Encoder[FilterLevel]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val filterLevelDecoder: Decoder[FilterLevel] = Decoder[FilterLevel]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val mfaLevelEncoder: Encoder[MFALevel] = Encoder[MFALevel]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val mfaLevelDecoder: Decoder[MFALevel] = Decoder[MFALevel]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val messageTypeEncoder: Encoder[MessageType] = Encoder[MessageType]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val messageTypeDecoder: Decoder[MessageType] = Decoder[MessageType]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val premiumTypeEncoder: Encoder[PremiumType] = Encoder[PremiumType]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val premiumTypeDecoder: Decoder[PremiumType] = Decoder[PremiumType]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val permissionValueTypeEncoder: Encoder[PermissionOverwriteType] = Encoder[PermissionOverwriteType]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val permissionValueTypeDecoder: Decoder[PermissionOverwriteType] = Decoder[PermissionOverwriteType]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val presenceStatusEncoder: Encoder[PresenceStatus] = Encoder[PresenceStatus]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val presenceStatusDecoder: Decoder[PresenceStatus] = Decoder[PresenceStatus]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val auditLogEventDecoder: Decoder[AuditLogEvent] = Decoder[AuditLogEvent]
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val connectionVisibilityEncoder: Encoder[ConnectionVisibility] = Encoder[ConnectionVisibility]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val connectionVisibilityDecoder: Decoder[ConnectionVisibility] = Decoder[ConnectionVisibility]
-
   implicit def snowflakeTypeEncoder[A]: Encoder[SnowflakeType[A]] = Encoder[String].contramap(_.asString)
   implicit def snowflakeTypeDecoder[A]: Decoder[SnowflakeType[A]] =
     Decoder[String].emap(s => Right(SnowflakeType[A](s)))
@@ -109,11 +56,6 @@ trait DiscordProtocol {
 
   implicit val imageDataEncoder: Encoder[ImageData] = Encoder[String].contramap(_.rawData)
   implicit val imageDataDecoder: Decoder[ImageData] = Decoder[String].emap(s => Right(new ImageData(s)))
-
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val messageActivityTypeEncoder: Encoder[MessageActivityType] = Encoder[MessageActivityType]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val messageActivityTypeDecoder: Decoder[MessageActivityType] = Decoder[MessageActivityType]
 
   implicit val rawChannelEncoder: Encoder[RawChannel] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawChannelDecoder: Decoder[RawChannel] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -160,7 +102,7 @@ trait DiscordProtocol {
   implicit val webhookAuthorDecoder: Decoder[WebhookAuthor] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
   implicit val roleEncoder
-    : Encoder[Role] = derivation.deriveEncoder(derivation.renaming.snakeCase) //Encoding roles is fine, decoding them is not
+      : Encoder[Role] = derivation.deriveEncoder(derivation.renaming.snakeCase) //Encoding roles is fine, decoding them is not
 
   implicit val rawRoleEncoder: Encoder[RawRole] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawRoleDecoder: Decoder[RawRole] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -307,29 +249,28 @@ trait DiscordProtocol {
       tpe             <- c.get[MessageType]("type").right
       activity        <- c.get[Option[RawMessageActivity]]("activity").right
       application     <- c.get[Option[MessageApplication]]("application").right
-    } yield
-      RawMessage(
-        id,
-        channelId,
-        guildId,
-        author,
-        member,
-        content,
-        timestamp,
-        editedTimestamp,
-        tts,
-        mentionEveryone,
-        mentions,
-        mentionRoles,
-        attachment,
-        embeds,
-        reactions,
-        nonce,
-        pinned,
-        tpe,
-        activity,
-        application
-      )
+    } yield RawMessage(
+      id,
+      channelId,
+      guildId,
+      author,
+      member,
+      content,
+      timestamp,
+      editedTimestamp,
+      tts,
+      mentionEveryone,
+      mentions,
+      mentionRoles,
+      attachment,
+      embeds,
+      reactions,
+      nonce,
+      pinned,
+      tpe,
+      activity,
+      application
+    )
   }
 
   implicit val voiceStateEncoder: Encoder[VoiceState] = derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -448,5 +389,11 @@ trait DiscordProtocol {
     derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val clientStatusDecoder: Decoder[ClientStatus] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val teamEncoder: Encoder[Team] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val teamDecoder: Decoder[Team] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
+  implicit val teamMemberEncoder: Encoder[TeamMember] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val teamMemberDecoder: Decoder[TeamMember] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object DiscordProtocol extends DiscordProtocol

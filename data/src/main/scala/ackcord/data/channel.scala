@@ -23,15 +23,11 @@
  */
 package ackcord.data
 
-import scala.language.higherKinds
-
 import java.time.OffsetDateTime
 
 import scala.collection.immutable
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
-import cats.data.OptionT
-import cats.{Applicative, Monad}
 import enumeratum.values._
 
 /**
@@ -47,19 +43,10 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
   case object GuildNews     extends ChannelType(5)
   case object GuildStore    extends ChannelType(6)
 
+  //Not API documented
+  case object LFG extends ChannelType(8)
+
   override def values: immutable.IndexedSeq[ChannelType] = findValues
-
-  /**
-    * Get a channel type from an id
-    */
-  @deprecated("Prefer ChannelType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[ChannelType] = withValueOpt(id)
-
-  /**
-    * Get id for a channel type
-    */
-  @deprecated("Prefer ChannelType#value", since = "0.14.0")
-  def idFor(channelType: ChannelType): Int = channelType.value
 }
 
 /**
@@ -74,18 +61,6 @@ object PermissionOverwriteType
   case object Member extends PermissionOverwriteType("member")
 
   override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
-
-  /**
-    * Get a overwrite type from a name.
-    */
-  @deprecated("Prefer PermissionOverwriteType.withValueOpt", since = "0.14.0")
-  def forName(name: String): Option[PermissionOverwriteType] = withValueOpt(name)
-
-  /**
-    * Get the name of an overwrite type
-    */
-  @deprecated("Prefer PermissionOverwriteType#value", since = "0.14.0")
-  def nameOf(tpe: PermissionOverwriteType): String = tpe.value
 }
 
 /**
@@ -101,8 +76,8 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
   /**
     * If this overwrite applies to a user, get's that user, otherwise returns None.
     */
-  def user[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, User] =
-    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else OptionT.none[F, User]
+  def user(implicit c: CacheSnapshot): Option[User] =
+    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else None
 
   /**
     * If this overwrite applies to a user, get that user's member, otherwise returns None.
@@ -141,6 +116,12 @@ sealed trait Channel {
 }
 
 /**
+  * A channel that is of a type that AckCord knows about, but doesn't implement.
+  * Normally because it's not yet part of the public API.
+  */
+case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends Channel
+
+/**
   * A text channel that has text messages
   */
 sealed trait TChannel extends Channel {
@@ -154,8 +135,8 @@ sealed trait TChannel extends Channel {
   /**
     * Gets the last message for this channel if it exists.
     */
-  def lastMessage[F[_]](implicit c: CacheSnapshot[F], F: Applicative[F]): OptionT[F, Message] =
-    lastMessageId.fold(OptionT.none[F, Message])(c.getMessage(id, _))
+  def lastMessage(implicit c: CacheSnapshot): Option[Message] =
+    lastMessageId.fold(None: Option[Message])(c.getMessage(id, _))
 }
 
 /**
@@ -196,8 +177,8 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * Gets the category for this channel if it has one.
     */
-  def category[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): OptionT[F, GuildCategory] =
-    OptionT.fromOption[F](parentId).flatMap(c.getGuildChannel(guildId, _)).collect {
+  def category(implicit c: CacheSnapshot): Option[GuildCategory] =
+    parentId.flatMap(c.getGuildChannel(guildId, _)).collect {
       case cat: GuildCategory => cat
     }
 }
@@ -346,5 +327,5 @@ case class GroupDMChannel(
   /**
     * Gets the owner for this group DM.
     */
-  def owner[F[_]](implicit c: CacheSnapshot[F]): OptionT[F, User] = c.getUser(ownerId)
+  def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
 }

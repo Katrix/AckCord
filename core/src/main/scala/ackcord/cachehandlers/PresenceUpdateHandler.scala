@@ -33,7 +33,7 @@ object PresenceUpdateHandler extends CacheUpdateHandler[PresenceUpdateData] {
 
     builder.guildMap.get(guildId).foreach { oldGuild =>
       //Add the user
-      builder.getUser(partialUser.id).value match {
+      builder.getUser(partialUser.id) match {
         case Some(existingUser) =>
           val newUser = existingUser.copy(
             username = partialUser.username.getOrElse(existingUser.username),

@@ -186,6 +186,7 @@ case class RawChannel(
             parentId
           )
         }
+      case ChannelType.LFG => Some(UnsupportedChannel(id, ChannelType.LFG))
     }
   }
 
@@ -280,6 +281,8 @@ case class RawChannel(
             parentId
           )
         }
+      case ChannelType.LFG =>
+        None //We only keep on unsupported channel type around, and that should be as general as possible
     }
   }
 }
@@ -630,6 +633,7 @@ case class RawActivity(
       Right(PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets))
     case 2 => Right(PresenceListening(name, timestamps, details, assets))
     case 3 => Right(PresenceWatching(name, timestamps, details, assets))
+    case 4 => Right(PresenceCustom(name, state))
     case _ => Left(s"Got unknown presence type ${`type`}")
   }
 }

@@ -32,8 +32,6 @@ import cats.{Alternative, Contravariant, Functor, MonadError}
 
 package object ackcord {
 
-  type Id[A] = A
-
   val RequestHelper: requests.RequestHelper.type = requests.RequestHelper
   type RequestHelper = requests.RequestHelper
 

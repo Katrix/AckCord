@@ -30,12 +30,12 @@ import scala.language.higherKinds
   *
   * @tparam A The API message type
   */
-trait EventHandler[F[_], G[_], A <: APIMessage] {
+trait EventHandler[G[_], A <: APIMessage] {
 
   /**
     * Called whenever the event for this handler is received.
     * @param message The event itself.
     * @param c A cache snapshot associated with the event.
     */
-  def handle(message: A)(implicit c: CacheSnapshot[F]): G[Unit]
+  def handle(message: A)(implicit c: CacheSnapshot): G[Unit]
 }

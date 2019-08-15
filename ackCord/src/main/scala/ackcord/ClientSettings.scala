@@ -59,7 +59,7 @@ class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     val system: ActorSystem = ActorSystem("AckCord"),
-    val commandSettings: AbstractCommandSettings[Id] = CommandSettings(needsMention = true, prefixes = Set.empty),
+    val commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
     val requestSettings: RequestSettings = RequestSettings()
 ) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
 
@@ -68,7 +68,7 @@ class ClientSettings(
   /**
     * Create a [[DiscordClient]] from these settings.
     */
-  def createClient(): Future[DiscordClient[Id]] = {
+  def createClient(): Future[DiscordClient] = {
     val streamLogger = Logger("StreamLogger")
     implicit val mat: ActorMaterializer =
       ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy { e: Throwable =>
@@ -82,7 +82,7 @@ class ClientSettings(
   /**
     * Create a [[DiscordClient]] from these settings and a custom materializer.
     */
-  def createClientWithMaterializer()(implicit mat: ActorMaterializer): Future[DiscordClient[Id]] = {
+  def createClientWithMaterializer()(implicit mat: ActorMaterializer): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem = system
 
     val requests = RequestHelper.create(
@@ -105,7 +105,7 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings while letting Discord
     * set the shard amount.
     */
-  def createClientAutoShards(): Future[DiscordClient[Id]] = {
+  def createClientAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem = system
     implicit val mat: ActorMaterializer   = ActorMaterializer()
 
@@ -157,7 +157,7 @@ object ClientSettings {
       status: PresenceStatus = PresenceStatus.Online,
       afk: Boolean = false,
       system: ActorSystem = ActorSystem("AckCord"),
-      commandSettings: AbstractCommandSettings[Id] = CommandSettings(needsMention = true, prefixes = Set.empty),
+      commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
       requestSettings: RequestSettings = RequestSettings()
   ): ClientSettings =
     new ClientSettings(

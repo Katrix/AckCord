@@ -35,10 +35,10 @@ object CoreCommands {
     * @param requests A request helper object which will be passed to handlers.
     */
   def create(
-      settings: AbstractCommandSettings[Id],
+      settings: AbstractCommandSettings,
       cache: Cache,
       requests: RequestHelper
-  ): Commands[Id] = {
+  ): Commands = {
     import requests.mat
     Commands(CmdStreams.cmdStreams(settings, cache.subscribeAPI)._2, requests)
   }
@@ -50,10 +50,10 @@ object CoreCommands {
     * @param requests A request helper object which will be passed to handlers.
     */
   def create[A](
-      settings: AbstractCommandSettings[Id],
+      settings: AbstractCommandSettings,
       apiMessages: Source[APIMessage, A],
       requests: RequestHelper
-  ): (A, Commands[Id]) = {
+  ): (A, Commands) = {
     import requests.mat
     val (materialized, streams) = CmdStreams.cmdStreams(settings, apiMessages)
     materialized -> Commands(streams, requests)

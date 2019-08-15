@@ -23,8 +23,6 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data._
 import akka.NotUsed
@@ -33,7 +31,6 @@ import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
-import cats.Monad
 
 /**
   * Base traits for all traits to get images
@@ -73,7 +70,7 @@ trait ImageRequest[Ctx] extends Request[ByteString, Ctx] {
       .mapAsyncUnordered(parallelism)(identity)
   }
 
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = F.pure(true)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 }
 object ImageRequest {
   //https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
@@ -202,4 +199,21 @@ case class GetGuildWidgetImage[Ctx](
   override def desiredSize: Int                 = 16
   override def format: ImageFormat              = ImageFormat.PNG
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
+}
+
+/**
+  * Get the icon for a team
+  * @param teamId The id of the team to get the icon for
+  * @param teamIcon The icon identifier
+  */
+case class GetTeamIconImage[Ctx](
+    desiredSize: Int,
+    format: ImageFormat,
+    teamId: SnowflakeType[Team],
+    teamIcon: String,
+    context: Ctx = NotUsed: NotUsed
+) extends ImageRequest[Ctx] {
+  override def route: RequestRoute = Routes.teamIconImage(teamId, teamIcon, format, Some(desiredSize))
+
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
 }

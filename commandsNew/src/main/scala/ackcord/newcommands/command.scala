@@ -1,31 +1,27 @@
 package ackcord.newcommands
 
-import scala.language.higherKinds
-
 import akka.stream.scaladsl.Flow
 
 /**
   * A constructed command execution.
   *
-  * @tparam F The effect type of the cache
   * @tparam A The argument type of the command
   * @tparam Mat The materialized result of creating this command
   */
-trait Command[F[_], A, Mat] {
+trait ComplexCommand[A, Mat] {
 
   def parser: MessageParser[A]
 
-  def flow: Flow[CommandMessage[F, A], CommandError[F], Mat]
+  def flow: Flow[CommandMessage[A], CommandError, Mat]
 }
 
 /**
   * A constructed command execution with a name.
   *
-  * @tparam F The effect type of the cache
   * @tparam A The argument type of the command
   * @tparam Mat The materialized result of creating this command
   */
-trait NamedCommand[F[_], A, Mat] extends Command[F, A, Mat] {
+trait NamedComplexCommand[A, Mat] extends ComplexCommand[A, Mat] {
 
   /**
     * The prefix symbol to use for this command.

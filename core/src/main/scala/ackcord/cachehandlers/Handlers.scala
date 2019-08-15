@@ -44,7 +44,7 @@ trait Handlers {
     val optGuild = obj.guildId
       .toRight("Can't handle VoiceState update with missing guild")
       .right
-      .flatMap(builder.getGuild(_).value.toRight(s"No guild found for voice state $obj"))
+      .flatMap(builder.getGuild(_).toRight(s"No guild found for voice state $obj"))
 
     optGuild match {
       case Right(guild) =>

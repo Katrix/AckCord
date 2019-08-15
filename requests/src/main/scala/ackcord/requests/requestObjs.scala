@@ -23,7 +23,7 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
+import java.util.UUID
 
 import scala.concurrent.duration._
 
@@ -33,16 +33,20 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Flow
-import cats.{CoflatMap, Monad}
 
 /**
   * Used by requests for specifying an uri to send to,
   * together with a method to use.
-  * @param rawRoute A string containing the route without any minor parameters filled in
+  * @param uriWithMajor A string containing the route without any minor parameters filled in
+  * @param uriWithoutMajor A string containing the route without any major or minor parameters filled in
   * @param uri The uri to send to
   * @param method The method to use
   */
-case class RequestRoute(rawRoute: String, uri: Uri, method: HttpMethod)
+case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: HttpMethod) {
+
+  @deprecated("Prefer uriWithMajor", since = "0.15.0")
+  def rawRoute: String = uriWithMajor
+}
 object RequestRoute {
 
   /**
@@ -50,14 +54,19 @@ object RequestRoute {
     * values for the this route.
     */
   def apply(route: Route, method: HttpMethod): RequestRoute =
-    RequestRoute(route.rawRoute, route.applied, method)
+    RequestRoute(route.uriWithMajor, route.uriWithoutMajor, route.applied, method)
 
   /**
     * Create a [[RequestRoute]] from a [[Routes.QueryRoute]] using the raw and applied
     * values for the this route, and adding the query at the end.
     */
   def apply(queryRoute: QueryRoute, method: HttpMethod): RequestRoute =
-    RequestRoute(queryRoute.rawRoute, queryRoute.applied.withQuery(Uri.Query(queryRoute.queryParts: _*)), method)
+    RequestRoute(
+      queryRoute.uriWithMajor,
+      queryRoute.uriWithoutMajor,
+      queryRoute.applied.withQuery(Uri.Query(queryRoute.queryParts: _*)),
+      method
+    )
 }
 
 /**
@@ -80,9 +89,16 @@ sealed trait MaybeRequest[+Data, Ctx] {
 trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
   /**
+    * An unique identifier to track this request from creation to answer.
+    */
+  val identifier: UUID = UUID.randomUUID()
+
+  /**
     * Updates the context of this request.
     */
   def withContext[NewCtx](newContext: NewCtx): Request[Data, NewCtx] = new Request[Data, NewCtx] {
+
+    override val identifier: UUID = self.identifier
 
     override def context: NewCtx = newContext
 
@@ -97,7 +113,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
 
-    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+    override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
 
   /**
@@ -132,6 +148,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
       f: Flow[ResponseEntity, Data, NotUsed] => Flow[ResponseEntity, B, NotUsed]
   ): Request[B, Ctx] = new Request[B, Ctx] {
 
+    override val identifier: UUID = self.identifier
+
     override def context: Ctx = self.context
 
     override def route: RequestRoute = self.route
@@ -145,7 +163,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
     override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, B, NotUsed] =
       f(self.parseResponse(parallelism))
 
-    override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+    override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
 
   /**
@@ -166,20 +184,44 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   /**
     * Check if a client has the needed permissions to execute this request.
     */
-  def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean]
+  def hasPermissions(implicit c: CacheSnapshot): Boolean
 }
-object Request {
-  implicit def instance[Ctx]: CoflatMap[Request[?, Ctx]] =
-    new CoflatMap[Request[?, Ctx]] {
-      override def map[A, B](fa: Request[A, Ctx])(f: A => B): Request[B, Ctx]                     = fa.map(f)
-      override def coflatMap[A, B](fa: Request[A, Ctx])(f: Request[A, Ctx] => B): Request[B, Ctx] = fa.map(_ => f(fa))
-    }
+
+/**
+  * Misc info needed to handle ratelimits correctly.
+  *
+  * @param tilReset The amount of time until this endpoint ratelimit is reset.
+  *                 Minus if unknown.
+  * @param tilRatelimit The amount of requests that can be made until this
+  *                     endpoint is ratelimited. -1 if unknown.
+  * @param bucketLimit The total amount of requests that can be sent to this
+  *                    to this endpoint until a ratelimit kicks in.
+  *                    -1 if unknown.
+  * @param bucket The ratelimit bucket for this request. Does not
+  *               include any parameters.
+  */
+case class RatelimitInfo(
+    tilReset: FiniteDuration,
+    tilRatelimit: Int,
+    bucketLimit: Int,
+    bucket: String
+) {
+
+  /**
+    * Returns if this ratelimit info does not contain any unknown placeholders.
+    */
+  def isValid: Boolean = tilReset > 0.millis && tilRatelimit != -1 && bucketLimit != -1
 }
 
 /**
   * Sent as a response to a request.
   */
 sealed trait RequestAnswer[+Data, Ctx] {
+
+  /**
+    * An unique identifier to track this request from creation to answer.
+    */
+  def identifier: UUID
 
   /**
     * The context sent with this request.
@@ -192,33 +234,35 @@ sealed trait RequestAnswer[+Data, Ctx] {
   def withContext[NewCtx](context: NewCtx): RequestAnswer[Data, NewCtx]
 
   /**
-    * The amount of time until this endpoint ratelimit is reset.
-    * Minus if unknown.
+    * Information about ratelimits gotten from this request.
     */
-  def tilReset: FiniteDuration
+  def ratelimitInfo: RatelimitInfo
+
+  @deprecated("Prefer ratelimitInfo.tilReset", since = "0.15.0")
+  def tilReset: FiniteDuration = ratelimitInfo.tilReset
+
+  @deprecated("Prefer ratelimitInfo.tilRatelimit", since = "0.15.0")
+  def remainingRequests: Int = ratelimitInfo.tilRatelimit
+
+  @deprecated("Prefer ratelimitInfo.bucketLimit", since = "0.15.0")
+  def uriRequestLimit: Int = ratelimitInfo.bucketLimit
 
   /**
-    * The amount of requests that can be made until this endpoint is ratelimited.
-    * -1 if unknown.
+    * The route for this request
     */
-  def remainingRequests: Int
-
-  /**
-    * The total amount of requests that can be sent to this to this endpoint
-    * until a ratelimit kicks in.
-    * -1 if unknown.
-    */
-  def uriRequestLimit: Int
+  def route: RequestRoute
 
   /**
     * The uri for this request.
     */
-  def uri: Uri
+  @deprecated("Prefer route.uri", since = "0.15.0")
+  def uri: Uri = route.uri
 
-  /**
-    * The raw route for this request without any minor parameters applied.
-    */
-  def rawRoute: String
+  @deprecated("Prefer route.uriWithMajor", since = "0.15.0")
+  def rawRoute: String = route.uriWithMajor
+
+  @deprecated("Prefer ratelimitInfo.ratelimitBucket", since = "0.15.0")
+  def ratelimitBucket: String = ratelimitInfo.bucket
 
   /**
     * An either that either contains the data, or the exception if this is a failure.
@@ -248,11 +292,9 @@ sealed trait RequestAnswer[+Data, Ctx] {
 case class RequestResponse[+Data, Ctx](
     data: Data,
     context: Ctx,
-    remainingRequests: Int,
-    tilReset: FiniteDuration,
-    uriRequestLimit: Int,
-    uri: Uri,
-    rawRoute: String
+    ratelimitInfo: RatelimitInfo,
+    route: RequestRoute,
+    identifier: UUID
 ) extends RequestAnswer[Data, Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestResponse[Data, NewCtx] = copy(context = context)
@@ -262,7 +304,7 @@ case class RequestResponse[+Data, Ctx](
   override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
 
   override def filter(f: Data => Boolean): RequestAnswer[Data, Ctx] =
-    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), uri, rawRoute)
+    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), route, identifier)
 
   override def flatMap[B](f: Data => RequestAnswer[B, Ctx]): RequestAnswer[B, Ctx] = f(data)
 }
@@ -287,16 +329,16 @@ sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
 case class RequestRatelimited[Ctx](
     context: Ctx,
     global: Boolean,
-    tilReset: FiniteDuration,
-    uriRequestLimit: Int,
-    uri: Uri,
-    rawRoute: String
+    ratelimitInfo: RatelimitInfo,
+    route: RequestRoute,
+    identifier: UUID
 ) extends FailedRequest[Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
 
-  override def remainingRequests: Int          = 0
-  override def asException: RatelimitException = new RatelimitException(global, tilReset, uri)
+  override def remainingRequests: Int = 0
+  override def asException: RatelimitException =
+    new RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
 
   override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
@@ -306,14 +348,13 @@ case class RequestRatelimited[Ctx](
 /**
   * A request that failed for some other reason.
   */
-case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: String) extends FailedRequest[Ctx] {
+case class RequestError[Ctx](context: Ctx, e: Throwable, route: RequestRoute, identifier: UUID)
+    extends FailedRequest[Ctx] {
   override def asException: Throwable = e
 
   override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
 
-  override def tilReset: FiniteDuration = -1.millis
-  override def remainingRequests: Int   = -1
-  override def uriRequestLimit: Int     = -1
+  override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
   override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
@@ -324,16 +365,14 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
   * A request that was dropped before it entered the network, most likely
   * because of timing out while waiting for ratelimits.
   */
-case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String)
+case class RequestDropped[Ctx](context: Ctx, route: RequestRoute, identifier: UUID)
     extends MaybeRequest[Nothing, Ctx]
     with FailedRequest[Ctx] {
-  override def asException = new DroppedRequestException(uri)
+  override def asException = new DroppedRequestException(route.uri)
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
 
-  override def tilReset: FiniteDuration = -1.millis
-  override def remainingRequests: Int   = -1
-  override def uriRequestLimit: Int     = -1
+  override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
   override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this

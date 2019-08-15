@@ -26,16 +26,14 @@ package ackcord.newcommands
 import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
 import ackcord.requests.RequestHelper
-import ackcord.util.Streamable
 import ackcord.syntax._
 import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
 import akka.{Done, NotUsed}
-import cats.Monad
 import cats.syntax.all._
+import cats.instances.future._
 
 import scala.concurrent.Future
-import scala.language.higherKinds
 
 /**
   *
@@ -43,14 +41,13 @@ import scala.language.higherKinds
   *                 that will be considered for commands.
   * @param requests A request helper to send errors and pass to command
   *                 messages
-  * @tparam F The cache effect type
   */
-class CommandConnector[F[_]: Streamable: Monad](
-    messages: Source[(Message, CacheSnapshot[F]), NotUsed],
+class CommandConnector(
+    messages: Source[(Message, CacheSnapshot), NotUsed],
     requests: RequestHelper
 ) {
 
-  type PrefixParser = (CacheSnapshot[F], Message) => F[MessageParser[Unit]]
+  type PrefixParser = (CacheSnapshot, Message) => Future[MessageParser[Unit]]
 
   /**
     * Creates a prefix parser for a command.
@@ -63,26 +60,28 @@ class CommandConnector[F[_]: Streamable: Monad](
       aliases: Seq[String],
       mustMention: Boolean
   ): PrefixParser = {
-    val mentionParser: (CacheSnapshot[F], Message) => F[MessageParser[Unit]] = if (mustMention) { (cache, message) =>
-      cache.botUser.map { botUser =>
-        //We do a quick check first before parsing the message
-        val quickCheck = message.mentions.contains(botUser.id)
-        lazy val err =
-          MessageParser.messageParserMonad.raiseError[Unit]("You need to use a mention to use this command")
+    val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = if (mustMention) { (cache, message) =>
+      val botUser = cache.botUser
 
-        if (quickCheck) {
-          MessageParser[User].flatMap { user =>
-            if (user == botUser) MessageParser.messageParserMonad.unit
-            else err
-          }
-        } else err
-      }
+      //We do a quick check first before parsing the message
+      val quickCheck = message.mentions.contains(botUser.id)
+      lazy val err =
+        MessageParser.messageParserMonad.raiseError[Unit]("You need to use a mention to use this command")
+
+      if (quickCheck) {
+        MessageParser[User].flatMap { user =>
+          if (user == botUser) MessageParser.messageParserMonad.unit
+          else err
+        }
+      } else err
     } else { (_, _) =>
-      Monad[F].pure(MessageParser.messageParserMonad.unit)
+      MessageParser.messageParserMonad.unit
     }
 
     Function.untupled(
-      mentionParser.tupled.andThen(_.map(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases).void))
+      mentionParser.tupled
+        .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases).void)
+        .andThen(Future.successful)
     )
   }
 
@@ -98,32 +97,33 @@ class CommandConnector[F[_]: Streamable: Monad](
     */
   def newCommandWithErrors[A, Mat](
       prefix: PrefixParser,
-      command: Command[F, A, Mat]
-  ): Source[CommandError[F], (Mat, Future[Done])] = {
+      command: ComplexCommand[A, Mat]
+  ): Source[CommandError, (Mat, Future[Done])] = {
     val commandMessageSource = messages
-      .flatMapConcat(t => Streamable[F].toSource(prefix(t._2, t._1).tupleLeft(t)))
-      .flatMapConcat {
-        case ((message, cache), prefixParser) =>
-          implicit val c: CacheSnapshot[F] = cache
-
-          val parsed = MessageParser.parseEitherT(message.content.split(" ").toList, prefixParser).map(_._1).toOption
-          Streamable[F].optionToSource(parsed.map((message, cache, _)))
+      .mapAsync(requests.parallelism) {
+        case t @ (message, cache) =>
+          import requests.mat.executionContext
+          prefix(cache, message).tupleLeft(t)
       }
-      .flatMapConcat {
+      .mapConcat { case ((message, cache), prefixParser) =>
+
+        implicit val c: CacheSnapshot = cache
+
+        val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
+        parsed.map((message, cache, _)).toList
+      }
+      .mapConcat {
         case (message, cache, args) =>
-          implicit val c: CacheSnapshot[F] = cache
+          implicit val c: CacheSnapshot = cache
 
-          val commandMessageF = message.channelId.tResolve[F].value.flatMap { channel =>
+          message.channelId.tResolve.map { channel =>
             MessageParser
-              .parseResultEitherT(args, command.parser)
+              .parseResultEither(args, command.parser)
               .map { a =>
-                CommandMessage.Default(requests, cache, channel.get, message, a): CommandMessage[F, A]
+                CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A]
               }
-              .leftMap(e => CommandError(e, channel.get, cache))
-              .value
-          }
-
-          Streamable[F].toSource(commandMessageF)
+              .leftMap(e => CommandError(e, channel, cache))
+          }.toList
       }
 
     Source.fromGraph(GraphDSL.create(command.flow.watchTermination()(Keep.both)) { implicit b => thatFlow =>
@@ -131,14 +131,14 @@ class CommandConnector[F[_]: Streamable: Monad](
 
       val selfSource = b.add(commandMessageSource)
 
-      val selfPartition = b.add(Partition[Either[CommandError[F], CommandMessage[F, A]]](2, {
+      val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
         case Left(_)  => 0
         case Right(_) => 1
       }))
       val selfErr = selfPartition.out(0).map(_.left.get)
       val selfOut = selfPartition.out(1).map(_.right.get)
 
-      val resMerge = b.add(Merge[CommandError[F]](2))
+      val resMerge = b.add(Merge[CommandError](2))
 
       // format: OFF
       selfSource ~> selfPartition
@@ -159,8 +159,8 @@ class CommandConnector[F[_]: Streamable: Monad](
     * @return A source of command errors that can be used however you want.
     */
   def newNamedCommandWithErrors[A, Mat](
-      command: NamedCommand[F, A, Mat]
-  ): Source[CommandError[F], (Mat, Future[Done])] =
+      command: NamedComplexCommand[A, Mat]
+  ): Source[CommandError, (Mat, Future[Done])] =
     newCommandWithErrors(prefix(command.symbol, command.aliases, command.requiresMention), command)
 
   /**
@@ -174,7 +174,7 @@ class CommandConnector[F[_]: Streamable: Monad](
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newCommand[A, Mat](prefix: PrefixParser, command: Command[F, A, Mat]): RunnableGraph[(Mat, Future[Done])] =
+  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] =
     newCommandWithErrors(prefix, command)
       .map {
         case CommandError(error, channel, _) =>
@@ -192,7 +192,7 @@ class CommandConnector[F[_]: Streamable: Monad](
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newNamedCommand[A, Mat](command: NamedCommand[F, A, Mat]): RunnableGraph[(Mat, Future[Done])] =
+  def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] =
     newCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
 
   /**
@@ -204,7 +204,7 @@ class CommandConnector[F[_]: Streamable: Monad](
     * @return The materialized result of running the command, in addition to
     *         a future signaling when the command is done running.
     */
-  def runNewCommand[A, Mat](prefix: PrefixParser, command: Command[F, A, Mat]): (Mat, Future[Done]) = {
+  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): (Mat, Future[Done]) = {
     import requests.mat
     newCommand(prefix, command).run()
   }
@@ -217,6 +217,6 @@ class CommandConnector[F[_]: Streamable: Monad](
     * @return The materialized result of running the command, in addition to
     *         a future signaling when the command is done running.
     */
-  def runNewNamedCommand[A, Mat](command: NamedCommand[F, A, Mat]): (Mat, Future[Done]) =
+  def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): (Mat, Future[Done]) =
     runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
 }

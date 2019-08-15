@@ -41,10 +41,20 @@ import akka.{Done, NotUsed}
   * This should be instantiated once per bot, and shared between shards.
   *
   * @define backpressures Backpressures before it hits a ratelimit.
+  * @param millisecondPrecision Sets if the requests should use millisecond
+  *                             precision for the ratelimits. If using this,
+  *                             make sure your system is properly synced to
+  *                             an NTP server.
+  * @param relativeTime Sets if the ratelimit reset should be calculated
+  *                     using relative time instead of absolute time. Might
+  *                     help with out of sync time on your device, but can
+  *                     also lead to slightly slower processing of requests.
   */
 case class RequestHelper(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef,
+    millisecondPrecision: Boolean = true,
+    relativeTime: Boolean = false,
     parallelism: Int = 4,
     maxRetryCount: Int = 3,
     bufferSize: Int = 32,
@@ -52,8 +62,20 @@ case class RequestHelper(
     maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem, val mat: Materializer) {
 
+  private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any, Ctx], Future[Done]] = Sink.foreach {
+    case _: RequestResponse[_, _] =>
+    case request: FailedRequest[_] =>
+      request.asException.printStackTrace()
+  }
+
   private lazy val rawFlowWithoutRateLimits =
-    RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
+    RequestStreams.requestFlowWithoutRatelimit(
+      credentials,
+      millisecondPrecision,
+      relativeTime,
+      parallelism,
+      ratelimitActor
+    )
 
   /**
     * A basic request flow which will send requests to Discord, and
@@ -63,12 +85,23 @@ case class RequestHelper(
     rawFlowWithoutRateLimits.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
 
   private lazy val rawFlow =
-    RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
+    RequestStreams.requestFlow(
+      credentials,
+      millisecondPrecision,
+      relativeTime,
+      bufferSize,
+      overflowStrategy,
+      maxAllowedWait,
+      parallelism,
+      ratelimitActor
+    )
 
   private lazy val rawOrderedFlow = RequestStreams.addOrdering(rawFlow)
 
   private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
     credentials,
+    millisecondPrecision,
+    relativeTime,
     bufferSize,
     overflowStrategy,
     maxAllowedWait,
@@ -109,7 +142,7 @@ case class RequestHelper(
   def sinkIgnore[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
   ): Sink[Request[Data, Ctx], Future[Done]] =
-    flow[Data, Ctx](properties).toMat(Sink.ignore)(Keep.right)
+    flow[Data, Ctx](properties).toMat(ignoreOrReport)(Keep.right)
 
   /**
     * A generic flow for making requests. Only returns successful requests.
@@ -118,9 +151,15 @@ case class RequestHelper(
   def flowSuccess[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
   ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
-    flow[Data, Ctx](properties).collect {
-      case RequestResponse(data, ctx, _, _, _, _, _) => data -> ctx
-    }
+    flow[Data, Ctx](properties)
+      .map {
+        case RequestResponse(data, ctx, _, _, _, _, _, _) =>
+          Some(data -> ctx)
+        case request: FailedRequest[_] =>
+          request.asException.printStackTrace()
+          None
+      }
+      .collect { case Some(value) => value }
 
   /**
     * Sends a single request.
@@ -165,7 +204,8 @@ case class RequestHelper(
     */
   def singleIgnore[Data, Ctx](request: Request[Data, Ctx])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Unit = single(request)(properties).runWith(Sink.ignore)
+  ): Unit =
+    single(request)(properties).runWith(ignoreOrReport)
 
   /**
     * Sends many requests and ignores the result.
@@ -173,7 +213,7 @@ case class RequestHelper(
     */
   def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Unit = many(requests)(properties).runWith(Sink.ignore)
+  ): Unit = many(requests)(properties).runWith(ignoreOrReport)
 }
 object RequestHelper {
 
@@ -197,6 +237,8 @@ object RequestHelper {
 
   def create(
       credentials: HttpCredentials,
+      millisecondPrecision: Boolean = true,
+      relativeTime: Boolean = false,
       parallelism: Int = 4,
       maxRetryCount: Int = 3,
       bufferSize: Int = 32,
@@ -206,6 +248,8 @@ object RequestHelper {
     new RequestHelper(
       credentials,
       system.actorOf(Ratelimiter.props),
+      millisecondPrecision,
+      relativeTime,
       parallelism,
       maxRetryCount,
       bufferSize,

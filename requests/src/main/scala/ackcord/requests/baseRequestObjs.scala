@@ -23,8 +23,6 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -36,7 +34,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
-import cats.Monad
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe._
 
@@ -94,7 +91,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
 
       override def requiredPermissions: Permission = self.requiredPermissions
 
-      override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = self.hasPermissions
+      override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
     }
 
   /**
@@ -112,7 +109,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
     */
   def requiredPermissions: Permission = Permission.None
 
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] = Monad[F].pure(true)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 }
 
 /**

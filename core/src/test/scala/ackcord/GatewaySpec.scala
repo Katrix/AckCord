@@ -48,7 +48,7 @@ class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)(implici
   implicit val system: ActorSystem = context.system
 
   override def wsFlow
-    : Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+      : Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val response = ValidUpgrade(HttpResponse(), None)
 
     val sendToServer = Sink.foreach[Message](gateway ! _)

@@ -37,11 +37,11 @@ import scala.concurrent.Future
 import scala.language.higherKinds
 import scala.util.{Failure, Success}
 
-trait RequestRunner[F[_], G[_]] {
+trait RequestRunner[F[_]] {
 
-  def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): F[A]
+  def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): F[A]
 
-  def runMany[A](requests: immutable.Seq[Request[A, NotUsed]])(implicit c: CacheSnapshot[G]): F[A]
+  def runMany[A](requests: immutable.Seq[Request[A, NotUsed]])(implicit c: CacheSnapshot): F[A]
 
   def fromSource[A](source: Source[A, NotUsed]): F[A]
 
@@ -53,7 +53,7 @@ trait RequestRunner[F[_], G[_]] {
 
   def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(F.pure)
 
-  def runOption[A](opt: Option[Request[A, NotUsed]])(implicit F: Alternative[F], c: CacheSnapshot[G]): F[A] =
+  def runOption[A](opt: Option[Request[A, NotUsed]])(implicit F: Alternative[F], c: CacheSnapshot): F[A] =
     opt.fold(F.empty[A])(run[A])
 
   def liftStreamable[H[_], A](ga: H[A])(implicit streamable: Streamable[H]): F[A] = fromSource(streamable.toSource(ga))
@@ -66,50 +66,39 @@ trait RequestRunner[F[_], G[_]] {
 
   def runFoldable[H[_], A](
       request: H[Request[A, NotUsed]]
-  )(implicit F: Alternative[F], FM: Monad[F], G: Foldable[H], c: CacheSnapshot[G]): F[A] =
+  )(implicit F: Alternative[F], FM: Monad[F], G: Foldable[H], c: CacheSnapshot): F[A] =
     FM.flatMap(liftFoldable(request))(run[A])
 
   def runOptionT[H[_], A](
       opt: OptionT[H, Request[A, NotUsed]]
-  )(implicit streamable: Streamable[H], F: FlatMap[F], c: CacheSnapshot[G]): F[A] =
+  )(implicit streamable: Streamable[H], F: FlatMap[F], c: CacheSnapshot): F[A] =
     F.flatMap(fromSource(streamable.optionToSource[Request[A, NotUsed]](opt)))(run[A])
 
 }
 object RequestRunner {
-  def apply[F[_], G[_]](implicit runner: RequestRunner[F, G]): RequestRunner[F, G] = runner
+  def apply[F[_]](implicit runner: RequestRunner[F]): RequestRunner[F] = runner
 
-  implicit def sourceRequestRunner[G[_]](
-      implicit requests: RequestHelper,
-      G: Monad[G],
-      streamable: Streamable[G]
-  ): RequestRunner[SourceRequest, G] =
-    new RequestRunner[SourceRequest, G] {
-      override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): SourceRequest[A] =
-        streamable.toSource(request.hasPermissions).flatMapConcat {
-          case false => Source.failed(new RequestPermissionException(request))
-          //case true  => requests.retry(request).map(_.data) //FIXME: Retry is broken
-          case true =>
-            requests.single(request).collect {
-              case RequestResponse(data, _, _, _, _, _, _) => data
-            }
-        }
+  implicit def sourceRequestRunner(
+      implicit requests: RequestHelper
+  ): RequestRunner[SourceRequest] =
+    new RequestRunner[SourceRequest] {
+      override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): SourceRequest[A] =
+        if (request.hasPermissions) {
+          requests.single(request).collect {
+            case RequestResponse(data, _, _, _, _, _, _, _) => data
+          }
+        } else Source.failed(new RequestPermissionException(request))
 
       override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
-          implicit c: CacheSnapshot[G]
+          implicit c: CacheSnapshot
       ): SourceRequest[A] = {
-        import cats.instances.vector._
-        import cats.syntax.all._
-
         val requestVec = requestSeq.toVector
-        streamable.toSource(requestVec.forallM(_.hasPermissions)).flatMapConcat {
-          case false =>
-            streamable
-              .toSource(requestVec.findM(_.hasPermissions.map(!_)))
-              .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
-          case true =>
-            requests.many(requestSeq).collect {
-              case RequestResponse(data, _, _, _, _, _, _) => data
-            }
+        if (requestVec.forall(_.hasPermissions)) {
+          requests.many(requestSeq).collect {
+            case RequestResponse(data, _, _, _, _, _, _, _) => data
+          }
+        } else {
+          Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
         }
       }
 
@@ -118,45 +107,36 @@ object RequestRunner {
       override def unit: SourceRequest[Unit] = Source.single(())
     }
 
-  implicit def futureRequestRunner[F[_], G[_]](
+  implicit def futureRequestRunner[F[_]](
       implicit requests: RequestHelper,
-      F: Alternative[F],
-      G: Monad[G],
-      streamable: Streamable[G]
-  ): RequestRunner[λ[A => Future[F[A]]], G] = new RequestRunner[λ[A => Future[F[A]]], G] {
+      F: Alternative[F]
+  ): RequestRunner[λ[A => Future[F[A]]]] = new RequestRunner[λ[A => Future[F[A]]]] {
     import requests.mat
     import requests.mat.executionContext
 
-    override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot[G]): Future[F[A]] =
-      streamable.toSource(request.hasPermissions).runWith(Sink.head).flatMap {
-        case false => Future.failed(new RequestPermissionException(request))
-        case true =>
-          requests
-            .singleFuture(request)
-            .flatMap(res => Future.fromTry(res.eitherData.fold(Failure.apply, Success.apply)))
-            .map(F.pure)
+    override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): Future[F[A]] =
+      if (request.hasPermissions) {
+        requests
+          .singleFuture(request)
+          .flatMap(res => Future.fromTry(res.eitherData.fold(Failure.apply, Success.apply)))
+          .map(F.pure)
+      } else {
+        Future.failed(new RequestPermissionException(request))
       }
 
     override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
-        implicit c: CacheSnapshot[G]
+        implicit c: CacheSnapshot
     ): Future[F[A]] = {
-      import cats.instances.vector._
-      import cats.syntax.all._
-
       val requestVec = requestSeq.toVector
-      streamable
-        .toSource(requestVec.forallM(_.hasPermissions))
-        .flatMapConcat {
-          case false =>
-            streamable
-              .toSource(requestVec.findM(_.hasPermissions.map(!_)))
-              .flatMapConcat(request => Source.failed(new RequestPermissionException(request.get)))
-          case true =>
-            requests.many(requestSeq).collect {
-              case RequestResponse(data, _, _, _, _, _, _) => data
-            }
+      val source = if (requestVec.forall(_.hasPermissions)) {
+        requests.many(requestSeq).collect {
+          case RequestResponse(data, _, _, _, _, _, _, _) => data
         }
-        .runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
+      } else {
+        Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
+      }
+
+      source.runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
     }
 
     override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =

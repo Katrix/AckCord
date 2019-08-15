@@ -23,13 +23,10 @@
  */
 package ackcord.requests
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import akka.NotUsed
-import cats.Monad
 import io.circe._
 
 /**
@@ -55,7 +52,7 @@ case class CreateWebhook[Ctx](
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
   override def withReason(reason: String): CreateWebhook[Ctx] = copy(reason = Some(reason))
@@ -71,7 +68,7 @@ case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed:
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
@@ -85,7 +82,7 @@ case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
-  override def hasPermissions[F[_]](implicit c: CacheSnapshot[F], F: Monad[F]): F[Boolean] =
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 

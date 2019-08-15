@@ -23,9 +23,7 @@
  */
 package ackcord.examplecore
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.{ChannelId, GuildId}
 
-case class GetChannelInfo[F[_]](guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot[F])
+case class GetChannelInfo(guildId: GuildId, senderChannelId: ChannelId, c: CacheSnapshot)

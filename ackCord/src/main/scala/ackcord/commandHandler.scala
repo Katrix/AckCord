@@ -31,14 +31,14 @@ import ackcord.data.Message
 /**
   * A handler for all raw commands.
   */
-abstract class RawCommandHandler[F[_], G[_]] {
+abstract class RawCommandHandler[G[_]] {
 
   /**
     * Called whenever a raw command is encountered.
     * @param rawCmd The command object
     * @param c The cache snapshot for the command.
     */
-  def handle(rawCmd: RawCmd[F])(implicit c: CacheSnapshot[F]): G[Unit]
+  def handle(rawCmd: RawCmd)(implicit c: CacheSnapshot): G[Unit]
 }
 
 /**
@@ -46,8 +46,8 @@ abstract class RawCommandHandler[F[_], G[_]] {
   *
   * @tparam A The parameter type.
   */
-abstract class CommandHandler[F[_], G[_], A](
-    val refiner: CmdRefiner[F],
+abstract class CommandHandler[G[_], A](
+    val refiner: CmdRefiner,
     val description: Option[CmdDescription] = None
 ) {
 
@@ -55,5 +55,5 @@ abstract class CommandHandler[F[_], G[_], A](
     * Called whenever the command for this handler is received.
     * @param c A cache snapshot associated with the command.
     */
-  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot[F]): G[Unit]
+  def handle(msg: Message, args: A, remaining: List[String])(implicit c: CacheSnapshot): G[Unit]
 }
