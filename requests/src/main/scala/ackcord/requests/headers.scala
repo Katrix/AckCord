@@ -69,6 +69,30 @@ object `X-RateLimit-Reset` extends ModeledCustomHeaderCompanion[`X-RateLimit-Res
     instant.map(new `X-RateLimit-Reset`(_))
   }
 }
+final class `X-RateLimit-Reset-After`(val resetIn: FiniteDuration)
+    extends ModeledCustomHeader[`X-RateLimit-Reset-After`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] = `X-RateLimit-Reset-After`
+
+  override def value: String              = (resetIn.toMillis.toDouble / 1000).toString
+  override def renderInRequests: Boolean  = false
+  override def renderInResponses: Boolean = true
+}
+object `X-RateLimit-Reset-After` extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] {
+  override def name: String = "X-RateLimit-Reset-After"
+  override def parse(value: String): Try[`X-RateLimit-Reset-After`] = {
+    val duration = Try(value.toLong.seconds)
+      .orElse {
+        //If this fails we try to reparse it as a double, and hope the header has millisecond accuracy
+        Try((value.toDouble * 1000).toLong.millis)
+      }
+      .orElse {
+        //If both of those fail, we assume the header has the error message
+        Failure(new Exception(value))
+      }
+
+    duration.map(new `X-RateLimit-Reset-After`(_))
+  }
+}
 
 final class `X-RateLimit-Precision`(val precision: String) extends ModeledCustomHeader[`X-RateLimit-Precision`] {
   override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Precision`] = `X-RateLimit-Precision`
@@ -81,6 +105,19 @@ object `X-RateLimit-Precision` extends ModeledCustomHeaderCompanion[`X-RateLimit
   override def name: String = "X-RateLimit-Precision"
 
   override def parse(value: String): Try[`X-RateLimit-Precision`] = Success(new `X-RateLimit-Precision`(value))
+}
+
+final class `X-RateLimit-Bucket`(val identifier: String) extends ModeledCustomHeader[`X-RateLimit-Bucket`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] = `X-RateLimit-Bucket`
+
+  override def value: String              = identifier
+  override def renderInRequests: Boolean  = false
+  override def renderInResponses: Boolean = true
+}
+object `X-RateLimit-Bucket` extends ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] {
+  override def name: String = "X-RateLimit-Bucket"
+
+  override def parse(value: String): Try[`X-RateLimit-Bucket`] = Success(new `X-RateLimit-Bucket`(value))
 }
 
 final class `X-Ratelimit-Global`(val isGlobal: Boolean) extends ModeledCustomHeader[`X-Ratelimit-Global`] {

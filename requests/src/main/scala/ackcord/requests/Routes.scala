@@ -37,8 +37,12 @@ object Routes {
   val discord = "discordapp.com"
 
   val base: Route =
-    Route(s"https://$discord/api/v${AckCord.DiscordApiVersion}", s"https://$discord/api/v${AckCord.DiscordApiVersion}")
-  val cdn: Route = Route(s"https://cdn.$discord/", s"https://cdn.$discord/")
+    Route(
+      s"https://$discord/api/v${AckCord.DiscordApiVersion}",
+      s"https://$discord/api/v${AckCord.DiscordApiVersion}",
+      s"https://$discord/api/v${AckCord.DiscordApiVersion}"
+    )
+  val cdn: Route = Route(s"https://cdn.$discord", s"https://cdn.$discord", s"https://cdn.$discord")
 
   //WS
   val gateway: Route    = base / "gateway"
@@ -54,65 +58,102 @@ object Routes {
     */
   type Emoji = String
 
-  case class Route(rawRoute: String, applied: Uri) {
+  case class Route(uriWithMajor: String, uriWithoutMajor: String, applied: Uri) {
     require(
-      rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
+      uriWithMajor.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
     )
+
+    @deprecated("Prefer uriWithMajor", since = "0.15.0")
+    def rawRoute: String = uriWithMajor
 
     def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 
     def /(next: String): Route =
       if (next.isEmpty) this
-      else Route(s"$rawRoute/$next", s"$applied/$next")
+      else Route(s"$uriWithMajor/$next", s"$uriWithoutMajor/$next", s"$applied/$next")
 
     def /[A](parameter: MinorParameter[A]): RouteFunction[A] =
-      RouteFunction(value => Route(s"$rawRoute/${parameter.name}", s"$applied/${parameter.print(value)}"))
+      RouteFunction { value =>
+        Route(
+          s"$uriWithMajor/${parameter.name}",
+          s"$uriWithoutMajor/${parameter.name}",
+          s"$applied/${parameter.print(value)}"
+        )
+      }
 
     def /[A](parameter: MajorParameter[A]): RouteFunction[A] =
-      RouteFunction(value => Route(s"$rawRoute/$value", s"$applied/${parameter.print(value)}"))
+      RouteFunction { value =>
+        Route(s"$uriWithMajor/$value", s"$uriWithoutMajor/${parameter.name}", s"$applied/${parameter.print(value)}")
+      }
 
     def /(other: Route): Route =
-      if (other.rawRoute.isEmpty) this
-      else Route(s"$rawRoute/${other.rawRoute}", s"$applied/${other.applied}")
+      if (other.uriWithMajor.isEmpty) this
+      else
+        Route(
+          s"$uriWithMajor/${other.uriWithMajor}",
+          s"$uriWithoutMajor/${other.uriWithoutMajor}",
+          s"$applied/${other.applied}"
+        )
 
-    def ++(other: String) = Route(s"$rawRoute$other", s"$applied$other")
+    def ++(other: String) = Route(s"$uriWithMajor$other", s"$uriWithoutMajor$other", s"$applied$other")
 
     def ++[A](parameter: ConcatParameter[A]): RouteFunction[A] =
-      RouteFunction(value => Route(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}"))
+      RouteFunction { value =>
+        Route(
+          s"$uriWithMajor${parameter.print(value)}",
+          s"$uriWithoutMajor${parameter.print(value)}",
+          s"$applied${parameter.print(value)}"
+        )
+      }
 
     def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
       QueryRouteFunction {
         case Some(value) =>
           QueryRoute(
-            rawRoute,
+            uriWithMajor,
+            uriWithoutMajor,
             applied,
             Vector(query.name -> query.print(value))
           )
-        case None => QueryRoute(rawRoute, applied, Vector.empty)
+        case None => QueryRoute(uriWithMajor, uriWithoutMajor, applied, Vector.empty)
       }
   }
 
-  case class QueryRoute(rawRoute: String, applied: Uri, queryParts: Vector[(String, String)]) {
+  case class QueryRoute(
+      uriWithMajor: String,
+      uriWithoutMajor: String,
+      applied: Uri,
+      queryParts: Vector[(String, String)]
+  ) {
     require(
-      rawRoute.count(_ == '/') == applied.toString.count(_ == '/'),
+      uriWithMajor.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
     )
 
+    @deprecated("Prefer uriWithMajor", since = "0.15.0")
+    def rawRoute: String = uriWithMajor
+
     def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 
-    def ++(other: String) = QueryRoute(s"$rawRoute$other", s"$applied$other", queryParts)
+    def ++(other: String) = QueryRoute(s"$uriWithMajor$other", s"$uriWithoutMajor$other", s"$applied$other", queryParts)
 
     def ++[A](parameter: ConcatParameter[A]): QueryRouteFunction[A] =
-      QueryRouteFunction(
-        value => QueryRoute(s"$rawRoute${parameter.print(value)}", s"$applied${parameter.print(value)}", queryParts)
-      )
+      QueryRouteFunction { value =>
+        QueryRoute(
+          s"$uriWithMajor${parameter.print(value)}",
+          s"$uriWithoutMajor${parameter.print(value)}",
+          s"$applied${parameter.print(value)}",
+          queryParts
+        )
+      }
 
     def +?[A](query: QueryParameter[A]): QueryRouteFunction[Option[A]] =
       QueryRouteFunction {
         case Some(value) =>
           QueryRoute(
-            rawRoute,
+            uriWithMajor,
+            uriWithoutMajor,
             applied,
             queryParts :+ (query.name -> query.print(value))
           )
@@ -183,7 +224,7 @@ object Routes {
     }
   }
 
-  class MajorParameter[A](val print: A => String)
+  class MajorParameter[A](val name: String, val print: A => String)
   class MinorParameter[A](val name: String, val print: A => String)
   class QueryParameter[A](val name: String, val print: A => String)
   class ConcatParameter[A](val print: A => String)
@@ -198,9 +239,9 @@ object Routes {
 
   def upcast[A, B >: A](a: A): B = a
 
-  val guildId: MajorParameter[GuildId]                  = new MajorParameter(_.asString)
-  val channelId: MajorParameter[ChannelId]              = new MajorParameter(_.asString)
-  val webhookId: MajorParameter[SnowflakeType[Webhook]] = new MajorParameter(_.asString)
+  val guildId: MajorParameter[GuildId]                  = new MajorParameter("guildId", _.asString)
+  val channelId: MajorParameter[ChannelId]              = new MajorParameter("channelId", _.asString)
+  val webhookId: MajorParameter[SnowflakeType[Webhook]] = new MajorParameter("webhookId", _.asString)
 
   val messageId: MinorParameter[MessageId]                = new MinorParameter("messageId", _.asString)
   val emoji: MinorParameter[Emoji]                        = new MinorParameter("emoji", identity)

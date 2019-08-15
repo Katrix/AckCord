@@ -23,65 +23,144 @@
  */
 package ackcord.requests
 
+import java.util.UUID
+
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.concurrent.duration._
 
-import akka.actor.{Actor, ActorRef, Props, Status, Timers}
+import ackcord.util.AckCordRequestSettings
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, Status, Timers}
 
-class Ratelimiter extends Actor with Timers {
+//noinspection ActorMutableStateInspection
+class Ratelimiter extends Actor with Timers with ActorLogging {
   import Ratelimiter._
 
-  private val routeLimits       = new mutable.HashMap[String, Int]
+  private val routeLimits = new mutable.HashMap[String, Int] //Key is bucket
+
+  private val uriToBucket = new mutable.HashMap[String, String]
+
   private val remainingRequests = new mutable.HashMap[String, Int]
-  private val rateLimits        = new mutable.HashMap[String, mutable.Queue[(ActorRef, Any)]]
+  private val rateLimits        = new mutable.HashMap[String, mutable.Queue[(ActorRef, WantToPass[_])]]
 
   private var globalRatelimitTimeout = 0.toLong
-  private val globalLimited          = new mutable.Queue[(ActorRef, Any)]
+  private val globalLimited          = new mutable.Queue[(ActorRef, WantToPass[_])]
+
+  private val settings = AckCordRequestSettings()(context.system)
 
   def isGlobalRatelimited: Boolean = globalRatelimitTimeout - System.currentTimeMillis() > 0
 
-  def receive: Receive = {
-    case ResetRatelimit(uri) =>
-      routeLimits.get(uri) match {
-        case Some(limit) => remainingRequests.put(uri, limit)
-        case None        => remainingRequests.remove(uri)
+  def handleWantToPassGlobal[A](sendResponseTo: ActorRef, request: WantToPass[A]): Unit = {
+    context.watchWith(sendResponseTo, GlobalTimedOut(sendResponseTo))
+    globalLimited.enqueue(sendResponseTo -> request)
+  }
+
+  def handleWantToPassNotGlobal[A](sendResponseTo: ActorRef, request: WantToPass[A]): Unit = {
+    val WantToPass(route, _, responseObj) = request
+
+    if (!remainingRequests.contains(route.uriWithMajor)) {
+      for {
+        bucket           <- uriToBucket.get(route.uriWithoutMajor)
+        defaultRateLimit <- routeLimits.get(bucket)
+      } {
+        remainingRequests.put(route.uriWithMajor, defaultRateLimit)
       }
-      releaseWaiting(uri)
+    }
+
+    val remainingOpt = remainingRequests.get(route.uriWithMajor)
+
+    if (remainingOpt.forall(_ > 0)) {
+      remainingOpt.foreach(remaining => remainingRequests.put(route.uriWithMajor, remaining - 1))
+      sendResponseTo ! responseObj
+    } else {
+      context.watchWith(sendResponseTo, TimedOut(route.uriWithMajor, sendResponseTo))
+      rateLimits.getOrElseUpdate(route.uriWithMajor, mutable.Queue.empty).enqueue(sendResponseTo -> request)
+    }
+  }
+
+  def receive: Receive = {
+    case ResetRatelimit(uriWithMajor, bucket) =>
+      if (settings.LogRatelimitEvents) {
+        log.debug(
+          s"""|Reseting ratelimit for: $uriWithMajor
+              |Bucket: $bucket
+              |Limit: ${routeLimits.get(bucket)}
+              |Current time: ${System.currentTimeMillis()}
+              |""".stripMargin
+        )
+      }
+
+      routeLimits.get(bucket) match {
+        case Some(limit) => remainingRequests.put(uriWithMajor, limit)
+        case None        => remainingRequests.remove(uriWithMajor)
+      }
+      releaseWaiting(uriWithMajor)
 
     case GlobalTimer =>
       globalLimited.dequeueAll(_ => true).foreach {
-        case (actor, obj) =>
-          actor ! obj
+        case (actor, request) =>
           context.unwatch(actor)
+          handleWantToPassNotGlobal(actor, request)
       }
 
-    case WantToPass(uri, responseObj) =>
+    case request @ WantToPass(route, identifier, _) =>
+      if (settings.LogRatelimitEvents) {
+        log.debug(
+          s"""|Got incoming request: ${route.uriWithMajor} $identifier
+              |RouteLimits: ${uriToBucket.get(route.uriWithoutMajor).flatMap(k => routeLimits.get(k))}
+              |Remaining requests: ${remainingRequests.get(route.uriWithMajor)}
+              |Requests waiting: ${rateLimits.get(route.uriWithMajor).fold(0)(_.size)}
+              |Global ratelimit timeout: $globalRatelimitTimeout
+              |Global requests waiting: ${globalLimited.size}
+              |Current time: ${System.currentTimeMillis()}
+              |""".stripMargin
+        )
+      }
+
       val sendResponseTo = sender()
 
       if (isGlobalRatelimited) {
-        context.watchWith(sendResponseTo, GlobalTimedOut(sendResponseTo))
-        globalLimited.enqueue(sendResponseTo -> responseObj)
+        handleWantToPassGlobal(sendResponseTo, request)
       } else {
-        val remainingOpt = remainingRequests.get(uri)
-
-        if (remainingOpt.forall(_ > 0)) {
-          remainingOpt.foreach(remaining => remainingRequests.put(uri, remaining - 1))
-          sendResponseTo ! responseObj
-        } else {
-          context.watchWith(sendResponseTo, TimedOut(uri, sendResponseTo))
-          rateLimits.getOrElseUpdate(uri, mutable.Queue.empty).enqueue(sendResponseTo -> responseObj)
-        }
+        handleWantToPassNotGlobal(sendResponseTo, request)
       }
 
-    case UpdateRatelimits(uri, isGlobal, timeTilReset, remainingRequestsAmount, requestLimit) =>
+    case UpdateRatelimits(
+        route,
+        bucket,
+        isGlobal,
+        timeTilReset,
+        remainingRequestsAmount,
+        requestLimit,
+        identifier
+        ) =>
+      if (settings.LogRatelimitEvents) {
+        log.debug(
+          s"""|Updating ratelimits info: ${route.uriWithMajor} $identifier
+              |Bucket: $bucket
+              |Global: $isGlobal
+              |TimeTilReset: $timeTilReset
+              |RemainingAmount: $remainingRequestsAmount
+              |RequestLimit: $requestLimit
+              |Current time: ${System.currentTimeMillis()}
+              |""".stripMargin
+        )
+      }
+
+      //We don't update the remainingRequests map here as the information we get here is slightly outdated
+
+      routeLimits.put(bucket, requestLimit)
+      uriToBucket.put(route.uriWithoutMajor, bucket)
+
       if (isGlobal) {
         globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
         timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
       } else {
-        routeLimits.put(uri, requestLimit)
-        remainingRequests.put(uri, remainingRequestsAmount)
-        timers.startSingleTimer(uri, ResetRatelimit(uri), timeTilReset)
+        timers.startSingleTimer(
+          route.uriWithMajor,
+          ResetRatelimit(route.uriWithMajor, bucket),
+          timeTilReset
+        )
       }
 
     case TimedOut(uri, actorRef) =>
@@ -97,15 +176,23 @@ class Ratelimiter extends Actor with Timers {
       def release(remaining: Int): Int = {
         if (remaining <= 0 || queue.isEmpty) remaining
         else {
-          val (sender, response) = queue.dequeue()
+          val (sender, WantToPass(_, _, response)) = queue.dequeue()
           sender ! response
           context.unwatch(sender)
           release(remaining - 1)
         }
       }
 
-      val newRemaining = release(remainingRequests.getOrElse(uri, Int.MaxValue))
-      remainingRequests.put(uri, newRemaining)
+      if (isGlobalRatelimited) {
+        queue.dequeueAll(_ => true).foreach {
+          case (sendResponseTo, request) =>
+            context.unwatch(sendResponseTo)
+            handleWantToPassGlobal(sendResponseTo, request)
+        }
+      } else {
+        val newRemaining = release(remainingRequests.getOrElse(uri, Int.MaxValue))
+        remainingRequests.put(uri, newRemaining)
+      }
     }
   }
 
@@ -119,18 +206,19 @@ object Ratelimiter {
   //TODO: Custom dispatcher
   def props: Props = Props(new Ratelimiter())
 
-  private case object GlobalTimer
-
-  case class WantToPass[A](route: String, ret: A)
-  case class ResetRatelimit(uri: String)
+  case class WantToPass[A](route: RequestRoute, identifier: UUID, ret: A)
   case class UpdateRatelimits(
-      uri: String,
+      route: RequestRoute,
+      bucket: String,
       isGlobal: Boolean,
       timeTilReset: FiniteDuration,
       remainingRequests: Int,
-      requestLimit: Int
+      requestLimit: Int,
+      identifier: UUID
   )
 
-  case class TimedOut(uri: String, actorRef: ActorRef)
-  case class GlobalTimedOut(actorRef: ActorRef)
+  private case object GlobalTimer
+  private case class ResetRatelimit(uriWithMajor: String, bucket: String)
+  private case class TimedOut(uriWithMajor: String, actorRef: ActorRef)
+  private case class GlobalTimedOut(actorRef: ActorRef)
 }

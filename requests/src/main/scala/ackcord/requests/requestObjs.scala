@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import java.util.UUID
+
 import scala.concurrent.duration._
 
 import ackcord.CacheSnapshot
@@ -35,11 +37,16 @@ import akka.stream.scaladsl.Flow
 /**
   * Used by requests for specifying an uri to send to,
   * together with a method to use.
-  * @param rawRoute A string containing the route without any minor parameters filled in
+  * @param uriWithMajor A string containing the route without any minor parameters filled in
+  * @param uriWithoutMajor A string containing the route without any major or minor parameters filled in
   * @param uri The uri to send to
   * @param method The method to use
   */
-case class RequestRoute(rawRoute: String, uri: Uri, method: HttpMethod)
+case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: HttpMethod) {
+
+  @deprecated("Prefer uriWithMajor", since = "0.15.0")
+  def rawRoute: String = uriWithMajor
+}
 object RequestRoute {
 
   /**
@@ -47,14 +54,19 @@ object RequestRoute {
     * values for the this route.
     */
   def apply(route: Route, method: HttpMethod): RequestRoute =
-    RequestRoute(route.rawRoute, route.applied, method)
+    RequestRoute(route.uriWithMajor, route.uriWithoutMajor, route.applied, method)
 
   /**
     * Create a [[RequestRoute]] from a [[Routes.QueryRoute]] using the raw and applied
     * values for the this route, and adding the query at the end.
     */
   def apply(queryRoute: QueryRoute, method: HttpMethod): RequestRoute =
-    RequestRoute(queryRoute.rawRoute, queryRoute.applied.withQuery(Uri.Query(queryRoute.queryParts: _*)), method)
+    RequestRoute(
+      queryRoute.uriWithMajor,
+      queryRoute.uriWithoutMajor,
+      queryRoute.applied.withQuery(Uri.Query(queryRoute.queryParts: _*)),
+      method
+    )
 }
 
 /**
@@ -77,9 +89,16 @@ sealed trait MaybeRequest[+Data, Ctx] {
 trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
   /**
+    * An unique identifier to track this request from creation to answer.
+    */
+  val identifier: UUID = UUID.randomUUID()
+
+  /**
     * Updates the context of this request.
     */
   def withContext[NewCtx](newContext: NewCtx): Request[Data, NewCtx] = new Request[Data, NewCtx] {
+
+    override val identifier: UUID = self.identifier
 
     override def context: NewCtx = newContext
 
@@ -129,6 +148,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
       f: Flow[ResponseEntity, Data, NotUsed] => Flow[ResponseEntity, B, NotUsed]
   ): Request[B, Ctx] = new Request[B, Ctx] {
 
+    override val identifier: UUID = self.identifier
+
     override def context: Ctx = self.context
 
     override def route: RequestRoute = self.route
@@ -172,6 +193,11 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 sealed trait RequestAnswer[+Data, Ctx] {
 
   /**
+    * An unique identifier to track this request from creation to answer.
+    */
+  def identifier: UUID
+
+  /**
     * The context sent with this request.
     */
   def context: Ctx
@@ -201,14 +227,23 @@ sealed trait RequestAnswer[+Data, Ctx] {
   def uriRequestLimit: Int
 
   /**
-    * The uri for this request.
+    * The route for this request
     */
-  def uri: Uri
+  def route: RequestRoute
 
   /**
-    * The raw route for this request without any minor parameters applied.
+    * The uri for this request.
     */
-  def rawRoute: String
+  @deprecated("Prefer route.uri", since = "0.15.0")
+  def uri: Uri = route.uri
+
+  @deprecated("Prefer route.uriWithMajor", since = "0.15.0")
+  def rawRoute: String = route.uriWithMajor
+
+  /**
+    * The ratelimit bucket for this request. Does not include any parameters.
+    */
+  def ratelimitBucket: String
 
   /**
     * An either that either contains the data, or the exception if this is a failure.
@@ -241,8 +276,9 @@ case class RequestResponse[+Data, Ctx](
     remainingRequests: Int,
     tilReset: FiniteDuration,
     uriRequestLimit: Int,
-    uri: Uri,
-    rawRoute: String
+    route: RequestRoute,
+    ratelimitBucket: String,
+    identifier: UUID
 ) extends RequestAnswer[Data, Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestResponse[Data, NewCtx] = copy(context = context)
@@ -252,7 +288,7 @@ case class RequestResponse[+Data, Ctx](
   override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
 
   override def filter(f: Data => Boolean): RequestAnswer[Data, Ctx] =
-    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), uri, rawRoute)
+    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), route, identifier)
 
   override def flatMap[B](f: Data => RequestAnswer[B, Ctx]): RequestAnswer[B, Ctx] = f(data)
 }
@@ -279,14 +315,15 @@ case class RequestRatelimited[Ctx](
     global: Boolean,
     tilReset: FiniteDuration,
     uriRequestLimit: Int,
-    uri: Uri,
-    rawRoute: String
+    route: RequestRoute,
+    ratelimitBucket: String,
+    identifier: UUID
 ) extends FailedRequest[Ctx] {
 
   override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
 
   override def remainingRequests: Int          = 0
-  override def asException: RatelimitException = new RatelimitException(global, tilReset, uri)
+  override def asException: RatelimitException = new RatelimitException(global, tilReset, route.uri, identifier)
 
   override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
@@ -296,7 +333,8 @@ case class RequestRatelimited[Ctx](
 /**
   * A request that failed for some other reason.
   */
-case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: String) extends FailedRequest[Ctx] {
+case class RequestError[Ctx](context: Ctx, e: Throwable, route: RequestRoute, identifier: UUID)
+    extends FailedRequest[Ctx] {
   override def asException: Throwable = e
 
   override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
@@ -304,6 +342,7 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
   override def tilReset: FiniteDuration = -1.millis
   override def remainingRequests: Int   = -1
   override def uriRequestLimit: Int     = -1
+  override def ratelimitBucket: String  = ""
 
   override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
@@ -314,16 +353,17 @@ case class RequestError[Ctx](context: Ctx, e: Throwable, uri: Uri, rawRoute: Str
   * A request that was dropped before it entered the network, most likely
   * because of timing out while waiting for ratelimits.
   */
-case class RequestDropped[Ctx](context: Ctx, uri: Uri, rawRoute: String)
+case class RequestDropped[Ctx](context: Ctx, route: RequestRoute, identifier: UUID)
     extends MaybeRequest[Nothing, Ctx]
     with FailedRequest[Ctx] {
-  override def asException = new DroppedRequestException(uri)
+  override def asException = new DroppedRequestException(route.uri)
 
   override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
 
   override def tilReset: FiniteDuration = -1.millis
   override def remainingRequests: Int   = -1
   override def uriRequestLimit: Int     = -1
+  override def ratelimitBucket: String  = ""
 
   override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
   override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this

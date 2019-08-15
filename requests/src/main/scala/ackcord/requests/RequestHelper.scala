@@ -41,10 +41,20 @@ import akka.{Done, NotUsed}
   * This should be instantiated once per bot, and shared between shards.
   *
   * @define backpressures Backpressures before it hits a ratelimit.
+  * @param millisecondPrecision Sets if the requests should use millisecond
+  *                             precision for the ratelimits. If using this,
+  *                             make sure your system is properly synced to
+  *                             an NTP server.
+  * @param relativeTime Sets if the ratelimit reset should be calculated
+  *                     using relative time instead of absolute time. Might
+  *                     help with out of sync time on your device, but can
+  *                     also lead to slightly slower processing of requests.
   */
 case class RequestHelper(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef,
+    millisecondPrecision: Boolean = true,
+    relativeTime: Boolean = false,
     parallelism: Int = 4,
     maxRetryCount: Int = 3,
     bufferSize: Int = 32,
@@ -59,7 +69,13 @@ case class RequestHelper(
   }
 
   private lazy val rawFlowWithoutRateLimits =
-    RequestStreams.requestFlowWithoutRatelimit(credentials, parallelism, ratelimitActor)
+    RequestStreams.requestFlowWithoutRatelimit(
+      credentials,
+      millisecondPrecision,
+      relativeTime,
+      parallelism,
+      ratelimitActor
+    )
 
   /**
     * A basic request flow which will send requests to Discord, and
@@ -69,12 +85,23 @@ case class RequestHelper(
     rawFlowWithoutRateLimits.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
 
   private lazy val rawFlow =
-    RequestStreams.requestFlow(credentials, bufferSize, overflowStrategy, maxAllowedWait, parallelism, ratelimitActor)
+    RequestStreams.requestFlow(
+      credentials,
+      millisecondPrecision,
+      relativeTime,
+      bufferSize,
+      overflowStrategy,
+      maxAllowedWait,
+      parallelism,
+      ratelimitActor
+    )
 
   private lazy val rawOrderedFlow = RequestStreams.addOrdering(rawFlow)
 
   private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
     credentials,
+    millisecondPrecision,
+    relativeTime,
     bufferSize,
     overflowStrategy,
     maxAllowedWait,
@@ -126,7 +153,7 @@ case class RequestHelper(
   ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
     flow[Data, Ctx](properties)
       .map {
-        case RequestResponse(data, ctx, _, _, _, _, _) =>
+        case RequestResponse(data, ctx, _, _, _, _, _, _) =>
           Some(data -> ctx)
         case request: FailedRequest[_] =>
           request.asException.printStackTrace()
@@ -210,6 +237,8 @@ object RequestHelper {
 
   def create(
       credentials: HttpCredentials,
+      millisecondPrecision: Boolean = true,
+      relativeTime: Boolean = false,
       parallelism: Int = 4,
       maxRetryCount: Int = 3,
       bufferSize: Int = 32,
@@ -219,6 +248,8 @@ object RequestHelper {
     new RequestHelper(
       credentials,
       system.actorOf(Ratelimiter.props),
+      millisecondPrecision,
+      relativeTime,
       parallelism,
       maxRetryCount,
       bufferSize,

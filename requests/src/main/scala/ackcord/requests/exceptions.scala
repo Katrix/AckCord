@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import java.util.UUID
+
 import scala.concurrent.duration.FiniteDuration
 
 import akka.http.scaladsl.model.{StatusCode, Uri}
@@ -41,10 +43,10 @@ class HttpException(statusCode: StatusCode, extraInfo: Option[String])
   *                 goes away.
   * @param uri The Uri for the request.
   */
-class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri)
+class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
     extends Exception(
       if (global) "Encountered global ratelimit"
-      else s"Encountered ratelimit at $uri"
+      else s"Encountered ratelimit at $uri $identifier"
     )
 
 /**

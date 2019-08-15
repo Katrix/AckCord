@@ -85,7 +85,7 @@ object RequestRunner {
       override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): SourceRequest[A] =
         if (request.hasPermissions) {
           requests.single(request).collect {
-            case RequestResponse(data, _, _, _, _, _, _) => data
+            case RequestResponse(data, _, _, _, _, _, _, _) => data
           }
         } else Source.failed(new RequestPermissionException(request))
 
@@ -95,7 +95,7 @@ object RequestRunner {
         val requestVec = requestSeq.toVector
         if (requestVec.forall(_.hasPermissions)) {
           requests.many(requestSeq).collect {
-            case RequestResponse(data, _, _, _, _, _, _) => data
+            case RequestResponse(data, _, _, _, _, _, _, _) => data
           }
         } else {
           Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
@@ -130,7 +130,7 @@ object RequestRunner {
       val requestVec = requestSeq.toVector
       val source = if (requestVec.forall(_.hasPermissions)) {
         requests.many(requestSeq).collect {
-          case RequestResponse(data, _, _, _, _, _, _) => data
+          case RequestResponse(data, _, _, _, _, _, _, _) => data
         }
       } else {
         Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))

@@ -23,9 +23,6 @@
  */
 package ackcord.requests
 
-import java.time.Instant
-import java.time.temporal.ChronoUnit
-
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -60,18 +57,21 @@ object RequestStreams {
   private def requestsForUri(response: HttpResponse): Int =
     findCustomHeader(`X-RateLimit-Limit`, response).fold(-1)(_.limit)
 
-  private def timeTilReset(response: HttpResponse): FiniteDuration =
-    findCustomHeader(`Retry-After`, response)
-      .map(_.tilReset)
-      .orElse {
-        findCustomHeader(`X-RateLimit-Reset`, response).map { header =>
-          Instant.now().until(header.resetAt, ChronoUnit.MILLIS).millis
-        }
+  private def timeTilReset(relativeTime: Boolean, response: HttpResponse): FiniteDuration = {
+    if (relativeTime) {
+      findCustomHeader(`X-RateLimit-Reset-After`, response).fold(-1.millis)(_.resetIn)
+    } else {
+      findCustomHeader(`X-RateLimit-Reset`, response).fold(-1.millis) { header =>
+        (header.resetAt.toEpochMilli - System.currentTimeMillis()).millis
       }
-      .getOrElse(-1.millis)
+    }
+  }
 
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
+
+  private def requestBucket(response: HttpResponse): String =
+    findCustomHeader(`X-RateLimit-Bucket`, response).map(_.identifier).get //Should always be present
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
@@ -82,21 +82,39 @@ object RequestStreams {
     * receive responses. This flow does not account for ratelimits. Only
     * use it if you know what you're doing.
     * @param credentials The credentials to use when sending the requests.
+    * @param millisecondPrecision Sets if the requests should use millisecond
+    *                             precision for the ratelimits. If using this,
+    *                             make sure your system is properly synced to
+    *                             an NTP server.
+    * @param relativeTime Sets if the ratelimit reset should be calculated
+    *                     using relative time instead of absolute time. Might
+    *                     help with out of sync time on your device, but can
+    *                     also lead to slightly slower processing of requests.
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
       credentials: HttpCredentials,
+      millisecondPrecision: Boolean,
+      relativeTime: Boolean,
       parallelism: Int = 4,
       rateLimitActor: ActorRef
   )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    createHttpRequestFlow[Data, Ctx](credentials)
+    createHttpRequestFlow[Data, Ctx](credentials, millisecondPrecision)
       .via(requestHttpFlow)
-      .via(requestParser(parallelism))
+      .via(requestParser(relativeTime, parallelism))
       .alsoTo(sendRatelimitUpdates(rateLimitActor))
 
   /**
     * A request flow which will send requests to Discord, and receive responses.
     * If it encounters a ratelimit it will backpressure.
     * @param credentials The credentials to use when sending the requests.
+    * @param millisecondPrecision Sets if the requests should use millisecond
+    *                             precision for the ratelimits. If using this,
+    *                             make sure your system is properly synced to
+    *                             an NTP server.
+    * @param relativeTime Sets if the ratelimit reset should be calculated
+    *                     using relative time instead of absolute time. Might
+    *                     help with out of sync time on your device, but can
+    *                     also lead to slightly slower processing of requests.
     * @param bufferSize The size of the internal buffer used before messages
     *                   are sent.
     * @param overflowStrategy The strategy to use if the buffer overflows.
@@ -107,6 +125,8 @@ object RequestStreams {
     */
   def requestFlow[Data, Ctx](
       credentials: HttpCredentials,
+      millisecondPrecision: Boolean,
+      relativeTime: Boolean,
       bufferSize: Int = 100,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes,
@@ -128,8 +148,16 @@ object RequestStreams {
       val requests = partition.out(0).collect { case request: Request[Data, Ctx]  => request }
       val dropped  = partition.out(1).collect { case dropped: RequestDropped[Ctx] => dropped }
 
-      val network = builder.add(requestFlowWithoutRatelimit[Data, Ctx](credentials, parallelism, rateLimitActor))
-      val out     = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
+      val network = builder.add(
+        requestFlowWithoutRatelimit[Data, Ctx](
+          credentials,
+          millisecondPrecision,
+          relativeTime,
+          parallelism,
+          rateLimitActor
+        )
+      )
+      val out = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
 
       // format: OFF
       in ~> buffer ~> ratelimits ~> partition
@@ -157,16 +185,17 @@ object RequestStreams {
     Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
       //We don't use ask here to get be able to create a RequestDropped instance
       import system.dispatcher
-      val future = ratelimiter ? Ratelimiter.WantToPass(request.route.rawRoute, request)
+      val future = ratelimiter ? Ratelimiter.WantToPass(request.route, request.identifier, request)
 
       future.mapTo[Request[Data, Ctx]].recover {
-        case _: AskTimeoutException => RequestDropped(request.context, request.route.uri, request.route.rawRoute)
+        case _: AskTimeoutException => RequestDropped(request.context, request.route, request.identifier)
       }
     }
   }.named("Ratelimiter")
 
   private def createHttpRequestFlow[Data, Ctx](
-      credentials: HttpCredentials
+      credentials: HttpCredentials,
+      millisecondPrecision: Boolean
   )(implicit system: ActorSystem): Flow[Request[Data, Ctx], (HttpRequest, Request[Data, Ctx]), NotUsed] = {
     val baseFlow = Flow[Request[Data, Ctx]]
 
@@ -187,7 +216,8 @@ object RequestStreams {
         val httpRequest = HttpRequest(
           route.method,
           route.uri,
-          immutable.Seq(auth, userAgent, millisecondPrecisionHeader) ++ request.extraHeaders,
+          immutable.Seq(auth, userAgent) ++
+            Seq(millisecondPrecisionHeader).filter(_ => millisecondPrecision) ++ request.extraHeaders,
           request.requestBody
         )
 
@@ -201,20 +231,23 @@ object RequestStreams {
     Http().superPool[Request[Data, Ctx]]()
 
   private def requestParser[Data, Ctx](
+      relativeTime: Boolean,
       breadth: Int
   )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
     MapWithMaterializer
       .flow[(Try[HttpResponse], Request[Data, Ctx]), Source[RequestAnswer[Data, Ctx], NotUsed]] { implicit mat =>
         {
           case (response, request) =>
-            val route    = request.route
-            val uri      = route.uri
-            val rawRoute = route.rawRoute
+            val route = request.route
             response match {
               case Success(httpResponse) =>
-                val tilReset     = timeTilReset(httpResponse)
+                println(s"After send: ${request.identifier} ${System.currentTimeMillis()}")
+                println(httpResponse.headers.mkString("\n"))
+
+                val tilReset     = timeTilReset(relativeTime, httpResponse)
                 val tilRatelimit = remainingRequests(httpResponse)
                 val requestLimit = requestsForUri(httpResponse)
+                val bucket       = requestBucket(httpResponse)
 
                 httpResponse.status match {
                   case StatusCodes.TooManyRequests =>
@@ -225,8 +258,9 @@ object RequestStreams {
                         isGlobalRatelimit(httpResponse),
                         tilReset,
                         requestLimit,
-                        uri,
-                        rawRoute
+                        route,
+                        bucket,
+                        request.identifier
                       )
                     )
                   case e if e.isFailure() =>
@@ -234,7 +268,12 @@ object RequestStreams {
                       .fold(ByteString.empty)(_ ++ _)
                       .flatMapConcat { eBytes =>
                         Source.single(
-                          RequestError(request.context, new HttpException(e, Some(eBytes.utf8String)), uri, rawRoute)
+                          RequestError(
+                            request.context,
+                            new HttpException(e, Some(eBytes.utf8String)),
+                            route,
+                            request.identifier
+                          )
                         )
                       }
                       .mapMaterializedValue(_ => NotUsed)
@@ -245,25 +284,44 @@ object RequestStreams {
                       .via(request.parseResponse(breadth))
                       .recover {
                         case Unmarshaller.NoContentException =>
+                          //Rethrow so that we get a stack trace
                           throw new HttpException(
                             StatusCodes.NoContent,
                             Some(s"Encountered NoContentException when trying to parse an ${request.getClass}")
                           )
                       }
                       .map { data =>
-                        RequestResponse(data, request.context, tilRatelimit, tilReset, requestLimit, uri, rawRoute)
+                        RequestResponse(
+                          data,
+                          request.context,
+                          tilRatelimit,
+                          tilReset,
+                          requestLimit,
+                          route,
+                          bucket,
+                          request.identifier
+                        )
                       }
                   case _ => //Should be success
                     Source
                       .single(httpResponse.entity)
                       .via(request.parseResponse(breadth))
                       .map { data =>
-                        RequestResponse(data, request.context, tilRatelimit, tilReset, requestLimit, uri, rawRoute)
+                        RequestResponse(
+                          data,
+                          request.context,
+                          tilRatelimit,
+                          tilReset,
+                          requestLimit,
+                          route,
+                          bucket,
+                          request.identifier
+                        )
                       }
                 }
 
               case Failure(e) =>
-                Source.single(RequestError(request.context, e, uri, rawRoute))
+                Source.single(RequestError(request.context, e, route, request.identifier))
             }
         }
       }
@@ -281,9 +339,17 @@ object RequestStreams {
         val tilReset          = answer.tilReset
         val remainingRequests = answer.remainingRequests
         val requestLimit      = answer.uriRequestLimit
-        val rawRoute          = answer.rawRoute
+
         if (tilReset > 0.millis && remainingRequests != -1 && requestLimit != -1) {
-          rateLimitActor ! Ratelimiter.UpdateRatelimits(rawRoute, isGlobal, tilReset, remainingRequests, requestLimit)
+          rateLimitActor ! Ratelimiter.UpdateRatelimits(
+            answer.route,
+            answer.ratelimitBucket,
+            isGlobal,
+            tilReset,
+            remainingRequests,
+            requestLimit,
+            answer.identifier
+          )
         }
       }
       .async
@@ -300,6 +366,14 @@ object RequestStreams {
   /**
     * A request flow that will retry failed requests.
     * @param credentials The credentials to use when sending the requests.
+    * @param millisecondPrecision Sets if the requests should use millisecond
+    *                             precision for the ratelimits. If using this,
+    *                             make sure your system is properly synced to
+    *                             an NTP server.
+    * @param relativeTime Sets if the ratelimit reset should be calculated
+    *                     using relative time instead of absolute time. Might
+    *                     help with out of sync time on your device, but can
+    *                     also lead to slightly slower processing of requests.
     * @param bufferSize The size of the internal buffer used before messages
     *                   are sent.
     * @param overflowStrategy The strategy to use if the buffer overflows.
@@ -310,6 +384,8 @@ object RequestStreams {
     */
   def retryRequestFlow[Data, Ctx](
       credentials: HttpCredentials,
+      millisecondPrecision: Boolean,
+      relativeTime: Boolean,
       bufferSize: Int = 100,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes,
@@ -326,6 +402,8 @@ object RequestStreams {
         RequestStreams
           .requestFlow[Data, (Int, Request[Data, Ctx])](
             credentials,
+            millisecondPrecision,
+            relativeTime,
             bufferSize,
             overflowStrategy,
             maxAllowedWait,

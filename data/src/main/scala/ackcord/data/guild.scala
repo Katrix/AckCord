@@ -526,7 +526,7 @@ case class PresenceWatching(
 //TODO: Figure out what the public API for this is, and what it sends back
 case class PresenceCustom(
     name: String,
-    state: Option[String]  //TODO: Figure out if this is nullable
+    state: Option[String] //TODO: Figure out if this is nullable
 ) extends Activity {
 
   override def timestamps: Option[ActivityTimestamps] = None

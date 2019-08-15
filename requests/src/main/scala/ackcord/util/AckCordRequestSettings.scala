@@ -34,6 +34,8 @@ class AckCordRequestSettings(config: Config) {
 
   val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
   val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
+
+  val LogRatelimitEvents: Boolean = getBoolean("ackcord.logging.log-ratelimit-events")
 }
 object AckCordRequestSettings {
 
