@@ -257,7 +257,18 @@ trait MessageParserInstances {
     * @param f The function to transform the string with.
     * @tparam A The type to parse
     */
-  def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
+  def fromTry[A](f: String => Try[A]): MessageParser[A] = fromEither(f(_).toEither.leftMap(_.getMessage))
+
+  /**
+    * Parse a string into a try, where the left contains the error message
+    * @param f The function to transform the string with.
+    * @tparam A The type to parse
+    */
+  def fromEither[A](f: String => Either[String, A]): MessageParser[A] = new MessageParser[A] {
+
+    /**
+      * A program to parse a message into the needed types.
+      */
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
@@ -267,8 +278,8 @@ trait MessageParserInstances {
       case Nil => E.raise("No more arguments left")
       case head :: tail =>
         S.set(tail).as(f(head)).flatMap {
-          case Success(value) => value.pure
-          case Failure(e)     => e.getMessage.raise
+          case Right(value) => value.pure
+          case Left(e)      => e.raise
         }
     }
   }
@@ -279,11 +290,8 @@ trait MessageParserInstances {
     * @param f The function to transform the string with.
     * @tparam A The type to parse
     */
-  def withTryCustomError[A](errorMessage: String => String)(f: String => A): MessageParser[A] = fromTry { s =>
-    Try(f(s)).recoverWith {
-      case _ => Failure(new Exception(errorMessage(s)))
-    }
-  }
+  def withTryCustomError[A](errorMessage: String => String)(f: String => A): MessageParser[A] =
+    fromEither(s => Try(f(s)).toEither.leftMap(_ => errorMessage(s)))
 
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {

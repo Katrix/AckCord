@@ -98,46 +98,6 @@ object CommandFunction {
       )
     })
   }
-
-  /**
-    * Source for short circuiting eithers.
-    */
-  def sourceViaEither[I, O, E, Mat1, Mat2, Mat3](
-      source: Source[Either[E, I], Mat1],
-      flow: Flow[I, Either[E, O], Mat2]
-  )(combine: (Mat1, Mat2) => Mat3): Source[Either[E, O], Mat3] = {
-    Source.fromGraph(GraphDSL.create(source, flow)(combine) { implicit b => (selfSource, thatFlow) =>
-      import GraphDSL.Implicits._
-
-      val selfPartition =
-        b.add(Partition[Either[E, I]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-      val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
-      val selfOut = selfPartition.out(1).map(_.right.get)
-
-      val thatPartition =
-        b.add(Partition[Either[E, O]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-      val thatErr = thatPartition.out(0)
-      val thatOut = thatPartition.out(1)
-
-      val resMerge = b.add(Merge[Either[E, O]](3))
-
-      // format: OFF
-      selfSource ~> selfPartition
-      selfOut       ~> thatFlow ~> thatPartition
-      selfErr       ~>                              resMerge
-      thatOut       ~> resMerge
-      thatErr       ~> resMerge
-      // format: ON
-
-      SourceShape(resMerge.out)
-    })
-  }
 }
 
 /**
@@ -244,27 +204,8 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   def streamed[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] = new ComplexCommand[A, Mat] {
     override def parser: MessageParser[A] = self.parser
 
-    override def flow: Flow[CommandMessage[A], CommandError, Mat] = {
-      Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
-        import GraphDSL.Implicits._
-        val selfFlow = b.add(self.flow[A])
-
-        val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
-        val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-        val selfOut = selfPartition.out(1).map(_.right.get)
-
-        selfFlow ~> selfPartition
-        selfOut ~> block
-
-        FlowShape(
-          selfFlow.in,
-          selfErr.outlet
-        )
-      })
-    }
+    override def flow: Flow[CommandMessage[A], CommandError, Mat] =
+      CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
   }
 
   /**
@@ -423,15 +364,41 @@ object CommandBuilder {
   /**
     * Creates a raw command builder without any extra processing.
     */
-  def rawBuilder(requestHelper: RequestHelper): CommandBuilder[CommandMessage, List[String]] =
-    new CommandBuilder[CommandMessage, List[String]] {
+  def rawBuilder(requestHelper: RequestHelper): CommandBuilder[CommandMessage, NotUsed] =
+    new CommandBuilder[CommandMessage, NotUsed] {
       override def requests: RequestHelper = requestHelper
 
-      override def parser: MessageParser[List[String]] = MessageParser.allStringsParser
+      override def parser: MessageParser[NotUsed] = MessageParser.notUsedParser
 
       override def flow[A]: Flow[CommandMessage[A], Either[Option[CommandError], CommandMessage[A]], NotUsed] =
         Flow[CommandMessage[A]].map(Right.apply)
     }
+
+  private[ackcord] def streamedFlow[M[_], A, Mat](
+      sinkBlock: Sink[M[A], Mat],
+      selfFlow: Flow[CommandMessage[A], Either[Option[CommandError], M[A]], NotUsed]
+  ): Flow[CommandMessage[A], CommandError, Mat] = {
+
+    Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
+      import GraphDSL.Implicits._
+      val selfFlowShape = b.add(selfFlow)
+
+      val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
+        case Left(_)  => 0
+        case Right(_) => 1
+      }))
+      val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
+      val selfOut = selfPartition.out(1).map(_.right.get)
+
+      selfFlowShape ~> selfPartition
+      selfOut ~> block
+
+      FlowShape(
+        selfFlowShape.in,
+        selfErr.outlet
+      )
+    })
+  }
 }
 
 /**
@@ -487,27 +454,8 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
 
       override def parser: MessageParser[A] = self.parser
 
-      override def flow: Flow[CommandMessage[A], CommandError, Mat] = {
-        Flow.fromGraph(GraphDSL.create(sinkBlock) { implicit b => block =>
-          import GraphDSL.Implicits._
-          val selfFlow = b.add(self.flow[A])
-
-          val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
-            case Left(_)  => 0
-            case Right(_) => 1
-          }))
-          val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-          val selfOut = selfPartition.out(1).map(_.right.get)
-
-          selfFlow ~> selfPartition
-          selfOut ~> block
-
-          FlowShape(
-            selfFlow.in,
-            selfErr.outlet
-          )
-        })
-      }
+      override def flow: Flow[CommandMessage[A], CommandError, Mat] =
+        CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
     }
 
   override def async[G[_]](

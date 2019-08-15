@@ -31,6 +31,7 @@ import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
 import akka.{Done, NotUsed}
 import cats.syntax.all._
+import cats.instances.future._
 
 import scala.concurrent.Future
 
@@ -46,7 +47,7 @@ class CommandConnector(
     requests: RequestHelper
 ) {
 
-  type PrefixParser = (CacheSnapshot, Message) => MessageParser[Unit]
+  type PrefixParser = (CacheSnapshot, Message) => Future[MessageParser[Unit]]
 
   /**
     * Creates a prefix parser for a command.
@@ -78,7 +79,9 @@ class CommandConnector(
     }
 
     Function.untupled(
-      mentionParser.tupled.andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases).void)
+      mentionParser.tupled
+        .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases).void)
+        .andThen(Future.successful)
     )
   }
 
@@ -97,14 +100,17 @@ class CommandConnector(
       command: ComplexCommand[A, Mat]
   ): Source[CommandError, (Mat, Future[Done])] = {
     val commandMessageSource = messages
-      .mapConcat {
-        case (message, cache) =>
-          val prefixParser = prefix(cache, message)
+      .mapAsync(requests.parallelism) {
+        case t @ (message, cache) =>
+          import requests.mat.executionContext
+          prefix(cache, message).tupleLeft(t)
+      }
+      .mapConcat { case ((message, cache), prefixParser) =>
 
-          implicit val c: CacheSnapshot = cache
+        implicit val c: CacheSnapshot = cache
 
-          val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
-          parsed.map((message, cache, _)).toList
+        val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
+        parsed.map((message, cache, _)).toList
       }
       .mapConcat {
         case (message, cache, args) =>
