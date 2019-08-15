@@ -268,7 +268,7 @@ package object data {
     val ManageWebhooks      = Permission(0x20000000)
     val ManageEmojis        = Permission(0x40000000)
 
-    @deprecated("Prefer ViewChannel instead", since = "1.15")
+    @deprecated("Prefer ViewChannel instead", since = "0.15")
     val ReadMessages: Permission = ViewChannel
 
     val None = Permission(0x00000000)

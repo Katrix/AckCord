@@ -31,11 +31,6 @@ import io.circe.{derivation, _}
 
 object VoiceWsProtocol extends DiscordProtocol {
 
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val opCodeEncoder: Encoder[VoiceOpCode] = Encoder[VoiceOpCode]
-  @deprecated("Prefer the instance provided in the companion object instead", since = "0.14.0")
-  val opCodeDecoder: Decoder[VoiceOpCode] = Decoder[VoiceOpCode]
-
   implicit val identifyDataEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val identifyDataDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 

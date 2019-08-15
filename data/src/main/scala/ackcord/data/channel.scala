@@ -47,18 +47,6 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
   case object LFG extends ChannelType(8)
 
   override def values: immutable.IndexedSeq[ChannelType] = findValues
-
-  /**
-    * Get a channel type from an id
-    */
-  @deprecated("Prefer ChannelType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[ChannelType] = withValueOpt(id)
-
-  /**
-    * Get id for a channel type
-    */
-  @deprecated("Prefer ChannelType#value", since = "0.14.0")
-  def idFor(channelType: ChannelType): Int = channelType.value
 }
 
 /**
@@ -73,18 +61,6 @@ object PermissionOverwriteType
   case object Member extends PermissionOverwriteType("member")
 
   override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
-
-  /**
-    * Get a overwrite type from a name.
-    */
-  @deprecated("Prefer PermissionOverwriteType.withValueOpt", since = "0.14.0")
-  def forName(name: String): Option[PermissionOverwriteType] = withValueOpt(name)
-
-  /**
-    * Get the name of an overwrite type
-    */
-  @deprecated("Prefer PermissionOverwriteType#value", since = "0.14.0")
-  def nameOf(tpe: PermissionOverwriteType): String = tpe.value
 }
 
 /**

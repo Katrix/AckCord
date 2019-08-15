@@ -60,12 +60,6 @@ object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnum[Ve
   case object VeryHigh extends VerificationLevel(4)
 
   override def values: immutable.IndexedSeq[VerificationLevel] = findValues
-
-  @deprecated("Prefer VerificationLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[VerificationLevel] = withValueOpt(id)
-
-  @deprecated("Prefer VerificationLevel#value", since = "0.14.0")
-  def idFor(lvl: VerificationLevel): Int = lvl.value
 }
 
 /**
@@ -81,12 +75,6 @@ object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnum[No
   case object OnlyMentions extends NotificationLevel(1)
 
   override def values: immutable.IndexedSeq[NotificationLevel] = findValues
-
-  @deprecated("Prefer NotificationLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[NotificationLevel] = withValueOpt(id)
-
-  @deprecated("Prefer NotificationLevel#value", since = "0.14.0")
-  def idFor(lvl: NotificationLevel): Int = lvl.value
 }
 
 /**
@@ -105,12 +93,6 @@ object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnum[FilterLevel] {
   case object AllMembers extends FilterLevel(2)
 
   override def values: immutable.IndexedSeq[FilterLevel] = findValues
-
-  @deprecated("Prefer FilterLevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[FilterLevel] = withValueOpt(id)
-
-  @deprecated("Prefer FilterLevel#value", since = "0.14.0")
-  def idFor(lvl: FilterLevel): Int = lvl.value
 }
 
 sealed abstract class MFALevel(val value: Int) extends IntEnumEntry
@@ -119,12 +101,6 @@ object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
   case object Elevated extends MFALevel(1)
 
   override def values: immutable.IndexedSeq[MFALevel] = findValues
-
-  @deprecated("Prefer MFALevel.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[MFALevel] = withValueOpt(id)
-
-  @deprecated("Prefer MFALevel#value", since = "0.14.0")
-  def idFor(lvl: MFALevel): Int = lvl.value
 }
 
 sealed abstract class PremiumTier(val value: Int) extends IntEnumEntry
@@ -548,12 +524,6 @@ object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnum[Pr
   case object Offline      extends PresenceStatus("offline")
 
   override def values: immutable.IndexedSeq[PresenceStatus] = findValues
-
-  @deprecated("Prefer PresenceStatus#value instead", since = "0.14.0")
-  def nameOf(status: PresenceStatus): String = status.value
-
-  @deprecated("Prefer PresenceStatus.withValueOpt", since = "0.14.0")
-  def forName(name: String): Option[PresenceStatus] = withValueOpt(name)
 }
 
 /**

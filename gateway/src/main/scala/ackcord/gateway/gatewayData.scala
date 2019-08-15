@@ -251,11 +251,7 @@ case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
   * All the different opcodes used by the gateway.
   * @param value The number of the opcode.
   */
-sealed abstract class GatewayOpCode(val value: Int) extends IntEnumEntry {
-
-  @deprecated("Prefer GatewayOpCode#value", since = "0.14.0")
-  def code: Int = value
-}
+sealed abstract class GatewayOpCode(val value: Int) extends IntEnumEntry
 object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnum[GatewayOpCode] {
   object Dispatch            extends GatewayOpCode(0)
   object Heartbeat           extends GatewayOpCode(1)
@@ -271,12 +267,6 @@ object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnum[GatewayOpC
   object HeartbeatACK        extends GatewayOpCode(11)
 
   override def values: immutable.IndexedSeq[GatewayOpCode] = findValues
-
-  /**
-    * Get an opcode from a number if it exists.
-    */
-  @deprecated("Prefer GatewayOpCode.withValueOpt", since = "0.14.0")
-  def forCode(code: Int): Option[GatewayOpCode] = withValueOpt(code)
 }
 
 /**

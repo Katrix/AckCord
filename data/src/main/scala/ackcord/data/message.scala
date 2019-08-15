@@ -84,12 +84,6 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
   case object UserPremiumGuildTier3        extends MessageType(11)
 
   override def values: immutable.IndexedSeq[MessageType] = findValues
-
-  @deprecated("Prefer MessageType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[MessageType] = withValueOpt(id)
-
-  @deprecated("Prefer MessageType#value", since = "0.14.0")
-  def idFor(tpe: MessageType): Int = tpe.value
 }
 
 sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
@@ -98,12 +92,6 @@ object PremiumType extends IntEnum[PremiumType] with IntCirceEnum[PremiumType] {
   case object Nitro        extends PremiumType(2)
 
   override def values: immutable.IndexedSeq[PremiumType] = findValues
-
-  @deprecated("Prefer PremiumType.withValueOpt", since = "0.14.0")
-  def forId(id: Int): Option[PremiumType] = withValueOpt(id)
-
-  @deprecated("Prefer PremiumType#value", since = "0.14.0")
-  def idFor(tpe: PremiumType): Int = tpe.value
 }
 
 /**
@@ -203,12 +191,6 @@ object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceE
   case object Everyone       extends ConnectionVisibility(1)
 
   override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
-
-  @deprecated("Prefer ConnectionVisibility.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[ConnectionVisibility] = withValueOpt(id)
-
-  @deprecated("Prefer ConnectionVisibility#value", since = "0.14.0")
-  def idOf(tpe: ConnectionVisibility): Int = tpe.value
 }
 
 sealed abstract class MessageActivityType(val value: Int) extends IntEnumEntry
@@ -219,12 +201,6 @@ object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnu
   case object JoinRequest extends MessageActivityType(5)
 
   override def values: immutable.IndexedSeq[MessageActivityType] = findValues
-
-  @deprecated("Prefer MessageActivityType.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[MessageActivityType] = withValueOpt(id)
-
-  @deprecated("Prefer MessageActivityType#value", since = "0.14.0")
-  def idOf(tpe: MessageActivityType): Int = tpe.value
 }
 
 /**

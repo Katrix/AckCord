@@ -288,20 +288,6 @@ case class CreateReaction[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 }
-object CreateReaction {
-
-  /**
-    * An utility method to create a reaction request with a unicode emoji.
-    * This method will do the URL encoding for you.
-    */
-  @deprecated("Url encoding is now done automatically", since = "0.14.0")
-  def unicodeEmoji[Ctx](
-      channelId: ChannelId,
-      messageId: MessageId,
-      unicodeEmoji: String,
-      context: Ctx = NotUsed: NotUsed
-  ): CreateReaction[Ctx] = CreateReaction(channelId, messageId, unicodeEmoji, context)
-}
 
 /**
   * Delete the clients reaction to a message.

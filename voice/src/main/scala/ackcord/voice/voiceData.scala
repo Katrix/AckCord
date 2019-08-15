@@ -49,12 +49,6 @@ sealed trait VoiceMessage[D] {
   def s: JsonOption[Int] = JsonUndefined
 
   /**
-    * An encoder for the message.
-    */
-  @deprecated("Prefer getting this statically", since = "0.14.0")
-  def dataEncoder: Encoder[D]
-
-  /**
     * The data for the message.
     */
   def d: D
@@ -239,11 +233,7 @@ case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
   * Voice opcode used by voice websocket
   * @param value The int value of the code
   */
-sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry {
-
-  @deprecated("Prefer VoiceOpCode#value", since = "0.14.0")
-  def code: Int = value
-}
+sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry
 object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnum[VoiceOpCode] {
   object Identify           extends VoiceOpCode(0)
   object SelectProtocol     extends VoiceOpCode(1)
@@ -259,7 +249,4 @@ object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnum[VoiceOpCode] {
   object ClientDisconnect   extends VoiceOpCode(13)
 
   override def values: immutable.IndexedSeq[VoiceOpCode] = findValues
-
-  @deprecated("Prefer VoiceOpCode.withValueOpt", since = "0.14.0")
-  def forCode(code: Int): Option[VoiceOpCode] = withValueOpt(code)
 }

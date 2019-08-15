@@ -95,12 +95,6 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   case object MessageDelete          extends AuditLogEvent(72)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
-
-  @deprecated("Prefer AuditLogEvent#value", since = "0.14.0")
-  def idOf(event: AuditLogEvent): Int = event.value
-
-  @deprecated("Prefer AuditLogEvent.withValueOpt", since = "0.14.0")
-  def fromId(id: Int): Option[AuditLogEvent] = withValueOpt(id)
 }
 
 /**
