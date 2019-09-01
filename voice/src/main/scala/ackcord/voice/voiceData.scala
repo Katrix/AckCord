@@ -68,7 +68,7 @@ case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: Strin
   * Discord responds with [[Ready]]
   */
 case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
-  override def op: VoiceOpCode                    = VoiceOpCode.Identify
+  override def op: VoiceOpCode = VoiceOpCode.Identify
 }
 
 /**
@@ -91,7 +91,7 @@ case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionDa
   * Discord responds with [[SessionDescription]]
   */
 case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
-  override def op: VoiceOpCode                          = VoiceOpCode.SelectProtocol
+  override def op: VoiceOpCode = VoiceOpCode.SelectProtocol
 }
 object SelectProtocol {
   def apply(
@@ -115,7 +115,7 @@ case class ReadyData(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval
   * Sent by Discord following [[Identify]]
   */
 case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
-  override def op: VoiceOpCode                 = VoiceOpCode.Ready
+  override def op: VoiceOpCode = VoiceOpCode.Ready
 }
 
 /**
@@ -123,7 +123,7 @@ case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
   * @param d Nonce
   */
 case class Heartbeat(d: Int) extends VoiceMessage[Int] {
-  override def op: VoiceOpCode           = VoiceOpCode.Heartbeat
+  override def op: VoiceOpCode = VoiceOpCode.Heartbeat
 }
 
 /**
@@ -137,7 +137,7 @@ case class SessionDescriptionData(mode: String, secretKey: ByteString)
   * Sent by Discord in response to [[SelectProtocol]]
   */
 case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
-  override def op: VoiceOpCode                              = VoiceOpCode.SessionDescription
+  override def op: VoiceOpCode = VoiceOpCode.SessionDescription
 }
 
 /**
@@ -154,7 +154,7 @@ case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOpt
   * set the bot as speaking. This is required before sending voice data.
   */
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
-  override def op: VoiceOpCode                    = VoiceOpCode.Speaking
+  override def op: VoiceOpCode = VoiceOpCode.Speaking
 }
 object Speaking {
   def apply(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId]): Speaking =
@@ -166,7 +166,7 @@ object Speaking {
   * @param d The nonce we sent
   */
 case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
-  override def op: VoiceOpCode           = VoiceOpCode.HeartbeatACK
+  override def op: VoiceOpCode = VoiceOpCode.HeartbeatACK
 }
 
 /**
@@ -182,39 +182,39 @@ case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
   * disconnected.
   */
 case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
-  override def op: VoiceOpCode                  = VoiceOpCode.Resume
+  override def op: VoiceOpCode = VoiceOpCode.Resume
 }
 
 /**
   * Sent by Discord to tell us what heartbeat interval we should use.
   */
 case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
-  override def op: VoiceOpCode               = VoiceOpCode.Hello
-  override def d: NotUsed                    = NotUsed
+  override def op: VoiceOpCode = VoiceOpCode.Hello
+  override def d: NotUsed      = NotUsed
 }
 
 /**
   * Send by Discord when we successfully resume a connection
   */
 case object Resumed extends VoiceMessage[NotUsed] {
-  override def op: VoiceOpCode               = VoiceOpCode.Resumed
-  override def d: NotUsed                    = NotUsed
+  override def op: VoiceOpCode = VoiceOpCode.Resumed
+  override def d: NotUsed      = NotUsed
 }
 
 /**
   * Message for OpCode 12, should be ignored
   */
 case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
-  override def op: VoiceOpCode               = VoiceOpCode.Op12Ignore
-  override def d: NotUsed                    = NotUsed
+  override def op: VoiceOpCode = VoiceOpCode.Op12Ignore
+  override def d: NotUsed      = NotUsed
 }
 
 /**
   * Message for OpCode 13, should be ignored
   */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
-  override def op: VoiceOpCode               = VoiceOpCode.ClientDisconnect
-  override def d: NotUsed                    = NotUsed
+  override def op: VoiceOpCode = VoiceOpCode.ClientDisconnect
+  override def d: NotUsed      = NotUsed
 }
 
 /**

@@ -73,7 +73,7 @@ object CacheTypeRegistry {
 
   private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(
     classOf[Ban]   -> CacheUpdater.dummy[Ban],
-    classOf[Emoji] -> CacheUpdater.dummy[Emoji],
+    classOf[Emoji] -> CacheUpdater.dummy[Emoji]
   )
 
   private val allUpdaters: Map[Class[_], CacheUpdater[_]] =

@@ -210,7 +210,7 @@ object GatewayHandlerCache {
                       data.nick,
                       state
                     )
-                },
+                  },
               CacheHandlers.rawGuildMemberUpdater,
               registry
             )
@@ -286,7 +286,7 @@ object GatewayHandlerCache {
               state =>
                 getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId).map { channel =>
                   api.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).toSeq), channel, state)
-              },
+                },
               CacheHandlers.rawMessageBulkDeleter,
               registry
             )

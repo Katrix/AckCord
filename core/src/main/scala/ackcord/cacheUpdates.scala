@@ -57,7 +57,7 @@ case class APIMessageCacheUpdate[Data](
     data: Data,
     sendEvent: CacheState => Option[APIMessage],
     handler: CacheHandler[Data],
-    registry: CacheTypeRegistry,
+    registry: CacheTypeRegistry
 ) extends CacheEvent {
 
   override def process(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =

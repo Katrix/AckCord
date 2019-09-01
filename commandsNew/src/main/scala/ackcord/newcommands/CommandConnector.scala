@@ -105,12 +105,12 @@ class CommandConnector(
           import requests.mat.executionContext
           prefix(cache, message).tupleLeft(t)
       }
-      .mapConcat { case ((message, cache), prefixParser) =>
+      .mapConcat {
+        case ((message, cache), prefixParser) =>
+          implicit val c: CacheSnapshot = cache
 
-        implicit val c: CacheSnapshot = cache
-
-        val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
-        parsed.map((message, cache, _)).toList
+          val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
+          parsed.map((message, cache, _)).toList
       }
       .mapConcat {
         case (message, cache, args) =>
