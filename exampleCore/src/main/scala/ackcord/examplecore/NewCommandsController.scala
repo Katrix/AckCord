@@ -9,12 +9,13 @@ import ackcord.syntax._
 import ackcord.newcommands._
 import ackcord.data.Permission
 import ackcord.requests.CreateMessage
+import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import cats.syntax.all._
 
 class NewCommandsController(requests: RequestHelper) extends CommandController(requests) {
 
-  val hello: NamedCommand[List[String]] = Command
+  val hello: NamedCommand[NotUsed] = Command
     .named("%", Seq("hello"), mustMention = true)
     .withRequest { implicit m =>
       m.tChannel.sendMessage(s"Hello ${m.user.username}")
@@ -25,7 +26,7 @@ class NewCommandsController(requests: RequestHelper) extends CommandController(r
       m.message.tGuildChannel.map(_.sendMessage(s"You said ${m.parsed}"))
     }
 
-  val guildInfo: NamedCommand[List[String]] =
+  val guildInfo: NamedCommand[NotUsed] =
     GuildCommand.named("%", Seq("guildInfo"), mustMention = true).withRequest { implicit m =>
       val guildName   = m.guild.name
       val channelName = m.tChannel.name
@@ -44,15 +45,15 @@ class NewCommandsController(requests: RequestHelper) extends CommandController(r
         m.message.tGuildChannel.map(_.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
       }
 
-  private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, List[String]] =
+  private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, NotUsed] =
     GuildCommand.andThen(CommandBuilder.needPermission[GuildUserCommandMessage](Permission.Administrator))
 
-  val adminsOnly: NamedCommand[List[String]] =
+  val adminsOnly: NamedCommand[NotUsed] =
     ElevatedCommand.named("%", Seq("adminOnly"), mustMention = true).withSideEffects { _ =>
       println("Command executed by an admin")
     }
 
-  val timeDiff: NamedCommand[List[String]] =
+  val timeDiff: NamedCommand[NotUsed] =
     Command.named("%", Seq("timeDiff"), mustMention = true).async[SourceRequest] { implicit m =>
       import requestRunner._
       for {
@@ -65,13 +66,13 @@ class NewCommandsController(requests: RequestHelper) extends CommandController(r
       } yield ()
     }
 
-  val ping: NamedCommand[List[String]] = Command.named("%", Seq("ping"), mustMention = true).streamed {
-    Flow[CommandMessage[List[String]]]
+  val ping: NamedCommand[NotUsed] = Command.named("%", Seq("ping"), mustMention = true).streamed {
+    Flow[CommandMessage[NotUsed]]
       .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
       .to(requests.sinkIgnore)
   }
 
-  val timeDiff2: NamedCommand[List[String]] =
+  val timeDiff2: NamedCommand[NotUsed] =
     Command.named("%", Seq("timeDiff2"), mustMention = true).async[Future] { implicit m =>
       //The ExecutionContext is provided by the controller
       for {

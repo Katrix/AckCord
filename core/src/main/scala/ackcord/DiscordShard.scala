@@ -27,9 +27,12 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
+import ackcord.cachehandlers.CacheTypeRegistry
+import ackcord.gateway.ComplexGatewayEvent
 import ackcord.requests.Routes
 import akka.Done
 import akka.actor._
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
@@ -43,9 +46,21 @@ import io.circe.Json
   * The core actor that controls all the other used actors of AckCord
   * @param gatewayUri The gateway websocket uri
   * @param settings The settings to use
+  * @param cache The cache to use for this shard
+  * @param ignoredEvents The events that the cache will completely ignore.
+  *                      EXPERIMENTAL: Not completely tested and may produce bugs.
+  * @param cacheTypeRegistry Provides a more fine grained way to ignore certain
+  *                          parts of events based on the data being updated or deleted.
+  *                          EXPERIMENTAL: Not completely tested, and may
+  *                          break your bot.
   */
-class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
-    extends Actor
+class DiscordShard(
+    gatewayUri: Uri,
+    settings: GatewaySettings,
+    cache: Cache,
+    ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+    cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
+) extends Actor
     with ActorLogging
     with Timers {
   import DiscordShard._
@@ -53,7 +68,11 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
   context.system
 
   private var gatewayHandler =
-    context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log, context.system), "GatewayHandler")
+    context.actorOf(
+      GatewayHandlerCache
+        .props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+      "GatewayHandler"
+    )
 
   private var shutdownCount  = 0
   private var isShuttingDown = false
@@ -87,8 +106,10 @@ class DiscordShard(gatewayUri: Uri, settings: GatewaySettings, cache: Cache)
       }
 
     case CreateGateway =>
-      gatewayHandler =
-        context.actorOf(GatewayHandlerCache.props(gatewayUri, settings, cache, log, context.system), "GatewayHandler")
+      gatewayHandler = context.actorOf(
+        GatewayHandlerCache.props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+        "GatewayHandler"
+      )
       gatewayHandler ! GatewayLogin
 
     case RestartShard =>

@@ -27,7 +27,7 @@ import akka.event.LoggingAdapter
 /**
   * A class that handles creating a new cache snapshot with an object
   */
-trait CacheHandler[-Obj] {
+sealed trait CacheHandler[-Obj] {
 
   /**
     * Updates the builder with the object
@@ -35,5 +35,38 @@ trait CacheHandler[-Obj] {
     * @param obj The logger to update with
     * @param log A logging adapter
     */
-  def handle(builder: CacheSnapshotBuilder, obj: Obj)(implicit log: LoggingAdapter): Unit
+  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(implicit log: LoggingAdapter): Unit
+}
+
+/**
+  * A [[CacheHandler]] for deletions.
+  */
+trait CacheDeleter[-Obj] extends CacheHandler[Obj]
+object CacheDeleter {
+  def dummy[Obj]: CacheDeleter[Obj] = new CacheDeleter[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
+        implicit log: LoggingAdapter
+    ): Unit = ()
+  }
+}
+
+/**
+  * A [[CacheHandler]] for updates.
+  */
+trait CacheUpdater[-Obj] extends CacheHandler[Obj]
+object CacheUpdater {
+  def dummy[Obj]: CacheUpdater[Obj] = new CacheUpdater[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
+        implicit log: LoggingAdapter
+    ): Unit = ()
+  }
+}
+
+/**
+  * A handler that takes no action
+  */
+object NOOPHandler extends CacheHandler[Any] {
+  override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry)(
+      implicit log: LoggingAdapter
+  ): Unit = ()
 }

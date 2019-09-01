@@ -153,7 +153,7 @@ case class RequestHelper(
   ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
     flow[Data, Ctx](properties)
       .map {
-        case RequestResponse(data, ctx, _, _, _, _, _, _) =>
+        case RequestResponse(data, ctx, _, _, _) =>
           Some(data -> ctx)
         case request: FailedRequest[_] =>
           request.asException.printStackTrace()

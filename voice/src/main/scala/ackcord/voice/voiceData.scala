@@ -69,7 +69,6 @@ case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: Strin
   */
 case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
   override def op: VoiceOpCode                    = VoiceOpCode.Identify
-  override def dataEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
 }
 
 /**
@@ -93,7 +92,6 @@ case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionDa
   */
 case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
   override def op: VoiceOpCode                          = VoiceOpCode.SelectProtocol
-  override def dataEncoder: Encoder[SelectProtocolData] = Encoder[SelectProtocolData]
 }
 object SelectProtocol {
   def apply(
@@ -118,7 +116,6 @@ case class ReadyData(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval
   */
 case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
   override def op: VoiceOpCode                 = VoiceOpCode.Ready
-  override def dataEncoder: Encoder[ReadyData] = Encoder[ReadyData]
 }
 
 /**
@@ -127,7 +124,6 @@ case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
   */
 case class Heartbeat(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode           = VoiceOpCode.Heartbeat
-  override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
 /**
@@ -142,7 +138,6 @@ case class SessionDescriptionData(mode: String, secretKey: ByteString)
   */
 case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
   override def op: VoiceOpCode                              = VoiceOpCode.SessionDescription
-  override def dataEncoder: Encoder[SessionDescriptionData] = Encoder[SessionDescriptionData]
 }
 
 /**
@@ -160,7 +155,6 @@ case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOpt
   */
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode                    = VoiceOpCode.Speaking
-  override def dataEncoder: Encoder[SpeakingData] = Encoder[SpeakingData]
 }
 object Speaking {
   def apply(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId]): Speaking =
@@ -173,7 +167,6 @@ object Speaking {
   */
 case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode           = VoiceOpCode.HeartbeatACK
-  override def dataEncoder: Encoder[Int] = Encoder[Int]
 }
 
 /**
@@ -190,7 +183,6 @@ case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
   */
 case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
   override def op: VoiceOpCode                  = VoiceOpCode.Resume
-  override def dataEncoder: Encoder[ResumeData] = Encoder[ResumeData]
 }
 
 /**
@@ -199,7 +191,6 @@ case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
 case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode               = VoiceOpCode.Hello
   override def d: NotUsed                    = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
@@ -208,7 +199,6 @@ case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
 case object Resumed extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode               = VoiceOpCode.Resumed
   override def d: NotUsed                    = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
@@ -217,7 +207,6 @@ case object Resumed extends VoiceMessage[NotUsed] {
 case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode               = VoiceOpCode.Op12Ignore
   override def d: NotUsed                    = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**
@@ -226,7 +215,6 @@ case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode               = VoiceOpCode.ClientDisconnect
   override def d: NotUsed                    = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
 }
 
 /**

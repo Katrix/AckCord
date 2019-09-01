@@ -23,31 +23,25 @@
  */
 package ackcord
 
-import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder}
+import ackcord.cachehandlers.{
+  CacheDeleter,
+  CacheHandler,
+  CacheSnapshotBuilder,
+  CacheTypeRegistry,
+  CacheUpdater,
+  NOOPHandler
+}
 import akka.event.LoggingAdapter
 
 /**
   * Represents some sort of event handled by the cache
-  *
-  * @tparam Data The data it contains
   */
-sealed trait CacheUpdate[Data] {
+trait CacheEvent {
 
   /**
-    * The data to update
+    * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event.
     */
-  def data: Data
-
-  /**
-    * A handler for the data
-    */
-  def handler: CacheHandler[Data]
-
-  /**
-    * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] with the data in this object.
-    */
-  def handle(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
-    handler.handle(builder, data)
+  def process(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit
 }
 
 /**
@@ -56,18 +50,16 @@ sealed trait CacheUpdate[Data] {
   * @param sendEvent A function to gather the needed variables to send the
   *                  event.
   * @param handler The handler to process the data of this event with.
+  * @param registry The handler registry that the event will use to update the snapshot.
   * @tparam Data The data it contains.
   */
 case class APIMessageCacheUpdate[Data](
     data: Data,
     sendEvent: CacheState => Option[APIMessage],
-    handler: CacheHandler[Data]
-) extends CacheUpdate[Data]
+    handler: CacheHandler[Data],
+    registry: CacheTypeRegistry,
+) extends CacheEvent {
 
-/**
-  * Any other event that updates the cache with it's data.
-  * @param data The data.
-  * @param handler The handler to process the data of this event with.
-  * @tparam Data The data it contains.
-  */
-case class MiscCacheUpdate[Data](data: Data, handler: CacheHandler[Data]) extends CacheUpdate[Data]
+  override def process(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
+    handler.handle(builder, data, registry)
+}

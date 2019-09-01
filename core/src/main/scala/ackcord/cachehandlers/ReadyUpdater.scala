@@ -24,35 +24,20 @@
 package ackcord.cachehandlers
 
 import ackcord.CacheSnapshot.BotUser
-import ackcord.data._
+import ackcord.gateway.GatewayEvent.ReadyData
+import akka.event.LoggingAdapter
 import shapeless.tag
 
-trait Handlers {
-  import CacheUpdateHandler._
+//We handle this one separately as is it's kind of special
+object ReadyUpdater extends CacheUpdater[ReadyData] {
+  override def handle(builder: CacheSnapshotBuilder, obj: ReadyData, registry: CacheTypeRegistry)(
+      implicit log: LoggingAdapter
+  ): Unit = {
+    val ReadyData(_, botUser, unavailableGuilds, _, _) = obj
 
-  //Update
+    val guilds = unavailableGuilds.map(g => g.id -> g)
 
-  implicit val userUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
-    builder.userMap.put(obj.id, obj)
-  }
-
-  val botUserUpdateHandler: CacheUpdateHandler[User] = updateHandler { (builder, obj, _) =>
-    builder.botUser = tag[BotUser](obj)
-  }
-
-  implicit val voiceStateUpdateHandler: CacheUpdateHandler[VoiceState] = updateHandler { (builder, obj, log) =>
-    val optGuild = obj.guildId
-      .toRight("Can't handle VoiceState update with missing guild")
-      .right
-      .flatMap(builder.getGuild(_).toRight(s"No guild found for voice state $obj"))
-
-    optGuild match {
-      case Right(guild) =>
-        val newVoiceStates =
-          obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
-        builder.guildMap.put(guild.id, guild.copy(voiceStates = newVoiceStates))
-      case Left(e) => log.warning(e)
-    }
+    builder.botUser = tag[BotUser](botUser)
+    builder.unavailableGuildMap ++= guilds
   }
 }
-object Handlers extends Handlers

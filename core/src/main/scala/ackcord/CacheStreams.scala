@@ -39,13 +39,13 @@ object CacheStreams {
   /**
     * Creates a set of publish subscribe streams that go through the cache updated.
     */
-  def cacheStreams[D](
+  def cacheStreams(
       implicit system: ActorSystem,
       mat: Materializer
-  ): (Sink[CacheUpdate[D], NotUsed], Source[(CacheUpdate[D], CacheState), NotUsed]) = {
+  ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     MergeHub
-      .source[CacheUpdate[D]](perProducerBufferSize = 16)
-      .via(cacheUpdater[D])
+      .source[CacheEvent](perProducerBufferSize = 16)
+      .via(cacheUpdater)
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
       .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
       .run()
@@ -68,10 +68,10 @@ object CacheStreams {
   /**
     * A flow that creates [[APIMessage]]s from update events.
     */
-  def createApiMessages[D]: Flow[(CacheUpdate[D], CacheState), APIMessage, NotUsed] = {
-    Flow[(CacheUpdate[D], CacheState)]
+  def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
+    Flow[(CacheEvent, CacheState)]
       .collect {
-        case (APIMessageCacheUpdate(_, sendEvent, _), state) => sendEvent(state)
+        case (APIMessageCacheUpdate(_, sendEvent, _, _), state) => sendEvent(state)
       }
       .mapConcat(_.toList)
   }
@@ -80,8 +80,8 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
-  def cacheUpdater[D](implicit system: ActorSystem): Flow[CacheUpdate[D], (CacheUpdate[D], CacheState), NotUsed] =
-    Flow[CacheUpdate[D]].statefulMapConcat { () =>
+  def cacheUpdater(implicit system: ActorSystem): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+    Flow[CacheEvent].statefulMapConcat { () =>
       var state: CacheState            = null
       implicit val log: LoggingAdapter = system.log
 
@@ -89,7 +89,7 @@ object CacheStreams {
       def isReady: Boolean = state != null
 
       {
-        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _) =>
+        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _, _) =>
           val builder = new CacheSnapshotBuilder(
             null, //The event will populate this,
             mutable.Map.empty,
@@ -102,14 +102,14 @@ object CacheStreams {
             mutable.Map.empty
           )
 
-          readyEvent.handle(builder)
+          readyEvent.process(builder)
 
           val snapshot = builder.toImmutable
           state = CacheState(snapshot, snapshot)
           List(readyEvent -> state)
-        case handlerEvent: CacheUpdate[_] if isReady =>
+        case handlerEvent: CacheEvent if isReady =>
           val builder = CacheSnapshotBuilder(state.current)
-          handlerEvent.handle(builder)
+          handlerEvent.process(builder)
 
           state = state.update(builder.toImmutable)
           List(handlerEvent -> state)

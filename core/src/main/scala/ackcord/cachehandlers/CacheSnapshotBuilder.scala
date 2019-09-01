@@ -67,13 +67,13 @@ class CacheSnapshotBuilder(
     )
   }
   override def getChannelMessages(channelId: ChannelId): mutable.Map[SnowflakeType[Message], Message] =
-    messageMap.getOrElse(channelId, mutable.Map.empty)
+    messageMap.getOrElseUpdate(channelId, mutable.Map.empty)
 
   override def getChannelLastTyped(channelId: ChannelId): mutable.Map[SnowflakeType[User], Instant] =
-    lastTypedMap.getOrElse(channelId, mutable.Map.empty)
+    lastTypedMap.getOrElseUpdate(channelId, mutable.Map.empty)
 
   override def getGuildBans(id: GuildId): mutable.Map[SnowflakeType[User], Ban] =
-    banMap.getOrElse(id, mutable.Map.empty)
+    banMap.getOrElseUpdate(id, mutable.Map.empty)
 }
 object CacheSnapshotBuilder {
   def apply(snapshot: MemoryCacheSnapshot): CacheSnapshotBuilder = {

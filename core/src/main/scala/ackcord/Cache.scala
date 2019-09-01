@@ -38,8 +38,8 @@ import akka.stream.scaladsl.{Sink, Source}
   * @param subscribe A source to subscribe to. All updates are pushed here.
   */
 case class Cache(
-    publish: Sink[CacheUpdate[Any], NotUsed],
-    subscribe: Source[(CacheUpdate[Any], CacheState), NotUsed],
+    publish: Sink[CacheEvent, NotUsed],
+    subscribe: Source[(CacheEvent, CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
     gatewaySubscribe: Source[GatewayMessage[Any], NotUsed]
 )(implicit val mat: Materializer) {
@@ -47,17 +47,17 @@ case class Cache(
   /**
     * Publish a single element to this cache.
     */
-  def publish(elem: CacheUpdate[Any]): Unit = publish.runWith(Source.single(elem))
+  def publish(elem: CacheEvent): Unit = publish.runWith(Source.single(elem))
 
   /**
     * Publish many elements to this cache.
     */
-  def publishMany(it: immutable.Iterable[CacheUpdate[Any]]): Unit = publish.runWith(Source(it))
+  def publishMany(it: immutable.Iterable[CacheEvent]): Unit = publish.runWith(Source(it))
 
   /**
     * A source used to subscribe to [[APIMessage]]s sent to this cache.
     */
-  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages[Any])
+  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages)
 
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
@@ -85,7 +85,7 @@ object Cache {
     * Creates a cache for a bot. This should be shared for the whole bot.
     */
   def create(implicit system: ActorSystem, mat: Materializer): Cache = {
-    val (publish, subscribe)               = CacheStreams.cacheStreams[Any]
+    val (publish, subscribe)               = CacheStreams.cacheStreams
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
     Cache(publish, subscribe, gatewayPublish, gatewaySubscribe)
   }

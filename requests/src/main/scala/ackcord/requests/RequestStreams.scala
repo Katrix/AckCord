@@ -241,9 +241,6 @@ object RequestStreams {
             val route = request.route
             response match {
               case Success(httpResponse) =>
-                println(s"After send: ${request.identifier} ${System.currentTimeMillis()}")
-                println(httpResponse.headers.mkString("\n"))
-
                 val tilReset     = timeTilReset(relativeTime, httpResponse)
                 val tilRatelimit = remainingRequests(httpResponse)
                 val bucketLimit  = requestsForUri(httpResponse)

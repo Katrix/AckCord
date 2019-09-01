@@ -27,8 +27,9 @@ import ackcord.requests.RequestHelper
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.{CacheSnapshot, RequestRunner}
 import cats.~>
-
 import scala.concurrent.ExecutionContext
+
+import akka.NotUsed
 
 /**
   * The base command controller that you will place your commands in.
@@ -48,13 +49,13 @@ abstract class CommandController(val requests: RequestHelper) {
     * The base command builder that you can build off if you don't like the
     * default provided builder.
     */
-  val baseCommandBuilder: CommandBuilder[CommandMessage, List[String]] = CommandBuilder.rawBuilder(requests)
+  val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] = CommandBuilder.rawBuilder(requests)
 
   /**
     * The default command builder you will use to create most of your commands.
     * By default blocks bots from using the commands.
     */
-  val Command: CommandBuilder[UserCommandMessage, List[String]] =
+  val Command: CommandBuilder[UserCommandMessage, NotUsed] =
     baseCommandBuilder.andThen(CommandBuilder.nonBot { user =>
       λ[CommandMessage ~> UserCommandMessage](m => UserCommandMessage.Default(user, m))
     })
@@ -63,7 +64,7 @@ abstract class CommandController(val requests: RequestHelper) {
     * Another default command builder for you to use. Can only be used in
     * guilds, and includes the guild, guild channel and user of the command.
     */
-  val GuildCommand: CommandBuilder[GuildMemberCommandMessage, List[String]] =
+  val GuildCommand: CommandBuilder[GuildMemberCommandMessage, NotUsed] =
     Command
       .andThen(CommandBuilder.onlyInGuild { (chG, g) =>
         λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
@@ -77,7 +78,7 @@ abstract class CommandController(val requests: RequestHelper) {
   /**
     * A command builder that only accepts users that are in a voice channel.
     */
-  val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, List[String]] =
+  val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildCommand.andThen(CommandBuilder.inVoiceChannel { vCh =>
       λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](
         m => VoiceGuildCommandMessage.WithGuildMember(m.tChannel, m.guild, m.user, m.guildMember, vCh, m)
