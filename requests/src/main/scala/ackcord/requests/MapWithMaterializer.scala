@@ -23,7 +23,10 @@
  */
 package ackcord.requests
 
+import scala.util.control.NonFatal
+
 import akka.NotUsed
+import akka.stream.ActorAttributes.SupervisionStrategy
 import akka.stream._
 import akka.stream.scaladsl.Flow
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
@@ -35,7 +38,19 @@ class MapWithMaterializer[In, Out](f: Materializer => In => Out) extends GraphSt
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) with InHandler with OutHandler {
-      override def onPush(): Unit = push(out, f(materializer)(grab(in)))
+      private def decider =
+        inheritedAttributes.mandatoryAttribute[SupervisionStrategy].decider
+
+      override def onPush(): Unit =
+        try {
+          push(out, f(materializer)(grab(in)))
+        } catch {
+          case NonFatal(e) =>
+            decider(e) match {
+              case Supervision.Stop => failStage(e)
+              case _                => pull(in)
+            }
+        }
       override def onPull(): Unit = pull(in)
 
       setHandlers(in, out, this)
