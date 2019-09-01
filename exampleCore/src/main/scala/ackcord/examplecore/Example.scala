@@ -90,7 +90,12 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
   implicit val system: ActorSystem = context.system
   import context.dispatcher
 
-  val requests: RequestHelper = RequestHelper.create(BotAuthentication(settings.token), relativeTime = true)
+  val requests: RequestHelper =
+    RequestHelper.create(
+      BotAuthentication(settings.token),
+      millisecondPrecision = false, //My system is pretty bad at syncing stuff up, so I need to be very generous when it comes to ratelimits
+      relativeTime = true
+    )
 
   val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
     import GenericCommands._

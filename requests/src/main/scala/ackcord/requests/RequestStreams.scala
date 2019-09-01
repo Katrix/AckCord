@@ -70,8 +70,8 @@ object RequestStreams {
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
 
-  private def requestBucket(response: HttpResponse): String =
-    findCustomHeader(`X-RateLimit-Bucket`, response).map(_.identifier).get //Should always be present
+  private def requestBucket(route: RequestRoute, response: HttpResponse): String =
+    findCustomHeader(`X-RateLimit-Bucket`, response).fold(route.uriWithoutMajor)(_.identifier) //Sadly this is not always present
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
@@ -244,7 +244,7 @@ object RequestStreams {
                 val tilReset     = timeTilReset(relativeTime, httpResponse)
                 val tilRatelimit = remainingRequests(httpResponse)
                 val bucketLimit  = requestsForUri(httpResponse)
-                val bucket       = requestBucket(httpResponse)
+                val bucket       = requestBucket(route, httpResponse)
 
                 val ratelimitInfo = RatelimitInfo(
                   tilReset,
