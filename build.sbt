@@ -183,7 +183,7 @@ lazy val lavaplayerCore = project
     version := ackCordVersion,
     //Workaround for https://github.com/sbt/sbt/issues/4479
     resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.17",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.20",
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
   .dependsOn(core, voice)
