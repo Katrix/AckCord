@@ -65,8 +65,6 @@ class DiscordShard(
     with Timers {
   import DiscordShard._
 
-  context.system
-
   private var gatewayHandler =
     context.actorOf(
       GatewayHandlerCache
@@ -107,7 +105,8 @@ class DiscordShard(
 
     case CreateGateway =>
       gatewayHandler = context.actorOf(
-        GatewayHandlerCache.props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+        GatewayHandlerCache
+          .props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
         "GatewayHandler"
       )
       gatewayHandler ! GatewayLogin
@@ -119,10 +118,21 @@ class DiscordShard(
 }
 object DiscordShard extends FailFastCirceSupport {
 
-  def props(wsUri: Uri, settings: GatewaySettings, cache: Cache): Props =
-    Props(new DiscordShard(wsUri, settings, cache))
+  def props(
+      wsUri: Uri,
+      settings: GatewaySettings,
+      cache: Cache,
+      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
+  ): Props =
+    Props(new DiscordShard(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry))
 
-  def props(wsUri: Uri, token: String, cache: Cache): Props = props(wsUri, GatewaySettings(token), cache)
+  @deprecated("Prefer the method that takes GatewaySettings", since = "0.15.0")
+  def props(
+      wsUri: Uri,
+      token: String,
+      cache: Cache
+  ): Props = props(wsUri, GatewaySettings(token), cache)
 
   /**
     * Create a shard actor given the needed arguments.
@@ -130,8 +140,14 @@ object DiscordShard extends FailFastCirceSupport {
     * @param token The bot token to use for authentication.
     * @param system The actor system to use for creating the client actor.
     */
-  def connect(wsUri: Uri, token: String, cache: Cache, actorName: String)(implicit system: ActorSystem): ActorRef =
-    system.actorOf(props(wsUri, token, cache), actorName)
+  @deprecated("Prefer the method that takes GatewaySettings", since = "0.15.0")
+  def connect(
+      wsUri: Uri,
+      token: String,
+      cache: Cache,
+      actorName: String
+  )(implicit system: ActorSystem): ActorRef =
+    system.actorOf(props(wsUri, GatewaySettings(token), cache), actorName)
 
   /**
     * Create a shard actor given the needed arguments.
@@ -139,9 +155,16 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use.
     * @param system The actor system to use for creating the client actor.
     */
-  def connect(wsUri: Uri, settings: GatewaySettings, cache: Cache, actorName: String)(
+  def connect(
+      wsUri: Uri,
+      settings: GatewaySettings,
+      cache: Cache,
+      actorName: String,
+      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
+  )(
       implicit system: ActorSystem
-  ): ActorRef = system.actorOf(props(wsUri, settings, cache), actorName)
+  ): ActorRef = system.actorOf(props(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry), actorName)
 
   /**
     * Create as multiple shard actors, given the needed arguments.
@@ -150,10 +173,25 @@ object DiscordShard extends FailFastCirceSupport {
     * @param settings The settings to use.
     * @param system The actor system to use for creating the client actor.
     */
-  def connectMultiple(wsUri: Uri, shardTotal: Int, settings: GatewaySettings, cache: Cache, actorName: String)(
+  def connectMultiple(
+      wsUri: Uri,
+      shardTotal: Int,
+      settings: GatewaySettings,
+      cache: Cache,
+      actorName: String,
+      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
+  )(
       implicit system: ActorSystem
   ): Seq[ActorRef] = for (i <- 0 until shardTotal) yield {
-    connect(wsUri, settings.copy(shardTotal = shardTotal, shardNum = i), cache, s"$actorName$i")
+    connect(
+      wsUri,
+      settings.copy(shardTotal = shardTotal, shardNum = i),
+      cache,
+      s"$actorName$i",
+      ignoredEvents,
+      cacheTypeRegistry
+    )
   }
 
   /**

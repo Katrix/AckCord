@@ -58,31 +58,42 @@ class CacheTypeRegistry(
 }
 object CacheTypeRegistry {
 
-  val allUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
+  private val noPresencesBansEmojiUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
     classOf[PartialUser]      -> CacheHandlers.partialUserUpdater,
     classOf[Guild]            -> CacheHandlers.guildUpdater,
-    classOf[Presence]         -> CacheUpdater.dummy[Presence],
     classOf[GuildMember]      -> CacheHandlers.guildMemberUpdater,
     classOf[GuildChannel]     -> CacheHandlers.guildChannelUpdater,
     classOf[DMChannel]        -> CacheHandlers.dmChannelUpdater,
     classOf[GroupDMChannel]   -> CacheHandlers.dmGroupChannelUpdater,
     classOf[User]             -> CacheHandlers.userUpdater,
     classOf[UnavailableGuild] -> CacheHandlers.unavailableGuildUpdater,
-    classOf[Ban]              -> CacheUpdater.dummy[Ban],
-    classOf[Emoji]            -> CacheUpdater.dummy[Emoji],
     classOf[Message]          -> CacheHandlers.messageUpdater,
     classOf[Role]             -> CacheHandlers.roleUpdater
   )
 
-  val allDeleters: Map[Class[_], CacheDeleter[_]] = Map(
+  private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(
+    classOf[Ban]   -> CacheUpdater.dummy[Ban],
+    classOf[Emoji] -> CacheUpdater.dummy[Emoji],
+  )
+
+  private val allUpdaters: Map[Class[_], CacheUpdater[_]] =
+    noPresencesUpdaters + (classOf[Presence] -> CacheUpdater.dummy[Presence])
+
+  private val noBanDeleters: Map[Class[_], CacheDeleter[_]] = Map(
     classOf[GuildChannel]   -> CacheHandlers.guildChannelDeleter,
     classOf[DMChannel]      -> CacheHandlers.dmChannelDeleter,
     classOf[GroupDMChannel] -> CacheHandlers.groupDmChannelDeleter,
-    classOf[Ban]            -> CacheDeleter.dummy[Ban],
     classOf[GuildMember]    -> CacheHandlers.guildMemberDeleter,
     classOf[Role]           -> CacheHandlers.roleDeleter,
     classOf[Message]        -> CacheHandlers.messageDeleter
   )
 
+  private val allDeleters: Map[Class[_], CacheDeleter[_]] = noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban])
+
   def default(log: LoggingAdapter) = new CacheTypeRegistry(allUpdaters, allDeleters, log)
+
+  def noPresences(log: LoggingAdapter) = new CacheTypeRegistry(noPresencesUpdaters, allDeleters, log)
+
+  def noPresencesBansEmoji(log: LoggingAdapter) =
+    new CacheTypeRegistry(noPresencesBansEmojiUpdaters, noBanDeleters, log)
 }

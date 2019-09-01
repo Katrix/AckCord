@@ -27,9 +27,11 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 import ackcord._
+import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
 import ackcord.examplecore.ExampleMain.NewCommandsEntry
 import ackcord.examplecore.music.MusicHandler
+import ackcord.gateway.GatewayEvent
 import ackcord.gateway.GatewaySettings
 import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
@@ -75,13 +77,35 @@ object Example {
     val token = args.head
 
     val settings = GatewaySettings(token = token)
-    DiscordShard.fetchWsGateway.map(DiscordShard.connect(_, settings, cache, "DiscordShard")).onComplete {
-      case Success(shardActor) =>
-        system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
-      case Failure(e) =>
-        println("Could not connect to Discord")
-        throw e
-    }
+    DiscordShard.fetchWsGateway
+      .map(
+        DiscordShard.connect(
+          _,
+          settings,
+          cache,
+          "DiscordShard",
+          //We can set some gateway events here that we want AckCord to completely
+          //ignore. For anything listed here, the JSON will never be deserialized,
+          //and it will be like as if they weren't sent.
+          ignoredEvents = Seq(
+            classOf[GatewayEvent.PresenceUpdate],
+            classOf[GatewayEvent.TypingStart]
+          ),
+          //In addition to setting events that will be ignored, we can also
+          //set data types that we don't want the cache to deal with.
+          //This will for the most part help us save RAM.
+          //This will for example kick in the GuildCreate event, which includes
+          //presences.
+          cacheTypeRegistry = CacheTypeRegistry.noPresences
+        )
+      )
+      .onComplete {
+        case Success(shardActor) =>
+          system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
+        case Failure(e) =>
+          println("Could not connect to Discord")
+          throw e
+      }
   }
 }
 

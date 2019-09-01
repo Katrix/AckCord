@@ -523,12 +523,13 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, topObj: UserWithGuildId, registry: CacheTypeRegistry)(
         implicit log: LoggingAdapter
     ): Unit = {
-      if (registry.hasDeleter[Ban]) {
-        val UserWithGuildId(guildId, user) = topObj
-        builder.banMap.get(guildId).foreach(_.remove(user.id))
+      val UserWithGuildId(guildId, user) = topObj
 
-        registry.updateData(builder)(user)
+      if (registry.hasDeleter[Ban]) {
+        builder.banMap.get(guildId).foreach(_.remove(user.id))
       }
+
+      registry.updateData(builder)(user)
     }
   }
 
