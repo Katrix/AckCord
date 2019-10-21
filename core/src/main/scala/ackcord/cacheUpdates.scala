@@ -24,12 +24,9 @@
 package ackcord
 
 import ackcord.cachehandlers.{
-  CacheDeleter,
   CacheHandler,
   CacheSnapshotBuilder,
   CacheTypeRegistry,
-  CacheUpdater,
-  NOOPHandler
 }
 import akka.event.LoggingAdapter
 

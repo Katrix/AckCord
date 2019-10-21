@@ -65,9 +65,10 @@ object CmdFilter {
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
       msg.channelId.resolve.exists {
-        case _: GuildChannel   => context == Context.Guild
-        case _: DMChannel      => context == Context.DM
-        case _: GroupDMChannel => context == Context.DM //We consider group DMs to be DMs
+        case _: GuildChannel       => context == Context.Guild
+        case _: DMChannel          => context == Context.DM
+        case _: GroupDMChannel     => context == Context.DM //We consider group DMs to be DMs
+        case _: UnsupportedChannel => false
       }
 
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =

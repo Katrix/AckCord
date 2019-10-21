@@ -85,14 +85,7 @@ class ClientSettings(
   def createClientWithMaterializer()(implicit mat: ActorMaterializer): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem = system
 
-    val requests = RequestHelper.create(
-      BotAuthentication(token),
-      requestSettings.parallelism,
-      requestSettings.bufferSize,
-      requestSettings.maxRetryCount,
-      requestSettings.overflowStrategy,
-      requestSettings.maxAllowedWait
-    )
+    val requests = requestSettings.toRequests(token)
     val cache    = Cache.create
     val commands = CoreCommands.create(commandSettings, cache, requests)
 
@@ -109,14 +102,7 @@ class ClientSettings(
     implicit val actorSystem: ActorSystem = system
     implicit val mat: ActorMaterializer   = ActorMaterializer()
 
-    val requests = RequestHelper.create(
-      BotAuthentication(token),
-      requestSettings.parallelism,
-      requestSettings.bufferSize,
-      requestSettings.maxRetryCount,
-      requestSettings.overflowStrategy,
-      requestSettings.maxAllowedWait
-    )
+    val requests = requestSettings.toRequests(token)
     val cache    = Cache.create
     val commands = CoreCommands.create(commandSettings, cache, requests)
 
@@ -184,9 +170,23 @@ object ClientSettings {
   * @param maxAllowedWait The max allowed wait time before giving up on a request.
   */
 case class RequestSettings(
+    millisecondPrecision: Boolean = true,
+    relativeTime: Boolean = false,
     parallelism: Int = 4,
     bufferSize: Int = 32,
     maxRetryCount: Int = 3,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
-)
+) {
+
+  def toRequests(token: String)(implicit system: ActorSystem, mat: ActorMaterializer): RequestHelper = RequestHelper.create(
+    BotAuthentication(token),
+    millisecondPrecision,
+    relativeTime,
+    parallelism,
+    maxRetryCount,
+    bufferSize,
+    overflowStrategy,
+    maxAllowedWait
+  )
+}

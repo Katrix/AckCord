@@ -27,11 +27,9 @@ import scala.collection.immutable
 
 import ackcord.data._
 import ackcord.util.{JsonOption, JsonUndefined}
-import ackcord.voice.VoiceWsProtocol._
 import akka.NotUsed
 import akka.util.ByteString
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
-import io.circe.{Encoder, Json}
 
 /**
   * Messages sent to the voice websocket.
