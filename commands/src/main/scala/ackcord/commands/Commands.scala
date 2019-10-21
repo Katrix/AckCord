@@ -26,7 +26,7 @@ package ackcord.commands
 import scala.concurrent.Future
 
 import ackcord.CacheSnapshot
-import ackcord.requests.RequestHelper
+import ackcord.requests.{RequestHelper, SupervisionStreams}
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
 
@@ -79,10 +79,14 @@ case class Commands(
   def subscribe[Mat, Mat2](
       factory: BaseCmdFactory[Mat]
   )(combine: (Future[Done], Mat) => Mat2): Mat2 =
-    subscribeCmd(factory.refiner)
-      .via(CmdHelper.addErrorHandlingUnparsed(requests))
-      .watchTermination()(Keep.right)
-      .toMat(factory.sink(requests))(combine)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        subscribeCmd(factory.refiner)
+          .via(CmdHelper.addErrorHandlingUnparsed(requests))
+          .watchTermination()(Keep.right)
+          .toMat(factory.sink(requests))(combine)
+          .addAttributes
+      )
       .run()
 
   /**
@@ -91,9 +95,13 @@ case class Commands(
   def subscribe[A, Mat, Mat2](
       factory: ParsedCmdFactory[A, Mat]
   )(combine: (Future[Done], Mat) => Mat2): Mat2 =
-    subscribeCmdParsed(factory.refiner)(factory.parser)
-      .via(CmdHelper.addErrorHandlingParsed(requests))
-      .watchTermination()(Keep.right)
-      .toMat(factory.sink(requests))(combine)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        subscribeCmdParsed(factory.refiner)(factory.parser)
+          .via(CmdHelper.addErrorHandlingParsed(requests))
+          .watchTermination()(Keep.right)
+          .toMat(factory.sink(requests))(combine)
+          .addAttributes
+      )
       .run()
 }

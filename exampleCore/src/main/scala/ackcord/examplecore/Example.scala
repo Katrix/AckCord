@@ -37,29 +37,16 @@ import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
 import akka.{Done, NotUsed}
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, CoordinatedShutdown, Props, Status, Terminated}
-import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
 import akka.pattern.ask
 import akka.pattern.gracefulStop
-import akka.stream.{ActorAttributes, KillSwitches, SharedKillSwitch, Supervision}
+import akka.stream.{KillSwitches, SharedKillSwitch}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 
 object Example {
 
-  val streamLogger = Logger("StreamLogger")
-
-  val loggingDecider: Supervision.Decider = { e =>
-    streamLogger.error("Unhandled exception in stream", e)
-    Supervision.Resume
-  }
-
-
   implicit val system: ActorSystem = ActorSystem("AckCord")
-
-  //TODO
-  ActorAttributes.supervisionStrategy(loggingDecider)
-
   import system.dispatcher
 
   def main(args: Array[String]): Unit = {
@@ -157,7 +144,11 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
         controller.timeDiff,
         newcommands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
       ),
-      NewCommandsEntry(controller.ping, newcommands.CommandDescription("Ping", "Checks if the bot is alive"))
+      NewCommandsEntry(controller.ping, newcommands.CommandDescription("Ping", "Checks if the bot is alive")),
+      NewCommandsEntry(
+        controller.maybeFail,
+        newcommands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
+      )
     )
   }
 

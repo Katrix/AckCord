@@ -3,6 +3,7 @@ package ackcord.examplecore
 import java.time.temporal.ChronoUnit
 
 import scala.concurrent.Future
+import scala.util.Random
 
 import ackcord._
 import ackcord.syntax._
@@ -82,4 +83,12 @@ class NewCommandsController(requests: RequestHelper) extends CommandController(r
         _ <- requests.singleFuture(m.tChannel.sendMessage(s"$time ms between command and response"))
       } yield ()
     }
+
+  val maybeFail: NamedCommand[NotUsed] = Command.named("%", Seq("maybeFail"), mustMention = true).withRequest { r =>
+    if(Random.nextInt(100) < 25) {
+      throw new Exception("Failed")
+    }
+
+    r.tChannel.sendMessage("Succeeded")
+  }
 }

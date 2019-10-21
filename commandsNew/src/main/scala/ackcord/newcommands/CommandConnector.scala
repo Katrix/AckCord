@@ -25,14 +25,13 @@ package ackcord.newcommands
 
 import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
-import ackcord.requests.RequestHelper
+import ackcord.requests.{RequestHelper, SupervisionStreams}
 import ackcord.syntax._
 import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
 import akka.{Done, NotUsed}
 import cats.syntax.all._
 import cats.instances.future._
-
 import scala.concurrent.Future
 
 /**
@@ -126,28 +125,32 @@ class CommandConnector(
           }.toList
       }
 
-    Source.fromGraph(GraphDSL.create(command.flow.watchTermination()(Keep.both)) { implicit b => thatFlow =>
-      import GraphDSL.Implicits._
+    import requests.system
+    Source.fromGraph(
+      GraphDSL.create(SupervisionStreams.logAndContinue(command.flow).watchTermination()(Keep.both)) {
+        implicit b => thatFlow =>
+          import GraphDSL.Implicits._
 
-      val selfSource = b.add(commandMessageSource)
+          val selfSource = b.add(commandMessageSource)
 
-      val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
-        case Left(_)  => 0
-        case Right(_) => 1
-      }))
-      val selfErr = selfPartition.out(0).map(_.left.get)
-      val selfOut = selfPartition.out(1).map(_.right.get)
+          val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }))
+          val selfErr = selfPartition.out(0).map(_.left.get)
+          val selfOut = selfPartition.out(1).map(_.right.get)
 
-      val resMerge = b.add(Merge[CommandError](2))
+          val resMerge = b.add(Merge[CommandError](2))
 
-      // format: OFF
-      selfSource ~> selfPartition
-                    selfOut       ~> thatFlow ~> resMerge
-                    selfErr       ~>             resMerge
-      // format: ON
+          // format: OFF
+          selfSource ~> selfPartition
+                        selfOut ~> thatFlow ~> resMerge
+                        selfErr ~>             resMerge
+          // format: ON
 
-      SourceShape(resMerge.out)
-    })
+          SourceShape(resMerge.out)
+      }
+    )
   }
 
   /**
@@ -174,13 +177,18 @@ class CommandConnector(
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] =
-    newCommandWithErrors(prefix, command)
-      .map {
-        case CommandError(error, channel, _) =>
-          channel.sendMessage(error)
-      }
-      .to(requests.sinkIgnore)
+  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] = {
+    import requests.system
+    SupervisionStreams.addLogAndContinueFunction(
+      newCommandWithErrors(prefix, command)
+        .map {
+          case CommandError(error, channel, _) =>
+            channel.sendMessage(error)
+        }
+        .to(requests.sinkIgnore)
+        .addAttributes
+    )
+  }
 
   /**
     * Creates a [[RunnableGraph]] for a named command.

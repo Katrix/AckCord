@@ -201,6 +201,7 @@ lazy val exampleCore = project
     noPublishSettings,
     name := "exampleCore",
     version := "1.0",
+    mainClass := Some("ackcord.examplecore.Example"),
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )

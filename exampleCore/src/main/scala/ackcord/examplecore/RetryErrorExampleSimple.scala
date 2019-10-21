@@ -27,7 +27,7 @@ import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, MergePreferred, Partition, Source}
 import akka.stream.FlowShape
 
-object RetryErrorExampleSimple extends App {
+object RetryErrorExampleSimple /*extends App*/ {
 
   def retryProcessSimple(maxRetryCount: Int = 3) = {
     type Res = Either[(String, Int), Int]

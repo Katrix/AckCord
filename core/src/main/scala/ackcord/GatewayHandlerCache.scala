@@ -27,6 +27,7 @@ import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
 import ackcord.data.{ChannelId, GuildId, TChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
+import ackcord.requests.SupervisionStreams
 import ackcord.syntax._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
@@ -50,11 +51,13 @@ object GatewayHandlerCache {
       system: ActorSystem
   ): Props = {
     val configSettings = AckCordGatewaySettings()(system)
-    val sink = Flow[Dispatch[_]]
-      .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
-      .mapConcat(dispatch => eventToCacheUpdate(dispatch.event, registry, log, configSettings).toList)
-      .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
-      .to(cache.publish)
+    val sink = SupervisionStreams.logAndContinue(
+      Flow[Dispatch[_]]
+        .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
+        .mapConcat(dispatch => eventToCacheUpdate(dispatch.event, registry, log, configSettings).toList)
+        .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
+        .to(cache.publish)
+    )(system)
 
     Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink))
   }
