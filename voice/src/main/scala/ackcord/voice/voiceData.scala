@@ -104,10 +104,11 @@ object SelectProtocol {
   * Data of [[Ready]]
   * @param ssrc Our ssrc
   * @param port The port to connect to
+  * @param ip The address to send voice data to
   * @param modes The supported modes
   * @param heartbeatInterval Faulty heartbeat interval, should be ignored
   */
-case class ReadyData(ssrc: Int, port: Int, modes: Seq[String], heartbeatInterval: Int)
+case class ReadyData(ssrc: Int, port: Int, ip: String, modes: Seq[String], heartbeatInterval: Int)
 
 /**
   * Sent by Discord following [[Identify]]

@@ -305,7 +305,7 @@ class VoiceWsHandler(
     * Handles all websocket messages received
     */
   def handleWsMessages: Receive = {
-    case Right(Ready(ReadyData(readySsrc, port, _, _))) =>
+    case Right(Ready(ReadyData(readySsrc, port, address, _, _))) =>
       log.debug("Received ready")
       ssrc = readySsrc
       secretKeyPromise = Promise[ByteString]
