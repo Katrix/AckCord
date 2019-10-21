@@ -54,3 +54,8 @@ class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, id
   * @param uri The Uri for the request.
   */
 class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
+
+/**
+  * An exception thrown when parsing JSON if something goes wrong.
+  */
+class HttpJsonDecodeException(message: String) extends Exception(message)

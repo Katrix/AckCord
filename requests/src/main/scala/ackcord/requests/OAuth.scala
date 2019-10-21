@@ -34,13 +34,12 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.model.{FormData, HttpMethods, HttpRequest, Uri}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
+import akka.stream.scaladsl.{Sink, Source}
 import io.circe._
 import io.circe.syntax._
 
-object OAuth extends FailFastCirceSupport {
+object OAuth {
 
   sealed abstract class Scope(val name: String)
   object Scope {
@@ -190,7 +189,8 @@ object OAuth extends FailFastCirceSupport {
 
     Http()
       .singleRequest(request)
-      .flatMap(Unmarshal(_).to[AccessToken])
+      .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
+      .map(_.as[AccessToken].fold(throw _, identity))
   }
 
   def tokenExchange(
@@ -235,7 +235,8 @@ object OAuth extends FailFastCirceSupport {
 
     Http()
       .singleRequest(request)
-      .flatMap(Unmarshal(_).to[ClientAccessToken])
+      .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
+      .map(_.as[ClientAccessToken].fold(throw _, identity))
   }
 
   case class ApplicationInformation(

@@ -29,10 +29,9 @@ import ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompre
 import ackcord.gateway.{GatewayHandler, _}
 import akka.NotUsed
 import akka.actor.{Actor, ActorRef, ActorSystem, Props, Stash}
-import akka.http.scaladsl.coding.Deflate
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.model.{HttpResponse, Uri}
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Sink, Source}
+import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream.{FlowShape, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import io.circe.{Encoder, parser}
@@ -108,9 +107,12 @@ class MockedGateway(sendMessagesTo: ActorRef) extends Actor with Stash {
       unstashAll()
       sendMessagesTo ! HasSetClient
     case send @ SendMessage(msg) if client != null =>
+      val strData = send.encoder(msg).noSpaces
+      val data    = ByteString.fromString(strData)
+
       val payload =
-        if (useCompression) BinaryMessage(Deflate.encode(ByteString.fromString(send.encoder(msg).noSpaces)))
-        else TextMessage(send.encoder(msg).noSpaces)
+        if (useCompression) BinaryMessage(Source.single(data).via(Compression.deflate))
+        else TextMessage(strData)
 
       client ! payload
     case SendMessage(_) => stash()

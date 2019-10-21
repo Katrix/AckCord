@@ -32,9 +32,7 @@ import ackcord.util.AckCordRequestSettings
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
 import io.circe._
 
 /**
@@ -51,11 +49,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
   override def parseResponse(
       parallelism: Int
   )(implicit system: ActorSystem): Flow[ResponseEntity, RawResponse, NotUsed] = {
-    val baseFlow = MapWithMaterializer
-      .flow { implicit mat => responseEntity: ResponseEntity =>
-        Unmarshal(responseEntity).to[Json]
-      }
-      .mapAsyncUnordered(parallelism)(identity)
+    val baseFlow = RequestStreams.jsonDecode
 
     val withLogging =
       if (AckCordRequestSettings().LogReceivedREST)
@@ -128,7 +122,7 @@ trait RESTRequest[Params, RawResponse, NiceResponse, Ctx] extends BaseRESTReques
     */
   def paramsEncoder: Encoder[Params]
 
-  override def bodyForLogging: Option[String] = Some(jsonPrinter.pretty(jsonParams))
+  override def bodyForLogging: Option[String] = Some(jsonPrinter.print(jsonParams))
 
   /**
     * The params of this request converted to json.
@@ -139,7 +133,7 @@ trait RESTRequest[Params, RawResponse, NiceResponse, Ctx] extends BaseRESTReques
 
   def requestBody: RequestEntity =
     if (params == NotUsed) HttpEntity.Empty
-    else HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter))
+    else HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
 }
 
 /**

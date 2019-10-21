@@ -33,13 +33,13 @@ import ackcord.util.AckCordRequestSettings
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{HttpEntity, HttpRequest, HttpResponse, StatusCodes}
-import akka.http.scaladsl.unmarshalling.Unmarshaller
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, ResponseEntity, StatusCodes}
 import akka.pattern.{AskTimeoutException, ask}
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
+import io.circe.Json
 
 object RequestStreams {
 
@@ -284,14 +284,6 @@ object RequestStreams {
                     Source
                       .single(HttpEntity.Empty)
                       .via(request.parseResponse(breadth))
-                      .recover {
-                        case Unmarshaller.NoContentException =>
-                          //Rethrow so that we get a stack trace
-                          throw new HttpException(
-                            StatusCodes.NoContent,
-                            Some(s"Encountered NoContentException when trying to parse an ${request.getClass}")
-                          )
-                      }
                       .map { data =>
                         RequestResponse(
                           data,
@@ -446,5 +438,27 @@ object RequestStreams {
 
   def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] = Flow[A].flatMapConcat { a =>
     Source.single(a).via(inner)
+  }
+
+  def bytestringFromResponse: Flow[ResponseEntity, ByteString, NotUsed] =
+    Flow[ResponseEntity].flatMapConcat(_.dataBytes.fold(ByteString.empty)(_ ++ _))
+
+  def jsonDecode: Flow[ResponseEntity, Json, NotUsed] = {
+    Flow[ResponseEntity]
+      .map { entity =>
+        val isValid = entity.contentType == ContentTypes.NoContentType || entity.contentType == ContentTypes.`application/json`
+
+        if (isValid) {
+          entity
+        } else {
+          throw new HttpJsonDecodeException("Invalid content type for json")
+        }
+      }
+      .via(bytestringFromResponse)
+      .map {
+        case ByteString.empty => throw new HttpJsonDecodeException("No data for json decode")
+        case bytes            => io.circe.jawn.parseByteBuffer(bytes.asByteBuffer)
+      }
+      .map(_.fold(throw _, identity))
   }
 }

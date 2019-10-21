@@ -1,13 +1,12 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion          = "2.5.23"
-lazy val akkaHttpVersion      = "10.1.8"
-lazy val circeVersion         = "0.11.1"
-lazy val akkaHttpCirceVersion = "1.25.2"
-lazy val ackCordVersion       = "0.14.0"
+lazy val akkaVersion     = "2.5.26"
+lazy val akkaHttpVersion = "10.1.10"
+lazy val circeVersion    = "0.12.1"
+lazy val ackCordVersion  = "0.14.0"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.12.10",
   crossScalaVersions := Seq(scalaVersion.value, "2.11.12"),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
@@ -64,11 +63,11 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.11.0-M1"
+      "io.circe" %%% "circe-derivation"     % "0.12.0-M3"
     ),
     libraryDependencies ++= Seq(
       "com.beachape" %%% "enumeratum"       % "1.5.13",
-      "com.beachape" %%% "enumeratum-circe" % "1.5.21"
+      "com.beachape" %%% "enumeratum-circe" % "1.5.22"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -88,8 +87,6 @@ lazy val requests = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
-    libraryDependencies += "com.typesafe.akka" %% "akka-http"       % akkaHttpVersion, //Need to add this because of akka-http-circe
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
   .dependsOn(dataJVM)
@@ -106,7 +103,6 @@ lazy val gateway = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe" % akkaHttpCirceVersion,
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
   .dependsOn(dataJVM)
@@ -123,7 +119,6 @@ lazy val voice = project
       "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
-    libraryDependencies += "de.heikoseeberger" %% "akka-http-circe"     % akkaHttpCirceVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern")
   )
@@ -135,7 +130,7 @@ lazy val commands = project
     publishSettings,
     name := "commands",
     version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.5.0",
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.0",
     description := "ackCord-commands provides the basic code used for commands in AckCord"
   )
   .dependsOn(requests)
@@ -146,7 +141,7 @@ lazy val commandsNew = project
     publishSettings,
     name := "commands-new",
     version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.5.0",
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.0",
     description := "ackCord-commands-new is an experiment to for better commands in AckCord"
   )
   .dependsOn(requests)
@@ -159,7 +154,7 @@ lazy val core = project
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.0.7"     % Test
+      "org.scalatest"     %% "scalatest"    % "3.0.8"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -183,7 +178,7 @@ lazy val lavaplayerCore = project
     version := ackCordVersion,
     //Workaround for https://github.com/sbt/sbt/issues/4479
     resolvers += MavenRepository(Resolver.JCenterRepositoryName, Resolver.JCenterRepositoryRoot + "net/.."),
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.20",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.22",
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
   .dependsOn(core, voice)

@@ -28,7 +28,6 @@ import ackcord.data._
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
-import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 
@@ -61,14 +60,8 @@ trait ImageRequest[Ctx] extends Request[ByteString, Ctx] {
 
   override def parseResponse(
       parallelism: Int
-  )(implicit system: ActorSystem): Flow[ResponseEntity, ByteString, NotUsed] = {
-    MapWithMaterializer
-      .flow { implicit mat => response: ResponseEntity =>
-        import mat.executionContext
-        Unmarshal(response).to[ByteString]
-      }
-      .mapAsyncUnordered(parallelism)(identity)
-  }
+  )(implicit system: ActorSystem): Flow[ResponseEntity, ByteString, NotUsed] =
+    RequestStreams.bytestringFromResponse
 
   override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 }

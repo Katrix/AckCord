@@ -29,18 +29,15 @@ import scala.util.{Failure, Success}
 
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.gateway.ComplexGatewayEvent
-import ackcord.requests.Routes
+import ackcord.requests.{RequestStreams, Routes}
 import akka.Done
 import akka.actor._
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
-import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.{Materializer, ThrottleMode}
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.Json
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -116,7 +113,7 @@ class DiscordShard(
       gatewayHandler.forward(GatewayLogout)
   }
 }
-object DiscordShard extends FailFastCirceSupport {
+object DiscordShard {
 
   def props(
       wsUri: Uri,
@@ -233,7 +230,8 @@ object DiscordShard extends FailFastCirceSupport {
     http
       .singleRequest(HttpRequest(uri = Routes.gateway.applied))
       .flatMap {
-        case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
+        case HttpResponse(StatusCodes.OK, _, entity, _) =>
+          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
         case HttpResponse(code, headers, entity, _) =>
           entity.discardBytes()
           Future.failed(
@@ -266,7 +264,8 @@ object DiscordShard extends FailFastCirceSupport {
     http
       .singleRequest(HttpRequest(uri = Routes.botGateway.applied, headers = List(auth)))
       .flatMap {
-        case HttpResponse(StatusCodes.OK, _, entity, _) => Unmarshal(entity).to[Json]
+        case HttpResponse(StatusCodes.OK, _, entity, _) =>
+          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
         case HttpResponse(code, headers, entity, _) =>
           entity.discardBytes()
           Future.failed(

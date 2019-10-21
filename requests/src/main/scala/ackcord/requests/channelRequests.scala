@@ -249,7 +249,10 @@ case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, c
         }
 
         val jsonPart =
-          FormData.BodyPart("payload_json", HttpEntity(ContentTypes.`application/json`, jsonParams.pretty(jsonPrinter)))
+          FormData.BodyPart(
+            "payload_json",
+            HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+          )
 
         FormData(fileParts :+ jsonPart: _*).toEntity()
       case _ => super.requestBody
