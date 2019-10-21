@@ -102,7 +102,7 @@ class CommandConnector(
     val commandMessageSource = messages
       .mapAsync(requests.parallelism) {
         case t @ (message, cache) =>
-          import requests.mat.executionContext
+          import requests.system.dispatcher
           prefix(cache, message).tupleLeft(t)
       }
       .mapConcat {
@@ -205,7 +205,7 @@ class CommandConnector(
     *         a future signaling when the command is done running.
     */
   def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): (Mat, Future[Done]) = {
-    import requests.mat
+    import requests.system
     newCommand(prefix, command).run()
   }
 

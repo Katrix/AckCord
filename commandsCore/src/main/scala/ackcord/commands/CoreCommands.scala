@@ -39,7 +39,7 @@ object CoreCommands {
       cache: Cache,
       requests: RequestHelper
   ): Commands = {
-    import requests.mat
+    import requests.system
     Commands(CmdStreams.cmdStreams(settings, cache.subscribeAPI)._2, requests)
   }
 
@@ -54,7 +54,7 @@ object CoreCommands {
       apiMessages: Source[APIMessage, A],
       requests: RequestHelper
   ): (A, Commands) = {
-    import requests.mat
+    import requests.system
     val (materialized, streams) = CmdStreams.cmdStreams(settings, apiMessages)
     materialized -> Commands(streams, requests)
   }

@@ -31,7 +31,7 @@ import ackcord.requests.RequestHelper.RequestProperties
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import akka.{Done, NotUsed}
 
 /**
@@ -60,7 +60,7 @@ case class RequestHelper(
     bufferSize: Int = 32,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
-)(implicit val system: ActorSystem, val mat: Materializer) {
+)(implicit val system: ActorSystem) {
 
   private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any, Ctx], Future[Done]] = Sink.foreach {
     case _: RequestResponse[_, _] =>
@@ -244,7 +244,7 @@ object RequestHelper {
       bufferSize: Int = 32,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes
-  )(implicit system: ActorSystem, mat: Materializer): RequestHelper =
+  )(implicit system: ActorSystem): RequestHelper =
     new RequestHelper(
       credentials,
       system.actorOf(Ratelimiter.props),

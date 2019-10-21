@@ -57,7 +57,6 @@ import scala.util.control.NonFatal
   * @param sendTo The actor to send all [[AudioAPIMessage]]s to unless noted otherwise
   * @param soundProducer A source which will produce the sound to send.
   * @param soundConsumer A sink which will consume [[AudioAPIMessage.ReceivedData]].
-  * @param mat The [[https://doc.akka.io/api/akka/current/akka/stream/Materializer.html Materializer]] to use
   */
 class VoiceWsHandler(
     address: String,
@@ -68,8 +67,7 @@ class VoiceWsHandler(
     sendTo: Option[ActorRef],
     soundProducer: Source[ByteString, NotUsed],
     soundConsumer: Sink[AudioAPIMessage.ReceivedData, NotUsed]
-)(implicit val mat: Materializer)
-    extends Actor
+) extends Actor
     with Timers
     with ActorLogging {
 
@@ -160,11 +158,12 @@ class VoiceWsHandler(
       val src = Source.queue[VoiceMessage[_]](64, OverflowStrategy.fail).named("GatewayQueue")
 
       val sink = Sink
-        .actorRefWithAck[Either[Error, VoiceMessage[_]]](
+        .actorRefWithBackpressure[Either[Error, VoiceMessage[_]]](
           ref = self,
           onInitMessage = InitSink,
           ackMessage = AckSink,
-          onCompleteMessage = CompletedSink
+          onCompleteMessage = CompletedSink,
+          onFailureMessage = Status.Failure
         )
         .named("GatewaySink")
 
@@ -336,7 +335,7 @@ class VoiceWsHandler(
 
     case Right(Hello(heartbeatInterval)) =>
       self ! SendHeartbeat
-      timers.startPeriodicTimer(heartbeatTimerKey, SendHeartbeat, (heartbeatInterval * 0.75).toInt.millis)
+      timers.startTimerAtFixedRate(heartbeatTimerKey, SendHeartbeat, (heartbeatInterval * 0.75).toInt.millis)
       receivedAck = true
       previousNonce = None
 
@@ -387,7 +386,7 @@ object VoiceWsHandler {
       sendTo: Option[ActorRef],
       soundProducer: Source[ByteString, NotUsed],
       soundConsumer: Sink[AudioAPIMessage, NotUsed]
-  )(implicit mat: Materializer): Props =
+  ): Props =
     Props(new VoiceWsHandler(address, serverId, userId, sessionId, token, sendTo, soundProducer, soundConsumer))
 
   private case object InitSink

@@ -234,8 +234,7 @@ object RequestStreams {
       relativeTime: Boolean,
       breadth: Int
   )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
-    MapWithMaterializer
-      .flow[(Try[HttpResponse], Request[Data, Ctx]), Source[RequestAnswer[Data, Ctx], NotUsed]] { implicit mat =>
+    Flow[(Try[HttpResponse], Request[Data, Ctx])].map[Source[RequestAnswer[Data, Ctx], NotUsed]] {
         {
           case (response, request) =>
             val route = request.route

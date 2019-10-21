@@ -25,7 +25,7 @@ package ackcord.examplecore
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, GraphDSL, MergePreferred, Partition, Source}
-import akka.stream.{ActorMaterializer, FlowShape}
+import akka.stream.FlowShape
 
 object RetryErrorExampleSimple extends App {
 
@@ -75,7 +75,6 @@ object RetryErrorExampleSimple extends App {
   }
 
   implicit val system = ActorSystem()
-  implicit val mat    = ActorMaterializer()
 
   val data       = Source(List(1, 2, 3))
   val nonWorking = data.flatMapMerge(3, req => Source.single(req).via(retryProcessSimple()))

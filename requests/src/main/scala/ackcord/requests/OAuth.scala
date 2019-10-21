@@ -34,7 +34,6 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.model.{FormData, HttpMethods, HttpRequest, Uri}
-import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 import io.circe._
 import io.circe.syntax._
@@ -166,8 +165,7 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem,
-      mat: Materializer
+      implicit system: ActorSystem
   ): Future[AccessToken] = {
     import system.dispatcher
     val baseFormData = Map(
@@ -201,8 +199,7 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem,
-      mat: Materializer
+      implicit system: ActorSystem
   ): Future[AccessToken] = baseExchange(clientId, clientSecret, grantType, Some(code), None, redirectUri, scopes)
 
   def refreshTokenExchange(
@@ -213,14 +210,12 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem,
-      mat: Materializer
+      implicit system: ActorSystem
   ): Future[AccessToken] =
     baseExchange(clientId, clientSecret, grantType, None, Some(refreshToken), redirectUri, scopes)
 
   def clientCredentialsGrant(clientId: String, clientSecret: String, scopes: Seq[Scope])(
-      implicit system: ActorSystem,
-      mat: Materializer
+      implicit system: ActorSystem
   ): Future[ClientAccessToken] = {
     import system.dispatcher
     val formData =

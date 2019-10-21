@@ -95,8 +95,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
         push(out, response)
 
         receivedAck = true
-        onTimer(HeartbeatTimerKey)
-        schedulePeriodically(HeartbeatTimerKey, data.heartbeatInterval.millis)
+        scheduleAtFixedRate(HeartbeatTimerKey, 0.millis, data.heartbeatInterval.millis)
       }
 
       override def onPush(): Unit = {
@@ -169,13 +168,13 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
-      override def onDownstreamFinish(): Unit =
+      override def onDownstreamFinish(cause: Throwable): Unit =
         if (!restarting) {
           if (!promise.isCompleted) {
             promise.success(Option(resume))
           }
 
-          super.onDownstreamFinish()
+          super.onDownstreamFinish(cause)
         }
 
       setHandler(out, this)

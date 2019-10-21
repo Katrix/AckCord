@@ -32,8 +32,7 @@ import ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
 import akka.actor.ActorSystem
-import akka.event.slf4j.Logger
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, OverflowStrategy, Supervision}
+import akka.stream.OverflowStrategy
 
 /**
   * Settings used when connecting to Discord.
@@ -69,20 +68,6 @@ class ClientSettings(
     * Create a [[DiscordClient]] from these settings.
     */
   def createClient(): Future[DiscordClient] = {
-    val streamLogger = Logger("StreamLogger")
-    implicit val mat: ActorMaterializer =
-      ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy { e: Throwable =>
-        streamLogger.error("Error in stream", e)
-        Supervision.Resume
-      })(system)
-
-    createClientWithMaterializer()
-  }
-
-  /**
-    * Create a [[DiscordClient]] from these settings and a custom materializer.
-    */
-  def createClientWithMaterializer()(implicit mat: ActorMaterializer): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem = system
 
     val requests = requestSettings.toRequests(token)
@@ -100,7 +85,6 @@ class ClientSettings(
     */
   def createClientAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem = system
-    implicit val mat: ActorMaterializer   = ActorMaterializer()
 
     val requests = requestSettings.toRequests(token)
     val cache    = Cache.create
@@ -179,7 +163,7 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 ) {
 
-  def toRequests(token: String)(implicit system: ActorSystem, mat: ActorMaterializer): RequestHelper =
+  def toRequests(token: String)(implicit system: ActorSystem): RequestHelper =
     RequestHelper.create(
       BotAuthentication(token),
       millisecondPrecision,

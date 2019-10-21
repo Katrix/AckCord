@@ -28,7 +28,6 @@ import scala.collection.immutable
 import ackcord.gateway.GatewayMessage
 import akka.NotUsed
 import akka.actor.{ActorRef, ActorSystem, Status}
-import akka.stream.Materializer
 import akka.stream.scaladsl.{Sink, Source}
 
 /**
@@ -42,7 +41,7 @@ case class Cache(
     subscribe: Source[(CacheEvent, CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
     gatewaySubscribe: Source[GatewayMessage[Any], NotUsed]
-)(implicit val mat: Materializer) {
+)(implicit system: ActorSystem) {
 
   /**
     * Publish a single element to this cache.
@@ -62,8 +61,12 @@ case class Cache(
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
     */
-  def subscribeAPIActor(actor: ActorRef, completeMessage: Any)(specificEvent: Class[_ <: APIMessage]*): Unit =
-    subscribeAPI.filter(msg => specificEvent.exists(_.isInstance(msg))).runWith(Sink.actorRef(actor, completeMessage))
+  def subscribeAPIActor(actor: ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
+      specificEvent: Class[_ <: APIMessage]*
+  ): Unit =
+    subscribeAPI
+      .filter(msg => specificEvent.exists(_.isInstance(msg)))
+      .runWith(Sink.actorRef(actor, completeMessage, onFailureMessage))
 
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]].
@@ -77,14 +80,14 @@ case class Cache(
   )(specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
-      .runWith(Sink.actorRefWithAck(actor, initMessage, ackMessage, completeMessage, failureMessage))
+      .runWith(Sink.actorRefWithBackpressure(actor, initMessage, ackMessage, completeMessage, failureMessage))
 }
 object Cache {
 
   /**
     * Creates a cache for a bot. This should be shared for the whole bot.
     */
-  def create(implicit system: ActorSystem, mat: Materializer): Cache = {
+  def create(implicit system: ActorSystem): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
     Cache(publish, subscribe, gatewayPublish, gatewaySubscribe)

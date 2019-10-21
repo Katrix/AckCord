@@ -51,9 +51,9 @@ import akka.util.ByteString
 class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, useBursting: Boolean = true)
     extends FSM[MusicState, StateData]
     with ActorLogging {
-  import cache.mat
+  import context.system
 
-  cache.subscribeAPIActor(self, DiscordShard.StopShard)(
+  cache.subscribeAPIActor(self, DiscordShard.StopShard, Status.Failure)(
     classOf[APIMessage.VoiceServerUpdate],
     classOf[APIMessage.VoiceStateUpdate]
   )

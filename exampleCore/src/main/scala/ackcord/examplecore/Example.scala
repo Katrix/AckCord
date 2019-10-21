@@ -36,19 +36,12 @@ import ackcord.gateway.GatewaySettings
 import ackcord.requests.{BotAuthentication, RequestHelper}
 import ackcord.util.GuildRouter
 import akka.{Done, NotUsed}
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, CoordinatedShutdown, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, CoordinatedShutdown, Props, Status, Terminated}
 import akka.event.slf4j.Logger
 import akka.stream.scaladsl.Keep
 import akka.pattern.ask
 import akka.pattern.gracefulStop
-import akka.stream.{
-  ActorMaterializer,
-  ActorMaterializerSettings,
-  KillSwitches,
-  Materializer,
-  SharedKillSwitch,
-  Supervision
-}
+import akka.stream.{ActorAttributes, KillSwitches, SharedKillSwitch, Supervision}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 
@@ -61,10 +54,12 @@ object Example {
     Supervision.Resume
   }
 
+
   implicit val system: ActorSystem = ActorSystem("AckCord")
-  implicit val mat: Materializer = ActorMaterializer(
-    ActorMaterializerSettings(system).withSupervisionStrategy(loggingDecider)
-  )
+
+  //TODO
+  ActorAttributes.supervisionStrategy(loggingDecider)
+
   import system.dispatcher
 
   def main(args: Array[String]): Unit = {
@@ -110,7 +105,6 @@ object Example {
 }
 
 class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
-  import cache.mat
   implicit val system: ActorSystem = context.system
   import context.dispatcher
 
@@ -223,7 +217,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
 
-  cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard)(classOf[APIMessage.Ready])
+  cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard, Status.Failure)(classOf[APIMessage.Ready])
   shard ! DiscordShard.StartShard
 
   private var shutdownCount        = 0

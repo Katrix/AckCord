@@ -40,7 +40,7 @@ case class Commands(
     subscribeRaw: Source[RawCmdMessage, NotUsed],
     requests: RequestHelper
 ) {
-  import requests.mat
+  import requests.system
 
   /**
     * Subscribe to a specific command using a refiner.

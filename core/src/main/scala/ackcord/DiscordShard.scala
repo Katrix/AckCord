@@ -37,7 +37,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.stream.scaladsl.{Sink, Source}
-import akka.stream.{Materializer, ThrottleMode}
+import akka.stream.ThrottleMode
 
 /**
   * The core actor that controls all the other used actors of AckCord
@@ -195,7 +195,7 @@ object DiscordShard {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(shards: Seq[ActorRef])(implicit mat: Materializer): Future[Done] =
+  def startShards(shards: Seq[ActorRef])(implicit system: ActorSystem): Future[Done] =
     Source(shards.toIndexedSeq)
       .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
       .runForeach(shard => shard ! StartShard)
@@ -220,10 +220,9 @@ object DiscordShard {
   /**
     * Fetch the websocket gateway.
     * @param system The actor system to use.
-    * @param mat The materializer to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGateway(implicit system: ActorSystem, mat: Materializer): Future[Uri] = {
+  def fetchWsGateway(implicit system: ActorSystem): Future[Uri] = {
     import system.dispatcher
     val http = Http()
 
@@ -253,10 +252,9 @@ object DiscordShard {
   /**
     * Fetch the websocket gateway with information about how many shards should be used.
     * @param system The actor system to use.
-    * @param mat The materializer to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem, mat: Materializer): Future[(Uri, Int)] = {
+  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem): Future[(Uri, Int)] = {
     import system.dispatcher
     val http = Http()
     val auth = Authorization(BotAuthentication(token))

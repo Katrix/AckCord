@@ -56,7 +56,6 @@ class MusicHandler(
     with ActorLogging {
   import MusicHandler._
   import context.dispatcher
-  import requests.mat
   implicit val system: ActorSystem = context.system
 
   private val msgQueue =

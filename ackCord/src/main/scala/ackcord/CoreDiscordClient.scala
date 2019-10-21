@@ -36,7 +36,7 @@ import akka.{Done, NotUsed}
 
 case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper)
     extends DiscordClient {
-  import cache.mat
+  import requests.system
 
   override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
     val (killSwitch, newCommands) = CoreCommands.create(

@@ -32,17 +32,14 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.LoggingAdapter
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
-import akka.stream.{ActorAttributes, Materializer, Supervision}
+import akka.stream.{ActorAttributes, Supervision}
 
 object CacheStreams {
 
   /**
     * Creates a set of publish subscribe streams that go through the cache updated.
     */
-  def cacheStreams(
-      implicit system: ActorSystem,
-      mat: Materializer
-  ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
+  def cacheStreams(implicit system: ActorSystem): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     MergeHub
       .source[CacheEvent](perProducerBufferSize = 16)
       .via(cacheUpdater)
@@ -54,10 +51,7 @@ object CacheStreams {
   /**
     * Creates a set of publish subscribe streams for gateway events.
     */
-  def gatewayEvents[D](
-      implicit
-      mat: Materializer
-  ): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) = {
+  def gatewayEvents[D](implicit system: ActorSystem): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) = {
     MergeHub
       .source[GatewayMessage[D]](perProducerBufferSize = 16)
       .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)

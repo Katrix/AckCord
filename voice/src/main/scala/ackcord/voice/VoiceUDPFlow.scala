@@ -36,7 +36,7 @@ object VoiceUDPFlow {
     val ipDiscoveryPacket = ByteString(ssrc).padTo(70, 0.toByte)
 
     val valvePromise = Promise[Unit]
-    val valve        = Source.fromFuture(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]
+    val valve        = Source.future(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]
 
     val ipDiscoveryFlow = Flow[ByteString]
       .viaMat(new IPDiscoveryFlow(() => valvePromise.success(())))(Keep.right)

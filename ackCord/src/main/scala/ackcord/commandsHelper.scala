@@ -62,7 +62,7 @@ trait CommandsHelper {
       handler: RawCmd => G[Unit]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
-    import req.mat
+    import req.system
     commands.subscribeRaw
       .collectType[RawCmd]
       .flatMapConcat(handler.andThen(streamable.toSource))
@@ -80,7 +80,7 @@ trait CommandsHelper {
       handler: RawCommandHandler[G]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
-    import req.mat
+    import req.system
     commands.subscribeRaw
       .collect {
         case cmd: RawCmd => handler.handle(cmd)(cmd.c)

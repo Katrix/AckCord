@@ -79,7 +79,7 @@ trait DiscordClient extends CommandsHelper {
     */
   def login(): Future[Done] = {
     val req = requests
-    import req.mat
+    import req.system
 
     require(shardShutdownManager == null, "Already logged in")
     shardShutdownManager = req.system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")

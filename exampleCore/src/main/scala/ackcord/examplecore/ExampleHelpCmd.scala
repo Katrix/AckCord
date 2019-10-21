@@ -29,7 +29,7 @@ import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}
 import ackcord.MemoryCacheSnapshot
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props, Status}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 
@@ -37,7 +37,6 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
 
   implicit val system: ActorSystem = context.system
   import context.dispatcher
-  import requests.mat
 
   private val msgQueue =
     Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
@@ -117,7 +116,9 @@ object ExampleHelpCmd {
 object ExampleHelpCmdFactory {
   def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
     refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
-    sink = _ => Sink.actorRefWithAck(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill),
+    sink = _ =>
+      Sink
+        .actorRefWithBackpressure(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill, Status.Failure),
     description = Some(
       CmdDescription(
         name = "Help",

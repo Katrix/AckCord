@@ -49,8 +49,6 @@ object GatewayHandlerCache {
       log: LoggingAdapter,
       system: ActorSystem
   ): Props = {
-    import cache.mat
-
     val configSettings = AckCordGatewaySettings()(system)
     val sink = Flow[Dispatch[_]]
       .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))

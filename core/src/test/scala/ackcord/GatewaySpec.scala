@@ -36,7 +36,7 @@ import akka.stream.{FlowShape, Materializer, OverflowStrategy}
 import akka.util.ByteString
 import io.circe.{Encoder, parser}
 
-class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)(implicit mat: Materializer)
+class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)
     extends GatewayHandler(
       Uri./,
       settings,
@@ -91,7 +91,7 @@ class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)(implici
   }
 }
 object MockedGatewayHandler {
-  def props(settings: GatewaySettings, gateway: ActorRef)(implicit mat: Materializer): Props =
+  def props(settings: GatewaySettings, gateway: ActorRef): Props =
     Props(new MockedGatewayHandler(settings, gateway))
 }
 

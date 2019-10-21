@@ -51,7 +51,7 @@ class UdpConnectedFlow(
           disconnect()
         }
 
-      override def onDownstreamFinish(): Unit =
+      override def onDownstreamFinish(cause: Throwable): Unit =
         if (socket != null && !hasSentDisconnect) {
           sendDisconnect()
         }
