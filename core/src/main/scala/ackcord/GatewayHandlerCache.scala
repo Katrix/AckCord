@@ -85,6 +85,7 @@ object GatewayHandlerCache {
       }
 
     event.data.value match {
+      case Right(_: gatewayEv.IgnoredEvent) => None
       case Right(_) =>
         val res = event match {
           case gatewayEv.Ready(_, GetLazy(data)) =>
