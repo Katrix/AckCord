@@ -23,11 +23,7 @@
  */
 package ackcord
 
-import ackcord.cachehandlers.{
-  CacheHandler,
-  CacheSnapshotBuilder,
-  CacheTypeRegistry,
-}
+import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder, CacheTypeRegistry}
 import akka.event.LoggingAdapter
 
 /**

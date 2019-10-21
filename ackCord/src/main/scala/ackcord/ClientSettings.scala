@@ -179,14 +179,15 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 ) {
 
-  def toRequests(token: String)(implicit system: ActorSystem, mat: ActorMaterializer): RequestHelper = RequestHelper.create(
-    BotAuthentication(token),
-    millisecondPrecision,
-    relativeTime,
-    parallelism,
-    maxRetryCount,
-    bufferSize,
-    overflowStrategy,
-    maxAllowedWait
-  )
+  def toRequests(token: String)(implicit system: ActorSystem, mat: ActorMaterializer): RequestHelper =
+    RequestHelper.create(
+      BotAuthentication(token),
+      millisecondPrecision,
+      relativeTime,
+      parallelism,
+      maxRetryCount,
+      bufferSize,
+      overflowStrategy,
+      maxAllowedWait
+    )
 }
