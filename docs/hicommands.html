@@ -8,10 +8,9 @@
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.NotUsed</span>
 <span class="k">import</span> <span class="nn">ackcord._</span>
-<span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
 <span class="k">import</span> <span class="nn">ackcord.commands._</span>
-<span class="k">import</span> <span class="nn">cats.Monad</span>
+<span class="k">import</span> <span class="nn">cats.Id</span>
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
 <span class="k">val</span> <span class="nc">GeneralCommands</span> <span class="k">=</span> <span class="s">"!"</span>
 <span class="c1">// IMPORTANT: We specify needsMention = true here. This is the default option.
@@ -28,11 +27,11 @@
 
 <p>When you register a parsed command, you also pass in a refiner and a description for the command.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">registerParsedCommand</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">](</span><span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">registerParsedCommand</span><span class="o">(</span><span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
   <span class="n">commands</span><span class="o">.</span><span class="n">registerCmd</span><span class="o">[</span><span class="kt">NotUsed</span>, <span class="kt">Id</span><span class="o">](</span>
-  	<span class="n">refiner</span> <span class="k">=</span> <span class="nc">CmdInfo</span><span class="o">[</span><span class="kt">F</span><span class="o">](</span><span class="n">prefix</span> <span class="k">=</span> <span class="nc">GeneralCommands</span><span class="o">,</span> <span class="n">aliases</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="s">"ping"</span><span class="o">),</span> <span class="n">filters</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">NonBot</span><span class="o">,</span> <span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">InGuild</span><span class="o">)),</span>
+  	<span class="n">refiner</span> <span class="k">=</span> <span class="nc">CmdInfo</span><span class="o">(</span><span class="n">prefix</span> <span class="k">=</span> <span class="nc">GeneralCommands</span><span class="o">,</span> <span class="n">aliases</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="s">"ping"</span><span class="o">),</span> <span class="n">filters</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">NonBot</span><span class="o">,</span> <span class="nc">CmdFilter</span><span class="o">.</span><span class="nc">InGuild</span><span class="o">)),</span>
     <span class="n">description</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="nc">CmdDescription</span><span class="o">(</span><span class="s">"Ping"</span><span class="o">,</span> <span class="s">"Check if the bot is alive"</span><span class="o">))</span>
-  <span class="o">)</span> <span class="o">{</span> <span class="n">cmd</span><span class="k">:</span> <span class="kt">ParsedCmd</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=&gt;</span>
+  <span class="o">)</span> <span class="o">{</span> <span class="n">cmd</span><span class="k">:</span> <span class="kt">ParsedCmd</span><span class="o">[</span><span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=&gt;</span>
     <span class="n">println</span><span class="o">(</span><span class="n">s</span><span class="s">"Received ping command"</span><span class="o">)</span>
   <span class="o">}</span>
 <span class="o">}</span>
@@ -43,17 +42,17 @@
 </code></pre>
 </div>
 
-<p>Notice the type <code class="highlighter-rouge">CommandsHelper[F]</code> there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other <code class="highlighter-rouge">CommandsHelper[F]</code>. Let’s see how, in addition to see how raw commands are done.</p>
+<p>Notice the type <code class="highlighter-rouge">CommandsHelper</code> there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other <code class="highlighter-rouge">CommandsHelper</code>. Let’s see how, in addition to see how raw commands are done.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="nc">TestCommands</span> <span class="k">=</span> <span class="s">"?"</span>
 <span class="c1">// TestCommands: String = "?"
-</span><span class="k">def</span> <span class="n">registerRawCommand</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">](</span><span class="n">client</span><span class="k">:</span> <span class="kt">DiscordClient</span><span class="o">[</span><span class="kt">F</span><span class="o">],</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+</span><span class="k">def</span> <span class="n">registerRawCommand</span><span class="o">(</span><span class="n">client</span><span class="k">:</span> <span class="kt">DiscordClient</span><span class="o">,</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">CommandsHelper</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
   <span class="n">commands</span><span class="o">.</span><span class="n">onRawCmd</span> <span class="o">{</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">withCache</span><span class="o">[</span><span class="kt">SourceRequest</span>, <span class="kt">RawCmd</span><span class="o">[</span><span class="kt">F</span><span class="o">]]</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">withCache</span><span class="o">[</span><span class="kt">SourceRequest</span>, <span class="kt">RawCmd</span><span class="o">]</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
         <span class="k">case</span> <span class="nc">RawCmd</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="nc">TestCommands</span><span class="o">,</span> <span class="s">"echo"</span><span class="o">,</span> <span class="n">args</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
           <span class="k">import</span> <span class="nn">client.sourceRequesterRunner._</span>
           <span class="k">for</span> <span class="o">{</span>
-            <span class="n">channel</span> <span class="k">&lt;-</span> <span class="n">liftOptionT</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span>
+            <span class="n">channel</span> <span class="k">&lt;-</span> <span class="n">optionPure</span><span class="o">(</span><span class="n">message</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">)</span>
             <span class="k">_</span>       <span class="k">&lt;-</span> <span class="n">run</span><span class="o">(</span><span class="n">channel</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="n">s</span><span class="s">"ECHO: ${args.mkString("</span> <span class="s">")}"</span><span class="o">))</span>
           <span class="o">}</span> <span class="k">yield</span> <span class="o">()</span>
         <span class="k">case</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="n">client</span><span class="o">.</span><span class="n">sourceRequesterRunner</span><span class="o">.</span><span class="n">unit</span>
@@ -75,10 +74,10 @@
 
 <h2 id="access-to-the-low-level-api">Access to the low level API</h2>
 
-<p>Accessing the low level API from the high level commands API is as simple as getting the <code class="highlighter-rouge">Commands[F]</code> instance that is backing the <code class="highlighter-rouge">CommandsHelper[F]</code> instance is as simple as calling the <code class="highlighter-rouge">commands</code> method on a <code class="highlighter-rouge">CommandsHelper[F]</code>.</p>
+<p>Accessing the low level API from the high level commands API is as simple as getting the <code class="highlighter-rouge">Commands</code> instance that is backing the <code class="highlighter-rouge">CommandsHelper</code> instance is as simple as calling the <code class="highlighter-rouge">commands</code> method on a <code class="highlighter-rouge">CommandsHelper</code>.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="k">val</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">Commands</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">commands</span>
+  <span class="k">val</span> <span class="n">commands</span><span class="k">:</span> <span class="kt">Commands</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">commands</span>
 <span class="o">}</span>
 </code></pre>
 </div>

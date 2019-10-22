@@ -8,14 +8,11 @@
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
 <span class="k">import</span> <span class="nn">ackcord.commands._</span>
-<span class="k">import</span> <span class="nn">cats.Monad</span>
 <span class="k">import</span> <span class="nn">akka.NotUsed</span>
 <span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
-<span class="k">import</span> <span class="nn">akka.stream.</span><span class="o">{</span><span class="nc">ActorMaterializer</span><span class="o">,</span> <span class="nc">Materializer</span><span class="o">}</span>
-<span class="k">import</span> <span class="nn">akka.stream.scaladsl.</span><span class="o">{</span><span class="nc">Flow</span><span class="o">,</span> <span class="nc">Keep</span><span class="o">}</span>
+<span class="k">import</span> <span class="nn">akka.stream.scaladsl.</span><span class="o">{</span><span class="nc">Source</span><span class="o">,</span> <span class="nc">Flow</span><span class="o">,</span> <span class="nc">Keep</span><span class="o">}</span>
 
 <span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span>  <span class="o">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">"AckCord"</span><span class="o">)</span>
-<span class="k">implicit</span> <span class="k">val</span> <span class="n">mat</span><span class="k">:</span> <span class="kt">Materializer</span> <span class="o">=</span> <span class="nc">ActorMaterializer</span><span class="o">()</span>
 <span class="k">import</span> <span class="nn">system.dispatcher</span>
 
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
@@ -35,16 +32,16 @@
 <p>Just like the job of the <code class="highlighter-rouge">Cache</code> object is to keep track of the current events and state of the application, it’s the job of the <code class="highlighter-rouge">Commands</code> object to keep track of the current commands in the application. To get a <code class="highlighter-rouge">Commands</code> instance, call <code class="highlighter-rouge">CoreCommands.create</code>. From there you have access to a source of raw commands that can be materialized as many times as needed.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="nc">GeneralCommands</span> <span class="k">=</span> <span class="s">"!"</span>
-<span class="k">val</span> <span class="n">commands</span> <span class="k">=</span> <span class="nc">CoreCommands</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">CommandSettings</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">prefixes</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">(</span><span class="nc">GeneralCommands</span><span class="o">),</span> <span class="n">needsMention</span> <span class="k">=</span> <span class="kc">true</span><span class="o">),</span> <span class="n">cache</span><span class="o">,</span> <span class="n">requests</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">commands</span> <span class="k">=</span> <span class="nc">CoreCommands</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">CommandSettings</span><span class="o">(</span><span class="n">prefixes</span> <span class="k">=</span> <span class="nc">Set</span><span class="o">(</span><span class="nc">GeneralCommands</span><span class="o">),</span> <span class="n">needsMention</span> <span class="k">=</span> <span class="kc">true</span><span class="o">),</span> <span class="n">cache</span><span class="o">,</span> <span class="n">requests</span><span class="o">)</span>
 </code></pre>
 </div>
 
 <p>Let’s create a raw command, using the <code class="highlighter-rouge">Source</code> found the the <code class="highlighter-rouge">Commands</code> object.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">rawCommandEcho</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Flow</span><span class="o">[</span><span class="kt">RawCmdMessage</span><span class="o">[</span><span class="kt">F</span><span class="o">]].</span><span class="n">collect</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">rawCommandEcho</span> <span class="k">=</span> <span class="nc">Flow</span><span class="o">[</span><span class="kt">RawCmdMessage</span><span class="o">].</span><span class="n">collect</span> <span class="o">{</span>
   <span class="k">case</span> <span class="nc">RawCmd</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="nc">GeneralCommands</span><span class="o">,</span> <span class="s">"echo"</span><span class="o">,</span> <span class="n">args</span><span class="o">,</span> <span class="n">c</span><span class="o">)</span> <span class="k">=&gt;</span>
-    <span class="k">implicit</span> <span class="k">val</span> <span class="n">cache</span><span class="k">:</span> <span class="kt">CacheSnapshot</span><span class="o">[</span><span class="kt">F</span><span class="o">]</span> <span class="k">=</span> <span class="n">c</span>
-    <span class="nc">Streamable</span><span class="o">[</span><span class="kt">F</span><span class="o">].</span><span class="n">optionToSource</span><span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="n">s</span><span class="s">"ECHO: ${args.mkString("</span> <span class="s">")}"</span><span class="o">)))</span>
+    <span class="k">implicit</span> <span class="k">val</span> <span class="n">cache</span><span class="k">:</span> <span class="kt">CacheSnapshot</span> <span class="o">=</span> <span class="n">c</span>
+    <span class="nc">Source</span><span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="n">s</span><span class="s">"ECHO: ${args.mkString("</span> <span class="s">")}"</span><span class="o">)).</span><span class="n">toList</span><span class="o">)</span>
 <span class="o">}.</span><span class="n">flatMapConcat</span><span class="o">(</span><span class="n">identity</span><span class="o">).</span><span class="n">to</span><span class="o">(</span><span class="n">requests</span><span class="o">.</span><span class="n">sinkIgnore</span><span class="o">)</span>
 
 <span class="n">commands</span><span class="o">.</span><span class="n">subscribeRaw</span><span class="o">.</span><span class="n">to</span><span class="o">(</span><span class="n">rawCommandEcho</span><span class="o">).</span><span class="n">run</span><span class="o">()</span>
@@ -62,25 +59,25 @@
 
 <h2 id="other-helpers">Other helpers</h2>
 
-<p>There are a few more helpers that you can use when writing commands. The first one is <code class="highlighter-rouge">CmdFlow[F]</code> and <code class="highlighter-rouge">ParsedCmdFlow[F, A]</code>, which helps you construct a flow with an implicit cache snapshot. The next is the <code class="highlighter-rouge">requestRunner</code> methods on the command factory objects, which lets you create factories that takes a <code class="highlighter-rouge">(RequestRunner[SourceRequest, F], &lt;cmdtype&gt;[F]) =&gt; SourceRequest[Unit]</code> instead.</p>
+<p>There are a few more helpers that you can use when writing commands. The first one is <code class="highlighter-rouge">CmdFlow</code> and <code class="highlighter-rouge">ParsedCmdFlow[A]</code>, which helps you construct a flow with an implicit cache snapshot. The next is the <code class="highlighter-rouge">requestRunner</code> methods on the command factory objects, which lets you create factories that takes a <code class="highlighter-rouge">(RequestRunner[SourceRequest, F], &lt;cmdtype&gt;[F]) =&gt; SourceRequest[Unit]</code> instead.</p>
 
 <h2 id="putting-it-all-together">Putting it all together</h2>
 
 <p>So now that we know what all the different things to, let’s create our factories.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">getUsernameCmdFactory</span><span class="o">[</span><span class="kt">F</span><span class="o">[</span><span class="k">_</span><span class="o">]</span><span class="kt">:</span> <span class="kt">Monad:</span> <span class="kt">Streamable</span><span class="o">]</span> <span class="k">=</span> <span class="nc">ParsedCmdFactory</span><span class="o">.</span><span class="n">requestRunner</span><span class="o">[</span><span class="kt">F</span>, <span class="kt">User</span><span class="o">](</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">def</span> <span class="n">getUsernameCmdFactory</span> <span class="k">=</span> <span class="nc">ParsedCmdFactory</span><span class="o">.</span><span class="n">requestRunner</span><span class="o">[</span><span class="kt">User</span><span class="o">](</span>
   <span class="n">refiner</span> <span class="k">=</span> <span class="nc">CmdInfo</span><span class="o">(</span><span class="n">prefix</span> <span class="k">=</span> <span class="nc">GeneralCommands</span><span class="o">,</span> <span class="n">aliases</span> <span class="k">=</span> <span class="nc">Seq</span><span class="o">(</span><span class="s">"getUsername"</span><span class="o">)),</span>
   <span class="n">run</span> <span class="k">=</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">(</span><span class="n">runner</span><span class="o">,</span> <span class="n">cmd</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="o">{</span>
     <span class="k">import</span> <span class="nn">runner._</span>
     <span class="k">for</span> <span class="o">{</span>
-      <span class="n">channel</span> <span class="k">&lt;-</span> <span class="n">liftOptionT</span><span class="o">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">[</span><span class="kt">F</span><span class="o">])</span>
+      <span class="n">channel</span> <span class="k">&lt;-</span> <span class="n">optionPure</span><span class="o">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">msg</span><span class="o">.</span><span class="n">tGuildChannel</span><span class="o">)</span>
       <span class="k">_</span>       <span class="k">&lt;-</span> <span class="n">run</span><span class="o">(</span><span class="n">channel</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="n">s</span><span class="s">"Username for user is: ${cmd.args.username}"</span><span class="o">))</span>
     <span class="o">}</span> <span class="k">yield</span> <span class="o">()</span>
   <span class="o">},</span>
   <span class="n">description</span> <span class="k">=</span> <span class="nc">Some</span><span class="o">(</span><span class="nc">CmdDescription</span><span class="o">(</span><span class="n">name</span> <span class="k">=</span> <span class="s">"Get username"</span><span class="o">,</span> <span class="n">description</span> <span class="k">=</span> <span class="s">"Get the username of a user"</span><span class="o">))</span>
 <span class="o">)</span>
 
-<span class="n">commands</span><span class="o">.</span><span class="n">subscribe</span><span class="o">(</span><span class="n">getUsernameCmdFactory</span><span class="o">[</span><span class="kt">Id</span><span class="o">])(</span><span class="nc">Keep</span><span class="o">.</span><span class="n">left</span><span class="o">)</span>
+<span class="n">commands</span><span class="o">.</span><span class="n">subscribe</span><span class="o">(</span><span class="n">getUsernameCmdFactory</span><span class="o">)(</span><span class="nc">Keep</span><span class="o">.</span><span class="n">left</span><span class="o">)</span>
 </code></pre>
 </div>
 

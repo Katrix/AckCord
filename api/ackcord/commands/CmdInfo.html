@@ -8,17 +8,17 @@
           <meta name="keywords" content="" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
+      
       <link href="../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
-      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.min.js"></script>
       <script type="text/javascript" src="../../lib/jquery.panzoom.min.js"></script>
       <script type="text/javascript" src="../../lib/jquery.mousewheel.min.js"></script>
       <script type="text/javascript" src="../../lib/index.js"></script>
       <script type="text/javascript" src="../../index.js"></script>
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
-      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
       
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
@@ -56,7 +56,7 @@
                 <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="_root_"></a><a id="root:_root_"></a>
       <span class="permalink">
-      <a href="index.html#_root_" title="Permalink">
+      <a href="../../index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -72,7 +72,7 @@
     </li><li name="_root_.ackcord" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ackcord"></a><a id="ackcord:ackcord"></a>
       <span class="permalink">
-      <a href="index.html#ackcord" title="Permalink">
+      <a href="../../ackcord/index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -88,7 +88,7 @@
     </li><li name="ackcord.commands" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="commands"></a><a id="commands:commands"></a>
       <span class="permalink">
-      <a href="../ackcord/index.html#commands" title="Permalink">
+      <a href="../../ackcord/commands/index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -138,9 +138,9 @@
                         <a class="trait" href="CmdFilter.html" title="A command filter is something used to limit the scope in which a command can be used."></a>
                         <a href="CmdFilter.html" title="A command filter is something used to limit the scope in which a command can be used.">CmdFilter</a>
                       </li><li class="current-entities indented2">
-                        <a class="object" href="CmdFlow$.html" title=""></a>
-                        <a class="class" href="CmdFlow.html" title="An object to extract the cache from a unparsed cmd object."></a>
-                        <a href="CmdFlow.html" title="An object to extract the cache from a unparsed cmd object.">CmdFlow</a>
+                        <span class="separator"></span>
+                        <a class="object" href="CmdFlow$.html" title="An object to extract the cache from a unparsed cmd object."></a>
+                        <a href="CmdFlow$.html" title="An object to extract the cache from a unparsed cmd object.">CmdFlow</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
                         <a class="trait" href="CmdFlowBase.html" title=""></a>
@@ -268,7 +268,7 @@
         <span class="kind">case class</span>
       </span>
       <span class="symbol">
-        <span class="name">CmdInfo</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="filters">filters: <span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>] = <span class="symbol">Seq.empty</span></span>, <span name="filterBehavior">filterBehavior: <a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a> = <span class="symbol"><span class="name"><a href="FilterBehavior$.html">FilterBehavior.SendAll</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="evidence$2">evidence$2: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result"> extends <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>] with <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
+        <span class="name">CmdInfo</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="filters">filters: <span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>] = <span class="symbol">Seq.empty</span></span>, <span name="filterBehavior">filterBehavior: <a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a> = <span class="symbol"><span class="name"><a href="FilterBehavior$.html">FilterBehavior.SendAll</a></span></span></span>)</span><span class="result"> extends <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a> with <a href="https://www.scala-lang.org/api/2.12.10/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a> with <a href="https://www.scala-lang.org/api/2.12.10/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></span>
       </span>
       </h4>
 
@@ -278,7 +278,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>], <a href="CmdRefiner.html" class="extype" name="ackcord.commands.CmdRefiner">CmdRefiner</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="https://www.scala-lang.org/api/2.12.10/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a>, <span class="extype" name="java.io.Serializable">Serializable</span>, <a href="https://www.scala-lang.org/api/2.12.10/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a>, <a href="https://www.scala-lang.org/api/2.12.10/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a>, <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a>, <a href="CmdRefiner.html" class="extype" name="ackcord.commands.CmdRefiner">CmdRefiner</a>, <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -325,9 +325,9 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <div id="constructors" class="members">
               <h3>Instance Constructors</h3>
               <ol><li name="ackcord.commands.CmdInfo#&lt;init&gt;" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="&lt;init&gt;(prefix:String,aliases:Seq[String],filters:Seq[ackcord.commands.CmdFilter],filterBehavior:ackcord.commands.FilterBehavior)(implicitevidence$2:cats.Monad[F]):ackcord.commands.CmdInfo[F]"></a><a id="&lt;init&gt;:CmdInfo[F]"></a>
+      <a id="&lt;init&gt;(prefix:String,aliases:Seq[String],filters:Seq[ackcord.commands.CmdFilter],filterBehavior:ackcord.commands.FilterBehavior):ackcord.commands.CmdInfo"></a><a id="&lt;init&gt;:CmdInfo"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#&lt;init&gt;(prefix:String,aliases:Seq[String],filters:Seq[ackcord.commands.CmdFilter],filterBehavior:ackcord.commands.FilterBehavior)(implicitevidence$2:cats.Monad[F]):ackcord.commands.CmdInfo[F]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#&lt;init&gt;(prefix:String,aliases:Seq[String],filters:Seq[ackcord.commands.CmdFilter],filterBehavior:ackcord.commands.FilterBehavior):ackcord.commands.CmdInfo" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -336,7 +336,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">new</span>
       </span>
       <span class="symbol">
-        <span class="name">CmdInfo</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="filters">filters: <span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>] = <span class="symbol">Seq.empty</span></span>, <span name="filterBehavior">filterBehavior: <a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a> = <span class="symbol"><span class="name"><a href="FilterBehavior$.html">FilterBehavior.SendAll</a></span></span></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="arg0">arg0: <a href="http://typelevel.org/cats/api/cats/Monad.html#cats.Monad" class="extype" name="cats.Monad">Monad</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span>
+        <span class="name">CmdInfo</span><span class="params">(<span name="prefix">prefix: <span class="extype" name="scala.Predef.String">String</span></span>, <span name="aliases">aliases: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>, <span name="filters">filters: <span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>] = <span class="symbol">Seq.empty</span></span>, <span name="filterBehavior">filterBehavior: <a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a> = <span class="symbol"><span class="name"><a href="FilterBehavior$.html">FilterBehavior.SendAll</a></span></span></span>)</span>
       </span>
       
       <p class="shortcomment cmt"></p><div class="fullcomment"><div class="comment cmt"></div><dl class="paramcmts block"><dt class="param">prefix</dt><dd class="cmt"><p>The prefix to use for the command.</p></dd><dt class="param">aliases</dt><dd class="cmt"><p>The aliases to use for the command.</p></dd><dt class="param">filters</dt><dd class="cmt"><p>The filters to use for the command.</p></dd></dl></div>
@@ -362,7 +362,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -378,7 +378,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -394,14 +394,14 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="ackcord.commands.CmdInfo#aliases" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="aliases(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[Seq[String]]"></a><a id="aliases(Message)(CacheSnapshot[F]):F[Seq[String]]"></a>
+      <a id="aliases(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):Seq[String]"></a><a id="aliases(Message)(CacheSnapshot):Seq[String]"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#aliases(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[Seq[String]]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#aliases(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):Seq[String]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -410,7 +410,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">aliases</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="ackcord.commands.CmdInfo.F">F</span>[<span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]]</span>
+        <span class="name">aliases</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.commands.CmdInfo">CmdInfo</a> → <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a></dd></dl></div>
@@ -458,16 +458,16 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
-                <span class="name">@native</span><span class="args">()</span>
-              
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
     </span>)</span>
+              
+                <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -482,14 +482,14 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
     </li><li name="ackcord.commands.CmdInfo#filterBehavior" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="filterBehavior(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[ackcord.commands.FilterBehavior]"></a><a id="filterBehavior(Message)(CacheSnapshot[F]):F[FilterBehavior]"></a>
+      <a id="filterBehavior(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):ackcord.commands.FilterBehavior"></a><a id="filterBehavior(Message)(CacheSnapshot):FilterBehavior"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#filterBehavior(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[ackcord.commands.FilterBehavior]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#filterBehavior(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):ackcord.commands.FilterBehavior" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -498,7 +498,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filterBehavior</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="ackcord.commands.CmdInfo.F">F</span>[<a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a>]</span>
+        <span class="name">filterBehavior</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a></span>)</span><span class="result">: <a href="FilterBehavior.html" class="extype" name="ackcord.commands.FilterBehavior">FilterBehavior</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.commands.CmdInfo">CmdInfo</a> → <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a></dd></dl></div>
@@ -519,9 +519,9 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
       
       
     </li><li name="ackcord.commands.CmdInfo#filters" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="filters(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[Seq[ackcord.commands.CmdFilter]]"></a><a id="filters(Message)(CacheSnapshot[F]):F[Seq[CmdFilter]]"></a>
+      <a id="filters(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):Seq[ackcord.commands.CmdFilter]"></a><a id="filters(Message)(CacheSnapshot):Seq[CmdFilter]"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#filters(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[Seq[ackcord.commands.CmdFilter]]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#filters(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):Seq[ackcord.commands.CmdFilter]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -530,7 +530,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">filters</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="ackcord.commands.CmdInfo.F">F</span>[<span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>]]</span>
+        <span class="name">filters</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a></span>)</span><span class="result">: <span class="extype" name="scala.Seq">Seq</span>[<a href="CmdFilter.html" class="extype" name="ackcord.commands.CmdFilter">CmdFilter</a>]</span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.commands.CmdInfo">CmdInfo</a> → <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a></dd></dl></div>
@@ -562,10 +562,10 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
@@ -603,7 +603,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -619,7 +619,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -635,7 +635,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -654,7 +654,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -662,9 +662,9 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
               
         </dd></dl></div>
     </li><li name="ackcord.commands.CmdInfo#prefix" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="prefix(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[String]"></a><a id="prefix(Message)(CacheSnapshot[F]):F[String]"></a>
+      <a id="prefix(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):String"></a><a id="prefix(Message)(CacheSnapshot):String"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#prefix(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot[F]):F[String]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#prefix(message:ackcord.data.Message)(implicitc:ackcord.CacheSnapshot):String" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -673,7 +673,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">prefix</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result">: <span class="extype" name="ackcord.commands.CmdInfo.F">F</span>[<span class="extype" name="scala.Predef.String">String</span>]</span>
+        <span class="name">prefix</span><span class="params">(<span name="message">message: <a href="../data/Message.html" class="extype" name="ackcord.data.Message">Message</a></span>)</span><span class="params">(<span class="implicit">implicit </span><span name="c">c: <a href="../CacheSnapshot.html" class="extype" name="ackcord.CacheSnapshot">CacheSnapshot</a></span>)</span><span class="result">: <span class="extype" name="scala.Predef.String">String</span></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="" class="extype" name="ackcord.commands.CmdInfo">CmdInfo</a> → <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a></dd></dl></div>
@@ -694,9 +694,9 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
       
       
     </li><li name="ackcord.commands.AbstractCmdInfo#refine" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="refine(raw:ackcord.commands.RawCmd[F]):cats.data.EitherT[F,Option[ackcord.commands.CmdMessage[F]withackcord.commands.CmdError[F]],ackcord.commands.Cmd[F]]"></a><a id="refine(RawCmd[F]):EitherT[F,Option[CmdMessage[F]withCmdError[F]],Cmd[F]]"></a>
+      <a id="refine(raw:ackcord.commands.RawCmd):Either[Option[ackcord.commands.CmdMessagewithackcord.commands.CmdError],ackcord.commands.Cmd]"></a><a id="refine(RawCmd):Either[Option[CmdMessagewithCmdError],Cmd]"></a>
       <span class="permalink">
-      <a href="../../ackcord/commands/CmdInfo.html#refine(raw:ackcord.commands.RawCmd[F]):cats.data.EitherT[F,Option[ackcord.commands.CmdMessage[F]withackcord.commands.CmdError[F]],ackcord.commands.Cmd[F]]" title="Permalink">
+      <a href="../../ackcord/commands/CmdInfo.html#refine(raw:ackcord.commands.RawCmd):Either[Option[ackcord.commands.CmdMessagewithackcord.commands.CmdError],ackcord.commands.Cmd]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -705,7 +705,7 @@ command are known in advance.</p></div><dl class="paramcmts block"><dt class="pa
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">refine</span><span class="params">(<span name="raw">raw: <a href="RawCmd.html" class="extype" name="ackcord.commands.RawCmd">RawCmd</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</span>)</span><span class="result">: <a href="http://typelevel.org/cats/api/cats/data/EitherT.html#cats.data.EitherT" class="extype" name="cats.data.EitherT">EitherT</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CmdMessage.html" class="extype" name="ackcord.commands.CmdMessage">CmdMessage</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>] with <a href="CmdError.html" class="extype" name="ackcord.commands.CmdError">CmdError</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]], <a href="Cmd.html" class="extype" name="ackcord.commands.Cmd">Cmd</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]]</span>
+        <span class="name">refine</span><span class="params">(<span name="raw">raw: <a href="RawCmd.html" class="extype" name="ackcord.commands.RawCmd">RawCmd</a></span>)</span><span class="result">: <span class="extype" name="scala.Either">Either</span>[<a href="https://www.scala-lang.org/api/2.12.10/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CmdMessage.html" class="extype" name="ackcord.commands.CmdMessage">CmdMessage</a> with <a href="CmdError.html" class="extype" name="ackcord.commands.CmdError">CmdError</a>], <a href="Cmd.html" class="extype" name="ackcord.commands.Cmd">Cmd</a>]</span>
       </span>
       
       <p class="shortcomment cmt">Refines the raw command object to a command object if a command should run,
@@ -739,7 +739,7 @@ if it should not return, an error object may be returned instead.</p></div><dl c
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -761,7 +761,7 @@ if it should not return, an error object may be returned instead.</p></div><dl c
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="https://www.scala-lang.org/api/2.12.10/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -783,16 +783,16 @@ if it should not return, an error object may be returned instead.</p></div><dl c
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
-                <span class="name">@native</span><span class="args">()</span>
-              
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
     </span>)</span>
+              
+                <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
     </li>
@@ -806,21 +806,21 @@ if it should not return, an error object may be returned instead.</p></div><dl c
 
         <div id="inheritedMembers">
         <div class="parent" name="scala.Serializable">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/Serializable.html#scala.Serializable" class="extype" name="scala.Serializable">Serializable</a></h3>
             </div><div class="parent" name="java.io.Serializable">
               <h3>Inherited from <span class="extype" name="java.io.Serializable">Serializable</span></h3>
             </div><div class="parent" name="scala.Product">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/Product.html#scala.Product" class="extype" name="scala.Product">Product</a></h3>
             </div><div class="parent" name="scala.Equals">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/Equals.html#scala.Equals" class="extype" name="scala.Equals">Equals</a></h3>
             </div><div class="parent" name="ackcord.commands.AbstractCmdInfo">
-              <h3>Inherited from <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</h3>
+              <h3>Inherited from <a href="AbstractCmdInfo.html" class="extype" name="ackcord.commands.AbstractCmdInfo">AbstractCmdInfo</a></h3>
             </div><div class="parent" name="ackcord.commands.CmdRefiner">
-              <h3>Inherited from <a href="CmdRefiner.html" class="extype" name="ackcord.commands.CmdRefiner">CmdRefiner</a>[<span class="extype" name="ackcord.commands.CmdInfo.F">F</span>]</h3>
+              <h3>Inherited from <a href="CmdRefiner.html" class="extype" name="ackcord.commands.CmdRefiner">CmdRefiner</a></h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>

@@ -55,15 +55,16 @@
 //   None,
 //   None,
 //   Online,
-//   false
+//   false,
+//   true
 // )
 </span><span class="k">import</span> <span class="nn">clientSettings.executionContext</span>
 
 <span class="k">val</span> <span class="n">futureClient</span> <span class="k">=</span> <span class="n">clientSettings</span><span class="o">.</span><span class="n">createClient</span><span class="o">()</span>
-<span class="c1">// futureClient: concurrent.Future[DiscordClient[Id]] = Future(&lt;not completed&gt;)
+<span class="c1">// futureClient: concurrent.Future[DiscordClient] = Future(&lt;not completed&gt;)
 </span>
 <span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="n">client</span><span class="o">.</span><span class="n">onEvent</span><span class="o">[</span><span class="kt">Id</span><span class="o">]</span> <span class="o">{</span>
+  <span class="n">client</span><span class="o">.</span><span class="n">onEvent</span><span class="o">[</span><span class="kt">cats.Id</span><span class="o">]</span> <span class="o">{</span>
     <span class="k">case</span> <span class="nc">APIMessage</span><span class="o">.</span><span class="nc">Ready</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">)</span>
     <span class="k">case</span> <span class="k">_</span>                   <span class="k">=&gt;</span>
   <span class="o">}</span>
@@ -77,15 +78,12 @@
 
 <p>When working with the low level API, you’re the one responsible for setting stuff up, and knowing how it works.</p>
 
-<p>First we need an actor system and materializer.</p>
+<p>First we need an actor system.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
-<span class="k">import</span> <span class="nn">akka.stream.</span><span class="o">{</span><span class="nc">ActorMaterializer</span><span class="o">,</span> <span class="nc">Materializer</span><span class="o">}</span>
 <span class="k">import</span> <span class="nn">akka.stream.scaladsl.Sink</span>
 
 <span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span>  <span class="o">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">"AckCord"</span><span class="o">)</span>
-<span class="c1">//I'd recommend using a supplying a custom supervision to log exceptions here
-</span><span class="k">implicit</span> <span class="k">val</span> <span class="n">mat</span><span class="k">:</span> <span class="kt">Materializer</span> <span class="o">=</span> <span class="nc">ActorMaterializer</span><span class="o">()</span>
 <span class="k">import</span> <span class="nn">system.dispatcher</span>
 </code></pre>
 </div>
@@ -116,7 +114,8 @@
 //   None,
 //   None,
 //   Online,
-//   false
+//   false,
+//   true
 // )
 </span><span class="nc">DiscordShard</span><span class="o">.</span><span class="n">fetchWsGateway</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">wsUri</span> <span class="k">=&gt;</span>
  <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="nc">DiscordShard</span><span class="o">.</span><span class="n">connect</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">,</span> <span class="n">actorName</span> <span class="k">=</span> <span class="s">"DiscordShard"</span><span class="o">)</span>

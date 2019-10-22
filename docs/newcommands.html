@@ -19,12 +19,10 @@
 <span class="k">import</span> <span class="nn">cats.</span><span class="o">~&gt;</span>
 <span class="k">import</span> <span class="nn">akka.NotUsed</span>
 <span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
-<span class="k">import</span> <span class="nn">akka.stream.</span><span class="o">{</span><span class="nc">ActorMaterializer</span><span class="o">,</span> <span class="nc">Materializer</span><span class="o">}</span>
 <span class="k">import</span> <span class="nn">java.time.temporal.ChronoUnit</span>
 <span class="k">import</span> <span class="nn">scala.concurrent.Future</span>
 
 <span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span>  <span class="o">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">"AckCord"</span><span class="o">)</span>
-<span class="k">implicit</span> <span class="k">val</span> <span class="n">mat</span><span class="k">:</span> <span class="kt">Materializer</span> <span class="o">=</span> <span class="nc">ActorMaterializer</span><span class="o">()</span>
 <span class="k">import</span> <span class="nn">system.dispatcher</span>
 
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
@@ -58,7 +56,7 @@
 
 <p>Let’s start with creating two basic commands. One command that doesn’t care about arguments and one that takes an int.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">OurController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">OurController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">(</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
   
   <span class="c1">//The command builder includes a few convenience functions for common things.
 </span>  <span class="c1">//withRequest is one of those, that sends the request at the end of the command.
@@ -104,7 +102,7 @@
 
 <p>Let’s create two new commands that interact with the guild they are used in. (I won’t register them here, you already know how that works).</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">GuildCommandsController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">GuildCommandsController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">(</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
 
   <span class="c1">//Here we're composing a command function with out builder. This lets us 
 </span>  <span class="c1">//include more information in the command message, 
@@ -114,15 +112,15 @@
 </span>  <span class="c1">//therefore also includes the user that used the command. To carry along that 
 </span>  <span class="c1">//information we need we must create a natural transformation from the previous
 </span>  <span class="c1">//command message type, to our new type.
-</span>  <span class="k">val</span> <span class="nc">OurGuildCommand</span> <span class="k">=</span> <span class="nc">Command</span><span class="o">.</span><span class="n">andThen</span><span class="o">(</span><span class="nc">CommandFunction</span><span class="o">.</span><span class="n">onlyInGuild</span> <span class="o">{</span> <span class="o">(</span><span class="n">chG</span><span class="o">,</span> <span class="n">g</span><span class="o">)</span> <span class="k">=&gt;</span>
-    <span class="n">λ</span><span class="o">[</span><span class="kt">UserCommandMessage</span> <span class="kt">~&gt;</span> <span class="kt">GuildUserCommandMessage</span><span class="o">](</span><span class="n">m</span> <span class="k">=&gt;</span> <span class="nc">GuildCommandMessage</span><span class="o">.</span><span class="nc">WithUser</span><span class="o">(</span><span class="n">chG</span><span class="o">,</span> <span class="n">g</span><span class="o">,</span> <span class="n">m</span><span class="o">.</span><span class="n">user</span><span class="o">,</span> <span class="n">m</span><span class="o">))</span>
-  <span class="o">})</span>
+</span>  <span class="k">val</span> <span class="nc">OurGuildCommand</span> <span class="k">=</span> <span class="nc">Command</span><span class="o">.</span><span class="n">andThen</span><span class="o">(</span><span class="nc">CommandBuilder</span><span class="o">.</span><span class="n">onlyInGuild</span> <span class="o">{</span> <span class="o">(</span><span class="n">chG</span><span class="o">,</span> <span class="n">g</span><span class="o">)</span> <span class="k">=&gt;</span>
+      <span class="nc">Lambda</span><span class="o">[</span><span class="kt">UserCommandMessage</span> <span class="kt">~&gt;</span> <span class="kt">GuildUserCommandMessage</span><span class="o">](</span><span class="n">m</span> <span class="k">=&gt;</span> <span class="nc">GuildCommandMessage</span><span class="o">.</span><span class="nc">WithUser</span><span class="o">(</span><span class="n">chG</span><span class="o">,</span> <span class="n">g</span><span class="o">,</span> <span class="n">m</span><span class="o">.</span><span class="n">user</span><span class="o">,</span> <span class="n">m</span><span class="o">))</span>
+    <span class="o">})</span>
   
   <span class="c1">//We can now use our new command builder like normal
 </span>  <span class="k">val</span> <span class="n">memberCount</span> <span class="k">=</span> <span class="nc">OurGuildCommand</span><span class="o">.</span><span class="n">withRequest</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">m</span> <span class="k">=&gt;</span>
     <span class="k">val</span> <span class="n">guildChannel</span> <span class="k">=</span> <span class="n">m</span><span class="o">.</span><span class="n">tChannel</span> <span class="c1">//Now a guild channel
 </span>    <span class="k">val</span> <span class="n">guild</span> <span class="k">=</span> <span class="n">m</span><span class="o">.</span><span class="n">guild</span>
-    <span class="k">val</span> <span class="n">guildOwner</span> <span class="k">=</span> <span class="n">guild</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">value</span> <span class="c1">//The implicit command message provides the cache snapshot
+    <span class="k">val</span> <span class="n">guildOwner</span> <span class="k">=</span> <span class="n">guild</span><span class="o">.</span><span class="n">owner</span> <span class="c1">//The implicit command message provides the cache snapshot
 </span>    <span class="n">guildChannel</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span>
       <span class="n">s</span><span class="s">"Member count for guild is ${guild.memberCount} and owner is ${guildOwner.fold("</span><span class="nc">Unknown</span><span class="s">")(_.username)}"</span>
     <span class="o">)</span>
@@ -145,9 +143,9 @@
 
 <p>Let’s see an example with <code class="highlighter-rouge">Future</code>.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">AsyncCommandsController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">[</span><span class="kt">Id</span><span class="o">](</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">class</span> <span class="nc">AsyncCommandsController</span><span class="o">(</span><span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span><span class="o">)</span> <span class="k">extends</span> <span class="nc">CommandController</span><span class="o">(</span><span class="n">requests</span><span class="o">)</span> <span class="o">{</span>
 
-  <span class="k">val</span> <span class="n">timeDiff</span><span class="k">:</span> <span class="kt">Command</span><span class="o">[</span><span class="kt">List</span><span class="o">[</span><span class="kt">String</span><span class="o">]]</span> <span class="k">=</span> <span class="nc">Command</span><span class="o">.</span><span class="n">async</span><span class="o">[</span><span class="kt">Future</span><span class="o">]</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">m</span> <span class="k">=&gt;</span>
+  <span class="k">val</span> <span class="n">timeDiff</span><span class="k">:</span> <span class="kt">Command</span><span class="o">[</span><span class="kt">NotUsed</span><span class="o">]</span> <span class="k">=</span> <span class="nc">Command</span><span class="o">.</span><span class="n">async</span><span class="o">[</span><span class="kt">Future</span><span class="o">]</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">m</span> <span class="k">=&gt;</span>
     <span class="c1">//The ExecutionContext is provided by the controller
 </span>    <span class="k">for</span> <span class="o">{</span>
       <span class="n">answer</span>  <span class="k">&lt;-</span> <span class="n">requests</span><span class="o">.</span><span class="n">singleFuture</span><span class="o">(</span><span class="n">m</span><span class="o">.</span><span class="n">tChannel</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="s">"Msg"</span><span class="o">))</span>

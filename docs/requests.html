@@ -4,7 +4,7 @@
 
 <h2 id="creating-a-request">Creating a request</h2>
 
-<p>First we need a request object to send. There are two main ways to get such a request object. The first one is to create <code class="highlighter-rouge">Request</code> objects with requests from the <code class="highlighter-rouge">ackcord.http.rest</code> and <code class="highlighter-rouge">ackcord.http.images</code> packages manually. The second is to import <code class="highlighter-rouge">ackcord.syntax._</code> and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.</p>
+<p>First we need a request object to send. There are two main ways to get such a request object. The first one is to create <code class="highlighter-rouge">Request</code> objects with requests from the <code class="highlighter-rouge">ackcord.requests</code> package manually. The second is to import <code class="highlighter-rouge">ackcord.syntax._</code> and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.</p>
 
 <h2 id="running-the-request">Running the request</h2>
 
@@ -17,7 +17,6 @@
 <h2 id="example">Example</h2>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
-<span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
 <span class="k">import</span> <span class="nn">ackcord.requests.CreateMessage</span>
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
@@ -34,8 +33,7 @@
           <span class="k">for</span> <span class="o">{</span>
             <span class="c1">//optionPure lifts an Option into the dsl
 </span>            <span class="n">guildChannel</span> <span class="k">&lt;-</span> <span class="n">optionPure</span><span class="o">(</span><span class="n">channel</span><span class="o">.</span><span class="n">asGuildChannel</span><span class="o">)</span>
-            <span class="c1">//liftOptionT lifts an OptionT into the dsl
-</span>            <span class="n">guild</span>        <span class="k">&lt;-</span> <span class="n">liftOptionT</span><span class="o">(</span><span class="n">guildChannel</span><span class="o">.</span><span class="n">guild</span><span class="o">)</span>
+            <span class="n">guild</span>        <span class="k">&lt;-</span> <span class="n">optionPure</span><span class="o">(</span><span class="n">guildChannel</span><span class="o">.</span><span class="n">guild</span><span class="o">)</span>
             <span class="c1">//optionRequest lifts an optional request into the dsl.
 </span>            <span class="n">msg</span>          <span class="k">&lt;-</span> <span class="n">runOption</span><span class="o">(</span><span class="n">guild</span><span class="o">.</span><span class="n">tChannels</span><span class="o">.</span><span class="n">headOption</span><span class="o">.</span><span class="n">map</span><span class="o">(</span><span class="k">_</span><span class="o">.</span><span class="n">sendMessage</span><span class="o">(</span><span class="n">s</span><span class="s">"${guildChannel.name} was deleted"</span><span class="o">)))</span>
             <span class="c1">//Creating a request without using the extra syntax
@@ -53,7 +51,7 @@
 
 <h2 id="access-to-the-low-level-api">Access to the low level API</h2>
 
-<p>Accessing the low level API from the high level API is as simple as getting the <code class="highlighter-rouge">RequestHelper</code> instance in the <code class="highlighter-rouge">DiscordClient[F]</code> instance.</p>
+<p>Accessing the low level API from the high level API is as simple as getting the <code class="highlighter-rouge">RequestHelper</code> instance in the <code class="highlighter-rouge">DiscordClient</code> instance.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
   <span class="k">val</span> <span class="n">requests</span><span class="k">:</span> <span class="kt">RequestHelper</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">requests</span>

@@ -8,17 +8,17 @@
           <meta name="keywords" content="" />
           <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
           
+      
       <link href="../../lib/index.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
       <link href="../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
-      <script type="text/javascript" src="../../lib/jquery.js"></script>
+      <script type="text/javascript" src="../../lib/jquery.min.js"></script>
       <script type="text/javascript" src="../../lib/jquery.panzoom.min.js"></script>
       <script type="text/javascript" src="../../lib/jquery.mousewheel.min.js"></script>
       <script type="text/javascript" src="../../lib/index.js"></script>
       <script type="text/javascript" src="../../index.js"></script>
       <script type="text/javascript" src="../../lib/scheduler.js"></script>
       <script type="text/javascript" src="../../lib/template.js"></script>
-      <script type="text/javascript" src="../../lib/tools.tooltip.js"></script>
       
       <script type="text/javascript">
         /* this variable can be used by the JS to determine the path to the root document */
@@ -56,7 +56,7 @@
                 <li name="_root_.root" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="_root_"></a><a id="root:_root_"></a>
       <span class="permalink">
-      <a href="index.html#_root_" title="Permalink">
+      <a href="../../index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -72,7 +72,7 @@
     </li><li name="_root_.ackcord" visbl="pub" class="indented1 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="ackcord"></a><a id="ackcord:ackcord"></a>
       <span class="permalink">
-      <a href="index.html#ackcord" title="Permalink">
+      <a href="../../ackcord/index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -88,7 +88,7 @@
     </li><li name="ackcord.newcommands" visbl="pub" class="indented2 " data-isabs="false" fullComment="yes" group="Ungrouped">
       <a id="newcommands"></a><a id="newcommands:newcommands"></a>
       <span class="permalink">
-      <a href="../ackcord/index.html#newcommands" title="Permalink">
+      <a href="../../ackcord/newcommands/index.html" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -102,10 +102,6 @@
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd><a href="../index.html" class="extype" name="ackcord">ackcord</a></dd></dl></div>
     </li><li class="current-entities indented2">
-                        <span class="separator"></span>
-                        <a class="trait" href="Command.html" title="A constructed command execution."></a>
-                        <a href="Command.html" title="A constructed command execution.">Command</a>
-                      </li><li class="current-entities indented2">
                         <a class="object" href="CommandBuilder$.html" title=""></a>
                         <a class="trait" href="CommandBuilder.html" title="A CommandFunction from a command message to an output."></a>
                         <a href="CommandBuilder.html" title="A CommandFunction from a command message to an output.">CommandBuilder</a>
@@ -139,6 +135,10 @@
                         <a href="" title="A CommandFunction that can't fail, but might return a different message type.">CommandTransformer</a>
                       </li><li class="current-entities indented2">
                         <span class="separator"></span>
+                        <a class="trait" href="ComplexCommand.html" title="A constructed command execution."></a>
+                        <a href="ComplexCommand.html" title="A constructed command execution.">ComplexCommand</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
                         <a class="trait" href="DeriveMessageParser.html" title=""></a>
                         <a href="DeriveMessageParser.html" title="">DeriveMessageParser</a>
                       </li><li class="current-entities indented2">
@@ -157,6 +157,14 @@
                         <span class="separator"></span>
                         <a class="trait" href="MessageParserInstances.html" title=""></a>
                         <a href="MessageParserInstances.html" title="">MessageParserInstances</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="NamedCommandBuilder.html" title="A CommandFunction from a command message to an output."></a>
+                        <a href="NamedCommandBuilder.html" title="A CommandFunction from a command message to an output.">NamedCommandBuilder</a>
+                      </li><li class="current-entities indented2">
+                        <span class="separator"></span>
+                        <a class="trait" href="NamedComplexCommand.html" title="A constructed command execution with a name."></a>
+                        <a href="NamedComplexCommand.html" title="A constructed command execution with a name.">NamedComplexCommand</a>
                       </li><li class="current-entities indented2">
                         <a class="object" href="UserCommandMessage$.html" title=""></a>
                         <a class="trait" href="UserCommandMessage.html" title="A message sent with the invocation of command used by a user"></a>
@@ -194,17 +202,17 @@
         <span class="kind">trait</span>
       </span>
       <span class="symbol">
-        <span class="name">CommandTransformer</span><span class="tparams">[<span name="F">F<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="I">-I<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="O">+O<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</span>
+        <span class="name">CommandTransformer</span><span class="tparams">[<span name="I">-I<span class="tparams">[<span name="_">_</span>]</span></span>, <span name="O">+O<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="result"> extends <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</span>
       </span>
       </h4>
 
       
           <div id="comment" class="fullcommenttop"><div class="comment cmt"><p>A <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a> that can't fail, but might return a different
-message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd class="cmt"><p>The cache effect type</p></dd><dt class="tparam">I</dt><dd class="cmt"><p>The input message type</p></dd><dt class="tparam">O</dt><dd class="cmt"><p>The output message type</p></dd></dl><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</dd><dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/commandsNew/src/main/scala/ackcord/newcommands/commandBuilder.scala" target="_blank">commandBuilder.scala</a></dd></dl><div class="toggleContainer block">
+message type.</p></div><dl class="paramcmts block"><dt class="tparam">I</dt><dd class="cmt"><p>The input message type</p></dd><dt class="tparam">O</dt><dd class="cmt"><p>The output message type</p></dd></dl><dl class="attributes block"> <dt>Self Type</dt><dd><a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</dd><dt>Source</dt><dd><a href="https://github.com/Katrix/Ackcord/tree/master/commandsNew/src/main/scala/ackcord/newcommands/commandBuilder.scala" target="_blank">commandBuilder.scala</a></dd></dl><div class="toggleContainer block">
           <span class="toggle">
             Linear Supertypes
           </span>
-          <div class="superTypes hiddenContent"><a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>], <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
+          <div class="superTypes hiddenContent"><a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>], <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a>, <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></div>
         </div></div>
         
 
@@ -266,7 +274,7 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flowMapper</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.5.23/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flowMapper.A">A</span>], <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flowMapper.A">A</span>], <a href="https://doc.akka.io/api/akka/2.5.23/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flowMapper</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.6.0-RC1/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flowMapper.A">A</span>], <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flowMapper.A">A</span>], <a href="https://doc.akka.io/api/akka/2.6.0-RC1/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">The flow representing this mapping without the eithers.</p>
@@ -288,7 +296,7 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -304,7 +312,7 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -320,14 +328,14 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
     </li><li name="ackcord.newcommands.CommandTransformer#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="andThen[O2[_]](that:ackcord.newcommands.CommandTransformer[F,O,O2]):ackcord.newcommands.CommandTransformer[F,I,O2]"></a><a id="andThen[O2[_]](CommandTransformer[F,O,O2]):CommandTransformer[F,I,O2]"></a>
+      <a id="andThen[O2[_]](that:ackcord.newcommands.CommandTransformer[O,O2]):ackcord.newcommands.CommandTransformer[I,O2]"></a><a id="andThen[O2[_]](CommandTransformer[O,O2]):CommandTransformer[I,O2]"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/CommandTransformer.html#andThen[O2[_]](that:ackcord.newcommands.CommandTransformer[F,O,O2]):ackcord.newcommands.CommandTransformer[F,I,O2]" title="Permalink">
+      <a href="../../ackcord/newcommands/CommandTransformer.html#andThen[O2[_]](that:ackcord.newcommands.CommandTransformer[O,O2]):ackcord.newcommands.CommandTransformer[I,O2]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -336,16 +344,16 @@ message type.</p></div><dl class="paramcmts block"><dt class="tparam">F</dt><dd 
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">andThen</span><span class="tparams">[<span name="O2">O2<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="that">that: <a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>)</span><span class="result">: <a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>
+        <span class="name">andThen</span><span class="tparams">[<span name="O2">O2<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="that">that: <a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>)</span><span class="result">: <a href="" class="extype" name="ackcord.newcommands.CommandTransformer">CommandTransformer</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Chains first this transformer, and then another one.</p><div class="fullcomment"><div class="comment cmt"><p>Chains first this transformer, and then another one. More efficient than
 the base andThen function.
 </p></div></div>
     </li><li name="ackcord.newcommands.CommandTransformer#andThen" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="andThen[O2[_]](that:ackcord.newcommands.CommandFunction[F,O,O2]):ackcord.newcommands.CommandFunction[F,I,O2]"></a><a id="andThen[O2[_]](CommandFunction[F,O,O2]):CommandFunction[F,I,O2]"></a>
+      <a id="andThen[O2[_]](that:ackcord.newcommands.CommandFunction[O,O2]):ackcord.newcommands.CommandFunction[I,O2]"></a><a id="andThen[O2[_]](CommandFunction[O,O2]):CommandFunction[I,O2]"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/CommandTransformer.html#andThen[O2[_]](that:ackcord.newcommands.CommandFunction[F,O,O2]):ackcord.newcommands.CommandFunction[F,I,O2]" title="Permalink">
+      <a href="../../ackcord/newcommands/CommandTransformer.html#andThen[O2[_]](that:ackcord.newcommands.CommandFunction[O,O2]):ackcord.newcommands.CommandFunction[I,O2]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -354,7 +362,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">andThen</span><span class="tparams">[<span name="O2">O2<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="that">that: <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>)</span><span class="result">: <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>
+        <span class="name">andThen</span><span class="tparams">[<span name="O2">O2<span class="tparams">[<span name="_">_</span>]</span></span>]</span><span class="params">(<span name="that">that: <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>)</span><span class="result">: <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.andThen.O2">O2</span>]</span>
       </span>
       
       <p class="shortcomment cmt">Chains first this function, and then another one.</p><div class="fullcomment"><div class="comment cmt"><p>Chains first this function, and then another one.
@@ -387,16 +395,16 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
-                <span class="name">@native</span><span class="args">()</span>
-              
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.CloneNotSupportedException]">...</span>
     </span>)</span>
+              
+                <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
     </li><li name="scala.AnyRef#eq" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
@@ -411,7 +419,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -427,7 +435,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
@@ -443,10 +451,10 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
-      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../java/lang/index.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<span class="extype" name="java.lang">lang</span>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="symbol">classOf[java.lang.Throwable]</span>
@@ -454,9 +462,9 @@ the base andThen function.
               
         </dd></dl></div>
     </li><li name="ackcord.newcommands.CommandTransformer#flow" visbl="pub" class="indented0 " data-isabs="false" fullComment="yes" group="Ungrouped">
-      <a id="flow[A]:akka.stream.scaladsl.Flow[I[A],Either[Option[ackcord.newcommands.CommandError[F]],O[A]],akka.NotUsed]"></a><a id="flow[A]:Flow[I[A],Either[Option[CommandError[F]],O[A]],NotUsed]"></a>
+      <a id="flow[A]:akka.stream.scaladsl.Flow[I[A],Either[Option[ackcord.newcommands.CommandError],O[A]],akka.NotUsed]"></a><a id="flow[A]:Flow[I[A],Either[Option[CommandError],O[A]],NotUsed]"></a>
       <span class="permalink">
-      <a href="../../ackcord/newcommands/CommandTransformer.html#flow[A]:akka.stream.scaladsl.Flow[I[A],Either[Option[ackcord.newcommands.CommandError[F]],O[A]],akka.NotUsed]" title="Permalink">
+      <a href="../../ackcord/newcommands/CommandTransformer.html#flow[A]:akka.stream.scaladsl.Flow[I[A],Either[Option[ackcord.newcommands.CommandError],O[A]],akka.NotUsed]" title="Permalink">
         <i class="material-icons"></i>
       </a>
     </span>
@@ -465,7 +473,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">flow</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.5.23/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flow.A">A</span>], <span class="extype" name="scala.Either">Either</span>[<a href="http://www.scala-lang.org/api/2.12.8/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CommandError.html" class="extype" name="ackcord.newcommands.CommandError">CommandError</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>]], <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flow.A">A</span>]], <a href="https://doc.akka.io/api/akka/2.5.23/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
+        <span class="name">flow</span><span class="tparams">[<span name="A">A</span>]</span><span class="result">: <a href="https://doc.akka.io/api/akka/2.6.0-RC1/akka/stream/scaladsl/Flow.html#akka.stream.scaladsl.Flow" class="extype" name="akka.stream.scaladsl.Flow">Flow</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flow.A">A</span>], <span class="extype" name="scala.Either">Either</span>[<a href="https://www.scala-lang.org/api/2.12.10/scala/Option.html#scala.Option" class="extype" name="scala.Option">Option</a>[<a href="CommandError.html" class="extype" name="ackcord.newcommands.CommandError">CommandError</a>], <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>[<span class="extype" name="ackcord.newcommands.CommandTransformer.flow.A">A</span>]], <a href="https://doc.akka.io/api/akka/2.6.0-RC1/akka/NotUsed.html#akka.NotUsed" class="extype" name="akka.NotUsed">NotUsed</a>]</span>
       </span>
       
       <p class="shortcomment cmt">A flow that represents this mapping.</p><div class="fullcomment"><div class="comment cmt"><p>A flow that represents this mapping.
@@ -501,7 +509,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd><dt>Annotations</dt><dd>
@@ -520,7 +528,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
@@ -536,7 +544,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Boolean.html#scala.Boolean" class="extype" name="scala.Boolean">Boolean</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
@@ -552,7 +560,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -571,7 +579,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -622,7 +630,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -644,7 +652,7 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="http://www.scala-lang.org/api/2.12.8/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>, <span name="arg1">arg1: <a href="https://www.scala-lang.org/api/2.12.10/scala/Int.html#scala.Int" class="extype" name="scala.Int">Int</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
@@ -666,16 +674,16 @@ the base andThen function.
         <span class="kind">def</span>
       </span>
       <span class="symbol">
-        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="http://www.scala-lang.org/api/2.12.8/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="http://www.scala-lang.org/api/2.12.8/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <a href="https://www.scala-lang.org/api/2.12.10/scala/Long.html#scala.Long" class="extype" name="scala.Long">Long</a></span>)</span><span class="result">: <a href="https://www.scala-lang.org/api/2.12.10/scala/Unit.html#scala.Unit" class="extype" name="scala.Unit">Unit</a></span>
       </span>
       
       <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
-                <span class="name">@native</span><span class="args">()</span>
-              
                 <span class="name">@throws</span><span class="args">(<span>
       
       <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
     </span>)</span>
+              
+                <span class="name">@native</span><span class="args">()</span>
               
         </dd></dl></div>
     </li>
@@ -689,11 +697,11 @@ the base andThen function.
 
         <div id="inheritedMembers">
         <div class="parent" name="ackcord.newcommands.CommandFunction">
-              <h3>Inherited from <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.F">F</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</h3>
+              <h3>Inherited from <a href="CommandFunction.html" class="extype" name="ackcord.newcommands.CommandFunction">CommandFunction</a>[<span class="extype" name="ackcord.newcommands.CommandTransformer.I">I</span>, <span class="extype" name="ackcord.newcommands.CommandTransformer.O">O</span>]</h3>
             </div><div class="parent" name="scala.AnyRef">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/AnyRef.html#scala.AnyRef" class="extype" name="scala.AnyRef">AnyRef</a></h3>
             </div><div class="parent" name="scala.Any">
-              <h3>Inherited from <a href="http://www.scala-lang.org/api/2.12.8/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
+              <h3>Inherited from <a href="https://www.scala-lang.org/api/2.12.10/scala/Any.html#scala.Any" class="extype" name="scala.Any">Any</a></h3>
             </div>
         
         </div>
