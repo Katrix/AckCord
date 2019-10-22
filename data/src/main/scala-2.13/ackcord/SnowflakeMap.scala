@@ -23,25 +23,47 @@
  */
 package ackcord
 
-import scala.collection.generic.CanBuildFrom
-import scala.collection.immutable.{AbstractMap, LongMap, MapLike}
-import scala.collection.mutable
+import scala.language.implicitConversions
+
+import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.generic.DefaultSerializationProxy
+import scala.collection.immutable.{AbstractMap, LongMap, StrictOptimizedMapOps}
+import scala.collection.mutable.ListBuffer
+import scala.collection.{BuildFrom, Factory, View, mutable}
 
 import ackcord.data.SnowflakeType
 
 //A wrapper around a LongMap which allows a nice API. We overwrite everything LongMap overrides.
 class SnowflakeMap[K, +V](private val inner: LongMap[V])
     extends AbstractMap[SnowflakeType[K], V]
-    with Map[SnowflakeType[K], V]
-    with MapLike[SnowflakeType[K], V, SnowflakeMap[K, V]] {
+    with StrictOptimizedMapOps[SnowflakeType[K], V, Map, SnowflakeMap[K, V]]
+    with Serializable {
   type Key = SnowflakeType[K]
+
+  override protected def fromSpecific(coll: IterableOnce[(SnowflakeType[K], V)] @uncheckedVariance): SnowflakeMap[K, V] = {
+    val b = newSpecificBuilder
+    b.sizeHint(coll)
+    b.addAll(coll)
+    b.result()
+  }
+
+  override protected def newSpecificBuilder
+      : mutable.Builder[(SnowflakeType[K], V), SnowflakeMap[K, V]] @uncheckedVariance =
+    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](empty) {
+      override def addOne(elem: (SnowflakeType[K], V)): this.type = {
+        elems = elems + elem
+        this
+      }
+    }
 
   private def keyToSnowflake(k: Long): Key = SnowflakeType[K](k)
 
   override def empty: SnowflakeMap[K, V] = new SnowflakeMap(inner.empty)
 
-  override def toList: List[(Key, V)] = inner.toList.map {
-    case (k, v) => (keyToSnowflake(k), v)
+  override def toList: List[(Key, V)] = {
+    val buffer = new ListBuffer[(Key, V)]
+    foreach(buffer += _)
+    buffer.toList
   }
 
   override def iterator: Iterator[(Key, V)] = inner.iterator.map {
@@ -52,6 +74,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     inner.foreach {
       case (k, v) => f((keyToSnowflake(k), v))
     }
+
+  final override def foreachEntry[U](f: (Key, V) => U): Unit =
+    inner.foreachEntry((k, v) => f(keyToSnowflake(k), v))
 
   override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
 
@@ -73,16 +98,18 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     */
   final def foreachValue(f: V => Unit): Unit = inner.foreachValue(f)
 
-  override def stringPrefix = "SnowflakeMap"
+  override protected[this] def className = "SnowflakeMap"
 
   override def isEmpty: Boolean = inner.isEmpty
+
+  override def knownSize: Int = inner.knownSize
 
   override def filter(p: ((Key, V)) => Boolean): SnowflakeMap[K, V] =
     new SnowflakeMap(inner.filter {
       case (k, v) => p((keyToSnowflake(k), v))
     })
 
-  def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
+  override def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.transform[S] {
       case (k, v) => f(keyToSnowflake(k), v)
     })
@@ -120,7 +147,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   def updateWith[S >: V](key: Key, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.updateWith(key, value, f))
 
-  override def -(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner - key)
+  override def removed(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner.removed(key))
 
   /**
     * A combined transform and filter function. Returns an `SnowflakeMap` such that
@@ -176,6 +203,23 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   final def firstKey: Key = keyToSnowflake(inner.firstKey)
 
   final def lastKey: Key = keyToSnowflake(inner.lastKey)
+
+  def map[K2, V2](f: ((Key, V)) => (SnowflakeType[K2], V2)): SnowflakeMap[K2, V2] =
+    SnowflakeMap.from(new View.Map(coll, f))
+
+  def flatMap[K2, V2](f: ((Key, V)) => IterableOnce[(SnowflakeType[K2], V2)]): SnowflakeMap[K2, V2] =
+    SnowflakeMap.from(new View.FlatMap(coll, f))
+
+  override def concat[V1 >: V](that: collection.IterableOnce[(Key, V1)]): SnowflakeMap[K, V1] =
+    super.concat(that).asInstanceOf[SnowflakeMap[K, V1]] // Already has corect type but not declared as such
+
+  override def ++[V1 >: V](that: collection.IterableOnce[(Key, V1)]): SnowflakeMap[K, V1] = concat(that)
+
+  def collect[K2, V2](pf: PartialFunction[(Key, V), (SnowflakeType[K2], V2)]): SnowflakeMap[K2, V2] =
+    ??? //strictOptimizedCollect(SnowflakeMap.newBuilder[K2, V2], pf)
+
+  protected[this] def writeReplace(): AnyRef =
+    new DefaultSerializationProxy(SnowflakeMap.toFactory[K, V](SnowflakeMap), this)
 }
 object SnowflakeMap {
 
@@ -197,21 +241,52 @@ object SnowflakeMap {
     new SnowflakeMap(LongMap.apply(elems: _*))
 
   /**
-    * Create a snowflake map from an iterable of snowflakes and values.
+    * Create a snowflake map from an IterableOnce of snowflakes and values.
     */
-  def apply[K, V](iterable: Iterable[(SnowflakeType[K], V)]): SnowflakeMap[K, V] = apply(iterable.toSeq: _*)
+  def from[K, V](coll: IterableOnce[(SnowflakeType[K], V)]): SnowflakeMap[K, V] =
+    newBuilder[K, V].addAll(coll).result()
+
+  def newBuilder[K, V]: mutable.Builder[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
+    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](empty) {
+      override def addOne(elem: (SnowflakeType[K], V)): this.type = {
+        elems = elems + elem
+        this
+      }
+    }
 
   /**
     * Create a snowflake map from an iterable of values while using a provided
     * function to get the key.
     */
   def withKey[K, V](iterable: Iterable[V])(f: V => SnowflakeType[K]): SnowflakeMap[K, V] =
-    apply(iterable.map(v => f(v) -> v).toSeq: _*)
+    from(iterable.map(v => f(v) -> v))
 
-  implicit def canBuildFrom[S, A, B]: CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] =
-    new CanBuildFrom[SnowflakeMap[S, A], (SnowflakeType[S], B), SnowflakeMap[S, B]] {
-      override def apply(from: SnowflakeMap[S, A]): mutable.Builder[(SnowflakeType[S], B), SnowflakeMap[S, B]] = apply()
-      override def apply(): mutable.Builder[(SnowflakeType[S], B), SnowflakeMap[S, B]] =
-        new mutable.MapBuilder[SnowflakeType[S], B, SnowflakeMap[S, B]](empty)
-    }
+  implicit def toFactory[K, V](dummy: SnowflakeMap.type): Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
+    ToFactory.asInstanceOf[Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]]]
+
+  @SerialVersionUID(3L)
+  private[this] object ToFactory
+      extends Factory[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]]
+      with Serializable {
+    def fromSpecific(it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]): SnowflakeMap[AnyRef, AnyRef] =
+      SnowflakeMap.from[AnyRef, AnyRef](it)
+    def newBuilder: mutable.Builder[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] =
+      SnowflakeMap.newBuilder[AnyRef, AnyRef]
+  }
+
+  implicit def toBuildFrom[K, V](
+      factory: SnowflakeMap.type
+  ): BuildFrom[Any, (SnowflakeType[K], V), SnowflakeMap[K, V]] =
+    ToBuildFrom.asInstanceOf[BuildFrom[Any, (SnowflakeType[K], V), SnowflakeMap[K, V]]]
+  private[this] object ToBuildFrom
+      extends BuildFrom[Any, (SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] {
+    def fromSpecific(from: Any)(it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]): SnowflakeMap[AnyRef, AnyRef] =
+      SnowflakeMap.from(it)
+    def newBuilder(from: Any): mutable.Builder[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] =
+      SnowflakeMap.newBuilder[AnyRef, AnyRef]
+  }
+
+  implicit def iterableFactory[K, V]: Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] = toFactory(this)
+  implicit def buildFromSnowflakeMap[K, V]: BuildFrom[SnowflakeMap[_, _], (SnowflakeType[K], V), SnowflakeMap[K, V]] =
+    toBuildFrom(this)
 }

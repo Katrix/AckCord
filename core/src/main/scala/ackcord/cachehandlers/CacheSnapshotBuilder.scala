@@ -52,17 +52,17 @@ class CacheSnapshotBuilder(
   def toImmutable: MemoryCacheSnapshot = {
     def convertNested[K1, K2, V](
         map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]
-    ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap(map.map { case (k, v) => k -> SnowflakeMap(v) })
+    ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap.from(map.map { case (k, v) => k -> SnowflakeMap.from(v) })
 
     MemoryCacheSnapshot(
       botUser = botUser,
-      dmChannelMap = SnowflakeMap(dmChannelMap),
-      groupDmChannelMap = SnowflakeMap(groupDmChannelMap),
-      unavailableGuildMap = SnowflakeMap(unavailableGuildMap),
-      guildMap = SnowflakeMap(guildMap),
+      dmChannelMap = SnowflakeMap.from(dmChannelMap),
+      groupDmChannelMap = SnowflakeMap.from(groupDmChannelMap),
+      unavailableGuildMap = SnowflakeMap.from(unavailableGuildMap),
+      guildMap = SnowflakeMap.from(guildMap),
       messageMap = convertNested(messageMap),
       lastTypedMap = convertNested(lastTypedMap),
-      userMap = SnowflakeMap(userMap),
+      userMap = SnowflakeMap.from(userMap),
       banMap = convertNested(banMap)
     )
   }

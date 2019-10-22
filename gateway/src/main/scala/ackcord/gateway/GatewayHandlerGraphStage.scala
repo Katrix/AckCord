@@ -248,7 +248,7 @@ object GatewayHandlerGraphStage {
       jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else jsonFlow
 
-    withLogging.map(parser.parse(_).right.flatMap(_.as[GatewayMessage[_]]))
+    withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 
   /**

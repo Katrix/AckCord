@@ -24,8 +24,6 @@
 
 package ackcord.data
 
-import scala.language.higherKinds
-
 import scala.collection.immutable
 
 import ackcord.CacheSnapshot

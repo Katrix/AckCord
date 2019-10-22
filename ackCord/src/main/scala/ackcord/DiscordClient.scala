@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag

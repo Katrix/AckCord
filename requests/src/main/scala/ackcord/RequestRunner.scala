@@ -34,7 +34,6 @@ import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
 
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.language.higherKinds
 import scala.util.{Failure, Success}
 
 trait RequestRunner[F[_]] {

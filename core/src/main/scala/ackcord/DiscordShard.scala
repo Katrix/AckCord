@@ -277,12 +277,12 @@ object DiscordShard {
         val c          = json.hcursor
         val startLimit = c.downField("session_start_limit")
         val res = for {
-          gateway <- c.get[String]("url").right
-          shards  <- c.get[Int]("shards").right
+          gateway <- c.get[String]("url")
+          shards  <- c.get[Int]("shards")
           // TODO: Use these
-          total      <- startLimit.get[Int]("total").right
-          remaining  <- startLimit.get[Int]("remaining").right
-          resetAfter <- startLimit.get[Int]("reset_after").right
+          total      <- startLimit.get[Int]("total")
+          remaining  <- startLimit.get[Int]("remaining")
+          resetAfter <- startLimit.get[Int]("reset_after")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
           (gateway: Uri, shards)

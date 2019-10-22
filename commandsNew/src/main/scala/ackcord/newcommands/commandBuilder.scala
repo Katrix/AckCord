@@ -32,7 +32,6 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Partition, Sink}
 import akka.stream.FlowShape
 import cats.data.OptionT
 import cats.~>
-import scala.language.higherKinds
 
 /**
   * A mapping over command builders.
@@ -72,7 +71,7 @@ object CommandFunction {
           case Right(_) => 1
         }))
       val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
-      val selfOut = selfPartition.out(1).map(_.right.get)
+      val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
       val thatPartition =
         b.add(Partition[Either[E, O]](2, {
@@ -387,8 +386,8 @@ object CommandBuilder {
         case Left(_)  => 0
         case Right(_) => 1
       }))
-      val selfErr = selfPartition.out(0).map(_.left.get).mapConcat(_.toList)
-      val selfOut = selfPartition.out(1).map(_.right.get)
+      val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible"))).mapConcat(_.toList)
+      val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
       selfFlowShape ~> selfPartition
       selfOut ~> block

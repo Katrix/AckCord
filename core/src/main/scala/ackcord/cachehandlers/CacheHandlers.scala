@@ -155,8 +155,8 @@ object CacheHandlers {
           verificationLevel = obj.verificationLevel,
           defaultMessageNotifications = obj.defaultMessageNotifications,
           explicitContentFilter = obj.explicitContentFilter,
-          roles = SnowflakeMap(obj.roles.map(r => r.id   -> r.toRole(obj.id))),
-          emojis = SnowflakeMap(obj.emojis.map(e => e.id -> e.toEmoji)),
+          roles = SnowflakeMap.from(obj.roles.map(r => r.id   -> r.toRole(obj.id))),
+          emojis = SnowflakeMap.from(obj.emojis.map(e => e.id -> e.toEmoji)),
           features = obj.features,
           mfaLevel = obj.mfaLevel,
           applicationId = obj.applicationId,
@@ -212,7 +212,7 @@ object CacheHandlers {
           builder.getGuild(guildId) match {
             case Some(guild) =>
               registry.updateData(builder) {
-                guild.copy(emojis = SnowflakeMap(emojis.map(e => e.id -> e.toEmoji)))
+                guild.copy(emojis = SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)))
               }
             case None => log.warning(s"Can't find guild for emojis update $obj")
           }
@@ -252,8 +252,8 @@ object CacheHandlers {
         val GuildMemberUpdateData(guildId, roles, user, nick) = obj
 
         val eitherMember = for {
-          guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj").right
-          guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj").right
+          guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj")
+          guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj")
         } yield guildMember
 
         eitherMember match {
@@ -441,7 +441,6 @@ object CacheHandlers {
     ): Unit = {
       val optGuild = obj.guildId
         .toRight("Can't handle VoiceState update with missing guild")
-        .right
         .flatMap(builder.getGuild(_).toRight(s"No guild found for voice state $obj"))
 
       optGuild match {
@@ -639,13 +638,13 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: DMChannel, registry: CacheTypeRegistry)(
         implicit log: LoggingAdapter
     ): Unit =
-      builder.dmChannelMap - obj.id
+      builder.dmChannelMap.remove(obj.id)
   }
 
   val groupDmChannelDeleter: CacheDeleter[GroupDMChannel] = new CacheDeleter[GroupDMChannel] {
     override def handle(builder: CacheSnapshotBuilder, obj: GroupDMChannel, registry: CacheTypeRegistry)(
         implicit log: LoggingAdapter
-    ): Unit = builder.groupDmChannelMap - obj.id
+    ): Unit = builder.groupDmChannelMap.remove(obj.id)
   }
 
   val guildMemberDeleter: CacheDeleter[GuildMember] = new CacheDeleter[GuildMember] {
@@ -669,6 +668,6 @@ object CacheHandlers {
   val messageDeleter: CacheDeleter[Message] = new CacheDeleter[Message] {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: LoggingAdapter
-    ): Unit = builder.getChannelMessages(obj.channelId) - obj.id
+    ): Unit = builder.getChannelMessages(obj.channelId).remove(obj.id)
   }
 }

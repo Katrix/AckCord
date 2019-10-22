@@ -28,7 +28,6 @@ import java.time.{Instant, OffsetDateTime}
 import scala.util.Try
 
 import ackcord.data.raw._
-import io.circe.Decoder.Result
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
 import io.circe._
@@ -229,26 +228,26 @@ trait DiscordProtocol {
     val isWebhook = c.keys.exists(_.toSeq.contains("webhook_id"))
 
     for {
-      id              <- c.get[MessageId]("id").right
-      channelId       <- c.get[ChannelId]("channel_id").right
-      guildId         <- c.get[Option[GuildId]]("guild_id").right
-      author          <- (if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")).right
-      member          <- c.get[Option[PartialRawGuildMember]]("member").right
-      content         <- c.get[String]("content").right
-      timestamp       <- c.get[OffsetDateTime]("timestamp").right
-      editedTimestamp <- c.get[Option[OffsetDateTime]]("edited_timestamp").right
-      tts             <- c.get[Boolean]("tts").right
-      mentionEveryone <- c.get[Boolean]("mention_everyone").right
-      mentions        <- c.get[Seq[User]]("mentions").right
-      mentionRoles    <- c.get[Seq[RoleId]]("mention_roles").right
-      attachment      <- c.get[Seq[Attachment]]("attachments").right
-      embeds          <- c.get[Seq[ReceivedEmbed]]("embeds").right
-      reactions       <- c.get[Option[Seq[Reaction]]]("reactions").right
-      nonce           <- c.get[Option[RawSnowflake]]("nonce").right
-      pinned          <- c.get[Boolean]("pinned").right
-      tpe             <- c.get[MessageType]("type").right
-      activity        <- c.get[Option[RawMessageActivity]]("activity").right
-      application     <- c.get[Option[MessageApplication]]("application").right
+      id              <- c.get[MessageId]("id")
+      channelId       <- c.get[ChannelId]("channel_id")
+      guildId         <- c.get[Option[GuildId]]("guild_id")
+      author          <- if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")
+      member          <- c.get[Option[PartialRawGuildMember]]("member")
+      content         <- c.get[String]("content")
+      timestamp       <- c.get[OffsetDateTime]("timestamp")
+      editedTimestamp <- c.get[Option[OffsetDateTime]]("edited_timestamp")
+      tts             <- c.get[Boolean]("tts")
+      mentionEveryone <- c.get[Boolean]("mention_everyone")
+      mentions        <- c.get[Seq[User]]("mentions")
+      mentionRoles    <- c.get[Seq[RoleId]]("mention_roles")
+      attachment      <- c.get[Seq[Attachment]]("attachments")
+      embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
+      reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
+      nonce           <- c.get[Option[RawSnowflake]]("nonce")
+      pinned          <- c.get[Boolean]("pinned")
+      tpe             <- c.get[MessageType]("type")
+      activity        <- c.get[Option[RawMessageActivity]]("activity")
+      application     <- c.get[Option[MessageApplication]]("application")
     } yield RawMessage(
       id,
       channelId,
@@ -324,61 +323,57 @@ trait DiscordProtocol {
   implicit val optionalAuditLogInfoDecoder: Decoder[OptionalAuditLogInfo] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
-  //Scala 2.11
-  //noinspection ConvertExpressionToSAM
-  implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = new Decoder[AuditLogChange[_]] {
-    override def apply(c: HCursor): Result[AuditLogChange[_]] = {
+  implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = (c: HCursor) => {
 
-      def mkChange[A: Decoder, B](create: (A, A) => B): Either[DecodingFailure, B] =
-        for {
-          oldVal <- c.get[A]("old_value").right
-          newVal <- c.get[A]("new_value").right
-        } yield create(oldVal, newVal)
+    def mkChange[A: Decoder, B](create: (A, A) => B): Either[DecodingFailure, B] =
+      for {
+        oldVal <- c.get[A]("old_value")
+        newVal <- c.get[A]("new_value")
+      } yield create(oldVal, newVal)
 
-      c.get[String]("key").right.flatMap {
-        case "name"                          => mkChange(AuditLogChange.Name)
-        case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
-        case "splash_hash"                   => mkChange(AuditLogChange.SplashHash)
-        case "owner_id"                      => mkChange(AuditLogChange.OwnerId)
-        case "region"                        => mkChange(AuditLogChange.Region)
-        case "afk_channel_id"                => mkChange(AuditLogChange.AfkChannelId)
-        case "afk_timeout"                   => mkChange(AuditLogChange.AfkTimeout)
-        case "mfa_level"                     => mkChange(AuditLogChange.MfaLevel)
-        case "verification_level"            => mkChange(AuditLogChange.VerificationLevel)
-        case "explicit_content_filter"       => mkChange(AuditLogChange.ExplicitContentFilter)
-        case "default_message_notifications" => mkChange(AuditLogChange.DefaultMessageNotification)
-        case "vanity_url_code"               => mkChange(AuditLogChange.VanityUrlCode)
-        case "$add"                          => mkChange(AuditLogChange.$Add)
-        case "$remove"                       => mkChange(AuditLogChange.$Remove)
-        case "prune_delete_days"             => mkChange(AuditLogChange.PruneDeleteDays)
-        case "widget_enabled"                => mkChange(AuditLogChange.WidgetEnabled)
-        case "widget_channel_id"             => mkChange(AuditLogChange.WidgetChannelId)
-        case "position"                      => mkChange(AuditLogChange.Position)
-        case "topic"                         => mkChange(AuditLogChange.Topic)
-        case "bitrate"                       => mkChange(AuditLogChange.Bitrate)
-        case "permission_overwrites"         => mkChange(AuditLogChange.PermissionOverwrites)
-        case "nsfw"                          => mkChange(AuditLogChange.NSFW)
-        case "application_id"                => mkChange(AuditLogChange.ApplicationId)
-        case "permissions"                   => mkChange(AuditLogChange.Permissions)
-        case "color"                         => mkChange(AuditLogChange.Color)
-        case "hoist"                         => mkChange(AuditLogChange.Hoist)
-        case "mentionable"                   => mkChange(AuditLogChange.Mentionable)
-        case "allow"                         => mkChange(AuditLogChange.Allow)
-        case "deny"                          => mkChange(AuditLogChange.Deny)
-        case "code"                          => mkChange(AuditLogChange.Code)
-        case "channel_id"                    => mkChange(AuditLogChange.InviteChannelId)
-        case "inviter_id"                    => mkChange(AuditLogChange.InviterId)
-        case "max_uses"                      => mkChange(AuditLogChange.MaxUses)
-        case "uses"                          => mkChange(AuditLogChange.Uses)
-        case "max_age"                       => mkChange(AuditLogChange.MaxAge)
-        case "temporary"                     => mkChange(AuditLogChange.Temporary)
-        case "deaf"                          => mkChange(AuditLogChange.Deaf)
-        case "mute"                          => mkChange(AuditLogChange.Mute)
-        case "nick"                          => mkChange(AuditLogChange.Nick)
-        case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
-        case "id"                            => mkChange(AuditLogChange.Id)
-        case "type"                          => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
-      }
+    c.get[String]("key").flatMap {
+      case "name" => mkChange(AuditLogChange.Name)
+      case "icon_hash" => mkChange(AuditLogChange.IconHash)
+      case "splash_hash" => mkChange(AuditLogChange.SplashHash)
+      case "owner_id" => mkChange(AuditLogChange.OwnerId)
+      case "region" => mkChange(AuditLogChange.Region)
+      case "afk_channel_id" => mkChange(AuditLogChange.AfkChannelId)
+      case "afk_timeout" => mkChange(AuditLogChange.AfkTimeout)
+      case "mfa_level" => mkChange(AuditLogChange.MfaLevel)
+      case "verification_level" => mkChange(AuditLogChange.VerificationLevel)
+      case "explicit_content_filter" => mkChange(AuditLogChange.ExplicitContentFilter)
+      case "default_message_notifications" => mkChange(AuditLogChange.DefaultMessageNotification)
+      case "vanity_url_code" => mkChange(AuditLogChange.VanityUrlCode)
+      case "$add" => mkChange(AuditLogChange.$Add)
+      case "$remove" => mkChange(AuditLogChange.$Remove)
+      case "prune_delete_days" => mkChange(AuditLogChange.PruneDeleteDays)
+      case "widget_enabled" => mkChange(AuditLogChange.WidgetEnabled)
+      case "widget_channel_id" => mkChange(AuditLogChange.WidgetChannelId)
+      case "position" => mkChange(AuditLogChange.Position)
+      case "topic" => mkChange(AuditLogChange.Topic)
+      case "bitrate" => mkChange(AuditLogChange.Bitrate)
+      case "permission_overwrites" => mkChange(AuditLogChange.PermissionOverwrites)
+      case "nsfw" => mkChange(AuditLogChange.NSFW)
+      case "application_id" => mkChange(AuditLogChange.ApplicationId)
+      case "permissions" => mkChange(AuditLogChange.Permissions)
+      case "color" => mkChange(AuditLogChange.Color)
+      case "hoist" => mkChange(AuditLogChange.Hoist)
+      case "mentionable" => mkChange(AuditLogChange.Mentionable)
+      case "allow" => mkChange(AuditLogChange.Allow)
+      case "deny" => mkChange(AuditLogChange.Deny)
+      case "code" => mkChange(AuditLogChange.Code)
+      case "channel_id" => mkChange(AuditLogChange.InviteChannelId)
+      case "inviter_id" => mkChange(AuditLogChange.InviterId)
+      case "max_uses" => mkChange(AuditLogChange.MaxUses)
+      case "uses" => mkChange(AuditLogChange.Uses)
+      case "max_age" => mkChange(AuditLogChange.MaxAge)
+      case "temporary" => mkChange(AuditLogChange.Temporary)
+      case "deaf" => mkChange(AuditLogChange.Deaf)
+      case "mute" => mkChange(AuditLogChange.Mute)
+      case "nick" => mkChange(AuditLogChange.Nick)
+      case "avatar_hash" => mkChange(AuditLogChange.AvatarHash)
+      case "id" => mkChange(AuditLogChange.Id)
+      case "type" => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
     }
   }
 

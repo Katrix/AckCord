@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 /**
   * A handler for a specific event type.
   *

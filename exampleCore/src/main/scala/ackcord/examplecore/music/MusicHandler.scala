@@ -23,7 +23,6 @@
  */
 package ackcord.examplecore.music
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.concurrent.duration._
 
@@ -36,6 +35,7 @@ import ackcord._
 import ackcord.commands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
 import ackcord.data.{ChannelId, GuildId, TChannel}
+import ackcord.examplecore.Compat
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler._
 import ackcord.syntax._
@@ -146,9 +146,9 @@ class MusicHandler(
       log.info("Received playlist")
       if (playlist.isSearchResult) {
         Option(playlist.getSelectedTrack)
-          .orElse(playlist.getTracks.asScala.headOption)
+          .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
           .foreach(queueTrack)
-      } else queueTracks(playlist.getTracks.asScala: _*)
+      } else queueTracks(Compat.convertJavaList(playlist.getTracks): _*)
       stay()
 
     case Event(_: AudioEvent, _) => stay() //Ignore
@@ -209,9 +209,9 @@ class MusicHandler(
       log.info("Received playlist")
       if (playlist.isSearchResult) {
         Option(playlist.getSelectedTrack)
-          .orElse(playlist.getTracks.asScala.headOption)
+          .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
           .foreach(queueTrack)
-      } else queueTracks(playlist.getTracks.asScala: _*)
+      } else queueTracks(Compat.convertJavaList(playlist.getTracks): _*)
       stay()
 
     case Event(_: PlayerPauseEvent, _) =>
@@ -279,7 +279,7 @@ class MusicHandler(
 
   def queueTracks(track: AudioTrack*): Unit = {
     queueTrack(track.head)
-    queue.enqueue(track.tail: _*)
+    Compat.enqueueMany(queue, track.tail)
   }
 
   def nextTrack(): Unit = if (queue.nonEmpty) {

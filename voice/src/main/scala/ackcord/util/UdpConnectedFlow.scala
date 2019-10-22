@@ -18,7 +18,7 @@ import scala.collection.immutable
 class UdpConnectedFlow(
     remoteAddress: InetSocketAddress,
     localAddress: Option[InetSocketAddress],
-    connectOptions: immutable.Traversable[SocketOption]
+    connectOptions: immutable.Iterable[SocketOption]
 )(
     implicit system: ActorSystem
 ) extends GraphStage[FlowShape[ByteString, ByteString]] {
@@ -136,7 +136,7 @@ object UdpConnectedFlow {
   def flow(
       remoteAddress: InetSocketAddress,
       localAddress: Option[InetSocketAddress] = None,
-      connectOptions: immutable.Traversable[SocketOption] = Nil
+      connectOptions: immutable.Iterable[SocketOption] = Nil
   )(
       implicit system: ActorSystem
   ): Flow[ByteString, ByteString, NotUsed] =

@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import java.time.Instant
 
 import ackcord.CacheSnapshot.BotUser

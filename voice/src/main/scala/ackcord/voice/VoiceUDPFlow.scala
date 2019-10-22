@@ -33,7 +33,7 @@ object VoiceUDPFlow {
       .join(UdpConnectedFlow.flow(remoteAddress))
 
   def voiceBidi(ssrc: Int): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[FoundIP]] = {
-    val ipDiscoveryPacket = ByteString(ssrc).padTo(70, 0.toByte)
+    val ipDiscoveryPacket = Compat.padBytestring(ByteString(ssrc), 70, 0.toByte)
 
     val valvePromise = Promise[Unit]
     val valve        = Source.future(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]

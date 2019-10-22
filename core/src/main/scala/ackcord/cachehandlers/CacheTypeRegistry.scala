@@ -1,7 +1,5 @@
 package ackcord.cachehandlers
 
-import scala.language.higherKinds
-
 import scala.reflect.ClassTag
 
 import ackcord.data.raw.PartialUser

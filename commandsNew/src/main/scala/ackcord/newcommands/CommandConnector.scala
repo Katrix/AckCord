@@ -137,8 +137,8 @@ class CommandConnector(
             case Left(_)  => 0
             case Right(_) => 1
           }))
-          val selfErr = selfPartition.out(0).map(_.left.get)
-          val selfOut = selfPartition.out(1).map(_.right.get)
+          val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
+          val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
           val resMerge = b.add(Merge[CommandError](2))
 

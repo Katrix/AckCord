@@ -29,7 +29,6 @@ import cats.Id
 import cats.data.OptionT
 
 import scala.concurrent.Future
-import scala.language.higherKinds
 
 /**
   * Typeclass for converting some type F[A] to a Source[A, NotUsed]

@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import ackcord.commands.{CmdDescription, CmdRefiner, RawCmd}
 import ackcord.data.Message
 

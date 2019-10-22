@@ -30,8 +30,6 @@ import ackcord.requests._
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 
-import scala.language.higherKinds
-
 package object syntax {
 
   implicit class ChannelSyntax(private val channel: Channel) extends AnyVal {

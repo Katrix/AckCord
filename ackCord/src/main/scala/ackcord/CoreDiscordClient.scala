@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.higherKinds
-
 import scala.concurrent.Future
 import scala.reflect.ClassTag
 

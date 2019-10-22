@@ -536,8 +536,8 @@ case class RawGuild(
         verificationLevel,
         defaultMessageNotifications,
         explicitContentFilter,
-        SnowflakeMap(roles.map(r => r.id  -> r.toRole(id))),
-        SnowflakeMap(emojis.map(e => e.id -> e.toEmoji)),
+        SnowflakeMap.from(roles.map(r => r.id  -> r.toRole(id))),
+        SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)),
         features,
         mfaLevel,
         applicationId,
@@ -548,9 +548,10 @@ case class RawGuild(
         large,
         memberCount,
         SnowflakeMap.withKey(voiceStates)(_.userId),
-        SnowflakeMap(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+        SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
-        SnowflakeMap(presences.flatMap(p => p.toPresence.toOption.map(p.user.id -> _))), //We throw away the errors here
+        SnowflakeMap
+          .from(presences.flatMap(p => p.toPresence.toOption.map(p.user.id -> _))), //We throw away the errors here
         maxPresences.getOrElse(5000), // The default is 5000
         maxMembers,
         vanityUrlCode,
@@ -653,7 +654,6 @@ case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Opt
     import cats.instances.either._
     Traverse[Option]
       .traverse(game)(_.toActivity)
-      .right
       .map(
         activity => Presence(user.id, activity, status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
       )

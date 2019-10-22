@@ -23,8 +23,6 @@
  */
 package ackcord.commands
 
-import scala.language.higherKinds
-
 import ackcord.CacheSnapshot
 import ackcord.data.raw.RawMessage
 import ackcord.data.{Message, User}

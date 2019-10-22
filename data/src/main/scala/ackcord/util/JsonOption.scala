@@ -29,7 +29,7 @@ object JsonOption {
 
   implicit def decodeRestOption[A](implicit decodeOpt: Decoder[Option[A]]): Decoder[JsonOption[A]] =
     Decoder.withReattempt { c =>
-      if (c.succeeded) c.as[Option[A]].right.map(fromOptionWithNull) else Right(JsonUndefined)
+      if (c.succeeded) c.as[Option[A]].map(fromOptionWithNull) else Right(JsonUndefined)
     }
 
   def fromOptionWithNull[A](opt: Option[A]): JsonOption[A] = opt.fold[JsonOption[A]](JsonNull)(JsonSome.apply)

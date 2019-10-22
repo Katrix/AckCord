@@ -91,11 +91,11 @@ object OAuth {
 
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
       for {
-        accessToken  <- c.get[String]("access_token").right
-        tokenType    <- c.get[String]("token_type").right
-        expiresIn    <- c.get[Int]("expires_in").right
-        refreshToken <- c.get[String]("refresh_token").right
-        scopes       <- c.get[String]("scope").right.map(s => s.split(" ").toSeq.flatMap(Scope.fromString)).right
+        accessToken  <- c.get[String]("access_token")
+        tokenType    <- c.get[String]("token_type")
+        expiresIn    <- c.get[Int]("expires_in")
+        refreshToken <- c.get[String]("refresh_token")
+        scopes       <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
       } yield AccessToken(accessToken, tokenType, expiresIn, refreshToken, scopes)
   }
 
@@ -111,10 +111,10 @@ object OAuth {
 
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
       for {
-        accessToken <- c.get[String]("access_token").right
-        tokenType   <- c.get[String]("token_type").right
-        expiresIn   <- c.get[Int]("expires_in").right
-        scopes      <- c.get[String]("scope").right.map(s => s.split(" ").toSeq.flatMap(Scope.fromString)).right
+        accessToken <- c.get[String]("access_token")
+        tokenType   <- c.get[String]("token_type")
+        expiresIn   <- c.get[Int]("expires_in")
+        scopes      <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
       } yield ClientAccessToken(accessToken, tokenType, expiresIn, scopes)
   }
 

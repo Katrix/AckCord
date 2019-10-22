@@ -6,20 +6,21 @@ lazy val circeVersion    = "0.12.1"
 lazy val ackCordVersion  = "0.14.0"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.10",
-  crossScalaVersions := Seq(scalaVersion.value),
+  scalaVersion := "2.13.1",
+  crossScalaVersions := Seq("2.12.10", scalaVersion.value),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature",
     "-unchecked",
     "-Xlint",
-    "-Yno-adapted-args",
-    "-Ywarn-dead-code",
-    "-Ywarn-unused-import",
-    "-Ypartial-unification"
+    "-Ywarn-dead-code"
   ),
-  scalacOptions ++= (if (scalaVersion.value.startsWith("2.11")) Seq("-Xexperimental") else Nil),
+  scalacOptions ++= (
+    if (scalaVersion.value.startsWith("2.12"))
+      Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
+    else Nil
+  ),
   libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
   //Fixes repository not specified error
   publishTo := {

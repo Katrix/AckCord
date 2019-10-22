@@ -91,7 +91,7 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
       message: Message,
       reg: HelpCmd.CommandRegistration
   )(implicit c: MemoryCacheSnapshot): EmbedField = {
-    val builder = StringBuilder.newBuilder
+    val builder = new StringBuilder
     builder.append(s"Name: ${reg.description.name}\n")
     builder.append(s"Description: ${reg.description.description}\n")
     builder.append(
