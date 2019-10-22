@@ -12,14 +12,11 @@ import ackcord._
 import ackcord.data._
 import ackcord.syntax._
 import ackcord.commands._
-import cats.Monad
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
-import akka.stream.scaladsl.{Flow, Keep}
+import akka.stream.scaladsl.{Source, Flow, Keep}
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
-implicit val mat: Materializer = ActorMaterializer()
 import system.dispatcher
 
 val token = "<token>"
@@ -37,15 +34,15 @@ DiscordShard.fetchWsGateway.foreach { wsUri =>
 Just like the job of the `Cache` object is to keep track of the current events and state of the application, it's the job of the `Commands` object to keep track of the current commands in the application. To get a `Commands` instance, call `CoreCommands.create`. From there you have access to a source of raw commands that can be materialized as many times as needed.
 ```scala mdoc:silent
 val GeneralCommands = "!"
-val commands = CoreCommands.create(CommandSettings[Id](prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
+val commands = CoreCommands.create(CommandSettings(prefixes = Set(GeneralCommands), needsMention = true), cache, requests)
 ```
 
 Let's create a raw command, using the `Source` found the the `Commands` object.
 ```scala mdoc
-def rawCommandEcho[F[_]: Monad: Streamable] = Flow[RawCmdMessage[F]].collect {
+def rawCommandEcho = Flow[RawCmdMessage].collect {
   case RawCmd(msg, GeneralCommands, "echo", args, c) =>
-    implicit val cache: CacheSnapshot[F] = c
-    Streamable[F].optionToSource(msg.tGuildChannel.map(_.sendMessage(s"ECHO: ${args.mkString(" ")}")))
+    implicit val cache: CacheSnapshot = c
+    Source(msg.tGuildChannel.map(_.sendMessage(s"ECHO: ${args.mkString(" ")}")).toList)
 }.flatMapConcat(identity).to(requests.sinkIgnore)
 
 commands.subscribeRaw.to(rawCommandEcho).run()
@@ -58,24 +55,24 @@ Often times, working with the raw commands objects directly can be kind of tires
 AckCord represents the code to run for a command as a Sink that can be connected to the command messages. While you can use the materialized value of running the sink, in most cases you probably only want use an ignoring sink as the last step of the pipeline.
 
 ## Other helpers
-There are a few more helpers that you can use when writing commands. The first one is `CmdFlow[F]` and `ParsedCmdFlow[F, A]`, which helps you construct a flow with an implicit cache snapshot. The next is the `requestRunner` methods on the command factory objects, which lets you create factories that takes a `(RequestRunner[SourceRequest, F], <cmdtype>[F]) => SourceRequest[Unit]` instead.
+There are a few more helpers that you can use when writing commands. The first one is `CmdFlow` and `ParsedCmdFlow[A]`, which helps you construct a flow with an implicit cache snapshot. The next is the `requestRunner` methods on the command factory objects, which lets you create factories that takes a `(RequestRunner[SourceRequest, F], <cmdtype>[F]) => SourceRequest[Unit]` instead.
 
 ## Putting it all together
 So now that we know what all the different things to, let's create our factories.
 ```scala mdoc:silent
-def getUsernameCmdFactory[F[_]: Monad: Streamable] = ParsedCmdFactory.requestRunner[F, User](
+def getUsernameCmdFactory = ParsedCmdFactory.requestRunner[User](
   refiner = CmdInfo(prefix = GeneralCommands, aliases = Seq("getUsername")),
   run = implicit c => (runner, cmd) => {
     import runner._
     for {
-      channel <- liftOptionT(cmd.msg.tGuildChannel[F])
+      channel <- optionPure(cmd.msg.tGuildChannel)
       _       <- run(channel.sendMessage(s"Username for user is: ${cmd.args.username}"))
     } yield ()
   },
   description = Some(CmdDescription(name = "Get username", description = "Get the username of a user"))
 )
 
-commands.subscribe(getUsernameCmdFactory[Id])(Keep.left)
+commands.subscribe(getUsernameCmdFactory)(Keep.left)
 ```
 
 ## Help command

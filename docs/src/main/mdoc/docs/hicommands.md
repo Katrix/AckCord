@@ -12,10 +12,9 @@ As before we create out client as usual, but with a small twist. This time we al
 ```scala mdoc:silent
 import akka.NotUsed
 import ackcord._
-import ackcord.data._
 import ackcord.syntax._
 import ackcord.commands._
-import cats.Monad
+import cats.Id
 val token = "<token>"
 val GeneralCommands = "!"
 // IMPORTANT: We specify needsMention = true here. This is the default option.
@@ -31,11 +30,11 @@ futureClient.foreach { client =>
 
 When you register a parsed command, you also pass in a refiner and a description for the command.
 ```scala mdoc
-def registerParsedCommand[F[_]: Monad: Streamable](commands: CommandsHelper[F]): Unit = {
+def registerParsedCommand(commands: CommandsHelper): Unit = {
   commands.registerCmd[NotUsed, Id](
-  	refiner = CmdInfo[F](prefix = GeneralCommands, aliases = Seq("ping"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
+  	refiner = CmdInfo(prefix = GeneralCommands, aliases = Seq("ping"), filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)),
     description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-  ) { cmd: ParsedCmd[F, NotUsed] =>
+  ) { cmd: ParsedCmd[NotUsed] =>
     println(s"Received ping command")
   }
 }
@@ -45,17 +44,17 @@ futureClient.foreach { client =>
 }
 ```
 
-Notice the type `CommandsHelper[F]` there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other `CommandsHelper[F]`. Let's see how, in addition to see how raw commands are done.
+Notice the type `CommandsHelper` there. So far we have been working with the main commands helper, the client object. The client object uses the command settings we passed to it when building the client. We can also make other `CommandsHelper`. Let's see how, in addition to see how raw commands are done.
 
 ```scala mdoc
 val TestCommands = "?"
-def registerRawCommand[F[_]: Monad: Streamable](client: DiscordClient[F], commands: CommandsHelper[F]): Unit = {
+def registerRawCommand(client: DiscordClient, commands: CommandsHelper): Unit = {
   commands.onRawCmd {
-    client.withCache[SourceRequest, RawCmd[F]] { implicit c => {
+    client.withCache[SourceRequest, RawCmd] { implicit c => {
         case RawCmd(message, TestCommands, "echo", args, _) =>
           import client.sourceRequesterRunner._
           for {
-            channel <- liftOptionT(message.tGuildChannel[F])
+            channel <- optionPure(message.tGuildChannel)
             _       <- run(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
           } yield ()
         case _ => client.sourceRequesterRunner.unit
@@ -79,9 +78,9 @@ settings.system.terminate()
 ```
 
 ## Access to the low level API
-Accessing the low level API from the high level commands API is as simple as getting the `Commands[F]` instance that is backing the `CommandsHelper[F]` instance is as simple as calling the `commands` method on a `CommandsHelper[F]`.
+Accessing the low level API from the high level commands API is as simple as getting the `Commands` instance that is backing the `CommandsHelper` instance is as simple as calling the `commands` method on a `CommandsHelper`.
 ```scala mdoc
 futureClient.foreach { client =>
-  val commands: Commands[Id] = client.commands
+  val commands: Commands = client.commands
 }
 ```

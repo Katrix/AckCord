@@ -22,12 +22,10 @@ import ackcord.newcommands._
 import cats.~>
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
-implicit val mat: Materializer = ActorMaterializer()
 import system.dispatcher
 
 val token = "<token>"
@@ -57,7 +55,7 @@ Now that we have our connector, we need some commands. The easiest way to create
 
 Let's start with creating two basic commands. One command that doesn't care about arguments and one that takes an int.
 ```scala mdoc:silent
-class OurController(requests: RequestHelper) extends CommandController[Id](requests) {
+class OurController(requests: RequestHelper) extends CommandController(requests) {
   
   //The command builder includes a few convenience functions for common things.
   //withRequest is one of those, that sends the request at the end of the command.
@@ -97,7 +95,7 @@ Ok, so we created our command, and can use them. However, so far they're not tha
 
 Let's create two new commands that interact with the guild they are used in. (I won't register them here, you already know how that works).
 ```scala mdoc:silent
-class GuildCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
+class GuildCommandsController(requests: RequestHelper) extends CommandController(requests) {
 
   //Here we're composing a command function with out builder. This lets us 
   //include more information in the command message, 
@@ -107,15 +105,15 @@ class GuildCommandsController(requests: RequestHelper) extends CommandController
   //therefore also includes the user that used the command. To carry along that 
   //information we need we must create a natural transformation from the previous
   //command message type, to our new type.
-  val OurGuildCommand = Command.andThen(CommandFunction.onlyInGuild { (chG, g) =>
-    λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
-  })
+  val OurGuildCommand = Command.andThen(CommandBuilder.onlyInGuild { (chG, g) =>
+      Lambda[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
+    })
   
   //We can now use our new command builder like normal
   val memberCount = OurGuildCommand.withRequest { implicit m =>
     val guildChannel = m.tChannel //Now a guild channel
     val guild = m.guild
-    val guildOwner = guild.owner.value //The implicit command message provides the cache snapshot
+    val guildOwner = guild.owner //The implicit command message provides the cache snapshot
     guildChannel.sendMessage(
       s"Member count for guild is ${guild.memberCount} and owner is ${guildOwner.fold("Unknown")(_.username)}"
     )
@@ -136,9 +134,9 @@ So far you've seen how to send a single request with commands, and how to do sid
 
 Let's see an example with `Future`.
 ```scala mdoc:silent
-class AsyncCommandsController(requests: RequestHelper) extends CommandController[Id](requests) {
+class AsyncCommandsController(requests: RequestHelper) extends CommandController(requests) {
 
-  val timeDiff: Command[List[String]] = Command.async[Future] { implicit m =>
+  val timeDiff: Command[NotUsed] = Command.async[Future] { implicit m =>
     //The ExecutionContext is provided by the controller
     for {
       answer  <- requests.singleFuture(m.tChannel.sendMessage("Msg"))

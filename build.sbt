@@ -20,7 +20,7 @@ lazy val commonSettings = Seq(
     "-Ypartial-unification"
   ),
   scalacOptions ++= (if (scalaVersion.value.startsWith("2.11")) Seq("-Xexperimental") else Nil),
-  libraryDependencies += compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.10"),
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
   //Fixes repository not specified error
   publishTo := {
     val nexus = "https://oss.sonatype.org/"

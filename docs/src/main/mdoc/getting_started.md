@@ -53,7 +53,7 @@ import clientSettings.executionContext
 val futureClient = clientSettings.createClient()
 
 futureClient.foreach { client =>
-  client.onEvent[Id] {
+  client.onEvent[cats.Id] {
     case APIMessage.Ready(_) => println("Now ready")
     case _                   =>
   }
@@ -77,15 +77,12 @@ val token = "<token>"
 
 When working with the low level API, you're the one responsible for setting stuff up, and knowing how it works.
 
-First we need an actor system and materializer.
+First we need an actor system.
 ```scala mdoc:silent
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.Sink
 
 implicit val system: ActorSystem  = ActorSystem("AckCord")
-//I'd recommend using a supplying a custom supervision to log exceptions here
-implicit val mat: Materializer = ActorMaterializer()
 import system.dispatcher
 ```
 
