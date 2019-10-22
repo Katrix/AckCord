@@ -85,7 +85,7 @@ class NewCommandsController(requests: RequestHelper) extends CommandController(r
     }
 
   val maybeFail: NamedCommand[NotUsed] = Command.named("%", Seq("maybeFail"), mustMention = true).withRequest { r =>
-    if(Random.nextInt(100) < 25) {
+    if (Random.nextInt(100) < 25) {
       throw new Exception("Failed")
     }
 

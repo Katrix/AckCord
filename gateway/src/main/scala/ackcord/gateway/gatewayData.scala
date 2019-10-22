@@ -867,5 +867,6 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
-  case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]]) extends SimpleGatewayEvent[Unit]
+  case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]])
+      extends SimpleGatewayEvent[Unit]
 }

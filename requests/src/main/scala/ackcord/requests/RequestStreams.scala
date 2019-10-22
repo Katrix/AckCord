@@ -234,7 +234,8 @@ object RequestStreams {
       relativeTime: Boolean,
       breadth: Int
   )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
-    Flow[(Try[HttpResponse], Request[Data, Ctx])].map[Source[RequestAnswer[Data, Ctx], NotUsed]] {
+    Flow[(Try[HttpResponse], Request[Data, Ctx])]
+      .map[Source[RequestAnswer[Data, Ctx], NotUsed]] {
         {
           case (response, request) =>
             val route = request.route
