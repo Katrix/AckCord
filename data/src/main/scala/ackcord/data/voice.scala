@@ -37,6 +37,7 @@ import ackcord.data.raw.RawGuildMember
   * @param mute If the user is muted by the guild
   * @param selfDeaf If the user is deafened locally
   * @param selfMute If the user is muted locally
+  * @param selfStream If the user is streaming
   * @param suppress If the client has muted the user
   */
 case class VoiceState(
@@ -49,6 +50,7 @@ case class VoiceState(
     mute: Boolean,
     selfDeaf: Boolean,
     selfMute: Boolean,
+    selfStream: Boolean,
     suppress: Boolean
 ) extends GetGuildOpt
     with GetVChannelOpt

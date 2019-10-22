@@ -172,7 +172,7 @@ case class Guild(
     explicitContentFilter: FilterLevel,
     roles: SnowflakeMap[Role, Role],
     emojis: SnowflakeMap[Emoji, Emoji],
-    features: Seq[String], //TODO: What is a feature?
+    features: Seq[GuildFeature], //TODO: What is a feature?
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean],
@@ -191,7 +191,8 @@ case class Guild(
     description: Option[String],
     banner: Option[String],
     premiumTier: PremiumTier,
-    premiumSubscriptionCount: Option[Int]
+    premiumSubscriptionCount: Option[Int],
+    preferredLocale: Option[String]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 
@@ -242,6 +243,24 @@ case class Guild(
   * @param unavailable If the guild is unavailable.
   */
 case class UnavailableGuild(id: GuildId, unavailable: Boolean) extends UnknownStatusGuild
+
+sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
+object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnum[GuildFeature] {
+  override def values: immutable.IndexedSeq[GuildFeature] = findValues
+
+  case object InviteSplash extends GuildFeature("INVITE_SPLASH")
+  case object VipRegions   extends GuildFeature("VIP_REGIONS")
+  case object VanityUrl    extends GuildFeature("VANITY_URL")
+  case object Verified     extends GuildFeature("VERIFIED")
+  case object Partnered    extends GuildFeature("PARTNERED")
+  case object Public       extends GuildFeature("PUBLIC")
+  case object Commerce     extends GuildFeature("COMMERCE")
+  case object News         extends GuildFeature("NEWS")
+  case object Discoverable extends GuildFeature("DISCOVERABLE")
+  case object Featureable  extends GuildFeature("FEATURABLE")
+  case object AnimatedIcon extends GuildFeature("ANIMATED_ICON")
+  case object Banner       extends GuildFeature("BANNER")
+}
 
 /**
   * Represents a user in a guild.

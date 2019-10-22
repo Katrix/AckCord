@@ -56,7 +56,6 @@ case class Invite(
   * @param maxAge The duration in seconds when the invite will expire
   * @param temporary If this invite is temporary
   * @param createdAt When this invite was created
-  * @param revoked If this invite has been revoked
   */
 case class InviteWithMetadata(
     code: String,
@@ -67,8 +66,7 @@ case class InviteWithMetadata(
     maxUses: Int,
     maxAge: Int,
     temporary: Boolean,
-    createdAt: OffsetDateTime,
-    revoked: Boolean
+    createdAt: OffsetDateTime
 )
 
 /**

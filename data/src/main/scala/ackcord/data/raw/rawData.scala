@@ -479,7 +479,7 @@ case class RawGuild(
     explicitContentFilter: FilterLevel,
     roles: Seq[RawRole],
     emojis: Seq[RawEmoji],
-    features: Seq[String],
+    features: Seq[GuildFeature],
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean],
@@ -499,7 +499,8 @@ case class RawGuild(
     description: Option[String],
     banner: Option[String],
     premiumTier: PremiumTier,
-    premiumSubscriptionCount: Option[Int]
+    premiumSubscriptionCount: Option[Int],
+    preferredLocale: Option[String]
 ) {
 
   /**
@@ -556,7 +557,8 @@ case class RawGuild(
         description,
         banner,
         premiumTier,
-        premiumSubscriptionCount
+        premiumSubscriptionCount,
+        preferredLocale
       )
     }
   }

@@ -179,7 +179,8 @@ object CacheHandlers {
           description = obj.description,
           banner = obj.banner,
           premiumTier = obj.premiumTier,
-          premiumSubscriptionCount = obj.premiumSubscriptionCount
+          premiumSubscriptionCount = obj.premiumSubscriptionCount,
+          preferredLocale = obj.preferredLocale
         )
 
         guildUpdater.handle(builder, guild, registry)

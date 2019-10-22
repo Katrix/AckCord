@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord._
 import ackcord.commands._
-import ackcord.data.{GuildId, TChannel, UserId, VoiceState}
+import ackcord.data.{GuildId, TChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
@@ -53,8 +53,8 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
           channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
           _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
-              case Some(VoiceState(_, Some(vChannelId), _, _, _, _, _, _, _, _)) =>
-                (musicHandler ? QueueUrl(cmd.args, channel, vChannelId)).map(_ => None)
+              case Some(vs) if vs.channelId.isDefined =>
+                (musicHandler ? QueueUrl(cmd.args, channel, vs.channelId.get)).map(_ => None)
               case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
             })
           }
