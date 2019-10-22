@@ -194,7 +194,6 @@ object GatewayHandlerGraphStage {
   def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem
   ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
-    import system.dispatcher
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)

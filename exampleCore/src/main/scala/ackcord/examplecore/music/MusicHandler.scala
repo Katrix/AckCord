@@ -25,7 +25,6 @@ package ackcord.examplecore.music
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import com.sedmelluq.discord.lavaplayer.player._
@@ -40,8 +39,8 @@ import ackcord.data.{ChannelId, GuildId, TChannel}
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler._
 import ackcord.syntax._
-import akka.{Done, NotUsed, util}
-import akka.actor.{ActorLogging, ActorSystem, CoordinatedShutdown, FSM, PoisonPill, Props}
+import akka.{NotUsed, util}
+import akka.actor.{ActorLogging, ActorSystem, FSM, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.util.Timeout

@@ -29,7 +29,7 @@ import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}
 import ackcord.MemoryCacheSnapshot
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props, Status}
+import akka.actor.{ActorRef, ActorSystem, Props, Status}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Sink, Source}
 

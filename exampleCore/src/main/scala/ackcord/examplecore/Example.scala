@@ -23,7 +23,6 @@
  */
 package ackcord.examplecore
 
-import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 
 import ackcord._
