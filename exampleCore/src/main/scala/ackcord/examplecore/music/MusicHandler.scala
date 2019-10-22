@@ -41,7 +41,7 @@ import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler._
 import ackcord.syntax._
 import akka.{Done, NotUsed, util}
-import akka.actor.{ActorLogging, ActorSystem, CoordinatedShutdown, FSM, Props}
+import akka.actor.{ActorLogging, ActorSystem, CoordinatedShutdown, FSM, PoisonPill, Props}
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
@@ -81,13 +81,6 @@ class MusicHandler(
   private var inVChannel             = ChannelId(0)
   private var lastTChannel: TChannel = _
 
-  CoordinatedShutdown(system).addTask("service-stop", s"stop-music-${guildId.asString}") { () =>
-    Future {
-      self ! MusicHandler.StopSystem
-      Done
-    }
-  }
-
   onTermination {
     case StopEvent(_, _, _) if player != null => player.destroy()
   }
@@ -95,12 +88,12 @@ class MusicHandler(
   startWith(Inactive, NoData)
 
   when(Inactive) {
-    case Event(MusicHandler.StopSystem, _) =>
+    case Event(DiscordShard.StopShard, _) =>
+      context.watchWith(lavaplayerHandler, PoisonPill)
       lavaplayerHandler.forward(DiscordShard.StopShard)
       stay()
 
-    case Event(DiscordShard.StopShard, _) =>
-      stop()
+    case Event(PoisonPill, _) => stop()
 
     case Event(APIMessage.Ready(_), _) =>
       //Startup
@@ -163,14 +156,11 @@ class MusicHandler(
   }
 
   when(Active) {
-    case Event(MusicHandler.StopSystem, _) =>
+    case Event(DiscordShard.StopShard, _) =>
       player.stopTrack()
+      context.watchWith(lavaplayerHandler, PoisonPill)
       lavaplayerHandler.forward(DiscordShard.StopShard)
       goto(Inactive)
-
-    case Event(DiscordShard.StopShard, _) =>
-      lavaplayerHandler.forward(DiscordShard.StopShard)
-      stop()
 
     case Event(StopMusic(tChannel), _) =>
       log.info("Stopped and left")
@@ -305,8 +295,6 @@ object MusicHandler {
   type MatCmdFactory[A] = ParsedCmdFactory[_, A]
 
   final val UseBurstingSender = true
-
-  case object StopSystem
 
   case object CommandAck
 

@@ -118,7 +118,7 @@ object ExampleHelpCmdFactory {
     refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
     sink = _ =>
       Sink
-        .actorRefWithBackpressure(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, PoisonPill, Status.Failure),
+        .actorRefWithBackpressure(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, NotUsed, Status.Failure),
     description = Some(
       CmdDescription(
         name = "Help",

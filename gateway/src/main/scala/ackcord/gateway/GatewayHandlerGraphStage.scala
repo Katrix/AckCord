@@ -131,6 +131,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       }
 
       override def onUpstreamFinish(): Unit = {
+        println("UpFinish")
         if (!restarting) {
           if (!promise.isCompleted) {
             promise.success(Option(resume))
@@ -142,6 +143,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       override def onUpstreamFailure(ex: Throwable): Unit = {
         promise.failure(ex)
+        println("UpFailure")
         super.onUpstreamFailure(ex)
       }
 
@@ -168,7 +170,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
-      override def onDownstreamFinish(cause: Throwable): Unit =
+      override def onDownstreamFinish(cause: Throwable): Unit = {
+        println("DownFinish")
         if (!restarting) {
           if (!promise.isCompleted) {
             promise.success(Option(resume))
@@ -176,6 +179,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
           super.onDownstreamFinish(cause)
         }
+      }
 
       setHandler(out, this)
       setHandler(dispatchOut, this)
@@ -190,6 +194,7 @@ object GatewayHandlerGraphStage {
   def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem
   ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+    import system.dispatcher
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
@@ -206,7 +211,7 @@ object GatewayHandlerGraphStage {
       implicit builder => (msgFlowShape, wsHandlerShape) =>
         import GraphDSL.Implicits._
 
-        val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
+        val wsMessages = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
 
         //TODO: Make overflow strategy configurable
         val buffer = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
@@ -214,7 +219,7 @@ object GatewayHandlerGraphStage {
         // format: OFF
 
         msgFlowShape.out ~> buffer ~> wsHandlerShape.in
-        wsHandlerShape.out0 ~> wsMessages.in(1)
+                                      wsHandlerShape.out0 ~> wsMessages.in(1)
         msgFlowShape.in                                   <~ wsMessages.out
 
         // format: ON
@@ -231,15 +236,14 @@ object GatewayHandlerGraphStage {
   def parseMessage(implicit system: ActorSystem): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
-        case t: TextMessage => t.textStream.fold("")(_ + _)
+        case t: TextMessage => t.textStream
         case b: BinaryMessage =>
           b.dataStream
             .fold(ByteString.empty)(_ ++ _)
             .via(Compression.inflate())
             .map(_.utf8String)
-            .fold("")(_ + _)
       }
-      .flatMapConcat(identity)
+      .flatMapConcat(_.fold("")(_ + _))
 
     val withLogging = if (AckCordGatewaySettings().LogReceivedWs) {
       jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))

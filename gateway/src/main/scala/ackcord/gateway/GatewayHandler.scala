@@ -60,7 +60,7 @@ class GatewayHandler(
   var shuttingDown               = false
   var resume: Option[ResumeData] = None
 
-  private var killSwitch: SharedKillSwitch = _
+  private var killSwitch: UniqueKillSwitch = _
   private var retryCount                   = 0
 
   val wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
@@ -84,17 +84,18 @@ class GatewayHandler(
   def inactive: Receive = {
     case Login =>
       log.info("Logging in")
-      killSwitch = KillSwitches.shared("GatewayComplete")
 
-      val (wsUpgrade, newResumeData) = source
-        .viaMat(wsFlow)(Keep.right)
-        .via(killSwitch.flow)
+      val (switch, (wsUpgrade, newResumeData)) = source
+        .viaMat(KillSwitches.single)(Keep.right)
+        .viaMat(wsFlow)(Keep.both)
         .toMat(sink)(Keep.left)
         .addAttributes(ActorAttributes.supervisionStrategy(e => {
           log.error(e, "Error in stream")
           Supervision.Resume
         }))
+        .named("GatewayWebsocket")
         .run()
+      killSwitch = switch
 
       newResumeData.map(ConnectionDied).pipeTo(self)
       wsUpgrade.pipeTo(self)

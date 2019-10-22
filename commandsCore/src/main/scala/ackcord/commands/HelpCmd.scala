@@ -118,6 +118,7 @@ abstract class HelpCmd extends Actor {
       if (commands.forall(_.description.extra.contains("ignore-help-last")) && sendEmptyEvent) {
         handler.foreach(_ ! HelpCmd.NoCommandsRemaining)
       }
+    case NotUsed => //Ignored
   }
 
   /**

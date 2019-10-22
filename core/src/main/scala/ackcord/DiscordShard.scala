@@ -107,6 +107,7 @@ class DiscordShard(
         "GatewayHandler"
       )
       gatewayHandler ! GatewayLogin
+      context.watch(gatewayHandler)
 
     case RestartShard =>
       isRestarting = true

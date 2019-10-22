@@ -142,6 +142,9 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       voiceWs ! VoiceWsHandler.Logout
       stay()
 
+    case Event(PoisonPill, _) =>
+      stop()
+
     case Event(DiscordShard.StopShard, _)                         => stop()
     case Event(AudioAPIMessage.UserSpeaking(_, _, _, _, _, _), _) => stay() //NO-OP
     case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
@@ -197,7 +200,7 @@ class LavaplayerHandler(player: AudioPlayer, guildId: GuildId, cache: Cache, use
       context.watchWith(voiceWs, PoisonPill)
       voiceWs ! VoiceWsHandler.Logout
       killSwitch.shutdown()
-      stay()
+      goto(Inactive)
 
     case Event(APIMessage.VoiceStateUpdate(_, _), _)              => stay() //NO-OP
     case Event(APIMessage.VoiceServerUpdate(_, _, _, _), _)       => stay() //NO-OP

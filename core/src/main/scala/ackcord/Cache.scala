@@ -90,6 +90,10 @@ object Cache {
   def create(implicit system: ActorSystem): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
+
+    //Keep it drained if nothing else is using it
+    subscribe.runWith(Sink.ignore)
+
     Cache(publish, subscribe, gatewayPublish, gatewaySubscribe)
   }
 }

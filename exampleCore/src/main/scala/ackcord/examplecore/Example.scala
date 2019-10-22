@@ -23,7 +23,7 @@
  */
 package ackcord.examplecore
 
-import scala.concurrent.Future
+import scala.concurrent.{Future, Promise}
 import scala.util.{Failure, Success}
 
 import ackcord._
@@ -208,6 +208,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
 
+  //TODO: Complete this before shutting down guildRouterMusic
   cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard, Status.Failure)(classOf[APIMessage.Ready])
   shard ! DiscordShard.StartShard
 
@@ -232,11 +233,14 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     gracefulStop(helpCmdActor, timeout).map(_ => Done)
   }
 
+  shutdown.addTask("service-requests-done", "stop-music") { () =>
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("service-requests-done"))
+    (self ? ExampleMain.StopMusic).mapTo[Done]
+  }
+
   shutdown.addTask("service-stop", "stop-discord") { () =>
-    Future {
-      self ! DiscordShard.StopShard
-      Done
-    }
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("service-stop"))
+    (self ? DiscordShard.StopShard).mapTo[Done]
   }
 
   override def receive: Receive = {
@@ -246,7 +250,9 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     case HelpCmd.NoCommandsRemaining =>
       if (isShuttingDown) {
         tempSender ! Done
+        tempSender = null
       }
+    case HelpCmd.CommandTerminated(_) => //Ignore
 
     case ExampleMain.BeginDeathwatch =>
       isShuttingDown = true
@@ -260,15 +266,23 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
       tempSender = sender()
       killSwitch.shutdown()
 
-    case DiscordShard.StopShard =>
-      shard ! DiscordShard.StopShard
+    case ExampleMain.StopMusic =>
+      tempSender = sender()
       guildRouterMusic ! DiscordShard.StopShard
+
+    case DiscordShard.StopShard =>
+      tempSender = sender()
+      shard ! DiscordShard.StopShard
 
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
+
+      tempSender ! Done
+      tempSender = null
+
       if (shutdownCount == 2) {
-        context.stop(self)
+        //context.stop(self)
       }
   }
 }
@@ -293,6 +307,7 @@ object ExampleMain {
 
   case object BeginDeathwatch
   case object UnregisterCommands
+  case object StopMusic
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
