@@ -31,7 +31,7 @@ import ackcord.data.SnowflakeType
 
 //A wrapper around a LongMap which allows a nice API. We overwrite everything LongMap overrides.
 class SnowflakeMap[K, +V](private val inner: LongMap[V])
-  extends AbstractMap[SnowflakeType[K], V]
+    extends AbstractMap[SnowflakeType[K], V]
     with Map[SnowflakeType[K], V]
     with MapLike[SnowflakeType[K], V, SnowflakeMap[K, V]] {
   type Key = SnowflakeType[K]

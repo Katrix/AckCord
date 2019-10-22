@@ -40,7 +40,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     with Serializable {
   type Key = SnowflakeType[K]
 
-  override protected def fromSpecific(coll: IterableOnce[(SnowflakeType[K], V)] @uncheckedVariance): SnowflakeMap[K, V] = {
+  override protected def fromSpecific(
+      coll: IterableOnce[(SnowflakeType[K], V)] @uncheckedVariance
+  ): SnowflakeMap[K, V] = {
     val b = newSpecificBuilder
     b.sizeHint(coll)
     b.addAll(coll)
