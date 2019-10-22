@@ -14,6 +14,7 @@ cache:
   directories:
     - $HOME/.ivy2/cache
     - $HOME/.sbt
+    - $HOME/.coursier/cache
 
 before_cache:
   # Tricks to avoid unnecessary cache updates
@@ -44,4 +45,4 @@ jobs:
     - stage: test
       script:
         - sbt ++$TRAVIS_SCALA_VERSION compile
-        - ./scalafmt -i --test --non-interactive
+        - ./scalafmt --test --non-interactive
