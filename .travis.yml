@@ -31,10 +31,6 @@ install:
   - gem install sass
   - gem install jekyll -v 3.2.1
 
-script:
-  - sbt ++$TRAVIS_SCALA_VERSION compile
-  - ./scalafmt -i --test --non-interactive
-
 stages:
   - name: test
   - name: deploy
@@ -45,3 +41,7 @@ jobs:
     - stage: deploy
       script:
         - bash scripts/publishMicrosite.sh
+    - stage: test
+      script:
+        - sbt ++$TRAVIS_SCALA_VERSION compile
+        - ./scalafmt -i --test --non-interactive
