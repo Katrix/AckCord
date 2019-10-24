@@ -33,9 +33,9 @@ import cats.mtl.{ApplicativeHandle, MonadState}
 import cats.syntax.all._
 import cats.{Monad, MonadError}
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 /**
   * MessageParser is a typeclass to simplify parsing messages. It can derive
@@ -167,7 +167,7 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
     import cats.mtl.instances.statet._
     import cats.instances.either._
 
-    parser.parse[StateT[Either[String, ?], List[String], ?]].run(args)
+    parser.parse[StateT[Either[String, *], List[String], *]].run(args)
   }
 
 }

@@ -111,7 +111,7 @@ object RequestRunner {
       F: Alternative[F]
   ): RequestRunner[λ[A => Future[F[A]]]] = new RequestRunner[λ[A => Future[F[A]]]] {
     import requests.system
-    import requests.system.dispatcher
+    import requests.system.executionContext
 
     override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): Future[F[A]] =
       if (request.hasPermissions) {

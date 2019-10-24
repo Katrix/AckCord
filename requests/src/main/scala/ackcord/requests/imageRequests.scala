@@ -26,7 +26,7 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data._
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
@@ -60,7 +60,7 @@ trait ImageRequest[Ctx] extends Request[ByteString, Ctx] {
 
   override def parseResponse(
       parallelism: Int
-  )(implicit system: ActorSystem): Flow[ResponseEntity, ByteString, NotUsed] =
+  )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, ByteString, NotUsed] =
     RequestStreams.bytestringFromResponse
 
   override def hasPermissions(implicit c: CacheSnapshot): Boolean = true

@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 package ackcord.cachehandlers
-import akka.event.LoggingAdapter
+
+import org.slf4j.Logger
 
 /**
   * A class that handles creating a new cache snapshot with an object
@@ -35,7 +36,7 @@ sealed trait CacheHandler[-Obj] {
     * @param obj The logger to update with
     * @param log A logging adapter
     */
-  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(implicit log: LoggingAdapter): Unit
+  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(implicit log: Logger): Unit
 }
 
 /**
@@ -45,7 +46,7 @@ trait CacheDeleter[-Obj] extends CacheHandler[Obj]
 object CacheDeleter {
   def dummy[Obj]: CacheDeleter[Obj] = new CacheDeleter[Obj] {
     override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = ()
   }
 }
@@ -57,7 +58,7 @@ trait CacheUpdater[-Obj] extends CacheHandler[Obj]
 object CacheUpdater {
   def dummy[Obj]: CacheUpdater[Obj] = new CacheUpdater[Obj] {
     override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = ()
   }
 }
@@ -67,6 +68,6 @@ object CacheUpdater {
   */
 object NOOPHandler extends CacheHandler[Any] {
   override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry)(
-      implicit log: LoggingAdapter
+      implicit log: Logger
   ): Unit = ()
 }

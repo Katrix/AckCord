@@ -50,7 +50,7 @@ case class VoiceState(
     mute: Boolean,
     selfDeaf: Boolean,
     selfMute: Boolean,
-    selfStream: Boolean,
+    selfStream: Option[Boolean],
     suppress: Boolean
 ) extends GetGuildOpt
     with GetVChannelOpt

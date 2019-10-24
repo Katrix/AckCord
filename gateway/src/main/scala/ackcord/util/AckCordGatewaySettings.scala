@@ -25,7 +25,7 @@ package ackcord.util
 
 import com.typesafe.config.Config
 
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 
 /**
   * Settings that AckCord used. See the reference config for more info.
@@ -42,5 +42,6 @@ class AckCordGatewaySettings(config: Config) {
 }
 object AckCordGatewaySettings {
 
-  def apply()(implicit system: ActorSystem): AckCordGatewaySettings = new AckCordGatewaySettings(system.settings.config)
+  def apply()(implicit system: ActorSystem[Nothing]): AckCordGatewaySettings =
+    new AckCordGatewaySettings(system.settings.config)
 }

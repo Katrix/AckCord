@@ -30,7 +30,7 @@ import scala.concurrent.duration._
 import ackcord.CacheSnapshot
 import ackcord.requests.Routes.{QueryRoute, Route}
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Flow
 
@@ -110,7 +110,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
-    override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed] =
+    override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
 
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
@@ -139,7 +139,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   /**
     * A flow that can be used to parse the responses from this request.
     */
-  def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, Data, NotUsed]
+  def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed]
 
   /**
     * Transform the response of this request as a flow.
@@ -160,7 +160,7 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
-    override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, B, NotUsed] =
+    override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, B, NotUsed] =
       f(self.parseResponse(parallelism))
 
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions

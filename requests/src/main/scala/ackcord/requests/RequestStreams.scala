@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import java.util.concurrent.TimeoutException
+
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -30,11 +32,11 @@ import scala.util.{Failure, Success, Try}
 
 import ackcord.AckCord
 import ackcord.util.AckCordRequestSettings
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, ResponseEntity, StatusCodes}
-import akka.pattern.{AskTimeoutException, ask}
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
@@ -96,8 +98,8 @@ object RequestStreams {
       millisecondPrecision: Boolean,
       relativeTime: Boolean,
       parallelism: Int = 4,
-      rateLimitActor: ActorRef
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
+      rateLimitActor: ActorRef[Ratelimiter.Command]
+  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
     createHttpRequestFlow[Data, Ctx](credentials, millisecondPrecision)
       .via(requestHttpFlow)
       .via(requestParser(relativeTime, parallelism))
@@ -131,8 +133,8 @@ object RequestStreams {
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4,
-      rateLimitActor: ActorRef
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+      rateLimitActor: ActorRef[Ratelimiter.Command]
+  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
@@ -178,25 +180,36 @@ object RequestStreams {
     *                       specific ratelimits.
     * @param parallelism The amount of requests to run at the same time.
     */
-  def ratelimitFlow[Data, Ctx](ratelimiter: ActorRef, maxAllowedWait: FiniteDuration, parallelism: Int = 4)(
-      implicit system: ActorSystem
+  def ratelimitFlow[Data, Ctx](
+      ratelimiter: ActorRef[Ratelimiter.Command],
+      maxAllowedWait: FiniteDuration,
+      parallelism: Int = 4
+  )(
+      implicit system: ActorSystem[Nothing]
   ): Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
     Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
       //We don't use ask here to get be able to create a RequestDropped instance
-      import system.dispatcher
-      val future = ratelimiter ? Ratelimiter.WantToPass(request.route, request.identifier, request)
+      import system.executionContext
+      val future = ratelimiter.ask[Ratelimiter.Response[Request[Data, Ctx]]](
+        Ratelimiter.WantToPass(request.route, request.identifier, _, request)
+      )
 
-      future.mapTo[Request[Data, Ctx]].recover {
-        case _: AskTimeoutException => RequestDropped(request.context, request.route, request.identifier)
-      }
+      future
+        .flatMap {
+          case Ratelimiter.CanPass(a)       => Future.successful(a)
+          case Ratelimiter.FailedRequest(e) => Future.failed(e)
+        }
+        .recover {
+          case _: TimeoutException => RequestDropped(request.context, request.route, request.identifier)
+        }
     }
   }.named("Ratelimiter")
 
   private def createHttpRequestFlow[Data, Ctx](
       credentials: HttpCredentials,
       millisecondPrecision: Boolean
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], (HttpRequest, Request[Data, Ctx]), NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], (HttpRequest, Request[Data, Ctx]), NotUsed] = {
     val baseFlow = Flow[Request[Data, Ctx]]
 
     val withLogging =
@@ -226,14 +239,18 @@ object RequestStreams {
   }.named("CreateRequest")
 
   private def requestHttpFlow[Data, Ctx](
-      implicit system: ActorSystem
-  ): Flow[(HttpRequest, Request[Data, Ctx]), (Try[HttpResponse], Request[Data, Ctx]), NotUsed] =
-    Http().superPool[Request[Data, Ctx]]()
+      implicit system: ActorSystem[Nothing]
+  ): Flow[(HttpRequest, Request[Data, Ctx]), (Try[HttpResponse], Request[Data, Ctx]), NotUsed] = {
+    import akka.actor.typed.scaladsl.adapter._
+    Http(system.toClassic).superPool[Request[Data, Ctx]]()
+  }
 
   private def requestParser[Data, Ctx](
       relativeTime: Boolean,
       breadth: Int
-  )(implicit system: ActorSystem): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
+  )(
+      implicit system: ActorSystem[Nothing]
+  ): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
     Flow[(Try[HttpResponse], Request[Data, Ctx])]
       .map[Source[RequestAnswer[Data, Ctx], NotUsed]] {
         {
@@ -316,7 +333,9 @@ object RequestStreams {
       .flatMapMerge(breadth, identity)
   }.named("RequestParser")
 
-  private def sendRatelimitUpdates[Data, Ctx](rateLimitActor: ActorRef): Sink[RequestAnswer[Data, Ctx], Future[Done]] =
+  private def sendRatelimitUpdates[Data, Ctx](
+      rateLimitActor: ActorRef[Ratelimiter.Command]
+  ): Sink[RequestAnswer[Data, Ctx], Future[Done]] =
     Sink
       .foreach[RequestAnswer[Data, Ctx]] { answer =>
         val isGlobal = answer match {
@@ -372,8 +391,8 @@ object RequestStreams {
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4,
       maxRetryCount: Int = 3,
-      rateLimitActor: ActorRef
-  )(implicit system: ActorSystem): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
+      rateLimitActor: ActorRef[Ratelimiter.Command]
+  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 

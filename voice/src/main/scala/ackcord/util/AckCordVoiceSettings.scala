@@ -24,7 +24,7 @@
 package ackcord.util
 import com.typesafe.config.Config
 
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 
 /**
   * Settings that AckCord uses for voice stuff. See the reference config for more info.
@@ -37,5 +37,5 @@ class AckCordVoiceSettings(config: Config) {
 }
 object AckCordVoiceSettings {
 
-  def apply()(implicit system: ActorSystem): AckCordVoiceSettings = new AckCordVoiceSettings(system.settings.config)
+  def apply()(implicit system: ActorSystem[Nothing]): AckCordVoiceSettings = new AckCordVoiceSettings(system.settings.config)
 }

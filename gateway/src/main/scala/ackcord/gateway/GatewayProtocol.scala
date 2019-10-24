@@ -285,7 +285,7 @@ object GatewayProtocol extends DiscordProtocol {
           .flatMap {
             case "READY" => createDispatch(GatewayEvent.Ready)
             case "RESUMED" =>
-              Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((a: NotUsed) => Json.obj()))
+              Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((_: NotUsed) => Json.obj()))
             case "CHANNEL_CREATE"              => createDispatch(GatewayEvent.ChannelCreate)
             case "CHANNEL_UPDATE"              => createDispatch(GatewayEvent.ChannelUpdate)
             case "CHANNEL_DELETE"              => createDispatch(GatewayEvent.ChannelDelete)

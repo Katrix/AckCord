@@ -4,12 +4,12 @@ import scala.reflect.ClassTag
 
 import ackcord.data.raw.PartialUser
 import ackcord.data._
-import akka.event.LoggingAdapter
+import org.slf4j.Logger
 
 class CacheTypeRegistry(
     val updateHandlers: Map[Class[_], CacheUpdater[_]],
     val deleteHandlers: Map[Class[_], CacheDeleter[_]],
-    log: LoggingAdapter
+    log: Logger
 ) {
 
   private def handleWithData[D: ClassTag, HandlerTpe[-A] <: CacheHandler[A]](
@@ -88,10 +88,10 @@ object CacheTypeRegistry {
 
   private val allDeleters: Map[Class[_], CacheDeleter[_]] = noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban])
 
-  def default(log: LoggingAdapter) = new CacheTypeRegistry(allUpdaters, allDeleters, log)
+  def default(log: Logger) = new CacheTypeRegistry(allUpdaters, allDeleters, log)
 
-  def noPresences(log: LoggingAdapter) = new CacheTypeRegistry(noPresencesUpdaters, allDeleters, log)
+  def noPresences(log: Logger) = new CacheTypeRegistry(noPresencesUpdaters, allDeleters, log)
 
-  def noPresencesBansEmoji(log: LoggingAdapter) =
+  def noPresencesBansEmoji(log: Logger) =
     new CacheTypeRegistry(noPresencesBansEmojiUpdaters, noBanDeleters, log)
 }

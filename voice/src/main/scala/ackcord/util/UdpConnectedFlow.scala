@@ -4,7 +4,9 @@ import java.net.InetSocketAddress
 
 import ackcord.util.UdpConnectedFlow.UDPAck
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorRef
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.adapter._
 import akka.io.Inet.SocketOption
 import akka.io.{IO, UdpConnected}
 import akka.stream.scaladsl.Flow
@@ -20,7 +22,7 @@ class UdpConnectedFlow(
     localAddress: Option[InetSocketAddress],
     connectOptions: immutable.Iterable[SocketOption]
 )(
-    implicit system: ActorSystem
+    implicit system: ActorSystem[Nothing]
 ) extends GraphStage[FlowShape[ByteString, ByteString]] {
 
   val in: Inlet[ByteString]   = Inlet("UdpConnectedFlow.in")
@@ -43,7 +45,7 @@ class UdpConnectedFlow(
       override def preStart(): Unit = {
         self = getStageActor(actorReceive).ref
         implicit val selfSender: ActorRef = self
-        IO(UdpConnected) ! UdpConnected.Connect(self, remoteAddress, localAddress, connectOptions)
+        IO(UdpConnected)(system.toClassic) ! UdpConnected.Connect(self, remoteAddress, localAddress, connectOptions)
       }
 
       override def onUpstreamFinish(): Unit =
@@ -138,7 +140,7 @@ object UdpConnectedFlow {
       localAddress: Option[InetSocketAddress] = None,
       connectOptions: immutable.Iterable[SocketOption] = Nil
   )(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Flow[ByteString, ByteString, NotUsed] =
     Flow.fromGraph(new UdpConnectedFlow(remoteAddress, localAddress, connectOptions))
 }

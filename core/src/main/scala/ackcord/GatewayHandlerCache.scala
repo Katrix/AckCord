@@ -31,25 +31,25 @@ import ackcord.requests.SupervisionStreams
 import ackcord.syntax._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
-import akka.actor.{ActorSystem, Props}
-import akka.event.LoggingAdapter
+import akka.actor.typed.{ActorSystem, Behavior}
 import akka.http.scaladsl.model.Uri
 import akka.stream.scaladsl.Flow
 import cats.Later
 import cats.syntax.all._
 import io.circe.{ACursor, CursorOp, Decoder, Json}
+import org.slf4j.Logger
 
 object GatewayHandlerCache {
 
-  def props(
+  def apply(
       wsUri: Uri,
       settings: GatewaySettings,
       cache: Cache,
       ignoredEvents: Seq[Class[_ <: gateway.ComplexGatewayEvent[_, _]]],
       registry: CacheTypeRegistry,
-      log: LoggingAdapter,
-      system: ActorSystem
-  ): Props = {
+      log: Logger,
+      system: ActorSystem[Nothing]
+  ): Behavior[GatewayHandler.Command] = {
     val configSettings = AckCordGatewaySettings()(system)
     val sink = SupervisionStreams.logAndContinue(
       Flow[Dispatch[_]]
@@ -59,7 +59,7 @@ object GatewayHandlerCache {
         .to(cache.publish)
     )(system)
 
-    Props(new GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink))
+    GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)
   }
 
   private object GetLazy {
@@ -69,7 +69,7 @@ object GatewayHandlerCache {
   def eventToCacheUpdate(
       event: ComplexGatewayEvent[_, _],
       registry: CacheTypeRegistry,
-      log: LoggingAdapter,
+      log: Logger,
       settings: AckCordGatewaySettings
   ): Option[APIMessageCacheUpdate[_]] = {
     import ackcord.gateway.{GatewayEvent => gatewayEv}
@@ -417,9 +417,9 @@ object GatewayHandlerCache {
 
           val tracesString = tracesToPrint.reverseIterator.map(t => t._1 -> t._2.noSpaces).mkString("\n")
 
-          log.error(e, s"Failed to parse payload for ${event.name}: ${e.show}\nJson traces:$tracesString")
+          log.error(s"Failed to parse payload for ${event.name}: ${e.show}\nJson traces:$tracesString", e)
         } else {
-          log.error(e, s"Failed to parse payload for ${event.name}: ${e.show}")
+          log.error(s"Failed to parse payload for ${event.name}: ${e.show}", e)
         }
 
         None

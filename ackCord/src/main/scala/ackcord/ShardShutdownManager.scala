@@ -23,25 +23,29 @@
  */
 package ackcord
 
-import ackcord.DiscordShard.StopShard
-import akka.actor.{Actor, ActorRef, Props, Terminated}
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 
-private[ackcord] class ShardShutdownManager(shards: Seq[ActorRef]) extends Actor {
-  var shardNum: Int = shards.size
-
-  override def receive: Receive = {
-    case StopShard =>
-      shards.foreach { shard =>
-        context.watch(shard)
-        shard ! StopShard
-      }
-    case Terminated(_) =>
-      shardNum -= 1
-      if (shardNum == 0) {
-        context.stop(self)
-      }
-  }
-}
 object ShardShutdownManager {
-  private[ackcord] def props(shards: Seq[ActorRef]): Props = Props(new ShardShutdownManager(shards))
+
+  private[ackcord] def apply(shards: Seq[ActorRef[DiscordShard.Command]]): Behavior[DiscordShard.StopShard.type] =
+    Behaviors
+      .receive[DiscordShard.StopShard.type] {
+        case (ctx, DiscordShard.StopShard) =>
+          shards.foreach { shard =>
+            ctx.watch(shard)
+            shard ! DiscordShard.StopShard
+          }
+
+          Behaviors.same
+      }
+      .receiveSignal {
+        case (_, Terminated(deadShard)) =>
+          val newShards = shards.filter(_ != deadShard)
+          if (shards.isEmpty) {
+            Behaviors.stopped
+          } else {
+            apply(newShards)
+          }
+      }
 }

@@ -25,7 +25,7 @@ package ackcord.commands
 
 import ackcord._
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{BroadcastHub, Keep, Source}
 import akka.stream.{ActorAttributes, Supervision}
 
@@ -40,7 +40,7 @@ object CmdStreams {
   def cmdStreams[A](
       settings: AbstractCommandSettings,
       apiMessages: Source[APIMessage, A]
-  )(implicit system: ActorSystem): (A, Source[RawCmdMessage, NotUsed]) = {
+  )(implicit system: ActorSystem[Nothing]): (A, Source[RawCmdMessage, NotUsed]) = {
     apiMessages
       .collect {
         case APIMessage.MessageCreate(msg, c) =>

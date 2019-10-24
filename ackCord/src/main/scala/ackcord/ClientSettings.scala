@@ -26,13 +26,18 @@ package ackcord
 import java.time.Instant
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
+import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
-import akka.actor.ActorSystem
+import ackcord.requests.Ratelimiter
+import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.OverflowStrategy
+import akka.util.Timeout
 
 /**
   * Settings used when connecting to Discord.
@@ -57,26 +62,41 @@ class ClientSettings(
     activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
-    val system: ActorSystem = ActorSystem("AckCord"),
+    val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     val commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
     val requestSettings: RequestSettings = RequestSettings()
+    //TODO: Allow setting ignored and cacheTypeRegistry here at some point
 ) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
 
-  implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  implicit val executionContext: ExecutionContext = system.executionContext
 
   /**
     * Create a [[DiscordClient]] from these settings.
     */
   def createClient(): Future[DiscordClient] = {
-    implicit val actorSystem: ActorSystem = system
+    implicit val actorSystem: ActorSystem[Nothing] = system
 
-    val requests = requestSettings.toRequests(token)
-    val cache    = Cache.create
-    val commands = CoreCommands.create(commandSettings, cache, requests)
+    DiscordShard.fetchWsGateway.flatMap { uri =>
+      val cache = Cache.create
+      val clientActor = actorSystem.systemActorOf(
+        DiscordClientActor(Seq(DiscordShard(uri, this, cache, Nil, CacheTypeRegistry.default)), cache),
+        "DiscordClient"
+      )
 
-    DiscordShard.fetchWsGateway.map(
-      uri => CoreDiscordClient(Seq(DiscordShard.connect(uri, this, cache, "DiscordClient")), cache, commands, requests)
-    )
+      implicit val timeout: Timeout = Timeout(1.second)
+      clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
+        case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
+          val requests = requestSettings.toRequests(token, ratelimiter)
+          val commands = CoreCommands.create(commandSettings, cache, requests)
+
+          new DiscordClientCore(
+            cache,
+            commands,
+            requests,
+            clientActor
+          )
+      }
+    }
   }
 
   /**
@@ -84,16 +104,36 @@ class ClientSettings(
     * set the shard amount.
     */
   def createClientAutoShards(): Future[DiscordClient] = {
-    implicit val actorSystem: ActorSystem = system
+    implicit val actorSystem: ActorSystem[Nothing] = system
 
-    val requests = requestSettings.toRequests(token)
-    val cache    = Cache.create
-    val commands = CoreCommands.create(commandSettings, cache, requests)
-
-    DiscordShard.fetchWsGatewayWithShards(token).map {
+    DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
-        val shards = DiscordShard.connectMultiple(uri, receivedShardTotal, this, cache, "DiscordClient")
-        CoreDiscordClient(shards, cache, commands, requests)
+        val cache = Cache.create
+        val shards = (0 until receivedShardTotal).map { i =>
+          DiscordShard(
+            uri,
+            this.copy(shardNum = i, shardTotal = receivedShardTotal),
+            cache,
+            Nil,
+            CacheTypeRegistry.default
+          )
+        }
+
+        val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")
+
+        implicit val timeout: Timeout = Timeout(1.second)
+        clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
+          case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
+            val requests = requestSettings.toRequests(token, ratelimiter)
+            val commands = CoreCommands.create(commandSettings, cache, requests)
+
+            new DiscordClientCore(
+              cache,
+              commands,
+              requests,
+              clientActor
+            )
+        }
     }
   }
 
@@ -126,7 +166,7 @@ object ClientSettings {
       gameStatus: Option[RawActivity] = None,
       status: PresenceStatus = PresenceStatus.Online,
       afk: Boolean = false,
-      system: ActorSystem = ActorSystem("AckCord"),
+      system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
       commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
       requestSettings: RequestSettings = RequestSettings()
   ): ClientSettings =
@@ -163,9 +203,12 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 ) {
 
-  def toRequests(token: String)(implicit system: ActorSystem): RequestHelper =
-    RequestHelper.create(
+  def toRequests(token: String, ratelimitActor: ActorRef[Ratelimiter.Command])(
+      implicit system: ActorSystem[Nothing]
+  ): RequestHelper =
+    new RequestHelper(
       BotAuthentication(token),
+      ratelimitActor,
       millisecondPrecision,
       relativeTime,
       parallelism,

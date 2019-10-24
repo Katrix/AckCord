@@ -30,7 +30,8 @@ import ackcord.data.{GuildId, RawSnowflake, Team}
 import ackcord.data.raw.PartialUser
 import ackcord.data.DiscordProtocol._
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.model.{FormData, HttpMethods, HttpRequest, Uri}
@@ -165,9 +166,9 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Future[AccessToken] = {
-    import system.dispatcher
+    import system.executionContext
     val baseFormData = Map(
       "grant_type"   -> grantType.name,
       "redirect_uri" -> redirectUri,
@@ -185,7 +186,7 @@ object OAuth {
       entity = FormData(formDataWithRefresh).toEntity
     )
 
-    Http()
+    Http(system.toClassic)
       .singleRequest(request)
       .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
       .map(_.as[AccessToken].fold(throw _, identity))
@@ -199,7 +200,7 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Future[AccessToken] = baseExchange(clientId, clientSecret, grantType, Some(code), None, redirectUri, scopes)
 
   def refreshTokenExchange(
@@ -210,14 +211,14 @@ object OAuth {
       redirectUri: String,
       scopes: Seq[Scope]
   )(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Future[AccessToken] =
     baseExchange(clientId, clientSecret, grantType, None, Some(refreshToken), redirectUri, scopes)
 
   def clientCredentialsGrant(clientId: String, clientSecret: String, scopes: Seq[Scope])(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Future[ClientAccessToken] = {
-    import system.dispatcher
+    import system.executionContext
     val formData =
       FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.name).mkString(" "))
 
@@ -228,7 +229,7 @@ object OAuth {
       entity = formData.toEntity
     )
 
-    Http()
+    Http(system.toClassic)
       .singleRequest(request)
       .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
       .map(_.as[ClientAccessToken].fold(throw _, identity))

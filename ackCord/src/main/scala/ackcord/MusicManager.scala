@@ -23,68 +23,76 @@
  */
 package ackcord
 
-import scala.collection.mutable
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
-
-import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
-import ackcord.lavaplayer.LavaplayerHandler.{ConnectVChannel, DisconnectVChannel, SetPlaying}
-import akka.actor.{Actor, ActorRef, Props, Status}
-import akka.pattern.ask
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
 
-private[ackcord] class MusicManager(cache: Cache) extends Actor {
-  import context.dispatcher
+object MusicManager {
 
-  private val players = mutable.HashMap.empty[GuildId, (AudioPlayer, ActorRef)]
+  private[ackcord] def apply(
+      cache: Cache,
+      players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
+  ): Behavior[Command] = Behaviors.receive {
+    case (ctx, ConnectToChannel(guildId, channelId, force, createPlayer, timeoutDur, replyTo)) =>
+      implicit val timeout: Timeout             = Timeout(timeoutDur)
+      implicit val system: ActorSystem[Nothing] = ctx.system
+      import ctx.executionContext
 
-  override def receive: Receive = {
-    case ConnectToChannel(guildId, channelId, force, createPlayer, timeoutDur) =>
-      implicit val timeout: Timeout = Timeout(timeoutDur)
-      val (usedPlayer, actor) = players.getOrElseUpdate(guildId, {
+      val (usedPlayer, actor) = players.getOrElse(guildId, {
         val player = createPlayer()
-        (player, context.actorOf(LavaplayerHandler.props(player, guildId, cache), guildId.asString))
+        (player, ctx.spawn(LavaplayerHandler(player, guildId, cache), guildId.asString))
       })
-      val replyTo = sender()
 
-      //Status.Failure should be routed to failure
-      actor.ask(ConnectVChannel(channelId, force)).onComplete {
-        case Success(_) => replyTo ! usedPlayer
-        case Failure(e) => replyTo ! Status.Failure(e)
+      //TODO: Handle errors
+      actor.ask[LavaplayerHandler.Reply](LavaplayerHandler.ConnectVChannel(channelId, force, _)).onComplete {
+        case Success(_) => replyTo ! GotPlayer(usedPlayer)
+        case Failure(e) => replyTo ! GotError(e)
       }
 
-    case DisconnectFromChannel(guildId, destroyPlayer) =>
-      players.remove(guildId).foreach {
+      apply(cache, players.updated(guildId, (usedPlayer, actor)))
+
+    case (_, DisconnectFromChannel(guildId, destroyPlayer)) =>
+      players.get(guildId).foreach {
         case (player, actor) =>
-          actor ! DisconnectVChannel
+          actor ! LavaplayerHandler.DisconnectVChannel
 
           if (destroyPlayer) {
             player.destroy()
           }
       }
 
-    case SetChannelPlaying(guildId, playing) =>
+      apply(cache, players.removed(guildId))
+
+    case (_, SetChannelPlaying(guildId, playing)) =>
       players.get(guildId).foreach {
         case (_, actor) =>
-          actor ! SetPlaying(playing)
+          actor ! LavaplayerHandler.SetPlaying(playing)
       }
+      Behaviors.same
   }
-}
-object MusicManager {
-  private[ackcord] def props(cache: Cache): Props = Props(new MusicManager(cache))
+
+  sealed trait Command
+
+  sealed trait ConnectToChannelResponse
+  case class GotPlayer(player: AudioPlayer) extends ConnectToChannelResponse
+  case class GotError(e: Throwable)         extends ConnectToChannelResponse
 
   private[ackcord] case class ConnectToChannel(
       guildId: GuildId,
       channelId: ChannelId,
       force: Boolean,
       createPlayer: () => AudioPlayer,
-      timeout: FiniteDuration
-  )
+      timeout: FiniteDuration,
+      replyTo: ActorRef[ConnectToChannelResponse]
+  ) extends Command
 
-  private[ackcord] case class DisconnectFromChannel(guildId: GuildId, destroyPlayer: Boolean)
-  private[ackcord] case class SetChannelPlaying(guildId: GuildId, playing: Boolean)
+  private[ackcord] case class DisconnectFromChannel(guildId: GuildId, destroyPlayer: Boolean) extends Command
+  private[ackcord] case class SetChannelPlaying(guildId: GuildId, playing: Boolean)           extends Command
 }

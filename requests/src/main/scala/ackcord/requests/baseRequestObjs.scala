@@ -30,7 +30,7 @@ import ackcord.CacheSnapshot
 import ackcord.data._
 import ackcord.util.AckCordRequestSettings
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Flow
 import io.circe._
@@ -48,7 +48,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
 
   override def parseResponse(
       parallelism: Int
-  )(implicit system: ActorSystem): Flow[ResponseEntity, RawResponse, NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, RawResponse, NotUsed] = {
     val baseFlow = RequestStreams.jsonDecode
 
     val withLogging =
@@ -68,7 +68,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
     new BaseRESTRequest[RawResponse, NiceResponse, NewCtx] {
 
       override def parseResponse(parallelism: Int)(
-          implicit system: ActorSystem
+          implicit system: ActorSystem[Nothing]
       ): Flow[ResponseEntity, RawResponse, NotUsed] = self.parseResponse(parallelism)
 
       override def responseDecoder: Decoder[RawResponse] = self.responseDecoder
@@ -206,7 +206,7 @@ trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonReques
   */
 trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUsed, Ctx] {
 
-  override def parseResponse(parallelism: Int)(implicit system: ActorSystem): Flow[ResponseEntity, NotUsed, NotUsed] =
+  override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, NotUsed, NotUsed] =
     Flow[ResponseEntity].map { responseEntity =>
       responseEntity.discardBytes()
       NotUsed

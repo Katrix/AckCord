@@ -25,36 +25,44 @@ package ackcord
 
 import scala.concurrent.Future
 
-import ackcord.MockedGateway.{HasSetClient, SendMessage, SetClient, SetUseCompression}
 import ackcord.gateway.{GatewayHandler, _}
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, ActorSystem, Props, Stash}
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.model.{HttpResponse, Uri}
 import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Keep, Merge, Sink, Source}
-import akka.stream.{FlowShape, Materializer, OverflowStrategy}
+import akka.stream.typed.scaladsl.ActorSource
+import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.ByteString
 import io.circe.{Encoder, parser}
 
-class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)
-    extends GatewayHandler(
+object MockedGatewayHandler {
+  def apply(settings: GatewaySettings, gateway: ActorRef[MockedGateway.GatewayCommand]) =
+    GatewayHandler(
       Uri./,
       settings,
       Source.maybe[GatewayMessage[_]].mapMaterializedValue(_ => NotUsed),
-      Sink.ignore.mapMaterializedValue(_ => NotUsed)
-    ) {
+      Sink.ignore.mapMaterializedValue(_ => NotUsed),
+      testingWsFlow(gateway)
+    )
 
-  implicit val system: ActorSystem = context.system
+  def testingWsFlow(gateway: ActorRef[MockedGateway.GatewayCommand])(
+      wsUri: Uri,
+      parameters: GatewayHandler.Parameters,
+      state: GatewayHandler.State
+  ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+    implicit val system: ActorSystem[Nothing] = parameters.context.system
+    val response                              = ValidUpgrade(HttpResponse(), None)
 
-  override def wsFlow
-      : Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
-    val response = ValidUpgrade(HttpResponse(), None)
-
-    val sendToServer = Sink.foreach[Message](gateway ! _)
-    val sendToClient = Source.actorRef[Message](128, OverflowStrategy.fail).mapMaterializedValue { actor =>
-      gateway ! SetClient(actor)
-      Future.successful(response)
-    }
+    val sendToServer =
+      Sink.foreach[MockedGateway.MessageFromClient](gateway ! _).contramap[Message](MockedGateway.MessageFromClient)
+    val sendToClient = ActorSource
+      .actorRef[Message](PartialFunction.empty, PartialFunction.empty, 128, OverflowStrategy.fail)
+      .mapMaterializedValue { actor =>
+        gateway ! MockedGateway.SetClient(actor)
+        Future.successful(response)
+      }
 
     val wsFlow = Flow.fromSinkAndSourceCoupledMat(sendToServer, sendToClient)(Keep.right)
 
@@ -68,7 +76,7 @@ class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)
           case Left(e)    => throw e
         }
 
-    val wsGraphStage = new GatewayHandlerGraphStage(settings, resume)
+    val wsGraphStage = new GatewayHandlerGraphStage(parameters.settings, state.resume)
 
     val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsGraph) =>
       import GraphDSL.Implicits._
@@ -90,44 +98,56 @@ class MockedGatewayHandler(settings: GatewaySettings, gateway: ActorRef)
     Flow.fromGraph(graph)
   }
 }
-object MockedGatewayHandler {
-  def props(settings: GatewaySettings, gateway: ActorRef): Props =
-    Props(new MockedGatewayHandler(settings, gateway))
-}
 
-class MockedGateway(sendMessagesTo: ActorRef) extends Actor with Stash {
-  import GatewayProtocol._
-
-  var client: ActorRef = _
-  var useCompression   = false
-
-  override def receive: Receive = {
-    case SetClient(newClient) =>
-      client = newClient
-      unstashAll()
-      sendMessagesTo ! HasSetClient
-    case send @ SendMessage(msg) if client != null =>
-      val strData = send.encoder(msg).noSpaces
-      val data    = ByteString.fromString(strData)
-
-      val payload =
-        if (useCompression) BinaryMessage(Source.single(data).via(Compression.deflate))
-        else TextMessage(strData)
-
-      client ! payload
-    case SendMessage(_) => stash()
-    case TextMessage.Strict(text) =>
-      parser.parse(text).flatMap(_.as[GatewayMessage[_]]) match {
-        case Right(msg) => sendMessagesTo ! msg
-        case Left(e)    => sendMessagesTo ! e
-      }
-    case SetUseCompression(compression) => useCompression = compression
-  }
-}
 object MockedGateway {
-  def props(sendMessagesTo: ActorRef): Props = Props(new MockedGateway(sendMessagesTo))
-  case class SetClient(ref: ActorRef)
-  case object HasSetClient
-  case class SendMessage[A](msg: GatewayMessage[A])(implicit val encoder: Encoder[GatewayMessage[A]])
-  case class SetUseCompression(useCompression: Boolean)
+
+  def apply(sendMessageTo: ActorRef[ProcessorCommand]): Behavior[GatewayCommand] = Behaviors.setup { ctx =>
+    Behaviors.withStash(32) { stash =>
+      mocked(ctx, stash, sendMessageTo, null, useCompression = false)
+    }
+  }
+
+  def mocked(
+      ctx: ActorContext[GatewayCommand],
+      stash: StashBuffer[GatewayCommand],
+      sendMessagesTo: ActorRef[ProcessorCommand],
+      client: ActorRef[Message],
+      useCompression: Boolean
+  ): Behavior[GatewayCommand] = {
+    import GatewayProtocol._
+    Behaviors.receiveMessage {
+      case SetClient(newClient) =>
+        sendMessagesTo ! HasSetClient
+        stash.unstashAll(mocked(ctx, stash, sendMessagesTo, newClient, useCompression))
+      case send @ MessageToClient(msg) if client != null =>
+        val strData = send.encoder(msg).noSpaces
+        val data    = ByteString.fromString(strData)
+
+        val payload =
+          if (useCompression) BinaryMessage(Source.single(data).via(Compression.deflate))
+          else TextMessage(strData)
+
+        client ! payload
+        Behaviors.same
+      case msg @ MessageToClient(_) =>
+        stash.stash(msg)
+        Behaviors.same
+      case MessageFromClient(TextMessage.Strict(text)) =>
+        sendMessagesTo ! DecodedGatewayMessage(parser.parse(text).flatMap(_.as[GatewayMessage[_]]))
+        Behaviors.same
+      case SetUseCompression(compression) => mocked(ctx, stash, sendMessagesTo, client, compression)
+    }
+  }
+
+  sealed trait GatewayCommand
+  sealed trait ProcessorCommand
+
+  case class SetClient(ref: ActorRef[Message])   extends GatewayCommand
+  case class MessageFromClient(message: Message) extends GatewayCommand
+  case class MessageToClient[A](msg: GatewayMessage[A])(implicit val encoder: Encoder[GatewayMessage[A]])
+      extends GatewayCommand
+  case class SetUseCompression(useCompression: Boolean) extends GatewayCommand
+
+  case object HasSetClient                                                       extends ProcessorCommand
+  case class DecodedGatewayMessage(e: Either[io.circe.Error, GatewayMessage[_]]) extends ProcessorCommand
 }

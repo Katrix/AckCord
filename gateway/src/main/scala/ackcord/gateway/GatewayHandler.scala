@@ -25,155 +25,200 @@ package ackcord.gateway
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 import ackcord.AckCord
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorSystem, Props, Status, Timers}
+import akka.actor.typed._
+import akka.{actor => classic}
+import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
-import akka.pattern.pipe
 import akka.stream._
 import akka.stream.scaladsl._
+import org.slf4j.Logger
 
-/**
-  * Responsible for normal websocket communication with Discord.
-  * Some REST messages can't be sent until this has authenticated.
-  * @param rawWsUri The raw uri to connect to without params
-  * @param settings The settings to use.
-  * @param source A source of gateway messages.
-  * @param sink A sink which will be sent all the dispatches of the gateway.
-  */
-class GatewayHandler(
-    rawWsUri: Uri,
-    settings: GatewaySettings,
-    source: Source[GatewayMessage[_], NotUsed],
-    sink: Sink[Dispatch[_], NotUsed]
-) extends Actor
-    with Timers
-    with ActorLogging {
-  import GatewayHandler._
-  import context.dispatcher
+object GatewayHandler {
 
-  implicit private val system: ActorSystem = context.system
+  sealed trait Command
 
-  var shuttingDown               = false
-  var resume: Option[ResumeData] = None
+  private[ackcord] case class Parameters(
+      rawWsUri: Uri,
+      settings: GatewaySettings,
+      source: Source[GatewayMessage[_], NotUsed],
+      sink: Sink[Dispatch[_], NotUsed],
+      context: ActorContext[Command],
+      timers: TimerScheduler[Command],
+      log: Logger
+  )
 
-  private var killSwitch: UniqueKillSwitch = _
-  private var retryCount                   = 0
+  private[ackcord] case class State(
+      shuttingDown: Boolean = false,
+      resume: Option[ResumeData] = None,
+      killSwitch: Option[UniqueKillSwitch] = None,
+      retryCount: Int = 0
+  )
 
-  val wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
+  type WsFlowFunc = (
+      Uri,
+      Parameters,
+      State
+  ) => Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])]
 
-  def wsFlow: Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
-    GatewayHandlerGraphStage.flow(wsUri, settings, resume)
+  /**
+    * Responsible for normal websocket communication with Discord.
+    * Some REST messages can't be sent until this has authenticated.
+    * @param rawWsUri The raw uri to connect to without params
+    * @param settings The settings to use.
+    * @param source A source of gateway messages.
+    * @param sink A sink which will be sent all the dispatches of the gateway.
+    */
+  def apply(
+      rawWsUri: Uri,
+      settings: GatewaySettings,
+      source: Source[GatewayMessage[_], NotUsed],
+      sink: Sink[Dispatch[_], NotUsed],
+      wsFlow: WsFlowFunc = defaultWsFlow
+  ): Behavior[Command] = Behaviors.setup { context =>
+    Behaviors.withTimers { timers =>
+      inactive(Parameters(rawWsUri, settings, source, sink, context, timers, context.log), State(), wsFlow)
+    }
+  }
 
-  override def postStop(): Unit =
-    if (killSwitch != null) killSwitch.shutdown()
+  def defaultWsFlow(
+      wsUri: Uri,
+      parameters: Parameters,
+      state: State
+  ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
+    GatewayHandlerGraphStage.flow(wsUri, parameters.settings, state.resume)(parameters.context.system)
 
-  private def retryLogin() = {
-    if (retryCount < 5) {
+  private def retryLogin(
+      parameters: Parameters,
+      state: State,
+      timers: TimerScheduler[Command],
+      wsFlow: WsFlowFunc
+  ): Behavior[Command] = {
+    if (state.retryCount < 5) {
       //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
-      retryCount += 1
-      system.scheduler.scheduleOnce(5.seconds)(self ! Login)
+      timers.startSingleTimer("RetryLogin", Login, 5.seconds)
+      inactive(parameters, state.copy(killSwitch = None, retryCount = state.retryCount + 1), wsFlow)
     } else {
       throw new Exception("Max retry count exceeded")
     }
   }
 
-  def inactive: Receive = {
-    case Login =>
-      log.info("Logging in")
+  private def shutdownStream(state: State): Unit =
+    state.killSwitch.foreach(_.shutdown())
 
-      val (switch, (wsUpgrade, newResumeData)) = source
-        .viaMat(KillSwitches.single)(Keep.right)
-        .viaMat(wsFlow)(Keep.both)
-        .toMat(sink)(Keep.left)
-        .addAttributes(ActorAttributes.supervisionStrategy(e => {
-          log.error(e, "Error in stream")
-          Supervision.Resume
-        }))
-        .named("GatewayWebsocket")
-        .run()
-      killSwitch = switch
+  private def inactive(parameters: Parameters, state: State, wsFlow: WsFlowFunc): Behavior[Command] = {
+    import akka.actor.typed.scaladsl.adapter._
+    import parameters._
+    import state._
+    implicit val oldSystem: classic.ActorSystem = context.system.toClassic
 
-      newResumeData.map(ConnectionDied).pipeTo(self)
-      wsUpgrade.pipeTo(self)
+    val wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
 
-    case ValidUpgrade(response, _) =>
-      retryCount = 0
-      log.info("Valid login. Going to active. Response: {}", response.entity.toString)
-      response.discardEntityBytes()
-      context.become(active)
+    Behaviors
+      .receiveMessage[Command] {
+        case Login =>
+          log.info("Logging in")
 
-    case InvalidUpgradeResponse(response, cause) =>
-      response.discardEntityBytes()
-      killSwitch.shutdown()
-      throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
+          val (switch, (wsUpgrade, newResumeData)) = source
+            .viaMat(KillSwitches.single)(Keep.right)
+            .viaMat(wsFlow(wsUri, parameters, state))(Keep.both)
+            .toMat(sink)(Keep.left)
+            .addAttributes(ActorAttributes.supervisionStrategy(e => {
+              log.error("Error in stream", e)
+              Supervision.Resume
+            }))
+            .named("GatewayWebsocket")
+            .run()
 
-    //Handling this too just in case
-    case Status.Failure(e) =>
-      log.error(e, "Websocket error. Retry count {}", retryCount)
-      killSwitch.shutdown()
-      killSwitch = null
-      retryLogin()
+          context.pipeToSelf(newResumeData) {
+            case Success(value) => ConnectionDied(value)
+            case Failure(e)     => SendException(e)
+          }
 
-    case GatewayHandler.ConnectionDied(newResume) =>
-      log.error("Connection died before starting. Retry count {}", retryCount)
-      println(newResume)
-      killSwitch.shutdown()
-      killSwitch = null
-      retryLogin()
-  }
+          context.pipeToSelf(wsUpgrade) {
+            case Success(value) => UpgradeResponse(value)
+            case Failure(e)     => SendException(e)
+          }
 
-  def active: Receive = {
-    case ConnectionDied(newResume) =>
-      if (shuttingDown) {
-        log.info("Websocket connection completed. Stopping.")
-        context.stop(self)
-      } else {
-        resume = newResume
-        killSwitch.shutdown()
-        killSwitch = null
+          inactive(parameters, state.copy(killSwitch = Some(switch)), wsFlow)
 
-        log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
-        context.become(inactive)
-        retryLogin()
+        case UpgradeResponse(ValidUpgrade(response, _)) =>
+          log.info("Valid login. Going to active. Response: {}", response.entity.toString)
+          response.discardEntityBytes()
+          active(parameters, state.copy(retryCount = 0), wsFlow)
+
+        case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
+          response.discardEntityBytes()
+          shutdownStream(state)
+          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
+
+        case SendException(e) =>
+          log.error("Websocket error. Retry count {}", retryCount, e)
+          shutdownStream(state)
+          retryLogin(parameters, state, timers, wsFlow)
+
+        case GatewayHandler.ConnectionDied(_) =>
+          log.error("Connection died before starting. Retry count {}", retryCount)
+          shutdownStream(state)
+          retryLogin(parameters, state, timers, wsFlow)
       }
-
-    case Status.Failure(e) =>
-      log.error(e, "Websocket error. Retry count {}", retryCount)
-      killSwitch.shutdown()
-      killSwitch = null
-      context.become(inactive)
-      retryLogin()
-
-    case Logout =>
-      log.info("Shutting down")
-      killSwitch.shutdown()
-      shuttingDown = true
+      .receiveSignal {
+        case (_, PostStop) =>
+          shutdownStream(state)
+          Behaviors.stopped
+      }
   }
 
-  override def receive: Receive = inactive
-}
-object GatewayHandler {
+  private def active(parameters: Parameters, state: State, wsFlow: WsFlowFunc): Behavior[Command] = {
+    import parameters._
+    import state._
 
-  def props(
-      rawWsUri: Uri,
-      settings: GatewaySettings,
-      source: Source[GatewayMessage[_], NotUsed],
-      sink: Sink[Dispatch[_], NotUsed]
-  ): Props = Props(new GatewayHandler(rawWsUri, settings, source, sink))
+    Behaviors
+      .receiveMessage[Command] {
+        case ConnectionDied(newResume) =>
+          if (shuttingDown) {
+            log.info("Websocket connection completed. Stopping.")
+            Behaviors.stopped
+          } else {
+            shutdownStream(state)
+
+            log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
+            retryLogin(parameters, state.copy(resume = newResume), timers, wsFlow)
+          }
+
+        case SendException(e) =>
+          log.error("Websocket error. Retry count {}", retryCount, e)
+          shutdownStream(state)
+          retryLogin(parameters, state, timers, wsFlow)
+
+        case Logout =>
+          log.info("Shutting down")
+          shutdownStream(state)
+          active(parameters, state.copy(shuttingDown = true), wsFlow)
+      }
+      .receiveSignal {
+        case (_, PostStop) =>
+          shutdownStream(state)
+          Behaviors.stopped
+      }
+  }
 
   /**
     * Send this to a [[GatewayHandler]] to make it go from inactive to active
     */
-  case object Login
+  case object Login extends Command
 
   /**
     * Send this to a [[GatewayHandler]] to stop it gracefully.
     */
-  case object Logout
+  case object Logout extends Command
 
-  private case class ConnectionDied(resume: Option[ResumeData])
+  private case class ConnectionDied(resume: Option[ResumeData])          extends Command
+  private case class UpgradeResponse(response: WebSocketUpgradeResponse) extends Command
+  private case class SendException(e: Throwable)                         extends Command
 }

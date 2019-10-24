@@ -5,7 +5,7 @@ import java.net.InetSocketAddress
 import ackcord.data.{RawSnowflake, UserId}
 import ackcord.util.UdpConnectedFlow
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.stream.BidiShape
 import akka.stream.scaladsl.{BidiFlow, Concat, Flow, GraphDSL, Keep, Source}
 import akka.util.ByteString
@@ -26,7 +26,7 @@ object VoiceUDPFlow {
       serverId: RawSnowflake,
       userId: UserId,
       secretKeyFut: Future[ByteString]
-  )(implicit system: ActorSystem): Flow[ByteString, AudioAPIMessage.ReceivedData, Future[FoundIP]] =
+  )(implicit system: ActorSystem[Nothing]): Flow[ByteString, AudioAPIMessage.ReceivedData, Future[FoundIP]] =
     NaclBidiFlow
       .bidiFlow(ssrc, serverId, userId, secretKeyFut)
       .atopMat(voiceBidi(ssrc).reversed)(Keep.right)

@@ -24,7 +24,7 @@
 package ackcord
 
 import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder, CacheTypeRegistry}
-import akka.event.LoggingAdapter
+import org.slf4j.Logger
 
 /**
   * Represents some sort of event handled by the cache
@@ -34,7 +34,7 @@ trait CacheEvent {
   /**
     * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event.
     */
-  def process(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit
+  def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit
 }
 
 /**
@@ -53,6 +53,6 @@ case class APIMessageCacheUpdate[Data](
     registry: CacheTypeRegistry
 ) extends CacheEvent {
 
-  override def process(builder: CacheSnapshotBuilder)(implicit log: LoggingAdapter): Unit =
+  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =
     handler.handle(builder, data, registry)
 }

@@ -30,7 +30,7 @@ import ackcord.gateway.GatewayHandlerGraphStage.Restart
 import ackcord.gateway.GatewayProtocol._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
@@ -192,7 +192,7 @@ object GatewayHandlerGraphStage {
   private case class Restart(resumable: Boolean)
 
   def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val msgFlow =
       createMessage
@@ -232,7 +232,7 @@ object GatewayHandlerGraphStage {
   /**
     * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
     */
-  def parseMessage(implicit system: ActorSystem): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
+  def parseMessage(implicit system: ActorSystem[Nothing]): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
         case t: TextMessage => t.textStream
@@ -254,7 +254,7 @@ object GatewayHandlerGraphStage {
   /**
     * Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]].
     */
-  def createMessage(implicit system: ActorSystem): Flow[GatewayMessage[_], Message, NotUsed] = {
+  def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
     val flow = Flow[GatewayMessage[_]].map { msg =>
       msg match {
         case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
@@ -271,6 +271,8 @@ object GatewayHandlerGraphStage {
 
   private def wsFlow(
       wsUri: Uri
-  )(implicit system: ActorSystem): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
-    Http().webSocketClientFlow(wsUri)
+  )(implicit system: ActorSystem[Nothing]): Flow[Message, Message, Future[WebSocketUpgradeResponse]] = {
+    import akka.actor.typed.scaladsl.adapter._
+    Http(system.toClassic).webSocketClientFlow(wsUri)
+  }
 }

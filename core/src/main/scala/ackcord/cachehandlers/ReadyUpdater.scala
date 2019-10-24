@@ -25,13 +25,13 @@ package ackcord.cachehandlers
 
 import ackcord.CacheSnapshot.BotUser
 import ackcord.gateway.GatewayEvent.ReadyData
-import akka.event.LoggingAdapter
+import org.slf4j.Logger
 import shapeless.tag
 
 //We handle this one separately as is it's kind of special
 object ReadyUpdater extends CacheUpdater[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData, registry: CacheTypeRegistry)(
-      implicit log: LoggingAdapter
+      implicit log: Logger
   ): Unit = {
     val ReadyData(_, botUser, unavailableGuilds, _, _) = obj
 

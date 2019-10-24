@@ -101,7 +101,7 @@ class CommandConnector(
     val commandMessageSource = messages
       .mapAsync(requests.parallelism) {
         case t @ (message, cache) =>
-          import requests.system.dispatcher
+          import requests.system.executionContext
           prefix(cache, message).tupleLeft(t)
       }
       .mapConcat {

@@ -116,7 +116,7 @@ object MyBot extends App {
         filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
         description = Some(CmdDescription("Ping", "Check if the bot is alive"))
       ) { _ =>
-        println(s"Received ping command}")
+        println(s"Received ping command")
       }
 
       client.registerCmd[NotUsed, cats.Id](

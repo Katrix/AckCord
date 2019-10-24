@@ -30,9 +30,9 @@ import ackcord.gateway.GatewayEvent.ReadyData
 import ackcord.gateway.GatewayMessage
 import ackcord.requests.SupervisionStreams
 import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.event.LoggingAdapter
+import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
+import org.slf4j.Logger
 
 object CacheStreams {
 
@@ -40,7 +40,7 @@ object CacheStreams {
     * Creates a set of publish subscribe streams that go through the cache updated.
     */
   def cacheStreams(
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     SupervisionStreams
       .addLogAndContinueFunction(
@@ -57,7 +57,7 @@ object CacheStreams {
     * Creates a set of publish subscribe streams for gateway events.
     */
   def gatewayEvents[D](
-      implicit system: ActorSystem
+      implicit system: ActorSystem[Nothing]
   ): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) =
     SupervisionStreams
       .addLogAndContinueFunction(
@@ -83,10 +83,10 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
-  def cacheUpdater(implicit system: ActorSystem): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+  def cacheUpdater(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
       var state: CacheState            = null
-      implicit val log: LoggingAdapter = system.log
+      implicit val log: Logger = system.log
 
       //We only handle events when we are ready to, and we have received the ready event.
       def isReady: Boolean = state != null

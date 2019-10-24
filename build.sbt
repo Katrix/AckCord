@@ -84,9 +84,9 @@ lazy val requests = project
     version := ackCordVersion,
     description := "The request module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -100,9 +100,9 @@ lazy val gateway = project
     version := ackCordVersion,
     description := "The gateway module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -116,8 +116,8 @@ lazy val voice = project
     version := ackCordVersion,
     description := "The voice websocket module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor"     % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream"    % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-typed"      % akkaVersion,
       "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
     ),
     libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,

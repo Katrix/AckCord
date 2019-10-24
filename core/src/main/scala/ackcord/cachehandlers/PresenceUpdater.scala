@@ -25,11 +25,11 @@ package ackcord.cachehandlers
 
 import ackcord.data.{Guild, GuildMember, Presence}
 import ackcord.gateway.GatewayEvent.PresenceUpdateData
-import akka.event.LoggingAdapter
+import org.slf4j.Logger
 
 object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry)(
-      implicit log: LoggingAdapter
+      implicit log: Logger
   ): Unit = {
     val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _, clientStatus) = obj
 
@@ -44,7 +44,7 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
         val newActivity = rawActivity.map(_.toActivity).flatMap {
           case Right(activity) => Some(activity)
           case Left(e) =>
-            log.warning(e)
+            log.warn(e)
             None
         }
 

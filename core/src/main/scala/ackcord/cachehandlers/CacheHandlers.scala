@@ -7,7 +7,7 @@ import ackcord.SnowflakeMap
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.gateway.GatewayEvent._
-import akka.event.LoggingAdapter
+import org.slf4j.Logger
 
 object CacheHandlers {
 
@@ -15,7 +15,7 @@ object CacheHandlers {
 
   val partialUserUpdater: CacheUpdater[PartialUser] = new CacheUpdater[PartialUser] {
     override def handle(builder: CacheSnapshotBuilder, partialUser: PartialUser, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
 
       builder.getUser(partialUser.id) match {
@@ -60,7 +60,7 @@ object CacheHandlers {
 
   val rawChannelUpdater: CacheUpdater[RawChannel] = new CacheUpdater[RawChannel] {
     override def handle(builder: CacheSnapshotBuilder, rawChannel: RawChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       rawChannel.toChannel.foreach {
         //Let's keep a match here so that we don't forget to add new types later
@@ -74,33 +74,33 @@ object CacheHandlers {
 
   val guildChannelUpdater: CacheUpdater[GuildChannel] = new CacheUpdater[GuildChannel] {
     override def handle(builder: CacheSnapshotBuilder, guildChannel: GuildChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       builder.guildMap.get(guildChannel.guildId) match {
         case Some(guild) =>
           registry.updateData(builder) {
             guild.copy(channels = guild.channels.updated(guildChannel.id, guildChannel))
           }
-        case None => log.warning(s"No guild for channel update $guildChannel")
+        case None => log.warn(s"No guild for channel update $guildChannel")
       }
     }
   }
 
   val dmChannelUpdater: CacheUpdater[DMChannel] = new CacheUpdater[DMChannel] {
     override def handle(builder: CacheSnapshotBuilder, dmChannel: DMChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = builder.dmChannelMap.put(dmChannel.id, dmChannel)
   }
 
   val dmGroupChannelUpdater: CacheUpdater[GroupDMChannel] = new CacheUpdater[GroupDMChannel] {
     override def handle(builder: CacheSnapshotBuilder, groupDmChannel: GroupDMChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = builder.groupDmChannelMap.put(groupDmChannel.id, groupDmChannel)
   }
 
   val rawGuildUpdater: CacheUpdater[RawGuild] = new CacheUpdater[RawGuild] {
     override def handle(builder: CacheSnapshotBuilder, obj: RawGuild, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       val userUpdater        = registry.getUpdater[User]
       val guildUpdater       = registry.getUpdater[Guild]
@@ -131,7 +131,7 @@ object CacheHandlers {
         val presences = rawPresences.map(_.toPresence).flatMap {
           case Right(value) => Seq(value)
           case Left(e) =>
-            log.warning(e)
+            log.warn(e)
             Nil
         }
         val channels = rawChannels.flatMap(_.toGuildChannel(obj.id))
@@ -190,7 +190,7 @@ object CacheHandlers {
 
   val rawBanUpdater: CacheUpdater[(GuildId, RawBan)] = new CacheUpdater[(GuildId, RawBan)] {
     override def handle(builder: CacheSnapshotBuilder, topObj: (GuildId, RawBan), registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       val (guildId, obj) = topObj
 
@@ -205,7 +205,7 @@ object CacheHandlers {
   val guildEmojisUpdater: CacheUpdater[GuildEmojisUpdateData] =
     new CacheUpdater[GuildEmojisUpdateData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildEmojisUpdateData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         if (registry.hasUpdater[Emoji]) {
           val GuildEmojisUpdateData(guildId, emojis) = obj
@@ -214,7 +214,7 @@ object CacheHandlers {
               registry.updateData(builder) {
                 guild.copy(emojis = SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)))
               }
-            case None => log.warning(s"Can't find guild for emojis update $obj")
+            case None => log.warn(s"Can't find guild for emojis update $obj")
           }
         }
       }
@@ -223,7 +223,7 @@ object CacheHandlers {
   val rawGuildMemberWithGuildUpdater: CacheUpdater[RawGuildMemberWithGuild] =
     new CacheUpdater[RawGuildMemberWithGuild] {
       override def handle(builder: CacheSnapshotBuilder, obj: RawGuildMemberWithGuild, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         registry.updateData(builder)(obj.toRawGuildMember.toGuildMember(obj.guildId))
         registry.updateData(builder)(obj.user)
@@ -232,14 +232,14 @@ object CacheHandlers {
 
   val guildMemberUpdater: CacheUpdater[GuildMember] = new CacheUpdater[GuildMember] {
     override def handle(builder: CacheSnapshotBuilder, member: GuildMember, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       builder.getGuild(member.guildId) match {
         case Some(guild) =>
           registry.updateData(builder) {
             guild.copy(members = guild.members.updated(member.userId, member))
           }
-        case None => log.warning(s"Can't find guild for guildMember update $member")
+        case None => log.warn(s"Can't find guild for guildMember update $member")
       }
     }
   }
@@ -247,7 +247,7 @@ object CacheHandlers {
   val rawGuildMemberUpdater: CacheUpdater[GuildMemberUpdateData] =
     new CacheUpdater[GuildMemberUpdateData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberUpdateData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         val GuildMemberUpdateData(guildId, roles, user, nick) = obj
 
@@ -261,7 +261,7 @@ object CacheHandlers {
             registry.updateData(builder) {
               guildMember.copy(nick = nick, roleIds = roles)
             }
-          case Left(e) => log.warning(e)
+          case Left(e) => log.warn(e)
         }
 
         registry.updateData(builder)(user)
@@ -271,7 +271,7 @@ object CacheHandlers {
   val rawGuildMemberChunkUpdater: CacheUpdater[GuildMemberChunkData] =
     new CacheUpdater[GuildMemberChunkData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberChunkData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         val GuildMemberChunkData(guildId, newRawMembers) = obj
 
@@ -284,7 +284,7 @@ object CacheHandlers {
                   members = guild.members ++ SnowflakeMap.withKey(newRawMembers.map(_.toGuildMember(guildId)))(_.userId)
                 )
               }
-            case None => log.warning(s"Can't find guild for guildMember update $obj")
+            case None => log.warn(s"Can't find guild for guildMember update $obj")
           }
         }
 
@@ -297,7 +297,7 @@ object CacheHandlers {
   val roleModifyDataUpdater: CacheUpdater[GuildRoleModifyData] =
     new CacheUpdater[GuildRoleModifyData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildRoleModifyData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         val GuildRoleModifyData(guildId, role) = obj
         registry.updateData(builder)(role.toRole(guildId))
@@ -306,7 +306,7 @@ object CacheHandlers {
 
   val roleUpdater: CacheUpdater[Role] = new CacheUpdater[Role] {
     override def handle(builder: CacheSnapshotBuilder, role: Role, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       //We need to check if this should run as the first updater always runs otherwise
       if (registry.hasUpdater[Role]) {
@@ -315,7 +315,7 @@ object CacheHandlers {
             registry.updateData(builder) {
               guild.copy(roles = guild.roles.updated(role.id, role))
             }
-          case None => log.warning(s"No guild found for role update $role")
+          case None => log.warn(s"No guild found for role update $role")
         }
       }
     }
@@ -323,7 +323,7 @@ object CacheHandlers {
 
   val rawMessageUpdater: CacheUpdater[RawMessage] = new CacheUpdater[RawMessage] {
     override def handle(builder: CacheSnapshotBuilder, obj: RawMessage, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       val users = obj.mentions
 
@@ -349,7 +349,7 @@ object CacheHandlers {
   val rawPartialMessageUpdater: CacheUpdater[RawPartialMessage] =
     new CacheUpdater[RawPartialMessage] {
       override def handle(builder: CacheSnapshotBuilder, obj: RawPartialMessage, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         val newUsers = obj.mentions.getOrElse(Seq.empty)
 
@@ -383,7 +383,7 @@ object CacheHandlers {
   val rawMessageReactionUpdater: CacheUpdater[MessageReactionData] =
     new CacheUpdater[MessageReactionData] {
       override def handle(builder: CacheSnapshotBuilder, obj: MessageReactionData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         for {
           updater <- registry.getUpdater[Message]
@@ -409,13 +409,13 @@ object CacheHandlers {
 
   val lastTypedUpdater: CacheUpdater[TypingStartData] = new CacheUpdater[TypingStartData] {
     override def handle(builder: CacheSnapshotBuilder, obj: TypingStartData, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
   }
 
   val userUpdater: CacheUpdater[User] = new CacheUpdater[User] {
     override def handle(builder: CacheSnapshotBuilder, user: User, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       //We need to check if this should run as the first updater always runs otherwise
       if (registry.hasUpdater[User]) {
@@ -425,7 +425,7 @@ object CacheHandlers {
 
   val guildUpdater: CacheUpdater[Guild] = new CacheUpdater[Guild] {
     override def handle(builder: CacheSnapshotBuilder, obj: Guild, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       builder.guildMap.put(obj.id, obj)
 
@@ -437,7 +437,7 @@ object CacheHandlers {
 
   val voiceStateUpdater: CacheUpdater[VoiceState] = new CacheUpdater[VoiceState] {
     override def handle(builder: CacheSnapshotBuilder, obj: VoiceState, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       val optGuild = obj.guildId
         .toRight("Can't handle VoiceState update with missing guild")
@@ -448,21 +448,21 @@ object CacheHandlers {
           val newVoiceStates =
             obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
           registry.updateData(builder)(guild.copy(voiceStates = newVoiceStates))
-        case Left(e) => log.warning(e)
+        case Left(e) => log.warn(e)
       }
     }
   }
 
   val messageUpdater: CacheUpdater[Message] = new CacheUpdater[Message] {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder.getChannelMessages(obj.channelId).put(obj.id, obj)
   }
 
   val unavailableGuildUpdater: CacheUpdater[UnavailableGuild] = new CacheUpdater[UnavailableGuild] {
     override def handle(builder: CacheSnapshotBuilder, obj: UnavailableGuild, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder.unavailableGuildMap.put(obj.id, obj)
   }
@@ -471,7 +471,7 @@ object CacheHandlers {
 
   val rawChannelDeleter: CacheDeleter[RawChannel] = new CacheDeleter[RawChannel] {
     override def handle(builder: CacheSnapshotBuilder, rawChannel: RawChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
@@ -509,7 +509,7 @@ object CacheHandlers {
 
   val guildDeleter: CacheDeleter[UnavailableGuild] = new CacheDeleter[UnavailableGuild] {
     override def handle(builder: CacheSnapshotBuilder, obj: UnavailableGuild, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       builder.guildMap.remove(obj.id)
 
@@ -521,7 +521,7 @@ object CacheHandlers {
 
   val rawBanDeleter: CacheDeleter[UserWithGuildId] = new CacheDeleter[UserWithGuildId] {
     override def handle(builder: CacheSnapshotBuilder, topObj: UserWithGuildId, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = {
       val UserWithGuildId(guildId, user) = topObj
 
@@ -536,14 +536,14 @@ object CacheHandlers {
   val rawGuildMemberDeleter: CacheDeleter[GuildMemberRemoveData] =
     new CacheDeleter[GuildMemberRemoveData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberRemoveData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         if (registry.hasDeleter[GuildMember]) {
           val GuildMemberRemoveData(guildId, user) = obj
           builder.getGuild(guildId) match {
             case Some(guild) =>
               registry.updateData(builder)(guild.copy(members = guild.members - user.id))
-            case None => log.warning(s"Couldn't get guild for member delete $obj")
+            case None => log.warn(s"Couldn't get guild for member delete $obj")
           }
         }
       }
@@ -552,13 +552,13 @@ object CacheHandlers {
   val roleDeleteDataDeleter: CacheDeleter[GuildRoleDeleteData] =
     new CacheDeleter[GuildRoleDeleteData] {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildRoleDeleteData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         if (registry.hasDeleter[Role]) {
           val GuildRoleDeleteData(guildId, roleId) = obj
           builder.getGuild(guildId) match {
             case Some(guild) => registry.updateData(builder)(guild.copy(roles = guild.roles - roleId))
-            case None        => log.warning(s"Couldn't get guild for member delete $obj")
+            case None        => log.warn(s"Couldn't get guild for member delete $obj")
           }
         }
       }
@@ -567,7 +567,7 @@ object CacheHandlers {
   val rawMessageDeleter: CacheDeleter[MessageDeleteData] =
     new CacheDeleter[MessageDeleteData] {
       override def handle(builder: CacheSnapshotBuilder, obj: MessageDeleteData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = if (registry.hasDeleter[Message]) {
         val MessageDeleteData(id, channelId, _) = obj
         builder.messageMap.get(channelId).foreach(_.remove(id))
@@ -577,7 +577,7 @@ object CacheHandlers {
   val rawMessageBulkDeleter: CacheDeleter[MessageDeleteBulkData] =
     new CacheDeleter[MessageDeleteBulkData] {
       override def handle(builder: CacheSnapshotBuilder, obj: MessageDeleteBulkData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit =
         if (registry.hasDeleter[Message]) {
           val MessageDeleteBulkData(ids, channelId, _) = obj
@@ -589,7 +589,7 @@ object CacheHandlers {
   val rawMessageReactionDeleter: CacheDeleter[MessageReactionData] =
     new CacheDeleter[MessageReactionData] {
       override def handle(builder: CacheSnapshotBuilder, obj: MessageReactionData, registry: CacheTypeRegistry)(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         for {
           updater <- registry.getUpdater[Message]
@@ -614,7 +614,7 @@ object CacheHandlers {
           obj: MessageReactionRemoveAllData,
           registry: CacheTypeRegistry
       )(
-          implicit log: LoggingAdapter
+          implicit log: Logger
       ): Unit = {
         for {
           updater <- registry.getUpdater[Message]
@@ -627,7 +627,7 @@ object CacheHandlers {
 
   val guildChannelDeleter: CacheDeleter[GuildChannel] = new CacheDeleter[GuildChannel] {
     override def handle(builder: CacheSnapshotBuilder, obj: GuildChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder
         .getGuild(obj.guildId)
@@ -636,20 +636,20 @@ object CacheHandlers {
 
   val dmChannelDeleter: CacheDeleter[DMChannel] = new CacheDeleter[DMChannel] {
     override def handle(builder: CacheSnapshotBuilder, obj: DMChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder.dmChannelMap.remove(obj.id)
   }
 
   val groupDmChannelDeleter: CacheDeleter[GroupDMChannel] = new CacheDeleter[GroupDMChannel] {
     override def handle(builder: CacheSnapshotBuilder, obj: GroupDMChannel, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = builder.groupDmChannelMap.remove(obj.id)
   }
 
   val guildMemberDeleter: CacheDeleter[GuildMember] = new CacheDeleter[GuildMember] {
     override def handle(builder: CacheSnapshotBuilder, obj: GuildMember, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder
         .getGuild(obj.guildId)
@@ -658,7 +658,7 @@ object CacheHandlers {
 
   val roleDeleter: CacheDeleter[Role] = new CacheDeleter[Role] {
     override def handle(builder: CacheSnapshotBuilder, obj: Role, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit =
       builder
         .getGuild(obj.guildId)
@@ -667,7 +667,7 @@ object CacheHandlers {
 
   val messageDeleter: CacheDeleter[Message] = new CacheDeleter[Message] {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
-        implicit log: LoggingAdapter
+        implicit log: Logger
     ): Unit = builder.getChannelMessages(obj.channelId).remove(obj.id)
   }
 }

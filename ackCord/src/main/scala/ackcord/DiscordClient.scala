@@ -35,8 +35,8 @@ import ackcord.commands._
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.Done
-import akka.actor.{ActorRef, Terminated}
-import akka.pattern.{ask, gracefulStop}
+import akka.actor.typed._
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
 import akka.util.Timeout
 
@@ -48,7 +48,7 @@ trait DiscordClient extends CommandsHelper {
   /**
     * The shards of this client
     */
-  def shards: Seq[ActorRef]
+  def shards: Future[Seq[ActorRef[DiscordShard.Command]]]
 
   /**
     * The cache used by the client
@@ -65,43 +65,28 @@ trait DiscordClient extends CommandsHelper {
     */
   def requests: RequestHelper
 
-  require(shards.nonEmpty, "No shards")
+  def musicManager: Future[ActorRef[MusicManager.Command]]
 
-  var shardShutdownManager: ActorRef = _
-  val musicManager: ActorRef         = requests.system.actorOf(MusicManager.props(cache), "MusicManager")
-
-  implicit val executionContext: ExecutionContextExecutor = requests.system.dispatcher
+  implicit val executionContext: ExecutionContextExecutor = requests.system.executionContext
 
   /**
-    * Login the shards of this client.
+    * Login the shards of this client. Note that this method just sends the
+    * login signal. It does not block until a response is received.
     */
-  def login(): Future[Done] = {
-    val req = requests
-    import req.system
-
-    require(shardShutdownManager == null, "Already logged in")
-    shardShutdownManager = req.system.actorOf(ShardShutdownManager.props(shards), "ShutdownManager")
-
-    DiscordShard.startShards(shards)
-  }
+  def login(): Unit
 
   /**
     * Logout the shards of this client
     * @param timeout The amount of time to wait before forcing logout.
     */
-  def logout(timeout: FiniteDuration = 1.minute): Future[Boolean] = {
-    require(shardShutdownManager != null, "Logout before login")
-    val res = gracefulStop(shardShutdownManager, timeout, DiscordShard.StopShard)
-    shardShutdownManager = null
-    res
-  }
+  def logout(timeout: FiniteDuration = 1.minute): Future[Boolean]
 
   /**
     * Logs out the shards of this client, and then shuts down the actor system.
     * @param timeout The amount of time to wait before forcing shutdown.
     */
-  def shutdown(timeout: FiniteDuration = 1.minute): Future[Terminated] =
-    logout(timeout).flatMap(_ => requests.system.terminate())
+  def shutdown(timeout: FiniteDuration = 1.minute): Future[Unit] =
+    logout(timeout).map(_ => requests.system.terminate())
 
   /**
     * A stream requester runner.
@@ -170,8 +155,19 @@ trait DiscordClient extends CommandsHelper {
       force: Boolean = false,
       timeoutDur: FiniteDuration = 30.seconds
   ): Future[AudioPlayer] = {
-    implicit val timeout: Timeout = Timeout(timeoutDur)
-    musicManager.ask(ConnectToChannel(guildId, channelId, force, () => createPlayer, timeoutDur)).mapTo[AudioPlayer]
+    implicit val timeout: Timeout                  = Timeout(timeoutDur)
+    implicit val actorSystem: ActorSystem[Nothing] = requests.system
+
+    musicManager
+      .flatMap(
+        _.ask[MusicManager.ConnectToChannelResponse](
+          ConnectToChannel(guildId, channelId, force, () => createPlayer, timeoutDur, _)
+        )
+      )
+      .flatMap {
+        case MusicManager.GotPlayer(player) => Future.successful(player)
+        case MusicManager.GotError(e)       => Future.failed(e)
+      }
   }
 
   /**
@@ -180,14 +176,14 @@ trait DiscordClient extends CommandsHelper {
     * @param destroyPlayer If the player used for this guild should be destroyed.
     */
   def leaveChannel(guildId: GuildId, destroyPlayer: Boolean = false): Unit =
-    musicManager ! DisconnectFromChannel(guildId, destroyPlayer)
+    musicManager.foreach(_ ! DisconnectFromChannel(guildId, destroyPlayer))
 
   /**
     * Set a bot as speaking/playing in a channel. This is required before
     * sending any sound.
     */
   def setPlaying(guildId: GuildId, playing: Boolean): Unit =
-    musicManager ! SetChannelPlaying(guildId, playing)
+    musicManager.foreach(_ ! SetChannelPlaying(guildId, playing))
 
   /**
     * Load a track using LavaPlayer.

@@ -28,7 +28,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 import ackcord.requests.RequestHelper.RequestProperties
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.OverflowStrategy
@@ -52,7 +52,7 @@ import akka.{Done, NotUsed}
   */
 case class RequestHelper(
     credentials: HttpCredentials,
-    ratelimitActor: ActorRef,
+    ratelimitActor: ActorRef[Ratelimiter.Command],
     millisecondPrecision: Boolean = true,
     relativeTime: Boolean = false,
     parallelism: Int = 4,
@@ -60,7 +60,7 @@ case class RequestHelper(
     bufferSize: Int = 32,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
     maxAllowedWait: FiniteDuration = 2.minutes
-)(implicit val system: ActorSystem) {
+)(implicit val system: ActorSystem[Nothing]) {
 
   private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any, Ctx], Future[Done]] = Sink.foreach {
     case _: RequestResponse[_, _] =>
@@ -234,26 +234,4 @@ object RequestHelper {
       implicit val retryOrdered: RequestProperties = RequestProperties.retryOrdered
     }
   }
-
-  def create(
-      credentials: HttpCredentials,
-      millisecondPrecision: Boolean = true,
-      relativeTime: Boolean = false,
-      parallelism: Int = 4,
-      maxRetryCount: Int = 3,
-      bufferSize: Int = 32,
-      overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-      maxAllowedWait: FiniteDuration = 2.minutes
-  )(implicit system: ActorSystem): RequestHelper =
-    new RequestHelper(
-      credentials,
-      system.actorOf(Ratelimiter.props),
-      millisecondPrecision,
-      relativeTime,
-      parallelism,
-      maxRetryCount,
-      bufferSize,
-      overflowStrategy,
-      maxAllowedWait
-    )
 }

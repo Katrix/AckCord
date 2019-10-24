@@ -28,165 +28,131 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.gateway.ComplexGatewayEvent
+import ackcord.gateway.{ComplexGatewayEvent, GatewayHandler}
 import ackcord.requests.{RequestStreams, Routes}
 import akka.Done
-import akka.actor._
-import akka.event.LoggingAdapter
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
 import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.ThrottleMode
+import org.slf4j.Logger
 
-/**
-  * The core actor that controls all the other used actors of AckCord
-  * @param gatewayUri The gateway websocket uri
-  * @param settings The settings to use
-  * @param cache The cache to use for this shard
-  * @param ignoredEvents The events that the cache will completely ignore.
-  *                      EXPERIMENTAL: Not completely tested and may produce bugs.
-  * @param cacheTypeRegistry Provides a more fine grained way to ignore certain
-  *                          parts of events based on the data being updated or deleted.
-  *                          EXPERIMENTAL: Not completely tested, and may
-  *                          break your bot.
-  */
-class DiscordShard(
-    gatewayUri: Uri,
-    settings: GatewaySettings,
-    cache: Cache,
-    ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
-    cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
-) extends Actor
-    with ActorLogging
-    with Timers {
-  import DiscordShard._
+object DiscordShard {
 
-  private var gatewayHandler =
-    context.actorOf(
-      GatewayHandlerCache
-        .props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
-      "GatewayHandler"
-    )
+  sealed trait Command
 
-  private var shutdownCount  = 0
-  private var isShuttingDown = false
-  private var isRestarting   = false
+  case class Parameters(
+      gatewayUri: Uri,
+      settings: GatewaySettings,
+      cache: Cache,
+      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]],
+      cacheTypeRegistry: Logger => CacheTypeRegistry,
+      context: ActorContext[Command],
+      timers: TimerScheduler[Command],
+      log: Logger
+  )
 
-  context.watch(gatewayHandler)
+  case class State(
+      gatewayHandler: ActorRef[GatewayHandler.Command],
+      isShuttingDown: Boolean = false,
+      isRestarting: Boolean = false
+  )
 
-  //We start the actor again manually. The actor itself is responsible for retrying
-  override def supervisorStrategy: SupervisorStrategy = SupervisorStrategy.stoppingStrategy
+  /**
+    * The core actor that controls all the other used actors of AckCord
+    * @param wsUri The gateway websocket uri
+    * @param settings The settings to use
+    * @param cache The cache to use for this shard
+    * @param ignoredEvents The events that the cache will completely ignore.
+    *                      EXPERIMENTAL: Not completely tested and may produce bugs.
+    * @param cacheTypeRegistry Provides a more fine grained way to ignore certain
+    *                          parts of events based on the data being updated or deleted.
+    *                          EXPERIMENTAL: Not completely tested, and may
+    *                          break your bot.
+    */
+  def apply(
+      wsUri: Uri,
+      settings: GatewaySettings,
+      cache: Cache,
+      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+  ): Behavior[Command] = Behaviors.setup { context =>
+    Behaviors.withTimers { timers =>
+      val log = context.log
+      val gatewayHandler = context.spawn(
+        GatewayHandlerCache(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+        "GatewayHandler"
+      )
 
-  override def receive: Receive = {
-    case DiscordShard.StopShard =>
-      isShuttingDown = true
-      gatewayHandler.forward(GatewayLogout)
+      context.watchWith(gatewayHandler, GatewayHandlerTerminated)
 
-    case DiscordShard.StartShard =>
-      gatewayHandler.forward(GatewayLogin)
+      shard(
+        Parameters(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry, context, timers, log),
+        State(gatewayHandler)
+      )
+    }
+  }
 
-    case Terminated(act) if isShuttingDown =>
-      shutdownCount += 1
-      log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
-      if (shutdownCount == 1) {
-        context.stop(self)
-      }
+  private def shard(parameters: Parameters, state: State): Behavior[Command] = {
+    import parameters._
+    import state._
 
-    case Terminated(ref) =>
-      if (ref == gatewayHandler) {
+    Behaviors.receiveMessage {
+      case DiscordShard.StopShard =>
+        gatewayHandler ! GatewayLogout
+        shard(parameters, state.copy(isShuttingDown = true))
+
+      case DiscordShard.StartShard =>
+        gatewayHandler ! GatewayLogin
+        Behaviors.same
+
+      case GatewayHandlerTerminated if isShuttingDown =>
+        log.info("Actor shut down: {}", gatewayHandler.path)
+        Behaviors.stopped
+
+      case GatewayHandlerTerminated =>
         val restartTime = if (isRestarting) 1.second else 5.minutes
         log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else "5 minutes"}")
         timers.startSingleTimer("RestartGateway", CreateGateway, restartTime)
-      }
 
-    case CreateGateway =>
-      gatewayHandler = context.actorOf(
-        GatewayHandlerCache
-          .props(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
-        "GatewayHandler"
-      )
-      gatewayHandler ! GatewayLogin
-      context.watch(gatewayHandler)
+        shard(parameters, state.copy(isRestarting = false))
 
-    case RestartShard =>
-      isRestarting = true
-      gatewayHandler.forward(GatewayLogout)
+      case CreateGateway =>
+        val newGatewayHandler = context.spawn(
+          GatewayHandlerCache(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+          "GatewayHandler"
+        )
+        newGatewayHandler ! GatewayLogin
+        context.watchWith(gatewayHandler, GatewayHandlerTerminated)
+        shard(parameters, state.copy(gatewayHandler = newGatewayHandler))
+
+      case RestartShard =>
+        gatewayHandler ! GatewayLogout
+        shard(parameters, state.copy(isRestarting = true))
+    }
   }
-}
-object DiscordShard {
-
-  def props(
-      wsUri: Uri,
-      settings: GatewaySettings,
-      cache: Cache,
-      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
-      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
-  ): Props =
-    Props(new DiscordShard(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry))
-
-  @deprecated("Prefer the method that takes GatewaySettings", since = "0.15.0")
-  def props(
-      wsUri: Uri,
-      token: String,
-      cache: Cache
-  ): Props = props(wsUri, GatewaySettings(token), cache)
 
   /**
-    * Create a shard actor given the needed arguments.
-    * @param wsUri The websocket gateway uri.
-    * @param token The bot token to use for authentication.
-    * @param system The actor system to use for creating the client actor.
-    */
-  @deprecated("Prefer the method that takes GatewaySettings", since = "0.15.0")
-  def connect(
-      wsUri: Uri,
-      token: String,
-      cache: Cache,
-      actorName: String
-  )(implicit system: ActorSystem): ActorRef =
-    system.actorOf(props(wsUri, GatewaySettings(token), cache), actorName)
-
-  /**
-    * Create a shard actor given the needed arguments.
-    * @param wsUri The websocket gateway uri.
-    * @param settings The settings to use.
-    * @param system The actor system to use for creating the client actor.
-    */
-  def connect(
-      wsUri: Uri,
-      settings: GatewaySettings,
-      cache: Cache,
-      actorName: String,
-      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
-      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
-  )(
-      implicit system: ActorSystem
-  ): ActorRef = system.actorOf(props(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry), actorName)
-
-  /**
-    * Create as multiple shard actors, given the needed arguments.
+    * Create many shard actors, given the needed arguments.
     * @param wsUri The websocket gateway uri.
     * @param shardTotal The amount of shards to create.
     * @param settings The settings to use.
-    * @param system The actor system to use for creating the client actor.
     */
-  def connectMultiple(
+  def many(
       wsUri: Uri,
       shardTotal: Int,
       settings: GatewaySettings,
       cache: Cache,
-      actorName: String,
       ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
-      cacheTypeRegistry: LoggingAdapter => CacheTypeRegistry = CacheTypeRegistry.default
-  )(
-      implicit system: ActorSystem
-  ): Seq[ActorRef] = for (i <- 0 until shardTotal) yield {
-    connect(
+      cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+  ): Seq[Behavior[Command]] = for (i <- 0 until shardTotal) yield {
+    apply(
       wsUri,
       settings.copy(shardTotal = shardTotal, shardNum = i),
       cache,
-      s"$actorName$i",
       ignoredEvents,
       cacheTypeRegistry
     )
@@ -196,7 +162,7 @@ object DiscordShard {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(shards: Seq[ActorRef])(implicit system: ActorSystem): Future[Done] =
+  def startShards(shards: Seq[ActorRef[Command]])(implicit system: ActorSystem[Nothing]): Future[Done] =
     Source(shards.toIndexedSeq)
       .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
       .runForeach(shard => shard ! StartShard)
@@ -204,28 +170,30 @@ object DiscordShard {
   /**
     * Send this to the client to log out and stop gracefully.
     */
-  case object StopShard
+  case object StopShard extends Command
 
   /**
     * Send this to the client to log in.
     */
-  case object StartShard
+  case object StartShard extends Command
 
-  private case object CreateGateway
+  private case object CreateGateway            extends Command
+  private case object GatewayHandlerTerminated extends Command
 
   /**
     * Send this to log out and log in again this shard.
     */
-  case object RestartShard
+  case object RestartShard extends Command
 
   /**
     * Fetch the websocket gateway.
     * @param system The actor system to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGateway(implicit system: ActorSystem): Future[Uri] = {
-    import system.dispatcher
-    val http = Http()
+  def fetchWsGateway(implicit system: ActorSystem[Nothing]): Future[Uri] = {
+    import system.executionContext
+    import akka.actor.typed.scaladsl.adapter._
+    val http = Http(system.toClassic)
 
     http
       .singleRequest(HttpRequest(uri = Routes.gateway.applied))
@@ -255,9 +223,10 @@ object DiscordShard {
     * @param system The actor system to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem): Future[(Uri, Int)] = {
-    import system.dispatcher
-    val http = Http()
+  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[(Uri, Int)] = {
+    import system.executionContext
+    import akka.actor.typed.scaladsl.adapter._
+    val http = Http(system.toClassic)
     val auth = Authorization(BotAuthentication(token))
 
     http

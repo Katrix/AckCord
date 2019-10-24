@@ -23,38 +23,46 @@
  */
 package ackcord.examplecore
 
+import ackcord.CacheSnapshot
+import ackcord.commands.HelpCmd.BaseCommand
 import ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}
-import ackcord.MemoryCacheSnapshot
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Props, Status}
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.Source
+import akka.stream.typed.scaladsl.ActorSink
 
-class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpCmd {
+class ExampleHelpCmd(
+    ctx: ActorContext[ExampleHelpCmd.Command],
+    requests: RequestHelper,
+    someHandler: ActorRef[HelpCmd.HandlerReply]
+) extends HelpCmd[ExampleHelpCmd.Command, ExampleHelpCmd.Ack.type](ctx) {
 
-  implicit val system: ActorSystem = context.system
-  import context.dispatcher
+  implicit val system: ActorSystem[Nothing] = context.system
+  import context.executionContext
 
   private val msgQueue =
     Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
 
-  override protected def handler: Option[ActorRef] = Some(mainActor)
+  override protected def handler: Option[ActorRef[HelpCmd.HandlerReply]] = Some(someHandler)
 
   override protected def sendEmptyEvent: Boolean = true
 
-  override def receive: Receive = {
-    val withInit: Receive = {
-      case ExampleHelpCmd.InitAck => sender() ! ExampleHelpCmd.Ack
-    }
-
-    withInit.orElse(super.receive)
+  override def onMessage(msg: ExampleHelpCmd.Command): Behavior[ExampleHelpCmd.Command] = msg match {
+    case ExampleHelpCmd.InitAck(replyTo) =>
+      replyTo ! ExampleHelpCmd.Ack
+      Behaviors.same
+    case ExampleHelpCmd.SinkComplete                => Behaviors.same
+    case ExampleHelpCmd.SendException(e)            => throw e
+    case base: BaseCommand[ExampleHelpCmd.Ack.type] => onBaseMessage(base)
   }
 
   override def createSearchReply(message: Message, query: String, matches: Seq[HelpCmd.CommandRegistration])(
-      implicit c: MemoryCacheSnapshot
+      implicit c: CacheSnapshot
   ): CreateMessageData =
     CreateMessageData(
       embed = Some(
@@ -67,7 +75,7 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
       )
     )
 
-  override def createReplyAll(message: Message, page: Int)(implicit c: MemoryCacheSnapshot): CreateMessageData = {
+  override def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): CreateMessageData = {
     val commandsSlice = commands.toSeq
       .sortBy(reg => (reg.info.prefix(message), reg.info.aliases(message).head))
       .slice(page * 10, (page + 1) * 10)
@@ -90,7 +98,7 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
   def createContent(
       message: Message,
       reg: HelpCmd.CommandRegistration
-  )(implicit c: MemoryCacheSnapshot): EmbedField = {
+  )(implicit c: CacheSnapshot): EmbedField = {
     val builder = new StringBuilder
     builder.append(s"Name: ${reg.description.name}\n")
     builder.append(s"Description: ${reg.description.description}\n")
@@ -101,31 +109,44 @@ class ExampleHelpCmd(requests: RequestHelper, mainActor: ActorRef) extends HelpC
     EmbedField(reg.description.name, builder.mkString)
   }
 
-  override def sendMessageAndAck(sender: ActorRef, request: Request[RawMessage, NotUsed]): Unit =
+  override def sendMessageAndAck(
+      sender: ActorRef[ExampleHelpCmd.Ack.type],
+      request: Request[RawMessage, NotUsed]
+  ): Unit =
     msgQueue.offer(request).onComplete(_ => sendAck(sender))
 
-  override def sendAck(sender: ActorRef): Unit = sender ! ExampleHelpCmd.Ack
+  override def sendAck(sender: ActorRef[ExampleHelpCmd.Ack.type]): Unit = sender ! ExampleHelpCmd.Ack
 }
 object ExampleHelpCmd {
-  case object InitAck
-  case object Ack
+  sealed trait Command extends HelpCmd.BaseCommand[Ack.type]
 
-  def props(requests: RequestHelper, mainActor: ActorRef): Props = Props(new ExampleHelpCmd(requests, mainActor))
+  case class InitAck(replyTo: ActorRef[Ack.type]) extends Command
+  case object SinkComplete                        extends Command
+  case class SendException(e: Throwable)          extends Command
+  case object Ack
 }
 
 object ExampleHelpCmdFactory {
-  def apply(helpCmdActor: ActorRef): ParsedCmdFactory[Option[HelpCmd.Args], NotUsed] = ParsedCmdFactory(
-    refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
-    sink = _ =>
-      Sink
-        .actorRefWithBackpressure(helpCmdActor, ExampleHelpCmd.InitAck, ExampleHelpCmd.Ack, NotUsed, Status.Failure),
-    description = Some(
-      CmdDescription(
-        name = "Help",
-        description = "This command right here",
-        usage = "<page|command>",
-        extra = Map("ignore-help-last" -> "") //Ignores the help command when returning if all commands have been unregistered
+  def apply(helpCmdActor: ActorRef[ExampleHelpCmd.Command]): ParsedCmdFactory[Option[HelpCmd.Args], NotUsed] =
+    ParsedCmdFactory(
+      refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
+      sink = _ =>
+        ActorSink
+          .actorRefWithBackpressure(
+            helpCmdActor,
+            HelpCmd.CmdMessage(_, _),
+            ExampleHelpCmd.InitAck,
+            ExampleHelpCmd.Ack,
+            ExampleHelpCmd.SinkComplete,
+            ExampleHelpCmd.SendException
+          ),
+      description = Some(
+        CmdDescription(
+          name = "Help",
+          description = "This command right here",
+          usage = "<page|command>",
+          extra = Map("ignore-help-last" -> "") //Ignores the help command when returning if all commands have been unregistered
+        )
       )
     )
-  )
 }

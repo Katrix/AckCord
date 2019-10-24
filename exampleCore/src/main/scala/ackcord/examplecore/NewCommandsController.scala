@@ -8,7 +8,7 @@ import scala.util.Random
 import ackcord._
 import ackcord.syntax._
 import ackcord.newcommands._
-import ackcord.data.Permission
+import ackcord.data._
 import ackcord.requests.CreateMessage
 import akka.NotUsed
 import akka.stream.scaladsl.Flow

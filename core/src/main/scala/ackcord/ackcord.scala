@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 
 import scala.concurrent.Future
 

@@ -27,7 +27,8 @@ import scala.collection.immutable
 
 import ackcord.gateway.GatewayMessage
 import akka.NotUsed
-import akka.actor.{ActorRef, ActorSystem, Status}
+import akka.{actor => classic}
+import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{Sink, Source}
 
 /**
@@ -41,7 +42,7 @@ case class Cache(
     subscribe: Source[(CacheEvent, CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
     gatewaySubscribe: Source[GatewayMessage[Any], NotUsed]
-)(implicit system: ActorSystem) {
+)(implicit system: ActorSystem[Nothing]) {
 
   /**
     * Publish a single element to this cache.
@@ -61,7 +62,7 @@ case class Cache(
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
     */
-  def subscribeAPIActor(actor: ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
+  def subscribeAPIActor(actor: classic.ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
       specificEvent: Class[_ <: APIMessage]*
   ): Unit =
     subscribeAPI
@@ -72,11 +73,11 @@ case class Cache(
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]].
     */
   def subscribeAPIActorWithAck(
-      actor: ActorRef,
+      actor: classic.ActorRef,
       initMessage: Any,
       ackMessage: Any,
       completeMessage: Any,
-      failureMessage: Throwable => Any = Status.Failure
+      failureMessage: Throwable => Any = classic.Status.Failure
   )(specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
@@ -87,7 +88,7 @@ object Cache {
   /**
     * Creates a cache for a bot. This should be shared for the whole bot.
     */
-  def create(implicit system: ActorSystem): Cache = {
+  def create(implicit system: ActorSystem[Nothing]): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
 

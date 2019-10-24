@@ -41,7 +41,7 @@ abstract class CommandController(val requests: RequestHelper) {
     implicit val impRequest: RequestHelper = requests
     ackcord.RequestRunner.sourceRequestRunner
   }
-  implicit val ec: ExecutionContext = requests.system.dispatcher
+  implicit val ec: ExecutionContext = requests.system.executionContext
 
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 

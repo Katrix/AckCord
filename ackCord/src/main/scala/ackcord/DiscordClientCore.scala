@@ -24,16 +24,23 @@
 package ackcord
 
 import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
 import ackcord.commands._
-import akka.actor.ActorRef
+import akka.actor.typed._
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
+import akka.util.Timeout
 import akka.{Done, NotUsed}
 
-case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Commands, requests: RequestHelper)
-    extends DiscordClient {
+class DiscordClientCore(
+    val cache: Cache,
+    val commands: Commands,
+    val requests: RequestHelper,
+    actor: ActorRef[DiscordClientActor.Command]
+) extends DiscordClient {
   import requests.system
 
   override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
@@ -46,7 +53,7 @@ case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Comm
     killSwitch -> SeperateCommandsHelper(newCommands, requests)
   }
 
-  override val sourceRequesterRunner: RequestRunner[Source[?, NotUsed]] =
+  override val sourceRequesterRunner: RequestRunner[Source[*, NotUsed]] =
     RequestRunner.sourceRequestRunner(requests)
 
   override def registerHandler[G[_], A <: APIMessage](
@@ -71,4 +78,21 @@ case class CoreDiscordClient(shards: Seq[ActorRef], cache: Cache, commands: Comm
       .viaMat(KillSwitches.single)(Keep.right)
       .toMat(Sink.ignore)(Keep.both)
       .run()
+
+  override def shards: Future[Seq[ActorRef[DiscordShard.Command]]] = {
+    implicit val timeout: Timeout = Timeout(1.second)
+    actor.ask(DiscordClientActor.GetShards).map(_.shards)
+  }
+
+  override def musicManager: Future[ActorRef[MusicManager.Command]] = {
+    implicit val timeout: Timeout = Timeout(1.second)
+    actor.ask(DiscordClientActor.GetMusicManager).map(_.musicManager)
+  }
+
+  override def login(): Unit = actor ! DiscordClientActor.Login
+
+  override def logout(timeout: FiniteDuration): Future[Boolean] = {
+    implicit val impTimeout: Timeout = Timeout(1.second + timeout)
+    actor.ask[DiscordClientActor.LogoutReply](DiscordClientActor.Logout(timeout, _)).flatMap(_.done)
+  }
 }
