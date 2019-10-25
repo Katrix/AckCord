@@ -24,8 +24,7 @@
 package ackcord.examplecore
 
 import ackcord.CacheSnapshot
-import ackcord.commands.HelpCmd.BaseCommand
-import ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmdFactory}
+import ackcord.commands.{CmdDescription, CmdInfo, HelpCmd, ParsedCmd, ParsedCmdFactory}
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}
@@ -40,7 +39,7 @@ class ExampleHelpCmd(
     ctx: ActorContext[ExampleHelpCmd.Command],
     requests: RequestHelper,
     someHandler: ActorRef[HelpCmd.HandlerReply]
-) extends HelpCmd[ExampleHelpCmd.Command, ExampleHelpCmd.Ack.type](ctx) {
+) extends HelpCmd[ExampleHelpCmd.Command](ctx) {
 
   implicit val system: ActorSystem[Nothing] = context.system
   import context.executionContext
@@ -54,11 +53,11 @@ class ExampleHelpCmd(
 
   override def onMessage(msg: ExampleHelpCmd.Command): Behavior[ExampleHelpCmd.Command] = msg match {
     case ExampleHelpCmd.InitAck(replyTo) =>
-      replyTo ! ExampleHelpCmd.Ack
+      replyTo ! HelpCmd.Ack
       Behaviors.same
-    case ExampleHelpCmd.SinkComplete                => Behaviors.same
-    case ExampleHelpCmd.SendException(e)            => throw e
-    case base: BaseCommand[ExampleHelpCmd.Ack.type] => onBaseMessage(base)
+    case ExampleHelpCmd.SinkComplete             => Behaviors.same
+    case ExampleHelpCmd.SendException(e)         => throw e
+    case ExampleHelpCmd.BaseCommandWrapper(base) => onBaseMessage(base)
   }
 
   override def createSearchReply(message: Message, query: String, matches: Seq[HelpCmd.CommandRegistration])(
@@ -110,20 +109,24 @@ class ExampleHelpCmd(
   }
 
   override def sendMessageAndAck(
-      sender: ActorRef[ExampleHelpCmd.Ack.type],
+      sender: ActorRef[HelpCmd.Ack.type],
       request: Request[RawMessage, NotUsed]
   ): Unit =
     msgQueue.offer(request).onComplete(_ => sendAck(sender))
 
-  override def sendAck(sender: ActorRef[ExampleHelpCmd.Ack.type]): Unit = sender ! ExampleHelpCmd.Ack
+  override def terminateCommand(registration: HelpCmd.CommandRegistration): ExampleHelpCmd.Command =
+    ExampleHelpCmd.BaseCommandWrapper(HelpCmd.TerminateCommand(registration))
 }
 object ExampleHelpCmd {
-  sealed trait Command extends HelpCmd.BaseCommand[Ack.type]
+  def apply(requests: RequestHelper, handler: ActorRef[HelpCmd.HandlerReply]): Behavior[Command] =
+    Behaviors.setup(ctx => new ExampleHelpCmd(ctx, requests, handler))
 
-  case class InitAck(replyTo: ActorRef[Ack.type]) extends Command
-  case object SinkComplete                        extends Command
-  case class SendException(e: Throwable)          extends Command
-  case object Ack
+  sealed trait Command
+  case class BaseCommandWrapper(wrapper: HelpCmd.BaseCommand) extends Command
+
+  case class InitAck(replyTo: ActorRef[HelpCmd.Ack.type]) extends Command
+  case object SinkComplete                                extends Command
+  case class SendException(e: Throwable)                  extends Command
 }
 
 object ExampleHelpCmdFactory {
@@ -132,11 +135,11 @@ object ExampleHelpCmdFactory {
       refiner = CmdInfo(prefix = "!", aliases = Seq("help")),
       sink = _ =>
         ActorSink
-          .actorRefWithBackpressure(
+          .actorRefWithBackpressure[ParsedCmd[Option[HelpCmd.Args]], ExampleHelpCmd.Command, HelpCmd.Ack.type](
             helpCmdActor,
-            HelpCmd.CmdMessage(_, _),
+            (r, c) => ExampleHelpCmd.BaseCommandWrapper(HelpCmd.CmdMessage(r, c)),
             ExampleHelpCmd.InitAck,
-            ExampleHelpCmd.Ack,
+            HelpCmd.Ack,
             ExampleHelpCmd.SinkComplete,
             ExampleHelpCmd.SendException
           ),

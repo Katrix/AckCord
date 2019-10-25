@@ -23,30 +23,33 @@
  */
 package ackcord.examplecore
 
-import scala.util.{Failure, Success}
+import scala.concurrent.Await
+import scala.concurrent.duration._
+import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
-import ackcord.examplecore.ExampleMain.NewCommandsEntry
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.GatewayEvent
 import ackcord.gateway.GatewaySettings
-import ackcord.requests.{BotAuthentication, RequestHelper}
-import ackcord.util.GuildRouter
+import ackcord.requests.{BotAuthentication, Ratelimiter, RequestHelper}
+import ackcord.util.{APIGuildRouter, GuildRouter}
+import akka.actor.CoordinatedShutdown
 import akka.{Done, NotUsed}
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, CoordinatedShutdown, Props, Status, Terminated}
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
+import akka.actor.typed.scaladsl.adapter._
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.Keep
-import akka.pattern.ask
 import akka.pattern.gracefulStop
+import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch}
 import akka.util.Timeout
 import cats.arrow.FunctionK
+import org.slf4j.Logger
 
 object Example {
-
-  implicit val system: ActorSystem = ActorSystem("AckCord")
-  import system.dispatcher
 
   def main(args: Array[String]): Unit = {
     if (args.isEmpty) {
@@ -54,49 +57,57 @@ object Example {
       sys.exit()
     }
 
-    val cache = Cache.create
     val token = args.head
 
     val settings = GatewaySettings(token = token)
-    DiscordShard.fetchWsGateway
-      .map(
-        DiscordShard.connect(
-          _,
-          settings,
-          cache,
-          "DiscordShard",
-          //We can set some gateway events here that we want AckCord to completely
-          //ignore. For anything listed here, the JSON will never be deserialized,
-          //and it will be like as if they weren't sent.
-          ignoredEvents = Seq(
-            classOf[GatewayEvent.PresenceUpdate],
-            classOf[GatewayEvent.TypingStart]
-          ),
-          //In addition to setting events that will be ignored, we can also
-          //set data types that we don't want the cache to deal with.
-          //This will for the most part help us save RAM.
-          //This will for example kick in the GuildCreate event, which includes
-          //presences.
-          cacheTypeRegistry = CacheTypeRegistry.noPresences
-        )
-      )
-      .onComplete {
-        case Success(shardActor) =>
-          system.actorOf(ExampleMain.props(settings, cache, shardActor), "Main")
-        case Failure(e) =>
-          println("Could not connect to Discord")
-          throw e
-      }
+    ActorSystem(Behaviors.setup[ExampleMain.Command](ctx => new ExampleMain(ctx, ctx.log, settings)), "ExampleCore")
   }
 }
 
-class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) extends Actor with ActorLogging {
-  implicit val system: ActorSystem = context.system
-  import context.dispatcher
+class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings: GatewaySettings)
+    extends AbstractBehavior[ExampleMain.Command](ctx) {
+  import context.executionContext
+  implicit val system: ActorSystem[Nothing] = context.system
+  import ExampleMain._
 
-  val requests: RequestHelper =
-    RequestHelper.create(
+  private val cache = Cache.create
+
+  private val wsUri = try {
+    Await.result(DiscordShard.fetchWsGateway, 30.seconds)
+  } catch {
+    case NonFatal(e) =>
+      println("Could not connect to Discord")
+      throw e
+  }
+
+  private val shard = context.spawn(
+    DiscordShard(
+      wsUri,
+      settings,
+      cache,
+      //We can set some gateway events here that we want AckCord to completely
+      //ignore. For anything listed here, the JSON will never be deserialized,
+      //and it will be like as if they weren't sent.
+      ignoredEvents = Seq(
+        classOf[GatewayEvent.PresenceUpdate],
+        classOf[GatewayEvent.TypingStart]
+      ),
+      //In addition to setting events that will be ignored, we can also
+      //set data types that we don't want the cache to deal with.
+      //This will for the most part help us save RAM.
+      //This will for example kick in the GuildCreate event, which includes
+      //presences.
+      cacheTypeRegistry = CacheTypeRegistry.noPresences
+    ),
+    "DiscordShard"
+  )
+
+  private val ratelimiter = context.spawn(Ratelimiter(), "Ratelimiter")
+
+  private val requests: RequestHelper =
+    new RequestHelper(
       BotAuthentication(settings.token),
+      ratelimiter,
       millisecondPrecision = false, //My system is pretty bad at syncing stuff up, so I need to be very generous when it comes to ratelimits
       relativeTime = true
     )
@@ -118,7 +129,7 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
         Seq("ratelimitTestOrdered"),
         requests.sinkIgnore(RequestHelper.RequestProperties.ordered)
       ),
-      KillCmdFactory(self)
+      KillCmdFactory
     )
   }
 
@@ -151,8 +162,18 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     )
   }
 
-  val helpCmdActor: ActorRef = context.actorOf(ExampleHelpCmd.props(requests, self), "HelpCmd")
-  val helpCmd                = ExampleHelpCmdFactory(helpCmdActor)
+  private val helpMonitor = context.spawn[HelpCmd.HandlerReply](
+    Behaviors.receiveMessage {
+      case HelpCmd.CommandTerminated(_) => Behaviors.same
+      case HelpCmd.NoCommandsRemaining =>
+        context.self ! CommandsUnregistered
+        Behaviors.same
+    },
+    "HelpMonitor"
+  )
+
+  val helpCmdActor: ActorRef[ExampleHelpCmd.Command] = context.spawn(ExampleHelpCmd(requests, helpMonitor), "HelpCmd")
+  val helpCmd                                        = ExampleHelpCmdFactory(helpCmdActor)
 
   val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
 
@@ -191,111 +212,122 @@ class ExampleMain(settings: GatewaySettings, cache: Cache, shard: ActorRef) exte
     .collect {
       case RawCmd(_, "!", "restart", _, _) => println("Restart Starting")
     }
-    .runForeach(_ => self ! DiscordShard.RestartShard)
+    .runForeach(_ => context.self ! RestartShard)
 
-  val guildRouterMusic: ActorRef = {
-    val registerCmdObj = new FunctionK[MusicHandler.MatCmdFactory, cats.Id] {
-      override def apply[A](fa: MusicHandler.MatCmdFactory[A]): A = registerCmd(fa)
-    }
+  private val registerCmdObjMusic = new FunctionK[MusicHandler.MatCmdFactory, cats.Id] {
+    override def apply[A](fa: MusicHandler.MatCmdFactory[A]): A = registerCmd(fa)
+  }
 
-    context.actorOf(
-      GuildRouter.props(
-        MusicHandler.props(requests, registerCmdObj, cache),
-        None
+  val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
+    context.spawn(
+      APIGuildRouter.partitioner(
+        None,
+        MusicHandler(requests, registerCmdObjMusic, cache),
+        None,
+        GuildRouter.OnShutdownSendMsg(MusicHandler.Shutdown)
       ),
       "MusicHandler"
     )
   }
 
   //TODO: Complete this before shutting down guildRouterMusic
-  cache.subscribeAPIActor(guildRouterMusic, DiscordShard.StopShard, Status.Failure)(classOf[APIMessage.Ready])
+  cache.subscribeAPI
+    .collect {
+      case ready: APIMessage.Ready        => GuildRouter.EventMessage(ready)
+      case create: APIMessage.GuildCreate => GuildRouter.EventMessage(create)
+    }
+    .runWith(ActorSink.actorRef(guildRouterMusic, GuildRouter.Shutdown, _ => GuildRouter.Shutdown))
   shard ! DiscordShard.StartShard
 
-  private var shutdownCount        = 0
-  private var isShuttingDown       = false
-  private var tempSender: ActorRef = _
+  private var shutdownCount              = 0
+  private var isShuttingDown             = false
+  private var doneSender: ActorRef[Done] = _
 
-  private val shutdown = CoordinatedShutdown(system)
+  private val shutdown = CoordinatedShutdown(system.toClassic)
 
   shutdown.addTask("before-service-unbind", "begin-deathwatch") { () =>
     implicit val timeout: Timeout = Timeout(shutdown.timeout("before-service-unbind"))
-    (self ? ExampleMain.BeginDeathwatch).mapTo[Done]
+    context.self.ask[Done](ExampleMain.BeginDeathwatch)
   }
 
   shutdown.addTask("service-unbind", "unregister-commands") { () =>
     implicit val timeout: Timeout = Timeout(shutdown.timeout("service-unbind"))
-    (self ? ExampleMain.UnregisterCommands).mapTo[Done]
+    context.self.ask[Done](ExampleMain.UnregisterCommands)
   }
 
   shutdown.addTask("service-requests-done", "stop-help-command") { () =>
     val timeout = shutdown.timeout("service-requests-done")
-    gracefulStop(helpCmdActor, timeout).map(_ => Done)
+    gracefulStop(helpCmdActor.toClassic, timeout).map(_ => Done)
   }
 
   shutdown.addTask("service-requests-done", "stop-music") { () =>
     implicit val timeout: Timeout = Timeout(shutdown.timeout("service-requests-done"))
-    (self ? ExampleMain.StopMusic).mapTo[Done]
+    context.self.ask[Done](ExampleMain.StopMusic)
   }
 
   shutdown.addTask("service-stop", "stop-discord") { () =>
     implicit val timeout: Timeout = Timeout(shutdown.timeout("service-stop"))
-    (self ? DiscordShard.StopShard).mapTo[Done]
+    context.self.ask[Done](StopShard)
   }
 
-  override def receive: Receive = {
-    case DiscordShard.RestartShard =>
-      shard.forward(DiscordShard.RestartShard)
+  override def onMessage(msg: Command): Behavior[Command] = {
+    msg match {
+      case RestartShard =>
+        shard ! DiscordShard.RestartShard
 
-    case HelpCmd.NoCommandsRemaining =>
-      if (isShuttingDown) {
-        tempSender ! Done
-        tempSender = null
-      }
-    case HelpCmd.CommandTerminated(_) => //Ignore
+      case CommandsUnregistered =>
+        if (isShuttingDown) {
+          doneSender ! Done
+          doneSender = null
+        }
 
-    case ExampleMain.BeginDeathwatch =>
-      isShuttingDown = true
+      case ExampleMain.BeginDeathwatch(replyTo) =>
+        isShuttingDown = true
 
-      context.watch(shard)
-      context.watch(guildRouterMusic)
+        context.watch(shard)
+        context.watch(guildRouterMusic)
 
-      sender() ! Done
+        replyTo ! Done
 
-    case ExampleMain.UnregisterCommands =>
-      tempSender = sender()
-      killSwitch.shutdown()
+      case ExampleMain.UnregisterCommands(replyTo) =>
+        doneSender = replyTo
+        killSwitch.shutdown()
 
-    case ExampleMain.StopMusic =>
-      tempSender = sender()
-      guildRouterMusic ! DiscordShard.StopShard
+      case ExampleMain.StopMusic(replyTo) =>
+        doneSender = replyTo
+        guildRouterMusic ! GuildRouter.Broadcast(MusicHandler.Shutdown)
 
-    case DiscordShard.StopShard =>
-      tempSender = sender()
-      shard ! DiscordShard.StopShard
+      case StopShard(replyTo) =>
+        doneSender = replyTo
+        shard ! DiscordShard.StopShard
+    }
 
+    Behaviors.same
+  }
+
+  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
       log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
 
-      tempSender ! Done
-      tempSender = null
+      doneSender ! Done
+      doneSender = null
 
       if (shutdownCount == 2) {
         //context.stop(self)
       }
+      Behaviors.same
   }
 }
 object ExampleMain {
-  def props(settings: GatewaySettings, cache: Cache, shard: ActorRef): Props =
-    Props(new ExampleMain(settings, cache, shard))
-
-  def registerCmd[Mat](commands: Commands, helpActor: ActorRef)(
+  def registerCmd[Mat](commands: Commands, helpActor: ActorRef[ExampleHelpCmd.Command])(
       parsedCmdFactory: ParsedCmdFactory[_, Mat]
   ): Mat = {
     val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
     (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
-      case (info: AbstractCmdInfo, Some(description)) => helpActor ! HelpCmd.AddCmd(info, description, complete)
-      case _                                          =>
+      case (info: AbstractCmdInfo, Some(description)) =>
+        helpActor ! ExampleHelpCmd.BaseCommandWrapper(HelpCmd.AddCmd(info, description, complete))
+      case _ =>
     }
     import scala.concurrent.ExecutionContext.Implicits.global
     complete.foreach { _ =>
@@ -304,9 +336,14 @@ object ExampleMain {
     materialized
   }
 
-  case object BeginDeathwatch
-  case object UnregisterCommands
-  case object StopMusic
+  sealed trait Command
+
+  case class BeginDeathwatch(replyTo: ActorRef[Done])    extends Command
+  case class UnregisterCommands(replyTo: ActorRef[Done]) extends Command
+  case class StopMusic(replyTo: ActorRef[Done])          extends Command
+  case class StopShard(replyTo: ActorRef[Done])          extends Command
+  case object RestartShard                               extends Command
+  case object CommandsUnregistered                       extends Command
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
@@ -314,7 +351,7 @@ object ExampleMain {
       description: newcommands.CommandDescription
   )
 
-  def registerNewCommand[Mat](connector: newcommands.CommandConnector, helpActor: ActorRef)(
+  def registerNewCommand[Mat](connector: newcommands.CommandConnector, helpActor: ActorRef[ExampleHelpCmd.Command])(
       entry: NewCommandsEntry[Mat]
   ): Mat = {
     val (materialized, complete) =
@@ -323,15 +360,17 @@ object ExampleMain {
     //Due to the new commands being a complete break from the old ones, being
     // completely incompatible with some other stuff, we need to do a bit of
     // translation and hackery here
-    helpActor ! HelpCmd.AddCmd(
-      commands.CmdInfo(entry.command.symbol, entry.command.aliases),
-      commands.CmdDescription(
-        entry.description.name,
-        entry.description.description,
-        entry.description.usage,
-        entry.description.extra
-      ),
-      complete
+    helpActor ! ExampleHelpCmd.BaseCommandWrapper(
+      HelpCmd.AddCmd(
+        commands.CmdInfo(entry.command.symbol, entry.command.aliases),
+        commands.CmdDescription(
+          entry.description.name,
+          entry.description.description,
+          entry.description.usage,
+          entry.description.extra
+        ),
+        complete
+      )
     )
     import scala.concurrent.ExecutionContext.Implicits.global
     complete.foreach { _ =>

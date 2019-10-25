@@ -34,7 +34,8 @@ import ackcord.data._
 import ackcord.data.raw.{RawChannel, RawMessage}
 import ackcord.requests._
 import ackcord.syntax._
-import akka.actor.{ActorRef, CoordinatedShutdown}
+import akka.actor.typed.scaladsl.adapter._
+import akka.actor.CoordinatedShutdown
 import akka.stream.scaladsl.Sink
 import akka.{Done, NotUsed}
 
@@ -101,14 +102,14 @@ object GenericCommands {
     )
   )
 
-  def KillCmdFactory(mainActor: ActorRef): ParsedCmdFactory[NotUsed, NotUsed] =
+  def KillCmdFactory: ParsedCmdFactory[NotUsed, NotUsed] =
     ParsedCmdFactory[NotUsed, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = Seq("kill", "die")),
       //We use system.actorOf to keep the actor alive when this actor shuts down
       sink = requests =>
         Sink
           .foreach[ParsedCmd[NotUsed]] { _ =>
-            CoordinatedShutdown(requests.system).run(CoordinatedShutdown.JvmExitReason)
+            CoordinatedShutdown(requests.system.toClassic).run(CoordinatedShutdown.JvmExitReason)
           }
           .mapMaterializedValue(_ => NotUsed),
       description = Some(CmdDescription(name = "Kill bot", description = "Shut down this bot"))

@@ -232,6 +232,9 @@ object LavaplayerHandler {
         val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
         inactive(parameters, con.copy(endPoint = Some(usedEndpoint), token = Some(vToken)))
 
+      case (_: APIStateEvent, _) => Behaviors.same
+      case (_: APIServerEvent, _) => Behaviors.same
+
       case (
           WsReady,
           HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, killSwitch)

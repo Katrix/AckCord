@@ -31,16 +31,18 @@ import ackcord.data.{GuildId, TChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
-import akka.actor.ActorRef
-import akka.pattern.ask
+import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.{Keep, Sink}
+import akka.stream.typed.scaladsl.ActorFlow
 import akka.util.Timeout
 import akka.{Done, NotUsed}
 import cats.data.OptionT
 
-class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
+class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Command])(
     implicit timeout: Timeout,
-    ec: ExecutionContext
+    ec: ExecutionContext,
+    system: ActorSystem[Nothing]
 ) {
 
   val QueueCmdFactory: ParsedCmdFactory[String, NotUsed] = ParsedCmdFactory.requestRunner(
@@ -54,7 +56,9 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
           _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
               case Some(vs) if vs.channelId.isDefined =>
-                (musicHandler ? QueueUrl(cmd.args, channel, vs.channelId.get)).map(_ => None)
+                musicHandler
+                  .ask[MusicHandler.CommandAck.type](replyTo => QueueUrl(cmd.args, channel, vs.channelId.get, replyTo))
+                  .map(_ => None)
               case _ => Future.successful(Some(channel.sendMessage("Not in a voice channel")))
             })
           }
@@ -63,19 +67,19 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef)(
     description = Some(CmdDescription(name = "Queue music", description = "Set an url as the url to play"))
   )
 
-  private def simpleCommand[A](
+  private def simpleCommand(
       aliases: Seq[String],
       description: CmdDescription,
-      mapper: TChannel => A
+      mapper: (TChannel, ActorRef[MusicHandler.CommandAck.type]) => MusicHandler.MusicHandlerEvents
   ): ParsedCmdFactory[NotUsed, Future[Done]] =
     ParsedCmdFactory[NotUsed, Future[Done]](
       refiner = CmdInfo(prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
       sink = requests =>
         ParsedCmdFlow[NotUsed]
           .mapConcat { implicit c => cmd =>
-            cmd.msg.tGuildChannel(guildId).map(mapper).toList
+            cmd.msg.tGuildChannel(guildId).toList
           }
-          .ask[MusicHandler.CommandAck.type](requests.parallelism)(musicHandler)
+          .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
           .toMat(Sink.ignore)(Keep.right),
       description = Some(description)
     )

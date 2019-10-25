@@ -15,7 +15,7 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import cats.syntax.all._
 
-abstract class HelpCmd[Command <: HelpCmd.BaseCommand[Ack], Ack](ctx: ActorContext[Command])
+abstract class HelpCmd[Command](ctx: ActorContext[Command])
     extends AbstractBehavior[Command](ctx) {
   import HelpCmd._
   import Args._
@@ -36,7 +36,9 @@ abstract class HelpCmd[Command <: HelpCmd.BaseCommand[Ack], Ack](ctx: ActorConte
     */
   protected def sendEmptyEvent: Boolean = false
 
-  def onBaseMessage(msg: BaseCommand[Ack]): Behavior[Command] = {
+  def terminateCommand(registration: CommandRegistration): Command
+
+  def onBaseMessage(msg: BaseCommand): Behavior[Command] = {
     msg match {
       case CmdMessage(replyTo, ParsedCmd(msg, Some(CommandArgs(cmd)), _, c)) =>
         implicit val cache: CacheSnapshot = c
@@ -78,7 +80,7 @@ abstract class HelpCmd[Command <: HelpCmd.BaseCommand[Ack], Ack](ctx: ActorConte
         val registration = CommandRegistration(info, description)
         commands += registration
 
-        context.pipeToSelf(commandEnd)(_ => TerminateCommand(registration).asInstanceOf[Command])
+        context.pipeToSelf(commandEnd)(_ => terminateCommand(registration))
 
       case TerminateCommand(registration) =>
         commands -= registration
@@ -99,12 +101,12 @@ abstract class HelpCmd[Command <: HelpCmd.BaseCommand[Ack], Ack](ctx: ActorConte
     * Sends an ack once the processing of a command is done.
     * @param sender The actor to send the ack to.
     */
-  def sendAck(sender: ActorRef[Ack]): Unit
+  def sendAck(sender: ActorRef[Ack.type]): Unit = sender ! HelpCmd.Ack
 
   /**
     * Send a request, and acks the sender.
     */
-  def sendMessageAndAck(sender: ActorRef[Ack], request: Request[RawMessage, NotUsed]): Unit
+  def sendMessageAndAck(sender: ActorRef[Ack.type], request: Request[RawMessage, NotUsed]): Unit
 
   /**
     * Create a reply for a search result
@@ -129,10 +131,12 @@ abstract class HelpCmd[Command <: HelpCmd.BaseCommand[Ack], Ack](ctx: ActorConte
 object HelpCmd {
   case class CommandRegistration(info: AbstractCmdInfo, description: CmdDescription)
 
-  trait BaseCommand[-Ack]
+  trait BaseCommand
+
+  case object Ack extends BaseCommand
   sealed trait HandlerReply
 
-  sealed trait Args extends BaseCommand[Any]
+  sealed trait Args extends BaseCommand
   object Args {
     case class CommandArgs(command: String) extends Args
     case class PageArgs(page: Int)          extends Args
@@ -142,8 +146,8 @@ object HelpCmd {
       MessageParser.intParser.map[Args](PageArgs).orElse(MessageParser.stringParser.map(CommandArgs))
   }
 
-  private case class TerminateCommand(registration: CommandRegistration)                   extends BaseCommand[Any]
-  case class CmdMessage[Ack](replyTo: ActorRef[Ack], cmd: ParsedCmd[Option[Args]]) extends BaseCommand[Ack]
+  case class TerminateCommand(registration: CommandRegistration)           extends BaseCommand
+  case class CmdMessage(replyTo: ActorRef[Ack.type], cmd: ParsedCmd[Option[Args]]) extends BaseCommand
 
   /**
     * Register a new help entry for a command.
@@ -151,8 +155,7 @@ object HelpCmd {
     * @param description The command description for the command
     * @param commandEnd A future that is completed when the command is removed.
     */
-  case class AddCmd(info: AbstractCmdInfo, description: CmdDescription, commandEnd: Future[Done])
-      extends BaseCommand[Any]
+  case class AddCmd(info: AbstractCmdInfo, description: CmdDescription, commandEnd: Future[Done]) extends BaseCommand
 
   /**
     * Sent to a handler from the help command when a command is unregistered.
