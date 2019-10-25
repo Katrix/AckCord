@@ -129,11 +129,16 @@ object VoiceWsHandler {
     implicit val system: ActorSystem[Nothing] = context.system
 
     def parseMessage: Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
-      val jsonFlow = Flow[Message].flatMapConcat {
-        case t: TextMessage => t.textStream.fold("")(_ + _)
-        case b: BinaryMessage =>
-          b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
-      }
+      val jsonFlow = Flow[Message]
+        .collect {
+          case t: TextMessage => t.textStream
+          case b: BinaryMessage =>
+            b.dataStream
+              .fold(ByteString.empty)(_ ++ _)
+              .via(Compression.inflate())
+              .map(_.utf8String)
+        }
+        .flatMapConcat(_.fold("")(_ + _))
 
       val withLogging =
         if (AckCordVoiceSettings().LogReceivedWs)
@@ -196,7 +201,10 @@ object VoiceWsHandler {
           val (sourceQueue, future) = src
             .viaMat(flow)(Keep.both)
             .toMat(sink)(Keep.left)
-            .addAttributes(ActorAttributes.supervisionStrategy(Supervision.resumingDecider))
+            .addAttributes(ActorAttributes.supervisionStrategy { e =>
+              context.log.error("Error in stream: ", e)
+              Supervision.Resume
+            })
             .run()
 
           context.pipeToSelf(future) {
@@ -368,7 +376,7 @@ object VoiceWsHandler {
             VoiceUDPFlow
               .flow(
                 new InetSocketAddress(address, port),
-                ssrc,
+                readySsrc,
                 serverId,
                 userId,
                 keyPromise.future

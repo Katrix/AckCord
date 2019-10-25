@@ -20,7 +20,9 @@ class Switch[A](ref: AtomicBoolean, emitChangeTrue: immutable.Seq[A], emitChange
     new GraphStageLogic(shape) with OutHandler {
 
       private var lastState: Boolean = ref.get()
-      private def activeIn: Inlet[A] = {
+      private var waitingOther: A    = _
+
+      private def activeIn(): Inlet[A] = {
         val newState = ref.get()
         val newIn    = if (newState) in1 else in2
 
@@ -28,27 +30,31 @@ class Switch[A](ref: AtomicBoolean, emitChangeTrue: immutable.Seq[A], emitChange
           lastState = newState
 
           emitMultiple(out, if (newState) emitChangeTrue else emitChangeFalse)
-          emit(out, waitingOther)
+
+          if (waitingOther != null) {
+            emit(out, waitingOther)
+            waitingOther = null.asInstanceOf[A]
+          }
+
           tryPull(newIn)
-          waitingOther = null.asInstanceOf[A]
         }
 
         newIn
       }
 
-      private var waitingOther: A = _
-
       private def setInHandler(in: Inlet[A]): Unit = {
         setHandler(
           in,
           new InHandler {
-            override def onPush(): Unit =
-              if (activeIn == in) {
+            override def onPush(): Unit = {
+
+              if (activeIn() == in) {
                 emit(out, grab(in))
               } else {
                 require(waitingOther == null, "Pushed other when a waiting other was already defined")
                 waitingOther = grab(in)
               }
+            }
           }
         )
       }
@@ -58,6 +64,6 @@ class Switch[A](ref: AtomicBoolean, emitChangeTrue: immutable.Seq[A], emitChange
 
       setHandler(out, this)
 
-      override def onPull(): Unit = pull(activeIn)
+      override def onPull(): Unit = pull(activeIn())
     }
 }
