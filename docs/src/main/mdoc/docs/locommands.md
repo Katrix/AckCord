@@ -12,20 +12,23 @@ import ackcord._
 import ackcord.data._
 import ackcord.syntax._
 import ackcord.commands._
+import ackcord.requests.Ratelimiter
 import akka.NotUsed
-import akka.actor.ActorSystem
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.{Source, Flow, Keep}
 
-implicit val system: ActorSystem  = ActorSystem("AckCord")
-import system.dispatcher
+implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord")
+import system.executionContext
 
 val token = "<token>"
 val cache = Cache.create
-val requests = RequestHelper.create(BotAuthentication(token))
+val ratelimiter = system.systemActorOf(Ratelimiter(), "Ratelimiter")
+val requests = new RequestHelper(BotAuthentication(token), ratelimiter)
 
 val gatewaySettings = GatewaySettings(token)
 DiscordShard.fetchWsGateway.foreach { wsUri =>
- val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, "DiscordShard")
+  val shard = system.systemActorOf(DiscordShard(wsUri, gatewaySettings, cache), "DiscordShard")
  //shard ! DiscordShard.StartShard
 }
 ```

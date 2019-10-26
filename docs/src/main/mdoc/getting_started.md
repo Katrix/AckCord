@@ -79,17 +79,22 @@ When working with the low level API, you're the one responsible for setting stuf
 
 First we need an actor system.
 ```scala mdoc:silent
-import akka.actor.ActorSystem
+import akka.actor.typed._
+import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.Sink
+import ackcord.requests.Ratelimiter
 
-implicit val system: ActorSystem  = ActorSystem("AckCord")
-import system.dispatcher
+//In a real application you would choose a better guardian actor than this,
+//and setup most of this stuff from within that.
+implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord")
+import system.executionContext
 ```
 
 Next we create the `Cache`, and the `RequestHelper`. The `Cache` helps you know when stuff happens, and keeps around the changes from old things that have happened. The `RequestHelper` helps you make stuff happen. I'd recommend looking into the settings used when creating both the `Cache` and `RequestHelper` if you want to fine tune your bot.
 ```scala mdoc:silent
 val cache = Cache.create
-val requests = RequestHelper.create(BotAuthentication(token))
+val ratelimiter = system.systemActorOf(Ratelimiter(), "Ratelimiter")
+val requests = new RequestHelper(BotAuthentication(token), ratelimiter)
 ```
 
 Now that we have all the pieces we want, we can create our event listener. In the low level API, events are represented as a `Source` you can materialize as many times as you want.
@@ -103,7 +108,7 @@ Finally we can create our `GatewaySettings` and start the shard.
 ```scala mdoc
 val gatewaySettings = GatewaySettings(token)
 DiscordShard.fetchWsGateway.foreach { wsUri =>
- val shard = DiscordShard.connect(wsUri, gatewaySettings, cache, actorName = "DiscordShard")
+ val shard = system.systemActorOf(DiscordShard(wsUri, gatewaySettings, cache), "DiscordShard")
  //shard ! DiscordShard.StartShard
 }
 ```
@@ -114,13 +119,14 @@ system.terminate()
 
 ## Access to the low level API from the high level API
 Accessing the low level API from the high level API is simple.
-The shard actors can be gotten from the `shards` method on the `DiscordClient[F]`.
-The cache can be gotten from the `cache` method on the `DiscordClient[F]`.
+The shard actors can be gotten from the `shards` method on the `DiscordClient`.
+The cache can be gotten from the `cache` method on the `DiscordClient`.
 
 ```scala mdoc:reset:invisible
-import akka.actor.ActorRef
+import akka.actor.typed.ActorRef
 import ackcord._
 import ackcord.data._
+import scala.concurrent.Future
 
 val clientSettings = ClientSettings("<token>")
 import clientSettings.executionContext
@@ -130,7 +136,7 @@ val futureClient = clientSettings.createClient()
 
 ```scala mdoc
 futureClient.foreach { client =>
-  val shards: Seq[ActorRef] = client.shards
+  val shards: Future[Seq[ActorRef[DiscordShard.Command]]] = client.shards
   val cache: Cache = client.cache
 }
 ```
