@@ -26,13 +26,13 @@ package ackcord
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.actor.typed._
-import akka.actor.typed.scaladsl._
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.scaladsl._
 import akka.util.Timeout
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
 object MusicManager {
 

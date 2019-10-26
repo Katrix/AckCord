@@ -28,8 +28,8 @@ import ackcord.data._
 import ackcord.requests.{Request, RequestHelper}
 import ackcord.util.Streamable
 import akka.NotUsed
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Partition, Sink}
 import akka.stream.FlowShape
+import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Merge, Partition, Sink}
 import cats.data.OptionT
 import cats.~>
 

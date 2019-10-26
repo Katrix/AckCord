@@ -31,8 +31,8 @@ import ackcord.data.{GuildId, TChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
-import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.stream.typed.scaladsl.ActorFlow
 import akka.util.Timeout

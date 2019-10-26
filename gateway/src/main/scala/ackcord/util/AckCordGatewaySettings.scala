@@ -23,9 +23,8 @@
  */
 package ackcord.util
 
-import com.typesafe.config.Config
-
 import akka.actor.typed.ActorSystem
+import com.typesafe.config.Config
 
 /**
   * Settings that AckCord used. See the reference config for more info.

@@ -32,11 +32,11 @@ import scala.util.{Failure, Success, Try}
 
 import ackcord.AckCord
 import ackcord.util.AckCordRequestSettings
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, ResponseEntity, StatusCodes}
-import akka.actor.typed.scaladsl.AskPattern._
+import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}

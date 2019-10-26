@@ -36,8 +36,8 @@ import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.Authorization
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes, Uri}
-import akka.stream.scaladsl.{Sink, Source}
 import akka.stream.ThrottleMode
+import akka.stream.scaladsl.{Sink, Source}
 import org.slf4j.Logger
 
 object DiscordShard {
@@ -191,8 +191,8 @@ object DiscordShard {
     * @return An URI with the websocket gateway uri.
     */
   def fetchWsGateway(implicit system: ActorSystem[Nothing]): Future[Uri] = {
-    import system.executionContext
     import akka.actor.typed.scaladsl.adapter._
+    import system.executionContext
     val http = Http(system.toClassic)
 
     http
@@ -224,8 +224,8 @@ object DiscordShard {
     * @return An URI with the websocket gateway uri.
     */
   def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[(Uri, Int)] = {
-    import system.executionContext
     import akka.actor.typed.scaladsl.adapter._
+    import system.executionContext
     val http = Http(system.toClassic)
     val auth = Authorization(BotAuthentication(token))
 

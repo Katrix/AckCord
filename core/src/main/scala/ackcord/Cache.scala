@@ -26,10 +26,9 @@ package ackcord
 import scala.collection.immutable
 
 import ackcord.gateway.GatewayMessage
-import akka.NotUsed
-import akka.{actor => classic}
 import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{Sink, Source}
+import akka.{NotUsed, actor => classic}
 
 /**
   * Represents a cache that can be published and subscribed to.

@@ -23,13 +23,13 @@
  */
 package ackcord.newcommands
 
+import scala.concurrent.ExecutionContext
+
 import ackcord.requests.RequestHelper
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.{CacheSnapshot, RequestRunner}
-import cats.~>
-import scala.concurrent.ExecutionContext
-
 import akka.NotUsed
+import cats.~>
 
 /**
   * The base command controller that you will place your commands in.

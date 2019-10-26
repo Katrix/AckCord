@@ -34,8 +34,8 @@ import ackcord.data._
 import ackcord.data.raw.{RawChannel, RawMessage}
 import ackcord.requests._
 import ackcord.syntax._
-import akka.actor.typed.scaladsl.adapter._
 import akka.actor.CoordinatedShutdown
+import akka.actor.typed.scaladsl.adapter._
 import akka.stream.scaladsl.Sink
 import akka.{Done, NotUsed}
 

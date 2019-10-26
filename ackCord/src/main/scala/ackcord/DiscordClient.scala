@@ -27,9 +27,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
 
-import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
-import com.sedmelluq.discord.lavaplayer.track.AudioItem
-
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
 import ackcord.data.{ChannelId, GuildId}
@@ -39,6 +36,8 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
 import akka.util.Timeout
+import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.track.AudioItem
 
 /**
   * Trait used to interface with Discord stuff from high level.

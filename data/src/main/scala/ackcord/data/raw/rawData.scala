@@ -650,8 +650,8 @@ case class RawActivity(
 case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Option[PresenceStatus]) {
 
   def toPresence: Either[String, Presence] = {
-    import cats.instances.option._
     import cats.instances.either._
+    import cats.instances.option._
     Traverse[Option]
       .traverse(game)(_.toActivity)
       .map(

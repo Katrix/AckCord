@@ -28,7 +28,7 @@ import java.time.{Instant, OffsetDateTime}
 import scala.collection.immutable
 
 import ackcord.{CacheSnapshot, SnowflakeMap}
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry, StringCirceEnum, StringEnum, StringEnumEntry}
+import enumeratum.values._
 
 /**
   * A guild which that status of is unknown.

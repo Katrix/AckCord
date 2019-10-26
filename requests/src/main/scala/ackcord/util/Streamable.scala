@@ -23,12 +23,12 @@
  */
 package ackcord.util
 
+import scala.concurrent.Future
+
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import cats.Id
 import cats.data.OptionT
-
-import scala.concurrent.Future
 
 /**
   * Typeclass for converting some type F[A] to a Source[A, NotUsed]

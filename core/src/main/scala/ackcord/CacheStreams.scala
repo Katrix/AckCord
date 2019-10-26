@@ -85,7 +85,7 @@ object CacheStreams {
     */
   def cacheUpdater(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
-      var state: CacheState            = null
+      var state: CacheState    = null
       implicit val log: Logger = system.log
 
       //We only handle events when we are ready to, and we have received the ready event.

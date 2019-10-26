@@ -1,3 +1,27 @@
+/*
+ * This file is part of AckCord, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) 2019 Katrix
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package ackcord.commands
 
 import java.util.Locale
@@ -8,15 +32,14 @@ import scala.concurrent.Future
 import ackcord.CacheSnapshot
 import ackcord.data.Message
 import ackcord.data.raw.RawMessage
-import ackcord.syntax._
 import ackcord.requests.{CreateMessage, CreateMessageData, Request}
-import akka.{Done, NotUsed}
+import ackcord.syntax._
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
+import akka.{Done, NotUsed}
 import cats.syntax.all._
 
-abstract class HelpCmd[Command](ctx: ActorContext[Command])
-    extends AbstractBehavior[Command](ctx) {
+abstract class HelpCmd[Command](ctx: ActorContext[Command]) extends AbstractBehavior[Command](ctx) {
   import HelpCmd._
   import Args._
 
@@ -146,7 +169,7 @@ object HelpCmd {
       MessageParser.intParser.map[Args](PageArgs).orElse(MessageParser.stringParser.map(CommandArgs))
   }
 
-  case class TerminateCommand(registration: CommandRegistration)           extends BaseCommand
+  case class TerminateCommand(registration: CommandRegistration)                   extends BaseCommand
   case class CmdMessage(replyTo: ActorRef[Ack.type], cmd: ParsedCmd[Option[Args]]) extends BaseCommand
 
   /**

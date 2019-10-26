@@ -24,8 +24,8 @@
 package ackcord.examplecore
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, GraphDSL, MergePreferred, Partition, Source}
 import akka.stream.FlowShape
+import akka.stream.scaladsl.{Flow, GraphDSL, MergePreferred, Partition, Source}
 
 object RetryErrorExampleSimple /*extends App*/ {
 

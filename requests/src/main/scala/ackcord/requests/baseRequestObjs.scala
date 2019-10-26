@@ -206,7 +206,9 @@ trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonReques
   */
 trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUsed, Ctx] {
 
-  override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, NotUsed, NotUsed] =
+  override def parseResponse(
+      parallelism: Int
+  )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, NotUsed, NotUsed] =
     Flow[ResponseEntity].map { responseEntity =>
       responseEntity.discardBytes()
       NotUsed

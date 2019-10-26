@@ -23,6 +23,11 @@
  */
 package ackcord.commands
 
+import scala.language.implicitConversions
+
+import scala.util.matching.Regex
+import scala.util.{Failure, Success, Try}
+
 import ackcord.CacheSnapshot
 import ackcord.commands.MessageParser.RemainingAsString
 import ackcord.data._
@@ -32,10 +37,6 @@ import cats.mtl.syntax.all._
 import cats.mtl.{ApplicativeHandle, MonadState}
 import cats.syntax.all._
 import cats.{Monad, MonadError}
-import scala.language.implicitConversions
-
-import scala.util.matching.Regex
-import scala.util.{Failure, Success, Try}
 
 /**
   * MessageParser is a typeclass to simplify parsing messages. It can derive
@@ -162,10 +163,10 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
       args: List[String],
       parser: MessageParser[A]
   )(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
+    import cats.instances.either._
     import cats.mtl.instances.handle._
     import cats.mtl.instances.state._
     import cats.mtl.instances.statet._
-    import cats.instances.either._
 
     parser.parse[StateT[Either[String, *], List[String], *]].run(args)
   }

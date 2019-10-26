@@ -29,7 +29,6 @@ import ackcord.data._
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.Later
-import cats.syntax.either._
 import io.circe.syntax._
 import io.circe.{derivation, _}
 

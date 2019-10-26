@@ -23,14 +23,13 @@
  */
 package ackcord.example
 
-import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudioPlayerManager}
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
-
 import ackcord._
 import ackcord.commands._
 import ackcord.syntax._
 import akka.NotUsed
+import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 object MyBot extends App {
 

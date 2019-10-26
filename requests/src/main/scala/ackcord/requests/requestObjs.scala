@@ -110,7 +110,9 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
-    override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed] =
+    override def parseResponse(
+        parallelism: Int
+    )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed] =
       self.parseResponse(parallelism)
 
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
@@ -160,7 +162,9 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
-    override def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, B, NotUsed] =
+    override def parseResponse(
+        parallelism: Int
+    )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, B, NotUsed] =
       f(self.parseResponse(parallelism))
 
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions

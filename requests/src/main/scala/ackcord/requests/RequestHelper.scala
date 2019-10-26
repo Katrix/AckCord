@@ -30,8 +30,8 @@ import scala.concurrent.duration._
 import ackcord.requests.RequestHelper.RequestProperties
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.OverflowStrategy
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 
 /**

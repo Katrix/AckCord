@@ -24,6 +24,10 @@
 
 package ackcord
 
+import scala.collection.immutable
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
+
 import ackcord.requests.{Request, RequestHelper, RequestResponse}
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.util.Streamable
@@ -31,10 +35,6 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Sink, Source}
 import cats.data.OptionT
 import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
-
-import scala.collection.immutable
-import scala.concurrent.Future
-import scala.util.{Failure, Success}
 
 trait RequestRunner[F[_]] {
 

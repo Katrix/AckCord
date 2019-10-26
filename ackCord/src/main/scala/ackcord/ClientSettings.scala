@@ -33,9 +33,9 @@ import ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
 import ackcord.requests.Ratelimiter
-import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.OverflowStrategy
 import akka.util.Timeout
 
@@ -108,7 +108,7 @@ class ClientSettings(
 
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
-        val cache = Cache.create
+        val cache  = Cache.create
         val shards = DiscordShard.many(uri, receivedShardTotal, this, cache, Nil, CacheTypeRegistry.default)
 
         val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")

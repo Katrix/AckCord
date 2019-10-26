@@ -22,9 +22,8 @@
  * SOFTWARE.
  */
 package ackcord.util
-import com.typesafe.config.Config
-
 import akka.actor.typed.ActorSystem
+import com.typesafe.config.Config
 
 /**
   * Settings that AckCord uses for requests. See the reference config for more info.
@@ -39,5 +38,6 @@ class AckCordRequestSettings(config: Config) {
 }
 object AckCordRequestSettings {
 
-  def apply()(implicit system: ActorSystem[Nothing]): AckCordRequestSettings = new AckCordRequestSettings(system.settings.config)
+  def apply()(implicit system: ActorSystem[Nothing]): AckCordRequestSettings =
+    new AckCordRequestSettings(system.settings.config)
 }

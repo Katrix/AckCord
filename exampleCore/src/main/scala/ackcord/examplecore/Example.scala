@@ -31,21 +31,20 @@ import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
 import ackcord.examplecore.music.MusicHandler
-import ackcord.gateway.GatewayEvent
-import ackcord.gateway.GatewaySettings
+import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, RequestHelper}
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.actor.CoordinatedShutdown
-import akka.{Done, NotUsed}
 import akka.actor.typed._
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl._
 import akka.actor.typed.scaladsl.adapter._
-import akka.actor.typed.scaladsl.AskPattern._
-import akka.stream.scaladsl.Keep
 import akka.pattern.gracefulStop
+import akka.stream.scaladsl.Keep
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
 import akka.util.Timeout
+import akka.{Done, NotUsed}
 import cats.arrow.FunctionK
 import org.slf4j.Logger
 

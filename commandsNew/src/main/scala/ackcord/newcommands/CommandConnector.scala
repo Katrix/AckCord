@@ -23,6 +23,8 @@
  */
 package ackcord.newcommands
 
+import scala.concurrent.Future
+
 import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
 import ackcord.requests.{RequestHelper, SupervisionStreams}
@@ -30,9 +32,8 @@ import ackcord.syntax._
 import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
 import akka.{Done, NotUsed}
-import cats.syntax.all._
 import cats.instances.future._
-import scala.concurrent.Future
+import cats.syntax.all._
 
 /**
   *

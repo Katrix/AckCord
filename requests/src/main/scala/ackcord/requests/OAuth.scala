@@ -26,8 +26,8 @@ package ackcord.requests
 
 import scala.concurrent.Future
 
-import ackcord.data.{GuildId, RawSnowflake, Team}
 import ackcord.data.raw.PartialUser
+import ackcord.data.{GuildId, RawSnowflake, Team}
 import ackcord.data.DiscordProtocol._
 import akka.NotUsed
 import akka.actor.typed.ActorSystem

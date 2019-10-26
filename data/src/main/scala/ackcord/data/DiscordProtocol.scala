@@ -28,9 +28,9 @@ import java.time.{Instant, OffsetDateTime}
 import scala.util.Try
 
 import ackcord.data.raw._
+import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
-import io.circe._
 
 trait DiscordProtocol {
 

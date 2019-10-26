@@ -25,24 +25,24 @@ package ackcord.lavaplayer
 
 import java.util.concurrent.atomic.AtomicBoolean
 
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 
-import com.sedmelluq.discord.lavaplayer.player.event._
-import com.sedmelluq.discord.lavaplayer.player.{AudioLoadResultHandler, AudioPlayer, AudioPlayerManager}
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
 import ackcord._
 import ackcord.data._
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import ackcord.util.Switch
 import ackcord.voice.{AudioAPIMessage, VoiceHandler, VoiceUDPFlow}
 import akka.NotUsed
-import akka.actor.typed.scaladsl._
 import akka.actor.typed._
-import akka.stream.{SourceShape, ThrottleMode}
+import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.{GraphDSL, Sink, Source}
+import akka.stream.{SourceShape, ThrottleMode}
 import akka.util.ByteString
+import com.sedmelluq.discord.lavaplayer.player.event._
+import com.sedmelluq.discord.lavaplayer.player.{AudioLoadResultHandler, AudioPlayer, AudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
+import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
 import org.slf4j.Logger
 
 object LavaplayerHandler {

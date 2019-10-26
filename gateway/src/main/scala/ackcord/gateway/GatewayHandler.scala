@@ -28,15 +28,14 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 import ackcord.AckCord
-import akka.NotUsed
 import akka.actor.typed._
-import akka.{actor => classic}
 import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
 import akka.stream._
 import akka.stream.scaladsl._
+import akka.{NotUsed, actor => classic}
 import org.slf4j.Logger
 
 object GatewayHandler {

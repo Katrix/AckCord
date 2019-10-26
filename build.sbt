@@ -116,9 +116,9 @@ lazy val voice = project
     version := ackCordVersion,
     description := "The voice websocket module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-stream-typed"      % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
+      "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern")
