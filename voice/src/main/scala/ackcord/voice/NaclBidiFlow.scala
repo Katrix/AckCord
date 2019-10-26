@@ -27,6 +27,7 @@ package ackcord.voice
 import java.nio.ByteBuffer
 
 import scala.annotation.unchecked.uncheckedVariance
+import scala.collection.immutable
 
 import ackcord.data.{RawSnowflake, UserId}
 import akka.stream.scaladsl.{BidiFlow, GraphDSL, Source}
@@ -42,9 +43,9 @@ case class BidiShapeWithExtraIn[-In1, +Out1, -In2, +Out2, -EIn](
     out2: Outlet[Out2 @uncheckedVariance],
     extraIn: Inlet[EIn @uncheckedVariance]
 ) extends Shape {
-  override def inlets: Seq[Inlet[_]] = Seq(in1, in2, extraIn)
+  override def inlets: immutable.Seq[Inlet[_]] = immutable.Seq(in1, in2, extraIn)
 
-  override def outlets: Seq[Outlet[_]] = Seq(out1, out2)
+  override def outlets: immutable.Seq[Outlet[_]] = immutable.Seq(out1, out2)
 
   override def deepCopy(): Shape =
     BidiShapeWithExtraIn(in1.carbonCopy(), out1.carbonCopy(), in2.carbonCopy(), out2.carbonCopy(), extraIn.carbonCopy())

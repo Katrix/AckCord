@@ -198,7 +198,7 @@ object MusicHandler {
           player.stopTrack()
           context.watchWith(lavaplayerHandler, StopNow)
           lavaplayerHandler ! LavaplayerHandler.Shutdown
-          inactive(parameters, None, None, queue.empty)
+          inactive(parameters, None, None, Queue.empty)
 
         case StopNow => Behaviors.stopped
 
@@ -209,7 +209,7 @@ object MusicHandler {
           lavaplayerHandler ! LavaplayerHandler.DisconnectVChannel
           replyTo ! CommandAck
 
-          inactive(parameters, None, Some(tChannel), queue.empty)
+          inactive(parameters, None, Some(tChannel), Queue.empty)
 
         case StopMusicInside =>
           log.info("Stopped and left")
@@ -217,7 +217,7 @@ object MusicHandler {
           player.stopTrack()
           lavaplayerHandler ! LavaplayerHandler.DisconnectVChannel
 
-          inactive(parameters, None, None, queue.empty)
+          inactive(parameters, None, None, Queue.empty)
 
         case QueueUrl(url, tChannel, vChannelId, replyTo) =>
           log.info("Received queue item")

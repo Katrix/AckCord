@@ -116,9 +116,11 @@ object GatewayProtocol extends DiscordProtocol {
     )
   implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
     for {
-      guildId <- c.get[GuildId]("guild_id").map(Right.apply).orElse(c.get[Seq[GuildId]]("guild_id").map(Left.apply))
-      query   <- c.get[String]("query")
-      limit   <- c.get[Int]("limit")
+      guildId <- c
+        .get[GuildId]("guild_id")
+        .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
+      query <- c.get[String]("query")
+      limit <- c.get[Int]("limit")
     } yield RequestGuildMembersData(guildId, query, limit)
 
   implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)

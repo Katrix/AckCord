@@ -68,7 +68,7 @@ object MusicManager {
           }
       }
 
-      apply(cache, players.removed(guildId))
+      apply(cache, players - guildId)
 
     case (_, SetChannelPlaying(guildId, playing)) =>
       players.get(guildId).foreach {

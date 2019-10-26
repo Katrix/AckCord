@@ -24,7 +24,7 @@
 package ackcord
 
 import scala.collection.generic.CanBuildFrom
-import scala.collection.immutable.{AbstractMap, LongMap}
+import scala.collection.immutable.{AbstractMap, LongMap, MapLike}
 import scala.collection.mutable
 
 import ackcord.data.SnowflakeType
