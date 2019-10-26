@@ -190,17 +190,22 @@ class Ratelimiter(
 
 object Ratelimiter {
 
-  def apply(): Behavior[Command] = Behaviors.setup { context =>
-    val settings = AckCordRequestSettings()(context.system)
-    val log      = context.log
+  def apply(): Behavior[Command] =
+    Behaviors
+      .supervise(
+        Behaviors.setup[Command] { context =>
+          val settings = AckCordRequestSettings()(context.system)
+          val log      = context.log
 
-    Behaviors.withTimers(timers => new Ratelimiter(context, log, timers, settings))
-  }
+          Behaviors.withTimers(timers => new Ratelimiter(context, log, timers, settings))
+        }
+      )
+      .onFailure(SupervisorStrategy.restart)
 
   sealed trait Command
 
   sealed trait Response[+A]
-  case class CanPass[+A](a: A)            extends Response[A]
+  case class CanPass[+A](a: A)           extends Response[A]
   case class FailedRequest(e: Throwable) extends Response[Nothing]
 
   case class WantToPass[A](route: RequestRoute, identifier: UUID, replyTo: ActorRef[Response[A]], ret: A)

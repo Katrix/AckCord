@@ -29,7 +29,7 @@ abstract private[util] class GuildRouter[Event, Inner](
     case TerminatedGuild(guildId) =>
       handlers.remove(guildId)
 
-      if (isShuttingDown) {
+      if (isShuttingDown && handlers.isEmpty) {
         Behaviors.stopped
       } else {
         Behaviors.same

@@ -41,8 +41,6 @@ import org.slf4j.Logger
 
 object GatewayHandler {
 
-  sealed trait Command
-
   private[ackcord] case class Parameters(
       rawWsUri: Uri,
       settings: GatewaySettings,
@@ -166,6 +164,10 @@ object GatewayHandler {
           log.error("Connection died before starting. Retry count {}", retryCount)
           shutdownStream(state)
           retryLogin(parameters, state, timers, wsFlow)
+
+        case Logout =>
+          //TODO: Fix receiving logout right before going to active
+          Behaviors.same
       }
       .receiveSignal {
         case (_, PostStop) =>
@@ -200,6 +202,12 @@ object GatewayHandler {
           log.info("Shutting down")
           shutdownStream(state)
           active(parameters, state.copy(shuttingDown = true), wsFlow)
+
+        case Login =>
+          Behaviors.same
+
+        case UpgradeResponse(_) =>
+          Behaviors.same
       }
       .receiveSignal {
         case (_, PostStop) =>
@@ -207,6 +215,8 @@ object GatewayHandler {
           Behaviors.stopped
       }
   }
+
+  sealed trait Command
 
   /**
     * Send this to a [[GatewayHandler]] to make it go from inactive to active

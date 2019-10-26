@@ -36,13 +36,12 @@ import ackcord._
 import ackcord.data._
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import ackcord.util.Switch
-import ackcord.voice.{AudioAPIMessage, VoiceUDPFlow, VoiceWsHandler}
+import ackcord.voice.{AudioAPIMessage, VoiceHandler, VoiceUDPFlow}
 import akka.NotUsed
 import akka.actor.typed.scaladsl._
 import akka.actor.typed._
-import akka.stream.{KillSwitches, SharedKillSwitch, SourceShape}
+import akka.stream.{SourceShape, ThrottleMode}
 import akka.stream.scaladsl.{GraphDSL, Sink, Source}
-import akka.stream.typed.scaladsl.ActorSink
 import akka.util.ByteString
 import org.slf4j.Logger
 
@@ -51,26 +50,23 @@ object LavaplayerHandler {
   private case object Idle extends InactiveState
 
   private case class Connecting(
-      endPoint: Option[String],
-      sessionId: Option[String],
-      token: Option[String],
       vChannelId: ChannelId,
-      sender: ActorRef[Reply]
+      sender: ActorRef[Reply],
+      negotiator: ActorRef[VoiceServerNegotiator.Command]
   ) extends InactiveState
 
   private case class HasVoiceWs(
-      voiceWs: ActorRef[VoiceWsHandler.Command],
+      voiceHandler: ActorRef[VoiceHandler.Command],
       vChannelId: ChannelId,
       sender: ActorRef[Reply],
-      toggle: AtomicBoolean,
-      killSwitch: SharedKillSwitch
+      toggle: AtomicBoolean
   ) extends InactiveState
 
   private case class CanSendAudio(
-      voiceWs: ActorRef[VoiceWsHandler.Command],
+      voiceHandler: ActorRef[VoiceHandler.Command],
       inVChannelId: ChannelId,
       toggle: AtomicBoolean,
-      killSwitch: SharedKillSwitch
+      sender: ActorRef[Reply]
   )
 
   case class Parameters(
@@ -84,29 +80,16 @@ object LavaplayerHandler {
 
   def apply(player: AudioPlayer, guildId: GuildId, cache: Cache, useBursting: Boolean = true): Behavior[Command] =
     Behaviors.setup { context =>
-      val log                                   = context.log
-      implicit val system: ActorSystem[Nothing] = context.system
-
-      cache.subscribeAPI
-        .collect {
-          case msg: APIMessage.VoiceServerUpdate => APIServerEvent(msg)
-          case msg: APIMessage.VoiceStateUpdate  => APIStateEvent(msg)
-        }
-        .runWith(ActorSink.actorRef(context.self, Shutdown, SendException))
-
-      inactive(Parameters(player, guildId, cache, useBursting, context, log), Idle)
+      inactive(Parameters(player, guildId, cache, useBursting, context, context.log), Idle)
     }
 
-  private def soundProducer(toggle: AtomicBoolean, player: AudioPlayer) = {
-    val killSwitch = KillSwitches.shared("StopMusic")
-
-    //FIXME: Don't think the switch is working completely properly. Could probably save some cycles if we fixed it
-    val source = Source.fromGraph(GraphDSL.create() { implicit b =>
+  private def soundProducer(toggle: AtomicBoolean, player: AudioPlayer) =
+    Source.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
       val switch  = b.add(new Switch[ByteString](toggle, List.fill(5)(VoiceUDPFlow.silence), Nil))
       val silence = b.add(Source.maybe[ByteString])
-      val music   = b.add(LavaplayerSource.source(player).throttle(1, 20.millis).via(killSwitch.flow))
+      val music   = b.add(LavaplayerSource.source(player).throttle(1, 20.millis, maximumBurst = 10, ThrottleMode.Shaping))
 
       music ~> switch.in0
       silence ~> switch.in1
@@ -114,15 +97,44 @@ object LavaplayerHandler {
       SourceShape(switch.out)
     })
 
-    (killSwitch, source)
-  }
-
   private def readyListener(replyTo: ActorRef[WsReady.type]): Behavior[AudioAPIMessage] = Behaviors.receiveMessage {
     case _: AudioAPIMessage.Ready =>
       replyTo ! WsReady
       Behaviors.same
     case _: AudioAPIMessage.UserSpeaking => Behaviors.same
     case _: AudioAPIMessage.ReceivedData => Behaviors.same
+  }
+
+  def handleConflictingConnect(
+      command: ConnectVChannel,
+      parameters: Parameters,
+      newVChannelId: ChannelId,
+      inVChannelId: ChannelId,
+      force: Boolean,
+      firstSender: ActorRef[Reply],
+      newSender: ActorRef[Reply],
+      voiceHandler: Option[ActorRef[VoiceHandler.Command]]
+  ): Behavior[Command] = {
+    if (newVChannelId != inVChannelId) {
+      if (force) {
+        parameters.context.child("ServerNegotiator").foreach {
+          case negotiator: ActorRef[VoiceServerNegotiator.Command @unchecked] =>
+            parameters.context.watchWith(negotiator, command)
+            negotiator ! VoiceServerNegotiator.Stop
+        }
+
+        voiceHandler.foreach(_ ! VoiceHandler.Logout)
+        firstSender ! ForcedConnectionFailure(inVChannelId, newVChannelId)
+
+        inactive(parameters, Idle)
+      } else {
+        newSender ! AlreadyConnectedFailure(inVChannelId, newVChannelId)
+        Behaviors.same
+      }
+    } else {
+      //Ignored
+      Behaviors.same
+    }
   }
 
   def inactive(parameters: Parameters, state: InactiveState): Behavior[Command] = Behaviors.receiveMessage { msg =>
@@ -137,124 +149,114 @@ object LavaplayerHandler {
         token: String,
         sender: ActorRef[Reply]
     ): Behavior[Command] = {
-      val toggle                 = new AtomicBoolean(true)
-      val (killSwitch, producer) = soundProducer(toggle, player)
+      val toggle   = new AtomicBoolean(true)
+      val producer = soundProducer(toggle, player)
 
       val readyListenerActor = context.spawn(readyListener(context.self), "ReadyListener")
 
-      val voiceWs =
-        context.spawn(
-          VoiceWsHandler(
-            endPoint,
-            RawSnowflake(guildId),
-            userId,
-            sessionId,
-            token,
-            Some(readyListenerActor),
-            soundProducer = producer,
-            Sink.ignore.mapMaterializedValue(_ => NotUsed)
-          ),
-          "VoiceWS"
-        )
-      voiceWs ! VoiceWsHandler.Login
+      val voiceWs = context.spawn(
+        VoiceHandler(
+          endPoint,
+          RawSnowflake(guildId),
+          userId,
+          sessionId,
+          token,
+          Some(readyListenerActor),
+          soundProducer = producer,
+          Sink.ignore.mapMaterializedValue(_ => NotUsed)
+        ),
+        "VoiceHandler"
+      )
       log.debug("Music Connected")
-      inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle, killSwitch))
+      inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle))
     }
 
     (msg, state) match {
       case (ConnectVChannel(vChannelId, _, replyTo), Idle) =>
         log.debug("Connecting to new voice channel")
+        val adaptedSelf = context.messageAdapter[VoiceServerNegotiator.GotVoiceData] { m =>
+          GotVoiceData(m.sessionId, m.token, m.endpoint, m.userId)
+        }
+        val negotiator =
+          context.spawn(VoiceServerNegotiator(guildId, vChannelId, cache, adaptedSelf), "ServerNegotiator")
+
+        inactive(parameters, Connecting(vChannelId, replyTo, negotiator))
+
+      case (connect @ ConnectVChannel(newVChannelId, force, replyTo), Connecting(inVChannelId, firstSender, _)) =>
+        handleConflictingConnect(connect, parameters, newVChannelId, inVChannelId, force, firstSender, replyTo, None)
+
+      case (
+          connect @ ConnectVChannel(newVChannelId, force, replyTo),
+          HasVoiceWs(voiceHandler, inVChannelId, firstSender, _)
+          ) =>
+        handleConflictingConnect(
+          connect,
+          parameters,
+          newVChannelId,
+          inVChannelId,
+          force,
+          firstSender,
+          replyTo,
+          Some(voiceHandler)
+        )
+
+      case (DisconnectVChannel, Idle) =>
+        Behaviors.same
+
+      case (DisconnectVChannel, con: Connecting) =>
+        con.negotiator ! VoiceServerNegotiator.Stop
+
         Source
           .single(
-            VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+            VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
           .runWith(cache.gatewayPublish)
-        inactive(parameters, Connecting(None, None, None, vChannelId, replyTo))
 
-      case (ConnectVChannel(newVChannelId, force, replyTo), Connecting(_, _, _, inVChannelId, firstSender)) =>
-        if (newVChannelId != inVChannelId) {
-          if (force) {
-            firstSender ! ForcedConnectionFailure(inVChannelId, newVChannelId)
-            inactive(parameters, Connecting(None, None, None, newVChannelId, replyTo))
-          } else {
-            replyTo ! AlreadyConnectedFailure(inVChannelId, newVChannelId)
-            Behaviors.same
-          }
-        } else {
-          //Ignored
-          Behaviors.same
-        }
+        inactive(parameters, Idle)
 
-      case (
-          ConnectVChannel(newVChannelId, force, replyTo),
-          HasVoiceWs(voiceWs, inVChannelId, firstSender, _, killSwitch)
-          ) =>
-        if (newVChannelId != inVChannelId) {
-          if (force) {
-            killSwitch.shutdown()
-            voiceWs ! VoiceWsHandler.Logout
+      case (DisconnectVChannel, hasWs: HasVoiceWs) =>
+        hasWs.voiceHandler ! VoiceHandler.Logout
 
-            firstSender ! ForcedConnectionFailure(inVChannelId, newVChannelId)
-            inactive(parameters, Connecting(None, None, None, newVChannelId, replyTo))
-          } else {
-            replyTo ! AlreadyConnectedFailure(inVChannelId, newVChannelId)
-            Behaviors.same
-          }
-        } else {
-          //Ignored
-          Behaviors.same
-        }
+        Source
+          .single(
+            VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+              .asInstanceOf[GatewayMessage[Any]]
+          )
+          .runWith(cache.gatewayPublish)
 
-      case (
-          APIStateEvent(APIMessage.VoiceStateUpdate(state, c)),
-          Connecting(Some(endPoint), _, Some(vToken), vChannelId, sender)
-          ) if state.userId == c.current.botUser.id =>
-        log.debug("Received session id")
-        connect(vChannelId, endPoint, c.current.botUser.id, state.sessionId, vToken, sender)
+        inactive(parameters, Idle)
 
-      case (APIStateEvent(APIMessage.VoiceStateUpdate(state, c)), con: Connecting)
-          if state.userId == c.current.botUser.id => //We did not have an endPoint and token
-        log.debug("Received session id")
-        inactive(parameters, con.copy(sessionId = Some(state.sessionId)))
+      case (GotVoiceData(sessionId, token, endpoint, userId), Connecting(inVChannelId, replyTo, _)) =>
+        log.debug("Received session id, token and endpoint")
+        connect(inVChannelId, endpoint, userId, sessionId, token, replyTo)
 
-      case (
-          APIServerEvent(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c)),
-          Connecting(_, Some(sessionId), _, vChannelId, sender)
-          ) if guild.id == guildId =>
-        val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
-        log.debug("Got token and endpoint")
-        connect(vChannelId, usedEndpoint, c.current.botUser.id, sessionId, vToken, sender)
-
-      case (APIServerEvent(APIMessage.VoiceServerUpdate(vToken, guild, endPoint, _)), con: Connecting)
-          if guild.id == guildId => //We did not have a sessionId
-        log.debug("Got token and endpoint")
-        val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
-        inactive(parameters, con.copy(endPoint = Some(usedEndpoint), token = Some(vToken)))
-
-      case (_: APIStateEvent, _) => Behaviors.same
-      case (_: APIServerEvent, _) => Behaviors.same
+      case (GotVoiceData(_, _, _, _), _) =>
+        Behaviors.same
 
       case (
           WsReady,
-          HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, killSwitch)
+          HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle)
           ) =>
         log.debug("Audio ready")
 
         sendEventsTo ! MusicReady
 
-        active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, killSwitch))
+        active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, sendEventsTo))
 
-      case (Shutdown, HasVoiceWs(voiceWs, _, _, _, killSwitch)) =>
-        killSwitch.shutdown()
+      case (WsReady, _) =>
+        Behaviors.same
+
+      case (Shutdown, HasVoiceWs(voiceWs, _, _, _)) =>
         context.watchWith(voiceWs, StopNow)
-        voiceWs ! VoiceWsHandler.Logout
+        voiceWs ! VoiceHandler.Logout
         Behaviors.same
 
       case (StopNow, _) =>
         Behaviors.stopped
 
-      case (Shutdown, _) => Behaviors.stopped
+      case (Shutdown, _)      => Behaviors.stopped
+      case (SetPlaying(_), _) => Behaviors.same
     }
   }
 
@@ -266,12 +268,11 @@ object LavaplayerHandler {
     Behaviors.receiveMessage {
       case SetPlaying(speaking) =>
         toggle.set(speaking)
-        voiceWs ! VoiceWsHandler.SetSpeaking(speaking)
+        voiceHandler ! VoiceHandler.SetSpeaking(speaking)
         Behaviors.same
 
       case DisconnectVChannel =>
-        killSwitch.shutdown()
-        voiceWs ! VoiceWsHandler.Logout
+        voiceHandler ! VoiceHandler.Logout
 
         Source
           .single(
@@ -283,43 +284,28 @@ object LavaplayerHandler {
         log.debug("Left voice channel")
         inactive(parameters, Idle)
 
-      case ConnectVChannel(newVChannelId, force, replyTo) =>
-        if (newVChannelId != inVChannelId) {
-          if (force) {
-            log.debug("Moving to new vChannel")
-
-            killSwitch.shutdown()
-            voiceWs ! VoiceWsHandler.Logout
-
-            Source
-              .single(
-                VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(newVChannelId), selfMute = false, selfDeaf = false))
-                  .asInstanceOf[GatewayMessage[Any]]
-              )
-              .runWith(cache.gatewayPublish)
-
-            inactive(parameters, Connecting(None, None, None, newVChannelId, replyTo))
-          } else {
-            replyTo ! AlreadyConnectedFailure(inVChannelId, newVChannelId)
-            Behaviors.same
-          }
-        } else {
-          //Ignored
-          Behaviors.same
-        }
+      case connect @ ConnectVChannel(newVChannelId, force, replyTo) =>
+        handleConflictingConnect(
+          connect,
+          parameters,
+          newVChannelId,
+          inVChannelId,
+          force,
+          replyTo,
+          replyTo,
+          Some(voiceHandler)
+        )
 
       case Shutdown =>
-        context.watchWith(voiceWs, StopNow)
-        voiceWs ! VoiceWsHandler.Logout
-        killSwitch.shutdown()
+        context.watchWith(voiceHandler, StopNow)
+        voiceHandler ! VoiceHandler.Logout
         inactive(parameters, Idle)
 
       case StopNow => Behaviors.stopped
 
-      case APIStateEvent(_)  => Behaviors.same //NO-OP
-      case APIServerEvent(_) => Behaviors.same //NO-OP
-      case WsReady           => Behaviors.same //NO-OP
-      case SendException(e)  => throw e
+      case WsReady => Behaviors.same //NO-OP
+
+      case GotVoiceData(_, _, _, _) => Behaviors.same
     }
 
   }
@@ -370,11 +356,10 @@ object LavaplayerHandler {
     */
   case object Shutdown extends Command
 
-  private case object StopNow                                          extends Command
-  private case object WsReady                                          extends Command
-  private case class APIServerEvent(msg: APIMessage.VoiceServerUpdate) extends Command
-  private case class APIStateEvent(msg: APIMessage.VoiceStateUpdate)   extends Command
-  private case class SendException(e: Throwable)                       extends Command
+  private case object StopNow extends Command
+  private case object WsReady extends Command
+
+  private case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId) extends Command
 
   /**
     * Tries to load an item given an identifier and returns it as a future.

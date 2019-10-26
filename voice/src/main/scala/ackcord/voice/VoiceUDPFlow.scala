@@ -20,16 +20,16 @@ object VoiceUDPFlow {
   val FrameSize  = 960
   val FrameTime  = 20
 
-  def flow(
+  def flow[Mat](
       remoteAddress: InetSocketAddress,
       ssrc: Int,
       serverId: RawSnowflake,
       userId: UserId,
-      secretKeyFut: Future[ByteString]
-  )(implicit system: ActorSystem[Nothing]): Flow[ByteString, AudioAPIMessage.ReceivedData, Future[FoundIP]] =
+      secretKeys: Source[Option[ByteString], Mat]
+  )(implicit system: ActorSystem[Nothing]): Flow[ByteString, AudioAPIMessage.ReceivedData, (Mat, Future[FoundIP])] =
     NaclBidiFlow
-      .bidiFlow(ssrc, serverId, userId, secretKeyFut)
-      .atopMat(voiceBidi(ssrc).reversed)(Keep.right)
+      .bidiFlow(ssrc, serverId, userId, secretKeys)
+      .atopMat(voiceBidi(ssrc).reversed)(Keep.both)
       .join(UdpConnectedFlow.flow(remoteAddress))
 
   def voiceBidi(ssrc: Int): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[FoundIP]] = {

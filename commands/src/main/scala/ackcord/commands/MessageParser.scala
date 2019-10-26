@@ -32,7 +32,7 @@ import cats.mtl.syntax.all._
 import cats.mtl.{ApplicativeHandle, MonadState}
 import cats.syntax.all._
 import cats.{Monad, MonadError}
-import scala.language.{higherKinds, implicitConversions}
+import scala.language.implicitConversions
 
 import scala.util.matching.Regex
 import scala.util.{Failure, Success, Try}

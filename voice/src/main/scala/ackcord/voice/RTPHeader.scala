@@ -1,6 +1,6 @@
 package ackcord.voice
 
-import java.nio.ByteOrder
+import java.nio.{ByteBuffer, ByteOrder}
 
 import akka.util.ByteString
 
@@ -26,11 +26,15 @@ case class RTPHeader(tpe: Byte, version: Byte, sequence: Short, timestamp: Int, 
     builder.result()
   }
 
-  def asNonce: ByteString = byteString ++ RTPHeader.nonceLastPart
+  def nonceToBuffer(buffer: ByteBuffer): Unit = {
+    buffer.put(tpe)
+    buffer.put(version)
+    buffer.putShort(sequence)
+    buffer.putInt(timestamp)
+    buffer.putInt(ssrc)
+  }
 }
 object RTPHeader {
-
-  private val nonceLastPart = ByteString.fromArray(new Array(12))
 
   /**
     * Deserialize an [[RTPHeader]]

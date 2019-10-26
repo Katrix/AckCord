@@ -109,15 +109,7 @@ class ClientSettings(
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
         val cache = Cache.create
-        val shards = (0 until receivedShardTotal).map { i =>
-          DiscordShard(
-            uri,
-            this.copy(shardNum = i, shardTotal = receivedShardTotal),
-            cache,
-            Nil,
-            CacheTypeRegistry.default
-          )
-        }
+        val shards = DiscordShard.many(uri, receivedShardTotal, this, cache, Nil, CacheTypeRegistry.default)
 
         val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")
 

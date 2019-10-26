@@ -27,9 +27,9 @@ class LavaplayerSource(player: AudioPlayer) extends GraphStage[SourceShape[ByteS
         val frame = player.provide()
         if (frame != null) {
           push(out, ByteString.fromArray(frame.getData))
-          //log.info("Sending data")
+          //log.debug("Sending data")
         } else {
-          //log.info("Scheduling attempt to provide frame")
+          //log.debug("Scheduling attempt to provide frame")
           scheduleOnce("RetryProvide", 20.millis)
         }
       }

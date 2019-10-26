@@ -44,7 +44,7 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.Keep
 import akka.pattern.gracefulStop
 import akka.stream.typed.scaladsl.ActorSink
-import akka.stream.{KillSwitches, SharedKillSwitch}
+import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 import org.slf4j.Logger
@@ -230,13 +230,14 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     )
   }
 
-  //TODO: Complete this before shutting down guildRouterMusic
-  cache.subscribeAPI
+  val killSwitchMusicHandler: UniqueKillSwitch = cache.subscribeAPI
+    .viaMat(KillSwitches.single)(Keep.right)
     .collect {
       case ready: APIMessage.Ready        => GuildRouter.EventMessage(ready)
       case create: APIMessage.GuildCreate => GuildRouter.EventMessage(create)
     }
-    .runWith(ActorSink.actorRef(guildRouterMusic, GuildRouter.Shutdown, _ => GuildRouter.Shutdown))
+    .to(ActorSink.actorRef(guildRouterMusic, GuildRouter.Shutdown, _ => GuildRouter.Shutdown))
+    .run()
   shard ! DiscordShard.StartShard
 
   private var shutdownCount              = 0
@@ -295,7 +296,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
       case ExampleMain.StopMusic(replyTo) =>
         doneSender = replyTo
-        guildRouterMusic ! GuildRouter.Broadcast(MusicHandler.Shutdown)
+        killSwitchMusicHandler.shutdown()
 
       case StopShard(replyTo) =>
         doneSender = replyTo
