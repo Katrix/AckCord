@@ -1,9 +1,10 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
+import xerial.sbt.Sonatype._
 
 lazy val akkaVersion     = "2.6.0-RC1"
 lazy val akkaHttpVersion = "10.1.10"
 lazy val circeVersion    = "0.12.1"
-lazy val ackCordVersion  = "0.14.0"
+lazy val ackCordVersion  = "0.15.0-M1"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
@@ -22,12 +23,7 @@ lazy val commonSettings = Seq(
     else Nil
   ),
   libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
-  //Fixes repository not specified error
-  publishTo := {
-    val nexus = "https://oss.sonatype.org/"
-    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-  }
+  publishTo := sonatypePublishToBundle.value
 )
 
 lazy val publishSettings = Seq(
@@ -47,6 +43,7 @@ lazy val publishSettings = Seq(
   },
   homepage := Some(url("https://github.com/Katrix/AckCord")),
   developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
+  sonatypeProjectHosting := Some(GitHubHosting("Katrix", "AckCord", "katrix97@hotmail.com")),
   autoAPIMappings := true
 )
 
@@ -283,13 +280,12 @@ lazy val ackCordRoot = project
     example
   )
   .settings(
-    noPublishSettings,
+    publishSettings,
+    organization := (dataJVM / organization).value,
+    version := (dataJVM / version).value,
     //Fix some stupid issue where we were cross building to both 2.12.7 and 2.12.8
+    scalaVersion := (dataJVM / scalaVersion).value,
     crossScalaVersions := (dataJVM / crossScalaVersions).value,
     //Fixes repository not specified error
-    publishTo := {
-      val nexus = "https://oss.sonatype.org/"
-      if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
-      else Some("releases" at nexus + "service/local/staging/deploy/maven2")
-    }
+    publishTo := sonatypePublishToBundle.value
   )
