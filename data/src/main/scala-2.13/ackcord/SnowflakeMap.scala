@@ -218,7 +218,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   override def ++[V1 >: V](that: collection.IterableOnce[(Key, V1)]): SnowflakeMap[K, V1] = concat(that)
 
   def collect[K2, V2](pf: PartialFunction[(Key, V), (SnowflakeType[K2], V2)]): SnowflakeMap[K2, V2] =
-    ??? //strictOptimizedCollect(SnowflakeMap.newBuilder[K2, V2], pf)
+    strictOptimizedCollect(SnowflakeMap.newBuilder[K2, V2], pf)
 
   protected[this] def writeReplace(): AnyRef =
     new DefaultSerializationProxy(SnowflakeMap.toFactory[K, V](SnowflakeMap), this)
