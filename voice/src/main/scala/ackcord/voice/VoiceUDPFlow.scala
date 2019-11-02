@@ -32,7 +32,7 @@ import ackcord.data.{RawSnowflake, UserId}
 import ackcord.util.UdpConnectedFlow
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
-import akka.stream.BidiShape
+import akka.stream.{BidiShape, OverflowStrategy}
 import akka.stream.scaladsl.{BidiFlow, Concat, Flow, GraphDSL, Keep, Source}
 import akka.util.ByteString
 
@@ -54,7 +54,8 @@ object VoiceUDPFlow {
     NaclBidiFlow
       .bidiFlow(ssrc, serverId, userId, secretKeys)
       .atopMat(voiceBidi(ssrc).reversed)(Keep.both)
-      .join(UdpConnectedFlow.flow(remoteAddress))
+      .async
+      .join(Flow[ByteString].buffer(32, OverflowStrategy.backpressure).via(UdpConnectedFlow.flow(remoteAddress)))
 
   def voiceBidi(ssrc: Int): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[FoundIP]] = {
     val ipDiscoveryPacket = Compat.padBytestring(ByteString(ssrc), 70, 0.toByte)

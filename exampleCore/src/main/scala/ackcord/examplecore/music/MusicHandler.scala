@@ -396,8 +396,9 @@ object MusicHandler {
   val playerManager: AudioPlayerManager = {
     val man = new DefaultAudioPlayerManager
     AudioSourceManagers.registerRemoteSources(man)
+    AudioSourceManagers.registerLocalSource(man)
     man.enableGcMonitoring()
-    man.getConfiguration.setResamplingQuality(AudioConfiguration.ResamplingQuality.MEDIUM)
+    man.getConfiguration.setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH)
     man
   }
 }

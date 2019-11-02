@@ -59,14 +59,16 @@ object LavaplayerHandler {
       voiceHandler: ActorRef[VoiceHandler.Command],
       vChannelId: ChannelId,
       sender: ActorRef[Reply],
-      toggle: AtomicBoolean
+      toggle: AtomicBoolean,
+      readyListener: ActorRef[AudioAPIMessage]
   ) extends InactiveState
 
   private case class CanSendAudio(
       voiceHandler: ActorRef[VoiceHandler.Command],
       inVChannelId: ChannelId,
       toggle: AtomicBoolean,
-      sender: ActorRef[Reply]
+      sender: ActorRef[Reply],
+      readyListener: ActorRef[AudioAPIMessage]
   )
 
   case class Parameters(
@@ -97,13 +99,14 @@ object LavaplayerHandler {
       SourceShape(switch.out)
     })
 
-  private def readyListener(replyTo: ActorRef[WsReady.type]): Behavior[AudioAPIMessage] = Behaviors.receiveMessage {
-    case _: AudioAPIMessage.Ready =>
-      replyTo ! WsReady
-      Behaviors.same
-    case _: AudioAPIMessage.UserSpeaking => Behaviors.same
-    case _: AudioAPIMessage.ReceivedData => Behaviors.same
-  }
+  private def readyListenerBehavior(replyTo: ActorRef[WsReady.type]): Behavior[AudioAPIMessage] =
+    Behaviors.receiveMessage {
+      case _: AudioAPIMessage.Ready =>
+        replyTo ! WsReady
+        Behaviors.same
+      case _: AudioAPIMessage.UserSpeaking => Behaviors.same
+      case _: AudioAPIMessage.ReceivedData => Behaviors.same
+    }
 
   def handleConflictingConnect(
       command: ConnectVChannel,
@@ -113,7 +116,8 @@ object LavaplayerHandler {
       force: Boolean,
       firstSender: ActorRef[Reply],
       newSender: ActorRef[Reply],
-      voiceHandler: Option[ActorRef[VoiceHandler.Command]]
+      voiceHandler: Option[ActorRef[VoiceHandler.Command]],
+      readyListener: Option[ActorRef[AudioAPIMessage]]
   ): Behavior[Command] = {
     if (newVChannelId != inVChannelId) {
       if (force) {
@@ -124,6 +128,7 @@ object LavaplayerHandler {
         }
 
         voiceHandler.foreach(_ ! VoiceHandler.Logout)
+        readyListener.foreach(parameters.context.stop)
         firstSender ! ForcedConnectionFailure(inVChannelId, newVChannelId)
 
         inactive(parameters, Idle)
@@ -152,7 +157,7 @@ object LavaplayerHandler {
       val toggle   = new AtomicBoolean(true)
       val producer = soundProducer(toggle, player)
 
-      val readyListenerActor = context.spawn(readyListener(context.self), "ReadyListener")
+      val readyListenerActor = context.spawn(readyListenerBehavior(context.self), "ReadyListener")
 
       val voiceWs = context.spawn(
         VoiceHandler(
@@ -168,7 +173,7 @@ object LavaplayerHandler {
         "VoiceHandler"
       )
       log.debug("Music Connected")
-      inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle))
+      inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle, readyListenerActor))
     }
 
     (msg, state) match {
@@ -183,11 +188,21 @@ object LavaplayerHandler {
         inactive(parameters, Connecting(vChannelId, replyTo, negotiator))
 
       case (connect @ ConnectVChannel(newVChannelId, force, replyTo), Connecting(inVChannelId, firstSender, _)) =>
-        handleConflictingConnect(connect, parameters, newVChannelId, inVChannelId, force, firstSender, replyTo, None)
+        handleConflictingConnect(
+          connect,
+          parameters,
+          newVChannelId,
+          inVChannelId,
+          force,
+          firstSender,
+          replyTo,
+          None,
+          None
+        )
 
       case (
           connect @ ConnectVChannel(newVChannelId, force, replyTo),
-          HasVoiceWs(voiceHandler, inVChannelId, firstSender, _)
+          HasVoiceWs(voiceHandler, inVChannelId, firstSender, _, readyListener)
           ) =>
         handleConflictingConnect(
           connect,
@@ -197,7 +212,8 @@ object LavaplayerHandler {
           force,
           firstSender,
           replyTo,
-          Some(voiceHandler)
+          Some(voiceHandler),
+          Some(readyListener)
         )
 
       case (DisconnectVChannel, Idle) =>
@@ -236,18 +252,19 @@ object LavaplayerHandler {
 
       case (
           WsReady,
-          HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle)
+          HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, readyListener)
           ) =>
         log.debug("Audio ready")
 
         sendEventsTo ! MusicReady
 
-        active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, sendEventsTo))
+        active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, sendEventsTo, readyListener))
 
       case (WsReady, _) =>
         Behaviors.same
 
-      case (Shutdown, HasVoiceWs(voiceWs, _, _, _)) =>
+      case (Shutdown, HasVoiceWs(voiceWs, _, _, _, readyListener)) =>
+        context.stop(readyListener)
         context.watchWith(voiceWs, StopNow)
         voiceWs ! VoiceHandler.Logout
         Behaviors.same
@@ -274,6 +291,8 @@ object LavaplayerHandler {
       case DisconnectVChannel =>
         voiceHandler ! VoiceHandler.Logout
 
+        context.stop(readyListener)
+
         Source
           .single(
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
@@ -293,10 +312,12 @@ object LavaplayerHandler {
           force,
           replyTo,
           replyTo,
-          Some(voiceHandler)
+          Some(voiceHandler),
+          Some(readyListener)
         )
 
       case Shutdown =>
+        context.stop(readyListener)
         context.watchWith(voiceHandler, StopNow)
         voiceHandler ! VoiceHandler.Logout
         inactive(parameters, Idle)

@@ -60,7 +60,7 @@ class UdpConnectedFlow(
       private var socket: ActorRef        = _
       private var nextElement: ByteString = _
 
-      private var hasReceivedAck    = true
+      private var canSend           = true
       private var hasSentDisconnect = false
       private var shouldDisconnect  = false
 
@@ -93,7 +93,7 @@ class UdpConnectedFlow(
 
       private def disconnect(): Unit = {
         if (socket != null) {
-          if (nextElement != null || !hasReceivedAck) {
+          if (nextElement != null || !canSend) {
             shouldDisconnect = true
           } else {
             sendDisconnect()
@@ -124,7 +124,7 @@ class UdpConnectedFlow(
             nextElement = null
             tryPull(in)
           } else {
-            hasReceivedAck = true
+            canSend = true
 
             if (shouldDisconnect) {
               sendDisconnect()
@@ -135,10 +135,9 @@ class UdpConnectedFlow(
       }
 
       override def onPush(): Unit = {
-        if (hasReceivedAck) {
-          hasReceivedAck = false
-          val msg = grab(in)
-          send(msg)
+        if (canSend) {
+          canSend = false
+          send(grab(in))
           tryPull(in)
         } else {
           nextElement = grab(in)
