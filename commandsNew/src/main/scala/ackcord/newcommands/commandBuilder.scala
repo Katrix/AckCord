@@ -621,7 +621,7 @@ trait VoiceGuildCommandMessage[+A] extends GuildCommandMessage[A] with UserComma
   /**
     * The voice channel the user that used this command is in.
     */
-  def voiceChannel: VGuildChannel
+  def vChannel: VGuildChannel
 }
 object VoiceGuildCommandMessage {
 
@@ -629,7 +629,7 @@ object VoiceGuildCommandMessage {
       override val tChannel: TGuildChannel,
       guild: Guild,
       user: User,
-      voiceChannel: VGuildChannel,
+      vChannel: VGuildChannel,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
@@ -639,7 +639,7 @@ object VoiceGuildCommandMessage {
       guild: Guild,
       user: User,
       guildMember: GuildMember,
-      voiceChannel: VGuildChannel,
+      vChannel: VGuildChannel,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
@@ -654,6 +654,6 @@ object VoiceGuildCommandMessage {
   */
 case class CommandError(error: String, channel: TChannel, cache: CacheSnapshot)
 object CommandError {
-  def mk[F[_], A](error: String, message: CommandMessage[A]): CommandError =
+  def mk[A](error: String, message: CommandMessage[A]): CommandError =
     CommandError(error, message.tChannel, message.cache)
 }
