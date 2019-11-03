@@ -25,8 +25,8 @@ package ackcord.requests
 
 import java.util.UUID
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.CacheSnapshot
 import ackcord.requests.Routes.{QueryRoute, Route}

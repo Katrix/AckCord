@@ -43,7 +43,12 @@ import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 import com.sedmelluq.discord.lavaplayer.player.event._
-import com.sedmelluq.discord.lavaplayer.player.{AudioConfiguration, AudioPlayer, AudioPlayerManager, DefaultAudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.player.{
+  AudioConfiguration,
+  AudioPlayer,
+  AudioPlayerManager,
+  DefaultAudioPlayerManager
+}
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}

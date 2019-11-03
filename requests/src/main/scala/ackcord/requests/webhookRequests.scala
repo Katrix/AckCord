@@ -59,8 +59,7 @@ case class CreateWebhook(
 /**
   * Get the webhooks in a channel.
   */
-case class GetChannelWebhooks(channelId: ChannelId)
-    extends NoParamsNiceResponseRequest[Seq[Webhook]] {
+case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -73,8 +72,7 @@ case class GetChannelWebhooks(channelId: ChannelId)
 /**
   * Get the webhooks in a guild.
   */
-case class GetGuildWebhooks(guildId: GuildId)
-    extends NoParamsNiceResponseRequest[Seq[Webhook]] {
+case class GetGuildWebhooks(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getGuildWebhooks(guildId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -87,8 +85,7 @@ case class GetGuildWebhooks(guildId: GuildId)
 /**
   * Get a webhook by id.
   */
-case class GetWebhook(id: SnowflakeType[Webhook])
-    extends NoParamsNiceResponseRequest[Webhook] {
+case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhook(id)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -99,8 +96,7 @@ case class GetWebhook(id: SnowflakeType[Webhook])
 /**
   * Get a webhook by id with a token. Doesn't require authentication.
   */
-case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String)
-    extends NoParamsNiceResponseRequest[Webhook] {
+case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]

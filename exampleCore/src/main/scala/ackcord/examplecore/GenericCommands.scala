@@ -80,16 +80,17 @@ object GenericCommands {
           GetChannel(cmd.args.id) -> GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c)
         }
         .via(requests.flow)
-        .mapConcat { case (answer, ctx) =>
-          implicit val cache: CacheSnapshot = ctx.c
-          val content = answer match {
-            case response: RequestResponse[RawChannel] =>
-              val data = response.data
-              s"Info for ${data.name}:\n$data"
-            case _: FailedRequest => "Error encountered"
-          }
+        .mapConcat {
+          case (answer, ctx) =>
+            implicit val cache: CacheSnapshot = ctx.c
+            val content = answer match {
+              case response: RequestResponse[RawChannel] =>
+                val data = response.data
+                s"Info for ${data.name}:\n$data"
+              case _: FailedRequest => "Error encountered"
+            }
 
-          ctx.senderChannelId.tResolve(ctx.guildId).map(_.sendMessage(content)).toList
+            ctx.senderChannelId.tResolve(ctx.guildId).map(_.sendMessage(content)).toList
         }
         .to(requests.sinkIgnore)
     },

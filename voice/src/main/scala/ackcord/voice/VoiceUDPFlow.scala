@@ -32,8 +32,8 @@ import ackcord.data.{RawSnowflake, UserId}
 import ackcord.util.UdpConnectedFlow
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
-import akka.stream.{BidiShape, OverflowStrategy}
 import akka.stream.scaladsl.{BidiFlow, Concat, Flow, GraphDSL, Keep, Source}
+import akka.stream.{BidiShape, OverflowStrategy}
 import akka.util.ByteString
 
 object VoiceUDPFlow {

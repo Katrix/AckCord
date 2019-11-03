@@ -30,9 +30,9 @@ import scala.annotation.unchecked.uncheckedVariance
 import scala.collection.immutable
 
 import ackcord.data.{RawSnowflake, UserId}
+import akka.stream._
 import akka.stream.scaladsl.{BidiFlow, GraphDSL, Source}
 import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler, OutHandler}
-import akka.stream._
 import akka.util.ByteString
 import com.iwebpp.crypto.TweetNaclFast
 
