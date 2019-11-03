@@ -1,10 +1,9 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
-import xerial.sbt.Sonatype._
 
 lazy val akkaVersion     = "2.6.0-RC1"
 lazy val akkaHttpVersion = "10.1.10"
 lazy val circeVersion    = "0.12.1"
-lazy val ackCordVersion  = "0.15.0-M1"
+lazy val ackCordVersion  = "0.15.0-M2"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
@@ -39,11 +38,10 @@ lazy val publishSettings = Seq(
   ),
   moduleName := {
     val old = moduleName.value
-    if (old.toLowerCase.startsWith("ackcord")) old else s"ackcord-$old"
+    s"ackcord-$old"
   },
   homepage := Some(url("https://github.com/Katrix/AckCord")),
   developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
-  sonatypeProjectHosting := Some(GitHubHosting("Katrix", "AckCord", "katrix97@hotmail.com")),
   autoAPIMappings := true
 )
 
@@ -188,6 +186,7 @@ lazy val ackCord = project
     name := "ackcord",
     version := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
+    moduleName := "ackcord",
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -280,12 +279,7 @@ lazy val ackCordRoot = project
     example
   )
   .settings(
+    commonSettings,
     publishSettings,
-    organization := (dataJVM / organization).value,
-    version := (dataJVM / version).value,
-    //Fix some stupid issue where we were cross building to both 2.12.7 and 2.12.8
-    scalaVersion := (dataJVM / scalaVersion).value,
-    crossScalaVersions := (dataJVM / crossScalaVersions).value,
-    //Fixes repository not specified error
-    publishTo := sonatypePublishToBundle.value
+    version := ackCordVersion
   )
