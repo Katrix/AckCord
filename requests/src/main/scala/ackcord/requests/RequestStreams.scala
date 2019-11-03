@@ -37,8 +37,8 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.model._
-import akka.stream.scaladsl.{Flow, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
-import akka.stream.{FlowShape, OverflowStrategy}
+import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
+import akka.stream.{Attributes, FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
 import io.circe.Json
@@ -99,11 +99,15 @@ object RequestStreams {
       relativeTime: Boolean,
       parallelism: Int = 4,
       rateLimitActor: ActorRef[Ratelimiter.Command]
-  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    createHttpRequestFlow[Data, Ctx](credentials, millisecondPrecision)
-      .via(requestHttpFlow)
-      .via(requestParser(relativeTime, parallelism))
-      .alsoTo(sendRatelimitUpdates(rateLimitActor))
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
+    FlowWithContext.fromTuples(
+      createHttpRequestFlow[Data, Ctx](credentials, millisecondPrecision)
+        .via(requestHttpFlow)
+        .via(Flow.apply[(Try[HttpResponse], (Request[Data], Ctx))].map(t => ((t._1, t._2._1), t._2._2)))
+        .via(requestParser[Data, Ctx](relativeTime, parallelism))
+        .asFlow
+        .alsoTo(sendRatelimitUpdates[Data](rateLimitActor).contramap[(RequestAnswer[Data], Ctx)](_._1))
+    )
 
   /**
     * A request flow which will send requests to Discord, and receive responses.
@@ -134,21 +138,21 @@ object RequestStreams {
       maxAllowedWait: FiniteDuration = 2.minutes,
       parallelism: Int = 4,
       rateLimitActor: ActorRef[Ratelimiter.Command]
-  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val in         = builder.add(Flow[Request[Data, Ctx]])
-      val buffer     = builder.add(Flow[Request[Data, Ctx]].buffer(bufferSize, overflowStrategy))
+      val in         = builder.add(Flow[(Request[Data], Ctx)])
+      val buffer     = builder.add(Flow[(Request[Data], Ctx)].buffer(bufferSize, overflowStrategy))
       val ratelimits = builder.add(ratelimitFlow[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
 
-      val partition = builder.add(Partition[MaybeRequest[Data, Ctx]](2, {
-        case _: RequestDropped[_] => 1
-        case _: Request[_, _]     => 0
+      val partition = builder.add(Partition[(MaybeRequest[Data], Ctx)](2, {
+        case (_: RequestDropped, _) => 1
+        case (_: Request[_], _)     => 0
       }))
-      val requests = partition.out(0).collect { case request: Request[Data, Ctx]  => request }
-      val dropped  = partition.out(1).collect { case dropped: RequestDropped[Ctx] => dropped }
+      val requests = partition.out(0).collect { case (request: Request[Data], ctx)  => request -> ctx }
+      val dropped  = partition.out(1).collect { case (dropped: RequestDropped, ctx) => dropped -> ctx }
 
       val network = builder.add(
         requestFlowWithoutRatelimit[Data, Ctx](
@@ -159,7 +163,7 @@ object RequestStreams {
           rateLimitActor
         )
       )
-      val out = builder.add(Merge[RequestAnswer[Data, Ctx]](2))
+      val out = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
 
       // format: OFF
       in ~> buffer ~> ratelimits ~> partition
@@ -170,7 +174,7 @@ object RequestStreams {
       FlowShape(in.in, out.out)
     }
 
-    Flow.fromGraph(graph)
+    FlowWithContext.fromTuples(Flow.fromGraph(graph))
   }
 
   /**
@@ -186,31 +190,38 @@ object RequestStreams {
       parallelism: Int = 4
   )(
       implicit system: ActorSystem[Nothing]
-  ): Flow[Request[Data, Ctx], MaybeRequest[Data, Ctx], NotUsed] = {
+  ): FlowWithContext[Request[Data], Ctx, MaybeRequest[Data], Ctx, NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
-    Flow[Request[Data, Ctx]].mapAsyncUnordered(parallelism) { request =>
-      //We don't use ask here to get be able to create a RequestDropped instance
-      import system.executionContext
-      val future = ratelimiter.ask[Ratelimiter.Response[Request[Data, Ctx]]](
-        Ratelimiter.WantToPass(request.route, request.identifier, _, request)
-      )
+    FlowWithContext.fromTuples(
+      Flow[(Request[Data], Ctx)]
+        .mapAsyncUnordered(parallelism) {
+          case (request, ctx) =>
+            //We don't use ask here to get be able to create a RequestDropped instance
+            import system.executionContext
+            val future = ratelimiter.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
+              Ratelimiter.WantToPass(request.route, request.identifier, _, (request, ctx))
+            )
 
-      future
-        .flatMap {
-          case Ratelimiter.CanPass(a)       => Future.successful(a)
-          case Ratelimiter.FailedRequest(e) => Future.failed(e)
+            future
+              .flatMap {
+                case Ratelimiter.CanPass(a)       => Future.successful(a)
+                case Ratelimiter.FailedRequest(e) => Future.failed(e)
+              }
+              .recover {
+                case _: TimeoutException => RequestDropped(request.route, request.identifier) -> ctx
+              }
         }
-        .recover {
-          case _: TimeoutException => RequestDropped(request.context, request.route, request.identifier)
-        }
-    }
-  }.named("Ratelimiter")
+        .named("Ratelimiter")
+    )
+  }
 
   private def createHttpRequestFlow[Data, Ctx](
       credentials: HttpCredentials,
       millisecondPrecision: Boolean
-  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], (HttpRequest, Request[Data, Ctx]), NotUsed] = {
-    val baseFlow = Flow[Request[Data, Ctx]]
+  )(
+      implicit system: ActorSystem[Nothing]
+  ): FlowWithContext[Request[Data], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
+    val baseFlow = FlowWithContext[Request[Data], Ctx]
 
     val withLogging =
       if (AckCordRequestSettings().LogSentREST)
@@ -222,8 +233,8 @@ object RequestStreams {
         )
       else baseFlow
 
-    withLogging
-      .map { request =>
+    withLogging.via(Flow[(Request[Data], Ctx)].map {
+      case (request, ctx) =>
         val route = request.route
         val auth  = Authorization(credentials)
         val httpRequest = HttpRequest(
@@ -234,27 +245,29 @@ object RequestStreams {
           request.requestBody
         )
 
-        httpRequest -> request
-      }
-  }.named("CreateRequest")
+        (httpRequest, (request, ctx))
+    })
+  }.withAttributes(Attributes.name("CreateRequest"))
 
   private def requestHttpFlow[Data, Ctx](
       implicit system: ActorSystem[Nothing]
-  ): Flow[(HttpRequest, Request[Data, Ctx]), (Try[HttpResponse], Request[Data, Ctx]), NotUsed] = {
+  ): FlowWithContext[HttpRequest, (Request[Data], Ctx), Try[HttpResponse], (Request[Data], Ctx), NotUsed] = {
     import akka.actor.typed.scaladsl.adapter._
-    Http(system.toClassic).superPool[Request[Data, Ctx]]()
+    FlowWithContext.fromTuples(Http(system.toClassic).superPool[(Request[Data], Ctx)]())
   }
 
   private def requestParser[Data, Ctx](
       relativeTime: Boolean,
-      breadth: Int
+      parallelism: Int
   )(
       implicit system: ActorSystem[Nothing]
-  ): Flow[(Try[HttpResponse], Request[Data, Ctx]), RequestAnswer[Data, Ctx], NotUsed] = {
-    Flow[(Try[HttpResponse], Request[Data, Ctx])]
-      .map[Source[RequestAnswer[Data, Ctx], NotUsed]] {
+  ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
+    FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx]
+      .mapAsync(parallelism) {
         {
           case (response, request) =>
+            import system.executionContext
+
             val route = request.route
             response match {
               case Success(httpResponse) =>
@@ -273,9 +286,8 @@ object RequestStreams {
                 httpResponse.status match {
                   case StatusCodes.TooManyRequests =>
                     httpResponse.discardEntityBytes()
-                    Source.single(
+                    Future.successful(
                       RequestRatelimited(
-                        request.context,
                         isGlobalRatelimit(httpResponse),
                         ratelimitInfo,
                         route,
@@ -284,63 +296,37 @@ object RequestStreams {
                     )
                   case e if e.isFailure() =>
                     httpResponse.entity.dataBytes
-                      .fold(ByteString.empty)(_ ++ _)
-                      .flatMapConcat { eBytes =>
-                        Source.single(
-                          RequestError(
-                            request.context,
-                            new HttpException(e, Some(eBytes.utf8String)),
-                            route,
-                            request.identifier
-                          )
-                        )
+                      .runFold(ByteString.empty)(_ ++ _)
+                      .map { eBytes =>
+                        RequestError(new HttpException(e, Some(eBytes.utf8String)), route, request.identifier)
                       }
-                      .mapMaterializedValue(_ => NotUsed)
                   case StatusCodes.NoContent =>
                     httpResponse.discardEntityBytes()
-                    Source
-                      .single(HttpEntity.Empty)
-                      .via(request.parseResponse(breadth))
-                      .map { data =>
-                        RequestResponse(
-                          data,
-                          request.context,
-                          ratelimitInfo,
-                          route,
-                          request.identifier
-                        )
-                      }
+
+                    request
+                      .parseResponse(HttpEntity.Empty)
+                      .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
                   case _ => //Should be success
-                    Source
-                      .single(httpResponse.entity)
-                      .via(request.parseResponse(breadth))
-                      .map { data =>
-                        RequestResponse(
-                          data,
-                          request.context,
-                          ratelimitInfo,
-                          route,
-                          request.identifier
-                        )
-                      }
+                    request
+                      .parseResponse(httpResponse.entity)
+                      .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
                 }
 
               case Failure(e) =>
-                Source.single(RequestError(request.context, e, route, request.identifier))
+                Future.successful(RequestError(e, route, request.identifier))
             }
         }
       }
-      .flatMapMerge(breadth, identity)
-  }.named("RequestParser")
+  }.withAttributes(Attributes.name("RequestParser"))
 
-  private def sendRatelimitUpdates[Data, Ctx](
+  private def sendRatelimitUpdates[Data](
       rateLimitActor: ActorRef[Ratelimiter.Command]
-  ): Sink[RequestAnswer[Data, Ctx], Future[Done]] =
+  ): Sink[RequestAnswer[Data], Future[Done]] =
     Sink
-      .foreach[RequestAnswer[Data, Ctx]] { answer =>
+      .foreach[RequestAnswer[Data]] { answer =>
         val isGlobal = answer match {
-          case ratelimited: RequestRatelimited[Ctx] => ratelimited.global
-          case _                                    => false
+          case ratelimited: RequestRatelimited => ratelimited.global
+          case _                               => false
         }
 
         if (answer.ratelimitInfo.isValid) {
@@ -358,9 +344,9 @@ object RequestStreams {
   /**
     * A flow that only returns successful responses.
     */
-  def dataResponses[Data, Ctx]: Flow[RequestAnswer[Data, Ctx], (Data, Ctx), NotUsed] =
-    Flow[RequestAnswer[Data, Ctx]].collect {
-      case response: RequestResponse[Data, Ctx] => response.data -> response.context
+  def dataResponses[Data, Ctx]: FlowWithContext[RequestAnswer[Data], Ctx, Data, Ctx, NotUsed] =
+    FlowWithContext[RequestAnswer[Data], Ctx].collect {
+      case response: RequestResponse[Data] => response.data
     }
 
   /**
@@ -392,15 +378,15 @@ object RequestStreams {
       parallelism: Int = 4,
       maxRetryCount: Int = 3,
       rateLimitActor: ActorRef[Ratelimiter.Command]
-  )(implicit system: ActorSystem[Nothing]): Flow[Request[Data, Ctx], RequestResponse[Data, Ctx], NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestResponse[Data], Ctx, NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
       val addContextStart =
-        builder.add(Flow[Request[Data, Ctx]].map(request => request.withContext((0, request))))
+        builder.add(Flow[(Request[Data], Ctx)].map(request => (request._1, (0, request._1, request._2))))
       def requestFlow =
         RequestStreams
-          .requestFlow[Data, (Int, Request[Data, Ctx])](
+          .requestFlow[Data, (Int, Request[Data], Ctx)](
             credentials,
             millisecondPrecision,
             relativeTime,
@@ -410,21 +396,21 @@ object RequestStreams {
             parallelism,
             rateLimitActor
           )
-      val allRequests = builder.add(MergePreferred[RequestAnswer[Data, (Int, Request[Data, Ctx])]](1))
+      val allRequests = builder.add(MergePreferred[(RequestAnswer[Data], (Int, Request[Data], Ctx))](1))
 
       val partitioner = builder.add(
-        Partition[RequestAnswer[Data, (Int, Request[Data, Ctx])]](2, {
-          case _: RequestResponse[_, _] => 0
-          case _: FailedRequest[_]      => 1
+        Partition[(RequestAnswer[Data], (Int, Request[Data], Ctx))](2, {
+          case (_: RequestResponse[_], _) => 0
+          case (_: FailedRequest, _)      => 1
         })
       )
 
       val successful = partitioner.out(0)
       val unwrapSuccess = builder.add(
-        Flow[RequestAnswer[Data, (Int, Request[Data, Ctx])]]
+        Flow[(RequestAnswer[Data], (Int, Request[Data], Ctx))]
           .collect {
-            case response: RequestResponse[Data, (Int, Request[Data, Ctx])] =>
-              response.withContext(response.context._2.context)
+            case (response: RequestResponse[Data], (_, _, ctx)) =>
+              (response, ctx)
           }
       )
 
@@ -432,12 +418,10 @@ object RequestStreams {
       val failed = partitioner.out(1)
 
       val processFailed = builder.add(
-        Flow[RequestAnswer[Data, (Int, Request[Data, Ctx])]]
+        Flow[(RequestAnswer[Data], (Int, Request[Data], Ctx))]
           .collect {
-            case failed: FailedRequest[(Int, Request[Data, Ctx])] if failed.context._1 + 1 < maxRetryCount =>
-              val request = failed.context._2
-              val trips   = failed.context._1
-              request.withContext((trips + 1, request))
+            case (failed: FailedRequest, (trips, request, ctx)) if trips + 1 < maxRetryCount =>
+              (request, (trips + 1, request, ctx))
           }
       )
 
@@ -452,7 +436,7 @@ object RequestStreams {
       FlowShape(addContextStart.in, unwrapSuccess.out)
     }
 
-    Flow.fromGraph(graph)
+    FlowWithContext.fromTuples(Flow.fromGraph(graph))
   }
 
   def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] = Flow[A].flatMapConcat { a =>

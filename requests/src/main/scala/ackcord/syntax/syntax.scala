@@ -28,7 +28,6 @@ import java.nio.file.Path
 import ackcord.data._
 import ackcord.requests._
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
-import akka.NotUsed
 
 package object syntax {
 
@@ -37,7 +36,7 @@ package object syntax {
     /**
       * Delete or close this channel.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteCloseChannel(channel.id, context)
+    def delete = DeleteCloseChannel(channel.id)
 
     /**
       * If this is a text channel, convert it to one.
@@ -106,54 +105,53 @@ package object syntax {
       *              files in the embed using `attachment://filename`.
       * @param embed An embed to send with this message.
       */
-    def sendMessage[Ctx](
+    def sendMessage(
         content: String = "",
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
-        embed: Option[OutgoingEmbed] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed), context)
+        embed: Option[OutgoingEmbed] = None
+    ) = CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed))
 
     /**
       * Fetch messages around a message id.
       * @param around The message to get messages around.
       * @param limit The max amount of messages to return.
       */
-    def fetchMessagesAround[Ctx](around: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-      GetChannelMessages(tChannel.id, GetChannelMessagesData(Some(around), None, None, limit), context)
+    def fetchMessagesAround(around: MessageId, limit: Option[Int] = None) =
+      GetChannelMessages(tChannel.id, GetChannelMessagesData(Some(around), None, None, limit))
 
     /**
       * Fetch messages before a message id.
       * @param before The message to get messages before.
       * @param limit The max amount of messages to return.
       */
-    def fetchMessagesBefore[Ctx](before: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, Some(before), None, limit), context)
+    def fetchMessagesBefore(before: MessageId, limit: Option[Int] = None) =
+      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, Some(before), None, limit))
 
     /**
       * Fetch messages after a message id.
       * @param after The message to get messages after.
       * @param limit The max amount of messages to return.
       */
-    def fetchMessagesAfter[Ctx](after: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, Some(after), limit), context)
+    def fetchMessagesAfter(after: MessageId, limit: Option[Int] = None) =
+      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, Some(after), limit))
 
     /**
       * Fetch messages in this channel.
       * @param limit The max amount of messages to return.
       */
-    def fetchMessages[Ctx](limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit), context)
+    def fetchMessages(limit: Option[Int] = None) =
+      GetChannelMessages(tChannel.id, GetChannelMessagesData(None, None, None, limit))
 
     /**
       * Fetch a message in this channel.
       */
-    def fetchMessage[Ctx](id: MessageId, context: Ctx = NotUsed: NotUsed) = GetChannelMessage(tChannel.id, id, context)
+    def fetchMessage(id: MessageId) = GetChannelMessage(tChannel.id, id)
 
     /**
       * Triggers typing in a channel.
       */
-    def triggerTyping[Ctx](context: Ctx = NotUsed: NotUsed) = TriggerTypingIndicator(tChannel.id, context)
+    def triggerTyping = TriggerTypingIndicator(tChannel.id)
   }
 
   implicit class GuildChannelSyntax(private val channel: GuildChannel) extends AnyVal {
@@ -175,16 +173,14 @@ package object syntax {
       * @param allow The new allowed permissions.
       * @param deny The new denied permissions.
       */
-    def editChannelPermissionsRole[Ctx](
+    def editChannelPermissionsRole(
         roleId: RoleId,
         allow: Permission,
-        deny: Permission,
-        context: Ctx = NotUsed: NotUsed
+        deny: Permission
     ) = EditChannelPermissions(
       channel.id,
       roleId,
-      EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Role),
-      context
+      EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Role)
     )
 
     /**
@@ -193,31 +189,29 @@ package object syntax {
       * @param allow The new allowed permissions.
       * @param deny The new denied permissions.
       */
-    def editChannelPermissionsUser[Ctx](
+    def editChannelPermissionsUser(
         userId: UserId,
         allow: Permission,
-        deny: Permission,
-        context: Ctx = NotUsed: NotUsed
+        deny: Permission
     ) = EditChannelPermissions(
       channel.id,
       userId,
-      EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Member),
-      context
+      EditChannelPermissionsData(allow, deny, PermissionOverwriteType.Member)
     )
 
     /**
       * Delete the permission overwrites for a user
       * @param userId The user to remove the permission overwrites for
       */
-    def deleteChannelPermissionsUser[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) =
-      DeleteChannelPermission(channel.id, userId, context)
+    def deleteChannelPermissionsUser(userId: UserId) =
+      DeleteChannelPermission(channel.id, userId)
 
     /**
       * Delete the permission overwrites for a role
       * @param roleId The role to remove the permission overwrites for
       */
-    def deleteChannelPermissionsRole[Ctx](roleId: RoleId, context: Ctx = NotUsed: NotUsed) =
-      DeleteChannelPermission(channel.id, roleId, context)
+    def deleteChannelPermissionsRole(roleId: RoleId) =
+      DeleteChannelPermission(channel.id, roleId)
   }
 
   implicit class TGuildChannelSyntax(private val channel: TGuildChannel) extends AnyVal {
@@ -232,15 +226,14 @@ package object syntax {
       * @param permissionOverwrites The new channel permission overwrites.
       * @param category The new category id of the channel.
       */
-    def modify[Ctx](
+    def modify(
         name: JsonOption[String] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        category: JsonOption[ChannelId] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
@@ -253,14 +246,13 @@ package object syntax {
         userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
         parentId = category
-      ),
-      context
+      )
     )
 
     /**
       * Fetch all the invites created for this channel.
       */
-    def fetchInvites[Ctx](context: Ctx = NotUsed: NotUsed) = GetChannelInvites(channel.id, context)
+    def fetchInvites = GetChannelInvites(channel.id)
 
     /**
       * Create an invite for this channel.
@@ -270,38 +262,37 @@ package object syntax {
       * @param temporary If this invite only grants temporary membership.
       * @param unique If true, guarantees to create a new invite.
       */
-    def createInvite[Ctx](
+    def createInvite(
         maxAge: Int = 86400,
         maxUses: Int = 0,
         temporary: Boolean = false,
-        unique: Boolean = false,
-        context: Ctx = NotUsed: NotUsed
-    ) = CreateChannelInvite(channel.id, CreateChannelInviteData(maxAge, maxUses, temporary, unique), context)
+        unique: Boolean = false
+    ) = CreateChannelInvite(channel.id, CreateChannelInviteData(maxAge, maxUses, temporary, unique))
 
     /**
       * Delete multiple messages at the same time.
       * @param ids The messages to delete.
       */
-    def bulkDelete[Ctx](ids: Seq[MessageId], context: Ctx = NotUsed: NotUsed) =
-      BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids), context)
+    def bulkDelete(ids: Seq[MessageId]) =
+      BulkDeleteMessages(channel.id, BulkDeleteMessagesData(ids))
 
     /**
       * Fetch all the pinned messages in this channel.
       */
-    def fetchPinnedMessages[Ctx](context: Ctx = NotUsed: NotUsed) = GetPinnedMessages(channel.id, context)
+    def fetchPinnedMessages = GetPinnedMessages(channel.id)
 
     /**
       * Create a webhook for this channel.
       * @param name The webhook name.
       * @param avatar The webhook avatar.
       */
-    def createWebhook[Ctx](name: String, avatar: Option[ImageData], context: Ctx = NotUsed: NotUsed) =
-      CreateWebhook(channel.id, CreateWebhookData(name, avatar), context)
+    def createWebhook(name: String, avatar: Option[ImageData]) =
+      CreateWebhook(channel.id, CreateWebhookData(name, avatar))
 
     /**
       * Fetch the webhooks for this channel.
       */
-    def fetchWebhooks[Ctx](context: Ctx = NotUsed: NotUsed) = GetChannelWebhooks(channel.id, context)
+    def fetchWebhooks = GetChannelWebhooks(channel.id)
   }
 
   implicit class VGuildChannelSyntax(private val channel: VGuildChannel) extends AnyVal {
@@ -315,14 +306,13 @@ package object syntax {
       * @param permissionOverwrites The new channel permission overwrites.
       * @param category The new category id of the channel.
       */
-    def modify[Ctx](
+    def modify(
         name: JsonOption[String] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        category: JsonOption[ChannelId] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
@@ -333,8 +323,7 @@ package object syntax {
         userLimit = userLimit,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
         parentId = category
-      ),
-      context
+      )
     )
 
     /**
@@ -507,11 +496,10 @@ package object syntax {
       * @param position New position of the category.
       * @param permissionOverwrites The new category permission overwrites.
       */
-    def modify[Ctx](
+    def modify(
         name: JsonOption[String] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined
     ) = ModifyChannel(
       category.id,
       ModifyChannelData(
@@ -520,8 +508,7 @@ package object syntax {
         nsfw = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
         parentId = JsonUndefined
-      ),
-      context
+      )
     )
   }
 
@@ -540,7 +527,7 @@ package object syntax {
       * @param ownerId Transfer ownership of this guild. Must be the owner.
       * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
       */
-    def modify[Ctx](
+    def modify(
         name: Option[String] = None,
         region: Option[String] = None,
         verificationLevel: Option[VerificationLevel] = None,
@@ -549,8 +536,7 @@ package object syntax {
         afkTimeout: Option[Int] = None,
         icon: Option[ImageData] = None,
         ownerId: Option[UserId] = None,
-        splash: Option[ImageData] = None,
-        context: Ctx = NotUsed: NotUsed
+        splash: Option[ImageData] = None
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -563,14 +549,13 @@ package object syntax {
         icon = icon,
         ownerId = ownerId,
         splash = splash
-      ),
-      context
+      )
     )
 
     /**
       * Fetch all channels in this guild.
       */
-    def fetchAllChannels[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildChannels(guild.id, context)
+    def fetchAllChannels = GetGuildChannels(guild.id)
 
     /**
       * Create a text channel in this guild.
@@ -581,14 +566,13 @@ package object syntax {
       * @param category The category id for the channel.
       * @param nsfw If the channel is NSFW.
       */
-    def createTextChannel[Ctx](
+    def createTextChannel(
         name: String,
         topic: JsonOption[String] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[ChannelId] = JsonUndefined,
-        nsfw: JsonOption[Boolean] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
@@ -599,8 +583,7 @@ package object syntax {
         permissionOverwrites = permissionOverwrites,
         parentId = category,
         nsfw = nsfw
-      ),
-      context
+      )
     )
 
     /**
@@ -612,14 +595,13 @@ package object syntax {
       * @param category The category id for the channel.
       * @param nsfw If the channel is NSFW.
       */
-    def createVoiceChannel[Ctx](
+    def createVoiceChannel(
         name: String,
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[ChannelId] = JsonUndefined,
-        nsfw: JsonOption[Boolean] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
@@ -630,8 +612,7 @@ package object syntax {
         permissionOverwrites = permissionOverwrites,
         parentId = category,
         nsfw = nsfw
-      ),
-      context
+      )
     )
 
     /**
@@ -640,11 +621,10 @@ package object syntax {
       * @param permissionOverwrites The permission overwrites for the channel.
       * @param nsfw If the channel is NSFW.
       */
-    def createCategory[Ctx](
+    def createCategory(
         name: String,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
-        nsfw: JsonOption[Boolean] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
       CreateGuildChannelData(
@@ -652,53 +632,50 @@ package object syntax {
         `type` = JsonSome(ChannelType.GuildCategory),
         permissionOverwrites = permissionOverwrites,
         nsfw = nsfw
-      ),
-      context
+      )
     )
 
     /**
       * Modify the positions of several channels.
       * @param newPositions A map between the channelId and the new positions.
       */
-    def modifyChannelPositions[Ctx](newPositions: SnowflakeMap[Channel, Int], context: Ctx = NotUsed: NotUsed) =
+    def modifyChannelPositions(newPositions: SnowflakeMap[Channel, Int]) =
       ModifyGuildChannelPositions(
         guild.id,
-        newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq,
-        context
+        newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq
       )
 
     /**
       * Fetch a guild member by id.
       */
-    def fetchGuildMember[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) =
-      GetGuildMember(guild.id, userId, context)
+    def fetchGuildMember(userId: UserId) =
+      GetGuildMember(guild.id, userId)
 
     /**
       * Fetch a ban for a specific user.
       */
-    def fetchBan[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = GetGuildBan(guild.id, userId)
+    def fetchBan(userId: UserId) = GetGuildBan(guild.id, userId)
 
     /**
       * Fetch all the bans for this guild.
       */
-    def fetchBans[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildBans(guild.id, context)
+    def fetchBans = GetGuildBans(guild.id)
 
     /**
       * Unban a user.
       * @param userId The user to unban.
       */
-    def unban[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = RemoveGuildBan(guild.id, userId, context)
+    def unban(userId: UserId) = RemoveGuildBan(guild.id, userId)
 
     /**
       * Get all the guild members in this guild.
       * @param limit The max amount of members to get
       * @param after Get userIds after this id
       */
-    def fetchAllGuildMember[Ctx](
+    def fetchAllGuildMember(
         limit: Option[Int] = None,
-        after: Option[UserId] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = ListGuildMembers(guild.id, ListGuildMembersData(limit, after), context)
+        after: Option[UserId] = None
+    ) = ListGuildMembers(guild.id, ListGuildMembersData(limit, after))
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
@@ -708,20 +685,19 @@ package object syntax {
       * @param mute If the user should be muted.
       * @param deaf If the user should be deafened.
       */
-    def addGuildMember[Ctx](
+    def addGuildMember(
         userId: UserId,
         accessToken: String,
         nick: Option[String] = None,
         roles: Option[Seq[RoleId]] = None,
         mute: Option[Boolean] = None,
-        deaf: Option[Boolean] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = AddGuildMember(guild.id, userId, AddGuildMemberData(accessToken, nick, roles, mute, deaf), context)
+        deaf: Option[Boolean] = None
+    ) = AddGuildMember(guild.id, userId, AddGuildMemberData(accessToken, nick, roles, mute, deaf))
 
     /**
       * Fetch all the roles in this guild.
       */
-    def fetchRoles[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildRoles(guild.id, context)
+    def fetchRoles = GetGuildRoles(guild.id)
 
     /**
       * Create a new role.
@@ -731,61 +707,59 @@ package object syntax {
       * @param hoist If this role is shown in the right sidebar.
       * @param mentionable If this role is mentionable.
       */
-    def createRole[Ctx](
+    def createRole(
         name: Option[String] = None,
         permissions: Option[Permission] = None,
         color: Option[Int] = None,
         hoist: Option[Boolean] = None,
-        mentionable: Option[Boolean] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable), context)
+        mentionable: Option[Boolean] = None
+    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable))
 
     /**
       * Modify the positions of several roles
       * @param newPositions A map from the role id to their new position.
       */
-    def modifyRolePositions[Ctx](newPositions: SnowflakeMap[Role, Int], context: Ctx = NotUsed: NotUsed) =
-      ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq, context)
+    def modifyRolePositions(newPositions: SnowflakeMap[Role, Int]) =
+      ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq)
 
     /**
       * Check how many members would be removed if a prune was started now.
       * @param days The number of days to prune for.
       */
-    def fetchPruneCount[Ctx](days: Int, context: Ctx = NotUsed: NotUsed) =
-      GetGuildPruneCount(guild.id, GuildPruneCountData(days), context)
+    def fetchPruneCount(days: Int) =
+      GetGuildPruneCount(guild.id, GuildPruneCountData(days))
 
     /**
       * Begin a prune.
       * @param days The number of days to prune for.
       */
-    def beginPrune[Ctx](
+    def beginPrune(
         days: Int,
-        computePruneCount: Boolean = guild.memberCount < 1000,
-        context: Ctx = NotUsed: NotUsed
-    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount)), context)
+        computePruneCount: Boolean = guild.memberCount < 1000
+    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount)))
 
     /**
       * Fetch the voice regions for this guild.
       */
-    def fetchVoiceRegions[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildVoiceRegions(guild.id, context)
+    def fetchVoiceRegions = GetGuildVoiceRegions(guild.id)
 
     /**
       * Fetch the invites for this guild.
       */
-    def fetchInvites[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildInvites(guild.id, context)
+    def fetchInvites = GetGuildInvites(guild.id)
 
     /**
       * Fetch the integrations for this guild.
       */
-    def fetchIntegrations[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildIntegrations(guild.id, context)
+    def fetchIntegrations = GetGuildIntegrations(guild.id)
 
     /**
       * Attach an integration to this guild.
       * @param tpe The integration type.
       * @param id The integration id.
       */
-    def createIntegration[Ctx](tpe: String, id: IntegrationId, context: Ctx = NotUsed: NotUsed) =
-      CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id), context)
+    def createIntegration(tpe: String, id: IntegrationId) =
+      CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id))
 
     /**
       * Modify an existing integration for this guild.
@@ -795,45 +769,43 @@ package object syntax {
       * @param enableEmoticons If emojis should be synced for this integration.
       *                        (Twitch only)
       */
-    def modifyIntegration[Ctx](
+    def modifyIntegration(
         id: IntegrationId,
         expireBehavior: Int,
         expireGracePeriod: Int,
-        enableEmoticons: Boolean,
-        context: Ctx = NotUsed: NotUsed
+        enableEmoticons: Boolean
     ) =
       ModifyGuildIntegration(
         guild.id,
         id,
-        ModifyGuildIntegrationData(expireBehavior, expireGracePeriod, enableEmoticons),
-        context
+        ModifyGuildIntegrationData(expireBehavior, expireGracePeriod, enableEmoticons)
       )
 
     /**
       * Delete an integration.
       * @param id The integration id.
       */
-    def removeIntegration[Ctx](id: IntegrationId, context: Ctx = NotUsed: NotUsed) =
-      DeleteGuildIntegration(guild.id, id, context)
+    def removeIntegration(id: IntegrationId) =
+      DeleteGuildIntegration(guild.id, id)
 
     /**
       * Sync an integration
       * @param id The integration id.
       */
-    def syncIntegration[Ctx](id: IntegrationId, context: Ctx = NotUsed: NotUsed) =
-      SyncGuildIntegration(guild.id, id, context)
+    def syncIntegration(id: IntegrationId) =
+      SyncGuildIntegration(guild.id, id)
 
     /**
       * Fetch the guild embed for this guild.
       */
-    def fetchEmbed[Ctx](context: Ctx = NotUsed: NotUsed) =
-      GetGuildEmbed(guild.id, context)
+    def fetchEmbed =
+      GetGuildEmbed(guild.id)
 
     /**
       * Modify a guild embed for this guild.
       */
-    def modifyEmbed[Ctx](embed: GuildEmbed, context: Ctx = NotUsed: NotUsed) =
-      ModifyGuildEmbed(guild.id, embed, context)
+    def modifyEmbed(embed: GuildEmbed) =
+      ModifyGuildEmbed(guild.id, embed)
 
     /**
       * Get all the text channels in the guild.
@@ -957,22 +929,22 @@ package object syntax {
     /**
       * Fetch all the emojis for this guild.
       */
-    def fetchEmojis[Ctx](context: Ctx = NotUsed: NotUsed) = ListGuildEmojis(guild.id, context)
+    def fetchEmojis = ListGuildEmojis(guild.id)
 
     /**
       * Fetch a single emoji from this guild.
       * @param emojiId The id of the emoji to fetch.
       */
-    def fetchSingleEmoji[Ctx](emojiId: EmojiId, context: Ctx = NotUsed: NotUsed) =
-      GetGuildEmoji(emojiId, guild.id, context)
+    def fetchSingleEmoji(emojiId: EmojiId) =
+      GetGuildEmoji(emojiId, guild.id)
 
     /**
       * Create a new emoji in this guild.
       * @param name The name of the emoji.
       * @param image The image for the emoji.
       */
-    def createEmoji[Ctx](name: String, image: ImageData, roles: Seq[RoleId], context: Ctx = NotUsed: NotUsed) =
-      CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image, roles), context)
+    def createEmoji(name: String, image: ImageData, roles: Seq[RoleId]) =
+      CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image, roles))
 
     /**
       * Get a voice state for a user.
@@ -983,34 +955,33 @@ package object syntax {
       * Modify the clients nickname.
       * @param nick The new nickname
       */
-    def setNick[Ctx](nick: String, context: Ctx = NotUsed: NotUsed) =
-      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick), context)
+    def setNick(nick: String) =
+      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick))
 
     /**
       * Fetch an audit log for a this guild.
       */
-    def fetchAuditLog[Ctx](
+    def fetchAuditLog(
         userId: Option[UserId] = None,
         actionType: Option[AuditLogEvent] = None,
         before: Option[RawSnowflake] = None,
-        limit: Option[Int] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = GetGuildAuditLog(guild.id, GetGuildAuditLogData(userId, actionType, before, limit), context)
+        limit: Option[Int] = None
+    ) = GetGuildAuditLog(guild.id, GetGuildAuditLogData(userId, actionType, before, limit))
 
     /**
       * Fetch the webhooks in this guild.
       */
-    def fetchWebhooks[Ctx](context: Ctx = NotUsed: NotUsed) = GetGuildWebhooks(guild.id, context)
+    def fetchWebhooks = GetGuildWebhooks(guild.id)
 
     /**
       * Leave this guild.
       */
-    def leaveGuild[Ctx](context: Ctx = NotUsed: NotUsed) = LeaveGuild(guild.id, context)
+    def leaveGuild = LeaveGuild(guild.id)
 
     /**
       * Delete this guild. Must be the owner.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteGuild(guild.id, context)
+    def delete = DeleteGuild(guild.id)
   }
 
   implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {
@@ -1035,52 +1006,50 @@ package object syntax {
       * @param deaf If the user should be deafened.
       * @param channelId The id of the channel to move the user to.
       */
-    def modify[Ctx](
+    def modify(
         nick: JsonOption[String] = JsonUndefined,
         roles: JsonOption[Seq[RoleId]] = JsonUndefined,
         mute: JsonOption[Boolean] = JsonUndefined,
         deaf: JsonOption[Boolean] = JsonUndefined,
-        channelId: JsonOption[ChannelId] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
+        channelId: JsonOption[ChannelId] = JsonUndefined
     ) =
       ModifyGuildMember(
         guildMember.guildId,
         guildMember.userId,
-        ModifyGuildMemberData(nick, roles, mute, deaf, channelId),
-        context
+        ModifyGuildMemberData(nick, roles, mute, deaf, channelId)
       )
 
     /**
       * Add a role to this member.
       * @param roleId The role to add
       */
-    def addRole[Ctx](roleId: RoleId, context: Ctx = NotUsed: NotUsed) =
-      AddGuildMemberRole(guildMember.guildId, guildMember.userId, roleId, context)
+    def addRole(roleId: RoleId) =
+      AddGuildMemberRole(guildMember.guildId, guildMember.userId, roleId)
 
     /**
       * Remove a role from this member.
       * @param roleId The role to remove
       */
-    def removeRole[Ctx](roleId: RoleId, context: Ctx = NotUsed: NotUsed) =
-      RemoveGuildMemberRole(guildMember.guildId, guildMember.userId, roleId, context)
+    def removeRole(roleId: RoleId) =
+      RemoveGuildMemberRole(guildMember.guildId, guildMember.userId, roleId)
 
     /**
       * Kick this guild member.
       */
-    def kick[Ctx](context: Ctx = NotUsed: NotUsed) = RemoveGuildMember(guildMember.guildId, guildMember.userId, context)
+    def kick = RemoveGuildMember(guildMember.guildId, guildMember.userId)
 
     /**
       * Ban this guild member.
       * @param deleteMessageDays The number of days to delete messages for
       *                              this banned user.
       */
-    def ban[Ctx](deleteMessageDays: Option[Int], reason: Option[String], context: Ctx = NotUsed: NotUsed) =
-      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays, reason), context)
+    def ban(deleteMessageDays: Option[Int], reason: Option[String]) =
+      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays, reason))
 
     /**
       * Unban this user.
       */
-    def unban[Ctx](context: Ctx = NotUsed: NotUsed) = RemoveGuildBan(guildMember.guildId, guildMember.userId, context)
+    def unban = RemoveGuildBan(guildMember.guildId, guildMember.userId)
   }
 
   implicit class EmojiSyntax(private val emoji: Emoji) extends AnyVal {
@@ -1090,14 +1059,14 @@ package object syntax {
       * @param name The new name of the emoji.
       * @param guildId The guildId of this emoji.
       */
-    def modify[Ctx](name: String, roles: Seq[RoleId], guildId: GuildId, context: Ctx = NotUsed: NotUsed) =
-      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, roles), context)
+    def modify(name: String, roles: Seq[RoleId], guildId: GuildId) =
+      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, roles))
 
     /**
       * Delete this emoji.
       * @param guildId The guildId of this emoji.
       */
-    def delete[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) = DeleteGuildEmoji(emoji.id, guildId, context)
+    def delete(guildId: GuildId) = DeleteGuildEmoji(emoji.id, guildId)
   }
 
   implicit class RoleSyntax(private val role: Role) extends AnyVal {
@@ -1110,91 +1079,89 @@ package object syntax {
       * @param hoist If this role is shown in the right sidebar.
       * @param mentionable If this role is mentionable.
       */
-    def modify[Ctx](
+    def modify(
         name: Option[String] = None,
         permissions: Option[Permission] = None,
         color: Option[Int] = None,
         hoist: Option[Boolean] = None,
-        mentionable: Option[Boolean] = None,
-        context: Ctx = NotUsed: NotUsed
+        mentionable: Option[Boolean] = None
     ) =
-      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable), context)
+      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable))
 
     /**
       * Delete this role.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteGuildRole(role.guildId, role.id, context)
+    def delete = DeleteGuildRole(role.guildId, role.id)
   }
 
+  //noinspection MutatorLikeMethodIsParameterless
   implicit class MessageSyntax(private val message: Message) extends AnyVal {
 
     /**
       * Create a reaction for a message.
       * @param guildEmoji The emoji to react with.
       */
-    def createReaction[Ctx](guildEmoji: Emoji, context: Ctx = NotUsed: NotUsed) =
-      CreateReaction(message.channelId, message.id, guildEmoji.asString, context)
+    def createReaction(guildEmoji: Emoji) =
+      CreateReaction(message.channelId, message.id, guildEmoji.asString)
 
     /**
       * Delete the clients reaction to a message.
       * @param guildEmoji The emoji to remove a reaction for.
       */
-    def deleteOwnReaction[Ctx](guildEmoji: Emoji, context: Ctx = NotUsed: NotUsed) =
-      DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString, context)
+    def deleteOwnReaction(guildEmoji: Emoji) =
+      DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString)
 
     /**
       * Delete the reaction of a user with an emoji.
       * @param guildEmoji The emoji of the reaction to remove.
       * @param userId The userId to remove for.
       */
-    def deleteUserReaction[Ctx](guildEmoji: Emoji, userId: UserId, context: Ctx = NotUsed: NotUsed) =
-      DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId, context)
+    def deleteUserReaction(guildEmoji: Emoji, userId: UserId) =
+      DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId)
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
       * @param guildEmoji The emoji the get the reactors for.
       */
-    def fetchReactions[Ctx](
+    def fetchReactions(
         guildEmoji: Emoji,
         before: Option[UserId] = None,
         after: Option[UserId] = None,
-        limit: Option[Int] = None,
-        context: Ctx = NotUsed: NotUsed
+        limit: Option[Int] = None
     ) =
-      GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit), context)
+      GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit))
 
     /**
       * Clear all the reactions on this message.
       */
-    def deleteAllReactions[Ctx](context: Ctx = NotUsed: NotUsed) =
-      DeleteAllReactions(message.channelId, message.id, context)
+    def deleteAllReactions =
+      DeleteAllReactions(message.channelId, message.id)
 
     /**
       * Edit this message.
       * @param content The new content of this message
       * @param embed The new embed of this message
       */
-    def edit[Ctx](
+    def edit(
         content: JsonOption[String] = JsonUndefined,
-        embed: JsonOption[OutgoingEmbed] = JsonUndefined,
-        context: Ctx = NotUsed: NotUsed
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed), context)
+        embed: JsonOption[OutgoingEmbed] = JsonUndefined
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed))
 
     /**
       * Delete this message.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteMessage(message.channelId, message.id, context)
+    def delete = DeleteMessage(message.channelId, message.id)
 
     /**
       * Pin this message.
       */
-    def pin[Ctx](context: Ctx = NotUsed: NotUsed) = AddPinnedChannelMessages(message.channelId, message.id, context)
+    def pin = AddPinnedChannelMessages(message.channelId, message.id)
 
     /**
       * Unpin this message.
       */
-    def unpin[Ctx](context: Ctx = NotUsed: NotUsed) =
-      DeletePinnedChannelMessages(message.channelId, message.id, context)
+    def unpin =
+      DeletePinnedChannelMessages(message.channelId, message.id)
   }
 
   implicit class UserSyntax(private val user: User) extends AnyVal {
@@ -1208,7 +1175,7 @@ package object syntax {
     /**
       * Create a new dm channel for this user.
       */
-    def createDMChannel[Ctx](context: Ctx = NotUsed: NotUsed) = CreateDm(CreateDMData(user.id), context)
+    def createDMChannel = CreateDm(CreateDMData(user.id))
   }
 
   implicit class InviteSyntax(private val invite: Invite) extends AnyVal {
@@ -1216,9 +1183,10 @@ package object syntax {
     /**
       * Delete this invite.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteInvite(invite.code, context)
+    def delete = DeleteInvite(invite.code)
   }
 
+  //noinspection MutatorLikeMethodIsParameterless
   implicit class WebhookSyntax(private val webhook: Webhook) extends AnyVal {
 
     /**
@@ -1227,12 +1195,11 @@ package object syntax {
       * @param avatar The avatar data of the webhook.
       * @param channelId The channel this webhook should be moved to.
       */
-    def modify[Ctx](
+    def modify(
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[ChannelId] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId), context)
+        channelId: Option[ChannelId] = None
+    ) = ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId))
 
     /**
       * Modify this webhook with a token. Doesn't require authentication.
@@ -1240,23 +1207,22 @@ package object syntax {
       * @param avatar The avatar data of the webhook.
       * @param channelId The channel this webhook should be moved to.
       */
-    def modifyWithToken[Ctx](
+    def modifyWithToken(
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[ChannelId] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = ModifyWebhookWithToken(webhook.id, webhook.token, ModifyWebhookData(name, avatar, channelId), context)
+        channelId: Option[ChannelId] = None
+    ) = ModifyWebhookWithToken(webhook.id, webhook.token, ModifyWebhookData(name, avatar, channelId))
 
     /**
       * Delete this webhook.
       */
-    def delete[Ctx](context: Ctx = NotUsed: NotUsed) = DeleteWebhook(webhook.id, context)
+    def delete = DeleteWebhook(webhook.id)
 
     /**
       * Delete this webhook with a token. Doesn't require authentication.
       */
-    def deleteWithToken[Ctx](context: Ctx = NotUsed: NotUsed) =
-      DeleteWebhookWithToken(webhook.id, webhook.token, context)
+    def deleteWithToken =
+      DeleteWebhookWithToken(webhook.id, webhook.token)
   }
 
   implicit class AckCordSyntax(private val ackCord: AckCord.type) extends AnyVal {
@@ -1265,17 +1231,17 @@ package object syntax {
     /**
       * Fetch a channel by id.
       */
-    def fetchChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed) = GetChannel(channelId, context)
+    def fetchChannel(channelId: ChannelId) = GetChannel(channelId)
 
     /**
       * Fetch a guild by id.
       */
-    def fetchGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) = GetGuild(guildId, context)
+    def fetchGuild(guildId: GuildId) = GetGuild(guildId)
 
     /**
       * Fetch a user by id.
       */
-    def fetchUser[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed) = GetUser(userId, context)
+    def fetchUser(userId: UserId) = GetUser(userId)
 
     /**
       * Create a new guild. Bots can only have 10 guilds by default.
@@ -1289,7 +1255,7 @@ package object syntax {
       *              just a placeholder.
       * @param channels The channels for the new guild.
       */
-    def createGuild[Ctx](
+    def createGuild(
         name: String,
         region: String,
         icon: Option[ImageData],
@@ -1297,8 +1263,7 @@ package object syntax {
         defaultMessageNotifications: NotificationLevel,
         explicitContentFilter: FilterLevel,
         roles: Seq[Role],
-        channels: Seq[CreateGuildChannelData],
-        context: Ctx = NotUsed: NotUsed
+        channels: Seq[CreateGuildChannelData]
     ) =
       CreateGuild(
         CreateGuildData(
@@ -1310,14 +1275,13 @@ package object syntax {
           explicitContentFilter,
           roles,
           channels
-        ),
-        context
+        )
       )
 
     /**
       * Fetch the client user.
       */
-    def fetchClientUser[Ctx](context: Ctx = NotUsed: NotUsed) = GetCurrentUser(context)
+    def fetchClientUser: GetCurrentUser.type = GetCurrentUser
 
     /**
       * Get the guilds of the client user.
@@ -1325,12 +1289,11 @@ package object syntax {
       * @param after Get guilds after this id.
       * @param limit The max amount of guilds to return.
       */
-    def fetchCurrentUserGuilds[Ctx](
+    def fetchCurrentUserGuilds(
         before: Option[GuildId] = None,
         after: Option[GuildId] = None,
-        limit: Option[Int] = None,
-        context: Ctx = NotUsed: NotUsed
-    ) = GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit), context)
+        limit: Option[Int] = None
+    ) = GetCurrentUserGuilds(GetCurrentUserGuildsData(before, after, limit))
 
     /**
       * Create a group DM to a few users.
@@ -1339,11 +1302,10 @@ package object syntax {
       * @param nicks A map specifying the nicknames for the users in this group DM.
       */
     @deprecated("Deprecated by Discord", since = "0.13")
-    def createGroupDM[Ctx](
+    def createGroupDM(
         accessTokens: Seq[String],
-        nicks: SnowflakeMap[User, String],
-        context: Ctx = NotUsed: NotUsed
-    ) = CreateGroupDm(CreateGroupDMData(accessTokens, nicks), context)
+        nicks: SnowflakeMap[User, String]
+    ) = CreateGroupDm(CreateGroupDMData(accessTokens, nicks))
 
     /**
       * Fetch an invite by code.
@@ -1351,23 +1313,23 @@ package object syntax {
       * @param withCounts If the returned invite object should return approximate
       *                   counts for members and people online.
       */
-    def fetchInvite[Ctx](inviteCode: String, withCounts: Boolean = false, context: Ctx = NotUsed: NotUsed) =
-      GetInvite(inviteCode, withCounts, context)
+    def fetchInvite(inviteCode: String, withCounts: Boolean = false) =
+      GetInvite(inviteCode, withCounts)
 
     /**
       * Fetch a list of voice regions that can be used when creating a guild.
       */
-    def fetchVoiceRegions[Ctx](context: Ctx = NotUsed: NotUsed) = ListVoiceRegions(context)
+    def fetchVoiceRegions: ListVoiceRegions.type = ListVoiceRegions
 
     /**
       * Fetch a webhook by id.
       */
-    def fetchWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: NotUsed) = GetWebhook(id, context)
+    def fetchWebhook(id: SnowflakeType[Webhook]) = GetWebhook(id)
 
     /**
       * Fetch a webhook by id with token. Doesn't require authentication.
       */
-    def fetchWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed) =
-      GetWebhookWithToken(id, token, context)
+    def fetchWebhookWithToken(id: SnowflakeType[Webhook], token: String) =
+      GetWebhookWithToken(id, token)
   }
 }

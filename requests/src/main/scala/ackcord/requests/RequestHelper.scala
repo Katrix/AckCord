@@ -31,7 +31,7 @@ import ackcord.requests.RequestHelper.RequestProperties
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.OverflowStrategy
-import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
+import akka.stream.scaladsl.{FlowWithContext, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 
 /**
@@ -62,9 +62,9 @@ case class RequestHelper(
     maxAllowedWait: FiniteDuration = 2.minutes
 )(implicit val system: ActorSystem[Nothing]) {
 
-  private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any, Ctx], Future[Done]] = Sink.foreach {
-    case _: RequestResponse[_, _] =>
-    case request: FailedRequest[_] =>
+  private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any], Future[Done]] = Sink.foreach {
+    case _: RequestResponse[_] =>
+    case request: FailedRequest =>
       request.asException.printStackTrace()
   }
 
@@ -81,8 +81,8 @@ case class RequestHelper(
     * A basic request flow which will send requests to Discord, and
     * receive responses. Don't use this if you don't know what you're doing.
     */
-  def flowWithoutRateLimits[Data, Ctx]: Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] =
-    rawFlowWithoutRateLimits.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
+  def flowWithoutRateLimits[Data, Ctx]: FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
+    rawFlowWithoutRateLimits.asInstanceOf[FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed]]
 
   private lazy val rawFlow =
     RequestStreams.requestFlow(
@@ -96,7 +96,10 @@ case class RequestHelper(
       ratelimitActor
     )
 
-  private lazy val rawOrderedFlow = RequestStreams.addOrdering(rawFlow)
+  private lazy val rawOrderedFlow =
+    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestAnswer[Nothing], Nothing, NotUsed](
+      RequestStreams.addOrdering(rawFlow.asFlow)
+    )
 
   private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
     credentials,
@@ -110,7 +113,10 @@ case class RequestHelper(
     ratelimitActor
   )
 
-  private lazy val rawOrderedRetryFlow = RequestStreams.addOrdering(rawRetryFlow)
+  private lazy val rawOrderedRetryFlow =
+    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestResponse[Nothing], Nothing, NotUsed](
+      RequestStreams.addOrdering(rawRetryFlow.asFlow)
+    )
 
   /**
     * A generic flow for making requests. You should use this one most of
@@ -124,7 +130,7 @@ case class RequestHelper(
     */
   def flow[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
-  ): Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed] = {
+  ): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     val flowToUse = properties match {
       case RequestProperties(false, false) => rawFlow
       case RequestProperties(true, false)  => rawRetryFlow
@@ -132,17 +138,20 @@ case class RequestHelper(
       case RequestProperties(true, true)   => rawOrderedRetryFlow
     }
 
-    flowToUse.asInstanceOf[Flow[Request[Data, Ctx], RequestAnswer[Data, Ctx], NotUsed]]
+    flowToUse.asInstanceOf[FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed]]
   }
 
   /**
     * A generic sink for making requests and ignoring the results.
     * $backpressures
     */
-  def sinkIgnore[Data, Ctx](
+  def sinkIgnore[Data](
       implicit properties: RequestProperties = RequestProperties.default
-  ): Sink[Request[Data, Ctx], Future[Done]] =
-    flow[Data, Ctx](properties).toMat(ignoreOrReport)(Keep.right)
+  ): Sink[Request[Data], Future[Done]] =
+    flow[Data, NotUsed](properties).asFlow
+      .map(_._1)
+      .toMat(ignoreOrReport)(Keep.right)
+      .contramap[Request[Data]](_ -> NotUsed)
 
   /**
     * A generic flow for making requests. Only returns successful requests.
@@ -150,12 +159,12 @@ case class RequestHelper(
     */
   def flowSuccess[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
-  ): Flow[Request[Data, Ctx], (Data, Ctx), NotUsed] =
+  ): FlowWithContext[Request[Data], Ctx, Data, Ctx, NotUsed] =
     flow[Data, Ctx](properties)
       .map {
-        case RequestResponse(data, ctx, _, _, _) =>
-          Some(data -> ctx)
-        case request: FailedRequest[_] =>
+        case RequestResponse(data, _, _, _) =>
+          Some(data)
+        case request: FailedRequest =>
           request.asException.printStackTrace()
           None
       }
@@ -166,43 +175,43 @@ case class RequestHelper(
     * @param request The request to send.
     * @return A source of the single request answer.
     */
-  def single[Data, Ctx](request: Request[Data, Ctx])(
+  def single[Data, Ctx](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Source[RequestAnswer[Data, Ctx], NotUsed] = Source.single(request).via(flow(properties))
+  ): Source[RequestAnswer[Data], NotUsed] = Source.single(request -> NotUsed).via(flow(properties).asFlow.map(_._1))
 
   /**
     * Sends many requests
     * @param requests The requests to send.
     * @return A source of the request answers.
     */
-  def many[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+  def many[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Source[RequestAnswer[Data, Ctx], NotUsed] =
-    Source(requests).via(flow(properties))
+  ): Source[RequestAnswer[Data], NotUsed] =
+    Source(requests.map(_ -> NotUsed)).via(flow(properties).asFlow.map(_._1))
 
   /**
     * Sends a single request and gets the response as a future.
     * @param request The request to send.
     */
-  def singleFuture[Data, Ctx](request: Request[Data, Ctx])(
+  def singleFuture[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Future[RequestAnswer[Data, Ctx]] =
+  ): Future[RequestAnswer[Data]] =
     single(request)(properties).runWith(Sink.head)
 
   /**
     * Sends many requests and gets the responses as a future.
     * @param requests The requests to send.
     */
-  def manyFuture[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+  def manyFuture[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Future[immutable.Seq[RequestAnswer[Data, Ctx]]] =
+  ): Future[immutable.Seq[RequestAnswer[Data]]] =
     many(requests)(properties).runWith(Sink.seq)
 
   /**
     * Sends a single request and ignores the result.
     * @param request The request to send.
     */
-  def singleIgnore[Data, Ctx](request: Request[Data, Ctx])(
+  def singleIgnore[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
   ): Unit =
     single(request)(properties).runWith(ignoreOrReport)
@@ -211,7 +220,7 @@ case class RequestHelper(
     * Sends many requests and ignores the result.
     * @param requests The requests to send.
     */
-  def manyIgnore[Data, Ctx](requests: immutable.Seq[Request[Data, Ctx]])(
+  def manyIgnore[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
   ): Unit = many(requests)(properties).runWith(ignoreOrReport)
 }

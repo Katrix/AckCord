@@ -36,7 +36,6 @@ import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
 import ackcord.syntax._
 import ackcord.{Cache, RequestHelper}
-import akka.NotUsed
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
@@ -58,7 +57,7 @@ object MusicHandler {
       context: ActorContext[Command],
       log: Logger,
       player: AudioPlayer,
-      msgQueue: SourceQueueWithComplete[Request[RawMessage, NotUsed]],
+      msgQueue: SourceQueueWithComplete[Request[RawMessage]],
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
@@ -86,7 +85,7 @@ object MusicHandler {
           ctx,
           ctx.log,
           player,
-          Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage, NotUsed]).run(),
+          Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage]).run(),
           ctx.spawn(LavaplayerHandler(player, guildId, cache, MusicHandler.UseBurstingSender), "LavaplayerHandler")
         ),
         None,
@@ -313,7 +312,7 @@ object MusicHandler {
   def handleFriendlyException(
       e: FriendlyException,
       track: Option[AudioTrack],
-      msgQueue: SourceQueueWithComplete[Request[RawMessage, NotUsed]],
+      msgQueue: SourceQueueWithComplete[Request[RawMessage]],
       lastTChannel: Option[TChannel]
   ): Behavior[Command] = {
     e.severity match {

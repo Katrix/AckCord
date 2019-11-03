@@ -39,8 +39,7 @@ import io.circe.syntax._
 /**
   * Get a channel by id.
   */
-case class GetChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[RawChannel, Option[Channel], Ctx] {
+case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, Option[Channel]] {
   override def route: RequestRoute = Routes.getChannel(channelId)
 
   override def responseDecoder: Decoder[RawChannel]                  = Decoder[RawChannel]
@@ -98,12 +97,11 @@ object ModifyChannelData {
   * Update the settings of a channel.
   * @param channelId The channel to update.
   */
-case class ModifyChannel[Ctx](
+case class ModifyChannel(
     channelId: ChannelId,
     params: ModifyChannelData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyChannel[Ctx], ModifyChannelData, RawChannel, Option[Channel], Ctx] {
+) extends ReasonRequest[ModifyChannel, ModifyChannelData, RawChannel, Option[Channel]] {
   override def route: RequestRoute                       = Routes.modifyChannelPut(channelId)
   override def paramsEncoder: Encoder[ModifyChannelData] = ModifyChannelData.encoder
   override def jsonPrinter: Printer                      = Printer.noSpaces
@@ -115,14 +113,14 @@ case class ModifyChannel[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyChannel[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyChannel = copy(reason = Some(reason))
 }
 
 /**
   * Delete a guild channel, or close a DM channel.
   */
-case class DeleteCloseChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed, reason: Option[String] = None)
-    extends NoParamsReasonRequest[DeleteCloseChannel[Ctx], RawChannel, Option[Channel], Ctx] {
+case class DeleteCloseChannel(channelId: ChannelId, reason: Option[String] = None)
+    extends NoParamsReasonRequest[DeleteCloseChannel, RawChannel, Option[Channel]] {
   override def route: RequestRoute = Routes.deleteCloseChannel(channelId)
 
   override def responseDecoder: Decoder[RawChannel]                  = Decoder[RawChannel]
@@ -132,7 +130,7 @@ case class DeleteCloseChannel[Ctx](channelId: ChannelId, context: Ctx = NotUsed:
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): DeleteCloseChannel[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteCloseChannel = copy(reason = Some(reason))
 }
 
 /**
@@ -165,8 +163,8 @@ case class GetChannelMessagesData(
 /**
   * Get the messages in a channel.
   */
-case class GetChannelMessages[Ctx](channelId: ChannelId, query: GetChannelMessagesData, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
+case class GetChannelMessages(channelId: ChannelId, query: GetChannelMessagesData)
+    extends NoParamsRequest[Seq[RawMessage], Seq[Message]] {
   override def route: RequestRoute = {
     val base = Routes.getChannelMessages(channelId)
     base.copy(uri = base.uri.withQuery(Uri.Query(query.toMap)))
@@ -180,21 +178,21 @@ case class GetChannelMessages[Ctx](channelId: ChannelId, query: GetChannelMessag
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object GetChannelMessages {
-  def around[Ctx](channelId: ChannelId, around: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-    new GetChannelMessages(channelId, GetChannelMessagesData(around = Some(around), limit = limit), context)
+  def around(channelId: ChannelId, around: MessageId, limit: Option[Int] = None) =
+    new GetChannelMessages(channelId, GetChannelMessagesData(around = Some(around), limit = limit))
 
-  def before[Ctx](channelId: ChannelId, before: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-    new GetChannelMessages(channelId, GetChannelMessagesData(before = Some(before), limit = limit), context)
+  def before(channelId: ChannelId, before: MessageId, limit: Option[Int] = None) =
+    new GetChannelMessages(channelId, GetChannelMessagesData(before = Some(before), limit = limit))
 
-  def after[Ctx](channelId: ChannelId, after: MessageId, limit: Option[Int] = None, context: Ctx = NotUsed: NotUsed) =
-    new GetChannelMessages(channelId, GetChannelMessagesData(after = Some(after), limit = limit), context)
+  def after(channelId: ChannelId, after: MessageId, limit: Option[Int] = None) =
+    new GetChannelMessages(channelId, GetChannelMessagesData(after = Some(after), limit = limit))
 }
 
 /**
   * Get a specific message in a channel.
   */
-case class GetChannelMessage[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[RawMessage, Message, Ctx] {
+case class GetChannelMessage(channelId: ChannelId, messageId: MessageId)
+    extends NoParamsRequest[RawMessage, Message] {
   override def route: RequestRoute = Routes.getChannelMessage(channelId, messageId)
 
   override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
@@ -237,13 +235,13 @@ object CreateMessageData {
 /**
   * Create a message in a channel.
   */
-case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[CreateMessageData, RawMessage, Message, Ctx] {
+case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
+    extends RESTRequest[CreateMessageData, RawMessage, Message] {
   override def route: RequestRoute                       = Routes.createMessage(channelId)
   override def paramsEncoder: Encoder[CreateMessageData] = CreateMessageData.encoder
   override def requestBody: RequestEntity = {
     this match {
-      case CreateMessage(_, CreateMessageData(_, _, _, files, _), _) if files.nonEmpty =>
+      case CreateMessage(_, CreateMessageData(_, _, _, files, _)) if files.nonEmpty =>
         val fileParts = files.map { f =>
           FormData.BodyPart.fromPath(f.getFileName.toString, ContentTypes.`application/octet-stream`, f)
         }
@@ -268,23 +266,22 @@ case class CreateMessage[Ctx](channelId: ChannelId, params: CreateMessageData, c
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object CreateMessage {
-  def mkContent[Ctx](channelId: ChannelId, content: String, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
-    new CreateMessage(channelId, CreateMessageData(content), context)
+  def mkContent(channelId: ChannelId, content: String): CreateMessage =
+    new CreateMessage(channelId, CreateMessageData(content))
 
-  def mkEmbed[Ctx](channelId: ChannelId, embed: OutgoingEmbed, context: Ctx = NotUsed: NotUsed): CreateMessage[Ctx] =
-    new CreateMessage(channelId, CreateMessageData(embed = Some(embed)), context)
+  def mkEmbed(channelId: ChannelId, embed: OutgoingEmbed): CreateMessage =
+    new CreateMessage(channelId, CreateMessageData(embed = Some(embed)))
 }
 
 /**
   * Create a reaction for a message.
   * @param emoji The emoji to send.
   */
-case class CreateReaction[Ctx](
+case class CreateReaction(
     channelId: ChannelId,
     messageId: MessageId,
-    emoji: String,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsResponseRequest[Ctx] {
+    emoji: String
+) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.createReaction(channelId, messageId, emoji)
 
   override def requiredPermissions: Permission = Permission.ReadMessageHistory
@@ -295,25 +292,23 @@ case class CreateReaction[Ctx](
 /**
   * Delete the clients reaction to a message.
   */
-case class DeleteOwnReaction[Ctx](
+case class DeleteOwnReaction(
     channelId: ChannelId,
     messageId: MessageId,
-    emoji: String,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsResponseRequest[Ctx] {
+    emoji: String
+) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteOwnReaction(channelId, messageId, emoji)
 }
 
 /**
   * Delete the reaction of another user to a message.
   */
-case class DeleteUserReaction[Ctx](
+case class DeleteUserReaction(
     channelId: ChannelId,
     messageId: MessageId,
     emoji: String,
-    userId: UserId,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsResponseRequest[Ctx] {
+    userId: UserId
+) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteUserReaction(channelId, messageId, emoji, userId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -331,45 +326,41 @@ case class GetReactionsData(before: Option[UserId] = None, after: Option[UserId]
 /**
   * Get all the users that have reacted with an emoji for a message.
   */
-case class GetReactions[Ctx](
+case class GetReactions(
     channelId: ChannelId,
     messageId: MessageId,
     emoji: String,
-    queryParams: GetReactionsData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsNiceResponseRequest[Seq[User], Ctx] {
+    queryParams: GetReactionsData
+) extends NoParamsNiceResponseRequest[Seq[User]] {
   override def route: RequestRoute =
     Routes.getReactions(channelId, messageId, emoji, queryParams.before, queryParams.after, queryParams.limit)
 
   override def responseDecoder: Decoder[Seq[User]] = Decoder[Seq[User]]
 }
 object GetReactions {
-  def before[Ctx](
+  def before(
       channelId: ChannelId,
       messageId: MessageId,
       emoji: String,
       before: UserId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ): GetReactions[Ctx] =
-    new GetReactions(channelId, messageId, emoji, GetReactionsData(before = Some(before), limit = limit), context)
+      limit: Option[Int] = None
+  ): GetReactions =
+    new GetReactions(channelId, messageId, emoji, GetReactionsData(before = Some(before), limit = limit))
 
-  def after[Ctx](
+  def after(
       channelId: ChannelId,
       messageId: MessageId,
       emoji: String,
       after: UserId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ): GetReactions[Ctx] =
-    new GetReactions(channelId, messageId, emoji, GetReactionsData(after = Some(after), limit = limit), context)
+      limit: Option[Int] = None
+  ): GetReactions =
+    new GetReactions(channelId, messageId, emoji, GetReactionsData(after = Some(after), limit = limit))
 }
 
 /**
   * Clear all reactions from a message.
   */
-case class DeleteAllReactions[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class DeleteAllReactions(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteAllReactions(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -395,12 +386,11 @@ object EditMessageData {
 /**
   * Edit an existing message
   */
-case class EditMessage[Ctx](
+case class EditMessage(
     channelId: ChannelId,
     messageId: MessageId,
-    params: EditMessageData,
-    context: Ctx = NotUsed: NotUsed
-) extends RESTRequest[EditMessageData, RawMessage, Message, Ctx] {
+    params: EditMessageData
+) extends RESTRequest[EditMessageData, RawMessage, Message] {
   override def route: RequestRoute                     = Routes.editMessage(channelId, messageId)
   override def paramsEncoder: Encoder[EditMessageData] = EditMessageData.encoder
   override def jsonPrinter: Printer                    = Printer.noSpaces
@@ -409,37 +399,34 @@ case class EditMessage[Ctx](
   override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 object EditMessage {
-  def mkContent[Ctx](
+  def mkContent(
       channelId: ChannelId,
       messageId: MessageId,
-      content: String,
-      context: Ctx = NotUsed: NotUsed
-  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(JsonSome(content)), context)
+      content: String
+  ): EditMessage = new EditMessage(channelId, messageId, EditMessageData(JsonSome(content)))
 
-  def mkEmbed[Ctx](
+  def mkEmbed(
       channelId: ChannelId,
       messageId: MessageId,
-      embed: OutgoingEmbed,
-      context: Ctx = NotUsed: NotUsed
-  ): EditMessage[Ctx] = new EditMessage(channelId, messageId, EditMessageData(embed = JsonSome(embed)), context)
+      embed: OutgoingEmbed
+  ): EditMessage = new EditMessage(channelId, messageId, EditMessageData(embed = JsonSome(embed)))
 }
 
 /**
   * Delete a message
   */
-case class DeleteMessage[Ctx](
+case class DeleteMessage(
     channelId: ChannelId,
     messageId: MessageId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteMessage[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteMessage] {
   override def route: RequestRoute = Routes.deleteMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): DeleteMessage[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteMessage = copy(reason = Some(reason))
 }
 
 /**
@@ -455,11 +442,10 @@ case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
 /**
   * Delete multiple messages in a single request. Can only be used on guild channels.
   */
-case class BulkDeleteMessages[Ctx](
+case class BulkDeleteMessages(
     channelId: ChannelId,
-    params: BulkDeleteMessagesData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoResponseRequest[BulkDeleteMessagesData, Ctx] {
+    params: BulkDeleteMessagesData
+) extends NoResponseRequest[BulkDeleteMessagesData] {
   override def route: RequestRoute                            = Routes.bulkDeleteMessages(channelId)
   override def paramsEncoder: Encoder[BulkDeleteMessagesData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -468,11 +454,10 @@ case class BulkDeleteMessages[Ctx](
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 object BulkDeleteMessages {
-  def mk[Ctx](
+  def mk(
       channelId: ChannelId,
-      messages: Seq[MessageId],
-      context: Ctx = NotUsed: NotUsed
-  ): BulkDeleteMessages[Ctx] = new BulkDeleteMessages(channelId, BulkDeleteMessagesData(messages), context)
+      messages: Seq[MessageId]
+  ): BulkDeleteMessages = new BulkDeleteMessages(channelId, BulkDeleteMessagesData(messages))
 }
 
 /**
@@ -485,13 +470,12 @@ case class EditChannelPermissionsData(allow: Permission, deny: Permission, `type
 /**
   * Edit a permission overwrite for a channel.
   */
-case class EditChannelPermissions[Ctx](
+case class EditChannelPermissions(
     channelId: ChannelId,
     overwriteId: UserOrRoleId,
     params: EditChannelPermissionsData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoResponseReasonRequest[EditChannelPermissions[Ctx], EditChannelPermissionsData, Ctx] {
+) extends NoResponseReasonRequest[EditChannelPermissions, EditChannelPermissionsData] {
   override def route: RequestRoute = Routes.editChannelPermissions(channelId, overwriteId)
   override def paramsEncoder: Encoder[EditChannelPermissionsData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -500,41 +484,38 @@ case class EditChannelPermissions[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): EditChannelPermissions[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): EditChannelPermissions = copy(reason = Some(reason))
 }
 object EditChannelPermissions {
-  def mk[Ctx](
+  def mk(
       channelId: ChannelId,
       overwriteId: UserOrRoleId,
       allow: Permission,
       deny: Permission,
-      tpe: PermissionOverwriteType,
-      context: Ctx = NotUsed: NotUsed
-  ): EditChannelPermissions[Ctx] =
-    new EditChannelPermissions(channelId, overwriteId, EditChannelPermissionsData(allow, deny, tpe), context)
+      tpe: PermissionOverwriteType
+  ): EditChannelPermissions =
+    new EditChannelPermissions(channelId, overwriteId, EditChannelPermissionsData(allow, deny, tpe))
 }
 
 /**
   * Delete a permission overwrite for a channel.
   */
-case class DeleteChannelPermission[Ctx](
+case class DeleteChannelPermission(
     channelId: ChannelId,
     overwriteId: UserOrRoleId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteChannelPermission[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteChannelPermission] {
   override def route: RequestRoute = Routes.deleteChannelPermissions(channelId, overwriteId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
 
-  override def withReason(reason: String): DeleteChannelPermission[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteChannelPermission = copy(reason = Some(reason))
 }
 
 /**
   * Get all invites for this channel. Can only be used on guild channels.
   */
-case class GetChannelInvites[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata], Ctx] {
+case class GetChannelInvites(channelId: ChannelId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
   override def route: RequestRoute = Routes.getChannelInvites(channelId)
 
   override def responseDecoder: Decoder[Seq[InviteWithMetadata]] = Decoder[Seq[InviteWithMetadata]]
@@ -561,12 +542,11 @@ case class CreateChannelInviteData(
 /**
   * Create a new invite for a channel. Can only be used on guild channels.
   */
-case class CreateChannelInvite[Ctx](
+case class CreateChannelInvite(
     channelId: ChannelId,
     params: CreateChannelInviteData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoNiceResponseReasonRequest[CreateChannelInvite[Ctx], CreateChannelInviteData, Invite, Ctx] {
+) extends NoNiceResponseReasonRequest[CreateChannelInvite, CreateChannelInviteData, Invite] {
   override def route: RequestRoute                             = Routes.getChannelInvites(channelId)
   override def paramsEncoder: Encoder[CreateChannelInviteData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -576,33 +556,30 @@ case class CreateChannelInvite[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): CreateChannelInvite[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateChannelInvite = copy(reason = Some(reason))
 }
 object CreateChannelInvite {
-  def mk[Ctx](
+  def mk(
       channelId: ChannelId,
       maxAge: Int = 86400,
       maxUses: Int = 0,
       temporary: Boolean = false,
-      unique: Boolean = false,
-      context: Ctx = NotUsed: NotUsed
-  ): CreateChannelInvite[Ctx] =
-    new CreateChannelInvite(channelId, CreateChannelInviteData(maxAge, maxUses, temporary, unique), context)
+      unique: Boolean = false
+  ): CreateChannelInvite =
+    new CreateChannelInvite(channelId, CreateChannelInviteData(maxAge, maxUses, temporary, unique))
 }
 
 /**
   * Triggers a typing indicator in a channel.
   */
-case class TriggerTypingIndicator[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class TriggerTypingIndicator(channelId: ChannelId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.triggerTyping(channelId)
 }
 
 /**
   * Get all the pinned messages in a channel.
   */
-case class GetPinnedMessages[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[Seq[RawMessage], Seq[Message], Ctx] {
+case class GetPinnedMessages(channelId: ChannelId) extends NoParamsRequest[Seq[RawMessage], Seq[Message]] {
   override def route: RequestRoute = Routes.getPinnedMessage(channelId)
 
   override def responseDecoder: Decoder[Seq[RawMessage]]               = Decoder[Seq[RawMessage]]
@@ -612,8 +589,7 @@ case class GetPinnedMessages[Ctx](channelId: ChannelId, context: Ctx = NotUsed: 
 /**
   * Add a new pinned message to a channel.
   */
-case class AddPinnedChannelMessages[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class AddPinnedChannelMessages(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.addPinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -624,8 +600,7 @@ case class AddPinnedChannelMessages[Ctx](channelId: ChannelId, messageId: Messag
 /**
   * Delete a pinned message in a channel.
   */
-case class DeletePinnedChannelMessages[Ctx](channelId: ChannelId, messageId: MessageId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class DeletePinnedChannelMessages(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -635,13 +610,13 @@ case class DeletePinnedChannelMessages[Ctx](channelId: ChannelId, messageId: Mes
 
 /*
 case class GroupDMAddRecipientData(accessToken: String, nick: String)
-case class GroupDMAddRecipient[Ctx](channelId:       Snowflake, userId: Snowflake, params: GroupDMAddRecipientData, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[GroupDMAddRecipientData, Ctx] {
+case class GroupDMAddRecipient(channelId:       Snowflake, userId: Snowflake, params: GroupDMAddRecipientData)
+    extends RESTRequest[GroupDMAddRecipientData] {
   override def route:         RestRoute                        = Routes.groupDmAddRecipient(userId, channelId)
   override def paramsEncoder: Encoder[GroupDMAddRecipientData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 }
 
-case class GroupDMRemoveRecipient[Ctx](channelId: Snowflake, userId: Snowflake, context: Ctx = NotUsed: NotUsed) extends NoParamsRequest {
+case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) extends NoParamsRequest {
   override def route: RestRoute = Routes.groupDmRemoveRecipient(userId, channelId)
 }
  */
@@ -649,8 +624,7 @@ case class GroupDMRemoveRecipient[Ctx](channelId: Snowflake, userId: Snowflake, 
 /**
   * Get all the emojis for this guild.
   */
-case class ListGuildEmojis[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[NotUsed, Seq[RawEmoji], Seq[Emoji], Ctx] {
+case class ListGuildEmojis(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawEmoji], Seq[Emoji]] {
   override def route: RequestRoute             = Routes.listGuildEmojis(guildId)
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params: NotUsed                 = NotUsed
@@ -669,12 +643,11 @@ case class CreateGuildEmojiData(name: String, image: ImageData, roles: Seq[RoleI
 /**
   * Create a new emoji for a guild.
   */
-case class CreateGuildEmoji[Ctx](
+case class CreateGuildEmoji(
     guildId: GuildId,
     params: CreateGuildEmojiData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[CreateGuildEmoji[Ctx], CreateGuildEmojiData, RawEmoji, Emoji, Ctx] {
+) extends ReasonRequest[CreateGuildEmoji, CreateGuildEmojiData, RawEmoji, Emoji] {
   override def route: RequestRoute                          = Routes.createGuildEmoji(guildId)
   override def paramsEncoder: Encoder[CreateGuildEmojiData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -685,23 +658,21 @@ case class CreateGuildEmoji[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): CreateGuildEmoji[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateGuildEmoji = copy(reason = Some(reason))
 }
 object CreateGuildEmoji {
-  def mk[Ctx](
+  def mk(
       guildId: GuildId,
       name: String,
       image: ImageData,
-      roles: Seq[RoleId],
-      context: Ctx = NotUsed: NotUsed
-  ): CreateGuildEmoji[Ctx] = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image, roles), context)
+      roles: Seq[RoleId]
+  ): CreateGuildEmoji = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image, roles))
 }
 
 /**
   * Get an emoji in a guild by id.
   */
-case class GetGuildEmoji[Ctx](emojiId: EmojiId, guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[RawEmoji, Emoji, Ctx] {
+case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[RawEmoji, Emoji] {
   override def route: RequestRoute = Routes.getGuildEmoji(guildId, emojiId)
 
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
@@ -717,13 +688,12 @@ case class ModifyGuildEmojiData(name: String, roles: Seq[RoleId])
 /**
   * Modify an existing emoji.
   */
-case class ModifyGuildEmoji[Ctx](
+case class ModifyGuildEmoji(
     emojiId: EmojiId,
     guildId: GuildId,
     params: ModifyGuildEmojiData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuildEmoji[Ctx], ModifyGuildEmojiData, RawEmoji, Emoji, Ctx] {
+) extends ReasonRequest[ModifyGuildEmoji, ModifyGuildEmojiData, RawEmoji, Emoji] {
   override def route: RequestRoute                          = Routes.modifyGuildEmoji(guildId, emojiId)
   override def paramsEncoder: Encoder[ModifyGuildEmojiData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -734,32 +704,30 @@ case class ModifyGuildEmoji[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyGuildEmoji[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuildEmoji = copy(reason = Some(reason))
 }
 object ModifyGuildEmoji {
-  def mk[Ctx](
+  def mk(
       emojiId: EmojiId,
       guildId: GuildId,
       name: String,
-      roles: Seq[RoleId],
-      context: Ctx = NotUsed: NotUsed
-  ): ModifyGuildEmoji[Ctx] = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, roles), context)
+      roles: Seq[RoleId]
+  ): ModifyGuildEmoji = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, roles))
 }
 
 /**
   * Delete an emoji from a guild.
   */
-case class DeleteGuildEmoji[Ctx](
+case class DeleteGuildEmoji(
     emojiId: EmojiId,
     guildId: GuildId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteGuildEmoji[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteGuildEmoji] {
   override def route: RequestRoute = Routes.deleteGuildEmoji(guildId, emojiId)
 
   override def requiredPermissions: Permission = Permission.ManageEmojis
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): DeleteGuildEmoji[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteGuildEmoji = copy(reason = Some(reason))
 }

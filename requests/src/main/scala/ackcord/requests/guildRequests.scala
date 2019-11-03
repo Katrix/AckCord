@@ -60,8 +60,7 @@ case class CreateGuildData(
 /**
   * Create a new guild. Can only be used by bots in less than 10 guilds.
   */
-case class CreateGuild[Ctx](params: CreateGuildData, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[CreateGuildData, RawGuild, Option[Guild], Ctx] {
+case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildData, RawGuild, Option[Guild]] {
   override def route: RequestRoute = Routes.createGuild
   override def paramsEncoder: Encoder[CreateGuildData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -73,8 +72,7 @@ case class CreateGuild[Ctx](params: CreateGuildData, context: Ctx = NotUsed: Not
 /**
   * Get a guild by id.
   */
-case class GetGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[RawGuild, Option[Guild], Ctx] {
+case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild, Option[Guild]] {
   override def route: RequestRoute = Routes.getGuild(guildId)
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
@@ -111,12 +109,11 @@ case class ModifyGuildData(
 /**
   * Modify an existing guild.
   */
-case class ModifyGuild[Ctx](
+case class ModifyGuild(
     guildId: GuildId,
     params: ModifyGuildData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuild[Ctx], ModifyGuildData, RawGuild, Option[Guild], Ctx] {
+) extends ReasonRequest[ModifyGuild, ModifyGuildData, RawGuild, Option[Guild]] {
   override def route: RequestRoute                     = Routes.modifyGuild(guildId)
   override def paramsEncoder: Encoder[ModifyGuildData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -127,21 +124,20 @@ case class ModifyGuild[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyGuild[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuild = copy(reason = Some(reason))
 }
 
 /**
   * Delete a guild. Must be the owner.
   */
-case class DeleteGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) extends NoParamsResponseRequest[Ctx] {
+case class DeleteGuild(guildId: GuildId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteGuild(guildId)
 }
 
 /**
   * Get all the channels for a guild.
   */
-case class GetGuildChannels[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[Seq[RawChannel], Seq[Option[GuildChannel]], Ctx] {
+case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawChannel], Seq[Option[GuildChannel]]] {
   override def route: RequestRoute = Routes.getGuildChannels(guildId)
 
   override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
@@ -192,12 +188,11 @@ object CreateGuildChannelData {
 /**
   * Create a channel in a guild.
   */
-case class CreateGuildChannel[Ctx](
+case class CreateGuildChannel(
     guildId: GuildId,
     params: CreateGuildChannelData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[CreateGuildChannel[Ctx], CreateGuildChannelData, RawChannel, Option[GuildChannel], Ctx] {
+) extends ReasonRequest[CreateGuildChannel, CreateGuildChannelData, RawChannel, Option[GuildChannel]] {
   override def route: RequestRoute                            = Routes.createGuildChannel(guildId)
   override def paramsEncoder: Encoder[CreateGuildChannelData] = CreateGuildChannelData.encoder
 
@@ -210,7 +205,7 @@ case class CreateGuildChannel[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): CreateGuildChannel[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateGuildChannel = copy(reason = Some(reason))
 }
 
 /**
@@ -222,12 +217,11 @@ case class ModifyGuildChannelPositionsData(id: ChannelId, position: Int)
 /**
   * Modify the positions of several channels.
   */
-case class ModifyGuildChannelPositions[Ctx](
+case class ModifyGuildChannelPositions(
     guildId: GuildId,
     params: Seq[ModifyGuildChannelPositionsData],
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoResponseReasonRequest[ModifyGuildChannelPositions[Ctx], Seq[ModifyGuildChannelPositionsData], Ctx] {
+) extends NoResponseReasonRequest[ModifyGuildChannelPositions, Seq[ModifyGuildChannelPositionsData]] {
   override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
   override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
     implicit val enc: Encoder[ModifyGuildChannelPositionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -238,10 +232,10 @@ case class ModifyGuildChannelPositions[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyGuildChannelPositions[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuildChannelPositions = copy(reason = Some(reason))
 }
 
-trait GuildMemberRequest[Params, Ctx] extends RESTRequest[Params, RawGuildMember, GuildMember, Ctx] {
+trait GuildMemberRequest[Params] extends RESTRequest[Params, RawGuildMember, GuildMember] {
   def guildId: GuildId
 
   override def responseDecoder: Decoder[RawGuildMember]              = Decoder[RawGuildMember]
@@ -251,8 +245,7 @@ trait GuildMemberRequest[Params, Ctx] extends RESTRequest[Params, RawGuildMember
 /**
   * Get a guild member by id.
   */
-case class GetGuildMember[Ctx](guildId: GuildId, userId: UserId, context: Ctx = NotUsed: NotUsed)
-    extends GuildMemberRequest[NotUsed, Ctx] {
+case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberRequest[NotUsed] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params: NotUsed                 = NotUsed
   override def route: RequestRoute             = Routes.getGuildMember(guildId, userId)
@@ -267,8 +260,8 @@ case class ListGuildMembersData(limit: Option[Int] = None, after: Option[UserId]
 /**
   * Get all the guild members in this guild.
   */
-case class ListGuildMembers[Ctx](guildId: GuildId, queryParams: ListGuildMembersData, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[Seq[RawGuildMember], Seq[GuildMember], Ctx] {
+case class ListGuildMembers(guildId: GuildId, queryParams: ListGuildMembersData)
+    extends NoParamsRequest[Seq[RawGuildMember], Seq[GuildMember]] {
   override def route: RequestRoute = Routes.listGuildMembers(guildId, queryParams.limit, queryParams.after)
 
   override def responseDecoder: Decoder[Seq[RawGuildMember]] = Decoder[Seq[RawGuildMember]]
@@ -276,12 +269,11 @@ case class ListGuildMembers[Ctx](guildId: GuildId, queryParams: ListGuildMembers
     response.map(_.toGuildMember(guildId))
 }
 object ListGuildMembers {
-  def mk[Ctx](
+  def mk(
       guildId: GuildId,
       limit: Option[Int] = None,
-      after: Option[UserId] = None,
-      context: Ctx = NotUsed: NotUsed
-  ): ListGuildMembers[Ctx] = new ListGuildMembers(guildId, ListGuildMembersData(limit, after), context)
+      after: Option[UserId] = None
+  ): ListGuildMembers = new ListGuildMembers(guildId, ListGuildMembersData(limit, after))
 }
 
 /**
@@ -302,12 +294,11 @@ case class AddGuildMemberData(
 /**
   * Adds a user to a guild. Requires the `guilds.join` OAuth2 scope.
   */
-case class AddGuildMember[Ctx](
+case class AddGuildMember(
     guildId: GuildId,
     userId: UserId,
-    params: AddGuildMemberData,
-    context: Ctx = NotUsed: NotUsed
-) extends GuildMemberRequest[AddGuildMemberData, Ctx] {
+    params: AddGuildMemberData
+) extends GuildMemberRequest[AddGuildMemberData] {
   override def route: RequestRoute                        = Routes.addGuildMember(guildId, userId)
   override def paramsEncoder: Encoder[AddGuildMemberData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -355,13 +346,12 @@ object ModifyGuildMemberData {
 /**
   * Modify a guild member.
   */
-case class ModifyGuildMember[Ctx](
+case class ModifyGuildMember(
     guildId: GuildId,
     userId: UserId,
     params: ModifyGuildMemberData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoResponseReasonRequest[ModifyGuildMember[Ctx], ModifyGuildMemberData, Ctx] {
+) extends NoResponseReasonRequest[ModifyGuildMember, ModifyGuildMemberData] {
   override def jsonPrinter: Printer = Printer.noSpaces
 
   override def route: RequestRoute                           = Routes.modifyGuildMember(guildId, userId)
@@ -380,7 +370,7 @@ case class ModifyGuildMember[Ctx](
   }
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
-  override def withReason(reason: String): ModifyGuildMember[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuildMember = copy(reason = Some(reason))
 }
 
 case class ModifyBotUsersNickData(nick: String)
@@ -388,12 +378,11 @@ case class ModifyBotUsersNickData(nick: String)
 /**
   * Modify the clients nickname.
   */
-case class ModifyBotUsersNick[Ctx](
+case class ModifyBotUsersNick(
     guildId: GuildId,
     params: ModifyBotUsersNickData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoNiceResponseReasonRequest[ModifyBotUsersNick[Ctx], ModifyBotUsersNickData, String, Ctx] {
+) extends NoNiceResponseReasonRequest[ModifyBotUsersNick, ModifyBotUsersNickData, String] {
   override def route: RequestRoute                            = Routes.modifyCurrentNick(guildId)
   override def paramsEncoder: Encoder[ModifyBotUsersNickData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -403,18 +392,17 @@ case class ModifyBotUsersNick[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyBotUsersNick[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyBotUsersNick = copy(reason = Some(reason))
 }
 object ModifyBotUsersNick {
-  def mk[Ctx](guildId: GuildId, nick: String, context: Ctx = NotUsed: NotUsed): ModifyBotUsersNick[Ctx] =
-    new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick), context)
+  def mk(guildId: GuildId, nick: String): ModifyBotUsersNick =
+    new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick))
 }
 
 /**
   * Add a role to a guild member.
   */
-case class AddGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: RoleId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.addGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
@@ -425,8 +413,7 @@ case class AddGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: Rol
 /**
   * Remove a role from a guild member.
   */
-case class RemoveGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: RoleId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.removeGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
@@ -437,26 +424,24 @@ case class RemoveGuildMemberRole[Ctx](guildId: GuildId, userId: UserId, roleId: 
 /**
   * Kicks a guild member.
   */
-case class RemoveGuildMember[Ctx](
+case class RemoveGuildMember(
     guildId: GuildId,
     userId: UserId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[RemoveGuildMember[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[RemoveGuildMember] {
   override def route: RequestRoute = Routes.removeGuildMember(guildId, userId)
 
   override def requiredPermissions: Permission = Permission.KickMembers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): RemoveGuildMember[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): RemoveGuildMember = copy(reason = Some(reason))
 }
 
 /**
   * Get all the bans for this guild.
   */
-case class GetGuildBans[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[Seq[RawBan], Seq[Ban], Ctx] {
+case class GetGuildBans(guildId: GuildId) extends NoParamsRequest[Seq[RawBan], Seq[Ban]] {
   override def route: RequestRoute = Routes.getGuildBans(guildId)
 
   override def responseDecoder: Decoder[Seq[RawBan]]           = Decoder[Seq[RawBan]]
@@ -470,8 +455,7 @@ case class GetGuildBans[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
 /**
   * Get the ban object for a specific member in a guild.
   */
-case class GetGuildBan[Ctx](guildId: GuildId, userId: UserId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsRequest[RawBan, Ban, Ctx] {
+case class GetGuildBan(guildId: GuildId, userId: UserId) extends NoParamsRequest[RawBan, Ban] {
   override def route: RequestRoute = Routes.getGuildBan(guildId, userId)
 
   override def responseDecoder: Decoder[RawBan]      = Decoder[RawBan]
@@ -492,13 +476,12 @@ case class CreateGuildBanData(deleteMessageDays: Option[Int], reason: Option[Str
 /**
   * Ban a user from a guild.
   */
-case class CreateGuildBan[Ctx](
+case class CreateGuildBan(
     guildId: GuildId,
     userId: UserId,
     queryParams: CreateGuildBanData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[CreateGuildBan[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[CreateGuildBan] {
   override def route: RequestRoute =
     Routes.createGuildMemberBan(guildId, userId, queryParams.deleteMessageDays, queryParams.reason)
 
@@ -506,41 +489,38 @@ case class CreateGuildBan[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): CreateGuildBan[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateGuildBan = copy(reason = Some(reason))
 }
 object CreateGuildBan {
-  def mk[Ctx](
+  def mk(
       guildId: GuildId,
       userId: UserId,
       deleteMessageDays: Option[Int],
-      reason: Option[String],
-      context: Ctx = NotUsed: NotUsed
-  ): CreateGuildBan[Ctx] = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays, reason), context)
+      reason: Option[String]
+  ): CreateGuildBan = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays, reason))
 }
 
 /**
   * Unban a user from a guild.
   */
-case class RemoveGuildBan[Ctx](
+case class RemoveGuildBan(
     guildId: GuildId,
     userId: UserId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[RemoveGuildBan[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[RemoveGuildBan] {
   override def route: RequestRoute = Routes.removeGuildMemberBan(guildId, userId)
 
   override def requiredPermissions: Permission = Permission.BanMembers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): RemoveGuildBan[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): RemoveGuildBan = copy(reason = Some(reason))
 }
 
 /**
   * Get all the roles in a guild.
   */
-case class GetGuildRoles[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[NotUsed, Seq[RawRole], Seq[Role], Ctx] {
+case class GetGuildRoles(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawRole], Seq[Role]] {
   override def route: RequestRoute             = Routes.getGuildRole(guildId)
   override def params: NotUsed                 = NotUsed
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
@@ -568,12 +548,11 @@ case class CreateGuildRoleData(
 /**
   * Create a new role in a guild.
   */
-case class CreateGuildRole[Ctx](
+case class CreateGuildRole(
     guildId: GuildId,
     params: CreateGuildRoleData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[CreateGuildRole[Ctx], CreateGuildRoleData, RawRole, Role, Ctx] {
+) extends ReasonRequest[CreateGuildRole, CreateGuildRoleData, RawRole, Role] {
   override def route: RequestRoute                         = Routes.createGuildRole(guildId)
   override def paramsEncoder: Encoder[CreateGuildRoleData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -585,7 +564,7 @@ case class CreateGuildRole[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): CreateGuildRole[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateGuildRole = copy(reason = Some(reason))
 }
 
 /**
@@ -597,12 +576,11 @@ case class ModifyGuildRolePositionsData(id: RoleId, position: Int)
 /**
   * Modify the positions of several roles.
   */
-case class ModifyGuildRolePositions[Ctx](
+case class ModifyGuildRolePositions(
     guildId: GuildId,
     params: Seq[ModifyGuildRolePositionsData],
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuildRolePositions[Ctx], Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[Role], Ctx] {
+) extends ReasonRequest[ModifyGuildRolePositions, Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[Role]] {
   override def route: RequestRoute = Routes.modifyGuildRolePositions(guildId)
   override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
     implicit val enc: Encoder[ModifyGuildRolePositionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -616,7 +594,7 @@ case class ModifyGuildRolePositions[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyGuildRolePositions[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuildRolePositions = copy(reason = Some(reason))
 }
 
 /**
@@ -637,13 +615,12 @@ case class ModifyGuildRoleData(
 /**
   * Modify a role.
   */
-case class ModifyGuildRole[Ctx](
+case class ModifyGuildRole(
     guildId: GuildId,
     roleId: RoleId,
     params: ModifyGuildRoleData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuildRole[Ctx], ModifyGuildRoleData, RawRole, Role, Ctx] {
+) extends ReasonRequest[ModifyGuildRole, ModifyGuildRoleData, RawRole, Role] {
   override def route: RequestRoute                         = Routes.modifyGuildRole(guildId, roleId)
   override def paramsEncoder: Encoder[ModifyGuildRoleData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -654,25 +631,24 @@ case class ModifyGuildRole[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): ModifyGuildRole[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyGuildRole = copy(reason = Some(reason))
 }
 
 /**
   * Delete a role in a guild.
   */
-case class DeleteGuildRole[Ctx](
+case class DeleteGuildRole(
     guildId: GuildId,
     roleId: RoleId,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteGuildRole[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteGuildRole] {
   override def route: RequestRoute = Routes.deleteGuildRole(guildId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): DeleteGuildRole[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteGuildRole = copy(reason = Some(reason))
 }
 
 /**
@@ -690,8 +666,8 @@ case class GuildPruneCountResponse(pruned: Int)
 /**
   * Check how many members would be removed if a prune was started now.
   */
-case class GetGuildPruneCount[Ctx](guildId: GuildId, queryParams: GuildPruneCountData, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[GuildPruneCountResponse, Ctx] {
+case class GetGuildPruneCount(guildId: GuildId, queryParams: GuildPruneCountData)
+    extends NoParamsNiceResponseRequest[GuildPruneCountResponse] {
   override def route: RequestRoute = Routes.getGuildPruneCount(guildId, Some(queryParams.days))
 
   override def requiredPermissions: Permission = Permission.KickMembers
@@ -702,8 +678,8 @@ case class GetGuildPruneCount[Ctx](guildId: GuildId, queryParams: GuildPruneCoun
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object GetGuildPruneCount {
-  def mk[Ctx](guildId: GuildId, days: Int, context: Ctx = NotUsed: NotUsed): GetGuildPruneCount[Ctx] =
-    new GetGuildPruneCount(guildId, GuildPruneCountData(days), context)
+  def mk(guildId: GuildId, days: Int): GetGuildPruneCount =
+    new GetGuildPruneCount(guildId, GuildPruneCountData(days))
 }
 
 /**
@@ -720,13 +696,12 @@ case class BeginGuildPruneResponse(pruned: Option[Int])
 /**
   * Begin a guild prune.
   */
-case class BeginGuildPrune[Ctx](
+case class BeginGuildPrune(
     guildId: GuildId,
     queryParams: BeginGuildPruneData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsNiceResponseRequest[BeginGuildPruneResponse, Ctx]
-    with NoParamsNiceResponseReasonRequest[BeginGuildPrune[Ctx], BeginGuildPruneResponse, Ctx] {
+) extends NoParamsNiceResponseRequest[BeginGuildPruneResponse]
+    with NoParamsNiceResponseReasonRequest[BeginGuildPrune, BeginGuildPruneResponse] {
   override def route: RequestRoute =
     Routes.beginGuildPrune(guildId, Some(queryParams.days), queryParams.computePruneCount)
 
@@ -734,26 +709,24 @@ case class BeginGuildPrune[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
-  override def withReason(reason: String): BeginGuildPrune[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): BeginGuildPrune = copy(reason = Some(reason))
 
   override def responseDecoder: Decoder[BeginGuildPruneResponse] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 }
 object BeginGuildPrune {
-  def mk[Ctx](
+  def mk(
       guildId: GuildId,
       days: Int,
-      computePruneCount: Boolean = true,
-      context: Ctx = NotUsed: NotUsed
-  ): BeginGuildPrune[Ctx] =
-    new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount)), context)
+      computePruneCount: Boolean = true
+  ): BeginGuildPrune =
+    new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount)))
 }
 
 /**
   * Get the voice regions for this guild.
   */
-case class GetGuildVoiceRegions[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[VoiceRegion], Ctx] {
+case class GetGuildVoiceRegions(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
   override def route: RequestRoute = Routes.getGuildVoiceRegions(guildId)
 
   override def responseDecoder: Decoder[Seq[VoiceRegion]] = Decoder[Seq[VoiceRegion]]
@@ -762,8 +735,7 @@ case class GetGuildVoiceRegions[Ctx](guildId: GuildId, context: Ctx = NotUsed: N
 /**
   * Get the invites for this guild.
   */
-case class GetGuildInvites[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata], Ctx] {
+case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
   override def route: RequestRoute = Routes.getGuildInvites(guildId)
 
   override def responseDecoder: Decoder[Seq[InviteWithMetadata]] = Decoder[Seq[InviteWithMetadata]]
@@ -776,8 +748,7 @@ case class GetGuildInvites[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUse
 /**
   * Get the integrations for this guild.
   */
-case class GetGuildIntegrations[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[Integration], Ctx] {
+case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Integration]] {
   override def route: RequestRoute = Routes.getGuildIntegrations(guildId)
 
   override def responseDecoder: Decoder[Seq[Integration]] = Decoder[Seq[Integration]]
@@ -796,11 +767,10 @@ case class CreateGuildIntegrationData(`type`: String /*TODO: Enum here*/, id: In
 /**
   * Attach an integration to a guild.
   */
-case class CreateGuildIntegration[Ctx](
+case class CreateGuildIntegration(
     guildId: GuildId,
-    params: CreateGuildIntegrationData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoResponseRequest[CreateGuildIntegrationData, Ctx] {
+    params: CreateGuildIntegrationData
+) extends NoResponseRequest[CreateGuildIntegrationData] {
   override def route: RequestRoute = Routes.createGuildIntegrations(guildId)
   override def paramsEncoder: Encoder[CreateGuildIntegrationData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -825,12 +795,11 @@ case class ModifyGuildIntegrationData(
 /**
   * Modify an existing integration for a guild.
   */
-case class ModifyGuildIntegration[Ctx](
+case class ModifyGuildIntegration(
     guildId: GuildId,
     integrationId: IntegrationId,
-    params: ModifyGuildIntegrationData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoResponseRequest[ModifyGuildIntegrationData, Ctx] {
+    params: ModifyGuildIntegrationData
+) extends NoResponseRequest[ModifyGuildIntegrationData] {
   override def route: RequestRoute = Routes.modifyGuildIntegration(guildId, integrationId)
   override def paramsEncoder: Encoder[ModifyGuildIntegrationData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase)
@@ -843,8 +812,7 @@ case class ModifyGuildIntegration[Ctx](
 /**
   * Delete an integration.
   */
-case class DeleteGuildIntegration[Ctx](guildId: GuildId, integrationId: IntegrationId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
@@ -855,8 +823,7 @@ case class DeleteGuildIntegration[Ctx](guildId: GuildId, integrationId: Integrat
 /**
   * Sync an integration.
   */
-case class SyncGuildIntegration[Ctx](guildId: GuildId, integrationId: IntegrationId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsResponseRequest[Ctx] {
+case class SyncGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.syncGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
@@ -867,8 +834,7 @@ case class SyncGuildIntegration[Ctx](guildId: GuildId, integrationId: Integratio
 /**
   * Get the guild embed for a guild.
   */
-case class GetGuildEmbed[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[GuildEmbed, Ctx] {
+case class GetGuildEmbed(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildEmbed] {
   override def route: RequestRoute = Routes.getGuildEmbed(guildId)
 
   override def responseDecoder: Decoder[GuildEmbed] = Decoder[GuildEmbed]
@@ -881,8 +847,8 @@ case class GetGuildEmbed[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
 /**
   * Modify a guild embed for a guild.
   */
-case class ModifyGuildEmbed[Ctx](guildId: GuildId, params: GuildEmbed, context: Ctx = NotUsed: NotUsed)
-    extends NoNiceResponseRequest[GuildEmbed, GuildEmbed, Ctx] {
+case class ModifyGuildEmbed(guildId: GuildId, params: GuildEmbed)
+    extends NoNiceResponseRequest[GuildEmbed, GuildEmbed] {
   override def route: RequestRoute                = Routes.modifyGuildEmbed(guildId)
   override def paramsEncoder: Encoder[GuildEmbed] = Encoder[GuildEmbed]
 
@@ -898,8 +864,7 @@ case class VanityUrlResponse(code: String)
 /**
   * Get a partial invite object for guilds with that feature enabled.
   */
-case class GetGuildVanityUrl[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[VanityUrlResponse, Ctx] {
+case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseRequest[VanityUrlResponse] {
   override def route: RequestRoute = Routes.getGuildVanityUrl(guildId)
 
   override def responseDecoder: Decoder[VanityUrlResponse] = derivation.deriveDecoder(derivation.renaming.snakeCase)
@@ -914,8 +879,7 @@ case class GetGuildVanityUrl[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotU
   * @param withCounts If the returned invite object should return approximate
   *                   counts for members and people online.
   */
-case class GetInvite[Ctx](inviteCode: String, withCounts: Boolean = false, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Invite, Ctx] {
+case class GetInvite(inviteCode: String, withCounts: Boolean = false) extends NoParamsNiceResponseRequest[Invite] {
   override def route: RequestRoute = {
     val raw = Routes.getInvite(inviteCode)
     raw.copy(uri = raw.uri.withQuery(Uri.Query("with_counts" -> withCounts.toString)))
@@ -927,8 +891,8 @@ case class GetInvite[Ctx](inviteCode: String, withCounts: Boolean = false, conte
 /**
   * Delete an invite.
   */
-case class DeleteInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed, reason: Option[String] = None)
-    extends NoParamsNiceResponseReasonRequest[DeleteInvite[Ctx], Invite, Ctx] {
+case class DeleteInvite(inviteCode: String, reason: Option[String] = None)
+    extends NoParamsNiceResponseReasonRequest[DeleteInvite, Invite] {
   override def route: RequestRoute = Routes.deleteInvite(inviteCode)
 
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
@@ -939,13 +903,13 @@ case class DeleteInvite[Ctx](inviteCode: String, context: Ctx = NotUsed: NotUsed
   //We don't track invites, so we'll have to stay optimistic with this one too
   override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 
-  override def withReason(reason: String): DeleteInvite[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteInvite = copy(reason = Some(reason))
 }
 
 /**
   * Fetch the client user.
   */
-case class GetCurrentUser[Ctx](context: Ctx = NotUsed: NotUsed) extends NoParamsNiceResponseRequest[User, Ctx] {
+case object GetCurrentUser extends NoParamsNiceResponseRequest[User] {
   override def route: RequestRoute = Routes.getCurrentUser
 
   override def responseDecoder: Decoder[User] = Decoder[User]
@@ -954,8 +918,7 @@ case class GetCurrentUser[Ctx](context: Ctx = NotUsed: NotUsed) extends NoParams
 /**
   * Get a user by id.
   */
-case class GetUser[Ctx](userId: UserId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[User, Ctx] {
+case class GetUser(userId: UserId) extends NoParamsNiceResponseRequest[User] {
   override def route: RequestRoute = Routes.getUser(userId)
 
   override def responseDecoder: Decoder[User] = Decoder[User]
@@ -977,8 +940,8 @@ case class GetCurrentUserGuildsData(
 /**
   * Get the guilds the client user is in.
   */
-case class GetCurrentUserGuilds[Ctx](queryParams: GetCurrentUserGuildsData, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[GetUserGuildsGuild], Ctx] {
+case class GetCurrentUserGuilds(queryParams: GetCurrentUserGuildsData)
+    extends NoParamsNiceResponseRequest[Seq[GetUserGuildsGuild]] {
   override def route: RequestRoute =
     Routes.getCurrentUserGuilds(queryParams.before, queryParams.after, queryParams.limit)
 
@@ -988,25 +951,23 @@ case class GetCurrentUserGuilds[Ctx](queryParams: GetCurrentUserGuildsData, cont
   }
 }
 object GetCurrentUserGuilds {
-  def before[Ctx](
+  def before(
       before: GuildId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ): GetCurrentUserGuilds[Ctx] =
-    new GetCurrentUserGuilds(GetCurrentUserGuildsData(before = Some(before), limit = limit), context)
+      limit: Option[Int] = None
+  ): GetCurrentUserGuilds =
+    new GetCurrentUserGuilds(GetCurrentUserGuildsData(before = Some(before), limit = limit))
 
-  def after[Ctx](
+  def after(
       after: GuildId,
-      limit: Option[Int] = None,
-      context: Ctx = NotUsed: NotUsed
-  ): GetCurrentUserGuilds[Ctx] =
-    new GetCurrentUserGuilds(GetCurrentUserGuildsData(after = Some(after), limit = limit), context)
+      limit: Option[Int] = None
+  ): GetCurrentUserGuilds =
+    new GetCurrentUserGuilds(GetCurrentUserGuildsData(after = Some(after), limit = limit))
 }
 
 /**
   * Leave a guild.
   */
-case class LeaveGuild[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed) extends NoParamsResponseRequest[Ctx] {
+case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.leaveGuild(guildId)
 }
 
@@ -1018,8 +979,7 @@ case class CreateDMData(recipientId: UserId)
 /**
   * Create a new DM channel.
   */
-case class CreateDm[Ctx](params: CreateDMData, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[CreateDMData, RawChannel, Option[DMChannel], Ctx] {
+case class CreateDm(params: CreateDMData) extends RESTRequest[CreateDMData, RawChannel, Option[DMChannel]] {
   override def route: RequestRoute                  = Routes.createDM
   override def paramsEncoder: Encoder[CreateDMData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -1028,7 +988,7 @@ case class CreateDm[Ctx](params: CreateDMData, context: Ctx = NotUsed: NotUsed)
     response.toChannel.collect { case dmChannel: DMChannel => dmChannel }
 }
 object CreateDm {
-  def mk[Ctx](to: UserId, context: Ctx = NotUsed: NotUsed): CreateDm[Ctx] = new CreateDm(CreateDMData(to), context)
+  def mk(to: UserId): CreateDm = new CreateDm(CreateDMData(to))
 }
 
 /**
@@ -1042,8 +1002,8 @@ case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User
   * Create a group DM. By default the client is limited to 10 active group DMs.
   */
 @deprecated("Deprecated by Discord", since = "0.13")
-case class CreateGroupDm[Ctx](params: CreateGroupDMData, context: Ctx = NotUsed: NotUsed)
-    extends RESTRequest[CreateGroupDMData, RawChannel, Option[GroupDMChannel], Ctx] {
+case class CreateGroupDm(params: CreateGroupDMData)
+    extends RESTRequest[CreateGroupDMData, RawChannel, Option[GroupDMChannel]] {
   override def route: RequestRoute = Routes.createDM
   override def paramsEncoder: Encoder[CreateGroupDMData] = (data: CreateGroupDMData) => {
     Json
@@ -1058,8 +1018,7 @@ case class CreateGroupDm[Ctx](params: CreateGroupDMData, context: Ctx = NotUsed:
 /**
   * Get a list of connection objects. Requires the `connection` OAuth2 scope.
   */
-case class GetUserConnections[Ctx](context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[Connection], Ctx] {
+case object GetUserConnections extends NoParamsNiceResponseRequest[Seq[Connection]] {
   override def route: RequestRoute = Routes.getUserConnections
 
   override def responseDecoder: Decoder[Seq[Connection]] = Decoder[Seq[Connection]]

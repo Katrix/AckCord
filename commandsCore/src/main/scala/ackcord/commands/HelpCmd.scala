@@ -34,9 +34,9 @@ import ackcord.data.Message
 import ackcord.data.raw.RawMessage
 import ackcord.requests.{CreateMessage, CreateMessageData, Request}
 import ackcord.syntax._
+import akka.Done
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
-import akka.{Done, NotUsed}
 import cats.syntax.all._
 
 abstract class HelpCmd[Command](ctx: ActorContext[Command]) extends AbstractBehavior[Command](ctx) {
@@ -129,7 +129,7 @@ abstract class HelpCmd[Command](ctx: ActorContext[Command]) extends AbstractBeha
   /**
     * Send a request, and acks the sender.
     */
-  def sendMessageAndAck(sender: ActorRef[Ack.type], request: Request[RawMessage, NotUsed]): Unit
+  def sendMessageAndAck(sender: ActorRef[Ack.type], request: Request[RawMessage]): Unit
 
   /**
     * Create a reply for a search result

@@ -26,7 +26,6 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import akka.NotUsed
 import io.circe._
 
 /**
@@ -40,12 +39,11 @@ case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
 /**
   * Create a new webhook in a channel.
   */
-case class CreateWebhook[Ctx](
+case class CreateWebhook(
     channelId: ChannelId,
     params: CreateWebhookData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoNiceResponseReasonRequest[CreateWebhook[Ctx], CreateWebhookData, Webhook, Ctx] {
+) extends NoNiceResponseReasonRequest[CreateWebhook, CreateWebhookData, Webhook] {
   override def route: RequestRoute                       = Routes.createWebhook(channelId)
   override def paramsEncoder: Encoder[CreateWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
@@ -55,14 +53,14 @@ case class CreateWebhook[Ctx](
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
 
-  override def withReason(reason: String): CreateWebhook[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): CreateWebhook = copy(reason = Some(reason))
 }
 
 /**
   * Get the webhooks in a channel.
   */
-case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
+case class GetChannelWebhooks(channelId: ChannelId)
+    extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -75,8 +73,8 @@ case class GetChannelWebhooks[Ctx](channelId: ChannelId, context: Ctx = NotUsed:
 /**
   * Get the webhooks in a guild.
   */
-case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Seq[Webhook], Ctx] {
+case class GetGuildWebhooks(guildId: GuildId)
+    extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getGuildWebhooks(guildId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -89,8 +87,8 @@ case class GetGuildWebhooks[Ctx](guildId: GuildId, context: Ctx = NotUsed: NotUs
 /**
   * Get a webhook by id.
   */
-case class GetWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Webhook, Ctx] {
+case class GetWebhook(id: SnowflakeType[Webhook])
+    extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhook(id)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -101,8 +99,8 @@ case class GetWebhook[Ctx](id: SnowflakeType[Webhook], context: Ctx = NotUsed: N
 /**
   * Get a webhook by id with a token. Doesn't require authentication.
   */
-case class GetWebhookWithToken[Ctx](id: SnowflakeType[Webhook], token: String, context: Ctx = NotUsed: NotUsed)
-    extends NoParamsNiceResponseRequest[Webhook, Ctx] {
+case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String)
+    extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
@@ -124,31 +122,29 @@ case class ModifyWebhookData(
 /**
   * Modify a webhook.
   */
-case class ModifyWebhook[Ctx](
+case class ModifyWebhook(
     id: SnowflakeType[Webhook],
     params: ModifyWebhookData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoNiceResponseReasonRequest[ModifyWebhook[Ctx], ModifyWebhookData, Webhook, Ctx] {
+) extends NoNiceResponseReasonRequest[ModifyWebhook, ModifyWebhookData, Webhook] {
   override def route: RequestRoute                       = Routes.getWebhook(id)
   override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
-  override def requiredPermissions: Permission                = Permission.ManageWebhooks
-  override def withReason(reason: String): ModifyWebhook[Ctx] = copy(reason = Some(reason))
+  override def requiredPermissions: Permission           = Permission.ManageWebhooks
+  override def withReason(reason: String): ModifyWebhook = copy(reason = Some(reason))
 }
 
 /**
   * Modify a webhook with a token. Doesn't require authentication
   */
-case class ModifyWebhookWithToken[Ctx](
+case class ModifyWebhookWithToken(
     id: SnowflakeType[Webhook],
     token: String,
     params: ModifyWebhookData,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoNiceResponseReasonRequest[ModifyWebhookWithToken[Ctx], ModifyWebhookData, Webhook, Ctx] {
+) extends NoNiceResponseReasonRequest[ModifyWebhookWithToken, ModifyWebhookData, Webhook] {
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
@@ -157,43 +153,41 @@ case class ModifyWebhookWithToken[Ctx](
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 
-  override def withReason(reason: String): ModifyWebhookWithToken[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): ModifyWebhookWithToken = copy(reason = Some(reason))
 }
 
 /**
   * Delete a webhook.
   */
-case class DeleteWebhook[Ctx](
+case class DeleteWebhook(
     id: SnowflakeType[Webhook],
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteWebhook[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteWebhook] {
   override def route: RequestRoute = Routes.deleteWebhook(id)
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 
-  override def withReason(reason: String): DeleteWebhook[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteWebhook = copy(reason = Some(reason))
 }
 
 /**
   * Delete a webhook with a token. Doesn't require authentication
   */
-case class DeleteWebhookWithToken[Ctx](
+case class DeleteWebhookWithToken(
     id: SnowflakeType[Webhook],
     token: String,
-    context: Ctx = NotUsed: NotUsed,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[DeleteWebhookWithToken[Ctx], Ctx] {
+) extends NoParamsResponseReasonRequest[DeleteWebhookWithToken] {
   override def route: RequestRoute = Routes.deleteWebhookWithToken(id, token)
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 
-  override def withReason(reason: String): DeleteWebhookWithToken[Ctx] = copy(reason = Some(reason))
+  override def withReason(reason: String): DeleteWebhookWithToken = copy(reason = Some(reason))
 }
 
 /*
 TODO
-case class ExecuteWebhook[Ctx](id: Snowflake, token: String, params: Nothing, context: Ctx = NotUsed: NotUsed) extends SimpleRESTRequest[Nothing, Nothing, Ctx] {
+case class ExecuteWebhook(id: Snowflake, token: String, params: Nothing) extends SimpleRESTRequest[Nothing, Nothing] {
   override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
 }
  */

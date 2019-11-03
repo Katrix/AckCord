@@ -45,7 +45,7 @@ object CmdHelper {
       val in          = builder.add(Flow[A])
       val broadcast   = builder.add(Broadcast[A](2))
       val mkWrapper   = builder.add(sendCmdErrorMsg[A])
-      val requestSink = builder.add(requests.sinkIgnore[RawMessage, NotUsed])
+      val requestSink = builder.add(requests.sinkIgnore[RawMessage])
 
       // format: OFF
 
@@ -81,7 +81,7 @@ object CmdHelper {
   /**
     * A flow which will send error messages as messages.
     */
-  def sendCmdErrorMsg[A <: AllCmdMessages]: Flow[A, Request[RawMessage, NotUsed], NotUsed] =
+  def sendCmdErrorMsg[A <: AllCmdMessages]: Flow[A, Request[RawMessage], NotUsed] =
     Flow[A]
       .collect {
         case filtered: FilteredCmd =>
@@ -91,7 +91,7 @@ object CmdHelper {
 
           if (errors.nonEmpty) {
             filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
-          } else None: Option[CreateMessage[NotUsed]]
+          } else None: Option[CreateMessage]
         case parseError: CmdParseError =>
           parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
         case error: GenericCmdError =>

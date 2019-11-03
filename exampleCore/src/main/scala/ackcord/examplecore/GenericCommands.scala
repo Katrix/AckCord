@@ -77,17 +77,16 @@ object GenericCommands {
       //Using the context
       ParsedCmdFlow[GuildChannel]
         .map { implicit c => cmd =>
-          GetChannel(cmd.args.id, context = GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
+          GetChannel(cmd.args.id) -> GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c)
         }
         .via(requests.flow)
-        .mapConcat { answer =>
-          val ctx                           = answer.context
+        .mapConcat { case (answer, ctx) =>
           implicit val cache: CacheSnapshot = ctx.c
           val content = answer match {
-            case response: RequestResponse[RawChannel, GetChannelInfo] =>
+            case response: RequestResponse[RawChannel] =>
               val data = response.data
               s"Info for ${data.name}:\n$data"
-            case _: FailedRequest[_] => "Error encountered"
+            case _: FailedRequest => "Error encountered"
           }
 
           ctx.senderChannelId.tResolve(ctx.guildId).map(_.sendMessage(content)).toList
@@ -138,7 +137,7 @@ object GenericCommands {
   def RatelimitTestCmdFactory(
       name: String,
       aliases: Seq[String],
-      sink: Sink[Request[RawMessage, NotUsed], Future[Done]]
+      sink: Sink[Request[RawMessage], Future[Done]]
   ): ParsedCmdFactory[Int, NotUsed] =
     ParsedCmdFactory[Int, NotUsed](
       refiner = CmdInfo(prefix = "!", aliases = aliases),

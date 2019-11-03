@@ -29,7 +29,6 @@ import scala.concurrent.Future
 import ackcord.data.raw.PartialUser
 import ackcord.data.{GuildId, RawSnowflake, Team}
 import ackcord.data.DiscordProtocol._
-import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
@@ -253,8 +252,7 @@ object OAuth {
       coverImage: Option[String]
   )
 
-  case class GetCurrentApplicationInformation[Ctx](context: Ctx = NotUsed: NotUsed)
-      extends NoParamsNiceResponseRequest[ApplicationInformation, Ctx] {
+  case object GetCurrentApplicationInformation extends NoParamsNiceResponseRequest[ApplicationInformation] {
     override def responseDecoder: Decoder[ApplicationInformation] =
       derivation.deriveDecoder(derivation.renaming.snakeCase)
     override def route: RequestRoute = Routes.getCurrentApplication

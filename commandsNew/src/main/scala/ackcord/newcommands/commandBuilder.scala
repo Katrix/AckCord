@@ -221,7 +221,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
     * @tparam G The streamable result type.
     */
   def asyncOptRequest[G[_]](
-      block: M[A] => OptionT[G, Request[Any, Any]]
+      block: M[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
 
@@ -229,14 +229,14 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
     * Creates a command that will do a single request
     * @param block The execution of the command.
     */
-  def withRequest(block: M[A] => Request[Any, Any]): ComplexCommand[A, NotUsed] =
+  def withRequest(block: M[A] => Request[Any]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].map(block).to(requests.sinkIgnore))
 
   /**
     * Creates a command that might do a single request
     * @param block The execution of the command.
     */
-  def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): ComplexCommand[A, NotUsed] =
+  def withRequestOpt(block: M[A] => Option[Request[Any]]): ComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
 
   /**
@@ -463,14 +463,14 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
     streamed(Flow[M[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
 
   override def asyncOptRequest[G[_]](
-      block: M[A] => OptionT[G, Request[Any, Any]]
+      block: M[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
 
-  override def withRequest(block: M[A] => Request[Any, Any]): NamedComplexCommand[A, NotUsed] =
+  override def withRequest(block: M[A] => Request[Any]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].map(block).to(requests.sinkIgnore))
 
-  override def withRequestOpt(block: M[A] => Option[Request[Any, Any]]): NamedComplexCommand[A, NotUsed] =
+  override def withRequestOpt(block: M[A] => Option[Request[Any]]): NamedComplexCommand[A, NotUsed] =
     streamed(Flow[M[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
 
   override def withSideEffects(block: M[A] => Unit): NamedComplexCommand[A, NotUsed] =

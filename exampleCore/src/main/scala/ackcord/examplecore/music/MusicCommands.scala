@@ -53,7 +53,7 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Comman
         for {
           guild   <- optionPure(guildId.resolve)
           channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
-          _ <- liftOptionT[Future, CreateMessage[NotUsed]] {
+          _ <- liftOptionT[Future, CreateMessage] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
               case Some(vs) if vs.channelId.isDefined =>
                 musicHandler

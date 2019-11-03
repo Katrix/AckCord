@@ -38,9 +38,9 @@ import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
 
 trait RequestRunner[F[_]] {
 
-  def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): F[A]
+  def run[A](request: Request[A])(implicit c: CacheSnapshot): F[A]
 
-  def runMany[A](requests: immutable.Seq[Request[A, NotUsed]])(implicit c: CacheSnapshot): F[A]
+  def runMany[A](requests: immutable.Seq[Request[A]])(implicit c: CacheSnapshot): F[A]
 
   def fromSource[A](source: Source[A, NotUsed]): F[A]
 
@@ -52,7 +52,7 @@ trait RequestRunner[F[_]] {
 
   def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(F.pure)
 
-  def runOption[A](opt: Option[Request[A, NotUsed]])(implicit F: Alternative[F], c: CacheSnapshot): F[A] =
+  def runOption[A](opt: Option[Request[A]])(implicit F: Alternative[F], c: CacheSnapshot): F[A] =
     opt.fold(F.empty[A])(run[A])
 
   def liftStreamable[H[_], A](ga: H[A])(implicit streamable: Streamable[H]): F[A] = fromSource(streamable.toSource(ga))
@@ -64,14 +64,14 @@ trait RequestRunner[F[_]] {
     G.foldLeft(ga, F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
 
   def runFoldable[H[_], A](
-      request: H[Request[A, NotUsed]]
+      request: H[Request[A]]
   )(implicit F: Alternative[F], FM: Monad[F], G: Foldable[H], c: CacheSnapshot): F[A] =
     FM.flatMap(liftFoldable(request))(run[A])
 
   def runOptionT[H[_], A](
-      opt: OptionT[H, Request[A, NotUsed]]
+      opt: OptionT[H, Request[A]]
   )(implicit streamable: Streamable[H], F: FlatMap[F], c: CacheSnapshot): F[A] =
-    F.flatMap(fromSource(streamable.optionToSource[Request[A, NotUsed]](opt)))(run[A])
+    F.flatMap(fromSource(streamable.optionToSource[Request[A]](opt)))(run[A])
 
 }
 object RequestRunner {
@@ -81,20 +81,20 @@ object RequestRunner {
       implicit requests: RequestHelper
   ): RequestRunner[SourceRequest] =
     new RequestRunner[SourceRequest] {
-      override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): SourceRequest[A] =
+      override def run[A](request: Request[A])(implicit c: CacheSnapshot): SourceRequest[A] =
         if (request.hasPermissions) {
           requests.single(request).collect {
-            case RequestResponse(data, _, _, _, _) => data
+            case RequestResponse(data, _, _, _) => data
           }
         } else Source.failed(new RequestPermissionException(request))
 
-      override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
+      override def runMany[A](requestSeq: immutable.Seq[Request[A]])(
           implicit c: CacheSnapshot
       ): SourceRequest[A] = {
         val requestVec = requestSeq.toVector
         if (requestVec.forall(_.hasPermissions)) {
           requests.many(requestSeq).collect {
-            case RequestResponse(data, _, _, _, _) => data
+            case RequestResponse(data, _, _, _) => data
           }
         } else {
           Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
@@ -113,7 +113,7 @@ object RequestRunner {
     import requests.system
     import requests.system.executionContext
 
-    override def run[A](request: Request[A, NotUsed])(implicit c: CacheSnapshot): Future[F[A]] =
+    override def run[A](request: Request[A])(implicit c: CacheSnapshot): Future[F[A]] =
       if (request.hasPermissions) {
         requests
           .singleFuture(request)
@@ -123,13 +123,13 @@ object RequestRunner {
         Future.failed(new RequestPermissionException(request))
       }
 
-    override def runMany[A](requestSeq: immutable.Seq[Request[A, NotUsed]])(
+    override def runMany[A](requestSeq: immutable.Seq[Request[A]])(
         implicit c: CacheSnapshot
     ): Future[F[A]] = {
       val requestVec = requestSeq.toVector
       val source = if (requestVec.forall(_.hasPermissions)) {
         requests.many(requestSeq).collect {
-          case RequestResponse(data, _, _, _, _) => data
+          case RequestResponse(data, _, _, _) => data
         }
       } else {
         Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))

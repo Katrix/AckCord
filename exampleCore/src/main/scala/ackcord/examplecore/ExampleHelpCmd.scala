@@ -45,7 +45,7 @@ class ExampleHelpCmd(
   import context.executionContext
 
   private val msgQueue =
-    Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage, NotUsed]).run()
+    Source.queue(32, OverflowStrategy.backpressure).to(requests.sinkIgnore[RawMessage]).run()
 
   override protected def handler: Option[ActorRef[HelpCmd.HandlerReply]] = Some(someHandler)
 
@@ -110,7 +110,7 @@ class ExampleHelpCmd(
 
   override def sendMessageAndAck(
       sender: ActorRef[HelpCmd.Ack.type],
-      request: Request[RawMessage, NotUsed]
+      request: Request[RawMessage]
   ): Unit =
     msgQueue.offer(request).onComplete(_ => sendAck(sender))
 

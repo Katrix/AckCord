@@ -26,7 +26,6 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import akka.NotUsed
 import io.circe.Decoder
 
 //Place for future audit log requests if they should ever appear
@@ -41,11 +40,10 @@ case class GetGuildAuditLogData(
 /**
   * Get an audit log for a given guild.
   */
-case class GetGuildAuditLog[Ctx](
+case class GetGuildAuditLog(
     guildId: GuildId,
-    queryParams: GetGuildAuditLogData,
-    context: Ctx = NotUsed: NotUsed
-) extends NoParamsNiceResponseRequest[AuditLog, Ctx] {
+    queryParams: GetGuildAuditLogData
+) extends NoParamsNiceResponseRequest[AuditLog] {
   override def route: RequestRoute =
     Routes.getGuildAuditLogs(guildId, queryParams.userId, queryParams.actionType, queryParams.before, queryParams.limit)
 

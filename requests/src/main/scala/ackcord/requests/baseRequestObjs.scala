@@ -32,7 +32,7 @@ import ackcord.util.AckCordRequestSettings
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
-import akka.stream.scaladsl.Flow
+import akka.stream.scaladsl.{Sink, Source}
 import io.circe._
 
 /**
@@ -44,11 +44,10 @@ import io.circe._
   * @tparam RawResponse The response type of the request
   * @tparam NiceResponse A nicer and less raw type of response created from the response.
   */
-trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawResponse, Ctx] { self =>
+trait BaseRESTRequest[RawResponse, NiceResponse] extends Request[RawResponse] { self =>
 
-  override def parseResponse(
-      parallelism: Int
-  )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, RawResponse, NotUsed] = {
+  override def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[RawResponse] = {
+    import system.executionContext
     val baseFlow = RequestStreams.jsonDecode
 
     val withLogging =
@@ -59,34 +58,10 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
         )
       else baseFlow
 
-    withLogging.mapAsyncUnordered(parallelism) { json =>
+    withLogging.runWith(Source.single(entity), Sink.head)._2.flatMap { json =>
       Future.fromTry(json.as(responseDecoder).fold(Failure.apply, Success.apply))
     }
   }
-
-  override def withContext[NewCtx](newContext: NewCtx): BaseRESTRequest[RawResponse, NiceResponse, NewCtx] =
-    new BaseRESTRequest[RawResponse, NiceResponse, NewCtx] {
-
-      override def parseResponse(parallelism: Int)(
-          implicit system: ActorSystem[Nothing]
-      ): Flow[ResponseEntity, RawResponse, NotUsed] = self.parseResponse(parallelism)
-
-      override def responseDecoder: Decoder[RawResponse] = self.responseDecoder
-
-      override def toNiceResponse(response: RawResponse): NiceResponse = self.toNiceResponse(response)
-
-      override def bodyForLogging: Option[String] = self.bodyForLogging
-
-      override def route: RequestRoute = self.route
-
-      override def requestBody: MessageEntity = self.requestBody
-
-      override def context: NewCtx = newContext
-
-      override def requiredPermissions: Permission = self.requiredPermissions
-
-      override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
-    }
 
   /**
     * A decoder to decode the response.
@@ -110,7 +85,7 @@ trait BaseRESTRequest[RawResponse, NiceResponse, Ctx] extends Request[RawRespons
   * A simpler, request trait where the params are defined explicitly and converted to json.
   * @tparam Params The json parameters of the request.
   */
-trait RESTRequest[Params, RawResponse, NiceResponse, Ctx] extends BaseRESTRequest[RawResponse, NiceResponse, Ctx] {
+trait RESTRequest[Params, RawResponse, NiceResponse] extends BaseRESTRequest[RawResponse, NiceResponse] {
 
   /**
     * The params of this request
@@ -139,8 +114,8 @@ trait RESTRequest[Params, RawResponse, NiceResponse, Ctx] extends BaseRESTReques
 /**
   * A complex REST request with an audit log reason.
   */
-trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceResponse, Ctx], Params, RawResponse, NiceResponse, Ctx]
-    extends RESTRequest[Params, RawResponse, NiceResponse, Ctx] {
+trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceResponse], Params, RawResponse, NiceResponse]
+    extends RESTRequest[Params, RawResponse, NiceResponse] {
 
   /**
     * A reason to add to the audit log entry.
@@ -158,7 +133,7 @@ trait ReasonRequest[Self <: ReasonRequest[Self, Params, RawResponse, NiceRespons
 /**
   * A request that takes no params.
   */
-trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUsed, RawResponse, NiceResponse, Ctx] {
+trait NoParamsRequest[RawResponse, NiceResponse] extends RESTRequest[NotUsed, RawResponse, NiceResponse] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params: NotUsed                 = NotUsed
 }
@@ -166,14 +141,14 @@ trait NoParamsRequest[RawResponse, NiceResponse, Ctx] extends RESTRequest[NotUse
 /**
   * A request that takes no params with an audit log reason.
   */
-trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, NiceResponse, Ctx], RawResponse, NiceResponse, Ctx]
-    extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse, Ctx]
-    with NoParamsRequest[RawResponse, NiceResponse, Ctx]
+trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, NiceResponse], RawResponse, NiceResponse]
+    extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse]
+    with NoParamsRequest[RawResponse, NiceResponse]
 
 /**
   * A request where the response type and the nice response type are the same.
   */
-trait NoNiceResponseRequest[Params, Response, Ctx] extends RESTRequest[Params, Response, Response, Ctx] {
+trait NoNiceResponseRequest[Params, Response] extends RESTRequest[Params, Response, Response] {
   override def toNiceResponse(response: Response): Response = response
 }
 
@@ -181,38 +156,35 @@ trait NoNiceResponseRequest[Params, Response, Ctx] extends RESTRequest[Params, R
   * A request, with an audit log reason, where the response type and
   * the nice response type are the same.
   */
-trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Params, Response, Ctx], Params, Response, Ctx]
-    extends ReasonRequest[Self, Params, Response, Response, Ctx]
-    with NoNiceResponseRequest[Params, Response, Ctx]
+trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Params, Response], Params, Response]
+    extends ReasonRequest[Self, Params, Response, Response]
+    with NoNiceResponseRequest[Params, Response]
 
 /**
   * A request that takes no params, and where the response type and the
   * nice response type are the same.
   */
-trait NoParamsNiceResponseRequest[Response, Ctx]
-    extends NoParamsRequest[Response, Response, Ctx]
-    with NoNiceResponseRequest[NotUsed, Response, Ctx]
+trait NoParamsNiceResponseRequest[Response]
+    extends NoParamsRequest[Response, Response]
+    with NoNiceResponseRequest[NotUsed, Response]
 
 /**
   * A request, with an audit log reason, that takes no params, and where the response type and the
   * nice response type are the same.
   */
-trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonRequest[Self, Response, Ctx], Response, Ctx]
-    extends NoParamsReasonRequest[Self, Response, Response, Ctx]
-    with NoNiceResponseReasonRequest[Self, NotUsed, Response, Ctx]
+trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonRequest[Self, Response], Response]
+    extends NoParamsReasonRequest[Self, Response, Response]
+    with NoNiceResponseReasonRequest[Self, NotUsed, Response]
 
 /**
   * A request that doesn't have a response.
   */
-trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUsed, Ctx] {
+trait NoResponseRequest[Params] extends NoNiceResponseRequest[Params, NotUsed] {
 
-  override def parseResponse(
-      parallelism: Int
-  )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, NotUsed, NotUsed] =
-    Flow[ResponseEntity].map { responseEntity =>
-      responseEntity.discardBytes()
-      NotUsed
-    }
+  override def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[NotUsed] = {
+    entity.discardBytes()
+    Future.successful(NotUsed)
+  }
 
   override def responseDecoder: Decoder[NotUsed] = (_: HCursor) => Right(NotUsed)
 }
@@ -220,18 +192,18 @@ trait NoResponseRequest[Params, Ctx] extends NoNiceResponseRequest[Params, NotUs
 /**
   * A request, with an audit log reason, that doesn't have a response.
   */
-trait NoResponseReasonRequest[Self <: NoResponseReasonRequest[Self, Params, Ctx], Params, Ctx]
-    extends NoNiceResponseReasonRequest[Self, Params, NotUsed, Ctx]
-    with NoResponseRequest[Params, Ctx]
+trait NoResponseReasonRequest[Self <: NoResponseReasonRequest[Self, Params], Params]
+    extends NoNiceResponseReasonRequest[Self, Params, NotUsed]
+    with NoResponseRequest[Params]
 
 /**
   * A request that has neither params nor a response.
   */
-trait NoParamsResponseRequest[Ctx] extends NoParamsRequest[NotUsed, NotUsed, Ctx] with NoResponseRequest[NotUsed, Ctx]
+trait NoParamsResponseRequest extends NoParamsRequest[NotUsed, NotUsed] with NoResponseRequest[NotUsed]
 
 /**
   * A request that has neither params nor a response with a reason.
   */
-trait NoParamsResponseReasonRequest[Self <: NoParamsResponseReasonRequest[Self, Ctx], Ctx]
-    extends NoParamsReasonRequest[Self, NotUsed, NotUsed, Ctx]
-    with NoResponseReasonRequest[Self, NotUsed, Ctx]
+trait NoParamsResponseReasonRequest[Self <: NoParamsResponseReasonRequest[Self]]
+    extends NoParamsReasonRequest[Self, NotUsed, NotUsed]
+    with NoResponseReasonRequest[Self, NotUsed]

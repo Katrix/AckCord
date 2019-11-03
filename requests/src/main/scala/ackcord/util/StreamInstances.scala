@@ -55,11 +55,11 @@ object StreamInstances {
         })
     }
 
-  implicit def flowInstance[In, Mat]: Functor[Flow[In, ?, Mat]] = new Functor[Flow[In, ?, Mat]] {
+  implicit def flowInstance[In, Mat]: Functor[Flow[In, *, Mat]] = new Functor[Flow[In, *, Mat]] {
     override def map[A, B](fa: Flow[In, A, Mat])(f: A => B): Flow[In, B, Mat] = fa.map(f)
   }
 
-  implicit def sinkInstance[Mat]: Contravariant[Sink[?, Mat]] = new Contravariant[Sink[?, Mat]] {
+  implicit def sinkInstance[Mat]: Contravariant[Sink[*, Mat]] = new Contravariant[Sink[*, Mat]] {
     override def contramap[A, B](fa: Sink[A, Mat])(f: B => A): Sink[B, Mat] = fa.contramap(f)
   }
 

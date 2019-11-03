@@ -25,14 +25,13 @@ package ackcord.requests
 
 import java.util.UUID
 
+import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
 
 import ackcord.CacheSnapshot
 import ackcord.requests.Routes.{QueryRoute, Route}
-import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
-import akka.stream.scaladsl.Flow
 
 /**
   * Used by requests for specifying an uri to send to,
@@ -72,51 +71,19 @@ object RequestRoute {
 /**
   * Base trait for all requests before they enter the network flow.
   * @tparam Data The response type for the request.
-  * @tparam Ctx The type of the context to send with this request.
   */
-sealed trait MaybeRequest[+Data, Ctx] {
-
-  /**
-    * The context to send with this request.
-    */
-  def context: Ctx
-}
+sealed trait MaybeRequest[+Data]
 
 /**
   * Base super simple trait for all HTTP requests in AckCord.
   * @tparam Data The parsed response type.
   */
-trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
+trait Request[+Data] extends MaybeRequest[Data] { self =>
 
   /**
     * An unique identifier to track this request from creation to answer.
     */
   val identifier: UUID = UUID.randomUUID()
-
-  /**
-    * Updates the context of this request.
-    */
-  def withContext[NewCtx](newContext: NewCtx): Request[Data, NewCtx] = new Request[Data, NewCtx] {
-
-    override val identifier: UUID = self.identifier
-
-    override def context: NewCtx = newContext
-
-    override def route: RequestRoute = self.route
-
-    override def requestBody: RequestEntity = self.requestBody
-
-    override def bodyForLogging: Option[String] = self.bodyForLogging
-
-    override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
-
-    override def parseResponse(
-        parallelism: Int
-    )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed] =
-      self.parseResponse(parallelism)
-
-    override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
-  }
 
   /**
     * Returns the body of this Request for use in logging.
@@ -141,18 +108,16 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   /**
     * A flow that can be used to parse the responses from this request.
     */
-  def parseResponse(parallelism: Int)(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, Data, NotUsed]
+  def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[Data]
 
   /**
     * Transform the response of this request as a flow.
     */
   def transformResponse[B](
-      f: Flow[ResponseEntity, Data, NotUsed] => Flow[ResponseEntity, B, NotUsed]
-  ): Request[B, Ctx] = new Request[B, Ctx] {
+      f: ExecutionContext => Future[Data] => Future[B]
+  ): Request[B] = new Request[B] {
 
     override val identifier: UUID = self.identifier
-
-    override def context: Ctx = self.context
 
     override def route: RequestRoute = self.route
 
@@ -162,10 +127,8 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
 
     override def extraHeaders: Seq[HttpHeader] = self.extraHeaders
 
-    override def parseResponse(
-        parallelism: Int
-    )(implicit system: ActorSystem[Nothing]): Flow[ResponseEntity, B, NotUsed] =
-      f(self.parseResponse(parallelism))
+    override def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[B] =
+      f(system.executionContext)(self.parseResponse(entity))
 
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
@@ -173,17 +136,17 @@ trait Request[+Data, Ctx] extends MaybeRequest[Data, Ctx] { self =>
   /**
     * Map the result of sending this request.
     */
-  def map[B](f: Data => B): Request[B, Ctx] = transformResponse(_.map(f))
+  def map[B](f: Data => B): Request[B] = transformResponse(implicit ec => _.map(f))
 
   /**
     * Filter the response of sending this request.
     */
-  def filter(f: Data => Boolean): Request[Data, Ctx] = transformResponse(_.filter(f))
+  def filter(f: Data => Boolean): Request[Data] = transformResponse(implicit ec => _.filter(f))
 
   /**
     * Map the result if the function is defined for the response data.
     */
-  def collect[B](f: PartialFunction[Data, B]): Request[B, Ctx] = transformResponse(_.collect(f))
+  def collect[B](f: PartialFunction[Data, B]): Request[B] = transformResponse(implicit ec => _.collect(f))
 
   /**
     * Check if a client has the needed permissions to execute this request.
@@ -220,22 +183,12 @@ case class RatelimitInfo(
 /**
   * Sent as a response to a request.
   */
-sealed trait RequestAnswer[+Data, Ctx] {
+sealed trait RequestAnswer[+Data] {
 
   /**
     * An unique identifier to track this request from creation to answer.
     */
   def identifier: UUID
-
-  /**
-    * The context sent with this request.
-    */
-  def context: Ctx
-
-  /**
-    * Updates the context of this request response.
-    */
-  def withContext[NewCtx](context: NewCtx): RequestAnswer[Data, NewCtx]
 
   /**
     * Information about ratelimits gotten from this request.
@@ -276,47 +229,44 @@ sealed trait RequestAnswer[+Data, Ctx] {
   /**
     * Apply a function to this answer, if it's a successful response.
     */
-  def map[B](f: Data => B): RequestAnswer[B, Ctx]
+  def map[B](f: Data => B): RequestAnswer[B]
 
   /**
     * Apply f if this is a successful response, and return this if the result
     * is true, else returns a failed answer.
     */
-  def filter(f: Data => Boolean): RequestAnswer[Data, Ctx]
+  def filter(f: Data => Boolean): RequestAnswer[Data]
 
   /**
     * Apply f and returns the result if this is a successful response.
     */
-  def flatMap[B](f: Data => RequestAnswer[B, Ctx]): RequestAnswer[B, Ctx]
+  def flatMap[B](f: Data => RequestAnswer[B]): RequestAnswer[B]
 }
 
 /**
   * A successful request response.
   */
-case class RequestResponse[+Data, Ctx](
+case class RequestResponse[+Data](
     data: Data,
-    context: Ctx,
     ratelimitInfo: RatelimitInfo,
     route: RequestRoute,
     identifier: UUID
-) extends RequestAnswer[Data, Ctx] {
-
-  override def withContext[NewCtx](context: NewCtx): RequestResponse[Data, NewCtx] = copy(context = context)
+) extends RequestAnswer[Data] {
 
   override def eitherData: Either[Throwable, Data] = Right(data)
 
-  override def map[B](f: Data => B): RequestResponse[B, Ctx] = copy(data = f(data))
+  override def map[B](f: Data => B): RequestResponse[B] = copy(data = f(data))
 
-  override def filter(f: Data => Boolean): RequestAnswer[Data, Ctx] =
-    if (f(data)) this else RequestError(context, new NoSuchElementException("Predicate failed"), route, identifier)
+  override def filter(f: Data => Boolean): RequestAnswer[Data] =
+    if (f(data)) this else RequestError(new NoSuchElementException("Predicate failed"), route, identifier)
 
-  override def flatMap[B](f: Data => RequestAnswer[B, Ctx]): RequestAnswer[B, Ctx] = f(data)
+  override def flatMap[B](f: Data => RequestAnswer[B]): RequestAnswer[B] = f(data)
 }
 
 /**
   * A failed request.
   */
-sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
+sealed trait FailedRequest extends RequestAnswer[Nothing] {
 
   /**
     * Get the exception associated with this failed request, or makes one
@@ -330,55 +280,45 @@ sealed trait FailedRequest[Ctx] extends RequestAnswer[Nothing, Ctx] {
 /**
   * A request that did not succeed because of a ratelimit.
   */
-case class RequestRatelimited[Ctx](
-    context: Ctx,
+case class RequestRatelimited(
     global: Boolean,
     ratelimitInfo: RatelimitInfo,
     route: RequestRoute,
     identifier: UUID
-) extends FailedRequest[Ctx] {
-
-  override def withContext[NewCtx](context: NewCtx): RequestRatelimited[NewCtx] = copy(context = context)
+) extends FailedRequest {
 
   override def remainingRequests: Int = 0
   override def asException: RatelimitException =
     new RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
 
-  override def map[B](f: Nothing => B): RequestRatelimited[Ctx]                         = this
-  override def filter(f: Nothing => Boolean): RequestRatelimited[Ctx]                   = this
-  override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestRatelimited[Ctx] = this
+  override def map[B](f: Nothing => B): RequestRatelimited                    = this
+  override def filter(f: Nothing => Boolean): RequestRatelimited              = this
+  override def flatMap[B](f: Nothing => RequestAnswer[B]): RequestRatelimited = this
 }
 
 /**
   * A request that failed for some other reason.
   */
-case class RequestError[Ctx](context: Ctx, e: Throwable, route: RequestRoute, identifier: UUID)
-    extends FailedRequest[Ctx] {
+case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) extends FailedRequest {
   override def asException: Throwable = e
-
-  override def withContext[NewCtx](context: NewCtx): RequestError[NewCtx] = copy(context = context)
 
   override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
-  override def map[B](f: Nothing => B): RequestError[Ctx]                         = this
-  override def filter(f: Nothing => Boolean): RequestError[Ctx]                   = this
-  override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestError[Ctx] = this
+  override def map[B](f: Nothing => B): RequestError                    = this
+  override def filter(f: Nothing => Boolean): RequestError              = this
+  override def flatMap[B](f: Nothing => RequestAnswer[B]): RequestError = this
 }
 
 /**
   * A request that was dropped before it entered the network, most likely
   * because of timing out while waiting for ratelimits.
   */
-case class RequestDropped[Ctx](context: Ctx, route: RequestRoute, identifier: UUID)
-    extends MaybeRequest[Nothing, Ctx]
-    with FailedRequest[Ctx] {
+case class RequestDropped(route: RequestRoute, identifier: UUID) extends MaybeRequest[Nothing] with FailedRequest {
   override def asException = new DroppedRequestException(route.uri)
-
-  override def withContext[NewCtx](context: NewCtx): RequestDropped[NewCtx] = copy(context = context)
 
   override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 
-  override def map[B](f: Nothing => B): RequestDropped[Ctx]                         = this
-  override def filter(f: Nothing => Boolean): RequestDropped[Ctx]                   = this
-  override def flatMap[B](f: Nothing => RequestAnswer[B, Ctx]): RequestDropped[Ctx] = this
+  override def map[B](f: Nothing => B): RequestDropped                    = this
+  override def filter(f: Nothing => Boolean): RequestDropped              = this
+  override def flatMap[B](f: Nothing => RequestAnswer[B]): RequestDropped = this
 }
