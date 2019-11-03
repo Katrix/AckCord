@@ -26,23 +26,23 @@ package ackcord.util
 
 import scala.collection.mutable
 
-import ackcord.data.{ChannelId, GuildId}
+import ackcord.data.GuildId
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import org.slf4j.Logger
 
-abstract private[util] class GuildRouter[Event, Inner](
+abstract class GuildRouter[Event, Inner](
     ctx: ActorContext[GuildRouter.Command[Event, Inner]],
     replyTo: Option[ActorRef[GuildRouter.GuildActorCreated[Inner]]],
-    log: Logger,
     behavior: GuildId => Behavior[Inner],
     notGuildHandler: Option[ActorRef[Inner]],
     shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
 ) extends AbstractBehavior[GuildRouter.Command[Event, Inner]](ctx) {
   import GuildRouter._
 
+  val log: Logger = context.log
+
   val handlers       = mutable.HashMap.empty[GuildId, ActorRef[Inner]]
-  val channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
   var isShuttingDown = false
 
   def handleThroughMessage(a: Event): Unit
@@ -98,9 +98,27 @@ abstract private[util] class GuildRouter[Event, Inner](
     }
     handlers.getOrElseUpdate(guildId, newActor)
   }
+
+  def stopHandler(guildId: GuildId): Unit = handlers.get(guildId).foreach { handler =>
+    shutdownBehavior match {
+      case GuildRouter.OnShutdownSendMsg(msg) => handler ! msg
+      case GuildRouter.OnShutdownStop         => context.stop(handler)
+    }
+  }
 }
 
 object GuildRouter {
+
+  def partitioner[Inner](
+      replyTo: Option[ActorRef[GuildRouter.GuildActorCreated[Inner]]],
+      behavior: GuildId => Behavior[Inner],
+      notGuildHandler: Option[ActorRef[Inner]],
+      shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
+  ): Behavior[Command[Nothing, Inner]] = Behaviors.setup { ctx =>
+    new GuildRouter[Nothing, Inner](ctx, replyTo, behavior, notGuildHandler, shutdownBehavior) {
+      override def handleThroughMessage(a: Nothing): Unit = sys.error("impossible")
+    }
+  }
 
   sealed trait ShutdownBehavior[+Inner]
   case class OnShutdownSendMsg[Inner](msg: Inner) extends ShutdownBehavior[Inner]

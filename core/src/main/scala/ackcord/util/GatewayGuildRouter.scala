@@ -24,23 +24,25 @@
 
 package ackcord.util
 
-import ackcord.data.GuildId
+import scala.collection.mutable
+
+import ackcord.data.{ChannelId, GuildId}
 import ackcord.gateway.{GatewayEvent, GatewayMessage}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import cats.Eval
 import io.circe.Decoder
-import org.slf4j.Logger
 
 class GatewayGuildRouter[Inner](
     ctx: ActorContext[GuildRouter.Command[GatewayMessage[_], Inner]],
     replyTo: Option[ActorRef[GuildRouter.GuildActorCreated[Inner]]],
-    log: Logger,
     behavior: GuildId => Behavior[Inner],
     notGuildHandler: Option[ActorRef[Inner]],
     handleEvent: (ActorRef[Inner], GatewayMessage[_]) => Unit,
     shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
-) extends GuildRouter[GatewayMessage[_], Inner](ctx, replyTo, log, behavior, notGuildHandler, shutdownBehavior) {
+) extends GuildRouter[GatewayMessage[_], Inner](ctx, replyTo, behavior, notGuildHandler, shutdownBehavior) {
+
+  val channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
 
   def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
     later.value match {
@@ -72,6 +74,16 @@ class GatewayGuildRouter[Inner](
     case msg: GatewayEvent.ChannelDelete =>
       handleLazyOpt(msg.guildId)(sendToGuild(_, msg, handleEvent))
       handleLazy(msg.channelId)(channelToGuild.remove)
+
+    case msg: GatewayEvent.GuildDelete =>
+      handleLazy(msg.data) { guild =>
+        if (!guild.unavailable) {
+          stopHandler(guild.id)
+        } else {
+          sendToGuild(guild.id, msg, handleEvent)
+        }
+      }
+
     case msg: GatewayEvent.GuildEvent[_]           => handleLazy(msg.guildId)(sendToGuild(_, msg, handleEvent))
     case msg: GatewayEvent.ComplexGuildEvent[_, _] => handleLazy(msg.guildId)(sendToGuild(_, msg, handleEvent))
     case msg: GatewayEvent.OptGuildEvent[_] =>
@@ -93,7 +105,7 @@ object GatewayGuildRouter {
       behavior: GuildId => Behavior[GatewayMessage[_]],
       notGuildHandler: Option[ActorRef[GatewayMessage[_]]]
   ): Behavior[GuildRouter.Command[GatewayMessage[_], GatewayMessage[_]]] = Behaviors.setup { ctx =>
-    new GatewayGuildRouter(ctx, replyTo, ctx.log, behavior, notGuildHandler, _ ! _, GuildRouter.OnShutdownStop)
+    new GatewayGuildRouter(ctx, replyTo, behavior, notGuildHandler, _ ! _, GuildRouter.OnShutdownStop)
   }
 
   def partitioner[Inner](
@@ -102,6 +114,6 @@ object GatewayGuildRouter {
       notGuildHandler: Option[ActorRef[Inner]],
       shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
   ): Behavior[GuildRouter.Command[GatewayMessage[_], Inner]] = Behaviors.setup { ctx =>
-    new GatewayGuildRouter(ctx, replyTo, ctx.log, behavior, notGuildHandler, (_, _) => (), shutdownBehavior)
+    new GatewayGuildRouter(ctx, replyTo, behavior, notGuildHandler, (_, _) => (), shutdownBehavior)
   }
 }
