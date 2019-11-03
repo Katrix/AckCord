@@ -99,10 +99,10 @@ object LavaplayerHandler {
       SourceShape(switch.out)
     })
 
-  private def readyListenerBehavior(replyTo: ActorRef[WsReady.type]): Behavior[AudioAPIMessage] =
+  private def readyListenerBehavior(replyTo: ActorRef[WsReady]): Behavior[AudioAPIMessage] =
     Behaviors.receiveMessage {
-      case _: AudioAPIMessage.Ready =>
-        replyTo ! WsReady
+      case AudioAPIMessage.Ready(serverId, userId) =>
+        replyTo ! WsReady(serverId, userId)
         Behaviors.same
       case _: AudioAPIMessage.UserSpeaking => Behaviors.same
       case _: AudioAPIMessage.ReceivedData => Behaviors.same
@@ -251,16 +251,16 @@ object LavaplayerHandler {
         Behaviors.same
 
       case (
-          WsReady,
+          WsReady(serverId, userId),
           HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, readyListener)
           ) =>
         log.debug("Audio ready")
 
-        sendEventsTo ! MusicReady
+        sendEventsTo ! MusicReady(serverId, userId)
 
         active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, sendEventsTo, readyListener))
 
-      case (WsReady, _) =>
+      case (WsReady(_, _), _) =>
         Behaviors.same
 
       case (Shutdown, HasVoiceWs(voiceWs, _, _, _, readyListener)) =>
@@ -324,7 +324,7 @@ object LavaplayerHandler {
 
       case StopNow => Behaviors.stopped
 
-      case WsReady => Behaviors.same //NO-OP
+      case WsReady(_, _) => Behaviors.same //NO-OP
 
       case GotVoiceData(_, _, _, _) => Behaviors.same
     }
@@ -349,7 +349,7 @@ object LavaplayerHandler {
   /**
     * Sent as a response to [[ConnectVChannel]] when everything is ready.
     */
-  case object MusicReady extends Reply
+  case class MusicReady(serverId: RawSnowflake, userId: UserId) extends Reply
 
   /**
     * Sent as a response to [[ConnectVChannel]] if the client is already
@@ -377,8 +377,8 @@ object LavaplayerHandler {
     */
   case object Shutdown extends Command
 
-  private case object StopNow extends Command
-  private case object WsReady extends Command
+  private case object StopNow                                        extends Command
+  private case class WsReady(serverId: RawSnowflake, userId: UserId) extends Command
 
   private case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId) extends Command
 
