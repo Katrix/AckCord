@@ -177,7 +177,7 @@ object VoiceWsHandler {
       .onFailure(
         SupervisorStrategy
           .restartWithBackoff(100.millis, 5.seconds, 1d)
-          .withResetBackoffAfter(10.seconds)
+          .withResetBackoffAfter(60.seconds)
           .withMaxRestarts(5)
       )
 
@@ -241,6 +241,11 @@ object VoiceWsHandler {
             case 4014 => Behaviors.stopped
             //Session no longer valid
             case 4006 => Behaviors.stopped
+            //Server crashed
+            case 4015 =>
+              context.self ! Restart(fresh = false, 0.seconds)
+              Behaviors.same
+
             case _    => throw e
           }
         case SendExeption(e) => throw e

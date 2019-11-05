@@ -32,7 +32,12 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{InvalidUpgradeResponse, ValidUpgrade, WebSocketUpgradeResponse}
+import akka.http.scaladsl.model.ws.{
+  InvalidUpgradeResponse,
+  PeerClosedConnectionException,
+  ValidUpgrade,
+  WebSocketUpgradeResponse
+}
 import akka.stream._
 import akka.stream.scaladsl._
 import akka.{NotUsed, actor => classic}
@@ -154,6 +159,31 @@ object GatewayHandler {
           shutdownStream(state)
           throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
 
+        case SendException(e: PeerClosedConnectionException) =>
+          e.closeCode match {
+            //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
+            //Authenticate failed
+            case 4004 =>
+              log.error("Authentication failed to WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //Invalid shard
+            case 4010 =>
+              log.error("Invalid shard passed to WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //
+            case 4011 =>
+              log.error("Sharding required to log into WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //Invalid seq when resuming or session timed out
+            case 4007 || 4009 =>
+              retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
+
+            case _ => throw e
+          }
+
         case SendException(e) =>
           log.error("Websocket error. Retry count {}", retryCount, e)
           shutdownStream(state)
@@ -190,6 +220,32 @@ object GatewayHandler {
 
             log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
             retryLogin(parameters, state.copy(resume = newResume), timers, wsFlow)
+          }
+
+
+        case SendException(e: PeerClosedConnectionException) =>
+          e.closeCode match {
+            //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
+            //Authenticate failed
+            case 4004 =>
+              log.error("Authentication failed to WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //Invalid shard
+            case 4010 =>
+              log.error("Invalid shard passed to WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //
+            case 4011 =>
+              log.error("Sharding required to log into WS gateway. Stopping JVM")
+              sys.exit(-1)
+
+            //Invalid seq when resuming or session timed out
+            case 4007 || 4009 =>
+              retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
+
+            case _ => throw e
           }
 
         case SendException(e) =>
