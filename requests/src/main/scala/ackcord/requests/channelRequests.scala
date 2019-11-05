@@ -102,7 +102,7 @@ case class ModifyChannel(
     params: ModifyChannelData,
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyChannel, ModifyChannelData, RawChannel, Option[Channel]] {
-  override def route: RequestRoute                       = Routes.modifyChannelPut(channelId)
+  override def route: RequestRoute                       = Routes.modifyChannel(channelId)
   override def paramsEncoder: Encoder[ModifyChannelData] = ModifyChannelData.encoder
   override def jsonPrinter: Printer                      = Printer.noSpaces
 
