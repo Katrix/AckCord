@@ -203,8 +203,16 @@ case object Reconnect extends EagerGatewayMessage[NotUsed] {
   * @param query Return all the users where their username start with this.
   *              or an empty string for all users.
   * @param limit The amount of users to send, or 0 for all users.
+  * @param presences If the presences of the users should be sent too.
+  * @param userIds Users to fetch.
   */
-case class RequestGuildMembersData(guildId: Either[Seq[GuildId], GuildId], query: String = "", limit: Int = 0)
+case class RequestGuildMembersData(
+    guildId: Either[Seq[GuildId], GuildId],
+    query: String = "",
+    limit: Int = 0,
+    presences: Boolean = false,
+    userIds: Option[Seq[UserId]]
+)
 
 /**
   * Sent by the shard to receive all the members of a guild, even logged out ones.
@@ -586,8 +594,15 @@ object GatewayEvent {
   /**
     * @param guildId The guild requested for.
     * @param members The guild members in this chunk.
+    * @param notFound If some users that was requested wasn't found, their ID is returned here.
+    * @param presences The presences of the users if those were requested as well.
     */
-  case class GuildMemberChunkData(guildId: GuildId, members: Seq[RawGuildMember])
+  case class GuildMemberChunkData(
+      guildId: GuildId,
+      members: Seq[RawGuildMember],
+      notFound: Option[Seq[UserId]],
+      presences: Option[Seq[RawPresence]]
+  )
 
   /**
     * Sent to the shard if the shard requests to get all members

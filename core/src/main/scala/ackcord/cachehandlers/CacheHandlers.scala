@@ -297,7 +297,7 @@ object CacheHandlers {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberChunkData, registry: CacheTypeRegistry)(
           implicit log: Logger
       ): Unit = {
-        val GuildMemberChunkData(guildId, newRawMembers) = obj
+        val GuildMemberChunkData(guildId, newRawMembers, _, rawPresencesOpt) = obj
 
         if (registry.hasUpdater[GuildMember]) {
           //We update he so that we only need one lookup for the guild and can quickly create the new member map
@@ -310,6 +310,26 @@ object CacheHandlers {
               }
             case None => log.warn(s"Can't find guild for guildMember update $obj")
           }
+        }
+
+        for {
+          _ <- registry.getUpdater[Presence]
+          _ <- registry.getUpdater[Guild]
+          guild <- builder.getGuild(guildId)
+          rawPresences <- rawPresencesOpt
+        } {
+          val presences = rawPresences.map(_.toPresence).flatMap {
+            case Right(value) => Seq(value.userId -> value)
+            case Left(e) =>
+              log.warn(e)
+              Nil
+          }
+
+          registry.updateData(builder)(
+            guild.copy(
+              presences = guild.presences ++ SnowflakeMap.from(presences)
+            )
+          )
         }
 
         registry

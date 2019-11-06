@@ -110,18 +110,22 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = (a: RequestGuildMembersData) =>
     Json.obj(
-      "guild_id" -> a.guildId.fold(_.asJson, _.asJson),
-      "query"    -> a.query.asJson,
-      "limit"    -> a.limit.asJson
+      "guild_id"  -> a.guildId.fold(_.asJson, _.asJson),
+      "query"     -> a.query.asJson,
+      "limit"     -> a.limit.asJson,
+      "presences" -> a.presences.asJson,
+      "user_ids"  -> a.userIds.asJson
     )
   implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
     for {
       guildId <- c
         .get[GuildId]("guild_id")
         .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
-      query <- c.get[String]("query")
-      limit <- c.get[Int]("limit")
-    } yield RequestGuildMembersData(guildId, query, limit)
+      query     <- c.get[String]("query")
+      limit     <- c.get[Int]("limit")
+      presences <- c.get[Boolean]("presences")
+      userIds   <- c.get[Option[Seq[UserId]]]("user_ids")
+    } yield RequestGuildMembersData(guildId, query, limit, presences, userIds)
 
   implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val helloDataDecoder: Decoder[HelloData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
