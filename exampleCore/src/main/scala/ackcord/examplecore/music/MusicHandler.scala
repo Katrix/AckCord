@@ -124,7 +124,7 @@ object MusicHandler {
         case QueueUrl(url, tChannel, vChannelId, replyTo) if inVChannel.isEmpty =>
           //TODO: Stop this at some point
           val lavaplayerReplyHandler = Behaviors.receiveMessage[LavaplayerHandler.Reply] {
-            case LavaplayerHandler.MusicReady =>
+            case LavaplayerHandler.MusicReady(_, _) =>
               context.self ! GotoActive
               Behaviors.same
             case LavaplayerHandler.AlreadyConnectedFailure(_, _) =>

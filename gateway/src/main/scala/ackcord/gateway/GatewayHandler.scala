@@ -178,7 +178,7 @@ object GatewayHandler {
               sys.exit(-1)
 
             //Invalid seq when resuming or session timed out
-            case 4007 || 4009 =>
+            case 4007 | 4009 =>
               retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
 
             case _ => throw e
@@ -242,7 +242,7 @@ object GatewayHandler {
               sys.exit(-1)
 
             //Invalid seq when resuming or session timed out
-            case 4007 || 4009 =>
+            case 4007 | 4009 =>
               retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
 
             case _ => throw e
