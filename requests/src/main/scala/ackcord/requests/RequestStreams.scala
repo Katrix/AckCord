@@ -37,7 +37,7 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Merge, MergePreferred, Partition, Sink, Source}
+import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Keep, Merge, MergePreferred, Partition, Sink, Source}
 import akka.stream.{Attributes, FlowShape, OverflowStrategy}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
@@ -464,4 +464,7 @@ object RequestStreams {
       }
       .map(_.fold(throw _, identity))
   }
+
+  def removeContext[I, O, Mat](withContext: FlowWithContext[I, NotUsed, O, NotUsed, Mat]): Flow[I, O, Mat] =
+    Flow[I].map(_ -> NotUsed).viaMat(withContext)(Keep.right).map(_._1)
 }
