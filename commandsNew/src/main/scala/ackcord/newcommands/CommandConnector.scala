@@ -32,6 +32,7 @@ import ackcord.syntax._
 import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
 import akka.{Done, NotUsed}
+import cats.{Monad, MonadError}
 import cats.instances.future._
 import cats.syntax.all._
 
@@ -49,6 +50,21 @@ class CommandConnector(
 
   type PrefixParser = (CacheSnapshot, Message) => Future[MessageParser[Unit]]
 
+  private val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = { (cache, message) =>
+    val botUser = cache.botUser
+
+    //We do a quick check first before parsing the message
+    val quickCheck = message.mentions.contains(botUser.id)
+    lazy val err   = MonadError[MessageParser, String].raiseError[Unit]("")
+
+    if (quickCheck) {
+      MessageParser[User].flatMap { user =>
+        if (user == botUser) Monad[MessageParser].unit
+        else err
+      }
+    } else err
+  }
+
   /**
     * Creates a prefix parser for a command.
     * @param symbol The symbol to parse before the command.
@@ -61,26 +77,14 @@ class CommandConnector(
       mustMention: Boolean = true,
       caseSensitive: Boolean = false
   ): PrefixParser = {
-    val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = if (mustMention) { (cache, message) =>
-      val botUser = cache.botUser
+    val messageParserF = MessageParser.messageParserMonad
 
-      //We do a quick check first before parsing the message
-      val quickCheck = message.mentions.contains(botUser.id)
-      lazy val err =
-        MessageParser.messageParserMonad.raiseError[Unit]("You need to use a mention to use this command")
-
-      if (quickCheck) {
-        MessageParser[User].flatMap { user =>
-          if (user == botUser) MessageParser.messageParserMonad.unit
-          else err
-        }
-      } else err
-    } else { (_, _) =>
-      MessageParser.messageParserMonad.unit
-    }
+    val first: (CacheSnapshot, Message) => MessageParser[Unit] =
+      if (mustMention) mentionParser
+      else (_, _) => messageParserF.unit
 
     Function.untupled(
-      mentionParser.tupled
+      first.tupled
         .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases, caseSensitive).void)
         .andThen(Future.successful)
     )
@@ -166,7 +170,10 @@ class CommandConnector(
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
   ): Source[CommandError, (Mat, Future[Done])] =
-    newCommandWithErrors(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
+    newCommandWithErrors(
+      prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive),
+      command
+    )
 
   /**
     * Creates a [[RunnableGraph]] for a command.
