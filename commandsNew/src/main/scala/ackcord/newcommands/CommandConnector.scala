@@ -58,7 +58,8 @@ class CommandConnector(
   def prefix(
       symbol: String,
       aliases: Seq[String],
-      mustMention: Boolean
+      mustMention: Boolean = true,
+      caseSensitive: Boolean = false
   ): PrefixParser = {
     val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = if (mustMention) { (cache, message) =>
       val botUser = cache.botUser
@@ -80,7 +81,7 @@ class CommandConnector(
 
     Function.untupled(
       mentionParser.tupled
-        .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases).void)
+        .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases, caseSensitive).void)
         .andThen(Future.successful)
     )
   }
@@ -165,7 +166,7 @@ class CommandConnector(
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
   ): Source[CommandError, (Mat, Future[Done])] =
-    newCommandWithErrors(prefix(command.symbol, command.aliases, command.requiresMention), command)
+    newCommandWithErrors(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
 
   /**
     * Creates a [[RunnableGraph]] for a command.
@@ -202,7 +203,7 @@ class CommandConnector(
     * @see [[newCommandWithErrors]]
     */
   def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] =
-    newCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
+    newCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
 
   /**
     * Starts a command execution.
@@ -227,5 +228,5 @@ class CommandConnector(
     *         a future signaling when the command is done running.
     */
   def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): (Mat, Future[Done]) =
-    runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention), command)
+    runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
 }

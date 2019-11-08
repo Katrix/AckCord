@@ -25,6 +25,8 @@ package ackcord.newcommands
 
 import scala.language.implicitConversions
 
+import java.util.Locale
+
 import scala.util.Try
 import scala.util.matching.Regex
 
@@ -178,40 +180,69 @@ trait MessageParserInstances {
   private def eitherToF[F[_], A](either: Either[String, A])(implicit E: ApplicativeHandle[F, String]): F[A] =
     either.fold(_.raise, E.applicative.pure)
 
-  def literal(lit: String): MessageParser[String] = new MessageParser[String] {
+  /**
+    * Matches a literal string
+    * @param lit The string to match
+    * @param caseSensitive If the match should be case insensitive
+    */
+  def literal(lit: String, caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
 
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
         E: ApplicativeHandle[F, String],
         S: MonadState[F, List[String]]
-    ): F[String] = S.get.flatMap {
-      case Nil           => E.raise("No more arguments left")
-      case `lit` :: tail => S.set(tail).as(lit)
-      case head :: _     => E.raise(s"Was expecting $lit, but found $head")
+    ): F[String] = {
+      def matchesLit(s: String) = if (caseSensitive) s == lit else s.equalsIgnoreCase(lit)
+
+      S.get.flatMap {
+        case Nil                        => E.raise("No more arguments left")
+        case s :: tail if matchesLit(s) => S.set(tail).as(lit)
+        case head :: _                  => E.raise(s"Was expecting $lit, but found $head")
+      }
     }
   }
 
-  def startsWith(prefix: String): MessageParser[String] = new MessageParser[String] {
-    override def parse[F[_]](
-        implicit c: CacheSnapshot,
-        F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
-    ): F[String] = S.get.flatMap {
-      case Nil => E.raise("No more arguments left")
-      case head :: tail if head.startsWith(prefix) =>
-        val newState =
-          if (prefix.length == head.length) tail
-          else head.substring(prefix.length) :: tail
+  /**
+    * Matches a string that starts with a prefix
+    * @param prefix The prefix to look for
+    * @param caseSensitive If the matching should be case sensitive
+    * @param consumeAll If the whole string should be consumed if only part of it was matched
+    */
+  def startsWith(prefix: String, caseSensitive: Boolean = true, consumeAll: Boolean = false): MessageParser[String] =
+    new MessageParser[String] {
+      override def parse[F[_]](
+          implicit c: CacheSnapshot,
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[String] = {
+        val usedPrefix = if (caseSensitive) prefix else prefix.toLowerCase(Locale.ROOT)
+        def startsWithPrefix(s: String) =
+          if (caseSensitive) s.startsWith(usedPrefix) else s.toLowerCase(Locale.ROOT).startsWith(usedPrefix)
 
-        S.set(newState).as(prefix)
-      case head :: _ => E.raise(s"Was expecting something starting with $prefix, but found $head")
+        S.get.flatMap {
+          case Nil => E.raise("No more arguments left")
+          case head :: tail if startsWithPrefix(head) =>
+            val newState =
+              if (consumeAll || prefix.length == head.length) tail
+              else head.substring(prefix.length) :: tail
+
+            S.set(newState).as(prefix)
+          case head :: _ => E.raise(s"Was expecting something starting with $prefix, but found $head")
+        }
+      }
     }
-  }
 
-  def oneOf(seq: Seq[String]): MessageParser[String] = new MessageParser[String] {
-    private val valid = seq.toSet
+  /**
+    * Matches one of the strings passed in
+    * @param seq The strings to try
+    * @param caseSensitive If the match should be case sensitive
+    */
+  def oneOf(seq: Seq[String], caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
+    private val valid = seq.map(s => if (caseSensitive) s else s.toLowerCase(Locale.ROOT)).toSet
+
+    private def validContains(s: String) = valid.contains(if (caseSensitive) s else s.toLowerCase(Locale.ROOT))
 
     override def parse[F[_]](
         implicit c: CacheSnapshot,
@@ -219,8 +250,8 @@ trait MessageParserInstances {
         E: ApplicativeHandle[F, String],
         S: MonadState[F, List[String]]
     ): F[String] = S.get.flatMap {
-      case Nil                                  => E.raise("No more arguments left")
-      case head :: tail if valid.contains(head) => S.set(tail).as(head)
+      case Nil                                 => E.raise("No more arguments left")
+      case head :: tail if validContains(head) => S.set(tail).as(head)
       case head :: _ =>
         val err =
           if (valid.size <= 5) s"Was expecting one of ${seq.mkString(", ")}, but found $head"

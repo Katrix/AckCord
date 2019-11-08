@@ -61,6 +61,11 @@ trait NamedComplexCommand[A, Mat] extends ComplexCommand[A, Mat] {
     * If this command requires a mention when invoking it.
     */
   def requiresMention: Boolean
+
+  /**
+    * If the aliases of this command should be matched with case sensitivity.
+    */
+  def caseSensitive: Boolean
 }
 
 /**

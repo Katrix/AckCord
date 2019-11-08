@@ -163,11 +163,13 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
     * @param namedSymbol The symbol to use when invoking the command
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
+    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
     */
   def named(
       namedSymbol: String,
       namedAliases: Seq[String],
-      mustMention: Boolean
+      mustMention: Boolean = true,
+      aliasesCaseSensitive: Boolean = false
   ): NamedCommandBuilder[M, A] =
     new NamedCommandBuilder[M, A] {
       override def symbol: String = namedSymbol
@@ -175,6 +177,8 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
       override def aliases: Seq[String] = namedAliases
 
       override def requiresMention: Boolean = mustMention
+
+      override def caseSensitive: Boolean = aliasesCaseSensitive
 
       override def requests: RequestHelper = self.requests
 
@@ -426,6 +430,11 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
   def requiresMention: Boolean
 
   /**
+    * If the aliases of the command this builder will create should be case sensitive
+    */
+  def caseSensitive: Boolean
+
+  /**
     * Creates a new command builder parsing a specific type.
     * @tparam B The type to parse
     */
@@ -437,6 +446,8 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
       override def aliases: Seq[String] = self.aliases
 
       override def requiresMention: Boolean = self.requiresMention
+
+      override def caseSensitive: Boolean = self.caseSensitive
 
       override def requests: RequestHelper = self.requests
 
@@ -452,6 +463,8 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
       override def aliases: Seq[String] = self.aliases
 
       override def requiresMention: Boolean = self.requiresMention
+
+      override def caseSensitive: Boolean = self.caseSensitive
 
       override def parser: MessageParser[A] = self.parser
 
@@ -486,6 +499,8 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
       override def aliases: Seq[String] = self.aliases
 
       override def requiresMention: Boolean = self.requiresMention
+
+      override def caseSensitive: Boolean = self.caseSensitive
 
       override def requests: RequestHelper = self.requests
 
