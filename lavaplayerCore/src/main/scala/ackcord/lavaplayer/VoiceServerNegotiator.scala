@@ -103,7 +103,9 @@ object VoiceServerNegotiator {
     case ReceivedEvent(ackTo, _) =>
       ackTo ! AckSink
       Behaviors.same
-    case CompletedSink => Behaviors.stopped
+
+    case CompletedSink =>
+      Behaviors.stopped
 
     case Stop =>
       killSwitch.shutdown()
