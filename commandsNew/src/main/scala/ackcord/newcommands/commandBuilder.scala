@@ -307,7 +307,9 @@ object CommandBuilder {
         .get(m.user.id)
         .flatMap(_.channelId)
         .flatMap(_.vResolve(m.guild.id))
-        .toRight(Some(CommandError.mk(s"This command can only be used in a guild", m)): Option[CommandError])
+        .toRight(
+          Some(CommandError.mk(s"This command can only be used while in a voice channel", m)): Option[CommandError]
+        )
         .map(vCh => create(vCh)(m))
     }
   }
