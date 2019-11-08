@@ -263,7 +263,7 @@ case class Message(
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
-    nonce: Option[RawSnowflake],
+    nonce: Option[String],
     pinned: Boolean,
     messageType: MessageType,
     activity: Option[MessageActivity],

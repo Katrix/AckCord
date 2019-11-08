@@ -188,7 +188,7 @@ object GatewayProtocol extends DiscordProtocol {
           "attachments"      -> a.attachment.map(_.asJson),
           "embeds"           -> a.embeds.map(_.asJson),
           "reactions"        -> a.reactions.map(_.asJson),
-          "nonce"            -> a.nonce.map(_.asJson),
+          "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)),
           "pinned"           -> a.pinned.map(_.asJson),
           "webhook_id"       -> a.webhookId.map(_.asJson)
         )
@@ -206,25 +206,29 @@ object GatewayProtocol extends DiscordProtocol {
     val isWebhook = c.keys.exists(_.toSeq.contains("webhook_id"))
 
     for {
-      id        <- c.downField("id").as[MessageId]
-      channelId <- c.downField("channel_id").as[ChannelId]
+      id        <- c.get[MessageId]("id")
+      channelId <- c.get[ChannelId]("channel_id")
       author <- {
-        if (isWebhook) c.downField("author").as[JsonOption[WebhookAuthor]]
-        else c.downField("author").as[JsonOption[User]]
+        if (isWebhook) c.get[JsonOption[WebhookAuthor]]("author")
+        else c.get[JsonOption[User]]("author")
       }
-      content         <- c.downField("content").as[JsonOption[String]]
-      timestamp       <- c.downField("timestamp").as[JsonOption[OffsetDateTime]]
-      editedTimestamp <- c.downField("edited_timestamp").as[JsonOption[OffsetDateTime]]
-      tts             <- c.downField("tts").as[JsonOption[Boolean]]
-      mentionEveryone <- c.downField("mention_everyone").as[JsonOption[Boolean]]
-      mentions        <- c.downField("mentions").as[JsonOption[Seq[User]]]
-      mentionRoles    <- c.downField("mention_roles").as[JsonOption[Seq[RoleId]]]
-      attachment      <- c.downField("attachments").as[JsonOption[Seq[Attachment]]]
-      embeds          <- c.downField("embeds").as[JsonOption[Seq[ReceivedEmbed]]]
-      reactions       <- c.downField("reactions").as[JsonOption[Seq[Reaction]]]
-      nonce           <- c.downField("nonce").as[JsonOption[RawSnowflake]]
-      pinned          <- c.downField("pinned").as[JsonOption[Boolean]]
-      webhookId       <- c.downField("webhook_id").as[JsonOption[String]]
+      content         <- c.get[JsonOption[String]]("content")
+      timestamp       <- c.get[JsonOption[OffsetDateTime]]("timestamp")
+      editedTimestamp <- c.get[JsonOption[OffsetDateTime]]("edited_timestamp")
+      tts             <- c.get[JsonOption[Boolean]]("tts")
+      mentionEveryone <- c.get[JsonOption[Boolean]]("mention_everyone")
+      mentions        <- c.get[JsonOption[Seq[User]]]("mentions")
+      mentionRoles    <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
+      attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
+      embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
+      reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
+      nonce <- c
+        .downField("nonce")
+        .as[JsonOption[Int]]
+        .map(_.map(Left.apply))
+        .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
+      pinned    <- c.get[JsonOption[Boolean]]("pinned")
+      webhookId <- c.get[JsonOption[String]]("webhook_id")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,

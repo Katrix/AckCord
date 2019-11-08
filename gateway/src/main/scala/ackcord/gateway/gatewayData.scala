@@ -680,7 +680,7 @@ object GatewayEvent {
       attachment: JsonOption[Seq[Attachment]],
       embeds: JsonOption[Seq[ReceivedEmbed]],
       reactions: JsonOption[Seq[Reaction]],
-      nonce: JsonOption[RawSnowflake],
+      nonce: JsonOption[Either[Int, String]],
       pinned: JsonOption[Boolean],
       webhookId: JsonOption[String]
   )

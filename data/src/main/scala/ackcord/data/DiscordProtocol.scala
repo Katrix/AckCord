@@ -81,6 +81,9 @@ trait DiscordProtocol {
   implicit val rawActivityPartyDecoder: Decoder[RawActivityParty] =
     derivation.deriveDecoder(derivation.renaming.snakeCase)
 
+  implicit val activityEmojiEncoder: Encoder[ActivityEmoji] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val activityEmojiDecoder: Decoder[ActivityEmoji] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
   implicit val rawPresenceEncoder: Encoder[RawPresence] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val rawPresenceDecoder: Decoder[RawPresence] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
@@ -211,7 +214,7 @@ trait DiscordProtocol {
       "attachments"      -> a.attachment.asJson,
       "embeds"           -> a.embeds.asJson,
       "reactions"        -> a.reactions.asJson,
-      "nonce"            -> a.nonce.asJson,
+      "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)).asJson,
       "pinned"           -> a.pinned.asJson,
       "type"             -> a.`type`.asJson,
       "activity"         -> a.activity.asJson,
@@ -243,11 +246,14 @@ trait DiscordProtocol {
       attachment      <- c.get[Seq[Attachment]]("attachments")
       embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
-      nonce           <- c.get[Option[RawSnowflake]]("nonce")
-      pinned          <- c.get[Boolean]("pinned")
-      tpe             <- c.get[MessageType]("type")
-      activity        <- c.get[Option[RawMessageActivity]]("activity")
-      application     <- c.get[Option[MessageApplication]]("application")
+      nonce <- c
+        .get[Option[Int]]("nonce")
+        .map(_.map(Left.apply))
+        .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
+      pinned      <- c.get[Boolean]("pinned")
+      tpe         <- c.get[MessageType]("type")
+      activity    <- c.get[Option[RawMessageActivity]]("activity")
+      application <- c.get[Option[MessageApplication]]("application")
     } yield RawMessage(
       id,
       channelId,

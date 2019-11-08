@@ -414,7 +414,7 @@ object CacheHandlers {
             attachment = obj.attachment.getOrElse(message.attachment),
             embeds = obj.embeds.getOrElse(message.embeds),
             reactions = obj.reactions.getOrElse(message.reactions),
-            nonce = obj.nonce.orElseIfUndefined(message.nonce),
+            nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
             pinned = obj.pinned.getOrElse(message.pinned)
           )
           updater.handle(builder, newMessage, registry)

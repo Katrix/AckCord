@@ -333,7 +333,7 @@ case class RawGuildMember(
   /**
     * Convert this to a normal guild member.
     */
-  def toGuildMember(guildId: GuildId) = GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
+  def toGuildMember(guildId: GuildId): GuildMember = GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
 }
 
 /**
@@ -383,7 +383,7 @@ case class RawMessage(
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
-    nonce: Option[RawSnowflake],
+    nonce: Option[Either[Int, String]],
     pinned: Boolean,
     `type`: MessageType,
     activity: Option[RawMessageActivity],
@@ -411,7 +411,7 @@ case class RawMessage(
       attachment,
       embeds,
       reactions.getOrElse(Seq.empty),
-      nonce,
+      nonce.map(_.fold(_.toString, identity)),
       pinned,
       `type`,
       activity.map(_.toMessageActivity),
