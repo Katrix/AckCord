@@ -620,6 +620,7 @@ case class RawActivity(
     applicationId: Option[RawSnowflake],
     details: Option[String],
     state: Option[String],
+    emoji: Option[ActivityEmoji],
     party: Option[RawActivityParty],
     assets: Option[ActivityAsset]
 ) {
@@ -636,7 +637,7 @@ case class RawActivity(
       Right(PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets))
     case 2 => Right(PresenceListening(name, timestamps, details, assets))
     case 3 => Right(PresenceWatching(name, timestamps, details, assets))
-    case 4 => Right(PresenceCustom(name, state))
+    case 4 => Right(PresenceCustom(name, state, emoji))
     case _ => Left(s"Got unknown presence type ${`type`}")
   }
 }

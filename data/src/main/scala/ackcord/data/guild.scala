@@ -518,10 +518,10 @@ case class PresenceWatching(
     assets: Option[ActivityAsset]
 ) extends Activity
 
-//TODO: Figure out what the public API for this is, and what it sends back
 case class PresenceCustom(
     name: String,
-    state: Option[String] //TODO: Figure out if this is nullable
+    state: Option[String],
+    emoji: Option[ActivityEmoji]
 ) extends Activity {
 
   override def timestamps: Option[ActivityTimestamps] = None
@@ -530,6 +530,15 @@ case class PresenceCustom(
 
   override def assets: Option[ActivityAsset] = None
 }
+
+/**
+  * The emoji of a custom status.
+  */
+case class ActivityEmoji(
+    name: String,
+    id: Option[EmojiId],
+    animated: Option[Boolean]
+)
 
 /**
   * The different statuses a user can have
