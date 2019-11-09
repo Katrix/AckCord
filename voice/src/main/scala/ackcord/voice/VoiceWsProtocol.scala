@@ -31,6 +31,9 @@ import io.circe.{derivation, _}
 
 object VoiceWsProtocol extends DiscordProtocol {
 
+  implicit val speakingFlagsEncoder: Encoder[SpeakingFlag] = Encoder[Long].contramap(identity)
+  implicit val speakingFlagsDecoder: Decoder[SpeakingFlag] = Decoder[Long].emap(i => Right(SpeakingFlag.fromLong(i)))
+
   implicit val identifyDataEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val identifyDataDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
@@ -70,6 +73,9 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
   implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
 
+  implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  implicit val helloDataDecoder: Decoder[HelloData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
     (a: VoiceMessage[Data]) => {
       val data = a match {
@@ -81,7 +87,7 @@ object VoiceWsProtocol extends DiscordProtocol {
         case Speaking(d)            => d.asJson
         case HeartbeatACK(d)        => d.asJson
         case Resume(d)              => d.asJson
-        case Hello(_)               => Json.obj()
+        case Hello(d)               => d.asJson
         case Resumed                => Json.obj()
         case IgnoreMessage12        => Json.obj()
         case IgnoreClientDisconnect => Json.obj()
@@ -95,29 +101,27 @@ object VoiceWsProtocol extends DiscordProtocol {
     }
 
   implicit val wsMessageDecoder: Decoder[VoiceMessage[_]] = (c: HCursor) => {
-    c.get[Int]("heartbeat_interval").map(Hello).left.flatMap { _ =>
-      val dCursor = c.downField("d")
+    val dCursor = c.downField("d")
 
-      val op = c.get[VoiceOpCode]("op")
+    val op = c.get[VoiceOpCode]("op")
 
-      def mkMsg[Data: Decoder, B](create: Data => B): Either[DecodingFailure, B] =
-        dCursor.as[Data].map(create)
+    def mkMsg[Data: Decoder, B](create: Data => B): Either[DecodingFailure, B] =
+      dCursor.as[Data].map(create)
 
-      //We use the apply method on the companion object here
-      op.flatMap {
-        case VoiceOpCode.Identify           => mkMsg(Identify)
-        case VoiceOpCode.SelectProtocol     => mkMsg(SelectProtocol.apply)
-        case VoiceOpCode.Ready              => mkMsg(Ready)
-        case VoiceOpCode.Heartbeat          => mkMsg(Heartbeat)
-        case VoiceOpCode.SessionDescription => mkMsg(SessionDescription)
-        case VoiceOpCode.Speaking           => mkMsg(Speaking.apply)
-        case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
-        case VoiceOpCode.Resume             => mkMsg(Resume)
-        case VoiceOpCode.Resumed            => Right(Resumed)
-        case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
-        case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
-        case VoiceOpCode.Hello              => dCursor.downField("heartbeat_interval").as[Int].map(Hello)
-      }
+    //We use the apply method on the companion object here
+    op.flatMap {
+      case VoiceOpCode.Identify           => mkMsg(Identify)
+      case VoiceOpCode.SelectProtocol     => mkMsg(SelectProtocol.apply)
+      case VoiceOpCode.Ready              => mkMsg(Ready)
+      case VoiceOpCode.Heartbeat          => mkMsg(Heartbeat)
+      case VoiceOpCode.SessionDescription => mkMsg(SessionDescription)
+      case VoiceOpCode.Speaking           => mkMsg(Speaking.apply)
+      case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
+      case VoiceOpCode.Resume             => mkMsg(Resume)
+      case VoiceOpCode.Resumed            => Right(Resumed)
+      case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
+      case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
+      case VoiceOpCode.Hello              => mkMsg(Hello)
     }
   }
 }

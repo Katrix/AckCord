@@ -21,23 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 package ackcord
 
-object AckCord {
+import shapeless.tag
+import shapeless.tag.@@
 
-  /**
-    * Current version of AckCord
-    */
-  val Version = "0.14.0"
+package object voice {
 
-  /**
-    * Current Discord API version in use
-    */
-  val DiscordApiVersion = "6"
+  type SpeakingFlag = Long @@ SpeakingFlag.type
+  object SpeakingFlag {
+    private[voice] def apply(long: Long): Long @@ SpeakingFlag.type = tag[SpeakingFlag.type](long)
 
-  /**
-    * Current Discord Voice API version in use
-    */
-  val DiscordVoiceVersion = "4"
+    def fromLong(long: Long): SpeakingFlag = SpeakingFlag(long)
 
+    val None: SpeakingFlag = SpeakingFlag(0)
+
+    val Microphone: SpeakingFlag = SpeakingFlag(1 << 0)
+    val Soundshare: SpeakingFlag = SpeakingFlag(1 << 1)
+    val Priority: SpeakingFlag   = SpeakingFlag(1 << 2)
+  }
+  implicit class SpeakingFlagSyntax(private val flags: SpeakingFlag) extends AnyVal {
+
+    /**
+      * Add a spealing flag to this speaking flag.
+      * @param other The other speaking flag.
+      */
+    def ++(other: SpeakingFlag): SpeakingFlag = SpeakingFlag(flags | other)
+  }
 }

@@ -106,9 +106,8 @@ object SelectProtocol {
   * @param port The port to connect to
   * @param ip The address to send voice data to
   * @param modes The supported modes
-  * @param heartbeatInterval Faulty heartbeat interval, should be ignored
   */
-case class ReadyData(ssrc: Int, port: Int, ip: String, modes: Seq[String], heartbeatInterval: Int)
+case class ReadyData(ssrc: Int, port: Int, ip: String, modes: Seq[String])
 
 /**
   * Sent by Discord following [[Identify]]
@@ -146,7 +145,12 @@ case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[Se
   * @param ssrc The ssrc of the speaking user
   * @param userId Optional user id
   */
-case class SpeakingData(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId])
+case class SpeakingData(
+    speaking: SpeakingFlag,
+    delay: JsonOption[Int],
+    ssrc: JsonOption[Int],
+    userId: JsonOption[UserId]
+)
 
 /**
   * Sent by Discord when a user is speaking, anc client when we want to
@@ -156,7 +160,12 @@ case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode = VoiceOpCode.Speaking
 }
 object Speaking {
-  def apply(speaking: Boolean, delay: JsonOption[Int], ssrc: JsonOption[Int], userId: JsonOption[UserId]): Speaking =
+  def apply(
+      speaking: SpeakingFlag,
+      delay: JsonOption[Int],
+      ssrc: JsonOption[Int],
+      userId: JsonOption[UserId]
+  ): Speaking =
     Speaking(SpeakingData(speaking, delay, ssrc, userId))
 }
 
@@ -185,11 +194,16 @@ case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
 }
 
 /**
+  * Data of [[Hello]]
+  * @param heartbeatInterval How often to heartbeat
+  */
+case class HelloData(heartbeatInterval: Double)
+
+/**
   * Sent by Discord to tell us what heartbeat interval we should use.
   */
-case class Hello(heartbeatInterval: Int) extends VoiceMessage[NotUsed] {
+case class Hello(d: HelloData) extends VoiceMessage[HelloData] {
   override def op: VoiceOpCode = VoiceOpCode.Hello
-  override def d: NotUsed      = NotUsed
 }
 
 /**

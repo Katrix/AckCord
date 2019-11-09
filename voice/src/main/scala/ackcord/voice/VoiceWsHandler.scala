@@ -246,7 +246,7 @@ object VoiceWsHandler {
               context.self ! Restart(fresh = false, 0.seconds)
               Behaviors.same
 
-            case _    => throw e
+            case _ => throw e
           }
         case SendExeption(e) => throw e
 
@@ -311,12 +311,12 @@ object VoiceWsHandler {
     import parameters._
 
     voiceMessage match {
-      case Ready(ReadyData(readySsrc, port, address, _, _)) =>
+      case Ready(ReadyData(readySsrc, port, address, _)) =>
         log.debug("Received ready")
 
         parent ! VoiceHandler.GotServerIP(address, port, readySsrc)
 
-      case Hello(heartbeatInterval) =>
+      case Hello(HelloData(heartbeatInterval)) =>
         val nonce = System.currentTimeMillis().toInt
         heart ! WsHeart.StartBeating(heartbeatInterval, nonce)
         context.self ! SendHeartbeat(nonce)
@@ -373,6 +373,6 @@ object VoiceWsHandler {
 
   case class GotLocalIP(localAddress: String, localPort: Int) extends Command
 
-  case class SendHeartbeat(nonce: Int)      extends Command
-  case class SetSpeaking(speaking: Boolean) extends Command
+  case class SendHeartbeat(nonce: Int)           extends Command
+  case class SetSpeaking(speaking: SpeakingFlag) extends Command
 }

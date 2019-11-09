@@ -49,12 +49,12 @@ object AudioAPIMessage {
     * Sent to the receiver when a user is speaking
     * @param speakingUserId The userId of the speaker
     * @param ssrc The ssrc of the speaker
-    * @param isSpeaking If the user is speaking, or stopped speaking
+    * @param speakingFlags If the speaking flags sent for the user
     */
   case class UserSpeaking(
       speakingUserId: UserId,
       ssrc: Option[Int],
-      isSpeaking: Boolean,
+      speakingFlags: SpeakingFlag,
       delay: Option[Int],
       serverId: RawSnowflake,
       userId: UserId

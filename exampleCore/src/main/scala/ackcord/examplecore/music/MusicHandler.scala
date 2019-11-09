@@ -91,7 +91,7 @@ object MusicHandler {
           ctx.log,
           player,
           Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage]).run(),
-          ctx.spawn(LavaplayerHandler(player, guildId, cache, MusicHandler.UseBurstingSender), "LavaplayerHandler")
+          ctx.spawn(LavaplayerHandler(player, guildId, cache), "LavaplayerHandler")
         ),
         None,
         None,

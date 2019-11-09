@@ -149,8 +149,17 @@ object VoiceHandler {
 
           Behaviors.same
 
-        case SetSpeaking(speaking) =>
-          wsHandler ! VoiceWsHandler.SetSpeaking(speaking)
+        case SetSpeaking(speaking, soundshare, priority) =>
+          val flags = Seq(
+            speaking   -> SpeakingFlag.Microphone,
+            soundshare -> SpeakingFlag.Soundshare,
+            priority   -> SpeakingFlag.Priority
+          ).collect {
+              case (b, f) if b => f
+            }
+            .fold(SpeakingFlag.None)(_ ++ _)
+
+          wsHandler ! VoiceWsHandler.SetSpeaking(flags)
           Behaviors.same
 
         case Logout =>
@@ -190,7 +199,7 @@ object VoiceHandler {
   private[voice] case class GotSecretKey(key: ByteString)                      extends Command
   private[voice] case class GotServerIP(address: String, port: Int, ssrc: Int) extends Command
 
-  case class SetSpeaking(speaking: Boolean) extends Command
+  case class SetSpeaking(speaking: Boolean, soundshare: Boolean = false, priority: Boolean = false) extends Command
 
   /**
     * Send this to a [[VoiceWsHandler]] to stop it gracefully.

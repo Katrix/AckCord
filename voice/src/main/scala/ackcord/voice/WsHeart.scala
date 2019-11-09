@@ -47,7 +47,7 @@ object WsHeart {
   ): Behavior[Command] = Behaviors.receiveMessage {
     case StartBeating(interval, nonce) =>
       context.log.debug(s"Starting to beat with initial nonce $nonce")
-      timers.startTimerAtFixedRate("heartbeatTimerKey", Beat, (interval * 0.75).toInt.millis)
+      timers.startTimerAtFixedRate("heartbeatTimerKey", Beat, interval.millis)
       runningHeart(context, timers, parent, Some(nonce), receivedAck = true)
 
     case StopBeating =>
@@ -81,8 +81,8 @@ object WsHeart {
   }
 
   sealed trait Command
-  case class StartBeating(interval: Int, nonce: Int) extends Command
-  case object StopBeating                            extends Command
-  case class BeatAck(nonce: Int)                     extends Command
-  case object Beat                                   extends Command
+  case class StartBeating(interval: Double, nonce: Int) extends Command
+  case object StopBeating                               extends Command
+  case class BeatAck(nonce: Int)                        extends Command
+  case object Beat                                      extends Command
 }
