@@ -251,6 +251,18 @@ object LavaplayerHandler {
 
         inactive(parameters, Idle)
 
+      case (VChannelMoved(None), _) =>
+        context.self ! DisconnectVChannel
+        Behaviors.same
+
+      case (VChannelMoved(Some(_)), Idle) => Behaviors.same
+
+      case (VChannelMoved(Some(newChannelId)), state: Connecting) =>
+        inactive(parameters, state.copy(vChannelId = newChannelId))
+
+      case (VChannelMoved(Some(newChannelId)), state: HasVoiceWs) =>
+        inactive(parameters, state.copy(vChannelId = newChannelId))
+
       case (GotVoiceData(sessionId, token, endpoint, userId), Connecting(inVChannelId, replyTo, _)) =>
         log.debug("Received session id, token and endpoint")
         connect(inVChannelId, endpoint, userId, sessionId, token, replyTo)
@@ -300,13 +312,12 @@ object LavaplayerHandler {
         voiceHandler ! VoiceHandler.SetSpeaking(speaking)
         Behaviors.same
 
-      case VChannelMoved(newVChannel) =>
-        newVChannel match {
-          case Some(channelId) => active(parameters, state.copy(inVChannelId = channelId))
-          case None =>
-            context.self ! DisconnectVChannel
-            Behaviors.same
-        }
+      case VChannelMoved(None) =>
+        context.self ! DisconnectVChannel
+        Behaviors.same
+
+      case VChannelMoved(Some(newChannelId)) =>
+        active(parameters, state.copy(inVChannelId = newChannelId))
 
       case DisconnectVChannel =>
         voiceHandler ! VoiceHandler.Logout
