@@ -109,15 +109,20 @@ sealed trait Author[A] {
     * If this author is not a webhook.
     */
   def isUser: Boolean
+
+  /**
+    * The name of the author.
+    */
+  def username: String
 }
 
 /**
   * An webhook author
   * @param id The webhook id
-  * @param name The name of the webhook
+  * @param username The name of the webhook
   * @param avatar The webhook's avatar hash
   */
-case class WebhookAuthor(id: SnowflakeType[Webhook], name: String, avatar: String) extends Author[Webhook] {
+case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, avatar: String) extends Author[Webhook] {
   override def isUser: Boolean = false
 }
 
