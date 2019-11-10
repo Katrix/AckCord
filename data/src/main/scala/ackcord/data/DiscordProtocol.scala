@@ -28,6 +28,7 @@ import java.time.{Instant, OffsetDateTime}
 import scala.util.Try
 
 import ackcord.data.raw._
+import cats.syntax.either._
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
