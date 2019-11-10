@@ -153,33 +153,23 @@ object VoiceWsHandler {
       userId: UserId,
       sessionId: String,
       token: String
-  ): Behavior[Command] =
-    Behaviors
-      .supervise(
-        Behaviors.setup[Command] { ctx =>
-          Behaviors.withTimers { timers =>
-            implicit val system: ActorSystem[Nothing] = ctx.system
-            val log                                   = ctx.log
+  ): Behavior[Command] = Behaviors.setup { ctx =>
+    Behaviors.withTimers { timers =>
+      implicit val system: ActorSystem[Nothing] = ctx.system
+      val log                                   = ctx.log
 
-            val queue = runWsFlow(ctx, log, address)
-            val heart = ctx.spawn(WsHeart(ctx.self), "Heart")
+      val queue = runWsFlow(ctx, log, address)
+      val heart = ctx.spawn(WsHeart(ctx.self), "Heart")
 
-            ctx.self ! SendHandshake
+      ctx.self ! SendHandshake
 
-            wsHandling(
-              Parameters(ctx, timers, log, parent, queue, sendTo, heart, address, serverId, userId, sessionId, token),
-              isRestarting = false,
-              canResume = false
-            )
-          }
-        }
+      wsHandling(
+        Parameters(ctx, timers, log, parent, queue, sendTo, heart, address, serverId, userId, sessionId, token),
+        isRestarting = false,
+        canResume = false
       )
-      .onFailure(
-        SupervisorStrategy
-          .restartWithBackoff(100.millis, 5.seconds, 1d)
-          .withResetBackoffAfter(60.seconds)
-          .withMaxRestarts(5)
-      )
+    }
+  }
 
   def wsHandling(
       parameters: Parameters,
