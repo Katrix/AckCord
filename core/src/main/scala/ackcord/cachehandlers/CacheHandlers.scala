@@ -313,9 +313,9 @@ object CacheHandlers {
         }
 
         for {
-          _ <- registry.getUpdater[Presence]
-          _ <- registry.getUpdater[Guild]
-          guild <- builder.getGuild(guildId)
+          _            <- registry.getUpdater[Presence]
+          _            <- registry.getUpdater[Guild]
+          guild        <- builder.getGuild(guildId)
           rawPresences <- rawPresencesOpt
         } {
           val presences = rawPresences.map(_.toPresence).flatMap {

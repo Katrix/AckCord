@@ -333,7 +333,8 @@ case class RawGuildMember(
   /**
     * Convert this to a normal guild member.
     */
-  def toGuildMember(guildId: GuildId): GuildMember = GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
+  def toGuildMember(guildId: GuildId): GuildMember =
+    GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
 }
 
 /**

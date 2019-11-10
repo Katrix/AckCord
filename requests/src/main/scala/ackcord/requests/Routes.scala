@@ -283,7 +283,7 @@ object Routes {
   val channel: RouteFunction[ChannelId] = base / "channels" / channelId
 
   val getChannel: ChannelId => RequestRoute         = upcast(channel.toRequest(GET))
-  val modifyChannel: ChannelId => RequestRoute = upcast(channel.toRequest(PATCH))
+  val modifyChannel: ChannelId => RequestRoute      = upcast(channel.toRequest(PATCH))
   val deleteCloseChannel: ChannelId => RequestRoute = upcast(channel.toRequest(DELETE))
 
   val channelMessages: RouteFunction[ChannelId]             = channel / "messages"

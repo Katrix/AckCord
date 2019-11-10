@@ -222,7 +222,6 @@ object GatewayHandler {
             retryLogin(parameters, state.copy(resume = newResume), timers, wsFlow)
           }
 
-
         case SendException(e: PeerClosedConnectionException) =>
           e.closeCode match {
             //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
