@@ -8,20 +8,23 @@
 <span class="k">import</span> <span class="nn">ackcord.data._</span>
 <span class="k">import</span> <span class="nn">ackcord.syntax._</span>
 <span class="k">import</span> <span class="nn">ackcord.commands._</span>
+<span class="k">import</span> <span class="nn">ackcord.requests.Ratelimiter</span>
 <span class="k">import</span> <span class="nn">akka.NotUsed</span>
-<span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
+<span class="k">import</span> <span class="nn">akka.actor.typed._</span>
+<span class="k">import</span> <span class="nn">akka.actor.typed.scaladsl._</span>
 <span class="k">import</span> <span class="nn">akka.stream.scaladsl.</span><span class="o">{</span><span class="nc">Source</span><span class="o">,</span> <span class="nc">Flow</span><span class="o">,</span> <span class="nc">Keep</span><span class="o">}</span>
 
-<span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span>  <span class="o">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">"AckCord"</span><span class="o">)</span>
-<span class="k">import</span> <span class="nn">system.dispatcher</span>
+<span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span><span class="o">[</span><span class="kt">Nothing</span><span class="o">]</span> <span class="k">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="nc">Behaviors</span><span class="o">.</span><span class="n">ignore</span><span class="o">,</span> <span class="s">"AckCord"</span><span class="o">)</span>
+<span class="k">import</span> <span class="nn">system.executionContext</span>
 
 <span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
 <span class="k">val</span> <span class="n">cache</span> <span class="k">=</span> <span class="nc">Cache</span><span class="o">.</span><span class="n">create</span>
-<span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="nc">RequestHelper</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">))</span>
+<span class="k">val</span> <span class="n">ratelimiter</span> <span class="k">=</span> <span class="n">system</span><span class="o">.</span><span class="n">systemActorOf</span><span class="o">(</span><span class="nc">Ratelimiter</span><span class="o">(),</span> <span class="s">"Ratelimiter"</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">RequestHelper</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">),</span> <span class="n">ratelimiter</span><span class="o">)</span>
 
 <span class="k">val</span> <span class="n">gatewaySettings</span> <span class="k">=</span> <span class="nc">GatewaySettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
 <span class="nc">DiscordShard</span><span class="o">.</span><span class="n">fetchWsGateway</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">wsUri</span> <span class="k">=&gt;</span>
- <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="nc">DiscordShard</span><span class="o">.</span><span class="n">connect</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">,</span> <span class="s">"DiscordShard"</span><span class="o">)</span>
+  <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="n">system</span><span class="o">.</span><span class="n">systemActorOf</span><span class="o">(</span><span class="nc">DiscordShard</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">),</span> <span class="s">"DiscordShard"</span><span class="o">)</span>
  <span class="c1">//shard ! DiscordShard.StartShard
 </span><span class="o">}</span>
 </code></pre>

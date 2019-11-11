@@ -80,18 +80,23 @@
 
 <p>First we need an actor system.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.actor.ActorSystem</span>
+<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">akka.actor.typed._</span>
+<span class="k">import</span> <span class="nn">akka.actor.typed.scaladsl._</span>
 <span class="k">import</span> <span class="nn">akka.stream.scaladsl.Sink</span>
+<span class="k">import</span> <span class="nn">ackcord.requests.Ratelimiter</span>
 
-<span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span>  <span class="o">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="s">"AckCord"</span><span class="o">)</span>
-<span class="k">import</span> <span class="nn">system.dispatcher</span>
+<span class="c1">//In a real application you would choose a better guardian actor than this,
+//and setup most of this stuff from within that.
+</span><span class="k">implicit</span> <span class="k">val</span> <span class="n">system</span><span class="k">:</span> <span class="kt">ActorSystem</span><span class="o">[</span><span class="kt">Nothing</span><span class="o">]</span> <span class="k">=</span> <span class="nc">ActorSystem</span><span class="o">(</span><span class="nc">Behaviors</span><span class="o">.</span><span class="n">ignore</span><span class="o">,</span> <span class="s">"AckCord"</span><span class="o">)</span>
+<span class="k">import</span> <span class="nn">system.executionContext</span>
 </code></pre>
 </div>
 
 <p>Next we create the <code class="highlighter-rouge">Cache</code>, and the <code class="highlighter-rouge">RequestHelper</code>. The <code class="highlighter-rouge">Cache</code> helps you know when stuff happens, and keeps around the changes from old things that have happened. The <code class="highlighter-rouge">RequestHelper</code> helps you make stuff happen. I’d recommend looking into the settings used when creating both the <code class="highlighter-rouge">Cache</code> and <code class="highlighter-rouge">RequestHelper</code> if you want to fine tune your bot.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">val</span> <span class="n">cache</span> <span class="k">=</span> <span class="nc">Cache</span><span class="o">.</span><span class="n">create</span>
-<span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="nc">RequestHelper</span><span class="o">.</span><span class="n">create</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">))</span>
+<span class="k">val</span> <span class="n">ratelimiter</span> <span class="k">=</span> <span class="n">system</span><span class="o">.</span><span class="n">systemActorOf</span><span class="o">(</span><span class="nc">Ratelimiter</span><span class="o">(),</span> <span class="s">"Ratelimiter"</span><span class="o">)</span>
+<span class="k">val</span> <span class="n">requests</span> <span class="k">=</span> <span class="k">new</span> <span class="nc">RequestHelper</span><span class="o">(</span><span class="nc">BotAuthentication</span><span class="o">(</span><span class="n">token</span><span class="o">),</span> <span class="n">ratelimiter</span><span class="o">)</span>
 </code></pre>
 </div>
 
@@ -118,7 +123,7 @@
 //   true
 // )
 </span><span class="nc">DiscordShard</span><span class="o">.</span><span class="n">fetchWsGateway</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">wsUri</span> <span class="k">=&gt;</span>
- <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="nc">DiscordShard</span><span class="o">.</span><span class="n">connect</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">,</span> <span class="n">actorName</span> <span class="k">=</span> <span class="s">"DiscordShard"</span><span class="o">)</span>
+ <span class="k">val</span> <span class="n">shard</span> <span class="k">=</span> <span class="n">system</span><span class="o">.</span><span class="n">systemActorOf</span><span class="o">(</span><span class="nc">DiscordShard</span><span class="o">(</span><span class="n">wsUri</span><span class="o">,</span> <span class="n">gatewaySettings</span><span class="o">,</span> <span class="n">cache</span><span class="o">),</span> <span class="s">"DiscordShard"</span><span class="o">)</span>
  <span class="c1">//shard ! DiscordShard.StartShard
 </span><span class="o">}</span>
 </code></pre>
@@ -127,11 +132,11 @@
 <h2 id="access-to-the-low-level-api-from-the-high-level-api">Access to the low level API from the high level API</h2>
 
 <p>Accessing the low level API from the high level API is simple.
-The shard actors can be gotten from the <code class="highlighter-rouge">shards</code> method on the <code class="highlighter-rouge">DiscordClient[F]</code>.
-The cache can be gotten from the <code class="highlighter-rouge">cache</code> method on the <code class="highlighter-rouge">DiscordClient[F]</code>.</p>
+The shard actors can be gotten from the <code class="highlighter-rouge">shards</code> method on the <code class="highlighter-rouge">DiscordClient</code>.
+The cache can be gotten from the <code class="highlighter-rouge">cache</code> method on the <code class="highlighter-rouge">DiscordClient</code>.</p>
 
 <div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="k">val</span> <span class="n">shards</span><span class="k">:</span> <span class="kt">Seq</span><span class="o">[</span><span class="kt">ActorRef</span><span class="o">]</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">shards</span>
+  <span class="k">val</span> <span class="n">shards</span><span class="k">:</span> <span class="kt">Future</span><span class="o">[</span><span class="kt">Seq</span><span class="o">[</span><span class="kt">ActorRef</span><span class="o">[</span><span class="kt">DiscordShard.Command</span><span class="o">]]]</span> <span class="k">=</span> <span class="n">client</span><span class="o">.</span><span class="n">shards</span>
   <span class="k">val</span> <span class="n">cache</span><span class="k">:</span> <span class="kt">Cache</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">cache</span>
 <span class="o">}</span>
 </code></pre>
