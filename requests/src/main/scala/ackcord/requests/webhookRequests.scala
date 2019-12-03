@@ -45,7 +45,7 @@ case class CreateWebhook(
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateWebhook, CreateWebhookData, Webhook] {
   override def route: RequestRoute                       = Routes.createWebhook(channelId)
-  override def paramsEncoder: Encoder[CreateWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[CreateWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -124,7 +124,7 @@ case class ModifyWebhook(
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyWebhook, ModifyWebhookData, Webhook] {
   override def route: RequestRoute                       = Routes.getWebhook(id)
-  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -144,7 +144,7 @@ case class ModifyWebhookWithToken(
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
-  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
   override def responseDecoder: Decoder[Webhook]         = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks

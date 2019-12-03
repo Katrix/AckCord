@@ -29,26 +29,24 @@ import akka.util.ByteString
 import io.circe.syntax._
 import io.circe.{derivation, _}
 
+//noinspection NameBooleanParameters
 object VoiceWsProtocol extends DiscordProtocol {
 
-  implicit val speakingFlagsEncoder: Encoder[SpeakingFlag] = Encoder[Long].contramap(identity)
-  implicit val speakingFlagsDecoder: Decoder[SpeakingFlag] = Decoder[Long].emap(i => Right(SpeakingFlag.fromLong(i)))
+  implicit val speakingFlagsCodec: Codec[SpeakingFlag] = Codec.from(
+    Decoder[Long].emap(i => Right(SpeakingFlag.fromLong(i))),
+    Encoder[Long].contramap(identity)
+  )
 
-  implicit val identifyDataEncoder: Encoder[IdentifyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val identifyDataDecoder: Decoder[IdentifyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val identifyDataCodec: Codec[IdentifyData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val selectProtocolDataEncoder: Encoder[SelectProtocolData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val selectProtocolDataDecoder: Decoder[SelectProtocolData] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolDataCodec: Codec[SelectProtocolData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val selectProtocolConnectionDataEncoder: Encoder[SelectProtocolConnectionData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val selectProtocolConnectionDataDecoder: Decoder[SelectProtocolConnectionData] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val selectProtocolConnectionDataCodec: Codec[SelectProtocolConnectionData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val readyDataEncoder: Encoder[ReadyData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val readyDataDecoder: Decoder[ReadyData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val readyDataCodec: Codec[ReadyData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
     Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
@@ -68,13 +66,12 @@ object VoiceWsProtocol extends DiscordProtocol {
       "ssrc"     -> a.ssrc.map(_.asJson),
       "user_id"  -> a.userId.map(_.asJson)
     )
-  implicit val speakingDataDecoder: Decoder[SpeakingData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val speakingDataDecoder: Decoder[SpeakingData] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
-  implicit val resumeDataEncoder: Encoder[ResumeData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val resumeDataDecoder: Decoder[ResumeData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val resumeDataCodec: Codec[ResumeData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val helloDataEncoder: Encoder[HelloData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
-  implicit val helloDataDecoder: Decoder[HelloData] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  implicit val helloDataCodec: Codec[HelloData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
     (a: VoiceMessage[Data]) => {

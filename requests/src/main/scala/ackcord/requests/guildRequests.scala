@@ -63,7 +63,7 @@ case class CreateGuildData(
 case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildData, RawGuild, Option[Guild]] {
   override def route: RequestRoute = Routes.createGuild
   override def paramsEncoder: Encoder[CreateGuildData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
   override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
@@ -115,7 +115,7 @@ case class ModifyGuild(
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyGuild, ModifyGuildData, RawGuild, Option[Guild]] {
   override def route: RequestRoute                     = Routes.modifyGuild(guildId)
-  override def paramsEncoder: Encoder[ModifyGuildData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[ModifyGuildData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
   override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
@@ -224,7 +224,8 @@ case class ModifyGuildChannelPositions(
 ) extends NoResponseReasonRequest[ModifyGuildChannelPositions, Seq[ModifyGuildChannelPositionsData]] {
   override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
   override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
-    implicit val enc: Encoder[ModifyGuildChannelPositionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+    implicit val enc: Encoder[ModifyGuildChannelPositionsData] =
+      derivation.deriveEncoder(derivation.renaming.snakeCase, None)
     Encoder[Seq[ModifyGuildChannelPositionsData]]
   }
 
@@ -299,8 +300,9 @@ case class AddGuildMember(
     userId: UserId,
     params: AddGuildMemberData
 ) extends GuildMemberRequest[AddGuildMemberData] {
-  override def route: RequestRoute                        = Routes.addGuildMember(guildId, userId)
-  override def paramsEncoder: Encoder[AddGuildMemberData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.addGuildMember(guildId, userId)
+  override def paramsEncoder: Encoder[AddGuildMemberData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def requiredPermissions: Permission = {
     def ifDefined(opt: Option[_], perm: Permission): Permission = if (opt.isDefined) perm else Permission.None
@@ -383,8 +385,9 @@ case class ModifyBotUsersNick(
     params: ModifyBotUsersNickData,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyBotUsersNick, ModifyBotUsersNickData, String] {
-  override def route: RequestRoute                            = Routes.modifyCurrentNick(guildId)
-  override def paramsEncoder: Encoder[ModifyBotUsersNickData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.modifyCurrentNick(guildId)
+  override def paramsEncoder: Encoder[ModifyBotUsersNickData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[String] = Decoder[String]
 
@@ -553,8 +556,9 @@ case class CreateGuildRole(
     params: CreateGuildRoleData,
     reason: Option[String] = None
 ) extends ReasonRequest[CreateGuildRole, CreateGuildRoleData, RawRole, Role] {
-  override def route: RequestRoute                         = Routes.createGuildRole(guildId)
-  override def paramsEncoder: Encoder[CreateGuildRoleData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.createGuildRole(guildId)
+  override def paramsEncoder: Encoder[CreateGuildRoleData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawRole] = Decoder[RawRole]
   override def toNiceResponse(response: RawRole): Role =
@@ -583,7 +587,8 @@ case class ModifyGuildRolePositions(
 ) extends ReasonRequest[ModifyGuildRolePositions, Seq[ModifyGuildRolePositionsData], Seq[RawRole], Seq[Role]] {
   override def route: RequestRoute = Routes.modifyGuildRolePositions(guildId)
   override def paramsEncoder: Encoder[Seq[ModifyGuildRolePositionsData]] = {
-    implicit val enc: Encoder[ModifyGuildRolePositionsData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+    implicit val enc: Encoder[ModifyGuildRolePositionsData] =
+      derivation.deriveEncoder(derivation.renaming.snakeCase, None)
     Encoder[Seq[ModifyGuildRolePositionsData]]
   }
 
@@ -621,8 +626,9 @@ case class ModifyGuildRole(
     params: ModifyGuildRoleData,
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyGuildRole, ModifyGuildRoleData, RawRole, Role] {
-  override def route: RequestRoute                         = Routes.modifyGuildRole(guildId, roleId)
-  override def paramsEncoder: Encoder[ModifyGuildRoleData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.modifyGuildRole(guildId, roleId)
+  override def paramsEncoder: Encoder[ModifyGuildRoleData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawRole]       = Decoder[RawRole]
   override def toNiceResponse(response: RawRole): Role = response.toRole(guildId)
@@ -675,7 +681,7 @@ case class GetGuildPruneCount(guildId: GuildId, queryParams: GuildPruneCountData
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def responseDecoder: Decoder[GuildPruneCountResponse] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 }
 object GetGuildPruneCount {
   def mk(guildId: GuildId, days: Int): GetGuildPruneCount =
@@ -712,7 +718,7 @@ case class BeginGuildPrune(
   override def withReason(reason: String): BeginGuildPrune = copy(reason = Some(reason))
 
   override def responseDecoder: Decoder[BeginGuildPruneResponse] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase)
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 }
 object BeginGuildPrune {
   def mk(
@@ -773,7 +779,7 @@ case class CreateGuildIntegration(
 ) extends NoResponseRequest[CreateGuildIntegrationData] {
   override def route: RequestRoute = Routes.createGuildIntegrations(guildId)
   override def paramsEncoder: Encoder[CreateGuildIntegrationData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -802,7 +808,7 @@ case class ModifyGuildIntegration(
 ) extends NoResponseRequest[ModifyGuildIntegrationData] {
   override def route: RequestRoute = Routes.modifyGuildIntegration(guildId, integrationId)
   override def paramsEncoder: Encoder[ModifyGuildIntegrationData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -867,7 +873,8 @@ case class VanityUrlResponse(code: String)
 case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseRequest[VanityUrlResponse] {
   override def route: RequestRoute = Routes.getGuildVanityUrl(guildId)
 
-  override def responseDecoder: Decoder[VanityUrlResponse] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+  override def responseDecoder: Decoder[VanityUrlResponse] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -946,7 +953,7 @@ case class GetCurrentUserGuilds(queryParams: GetCurrentUserGuildsData)
     Routes.getCurrentUserGuilds(queryParams.before, queryParams.after, queryParams.limit)
 
   override def responseDecoder: Decoder[Seq[GetUserGuildsGuild]] = {
-    implicit val dec: Decoder[GetUserGuildsGuild] = derivation.deriveDecoder(derivation.renaming.snakeCase)
+    implicit val dec: Decoder[GetUserGuildsGuild] = derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
     Decoder[Seq[GetUserGuildsGuild]]
   }
 }
@@ -981,7 +988,7 @@ case class CreateDMData(recipientId: UserId)
   */
 case class CreateDm(params: CreateDMData) extends RESTRequest[CreateDMData, RawChannel, Option[DMChannel]] {
   override def route: RequestRoute                  = Routes.createDM
-  override def paramsEncoder: Encoder[CreateDMData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[CreateDMData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[DMChannel] =

@@ -253,8 +253,9 @@ object OAuth {
   )
 
   case object GetCurrentApplicationInformation extends NoParamsNiceResponseRequest[ApplicationInformation] {
+    //noinspection NameBooleanParameters
     override def responseDecoder: Decoder[ApplicationInformation] =
-      derivation.deriveDecoder(derivation.renaming.snakeCase)
+      derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
     override def route: RequestRoute = Routes.getCurrentApplication
   }
 }

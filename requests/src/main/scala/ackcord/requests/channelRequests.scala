@@ -445,8 +445,9 @@ case class BulkDeleteMessages(
     channelId: ChannelId,
     params: BulkDeleteMessagesData
 ) extends NoResponseRequest[BulkDeleteMessagesData] {
-  override def route: RequestRoute                            = Routes.bulkDeleteMessages(channelId)
-  override def paramsEncoder: Encoder[BulkDeleteMessagesData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.bulkDeleteMessages(channelId)
+  override def paramsEncoder: Encoder[BulkDeleteMessagesData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -477,7 +478,7 @@ case class EditChannelPermissions(
 ) extends NoResponseReasonRequest[EditChannelPermissions, EditChannelPermissionsData] {
   override def route: RequestRoute = Routes.editChannelPermissions(channelId, overwriteId)
   override def paramsEncoder: Encoder[EditChannelPermissionsData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase)
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -546,8 +547,9 @@ case class CreateChannelInvite(
     params: CreateChannelInviteData,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateChannelInvite, CreateChannelInviteData, Invite] {
-  override def route: RequestRoute                             = Routes.getChannelInvites(channelId)
-  override def paramsEncoder: Encoder[CreateChannelInviteData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.getChannelInvites(channelId)
+  override def paramsEncoder: Encoder[CreateChannelInviteData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 
@@ -612,7 +614,7 @@ case class GroupDMAddRecipientData(accessToken: String, nick: String)
 case class GroupDMAddRecipient(channelId:       Snowflake, userId: Snowflake, params: GroupDMAddRecipientData)
     extends RESTRequest[GroupDMAddRecipientData] {
   override def route:         RestRoute                        = Routes.groupDmAddRecipient(userId, channelId)
-  override def paramsEncoder: Encoder[GroupDMAddRecipientData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def paramsEncoder: Encoder[GroupDMAddRecipientData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 }
 
 case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) extends NoParamsRequest {
@@ -647,8 +649,9 @@ case class CreateGuildEmoji(
     params: CreateGuildEmojiData,
     reason: Option[String] = None
 ) extends ReasonRequest[CreateGuildEmoji, CreateGuildEmojiData, RawEmoji, Emoji] {
-  override def route: RequestRoute                          = Routes.createGuildEmoji(guildId)
-  override def paramsEncoder: Encoder[CreateGuildEmojiData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.createGuildEmoji(guildId)
+  override def paramsEncoder: Encoder[CreateGuildEmojiData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
   override def toNiceResponse(response: RawEmoji): Emoji = response.toEmoji
@@ -693,8 +696,9 @@ case class ModifyGuildEmoji(
     params: ModifyGuildEmojiData,
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyGuildEmoji, ModifyGuildEmojiData, RawEmoji, Emoji] {
-  override def route: RequestRoute                          = Routes.modifyGuildEmoji(guildId, emojiId)
-  override def paramsEncoder: Encoder[ModifyGuildEmojiData] = derivation.deriveEncoder(derivation.renaming.snakeCase)
+  override def route: RequestRoute = Routes.modifyGuildEmoji(guildId, emojiId)
+  override def paramsEncoder: Encoder[ModifyGuildEmojiData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
   override def toNiceResponse(response: RawEmoji): Emoji = response.toEmoji
