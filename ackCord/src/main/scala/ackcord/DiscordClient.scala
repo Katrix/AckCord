@@ -26,6 +26,7 @@ package ackcord
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
+import scala.util.Success
 
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
@@ -85,7 +86,13 @@ trait DiscordClient extends CommandsHelper {
     * @param timeout The amount of time to wait before forcing shutdown.
     */
   def shutdown(timeout: FiniteDuration = 1.minute): Future[Unit] =
-    logout(timeout).map(_ => requests.system.terminate())
+    logout(timeout)
+      .transformWith { _ =>
+        requests.system.terminate()
+
+        requests.system.whenTerminated
+      }
+      .map(_ => ())
 
   /**
     * A stream requester runner.
