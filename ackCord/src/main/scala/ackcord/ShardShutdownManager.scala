@@ -32,17 +32,21 @@ object ShardShutdownManager {
     Behaviors
       .receive[DiscordShard.StopShard.type] {
         case (ctx, DiscordShard.StopShard) =>
-          shards.foreach { shard =>
-            ctx.watch(shard)
-            shard ! DiscordShard.StopShard
-          }
+          if (shards.isEmpty) {
+            Behaviors.stopped
+          } else {
+            shards.foreach { shard =>
+              ctx.watch(shard)
+              shard ! DiscordShard.StopShard
+            }
 
-          Behaviors.same
+            Behaviors.same
+          }
       }
       .receiveSignal {
         case (_, Terminated(deadShard)) =>
           val newShards = shards.filter(_ != deadShard)
-          if (shards.isEmpty) {
+          if (newShards.isEmpty) {
             Behaviors.stopped
           } else {
             apply(newShards)
