@@ -175,9 +175,18 @@ case class RequestHelper(
     * @param request The request to send.
     * @return A source of the single request answer.
     */
-  def single[Data, Ctx](request: Request[Data])(
+  def single[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
   ): Source[RequestAnswer[Data], NotUsed] = Source.single(request -> NotUsed).via(flow(properties).asFlow.map(_._1))
+
+  /**
+    * Sends a single request, and grabs the data if it's available.
+    * @param request The request to send.
+    * @return A source of the single request answer.
+    */
+  def singleSuccess[Data](request: Request[Data])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Source[Data, NotUsed] = Source.single(request -> NotUsed).via(flowSuccess(properties).asFlow.map(_._1))
 
   /**
     * Sends many requests
@@ -188,6 +197,15 @@ case class RequestHelper(
       implicit properties: RequestProperties = RequestProperties.default
   ): Source[RequestAnswer[Data], NotUsed] =
     Source(requests.map(_ -> NotUsed)).via(flow(properties).asFlow.map(_._1))
+
+  /**
+    * Sends many requests, and grabs the data if it's available.
+    * @param requests The requests to send.
+    * @return A source of the request answers.
+    */
+  def manySuccess[Data](requests: immutable.Seq[Request[Data]])(
+      implicit properties: RequestProperties = RequestProperties.default
+  ): Source[Data, NotUsed] = Source(requests.map(_ -> NotUsed)).via(flowSuccess(properties).asFlow.map(_._1))
 
   /**
     * Sends a single request and gets the response as a future.

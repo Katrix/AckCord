@@ -83,9 +83,7 @@ object RequestRunner {
     new RequestRunner[SourceRequest] {
       override def run[A](request: Request[A])(implicit c: CacheSnapshot): SourceRequest[A] =
         if (request.hasPermissions) {
-          requests.single(request).collect {
-            case RequestResponse(data, _, _, _) => data
-          }
+          requests.singleSuccess(request)
         } else Source.failed(new RequestPermissionException(request))
 
       override def runMany[A](requestSeq: immutable.Seq[Request[A]])(
