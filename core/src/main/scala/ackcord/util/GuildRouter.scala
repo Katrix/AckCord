@@ -72,12 +72,16 @@ abstract class GuildRouter[Event, Inner](
     case Shutdown =>
       isShuttingDown = true
 
-      shutdownBehavior match {
-        case OnShutdownSendMsg(msg)     => sendToAll[Inner](msg, _ ! _)
-        case GuildRouter.OnShutdownStop => handlers.values.foreach(context.stop)
-      }
+      if (handlers.nonEmpty) {
+        shutdownBehavior match {
+          case OnShutdownSendMsg(msg)     => sendToAll[Inner](msg, _ ! _)
+          case GuildRouter.OnShutdownStop => handlers.values.foreach(context.stop)
+        }
 
-      Behaviors.same
+        Behaviors.same
+      } else {
+        Behaviors.stopped
+      }
   }
 
   def sendToGuild[A](guildId: GuildId, msg: A, handle: (ActorRef[Inner], A) => Unit): Unit =
