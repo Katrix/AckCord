@@ -29,7 +29,9 @@ import scala.reflect.ClassTag
 
 import ackcord.commands._
 import ackcord.requests.SupervisionStreams
+import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
+import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
@@ -104,4 +106,12 @@ class DiscordClientCore(
     implicit val impTimeout: Timeout = Timeout(1.second + timeout)
     actor.ask[DiscordClientActor.LogoutReply](DiscordClientActor.Logout(timeout, _)).flatMap(_.done)
   }
+
+  override def shutdownJVM(timeout: FiniteDuration): Future[Unit] =
+    CoordinatedShutdown(system.toClassic)
+      .run(CoordinatedShutdown.JvmExitReason)
+      .map { _ =>
+        println("Stopping")
+        sys.exit(0)
+      }(scala.concurrent.ExecutionContext.global) //Just in case CoordinatedShutdown doesn't stop the JVM
 }

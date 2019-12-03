@@ -124,7 +124,7 @@ object MyBot extends App {
         filters = Seq(CmdFilter.NonBot), //Ideally you're create a new filter type here to only allow the owner to shut down the bot
         description = Some(CmdDescription("Kill", "Stops the bot"))
       ) { _ =>
-        client.shutdown()
+        client.shutdownJVM()
       }
 
       val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager

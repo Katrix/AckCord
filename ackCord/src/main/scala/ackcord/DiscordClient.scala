@@ -33,6 +33,7 @@ import ackcord.commands._
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.Done
+import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
@@ -83,9 +84,9 @@ trait DiscordClient extends CommandsHelper {
 
   /**
     * Logs out the shards of this client, and then shuts down the actor system.
-    * @param timeout The amount of time to wait before forcing shutdown.
+    * @param timeout The amount of time to wait for logout to succeed before forcing shutdown.
     */
-  def shutdown(timeout: FiniteDuration = 1.minute): Future[Unit] =
+  def shutdownAckCord(timeout: FiniteDuration = 1.minute): Future[Unit] =
     logout(timeout)
       .transformWith { _ =>
         requests.system.terminate()
@@ -93,6 +94,13 @@ trait DiscordClient extends CommandsHelper {
         requests.system.whenTerminated
       }
       .map(_ => ())
+
+  /**
+    * Logs out the shards of this client, and then shuts down the JVM.
+    * @param timeout The amount of time to wait for logout to succeed before forcing shutdown.
+    * @return
+    */
+  def shutdownJVM(timeout: FiniteDuration = 1.minute): Future[Unit]
 
   /**
     * A stream requester runner.
