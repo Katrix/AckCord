@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import java.net.URLEncoder
+
 import ackcord.AckCord
 import ackcord.data._
 import akka.http.scaladsl.model.HttpMethods._
@@ -244,7 +246,7 @@ object Routes {
   val webhookId: MajorParameter[SnowflakeType[Webhook]] = new MajorParameter("webhookId", _.asString)
 
   val messageId: MinorParameter[MessageId]                = new MinorParameter("messageId", _.asString)
-  val emoji: MinorParameter[Emoji]                        = new MinorParameter("emoji", identity)
+  val emoji: MinorParameter[Emoji]                        = new MinorParameter("emoji", URLEncoder.encode(_, "UTF-8"))
   val emojiId: MinorParameter[EmojiId]                    = new MinorParameter("emojiId", _.asString)
   val userId: MinorParameter[UserId]                      = new MinorParameter("userId", _.asString)
   val permissionOverwriteId: MinorParameter[UserOrRoleId] = new MinorParameter("permissionOverwriteId", _.asString)
