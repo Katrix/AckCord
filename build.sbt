@@ -3,7 +3,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 lazy val akkaVersion     = "2.6.0"
 lazy val akkaHttpVersion = "10.1.11"
 lazy val circeVersion    = "0.12.3"
-lazy val ackCordVersion  = "0.15.0-RC1"
+lazy val ackCordVersion  = "0.15.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
