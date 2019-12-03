@@ -28,6 +28,7 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
 import ackcord.commands._
+import ackcord.requests.SupervisionStreams
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.scaladsl.{Keep, Sink, Source}
@@ -59,24 +60,32 @@ class DiscordClientCore(
   override def registerHandler[G[_], A <: APIMessage](
       handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
-    cache.subscribeAPI
-      .collectType[A]
-      .map { a =>
-        implicit val c: MemoryCacheSnapshot = a.cache.current
-        handler.handle(a)
-      }
-      .flatMapConcat(streamable.toSource)
-      .viaMat(KillSwitches.single)(Keep.right)
-      .toMat(Sink.ignore)(Keep.both)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        cache.subscribeAPI
+          .collectType[A]
+          .map { a =>
+            implicit val c: MemoryCacheSnapshot = a.cache.current
+            handler.handle(a)
+          }
+          .flatMapConcat(streamable.toSource)
+          .viaMat(KillSwitches.single)(Keep.right)
+          .toMat(Sink.ignore)(Keep.both)
+          .addAttributes
+      )
       .run()
 
   override def onEvent[G[_]](
       handler: APIMessage => G[Unit]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
-    cache.subscribeAPI
-      .flatMapConcat(handler.andThen(streamable.toSource))
-      .viaMat(KillSwitches.single)(Keep.right)
-      .toMat(Sink.ignore)(Keep.both)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        cache.subscribeAPI
+          .flatMapConcat(handler.andThen(streamable.toSource))
+          .viaMat(KillSwitches.single)(Keep.right)
+          .toMat(Sink.ignore)(Keep.both)
+          .addAttributes
+      )
       .run()
 
   override def shards: Future[Seq[ActorRef[DiscordShard.Command]]] = {

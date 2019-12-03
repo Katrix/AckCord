@@ -26,6 +26,7 @@ package ackcord
 import scala.concurrent.Future
 
 import ackcord.commands._
+import ackcord.requests.SupervisionStreams
 import akka.Done
 import akka.stream.scaladsl.{Keep, Sink}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
@@ -61,11 +62,15 @@ trait CommandsHelper {
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.system
-    commands.subscribeRaw
-      .collectType[RawCmd]
-      .flatMapConcat(handler.andThen(streamable.toSource))
-      .viaMat(KillSwitches.single)(Keep.right)
-      .toMat(Sink.ignore)(Keep.both)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        commands.subscribeRaw
+          .collectType[RawCmd]
+          .flatMapConcat(handler.andThen(streamable.toSource))
+          .viaMat(KillSwitches.single)(Keep.right)
+          .toMat(Sink.ignore)(Keep.both)
+          .addAttributes
+      )
       .run()
   }
 
@@ -79,13 +84,17 @@ trait CommandsHelper {
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) = {
     val req = requests
     import req.system
-    commands.subscribeRaw
-      .collect {
-        case cmd: RawCmd => handler.handle(cmd)(cmd.c)
-      }
-      .flatMapConcat(streamable.toSource)
-      .viaMat(KillSwitches.single)(Keep.right)
-      .toMat(Sink.ignore)(Keep.both)
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        commands.subscribeRaw
+          .collect {
+            case cmd: RawCmd => handler.handle(cmd)(cmd.c)
+          }
+          .flatMapConcat(streamable.toSource)
+          .viaMat(KillSwitches.single)(Keep.right)
+          .toMat(Sink.ignore)(Keep.both)
+          .addAttributes
+      )
       .run()
   }
 
