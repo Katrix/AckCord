@@ -236,4 +236,13 @@ class CommandConnector(
     */
   def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): (Mat, Future[Done]) =
     runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
+
+  /**
+    * Starts many named commands at the same time. They must all have a
+    * materialized value of NotUsed.
+    * @param commands The commands to run.
+    * @return The commands together with their completions.
+    */
+  def bulkRunNamed(commands: Seq[NamedCommand[_]]): Seq[(NamedCommand[_], Future[Done])] =
+    commands.map(c => c -> runNewNamedCommand(c)).map(t => t._1 -> t._2._2)
 }
