@@ -33,19 +33,21 @@ import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 class MyCommands(client: DiscordClient, requests: RequestHelper) extends CommandController(requests) {
 
+  override def defaultMustMention: Boolean = true
+  
   val GeneralCommands = "!"
   val MusicCommands   = "&"
 
   val echo: NamedCommand[MessageParser.RemainingAsString] =
     Command
-      .named(GeneralCommands, Seq("echo"), mustMention = true)
+      .named(GeneralCommands, Seq("echo"))
       .parsing[MessageParser.RemainingAsString]
       .withRequest { r =>
         r.tChannel.sendMessage(s"ECHO: ${r.parsed.remaining}")
       }
 
   val guildInfo: NamedCommand[NotUsed] =
-    GuildCommand.named(GeneralCommands, Seq("guildInfo"), mustMention = true).withRequest { r =>
+    GuildCommand.named(GeneralCommands, Seq("guildInfo")).withRequest { r =>
       val guildName   = r.guild.name
       val channelName = r.tChannel.name
       val userNick    = r.guildMember.nick.getOrElse(r.user.username)
@@ -55,12 +57,12 @@ class MyCommands(client: DiscordClient, requests: RequestHelper) extends Command
     }
 
   val ping: NamedCommand[NotUsed] =
-    Command.named(GeneralCommands, Seq("ping"), mustMention = true).withSideEffects { _ =>
+    Command.named(GeneralCommands, Seq("ping")).withSideEffects { _ =>
       println(s"Received ping command")
     }
 
   val kill: NamedCommand[NotUsed] =
-    Command.named(GeneralCommands, Seq("kill", "die"), mustMention = true).withSideEffects { _ =>
+    Command.named(GeneralCommands, Seq("kill", "die")).withSideEffects { _ =>
       client.shutdownJVM()
     }
 
@@ -68,7 +70,7 @@ class MyCommands(client: DiscordClient, requests: RequestHelper) extends Command
   AudioSourceManagers.registerRemoteSources(playerManager)
 
   val queue: NamedCommand[String] =
-    GuildVoiceCommand.named(MusicCommands, Seq("queue"), mustMention = true).parsing[String].async { r =>
+    GuildVoiceCommand.named(MusicCommands, Seq("queue")).parsing[String].async { r =>
       val guildId     = r.guild.id
       val url         = r.parsed
       val loadItem    = client.loadTrack(playerManager, url)

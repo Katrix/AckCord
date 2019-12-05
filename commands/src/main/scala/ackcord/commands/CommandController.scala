@@ -46,10 +46,15 @@ abstract class CommandController(val requests: RequestHelper) {
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 
   /**
+    * Determines the default value for if a mention should required.
+    */
+  def defaultMustMention: Boolean = true
+
+  /**
     * The base command builder that you can build off if you don't like the
     * default provided builder.
     */
-  val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] = CommandBuilder.rawBuilder(requests)
+  val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] = CommandBuilder.rawBuilder(requests, defaultMustMention)
 
   /**
     * The default command builder you will use to create most of your commands.

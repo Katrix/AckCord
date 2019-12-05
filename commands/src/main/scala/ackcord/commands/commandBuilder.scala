@@ -147,6 +147,11 @@ object CommandTransformer {
 trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self =>
 
   /**
+    * Set the default value for must mention when creating a named command.
+    */
+  val defaultMustMention: Boolean
+
+  /**
     * A request helper that belongs to this builder.
     */
   def requests: RequestHelper
@@ -168,10 +173,12 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   def named(
       namedSymbol: String,
       namedAliases: Seq[String],
-      mustMention: Boolean = true,
+      mustMention: Boolean = defaultMustMention,
       aliasesCaseSensitive: Boolean = false
   ): NamedCommandBuilder[M, A] =
     new NamedCommandBuilder[M, A] {
+      override val defaultMustMention: Boolean = self.defaultMustMention
+
       override def symbol: String = namedSymbol
 
       override def aliases: Seq[String] = namedAliases
@@ -192,6 +199,8 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
     * @tparam B The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] = new CommandBuilder[M, B] {
+    override val defaultMustMention: Boolean = self.defaultMustMention
+
     override def requests: RequestHelper = self.requests
 
     override def parser: MessageParser[B] = newParser
@@ -251,6 +260,8 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
     streamed(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
+    override val defaultMustMention: Boolean = self.defaultMustMention
+
     override def requests: RequestHelper = self.requests
 
     override def parser: MessageParser[A] = self.parser
@@ -369,8 +380,10 @@ object CommandBuilder {
   /**
     * Creates a raw command builder without any extra processing.
     */
-  def rawBuilder(requestHelper: RequestHelper): CommandBuilder[CommandMessage, NotUsed] =
+  def rawBuilder(requestHelper: RequestHelper, defaultMustMentionVal: Boolean): CommandBuilder[CommandMessage, NotUsed] =
     new CommandBuilder[CommandMessage, NotUsed] {
+      override val defaultMustMention: Boolean = defaultMustMentionVal
+
       override def requests: RequestHelper = requestHelper
 
       override def parser: MessageParser[NotUsed] = MessageParser.notUsedParser
@@ -440,6 +453,7 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
     */
   override def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[M, B] =
     new NamedCommandBuilder[M, B] {
+      override val defaultMustMention: Boolean = self.defaultMustMention
 
       override def symbol: String = self.symbol
 
@@ -493,6 +507,7 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedCommandBuilder[M2, A] =
     new NamedCommandBuilder[M2, A] {
+      override val defaultMustMention: Boolean = self.defaultMustMention
 
       override def symbol: String = self.symbol
 
