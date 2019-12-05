@@ -21,16 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package ackcord
 
 import akka.NotUsed
 
-package object newcommands {
+package object commands {
 
   type GuildUserCommandMessage[+A]        = GuildCommandMessage[A] with UserCommandMessage[A]
   type VoiceGuildMemberCommandMessage[+A] = GuildMemberCommandMessage[A] with VoiceGuildCommandMessage[A]
 
-  type Command[A]      = ackcord.newcommands.ComplexCommand[A, NotUsed]
-  type NamedCommand[A] = ackcord.newcommands.NamedComplexCommand[A, NotUsed]
+  type Command[A]      = ackcord.commands.ComplexCommand[A, NotUsed]
+  type NamedCommand[A] = ackcord.commands.NamedComplexCommand[A, NotUsed]
 }

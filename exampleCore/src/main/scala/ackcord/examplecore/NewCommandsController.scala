@@ -31,7 +31,7 @@ import scala.util.Random
 
 import ackcord._
 import ackcord.data._
-import ackcord.newcommands._
+import ackcord.commands._
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
 import akka.NotUsed

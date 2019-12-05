@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.newcommands
+package ackcord.commands
 
 import ackcord.CacheSnapshot
 import ackcord.data._

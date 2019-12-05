@@ -29,7 +29,6 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.commands.{AbstractCommandSettings, CommandSettings, CoreCommands}
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
 import ackcord.requests.Ratelimiter
@@ -50,7 +49,6 @@ import akka.util.Timeout
   * @param status The status to use when connecting.
   * @param afk If the bot should be afk when connecting.
   * @param system The actor system to use.
-  * @param commandSettings The command settings to use.
   * @param requestSettings The request settings to use.
   */
 class ClientSettings(
@@ -63,7 +61,6 @@ class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
-    val commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
     val requestSettings: RequestSettings = RequestSettings()
     //TODO: Allow setting ignored and cacheTypeRegistry here at some point
 ) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
@@ -87,11 +84,9 @@ class ClientSettings(
       clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
         case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
           val requests = requestSettings.toRequests(token, ratelimiter)
-          val commands = CoreCommands.create(commandSettings, cache, requests)
 
           new DiscordClientCore(
             cache,
-            commands,
             requests,
             clientActor
           )
@@ -117,11 +112,9 @@ class ClientSettings(
         clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
           case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
             val requests = requestSettings.toRequests(token, ratelimiter)
-            val commands = CoreCommands.create(commandSettings, cache, requests)
 
             new DiscordClientCore(
               cache,
-              commands,
               requests,
               clientActor
             )
@@ -131,7 +124,7 @@ class ClientSettings(
 
   override def toString: String =
     s"ClientSettings($token, $largeThreshold, $shardNum, $shardTotal, $idleSince, " +
-      s"$activity, $status, $afk, $executionContext, $system, $commandSettings, $requestSettings)"
+      s"$activity, $status, $afk, $executionContext, $system, $requestSettings)"
 }
 object ClientSettings {
 
@@ -146,7 +139,6 @@ object ClientSettings {
     * @param status The status to use when connecting.
     * @param afk If the bot should be afk when connecting.
     * @param system The actor system to use.
-    * @param commandSettings The command settings to use.
     * @param requestSettings The request settings to use.
     */
   def apply(
@@ -159,7 +151,6 @@ object ClientSettings {
       status: PresenceStatus = PresenceStatus.Online,
       afk: Boolean = false,
       system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
-      commandSettings: AbstractCommandSettings = CommandSettings(needsMention = true, prefixes = Set.empty),
       requestSettings: RequestSettings = RequestSettings()
   ): ClientSettings =
     new ClientSettings(
@@ -172,7 +163,6 @@ object ClientSettings {
       status,
       afk,
       system,
-      commandSettings,
       requestSettings
     )
 }

@@ -40,21 +40,15 @@ import akka.{Done, NotUsed}
 
 class DiscordClientCore(
     val cache: Cache,
-    val commands: Commands,
     val requests: RequestHelper,
     actor: ActorRef[DiscordClientActor.Command]
 ) extends DiscordClient {
   import requests.system
 
-  override def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper) = {
-    val (killSwitch, newCommands) = CoreCommands.create(
-      settings,
-      cache.subscribeAPI.viaMat(KillSwitches.single)(Keep.right),
-      requests
-    )
-
-    killSwitch -> SeperateCommandsHelper(newCommands, requests)
-  }
+  val commands = new CommandConnector(
+    cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
+    requests
+  )
 
   override val sourceRequesterRunner: RequestRunner[Source[*, NotUsed]] =
     RequestRunner.sourceRequestRunner(requests)

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package ackcord.newcommands
+package ackcord.commands
 
 import akka.stream.scaladsl.Flow
 

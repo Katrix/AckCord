@@ -24,7 +24,7 @@
 package ackcord.examplecore
 
 import ackcord.CacheSnapshot
-import ackcord.commands._
+import ackcord.oldcommands._
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.{CreateMessageData, Request, RequestHelper}

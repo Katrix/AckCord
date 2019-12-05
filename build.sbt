@@ -3,7 +3,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 lazy val akkaVersion     = "2.6.0"
 lazy val akkaHttpVersion = "10.1.11"
 lazy val circeVersion    = "0.12.3"
-lazy val ackCordVersion  = "0.15.0"
+lazy val ackCordVersion  = "0.16.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
@@ -120,6 +120,17 @@ lazy val voice = project
   )
   .dependsOn(dataJVM)
 
+lazy val commandsOld = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "commands-old",
+    version := ackCordVersion,
+    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.0",
+    description := "ackCord-commands-old provides the legacy command framework for AckCord"
+  )
+  .dependsOn(requests)
+
 lazy val commands = project
   .settings(
     commonSettings,
@@ -127,18 +138,7 @@ lazy val commands = project
     name := "commands",
     version := ackCordVersion,
     libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.0",
-    description := "ackCord-commands provides the basic code used for commands in AckCord"
-  )
-  .dependsOn(requests)
-
-lazy val commandsNew = project
-  .settings(
-    commonSettings,
-    publishSettings,
-    name := "commands-new",
-    version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.0",
-    description := "ackCord-commands-new is an experiment to for better commands in AckCord"
+    description := "ackCord-commands provides a Play like commands framework for AckCord"
   )
   .dependsOn(requests)
 
@@ -156,15 +156,15 @@ lazy val core = project
   )
   .dependsOn(requests, gateway)
 
-lazy val commandsCore = project
+lazy val commandsOldCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "commands-core",
+    name := "commands-old-core",
     version := ackCordVersion,
-    description := "ackCord-commands-core provides the glue code between ackcord-core and ackcord-commands"
+    description := "ackCord-commands-old-core provides the glue code between ackcord-core and ackcord-commands-old"
   )
-  .dependsOn(core, commands)
+  .dependsOn(core, commandsOld)
 
 lazy val lavaplayerCore = project
   .settings(
@@ -190,7 +190,7 @@ lazy val ackCord = project
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
-  .dependsOn(core, commandsCore, lavaplayerCore)
+  .dependsOn(core, commands, lavaplayerCore)
 
 lazy val exampleCore = project
   .settings(
@@ -202,7 +202,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"     % akkaVersion,
     libraryDependencies += "ch.qos.logback"    % "logback-classic" % "1.2.3"
   )
-  .dependsOn(core, commandsCore, lavaplayerCore, commandsNew)
+  .dependsOn(core, commandsOldCore, lavaplayerCore, commands)
 
 lazy val example = project
   .settings(
@@ -238,10 +238,10 @@ lazy val docs = project
       requests,
       gateway,
       voice,
-      commands,
+      commandsOld,
       core,
-      commandsCore,
-      commandsNew,
+      commandsOldCore,
+      commands,
       lavaplayerCore,
       ackCord
     ),
@@ -259,7 +259,7 @@ lazy val docs = project
       baseDirectory.in(LocalRootProject).value.getAbsolutePath
     )
   )
-  .dependsOn(ackCord, commandsNew)
+  .dependsOn(ackCord, commands)
 
 lazy val ackCordRoot = project
   .in(file("."))
@@ -269,10 +269,10 @@ lazy val ackCordRoot = project
     requests,
     gateway,
     voice,
-    commands,
+    commandsOld,
     core,
-    commandsCore,
-    commandsNew,
+    commandsOldCore,
+    commands,
     lavaplayerCore,
     ackCord,
     exampleCore,

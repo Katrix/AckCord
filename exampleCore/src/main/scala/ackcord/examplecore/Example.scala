@@ -29,7 +29,7 @@ import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.commands._
+import ackcord.oldcommands._
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, RequestHelper}
@@ -135,28 +135,28 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   val controllerCommands: Seq[NewCommandsEntry[NotUsed]] = {
     val controller = new NewCommandsController(requests)
     Seq(
-      NewCommandsEntry(controller.hello, newcommands.CommandDescription("Hello", "Say hello")),
-      NewCommandsEntry(controller.copy, newcommands.CommandDescription("Copy", "Make the bot say what you said")),
+      NewCommandsEntry(controller.hello, commands.CommandDescription("Hello", "Say hello")),
+      NewCommandsEntry(controller.copy, commands.CommandDescription("Copy", "Make the bot say what you said")),
       NewCommandsEntry(
         controller.guildInfo,
-        newcommands.CommandDescription("Guild info", "Prints info about the current guild")
+        commands.CommandDescription("Guild info", "Prints info about the current guild")
       ),
       NewCommandsEntry(
         controller.parsingNumbers,
-        newcommands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
+        commands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
       ),
       NewCommandsEntry(
         controller.adminsOnly,
-        newcommands.CommandDescription("Elevanted command", "Command only admins can use")
+        commands.CommandDescription("Elevanted command", "Command only admins can use")
       ),
       NewCommandsEntry(
         controller.timeDiff,
-        newcommands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
+        commands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
       ),
-      NewCommandsEntry(controller.ping, newcommands.CommandDescription("Ping", "Checks if the bot is alive")),
+      NewCommandsEntry(controller.ping, commands.CommandDescription("Ping", "Checks if the bot is alive")),
       NewCommandsEntry(
         controller.maybeFail,
-        newcommands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
+        commands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
       )
     )
   }
@@ -188,7 +188,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       )
       ._2
 
-  val commandConnector = new newcommands.CommandConnector(
+  val commandConnector = new commands.CommandConnector(
     cache.subscribeAPI
       .collectType[APIMessage.MessageCreate]
       .map(m => m.message -> m.cache.current)
@@ -347,11 +347,11 @@ object ExampleMain {
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
   case class NewCommandsEntry[Mat](
-      command: newcommands.NamedComplexCommand[_, Mat],
-      description: newcommands.CommandDescription
+      command: commands.NamedComplexCommand[_, Mat],
+      description: commands.CommandDescription
   )
 
-  def registerNewCommand[Mat](connector: newcommands.CommandConnector, helpActor: ActorRef[ExampleHelpCmd.Command])(
+  def registerNewCommand[Mat](connector: commands.CommandConnector, helpActor: ActorRef[ExampleHelpCmd.Command])(
       entry: NewCommandsEntry[Mat]
   ): Mat = {
     val (materialized, complete) =
@@ -362,8 +362,8 @@ object ExampleMain {
     // translation and hackery here
     helpActor ! ExampleHelpCmd.BaseCommandWrapper(
       HelpCmd.AddCmd(
-        commands.CmdInfo(entry.command.symbol, entry.command.aliases),
-        commands.CmdDescription(
+        oldcommands.CmdInfo(entry.command.symbol, entry.command.aliases),
+        oldcommands.CmdDescription(
           entry.description.name,
           entry.description.description,
           entry.description.usage,

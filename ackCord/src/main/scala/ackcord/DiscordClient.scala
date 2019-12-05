@@ -26,14 +26,12 @@ package ackcord
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.reflect.ClassTag
-import scala.util.Success
 
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.Done
-import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
@@ -44,7 +42,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem
 /**
   * Trait used to interface with Discord stuff from high level.
   */
-trait DiscordClient extends CommandsHelper {
+trait DiscordClient {
 
   /**
     * The shards of this client
@@ -59,7 +57,7 @@ trait DiscordClient extends CommandsHelper {
   /**
     * The global commands object used by the client
     */
-  def commands: Commands
+  def commands: CommandConnector
 
   /**
     * The requests object used by the client
@@ -143,13 +141,6 @@ trait DiscordClient extends CommandsHelper {
   def registerHandler[G[_], A <: APIMessage](
       handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
-
-  /**
-    * Creates a new commands object to handle commands if the global settings are unfitting.
-    * @param settings The settings to use for the commands object
-    * @return A killswitch to stop this command helper, together with the command helper.
-    */
-  def newCommandsHelper(settings: CommandSettings): (UniqueKillSwitch, CommandsHelper)
 
   /**
     * Join a voice channel.

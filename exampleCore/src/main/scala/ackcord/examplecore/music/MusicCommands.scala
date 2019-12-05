@@ -26,7 +26,7 @@ package ackcord.examplecore.music
 import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord._
-import ackcord.commands._
+import ackcord.oldcommands._
 import ackcord.data.{GuildId, TChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage

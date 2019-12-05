@@ -29,7 +29,7 @@ import java.time.temporal.ChronoUnit
 import scala.concurrent.Future
 
 import ackcord._
-import ackcord.commands._
+import ackcord.oldcommands._
 import ackcord.data._
 import ackcord.data.raw.{RawChannel, RawMessage}
 import ackcord.requests._

@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package ackcord.commands
+package ackcord.oldcommands
 
 import java.util.Locale
 

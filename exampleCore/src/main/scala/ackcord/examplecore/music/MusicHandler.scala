@@ -27,7 +27,7 @@ package ackcord.examplecore.music
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
-import ackcord.commands.ParsedCmdFactory
+import ackcord.oldcommands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
 import ackcord.data.{ChannelId, GuildId, TChannel}
 import ackcord.examplecore.Compat

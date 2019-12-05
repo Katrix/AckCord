@@ -21,18 +21,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.newcommands
+package ackcord.oldcommands
 
 import scala.language.implicitConversions
 
-import java.util.Locale
-
-import scala.util.Try
 import scala.util.matching.Regex
+import scala.util.{Failure, Success, Try}
 
 import ackcord.CacheSnapshot
+import ackcord.oldcommands.MessageParser.RemainingAsString
 import ackcord.data._
-import ackcord.newcommands.MessageParser.RemainingAsString
 import akka.NotUsed
 import cats.data.StateT
 import cats.mtl.syntax.all._
@@ -181,86 +179,6 @@ trait MessageParserInstances {
     either.fold(_.raise, E.applicative.pure)
 
   /**
-    * Matches a literal string
-    * @param lit The string to match
-    * @param caseSensitive If the match should be case insensitive
-    */
-  def literal(lit: String, caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
-
-    override def parse[F[_]](
-        implicit c: CacheSnapshot,
-        F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
-    ): F[String] = {
-      def matchesLit(s: String) = if (caseSensitive) s == lit else s.equalsIgnoreCase(lit)
-
-      S.get.flatMap {
-        case Nil                        => E.raise("No more arguments left")
-        case s :: tail if matchesLit(s) => S.set(tail).as(lit)
-        case head :: _                  => E.raise(s"Was expecting $lit, but found $head")
-      }
-    }
-  }
-
-  /**
-    * Matches a string that starts with a prefix
-    * @param prefix The prefix to look for
-    * @param caseSensitive If the matching should be case sensitive
-    * @param consumeAll If the whole string should be consumed if only part of it was matched
-    */
-  def startsWith(prefix: String, caseSensitive: Boolean = true, consumeAll: Boolean = false): MessageParser[String] =
-    new MessageParser[String] {
-      override def parse[F[_]](
-          implicit c: CacheSnapshot,
-          F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
-      ): F[String] = {
-        val usedPrefix = if (caseSensitive) prefix else prefix.toLowerCase(Locale.ROOT)
-        def startsWithPrefix(s: String) =
-          if (caseSensitive) s.startsWith(usedPrefix) else s.toLowerCase(Locale.ROOT).startsWith(usedPrefix)
-
-        S.get.flatMap {
-          case Nil => E.raise("No more arguments left")
-          case head :: tail if startsWithPrefix(head) =>
-            val newState =
-              if (consumeAll || prefix.length == head.length) tail
-              else head.substring(prefix.length) :: tail
-
-            S.set(newState).as(prefix)
-          case head :: _ => E.raise(s"Was expecting something starting with $prefix, but found $head")
-        }
-      }
-    }
-
-  /**
-    * Matches one of the strings passed in
-    * @param seq The strings to try
-    * @param caseSensitive If the match should be case sensitive
-    */
-  def oneOf(seq: Seq[String], caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
-    private val valid = seq.map(s => if (caseSensitive) s else s.toLowerCase(Locale.ROOT)).toSet
-
-    private def validContains(s: String) = valid.contains(if (caseSensitive) s else s.toLowerCase(Locale.ROOT))
-
-    override def parse[F[_]](
-        implicit c: CacheSnapshot,
-        F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
-    ): F[String] = S.get.flatMap {
-      case Nil                                 => E.raise("No more arguments left")
-      case head :: tail if validContains(head) => S.set(tail).as(head)
-      case head :: _ =>
-        val err =
-          if (valid.size <= 5) s"Was expecting one of ${seq.mkString(", ")}, but found $head"
-          else s"$head did not match one of the valid choices"
-        E.raise(err)
-    }
-  }
-
-  /**
     * Create a parser from a string
     * @param f The function to transform the string with
     * @tparam A The type to parse
@@ -289,18 +207,7 @@ trait MessageParserInstances {
     * @param f The function to transform the string with.
     * @tparam A The type to parse
     */
-  def fromTry[A](f: String => Try[A]): MessageParser[A] = fromEither(f(_).toEither.leftMap(_.getMessage))
-
-  /**
-    * Parse a string into a try, where the left contains the error message
-    * @param f The function to transform the string with.
-    * @tparam A The type to parse
-    */
-  def fromEither[A](f: String => Either[String, A]): MessageParser[A] = new MessageParser[A] {
-
-    /**
-      * A program to parse a message into the needed types.
-      */
+  def fromTry[A](f: String => Try[A]): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
@@ -310,20 +217,21 @@ trait MessageParserInstances {
       case Nil => E.raise("No more arguments left")
       case head :: tail =>
         S.set(tail).as(f(head)).flatMap {
-          case Right(value) => value.pure
-          case Left(e)      => e.raise
+          case Success(value) => value.pure
+          case Failure(e)     => e.getMessage.raise
         }
     }
   }
 
   /**
-    * Same as [[withTry]] but with a custom error.
+    * Same as [[fromTry]] but with a custom error.
     * @param errorMessage The error message to use
     * @param f The function to transform the string with.
     * @tparam A The type to parse
     */
-  def withTryCustomError[A](errorMessage: String => String)(f: String => A): MessageParser[A] =
-    fromEither(s => Try(f(s)).toEither.leftMap(_ => errorMessage(s)))
+  def fromTryCustomError[A](errorMessage: String)(f: String => Try[A]): MessageParser[A] = fromTry(f).adaptError {
+    case _ => errorMessage
+  }
 
   implicit val remainingStringParser: MessageParser[MessageParser.RemainingAsString] =
     new MessageParser[RemainingAsString] {
@@ -335,17 +243,14 @@ trait MessageParserInstances {
       ): F[RemainingAsString] = S.get.map(s => RemainingAsString(s.mkString(" "))) <* S.set(Nil)
     }
 
-  implicit val stringParser: MessageParser[String] = fromString(identity)
-  implicit val byteParser: MessageParser[Byte]     = withTryCustomError(s => s"$s is not a valid number")(_.toByte)
-  implicit val shortParser: MessageParser[Short]   = withTryCustomError(s => s"$s is not a valid number")(_.toShort)
-  implicit val intParser: MessageParser[Int]       = withTryCustomError(s => s"$s is not a valid number")(_.toInt)
-  implicit val longParser: MessageParser[Long]     = withTryCustomError(s => s"$s is not a valid number")(_.toLong)
-  implicit val floatParser: MessageParser[Float] =
-    withTryCustomError(s => s"$s is not a valid decimal number")(_.toFloat)
-  implicit val doubleParser: MessageParser[Double] =
-    withTryCustomError(s => s"$s is not a valid decimal number")(_.toDouble)
-  implicit val booleanParser: MessageParser[Boolean] =
-    withTryCustomError(s => s"$s is not a valid boolean")(_.toBoolean)
+  implicit val stringParser: MessageParser[String]   = fromString(identity)
+  implicit val byteParser: MessageParser[Byte]       = withTry(_.toByte)
+  implicit val shortParser: MessageParser[Short]     = withTry(_.toShort)
+  implicit val intParser: MessageParser[Int]         = withTry(_.toInt)
+  implicit val longParser: MessageParser[Long]       = withTry(_.toLong)
+  implicit val floatParser: MessageParser[Float]     = withTry(_.toFloat)
+  implicit val doubleParser: MessageParser[Double]   = withTry(_.toDouble)
+  implicit val booleanParser: MessageParser[Boolean] = withTry(_.toBoolean)
 
   val userRegex: Regex    = """<@!?(\d+)>""".r
   val channelRegex: Regex = """<#(\d+)>""".r
@@ -450,7 +355,7 @@ trait MessageParserInstances {
         )
   }
 
-  implicit def optional[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
+  implicit def optionParser[A](implicit parser: MessageParser[A]): MessageParser[Option[A]] =
     new MessageParser[Option[A]] {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
