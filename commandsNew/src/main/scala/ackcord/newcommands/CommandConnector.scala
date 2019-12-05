@@ -48,6 +48,23 @@ class CommandConnector(
     requests: RequestHelper
 ) {
 
+  //https://stackoverflow.com/questions/249791/regex-for-quoted-string-with-escaping-quotes
+  private val quotedRegex = """(?:"((?:[^"\\]|\\.)+)")|((?:\S)+)""".r
+
+  private def stringToArgsQuoted(arguments: String): List[String] = {
+    if (arguments.isEmpty) Nil
+    else {
+      quotedRegex
+        .findAllMatchIn(arguments)
+        .map { m =>
+          val quoted = m.group(1) != null
+          val group  = if (quoted) 1 else 2
+          m.group(group)
+        }
+        .toList
+    }
+  }
+
   type PrefixParser = (CacheSnapshot, Message) => Future[MessageParser[Unit]]
 
   private val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = { (cache, message) =>
@@ -114,7 +131,7 @@ class CommandConnector(
         case ((message, cache), prefixParser) =>
           implicit val c: CacheSnapshot = cache
 
-          val parsed = MessageParser.parseEither(message.content.split(" ").toList, prefixParser).map(_._1).toOption
+          val parsed = MessageParser.parseEither(stringToArgsQuoted(message.content), prefixParser).map(_._1).toOption
           parsed.map((message, cache, _)).toList
       }
       .mapConcat {
