@@ -91,9 +91,7 @@ object RequestRunner {
       ): SourceRequest[A] = {
         val requestVec = requestSeq.toVector
         if (requestVec.forall(_.hasPermissions)) {
-          requests.many(requestSeq).collect {
-            case RequestResponse(data, _, _, _) => data
-          }
+          requests.manySuccess(requestSeq)(RequestHelper.RequestProperties.ordered)
         } else {
           Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
         }
