@@ -24,12 +24,7 @@
 package ackcord.example
 
 import ackcord._
-import ackcord.commands._
 import ackcord.syntax._
-import akka.NotUsed
-import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudioPlayerManager}
-import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
 object MyBot extends App {
 
@@ -38,11 +33,7 @@ object MyBot extends App {
 
   require(args.nonEmpty, "Please provide a token")
   val token = args.head
-  val settings =
-    ClientSettings(
-      token,
-      commandSettings = CommandSettings(needsMention = true, prefixes = Set(GeneralCommands, MusicCommands))
-    )
+  val settings = ClientSettings(token)
   import settings.executionContext
 
   settings
@@ -73,99 +64,14 @@ object MyBot extends App {
         }
       }
 
-      client.onRawCmd[SourceRequest] {
-        client.withCache[SourceRequest, RawCmd] { implicit c =>
-          {
-            case RawCmd(message, GeneralCommands, "echo", args, _) =>
-              for {
-                channel <- optionPure(message.tGuildChannel)
-                _       <- run(channel.sendMessage(s"ECHO: ${args.mkString(" ")}"))
-              } yield ()
-            case _ => client.sourceRequesterRunner.unit
-          }
-        }
-      }
-
-      client.registerCmd[NotUsed, SourceRequest](
-        prefix = GeneralCommands,
-        aliases = Seq("guildInfo"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
-      ) {
-        client.withCache[SourceRequest, ParsedCmd[NotUsed]] { implicit c => cmd =>
-          for {
-            user        <- optionPure(cmd.msg.authorUser)
-            channel     <- optionPure(cmd.msg.tGuildChannel)
-            guild       <- optionPure(channel.guild)
-            guildMember <- optionPure(guild.memberFromUser(user))
-            guildName   = guild.name
-            channelName = channel.name
-            userNick    = guildMember.nick.getOrElse(user.username)
-            _ <- run(
-              channel.sendMessage(
-                s"This guild is named $guildName, the channel is named $channelName and you are called $userNick"
-              )
-            )
-          } yield ()
-        }
-      }
-
-      client.registerCmd[NotUsed, cats.Id](
-        prefix = GeneralCommands,
-        aliases = Seq("ping"),
-        filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild),
-        description = Some(CmdDescription("Ping", "Check if the bot is alive"))
-      ) { _ =>
-        println(s"Received ping command")
-      }
-
-      client.registerCmd[NotUsed, cats.Id](
-        prefix = GeneralCommands,
-        aliases = Seq("kill", "die"),
-        filters = Seq(CmdFilter.NonBot), //Ideally you're create a new filter type here to only allow the owner to shut down the bot
-        description = Some(CmdDescription("Kill", "Stops the bot"))
-      ) { _ =>
-        client.shutdownJVM()
-      }
-
-      val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
-      AudioSourceManagers.registerRemoteSources(playerManager)
-
-      client.registerCmd[String, cats.Id](
-        refiner = CmdInfo(
-          prefix = MusicCommands,
-          aliases = Seq("queue"),
-          filters = Seq(CmdFilter.NonBot, CmdFilter.InGuild)
-        ),
-        description = Some(CmdDescription("Queue", "Queue a track"))
-      ) {
-        client.withCache[cats.Id, ParsedCmd[String]] { implicit c => cmd =>
-          for {
-            channel    <- cmd.msg.tGuildChannel
-            authorId   <- cmd.msg.authorUserId
-            guild      <- channel.guild
-            vChannelId <- guild.voiceStateFor(authorId).flatMap(_.channelId)
-          } {
-            val guildId     = guild.id
-            val url         = cmd.args
-            val loadItem    = client.loadTrack(playerManager, url)
-            val joinChannel = client.joinChannel(guildId, vChannelId, playerManager.createPlayer())
-
-            loadItem.zip(joinChannel).foreach {
-              case (track: AudioTrack, player) =>
-                player.startTrack(track, true)
-                client.setPlaying(guildId, playing = true)
-              case (playlist: AudioPlaylist, player) =>
-                if (playlist.getSelectedTrack != null) {
-                  player.startTrack(playlist.getSelectedTrack, false)
-                } else {
-                  player.startTrack(playlist.getTracks.get(0), false)
-                }
-                client.setPlaying(guildId, playing = true)
-              case _ => sys.error("Unknown audio item")
-            }
-          }
-        }
-      }
+      val myCommands = new MyCommands(client, client.requests)
+      client.commands.bulkRunNamed(
+        myCommands.echo,
+        myCommands.guildInfo,
+        myCommands.ping,
+        myCommands.kill,
+        myCommands.queue
+      )
 
       client.login()
     }
