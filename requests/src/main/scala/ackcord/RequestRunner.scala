@@ -28,7 +28,7 @@ import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-import ackcord.requests.{Request, RequestHelper, RequestResponse}
+import ackcord.requests.{Request, Requests, RequestResponse}
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.util.Streamable
 import akka.NotUsed
@@ -78,7 +78,7 @@ object RequestRunner {
   def apply[F[_]](implicit runner: RequestRunner[F]): RequestRunner[F] = runner
 
   implicit def sourceRequestRunner(
-      implicit requests: RequestHelper
+      implicit requests: Requests
   ): RequestRunner[SourceRequest] =
     new RequestRunner[SourceRequest] {
       override def run[A](request: Request[A])(implicit c: CacheSnapshot): SourceRequest[A] =
@@ -91,7 +91,7 @@ object RequestRunner {
       ): SourceRequest[A] = {
         val requestVec = requestSeq.toVector
         if (requestVec.forall(_.hasPermissions)) {
-          requests.manySuccess(requestSeq)(RequestHelper.RequestProperties.ordered)
+          requests.manySuccess(requestSeq)(Requests.RequestProperties.ordered)
         } else {
           Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
         }
@@ -103,8 +103,8 @@ object RequestRunner {
     }
 
   implicit def futureRequestRunner[F[_]](
-      implicit requests: RequestHelper,
-      F: Alternative[F]
+                                          implicit requests: Requests,
+                                          F: Alternative[F]
   ): RequestRunner[λ[A => Future[F[A]]]] = new RequestRunner[λ[A => Future[F[A]]]] {
     import requests.system
     import requests.system.executionContext

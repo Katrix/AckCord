@@ -35,7 +35,7 @@ import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
 import ackcord.syntax._
-import ackcord.{Cache, RequestHelper}
+import ackcord.{Cache, Requests}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
@@ -57,7 +57,7 @@ import org.slf4j.Logger
 object MusicHandler {
 
   case class Parameters(
-      helper: RequestHelper,
+      helper: Requests,
       cache: Cache,
       context: ActorContext[Command],
       log: Logger,
@@ -66,7 +66,7 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: RequestHelper, registerCmd: FunctionK[MatCmdFactory, cats.Id], cache: Cache)(
+  def apply(requests: Requests, registerCmd: FunctionK[MatCmdFactory, cats.Id], cache: Cache)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>

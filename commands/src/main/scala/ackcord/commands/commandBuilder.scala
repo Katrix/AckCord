@@ -25,7 +25,7 @@ package ackcord.commands
 
 import ackcord.CacheSnapshot
 import ackcord.data._
-import ackcord.requests.{Request, RequestHelper}
+import ackcord.requests.{Request, Requests}
 import ackcord.util.Streamable
 import akka.NotUsed
 import akka.stream.FlowShape
@@ -154,7 +154,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   /**
     * A request helper that belongs to this builder.
     */
-  def requests: RequestHelper
+  def requests: Requests
 
   /**
     * The parser used for parsing the arguments this command takes.
@@ -187,7 +187,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
 
       override def caseSensitive: Boolean = aliasesCaseSensitive
 
-      override def requests: RequestHelper = self.requests
+      override def requests: Requests = self.requests
 
       override def parser: MessageParser[A] = self.parser
 
@@ -201,7 +201,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] = new CommandBuilder[M, B] {
     override val defaultMustMention: Boolean = self.defaultMustMention
 
-    override def requests: RequestHelper = self.requests
+    override def requests: Requests = self.requests
 
     override def parser: MessageParser[B] = newParser
 
@@ -262,7 +262,7 @@ trait CommandBuilder[+M[_], A] extends CommandFunction[CommandMessage, M] { self
   override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
     override val defaultMustMention: Boolean = self.defaultMustMention
 
-    override def requests: RequestHelper = self.requests
+    override def requests: Requests = self.requests
 
     override def parser: MessageParser[A] = self.parser
 
@@ -380,11 +380,11 @@ object CommandBuilder {
   /**
     * Creates a raw command builder without any extra processing.
     */
-  def rawBuilder(requestHelper: RequestHelper, defaultMustMentionVal: Boolean): CommandBuilder[CommandMessage, NotUsed] =
+  def rawBuilder(requestHelper: Requests, defaultMustMentionVal: Boolean): CommandBuilder[CommandMessage, NotUsed] =
     new CommandBuilder[CommandMessage, NotUsed] {
       override val defaultMustMention: Boolean = defaultMustMentionVal
 
-      override def requests: RequestHelper = requestHelper
+      override def requests: Requests = requestHelper
 
       override def parser: MessageParser[NotUsed] = MessageParser.notUsedParser
 
@@ -463,7 +463,7 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
 
       override def caseSensitive: Boolean = self.caseSensitive
 
-      override def requests: RequestHelper = self.requests
+      override def requests: Requests = self.requests
 
       override def parser: MessageParser[B] = newParser
 
@@ -517,7 +517,7 @@ trait NamedCommandBuilder[+M[_], A] extends CommandBuilder[M, A] { self =>
 
       override def caseSensitive: Boolean = self.caseSensitive
 
-      override def requests: RequestHelper = self.requests
+      override def requests: Requests = self.requests
 
       override def parser: MessageParser[A] = self.parser
 
@@ -535,7 +535,7 @@ trait CommandMessage[+A] {
   /**
     * Easy access to a request helper.
     */
-  def requests: RequestHelper
+  def requests: Requests
 
   /**
     * A cache snapshot taken when the command was used.
@@ -562,16 +562,16 @@ object CommandMessage {
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 
   case class Default[A](
-      requests: RequestHelper,
-      cache: CacheSnapshot,
-      tChannel: TChannel,
-      message: Message,
-      parsed: A
+                         requests: Requests,
+                         cache: CacheSnapshot,
+                         tChannel: TChannel,
+                         message: Message,
+                         parsed: A
   ) extends CommandMessage[A]
 }
 
 class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
-  override def requests: RequestHelper = m.requests
+  override def requests: Requests = m.requests
 
   override def cache: CacheSnapshot = m.cache
 

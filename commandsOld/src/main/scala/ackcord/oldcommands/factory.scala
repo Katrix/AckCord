@@ -23,7 +23,7 @@
  */
 package ackcord.oldcommands
 
-import ackcord.requests.RequestHelper
+import ackcord.requests.Requests
 import ackcord.{CacheSnapshot, RequestRunner}
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink, Source}
@@ -52,7 +52,7 @@ sealed trait CmdFactory[A, +Mat] {
   /**
     * A sink which defines the behavior of this command.
     */
-  def sink: RequestHelper => Sink[A, Mat]
+  def sink: Requests => Sink[A, Mat]
 
   /**
     * A description of this command.
@@ -69,9 +69,9 @@ sealed trait CmdFactory[A, +Mat] {
   * @param description A description of this command.
   */
 case class BaseCmdFactory[+Mat](
-    refiner: CmdRefiner,
-    sink: RequestHelper => Sink[Cmd, Mat],
-    description: Option[CmdDescription] = None
+                                 refiner: CmdRefiner,
+                                 sink: Requests => Sink[Cmd, Mat],
+                                 description: Option[CmdDescription] = None
 ) extends CmdFactory[Cmd, Mat]
 object BaseCmdFactory {
 
@@ -93,7 +93,7 @@ object BaseCmdFactory {
       flow: RequestRunner[SourceRequest] => Flow[Cmd, SourceRequest[Unit], Mat],
       description: Option[CmdDescription] = None
   ): BaseCmdFactory[Mat] = {
-    val sink: RequestHelper => Sink[Cmd, Mat] = implicit requests => {
+    val sink: Requests => Sink[Cmd, Mat] = implicit requests => {
       val runner = RequestRunner[Source[?, NotUsed]]
       flow(runner).flatMapConcat(s => s).to(Sink.ignore)
     }
@@ -110,9 +110,9 @@ object BaseCmdFactory {
   * @param description A description of this command.
   */
 case class ParsedCmdFactory[A, +Mat](
-    refiner: CmdRefiner,
-    sink: RequestHelper => Sink[ParsedCmd[A], Mat],
-    description: Option[CmdDescription] = None
+                                      refiner: CmdRefiner,
+                                      sink: Requests => Sink[ParsedCmd[A], Mat],
+                                      description: Option[CmdDescription] = None
 )(implicit val parser: MessageParser[A])
     extends CmdFactory[ParsedCmd[A], Mat]
 object ParsedCmdFactory {
@@ -135,7 +135,7 @@ object ParsedCmdFactory {
       flow: RequestRunner[SourceRequest] => Flow[ParsedCmd[A], SourceRequest[Unit], Mat],
       description: Option[CmdDescription] = None
   )(implicit parser: MessageParser[A]): ParsedCmdFactory[A, Mat] = {
-    val sink: RequestHelper => Sink[ParsedCmd[A], Mat] = implicit requests => {
+    val sink: Requests => Sink[ParsedCmd[A], Mat] = implicit requests => {
       val runner = RequestRunner[SourceRequest]
       flow(runner).flatMapConcat(s => s).to(Sink.ignore)
     }

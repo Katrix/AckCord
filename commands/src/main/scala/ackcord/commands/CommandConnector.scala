@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
-import ackcord.requests.{RequestHelper, SupervisionStreams}
+import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.syntax._
 import akka.stream.SourceShape
 import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
@@ -45,7 +45,7 @@ import cats.syntax.all._
   */
 class CommandConnector(
     messages: Source[(Message, CacheSnapshot), NotUsed],
-    requests: RequestHelper
+    requests: Requests
 ) {
 
   //https://stackoverflow.com/questions/249791/regex-for-quoted-string-with-escaping-quotes

@@ -27,7 +27,7 @@ import scala.concurrent.Future
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import cats.Id
+import cats.{Foldable, Id}
 import cats.data.OptionT
 
 /**
@@ -48,6 +48,13 @@ object Streamable {
 
   implicit val futureStreamable: Streamable[Future] = new Streamable[Future] {
     override def toSource[A](fa: Future[A]): Source[A, NotUsed] = Source.future(fa)
+  }
+
+  implicit def futureFoldableStreamable[F[_]: Foldable]: Streamable[λ[A => Future[F[A]]]] = new Streamable[λ[A => Future[F[A]]]] {
+    override def toSource[A](fa: Future[F[A]]): Source[A, NotUsed] = {
+      import cats.syntax.all._
+      Source.future(fa).mapConcat(_.toList)
+    }
   }
 
   implicit val sourceStreamable: Streamable[Source[?, NotUsed]] = new Streamable[Source[?, NotUsed]] {

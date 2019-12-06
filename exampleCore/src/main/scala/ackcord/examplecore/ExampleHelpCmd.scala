@@ -27,7 +27,7 @@ import ackcord.CacheSnapshot
 import ackcord.oldcommands._
 import ackcord.data.raw.RawMessage
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
-import ackcord.requests.{CreateMessageData, Request, RequestHelper}
+import ackcord.requests.{CreateMessageData, Request, Requests}
 import akka.NotUsed
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
@@ -37,7 +37,7 @@ import akka.stream.typed.scaladsl.ActorSink
 
 class ExampleHelpCmd(
     ctx: ActorContext[ExampleHelpCmd.Command],
-    requests: RequestHelper,
+    requests: Requests,
     someHandler: ActorRef[HelpCmd.HandlerReply]
 ) extends HelpCmd[ExampleHelpCmd.Command](ctx) {
 
@@ -118,7 +118,7 @@ class ExampleHelpCmd(
     ExampleHelpCmd.BaseCommandWrapper(HelpCmd.TerminateCommand(registration))
 }
 object ExampleHelpCmd {
-  def apply(requests: RequestHelper, handler: ActorRef[HelpCmd.HandlerReply]): Behavior[Command] =
+  def apply(requests: Requests, handler: ActorRef[HelpCmd.HandlerReply]): Behavior[Command] =
     Behaviors.setup(ctx => new ExampleHelpCmd(ctx, requests, handler))
 
   sealed trait Command

@@ -32,8 +32,15 @@ import cats.{Alternative, Contravariant, Functor, MonadError}
 
 package object ackcord {
 
-  val RequestHelper: requests.RequestHelper.type = requests.RequestHelper
-  type RequestHelper = requests.RequestHelper
+  @deprecated("Prefer the new name Requests", since = "0.16")
+  val RequestHelper: requests.Requests.type = requests.Requests
+  @deprecated("Prefer the new name Requests", since = "0.16")
+  type RequestHelper = requests.Requests
+
+  val Requests: requests.Requests.type = requests.Requests
+  type Requests = requests.Requests
+
+  type RequestsHelper = requests.RequestsHelper
 
   val BotAuthentication: requests.BotAuthentication.type = requests.BotAuthentication
   type BotAuthentication = requests.BotAuthentication.type

@@ -21,41 +21,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.oldcommands
 
-import ackcord._
-import akka.stream.scaladsl.Source
+package ackcord.requests
 
-object CoreCommands {
+import scala.concurrent.Future
+import scala.collection.immutable
 
-  /**
-    * Create a new command handler using a cache.
-    * @param settings The settings this handler should use.
-    * @param cache The cache to use for subscribing to created messages.
-    * @param requests A request helper object which will be passed to handlers.
-    */
-  def create(
-      settings: AbstractCommandSettings,
-      cache: Cache,
-      requests: Requests
-  ): Commands = {
-    import requests.system
-    Commands(CmdStreams.cmdStreams(settings, cache.subscribeAPI)._2, requests)
-  }
+import ackcord.{CacheSnapshot, RequestPermissionException}
+
+/**
+  * A small layer on top of [[Requests]] for use in high level code.
+  * @param requests The requests instance to use
+  */
+class RequestsHelper(requests: Requests) {
+  import requests.system.executionContext
+
+  private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): Future[Unit] =
+    if (requests.forall(_.hasPermissions)) Future.unit
+    else Future.failed(new RequestPermissionException(requests.find(!_.hasPermissions).get))
 
   /**
-    * Create a new command handler using an [[APIMessage]] source.
-    * @param settings The settings this handler should use.
-    * @param apiMessages The source of [[APIMessage]]s.
-    * @param requests A request helper object which will be passed to handlers.
+    * Runs a single requests and returns the result.
+    * @param request The request to run
     */
-  def create[A](
-      settings: AbstractCommandSettings,
-      apiMessages: Source[APIMessage, A],
-      requests: Requests
-  ): (A, Commands) = {
-    import requests.system
-    val (materialized, streams) = CmdStreams.cmdStreams(settings, apiMessages)
-    materialized -> Commands(streams, requests)
-  }
+  def run[A](request: Request[A])(implicit c: CacheSnapshot): Future[A] =
+    checkPerms(Seq(request)).flatMap(_ => requests.singleFutureSuccess(request))
+
+  /**
+    * Runs many requests in order, and returns the result. The result is only
+    * a success if all the requests succeed.
+    * @param requests The requests to run
+    */
+  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): Future[immutable.Seq[A]] =
+    checkPerms(requests).flatMap(_ => this.requests.manyFutureSuccess(requests))
+
 }

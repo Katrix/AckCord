@@ -26,7 +26,7 @@ package ackcord.oldcommands
 import ackcord.CacheSnapshot
 import ackcord.data.raw.RawMessage
 import ackcord.data.{Message, User}
-import ackcord.requests.{CreateMessage, Request, RequestHelper}
+import ackcord.requests.{CreateMessage, Request, Requests}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.FlowShape
@@ -38,7 +38,7 @@ object CmdHelper {
     * Handle command errors.
     */
   def addErrorHandlingGraph[A <: AllCmdMessages](
-      requests: RequestHelper
+      requests: Requests
   ): Flow[A, A, NotUsed] = {
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
@@ -64,7 +64,7 @@ object CmdHelper {
     * Handle all the errors for a parsed command.
     */
   def addErrorHandlingParsed[A](
-      requests: RequestHelper
+      requests: Requests
   ): Flow[ParsedCmdMessage[A], ParsedCmd[A], NotUsed] =
     addErrorHandlingGraph[ParsedCmdMessage[A]](requests).collect {
       case msg: ParsedCmd[A] => msg
@@ -73,7 +73,7 @@ object CmdHelper {
   /**
     * Handle all the errors for a unparsed command.
     */
-  def addErrorHandlingUnparsed(requests: RequestHelper): Flow[CmdMessage, Cmd, NotUsed] =
+  def addErrorHandlingUnparsed(requests: Requests): Flow[CmdMessage, Cmd, NotUsed] =
     addErrorHandlingGraph[CmdMessage](requests).collect {
       case msg: Cmd => msg
     }

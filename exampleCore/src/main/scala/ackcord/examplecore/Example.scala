@@ -32,7 +32,7 @@ import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.oldcommands._
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
-import ackcord.requests.{BotAuthentication, Ratelimiter, RequestHelper}
+import ackcord.requests.{BotAuthentication, Ratelimiter, Requests}
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
@@ -103,8 +103,8 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
   private val ratelimiter = context.spawn(Ratelimiter(), "Ratelimiter")
 
-  private val requests: RequestHelper =
-    new RequestHelper(
+  private val requests: Requests =
+    new Requests(
       BotAuthentication(settings.token),
       ratelimiter,
       millisecondPrecision = false, //My system is pretty bad at syncing stuff up, so I need to be very generous when it comes to ratelimits
@@ -126,7 +126,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       RatelimitTestCmdFactory(
         "Ordered Ratelimit test",
         Seq("ratelimitTestOrdered"),
-        requests.sinkIgnore(RequestHelper.RequestProperties.ordered)
+        requests.sinkIgnore(Requests.RequestProperties.ordered)
       ),
       KillCmdFactory
     )

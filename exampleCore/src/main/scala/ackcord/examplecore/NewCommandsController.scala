@@ -38,7 +38,7 @@ import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import cats.syntax.all._
 
-class NewCommandsController(requests: RequestHelper) extends CommandController(requests) {
+class NewCommandsController(requests: Requests) extends CommandController(requests) {
 
   val hello: NamedCommand[NotUsed] = Command
     .named("%", Seq("hello"), mustMention = true)

@@ -60,9 +60,14 @@ trait DiscordClient {
   def commands: CommandConnector
 
   /**
-    * The requests object used by the client
+    * The low level requests object used by the client
     */
-  def requests: RequestHelper
+  def requests: Requests
+
+  /**
+    * The high level requests helper for use in user code.
+    */
+  def requestsHelper: RequestsHelper
 
   def musicManager: Future[ActorRef[MusicManager.Command]]
 
@@ -103,6 +108,7 @@ trait DiscordClient {
   /**
     * A stream requester runner.
     */
+  @deprecated("Prefer using the requests helper instead", since = "0.16")
   val sourceRequesterRunner: RequestRunner[SourceRequest]
 
   /**

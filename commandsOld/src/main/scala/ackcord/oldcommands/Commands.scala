@@ -26,7 +26,7 @@ package ackcord.oldcommands
 import scala.concurrent.Future
 
 import ackcord.CacheSnapshot
-import ackcord.requests.{RequestHelper, SupervisionStreams}
+import ackcord.requests.{Requests, SupervisionStreams}
 import akka.stream.scaladsl.{Keep, Source}
 import akka.{Done, NotUsed}
 
@@ -38,7 +38,7 @@ import akka.{Done, NotUsed}
   */
 case class Commands(
     subscribeRaw: Source[RawCmdMessage, NotUsed],
-    requests: RequestHelper
+    requests: Requests
 ) {
   import requests.system
 

@@ -187,8 +187,8 @@ case class RequestSettings(
 
   def toRequests(token: String, ratelimitActor: ActorRef[Ratelimiter.Command])(
       implicit system: ActorSystem[Nothing]
-  ): RequestHelper =
-    new RequestHelper(
+  ): Requests =
+    new Requests(
       BotAuthentication(token),
       ratelimitActor,
       millisecondPrecision,

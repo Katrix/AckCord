@@ -40,7 +40,7 @@ import akka.{Done, NotUsed}
 
 class DiscordClientCore(
     val cache: Cache,
-    val requests: RequestHelper,
+    val requests: Requests,
     actor: ActorRef[DiscordClientActor.Command]
 ) extends DiscordClient {
   import requests.system
@@ -49,6 +49,8 @@ class DiscordClientCore(
     cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
     requests
   )
+
+  val requestsHelper: RequestsHelper = new RequestsHelper(requests)
 
   override val sourceRequesterRunner: RequestRunner[Source[*, NotUsed]] =
     RequestRunner.sourceRequestRunner(requests)

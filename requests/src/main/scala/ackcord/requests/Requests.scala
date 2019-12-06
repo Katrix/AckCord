@@ -27,7 +27,7 @@ import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-import ackcord.requests.RequestHelper.RequestProperties
+import ackcord.requests.Requests.RequestProperties
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.HttpCredentials
 import akka.stream.OverflowStrategy
@@ -50,7 +50,7 @@ import akka.{Done, NotUsed}
   *                     help with out of sync time on your device, but can
   *                     also lead to slightly slower processing of requests.
   */
-case class RequestHelper(
+case class Requests(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef[Ratelimiter.Command],
     millisecondPrecision: Boolean = true,
@@ -189,6 +189,34 @@ case class RequestHelper(
   ): Source[Data, NotUsed] = Source.single(request -> NotUsed).via(flowSuccess(properties).asFlow.map(_._1))
 
   /**
+    * Sends a single request and gets the response as a future.
+    * @param request The request to send.
+    */
+  def singleFuture[Data](request: Request[Data])(
+    implicit properties: RequestProperties = RequestProperties.default
+  ): Future[RequestAnswer[Data]] =
+    single(request)(properties).runWith(Sink.head)
+
+  /**
+    * Sends a single request and gets the success response as a future if it's
+    * available.
+    * @param request The request to send.
+    */
+  def singleFutureSuccess[Data](request: Request[Data])(
+    implicit properties: RequestProperties = RequestProperties.default
+  ): Future[Data] =
+    singleSuccess(request)(properties).runWith(Sink.head)
+
+  /**
+    * Sends a single request and ignores the result.
+    * @param request The request to send.
+    */
+  def singleIgnore[Data](request: Request[Data])(
+    implicit properties: RequestProperties = RequestProperties.default
+  ): Unit =
+    single(request)(properties).runWith(ignoreOrReport)
+
+  /**
     * Sends many requests
     * @param requests The requests to send.
     * @return A source of the request answers.
@@ -208,15 +236,6 @@ case class RequestHelper(
   ): Source[Data, NotUsed] = Source(requests.map(_ -> NotUsed)).via(flowSuccess(properties).asFlow.map(_._1))
 
   /**
-    * Sends a single request and gets the response as a future.
-    * @param request The request to send.
-    */
-  def singleFuture[Data](request: Request[Data])(
-      implicit properties: RequestProperties = RequestProperties.default
-  ): Future[RequestAnswer[Data]] =
-    single(request)(properties).runWith(Sink.head)
-
-  /**
     * Sends many requests and gets the responses as a future.
     * @param requests The requests to send.
     */
@@ -226,13 +245,15 @@ case class RequestHelper(
     many(requests)(properties).runWith(Sink.seq)
 
   /**
-    * Sends a single request and ignores the result.
-    * @param request The request to send.
+    * Sends many requests and gets the success response as a future if it's
+    * available. All the requests must succeed for this function to return a
+    * a value.
+    * @param requests The requests to send.
     */
-  def singleIgnore[Data](request: Request[Data])(
-      implicit properties: RequestProperties = RequestProperties.default
-  ): Unit =
-    single(request)(properties).runWith(ignoreOrReport)
+  def manyFutureSuccess[Data](requests: immutable.Seq[Request[Data]])(
+    implicit properties: RequestProperties = RequestProperties.default
+  ): Future[immutable.Seq[Data]] =
+    manySuccess(requests)(properties).runWith(Sink.seq)
 
   /**
     * Sends many requests and ignores the result.
@@ -242,17 +263,17 @@ case class RequestHelper(
       implicit properties: RequestProperties = RequestProperties.default
   ): Unit = many(requests)(properties).runWith(ignoreOrReport)
 }
-object RequestHelper {
+object Requests {
 
   case class RequestProperties(
       retry: Boolean = false,
       ordered: Boolean = false
   )
   object RequestProperties {
-    val default      = RequestProperties()
-    val retry        = RequestProperties(retry = true)
-    val ordered      = RequestProperties(ordered = true)
-    val retryOrdered = RequestProperties(retry = true, ordered = true)
+    val default: RequestProperties      = RequestProperties()
+    val retry: RequestProperties        = RequestProperties(retry = true)
+    val ordered: RequestProperties      = RequestProperties(ordered = true)
+    val retryOrdered: RequestProperties = RequestProperties(retry = true, ordered = true)
 
     object Implicits {
       implicit val default: RequestProperties      = RequestProperties.default

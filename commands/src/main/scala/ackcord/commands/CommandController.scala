@@ -25,7 +25,7 @@ package ackcord.commands
 
 import scala.concurrent.ExecutionContext
 
-import ackcord.requests.RequestHelper
+import ackcord.requests.Requests
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.{CacheSnapshot, RequestRunner}
 import akka.NotUsed
@@ -35,10 +35,10 @@ import cats.~>
   * The base command controller that you will place your commands in.
   * Contains partially applied types, and the Command builder object.
   */
-abstract class CommandController(val requests: RequestHelper) {
+abstract class CommandController(val requests: Requests) {
 
   implicit val requestRunner: RequestRunner[SourceRequest] = {
-    implicit val impRequest: RequestHelper = requests
+    implicit val impRequest: Requests = requests
     ackcord.RequestRunner.sourceRequestRunner
   }
   implicit val ec: ExecutionContext = requests.system.executionContext
