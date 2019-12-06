@@ -27,6 +27,9 @@ import akka.NotUsed
 
 package object commands {
 
+  type CommandFunction[-I[_], +O[_]] = ActionFunction[I, O, CommandError]
+  type CommandTransformer[-I[_], +O[_]] = ActionTransformer[I, O, CommandError]
+
   type GuildUserCommandMessage[+A]        = GuildCommandMessage[A] with UserCommandMessage[A]
   type VoiceGuildMemberCommandMessage[+A] = GuildMemberCommandMessage[A] with VoiceGuildCommandMessage[A]
 
