@@ -31,7 +31,7 @@ import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannel
 import ackcord.commands._
 import ackcord.data.{ChannelId, GuildId}
 import ackcord.lavaplayer.LavaplayerHandler
-import akka.Done
+import akka.{Done, NotUsed}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
@@ -161,7 +161,8 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventAsync(handler: APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
+  def onEventAsync(handler: APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) =
+    onEventStreamable(handler)
 
   /**
     * An utility function to extract a [[CacheSnapshot]] from a type in
@@ -182,6 +183,27 @@ trait DiscordClient {
   def registerHandler[G[_], A <: APIMessage](
       handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
+
+  /**
+    * Registers an [[EventListener]], created inside an [[EventsController]].
+    * @param listener The listener to run
+    * @tparam A The type events this listener takes.
+    * @tparam Mat The materialized result of running the listener graph.
+    * @return The materialized result of running the listener, in addition to
+    *         a future signaling when the listener is done running.
+    */
+  def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): (Mat, Future[Done])
+
+  /**
+    * Starts many listeners at the same time. They must all have a
+    * materialized value of NotUsed.
+    * @param listeners The listeners to run.
+    * @return The listeners together with their completions.
+    */
+  def bulkRegisterListeners(
+      listeners: EventListener[_ <: APIMessage, NotUsed]*
+  ): Seq[(EventListener[_ <: APIMessage, NotUsed], Future[Done])] =
+    listeners.map(l => l -> registerListener(l)._2)
 
   /**
     * Join a voice channel.

@@ -86,6 +86,21 @@ class DiscordClientCore(
       )
       .run()
 
+  override def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): (Mat, Future[Done]) =
+    SupervisionStreams
+      .addLogAndContinueFunction(
+        cache.subscribeAPI
+          .collect {
+            case msg if listener.refineEvent(msg).isDefined => listener.refineEvent(msg).get
+          }
+          .map(a => EventListenerMessage.Default(a))
+          .watchTermination()(Keep.right)
+          .toMat(listener.sink)(Keep.both)
+          .addAttributes
+      )
+      .run()
+      .swap
+
   override def shards: Future[Seq[ActorRef[DiscordShard.Command]]] = {
     implicit val timeout: Timeout = Timeout(1.second)
     actor.ask(DiscordClientActor.GetShards).map(_.shards)

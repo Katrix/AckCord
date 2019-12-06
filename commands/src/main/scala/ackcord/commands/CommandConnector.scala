@@ -261,5 +261,5 @@ class CommandConnector(
     * @return The commands together with their completions.
     */
   def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], Future[Done])] =
-    commands.map(c => c -> runNewNamedCommand(c)).map(t => t._1 -> t._2._2)
+    commands.map(c => c -> runNewNamedCommand(c)._2)
 }

@@ -32,52 +32,52 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}
 import cats.~>
 
-trait EventHandlerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventHandlerMessage, M, Nothing, A] { self =>
-  override type Action[B, Mat] = EventHandler2[B, Mat]
+trait EventListenerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventListenerMessage, M, Nothing, A] { self =>
+  override type Action[B, Mat] = EventListener[B, Mat]
 
   def refineEvent(msg: APIMessage): Option[A]
 
-  def on[B >: A <: APIMessage](implicit tag: ClassTag[B]): EventHandlerBuilder[M, B] = new EventHandlerBuilder[M, B] {
+  def on[B >: A <: APIMessage](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = new EventListenerBuilder[M, B] {
     override def requests: Requests = self.requests
 
-    override def flow[C]: Flow[EventHandlerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = self.flow
+    override def flow[C]: Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = self.flow
 
     override def refineEvent(msg: APIMessage): Option[B] =
       tag.unapply(msg)
   }
 
-  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): EventHandler2[A, Mat] = new EventHandler2[A, Mat] {
-    override def flow: Sink[EventHandlerMessage[A], Mat] =
+  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] = new EventListener[A, Mat] {
+    override def sink: Sink[EventListenerMessage[A], Mat] =
       self.flow[A].collect { case Right(ma) => ma }.toMat(sinkBlock)(Keep.right)
 
     override def refineEvent(msg: APIMessage): Option[A] = self.refineEvent(msg)
   }
 
-  override def andThen[O2[_]](that: ActionFunction[M, O2, Nothing]): EventHandlerBuilder[O2, A] =
-    new EventHandlerBuilder[O2, A] {
+  override def andThen[O2[_]](that: ActionFunction[M, O2, Nothing]): EventListenerBuilder[O2, A] =
+    new EventListenerBuilder[O2, A] {
       override def refineEvent(msg: APIMessage): Option[A] = self.refineEvent(msg)
 
       override def requests: Requests = self.requests
 
-      override def flow[B]: Flow[EventHandlerMessage[B], Either[Option[Nothing], O2[B]], NotUsed] =
+      override def flow[B]: Flow[EventListenerMessage[B], Either[Option[Nothing], O2[B]], NotUsed] =
         ActionFunction.flowViaEither(self.flow[B], that.flow[B])(Keep.right)
     }
 }
-object EventHandlerBuilder {
+object EventListenerBuilder {
   type EventFunction[-I[_], +O[_]]    = ActionFunction[I, O, Nothing]
   type EventTransformer[-I[_], +O[_]] = ActionTransformer[I, O, Nothing]
 
-  def rawBuilder(requestsObj: Requests): EventHandlerBuilder[EventHandlerMessage, APIMessage] =
-    new EventHandlerBuilder[EventHandlerMessage, APIMessage] {
+  def rawBuilder(requestsObj: Requests): EventListenerBuilder[EventListenerMessage, APIMessage] =
+    new EventListenerBuilder[EventListenerMessage, APIMessage] {
       override def refineEvent(msg: APIMessage): Option[APIMessage] = Some(msg)
 
       override def requests: Requests = requestsObj
 
-      override def flow[A]: Flow[EventHandlerMessage[A], Either[Option[Nothing], EventHandlerMessage[A]], NotUsed] =
-        Flow[EventHandlerMessage[A]].map(Right.apply)
+      override def flow[A]: Flow[EventListenerMessage[A], Either[Option[Nothing], EventListenerMessage[A]], NotUsed] =
+        Flow[EventListenerMessage[A]].map(Right.apply)
     }
 
-  def guildEvent[I[A] <: EventHandlerMessage[A], O[_]](
+  def guildEvent[I[A] <: EventListenerMessage[A], O[_]](
       create: Guild => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
 
@@ -106,7 +106,7 @@ object EventHandlerBuilder {
         .mapConcat(_.toList)
   }
 
-  def channelEvent[I[A] <: EventHandlerMessage[A], O[_]](
+  def channelEvent[I[A] <: EventListenerMessage[A], O[_]](
       create: Channel => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
 
@@ -125,7 +125,7 @@ object EventHandlerBuilder {
         .mapConcat(_.toList)
   }
 
-  def tChannelEvent[I[A] <: ChannelEventHandlerMessage[A], O[_]](
+  def tChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
       create: TChannel => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
@@ -136,7 +136,7 @@ object EventHandlerBuilder {
         .mapConcat(_.toList)
   }
 
-  def tGuildChannelEvent[I[A] <: ChannelEventHandlerMessage[A], O[_]](
+  def tGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
       create: (TGuildChannel, Guild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
@@ -151,7 +151,7 @@ object EventHandlerBuilder {
         .mapConcat(_.toList)
   }
 
-  def vGuildChannelEvent[I[A] <: ChannelEventHandlerMessage[A], O[_]](
+  def vGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
       create: (VGuildChannel, Guild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
@@ -166,7 +166,7 @@ object EventHandlerBuilder {
         .mapConcat(_.toList)
   }
 
-  def guildUserEvent[I[A] <: GuildEventHandlerMessage[A], O[_]](
+  def guildUserEvent[I[A] <: GuildEventListenerMessage[A], O[_]](
       create: (Guild, User, GuildMember) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
@@ -190,7 +190,7 @@ object EventHandlerBuilder {
             case APIMessage.PresenceUpdate(_, user, _, _, _)        => doCreate(user)
             case APIMessage.TypingStart(_, user, _, _)              => doCreate(user)
             case APIMessage.VoiceStateUpdate(voiceState, _)         => voiceState.user.flatMap(doCreate)
-            case APIMessage.VoiceStateUpdate(voiceState, cache)     => voiceState.user.flatMap(doCreate)
+            case APIMessage.VoiceStateUpdate(voiceState, _)         => voiceState.user.flatMap(doCreate)
             case _                                                  => None
           }
         }
@@ -198,84 +198,84 @@ object EventHandlerBuilder {
   }
 }
 
-trait EventHandler2[A, Mat] {
+trait EventListener[A, Mat] {
 
   def refineEvent(msg: APIMessage): Option[A]
 
-  def flow: Sink[EventHandlerMessage[A], Mat]
+  def sink: Sink[EventListenerMessage[A], Mat]
 }
 
-trait EventHandlerMessage[A] {
+trait EventListenerMessage[A] {
   def event: A with APIMessage
 
   def cacheSnapshot: CacheSnapshot = event.cache.current
 }
-object EventHandlerMessage {
-  implicit def findCache[A](implicit message: EventHandlerMessage[A]): CacheSnapshot = message.cacheSnapshot
+object EventListenerMessage {
+  implicit def findCache[A](implicit message: EventListenerMessage[A]): CacheSnapshot = message.cacheSnapshot
 
-  case class Default[A <: APIMessage](event: A with APIMessage) extends EventHandlerMessage[A]
+  case class Default[A](event: A with APIMessage) extends EventListenerMessage[A]
 }
 
-class WrappedEventHandlerMessage[A](m: EventHandlerMessage[A]) extends EventHandlerMessage[A] {
+class WrappedEventListenerMessage[A](m: EventListenerMessage[A]) extends EventListenerMessage[A] {
   override def event: A with APIMessage = m.event
 }
 
-trait GuildEventHandlerMessage[A] extends EventHandlerMessage[A] {
+trait GuildEventListenerMessage[A] extends EventListenerMessage[A] {
   def guild: Guild
 }
-object GuildEventHandlerMessage {
+object GuildEventListenerMessage {
 
-  case class Default[A <: APIMessage](guild: Guild, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with GuildEventHandlerMessage[A]
+  case class Default[A](guild: Guild, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with GuildEventListenerMessage[A]
 }
 
-trait ChannelEventHandlerMessage[A] extends EventHandlerMessage[A] {
+trait ChannelEventListenerMessage[A] extends EventListenerMessage[A] {
   def channel: Channel
 }
-object ChannelEventHandlerMessage {
+object ChannelEventListenerMessage {
 
-  case class Default[A <: APIMessage](channel: Channel, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with ChannelEventHandlerMessage[A]
+  case class Default[A](channel: Channel, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with ChannelEventListenerMessage[A]
 }
 
-trait TChannelEventHandlerMessage[A] extends ChannelEventHandlerMessage[A] {
+trait TChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] {
   def channel: TChannel
 }
-object TChannelEventHandlerMessage {
-  case class Default[A <: APIMessage](channel: TChannel, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with TChannelEventHandlerMessage[A]
+object TChannelEventListenerMessage {
+  case class Default[A](channel: TChannel, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with TChannelEventListenerMessage[A]
 }
 
-trait TGuildChannelEventHandlerMessage[A] extends TChannelEventHandlerMessage[A] with GuildEventHandlerMessage[A] {
+trait TGuildChannelEventListenerMessage[A] extends TChannelEventListenerMessage[A] with GuildEventListenerMessage[A] {
   def channel: TGuildChannel
 }
-object TGuildChannelEventHandlerMessage {
-  case class Default[A <: APIMessage](channel: TGuildChannel, guild: Guild, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with TGuildChannelEventHandlerMessage[A]
+object TGuildChannelEventListenerMessage {
+  case class Default[A](channel: TGuildChannel, guild: Guild, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with TGuildChannelEventListenerMessage[A]
 }
 
-trait VGuildChannelEventHandlerMessage[A] extends ChannelEventHandlerMessage[A] with GuildEventHandlerMessage[A] {
+trait VGuildChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] with GuildEventListenerMessage[A] {
   def channel: VGuildChannel
 }
-object VGuildChannelEventHandlerMessage {
-  case class Default[A <: APIMessage](channel: VGuildChannel, guild: Guild, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with VGuildChannelEventHandlerMessage[A]
+object VGuildChannelEventListenerMessage {
+  case class Default[A](channel: VGuildChannel, guild: Guild, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with VGuildChannelEventListenerMessage[A]
 }
 
-trait UserEventHandlerMessage[A] extends EventHandlerMessage[A] {
+trait UserEventListenerMessage[A] extends EventListenerMessage[A] {
   def user: User
 }
 
-trait GuildUserEventHandlerMessage[A] extends GuildEventHandlerMessage[A] with UserEventHandlerMessage[A] {
+trait GuildUserEventListenerMessage[A] extends GuildEventListenerMessage[A] with UserEventListenerMessage[A] {
   def guildMember: GuildMember
 }
-object GuildUserEventHandlerMessage {
-  case class Default[A <: APIMessage](guild: Guild, user: User, guildMember: GuildMember, m: EventHandlerMessage[A])
-      extends WrappedEventHandlerMessage(m)
-      with GuildUserEventHandlerMessage[A]
+object GuildUserEventListenerMessage {
+  case class Default[A](guild: Guild, user: User, guildMember: GuildMember, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
+      with GuildUserEventListenerMessage[A]
 }
