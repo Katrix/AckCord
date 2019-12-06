@@ -128,7 +128,7 @@ trait DiscordClient {
   @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
   def onEvent[G[_]](handler: APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
+  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(_ => handler)
 
   /**
     * Runs a function whenever [[APIMessage]]s are received.
@@ -141,7 +141,7 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventStreamable[G[_]](handler: APIMessage => G[Unit])(
+  def onEventStreamable[G[_]](handler: CacheSnapshot => APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
   ): (UniqueKillSwitch, Future[Done])
 
@@ -152,7 +152,7 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventId(handler: APIMessage => Unit): (UniqueKillSwitch, Future[Done]) = onEventStreamable[cats.Id](handler)
+  def onEventId(handler: CacheSnapshot => APIMessage => Unit): (UniqueKillSwitch, Future[Done]) = onEventStreamable[cats.Id](handler)
 
   /**
     * Runs an async function whenever [[APIMessage]]s are received.
@@ -161,19 +161,8 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventAsync(handler: APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) =
+  def onEventOptFuture(handler: CacheSnapshot => APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) =
     onEventStreamable(handler)
-
-  /**
-    * An utility function to extract a [[CacheSnapshot]] from a type in
-    * a function.
-    * @param handler The handler function with a cache parameter.
-    * @tparam G The execution type
-    * @return A handler function
-    */
-  def withCache[G[_]](
-      handler: CacheSnapshot => APIMessage => G[Unit]
-  ): APIMessage => G[Unit] = msg => handler(msg.cache.current)(msg)
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.

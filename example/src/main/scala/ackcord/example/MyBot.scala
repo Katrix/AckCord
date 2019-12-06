@@ -25,6 +25,8 @@ package ackcord.example
 
 import ackcord._
 import ackcord.syntax._
+import cats.data.OptionT
+import cats.instances.future._
 
 object MyBot extends App {
 
@@ -32,39 +34,46 @@ object MyBot extends App {
   val MusicCommands   = "&"
 
   require(args.nonEmpty, "Please provide a token")
-  val token = args.head
+  val token    = args.head
   val settings = ClientSettings(token)
   import settings.executionContext
 
   settings
     .createClient()
     .foreach { client =>
-      client.onEvent[cats.Id] {
-        case APIMessage.Ready(_) => println("Now ready")
-        case _                   => client.sourceRequesterRunner.unit
-      }
-
-      import client.sourceRequesterRunner._
-      client.onEvent[SourceRequest] {
-        client.withCache[SourceRequest, APIMessage] { implicit c =>
-          {
-            case APIMessage.ChannelCreate(channel, _) =>
-              for {
-                tChannel <- optionPure(channel.asTChannel)
-                _        <- run(tChannel.sendMessage("First"))
-              } yield ()
-            case APIMessage.ChannelDelete(channel, _) =>
-              for {
-                guildChannel <- optionPure(channel.asGuildChannel)
-                guild        <- optionPure(guildChannel.guild)
-                _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
-              } yield ()
-            case _ => client.sourceRequesterRunner.unit
-          }
+      client.onEventId { _ =>
+        {
+          case APIMessage.Ready(_) => println("Now ready")
+          case _                   => ()
         }
       }
 
+      import client.requestsHelper._
+      client.onEventOptFuture { implicit c =>
+        {
+          case APIMessage.ChannelCreate(channel, _) =>
+            for {
+              tChannel <- optionPure(channel.asTChannel)
+              _        <- run(tChannel.sendMessage("First"))
+            } yield ()
+          case APIMessage.ChannelDelete(channel, _) =>
+            for {
+              guildChannel <- optionPure(channel.asGuildChannel)
+              guild        <- optionPure(guildChannel.guild)
+              _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+            } yield ()
+          case _ => OptionT.none
+        }
+      }
+
+      val myEvents   = new MyEvents(client.requests)
       val myCommands = new MyCommands(client, client.requests)
+
+      client.bulkRegisterListeners(
+        myEvents.printReady,
+        myEvents.welcomeNew
+      )
+
       client.commands.bulkRunNamed(
         myCommands.echo,
         myCommands.guildInfo,

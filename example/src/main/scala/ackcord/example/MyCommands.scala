@@ -31,10 +31,10 @@ import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudio
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}
 
-class MyCommands(client: DiscordClient, requests: RequestHelper) extends CommandController(requests) {
+class MyCommands(client: DiscordClient, requests: Requests) extends CommandController(requests) {
 
   override def defaultMustMention: Boolean = true
-  
+
   val GeneralCommands = "!"
   val MusicCommands   = "&"
 
