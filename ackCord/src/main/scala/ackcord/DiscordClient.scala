@@ -67,7 +67,7 @@ trait DiscordClient {
   /**
     * The high level requests helper for use in user code.
     */
-  def requestsHelper: RequestsHelper
+  val requestsHelper: RequestsHelper
 
   def musicManager: Future[ActorRef[MusicManager.Command]]
 
@@ -112,32 +112,64 @@ trait DiscordClient {
   val sourceRequesterRunner: RequestRunner[SourceRequest]
 
   /**
-    * Runs a partial function whenever [[APIMessage]]s are received.
+    * Runs a function whenever [[APIMessage]]s are received.
     *
     * If you use IntelliJ you might have to specify the execution type.
-    * (Normally Id or SourceRequest)
+    * (Normally Id, SourceRequest or Future)
     * @param handler The handler function
     * @param streamable A way to convert your execution type to a stream.
     * @tparam G The execution type
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
+  @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
   def onEvent[G[_]](handler: APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
+  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
+
+  /**
+    * Runs a function whenever [[APIMessage]]s are received.
+    *
+    * If you use IntelliJ you might have to specify the execution type.
+    * (Normally Id, SourceRequest or Future)
+    * @param handler The handler function
+    * @param streamable A way to convert your execution type to a stream.
+    * @tparam G The execution type
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
+  def onEventStreamable[G[_]](handler: APIMessage => G[Unit])(
+      implicit streamable: Streamable[G]
   ): (UniqueKillSwitch, Future[Done])
+
+  /**
+    * Runs a function whenever [[APIMessage]]s are received.
+    *
+    * @param handler The handler function
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
+  def onEventId(handler: APIMessage => Unit): (UniqueKillSwitch, Future[Done]) = onEventStreamable[cats.Id](handler)
+
+  /**
+    * Runs an async function whenever [[APIMessage]]s are received.
+    *
+    * @param handler The handler function
+    * @return A kill switch to cancel this listener, and a future representing
+    *         when it's done.
+    */
+  def onEventAsync(handler: APIMessage => Future[Unit]): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
 
   /**
     * An utility function to extract a [[CacheSnapshot]] from a type in
     * a function.
     * @param handler The handler function with a cache parameter.
-    * @param hasCache A typeclass allowing you to extract the cache.
     * @tparam G The execution type
-    * @tparam ContainsCache The type of the value that contains the cache.
     * @return A handler function
     */
-  def withCache[G[_], ContainsCache](
-      handler: CacheSnapshot => ContainsCache => G[Unit]
-  )(implicit hasCache: HasCache[ContainsCache]): ContainsCache => G[Unit] = msg => handler(hasCache.cache(msg))(msg)
+  def withCache[G[_]](
+      handler: CacheSnapshot => APIMessage => G[Unit]
+  ): APIMessage => G[Unit] = msg => handler(msg.cache.current)(msg)
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.

@@ -73,7 +73,7 @@ class DiscordClientCore(
       )
       .run()
 
-  override def onEvent[G[_]](
+  override def onEventStreamable[G[_]](
       handler: APIMessage => G[Unit]
   )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
     SupervisionStreams
