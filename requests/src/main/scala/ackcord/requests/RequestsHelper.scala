@@ -25,9 +25,10 @@
 package ackcord.requests
 
 import scala.concurrent.Future
-import scala.collection.immutable
 
 import ackcord.{CacheSnapshot, RequestPermissionException}
+import cats.data.OptionT
+import cats.instances.future._
 
 /**
   * A small layer on top of [[Requests]] for use in high level code.
@@ -36,23 +37,36 @@ import ackcord.{CacheSnapshot, RequestPermissionException}
 class RequestsHelper(requests: Requests) {
   import requests.system.executionContext
 
-  private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): Future[Unit] =
-    if (requests.forall(_.hasPermissions)) Future.unit
-    else Future.failed(new RequestPermissionException(requests.find(!_.hasPermissions).get))
+  private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): OptionT[Future, Unit] =
+    if (requests.forall(_.hasPermissions)) OptionT.liftF(Future.unit)
+    else OptionT.liftF(Future.failed(new RequestPermissionException(requests.find(!_.hasPermissions).get)))
 
   /**
     * Runs a single requests and returns the result.
     * @param request The request to run
     */
-  def run[A](request: Request[A])(implicit c: CacheSnapshot): Future[A] =
-    checkPerms(Seq(request)).flatMap(_ => requests.singleFutureSuccess(request))
+  def run[A](request: Request[A])(implicit c: CacheSnapshot): OptionT[Future, A] =
+    checkPerms(Seq(request)).semiflatMap(_ => requests.singleFutureSuccess(request))
 
   /**
     * Runs many requests in order, and returns the result. The result is only
     * a success if all the requests succeed.
     * @param requests The requests to run
     */
-  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): Future[immutable.Seq[A]] =
-    checkPerms(requests).flatMap(_ => this.requests.manyFutureSuccess(requests))
+  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): OptionT[Future, Seq[A]] =
+    checkPerms(requests).semiflatMap(_ => this.requests.manyFutureSuccess(requests))
 
+  //From here on it's all convenience methods
+
+  def pure[A](a: A): OptionT[Future, A] = OptionT.some[Future](a)
+
+  def optionPure[A](opt: Option[A]): OptionT[Future, A] = OptionT.fromOption[Future](opt)
+
+  def runOption[A](opt: Option[Request[A]])(implicit c: CacheSnapshot): OptionT[Future, A] =
+    optionPure(opt).flatMap(run)
+
+  def runOptionT[H[_], A](
+      opt: OptionT[Future, Request[A]]
+  )(implicit c: CacheSnapshot): OptionT[Future, A] =
+    opt.flatMap(run)
 }

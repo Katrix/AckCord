@@ -36,6 +36,7 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.stream.UniqueKillSwitch
 import akka.util.Timeout
+import cats.data.OptionT
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 
@@ -43,6 +44,8 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem
   * Trait used to interface with Discord stuff from high level.
   */
 trait DiscordClient {
+
+  type OptFuture[A] = OptionT[Future, A]
 
   /**
     * The shards of this client
@@ -158,7 +161,7 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventAsync(handler: APIMessage => Future[Unit]): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
+  def onEventAsync(handler: APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) = onEventStreamable(handler)
 
   /**
     * An utility function to extract a [[CacheSnapshot]] from a type in
