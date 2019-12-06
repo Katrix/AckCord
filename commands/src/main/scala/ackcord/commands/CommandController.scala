@@ -25,7 +25,7 @@ package ackcord.commands
 
 import scala.concurrent.ExecutionContext
 
-import ackcord.requests.Requests
+import ackcord.requests.{Requests, RequestsHelper}
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.{CacheSnapshot, RequestRunner}
 import akka.NotUsed
@@ -37,10 +37,14 @@ import cats.~>
   */
 abstract class CommandController(val requests: Requests) {
 
+  @deprecated("Prefer using the RequestHelper instead", since = "0.16")
   implicit val requestRunner: RequestRunner[SourceRequest] = {
     implicit val impRequest: Requests = requests
     ackcord.RequestRunner.sourceRequestRunner
   }
+
+  val requestHelper: RequestsHelper = new RequestsHelper(requests)
+
   implicit val ec: ExecutionContext = requests.system.executionContext
 
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache

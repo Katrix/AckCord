@@ -376,11 +376,6 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
 trait CommandMessage[+A] {
 
   /**
-    * Easy access to a request helper.
-    */
-  def requests: Requests
-
-  /**
     * A cache snapshot taken when the command was used.
     */
   def cache: CacheSnapshot
@@ -414,8 +409,6 @@ object CommandMessage {
 }
 
 class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
-  override def requests: Requests = m.requests
-
   override def cache: CacheSnapshot = m.cache
 
   override def tChannel: TChannel = m.tChannel
