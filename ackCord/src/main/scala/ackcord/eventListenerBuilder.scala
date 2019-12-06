@@ -37,7 +37,7 @@ trait EventListenerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventLi
 
   def refineEvent(msg: APIMessage): Option[A]
 
-  def on[B >: A <: APIMessage](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = new EventListenerBuilder[M, B] {
+  def on[B <: A](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = new EventListenerBuilder[M, B] {
     override def requests: Requests = self.requests
 
     override def flow[C]: Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = self.flow
@@ -189,7 +189,6 @@ object EventListenerBuilder {
             case APIMessage.MessageReactionRemove(user, _, _, _, _) => doCreate(user)
             case APIMessage.PresenceUpdate(_, user, _, _, _)        => doCreate(user)
             case APIMessage.TypingStart(_, user, _, _)              => doCreate(user)
-            case APIMessage.VoiceStateUpdate(voiceState, _)         => voiceState.user.flatMap(doCreate)
             case APIMessage.VoiceStateUpdate(voiceState, _)         => voiceState.user.flatMap(doCreate)
             case _                                                  => None
           }

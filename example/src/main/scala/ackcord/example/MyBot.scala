@@ -25,7 +25,6 @@ package ackcord.example
 
 import ackcord._
 import ackcord.syntax._
-import cats.data.OptionT
 import cats.instances.future._
 
 object MyBot extends App {
@@ -44,7 +43,6 @@ object MyBot extends App {
       client.onEventId { _ =>
         {
           case APIMessage.Ready(_) => println("Now ready")
-          case _                   => ()
         }
       }
 
@@ -62,7 +60,6 @@ object MyBot extends App {
               guild        <- optionPure(guildChannel.guild)
               _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
             } yield ()
-          case _ => OptionT.none
         }
       }
 

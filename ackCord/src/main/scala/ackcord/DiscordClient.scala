@@ -128,7 +128,7 @@ trait DiscordClient {
   @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
   def onEvent[G[_]](handler: APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(_ => handler)
+  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(_ => PartialFunction.fromFunction(handler))
 
   /**
     * Runs a function whenever [[APIMessage]]s are received.
@@ -141,7 +141,7 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventStreamable[G[_]](handler: CacheSnapshot => APIMessage => G[Unit])(
+  def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
       implicit streamable: Streamable[G]
   ): (UniqueKillSwitch, Future[Done])
 
@@ -152,7 +152,8 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventId(handler: CacheSnapshot => APIMessage => Unit): (UniqueKillSwitch, Future[Done]) = onEventStreamable[cats.Id](handler)
+  def onEventId(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) =
+    onEventStreamable[cats.Id](handler)
 
   /**
     * Runs an async function whenever [[APIMessage]]s are received.
@@ -161,7 +162,9 @@ trait DiscordClient {
     * @return A kill switch to cancel this listener, and a future representing
     *         when it's done.
     */
-  def onEventOptFuture(handler: CacheSnapshot => APIMessage => OptionT[Future, Unit]): (UniqueKillSwitch, Future[Done]) =
+  def onEventOptFuture(
+      handler: CacheSnapshot => PartialFunction[APIMessage, OptionT[Future, Unit]]
+  ): (UniqueKillSwitch, Future[Done]) =
     onEventStreamable(handler)
 
   /**

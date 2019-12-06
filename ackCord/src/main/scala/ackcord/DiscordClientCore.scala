@@ -73,13 +73,16 @@ class DiscordClientCore(
       )
       .run()
 
-  override def onEventStreamable[G[_]](
-      handler: APIMessage => G[Unit]
-  )(implicit streamable: Streamable[G]): (UniqueKillSwitch, Future[Done]) =
+  override def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
+      implicit streamable: Streamable[G]
+  ): (UniqueKillSwitch, Future[Done]) =
     SupervisionStreams
       .addLogAndContinueFunction(
         cache.subscribeAPI
-          .flatMapConcat(handler.andThen(streamable.toSource))
+          .collect {
+            case m if handler(m.cache.current).isDefinedAt(m) => handler(m.cache.current)(m)
+          }
+          .flatMapConcat(streamable.toSource)
           .viaMat(KillSwitches.single)(Keep.right)
           .toMat(Sink.ignore)(Keep.both)
           .addAttributes
