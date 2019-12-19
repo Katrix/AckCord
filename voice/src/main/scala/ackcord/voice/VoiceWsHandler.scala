@@ -179,6 +179,23 @@ object VoiceWsHandler {
     import parameters._
     implicit val system: ActorSystem[Nothing] = context.system
 
+    def handleError(e: Throwable): Behavior[Command] = e match {
+      case e: PeerClosedConnectionException =>
+        e.closeCode match {
+          //Disconnected
+          case 4014 => Behaviors.stopped
+          //Session no longer valid
+          case 4006 => Behaviors.stopped
+          //Server crashed
+          case 4015 =>
+            context.self ! Restart(fresh = false, 0.seconds)
+            Behaviors.same
+
+          case _ => throw e
+        }
+      case _ => throw e
+    }
+
     Behaviors
       .receiveMessage[Command] {
         case InitSink(replyTo) =>
@@ -210,10 +227,7 @@ object VoiceWsHandler {
           Behaviors.stopped
 
         case FailedSink(e) =>
-          //TODO: Inspect error and only do fresh if needed
-          log.error("Encountered websocket error", e)
-          context.self ! Restart(fresh = true, 1.seconds)
-          Behaviors.same
+          handleError(e)
 
         case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
           response.discardEntityBytes()
@@ -225,20 +239,8 @@ object VoiceWsHandler {
           response.discardEntityBytes()
           Behaviors.same
 
-        case SendExeption(e: PeerClosedConnectionException) =>
-          e.closeCode match {
-            //Disconnected
-            case 4014 => Behaviors.stopped
-            //Session no longer valid
-            case 4006 => Behaviors.stopped
-            //Server crashed
-            case 4015 =>
-              context.self ! Restart(fresh = false, 0.seconds)
-              Behaviors.same
-
-            case _ => throw e
-          }
-        case SendExeption(e) => throw e
+        case SendExeption(e) =>
+          handleError(e)
 
         case SinkMessage(replyTo, Left(e)) =>
           log.error("Encountered websocket parsing error", e)
