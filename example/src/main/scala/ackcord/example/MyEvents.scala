@@ -40,5 +40,4 @@ class MyEvents(requests: Requests) extends EventsController(requests) {
         systemChannel <- r.guild.systemChannel
       } yield systemChannel.sendMessage(s"Hello ${r.user.username}")
     }
-
 }

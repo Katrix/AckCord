@@ -26,7 +26,6 @@ package ackcord
 
 import scala.concurrent.ExecutionContext
 
-import ackcord.commands.CommandMessage
 import cats.~>
 
 abstract class EventsController(val requests: Requests) {
@@ -35,7 +34,7 @@ abstract class EventsController(val requests: Requests) {
 
   implicit val ec: ExecutionContext = requests.system.executionContext
 
-  implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
+  implicit def findCache[A](implicit message: EventListenerMessage[A]): CacheSnapshot = message.cacheSnapshot
 
   /**
     * The base event handler builder that you can build off if you don't like the
