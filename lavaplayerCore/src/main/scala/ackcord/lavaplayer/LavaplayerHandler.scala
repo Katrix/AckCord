@@ -178,7 +178,7 @@ object LavaplayerHandler {
       )
       val movedMonitor = context.spawn(MovedMonitor(cache, context.self), "MovedMonitor")
 
-      log.debug("Music Connected")
+      log.debug("Music connecting")
       inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle, readyListenerActor, movedMonitor))
     }
 
@@ -264,7 +264,7 @@ object LavaplayerHandler {
         inactive(parameters, state.copy(vChannelId = newChannelId))
 
       case (GotVoiceData(sessionId, token, endpoint, userId), Connecting(inVChannelId, replyTo, _)) =>
-        log.debug("Received session id, token and endpoint")
+        log.debug(s"Received session id, token and endpoint: $sessionId $token $endpoint")
         connect(inVChannelId, endpoint, userId, sessionId, token, replyTo)
 
       case (GotVoiceData(_, _, _, _), _) =>

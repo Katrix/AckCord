@@ -183,11 +183,16 @@ object VoiceWsHandler {
       case e: PeerClosedConnectionException =>
         e.closeCode match {
           //Disconnected
-          case 4014 => Behaviors.stopped
+          case 4014 =>
+            log.debug("Got 4014 close code. Stopping")
+            Behaviors.stopped
           //Session no longer valid
-          case 4006 => Behaviors.stopped
+          case 4006 =>
+            log.debug("Got 4006 close code. Stopping")
+            Behaviors.stopped
           //Server crashed
           case 4015 =>
+            log.debug("Got 4015 close code. Restarting")
             context.self ! Restart(fresh = false, 0.seconds)
             Behaviors.same
 
@@ -224,6 +229,7 @@ object VoiceWsHandler {
           Behaviors.same
 
         case CompletedSink =>
+          log.debug("Got CompletedSink when not in restarting mode. Stopping")
           Behaviors.stopped
 
         case FailedSink(e) =>
@@ -258,7 +264,7 @@ object VoiceWsHandler {
           Behaviors.same
 
         case GotLocalIP(localAddress, localPort) =>
-          log.debug("Found IP and port")
+          log.debug(s"Found IP and port: $localAddress $localPort")
           queue.offer(
             SelectProtocol(
               protocol = "udp",
@@ -304,7 +310,7 @@ object VoiceWsHandler {
 
     voiceMessage match {
       case Ready(ReadyData(readySsrc, port, address, _)) =>
-        log.debug("Received ready")
+        log.debug(s"Received ready with ssrc port address: $readySsrc $port $address")
 
         parent ! VoiceHandler.GotServerIP(address, port, readySsrc)
 

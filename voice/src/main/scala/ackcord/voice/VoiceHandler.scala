@@ -169,8 +169,8 @@ object VoiceHandler {
           shutdownPhase(parameters, state)
       }
       .receiveSignal {
-        case (_, Terminated(_)) =>
-          throw new IllegalStateException("Voice Handler stopped unexpectedly")
+        case (_, Terminated(actor)) =>
+          throw new IllegalStateException(s"Voice Handler actor $actor stopped unexpectedly")
       }
   }
 
