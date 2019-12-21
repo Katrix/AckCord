@@ -50,10 +50,17 @@ class IPDiscoveryFlow(openValve: () => Unit)
       override def onPush(): Unit = {
         val data = grab(in)
         log.debug(s"Grabbing data for IP discovery $data")
-        val (addressBytes, portBytes) = data.splitAt(68)
+        val byteBuf = data.asByteBuffer.order(ByteOrder.BIG_ENDIAN)
+        val tpe = byteBuf.getShort
 
-        val address = new String(addressBytes.drop(4).toArray).trim
-        val port    = portBytes.asByteBuffer.order(ByteOrder.LITTLE_ENDIAN).getShort
+        require(tpe == 0x2, s"Was expecting IP discovery result, got $tpe")
+
+        byteBuf.getShort //Length
+        byteBuf.getInt //SSRC
+        val nullTermString = new Array[Byte](64)
+        byteBuf.get(nullTermString)
+        val address = new String(nullTermString, 0, nullTermString.iterator.takeWhile(_ != 0).length)
+        val port    = byteBuf.getChar.toInt //Char is unsigned short
 
         promise.success(VoiceUDPFlow.FoundIP(address, port))
         log.debug("Success doing IP discovery")

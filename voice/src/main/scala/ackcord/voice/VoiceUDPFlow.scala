@@ -25,6 +25,7 @@
 package ackcord.voice
 
 import java.net.InetSocketAddress
+import java.nio.ByteOrder
 
 import scala.concurrent.{Future, Promise}
 
@@ -58,7 +59,18 @@ object VoiceUDPFlow {
       .join(Flow[ByteString].buffer(32, OverflowStrategy.backpressure).via(UdpConnectedFlow.flow(remoteAddress)))
 
   def voiceBidi(ssrc: Int): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[FoundIP]] = {
-    val ipDiscoveryPacket = Compat.padBytestring(ByteString(ssrc), 70, 0.toByte)
+    implicit val byteOrder: ByteOrder = ByteOrder.BIG_ENDIAN
+    val ipDiscoveryPacket = {
+      val byteBuilder = ByteString.createBuilder
+      byteBuilder.sizeHint(74)
+      byteBuilder.putShort(0x1).putShort(70).putInt(ssrc)
+
+      byteBuilder.putBytes(new Array[Byte](66))
+
+      byteBuilder.result()
+    }
+
+    println(ipDiscoveryPacket)
 
     val valvePromise = Promise[Unit]
     val valve        = Source.future(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]
