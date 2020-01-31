@@ -32,7 +32,9 @@ import ackcord.data.raw._
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, Uri}
+import akka.http.scaladsl.model._
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import io.circe._
 import io.circe.syntax._
 
@@ -202,6 +204,59 @@ case class GetChannelMessage(channelId: ChannelId, messageId: MessageId) extends
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
+sealed trait CreateMessageFile {
+  def fileName: String
+  def isValid: Boolean
+  protected[requests] def toBodyPart: FormData.BodyPart
+}
+object CreateMessageFile {
+  case class FromPath(path: Path) extends CreateMessageFile {
+    override def fileName: String = path.getFileName.toString
+    override def isValid: Boolean = Files.isRegularFile(path)
+    override protected[requests] def toBodyPart: FormData.BodyPart =
+      FormData.BodyPart.fromPath(fileName, ContentTypes.`application/octet-stream`, path)
+  }
+
+  case class SourceFile(
+      contentType: ContentType,
+      contentLength: Int,
+      bytes: Source[ByteString, NotUsed],
+      fileName: String
+  ) extends CreateMessageFile {
+    override def isValid: Boolean = true
+
+    override protected[requests] def toBodyPart: FormData.BodyPart =
+      FormData.BodyPart(fileName, HttpEntity(contentType, contentLength, bytes), Map("filename" -> fileName))
+  }
+
+  case class ByteFile(
+      contentType: ContentType,
+      bytes: ByteString,
+      fileName: String
+  ) extends CreateMessageFile {
+    override def isValid: Boolean = true
+
+    override protected[requests] def toBodyPart: FormData.BodyPart =
+      FormData.BodyPart(
+        fileName,
+        HttpEntity(ContentTypes.`application/octet-stream`, bytes),
+        Map("filename" -> fileName)
+      )
+  }
+
+  case class StringFile(
+      contentType: ContentType.NonBinary,
+      contents: String,
+      fileName: String
+  ) extends CreateMessageFile {
+    override def isValid: Boolean = true
+
+    override protected[requests] def toBodyPart: FormData.BodyPart =
+      FormData.BodyPart(fileName, HttpEntity(ContentTypes.`text/plain(UTF-8)`, contents), Map("filename" -> fileName))
+  }
+
+}
+
 /**
   * @param content The content of the message.
   * @param nonce A nonce used for optimistic message sending.
@@ -214,12 +269,12 @@ case class CreateMessageData(
     content: String = "",
     nonce: Option[RawSnowflake] = None,
     tts: Boolean = false,
-    files: Seq[Path] = Seq.empty,
+    files: Seq[CreateMessageFile] = Seq.empty,
     embed: Option[OutgoingEmbed] = None
 ) {
-  files.foreach(path => require(Files.isRegularFile(path)))
+  files.foreach(file => require(file.isValid))
   require(
-    files.map(_.getFileName.toString).distinct.lengthCompare(files.length) == 0,
+    files.map(_.fileName).distinct.lengthCompare(files.length) == 0,
     "Please use unique filenames for all files"
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
@@ -241,17 +296,12 @@ case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
   override def requestBody: RequestEntity = {
     this match {
       case CreateMessage(_, CreateMessageData(_, _, _, files, _)) if files.nonEmpty =>
-        val fileParts = files.map { f =>
-          FormData.BodyPart.fromPath(f.getFileName.toString, ContentTypes.`application/octet-stream`, f)
-        }
+        val jsonPart = FormData.BodyPart(
+          "payload_json",
+          HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+        )
 
-        val jsonPart =
-          FormData.BodyPart(
-            "payload_json",
-            HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
-          )
-
-        FormData(fileParts :+ jsonPart: _*).toEntity()
+        FormData(files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
       case _ => super.requestBody
     }
   }

@@ -110,7 +110,7 @@ package object syntax {
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
         embed: Option[OutgoingEmbed] = None
-    ) = CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files, embed))
+    ) = CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files.map(CreateMessageFile.FromPath), embed))
 
     /**
       * Fetch messages around a message id.
