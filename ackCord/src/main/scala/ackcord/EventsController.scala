@@ -40,7 +40,8 @@ abstract class EventsController(val requests: Requests) {
     * The base event handler builder that you can build off if you don't like the
     * default provided builder.
     */
-  val baseEventBuilder: EventListenerBuilder[EventListenerMessage, APIMessage] = EventListenerBuilder.rawBuilder(requests)
+  val baseEventBuilder: EventListenerBuilder[EventListenerMessage, APIMessage] =
+    EventListenerBuilder.rawBuilder(requests)
 
   /**
     * An alias for the base builder.

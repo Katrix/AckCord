@@ -373,7 +373,8 @@ case class DeleteAllReactions(channelId: ChannelId, messageId: MessageId) extend
   */
 case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
-    embed: JsonOption[OutgoingEmbed] = JsonUndefined
+    embed: JsonOption[OutgoingEmbed] = JsonUndefined,
+    flags: JsonOption[MessageFlags] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
 }
@@ -409,6 +410,17 @@ object EditMessage {
       messageId: MessageId,
       embed: OutgoingEmbed
   ): EditMessage = new EditMessage(channelId, messageId, EditMessageData(embed = JsonSome(embed)))
+
+  def suppressEmbeds(
+      channelId: ChannelId,
+      messageId: MessageId,
+      existingFlags: MessageFlags
+  ) =
+    new EditMessage(
+      channelId,
+      messageId,
+      EditMessageData(flags = JsonSome(existingFlags -- MessageFlags.SuppressEmbeds))
+    )
 }
 
 /**
@@ -531,12 +543,15 @@ case class GetChannelInvites(channelId: ChannelId) extends NoParamsNiceResponseR
   *                or 0 for unlimited.
   * @param temporary If this invite only grants temporary membership.
   * @param unique If true, guarantees to create a new invite.
+  * @param targetUser The target user for this invite.
   */
 case class CreateChannelInviteData(
     maxAge: Int = 86400,
     maxUses: Int = 0,
     temporary: Boolean = false,
-    unique: Boolean = false
+    unique: Boolean = false,
+    targetUser: Option[UserId],
+    targetUserType: Option[Int] //TODO: What is the type here
 )
 
 /**
@@ -565,9 +580,14 @@ object CreateChannelInvite {
       maxAge: Int = 86400,
       maxUses: Int = 0,
       temporary: Boolean = false,
-      unique: Boolean = false
+      unique: Boolean = false,
+      targetUser: Option[UserId] = None,
+      targetUserType: Option[Int] = None
   ): CreateChannelInvite =
-    new CreateChannelInvite(channelId, CreateChannelInviteData(maxAge, maxUses, temporary, unique))
+    new CreateChannelInvite(
+      channelId,
+      CreateChannelInviteData(maxAge, maxUses, temporary, unique, targetUser, targetUserType)
+    )
 }
 
 /**

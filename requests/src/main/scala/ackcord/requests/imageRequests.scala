@@ -108,6 +108,16 @@ case class GetGuildSplashImage(
   override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
+case class GetDiscoverySplashImage(
+    desiredSize: Int,
+    format: ImageFormat,
+    guildId: GuildId,
+    splashHash: String
+) extends ImageRequest {
+  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute              = Routes.discoverySplashImage(guildId, splashHash, format, Some(desiredSize))
+}
+
 case class GetGuildBannerImage(
     desiredSize: Int,
     format: ImageFormat,

@@ -58,7 +58,8 @@ abstract class CommandController(val requests: Requests) {
     * The base command builder that you can build off if you don't like the
     * default provided builder.
     */
-  val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] = CommandBuilder.rawBuilder(requests, defaultMustMention)
+  val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] =
+    CommandBuilder.rawBuilder(requests, defaultMustMention)
 
   /**
     * The default command builder you will use to create most of your commands.

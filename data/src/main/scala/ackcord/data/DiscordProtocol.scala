@@ -27,6 +27,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import scala.util.Try
 
+import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
 import cats.syntax.either._
 import io.circe._
@@ -55,6 +56,16 @@ trait DiscordProtocol {
 
   implicit val userFlagsCodec: Codec[UserFlags] = Codec.from(
     Decoder[Int].emap(i => Right(UserFlags.fromInt(i))),
+    Encoder[Int].contramap(identity)
+  )
+
+  implicit val messageFlagsCodec: Codec[MessageFlags] = Codec.from(
+    Decoder[Int].emap(i => Right(MessageFlags.fromInt(i))),
+    Encoder[Int].contramap(identity)
+  )
+
+  implicit val systemChannelFlagsCodec: Codec[SystemChannelFlags] = Codec.from(
+    Decoder[Int].emap(i => Right(SystemChannelFlags.fromInt(i))),
     Encoder[Int].contramap(identity)
   )
 
@@ -175,6 +186,12 @@ trait DiscordProtocol {
   implicit val partialRawGuildMemberCodec: Codec[PartialRawGuildMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val channelMentionCodec: Codec[ChannelMention] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val messageReferenceCodec: Codec[MessageReference] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
       "id"               -> a.id.asJson,
@@ -218,6 +235,7 @@ trait DiscordProtocol {
       mentionEveryone <- c.get[Boolean]("mention_everyone")
       mentions        <- c.get[Seq[User]]("mentions")
       mentionRoles    <- c.get[Seq[RoleId]]("mention_roles")
+      mentionChannels <- c.get[Option[Seq[ChannelMention]]]("mention_channels")
       attachment      <- c.get[Seq[Attachment]]("attachments")
       embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
@@ -225,10 +243,12 @@ trait DiscordProtocol {
         .get[Option[Int]]("nonce")
         .map(_.map(Left.apply))
         .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
-      pinned      <- c.get[Boolean]("pinned")
-      tpe         <- c.get[MessageType]("type")
-      activity    <- c.get[Option[RawMessageActivity]]("activity")
-      application <- c.get[Option[MessageApplication]]("application")
+      pinned           <- c.get[Boolean]("pinned")
+      tpe              <- c.get[MessageType]("type")
+      activity         <- c.get[Option[RawMessageActivity]]("activity")
+      application      <- c.get[Option[MessageApplication]]("application")
+      messageReference <- c.get[Option[MessageReference]]("message_reference")
+      flags            <- c.get[Option[MessageFlags]]("flags")
     } yield RawMessage(
       id,
       channelId,
@@ -242,6 +262,7 @@ trait DiscordProtocol {
       mentionEveryone,
       mentions,
       mentionRoles,
+      mentionChannels,
       attachment,
       embeds,
       reactions,
@@ -249,7 +270,9 @@ trait DiscordProtocol {
       pinned,
       tpe,
       activity,
-      application
+      application,
+      messageReference,
+      flags
     )
   }
 
@@ -277,6 +300,9 @@ trait DiscordProtocol {
   implicit val integrationAccountCodec: Codec[IntegrationAccount] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val partialIntegrationCodec: Codec[PartialIntegration] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val integrationCodec: Codec[Integration] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -300,6 +326,9 @@ trait DiscordProtocol {
 
   implicit val optionalAuditLogInfoDecoder: Decoder[OptionalAuditLogInfo] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+
+  implicit val partialRoleCodec: Codec[PartialRole] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = (c: HCursor) => {
 
@@ -327,12 +356,14 @@ trait DiscordProtocol {
       case "prune_delete_days"             => mkChange(AuditLogChange.PruneDeleteDays)
       case "widget_enabled"                => mkChange(AuditLogChange.WidgetEnabled)
       case "widget_channel_id"             => mkChange(AuditLogChange.WidgetChannelId)
+      case "system_channel_id"             => mkChange(AuditLogChange.SystemChannelId)
       case "position"                      => mkChange(AuditLogChange.Position)
       case "topic"                         => mkChange(AuditLogChange.Topic)
       case "bitrate"                       => mkChange(AuditLogChange.Bitrate)
       case "permission_overwrites"         => mkChange(AuditLogChange.PermissionOverwrites)
       case "nsfw"                          => mkChange(AuditLogChange.NSFW)
       case "application_id"                => mkChange(AuditLogChange.ApplicationId)
+      case "rate_limit_per_user"           => mkChange(AuditLogChange.RateLimitPerUser)
       case "permissions"                   => mkChange(AuditLogChange.Permissions)
       case "color"                         => mkChange(AuditLogChange.Color)
       case "hoist"                         => mkChange(AuditLogChange.Hoist)
@@ -352,6 +383,9 @@ trait DiscordProtocol {
       case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
       case "id"                            => mkChange(AuditLogChange.Id)
       case "type"                          => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
+      case "enable_emoticons"              => mkChange(AuditLogChange.EnableEmoticons)
+      case "expire_behavior"               => mkChange(AuditLogChange.ExpireBehavior)
+      case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
     }
   }
 

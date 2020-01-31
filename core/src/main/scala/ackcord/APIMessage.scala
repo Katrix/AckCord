@@ -184,6 +184,7 @@ object APIMessage {
       roles: Seq[Role],
       user: User,
       nick: Option[String],
+      premiumSince: Option[OffsetDateTime],
       cache: CacheState
   ) extends GuildMessage
 
@@ -305,12 +306,16 @@ object APIMessage {
     * @param user The user of the presence
     * @param roleIds The roles of the user
     * @param presence The new presence
+    * @param nick The nickname of the user if they have one.
+    * @param premiumSince When the user boosted the guild.
     */
   case class PresenceUpdate(
       guild: Guild,
       user: User,
       roleIds: Seq[RoleId],
       presence: Presence,
+      nick: Option[String],
+      premiumSince: Option[OffsetDateTime],
       cache: CacheState
   ) extends GuildMessage
 

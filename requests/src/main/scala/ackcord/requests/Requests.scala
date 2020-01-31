@@ -193,7 +193,7 @@ case class Requests(
     * @param request The request to send.
     */
   def singleFuture[Data](request: Request[Data])(
-    implicit properties: RequestProperties = RequestProperties.default
+      implicit properties: RequestProperties = RequestProperties.default
   ): Future[RequestAnswer[Data]] =
     single(request)(properties).runWith(Sink.head)
 
@@ -203,7 +203,7 @@ case class Requests(
     * @param request The request to send.
     */
   def singleFutureSuccess[Data](request: Request[Data])(
-    implicit properties: RequestProperties = RequestProperties.default
+      implicit properties: RequestProperties = RequestProperties.default
   ): Future[Data] =
     singleSuccess(request)(properties).runWith(Sink.head)
 
@@ -212,7 +212,7 @@ case class Requests(
     * @param request The request to send.
     */
   def singleIgnore[Data](request: Request[Data])(
-    implicit properties: RequestProperties = RequestProperties.default
+      implicit properties: RequestProperties = RequestProperties.default
   ): Unit =
     single(request)(properties).runWith(ignoreOrReport)
 
@@ -251,7 +251,7 @@ case class Requests(
     * @param requests The requests to send.
     */
   def manyFutureSuccess[Data](requests: immutable.Seq[Request[Data]])(
-    implicit properties: RequestProperties = RequestProperties.default
+      implicit properties: RequestProperties = RequestProperties.default
   ): Future[immutable.Seq[Data]] =
     manySuccess(requests)(properties).runWith(Sink.seq)
 

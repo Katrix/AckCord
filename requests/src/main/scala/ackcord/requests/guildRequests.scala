@@ -43,16 +43,22 @@ import io.circe.syntax._
   * @param roles The roles for the new guild. Note, here the snowflake is
   *              just a placeholder.
   * @param channels The channels for the new guild.
+  * @param afkChannelId The id for the AFK channel
+  * @param afkTimeout The timeout in seconds until users are moved to the AFK channel.
+  * @param systemChannelId The id of the system channel.
   */
 case class CreateGuildData(
     name: String,
-    region: String,
+    region: Option[String],
     icon: Option[ImageData],
-    verificationLevel: VerificationLevel,
-    defaultMessageNotifications: NotificationLevel,
-    explicitContentFilter: FilterLevel,
-    roles: Seq[Role],
-    channels: Seq[CreateGuildChannelData] //Technically this should be partial channels, but I think this works too
+    verificationLevel: Option[VerificationLevel],
+    defaultMessageNotifications: Option[NotificationLevel],
+    explicitContentFilter: Option[FilterLevel],
+    roles: Option[Seq[Role]],
+    channels: Option[Seq[CreateGuildChannelData]], //Technically this should be partial channels, but I think this works too
+    afkChannelId: Option[ChannelId],
+    afkTimeout: Option[Int],
+    systemChannelId: Option[ChannelId]
 ) {
   require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
 }
@@ -90,6 +96,7 @@ case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild, Option[G
   * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
   * @param ownerId Transfer ownership of this guild. Must be the owner.
   * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
+  * @param banner The new banner for the guild. Must be 128x128 jpeg. VIP only.
   * @param systemChannelId The new channel which system messages will be sent to.
   */
 case class ModifyGuildData(
@@ -103,6 +110,7 @@ case class ModifyGuildData(
     icon: Option[ImageData] = None,
     ownerId: Option[UserId] = None,
     splash: Option[ImageData] = None,
+    banner: Option[ImageData] = None,
     systemChannelId: Option[ChannelId] = None
 )
 
@@ -919,6 +927,21 @@ case class DeleteInvite(inviteCode: String, reason: Option[String] = None)
 case object GetCurrentUser extends NoParamsNiceResponseRequest[User] {
   override def route: RequestRoute = Routes.getCurrentUser
 
+  override def responseDecoder: Decoder[User] = Decoder[User]
+}
+
+case class ModifyCurrentUserData(
+    username: Option[String],
+    avatar: Option[ImageData]
+)
+
+/**
+  * Modify the current user.
+  */
+case class ModifyCurrentUser(params: ModifyCurrentUserData) extends NoNiceResponseRequest[ModifyCurrentUserData, User] {
+  override def route: RequestRoute = Routes.modifyCurrentUser
+  override def paramsEncoder: Encoder[ModifyCurrentUserData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
   override def responseDecoder: Decoder[User] = Decoder[User]
 }
 

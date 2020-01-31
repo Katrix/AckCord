@@ -24,6 +24,7 @@
 package ackcord.data
 
 import ackcord.CacheSnapshot
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 /**
   * A webhook
@@ -38,12 +39,13 @@ import ackcord.CacheSnapshot
   */
 case class Webhook(
     id: SnowflakeType[Webhook],
+    `type`: WebhookType,
     guildId: Option[GuildId],
     channelId: ChannelId,
     user: Option[User],
     name: Option[String],
     avatar: Option[String],
-    token: String
+    token: Option[String]
 ) extends GetGuildOpt {
 
   /**
@@ -56,4 +58,12 @@ case class Webhook(
       .collect {
         case gChannel: TGuildChannel => gChannel
       }
+}
+
+sealed abstract class WebhookType(val value: Int) extends IntEnumEntry
+object WebhookType extends IntEnum[WebhookType] with IntCirceEnum[WebhookType] {
+  override def values: IndexedSeq[WebhookType] = findValues
+
+  case object Incomming       extends WebhookType(1)
+  case object ChannelFollower extends WebhookType(2)
 }

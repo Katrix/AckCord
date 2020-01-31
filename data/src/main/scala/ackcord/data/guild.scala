@@ -119,6 +119,7 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
   * @param name The name of the guild.
   * @param icon The icon hash.
   * @param splash The splash hash.
+  * @param discoverySplash The discovery splash hash.
   * @param isOwner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
   * @param permissions The permissions of the current user without overwrites.
@@ -139,6 +140,8 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
   * @param widgetEnabled If the widget is enabled.
   * @param widgetChannelId The channel id for the widget.
   * @param systemChannelId The channel which system messages are sent to.
+  * @param systemChannelFlags The flags for the system channel
+  * @param rulesChannelId The id for the channel where the rules of a guild are stored.
   * @param joinedAt When the client joined the guild.
   * @param large If this guild is above the large threshold.
   * @param memberCount The amount of members in the guild.
@@ -159,6 +162,7 @@ case class Guild(
     name: String,
     icon: Option[String],
     splash: Option[String],
+    discoverySplash: Option[String],
     isOwner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
@@ -178,6 +182,8 @@ case class Guild(
     widgetEnabled: Option[Boolean],
     widgetChannelId: Option[ChannelId],
     systemChannelId: Option[ChannelId],
+    systemChannelFlags: SystemChannelFlags,
+    rulesChannelId: Option[ChannelId],
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
@@ -248,18 +254,19 @@ sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnum[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
-  case object InviteSplash extends GuildFeature("INVITE_SPLASH")
-  case object VipRegions   extends GuildFeature("VIP_REGIONS")
-  case object VanityUrl    extends GuildFeature("VANITY_URL")
-  case object Verified     extends GuildFeature("VERIFIED")
-  case object Partnered    extends GuildFeature("PARTNERED")
-  case object Public       extends GuildFeature("PUBLIC")
-  case object Commerce     extends GuildFeature("COMMERCE")
-  case object News         extends GuildFeature("NEWS")
-  case object Discoverable extends GuildFeature("DISCOVERABLE")
-  case object Featureable  extends GuildFeature("FEATURABLE")
-  case object AnimatedIcon extends GuildFeature("ANIMATED_ICON")
-  case object Banner       extends GuildFeature("BANNER")
+  case object InviteSplash   extends GuildFeature("INVITE_SPLASH")
+  case object VipRegions     extends GuildFeature("VIP_REGIONS")
+  case object VanityUrl      extends GuildFeature("VANITY_URL")
+  case object Verified       extends GuildFeature("VERIFIED")
+  case object Partnered      extends GuildFeature("PARTNERED")
+  case object Public         extends GuildFeature("PUBLIC")
+  case object Commerce       extends GuildFeature("COMMERCE")
+  case object News           extends GuildFeature("NEWS")
+  case object Discoverable   extends GuildFeature("DISCOVERABLE")
+  case object Featureable    extends GuildFeature("FEATURABLE")
+  case object AnimatedIcon   extends GuildFeature("ANIMATED_ICON")
+  case object Banner         extends GuildFeature("BANNER")
+  case object PublicDisabled extends GuildFeature("PUBLIC_DISABLED")
 }
 
 /**
@@ -444,6 +451,11 @@ case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: 
 sealed trait Activity {
 
   /**
+    * When this activity was created.
+    */
+  def createdAt: Instant
+
+  /**
     * The text shown
     */
   def name: String
@@ -472,6 +484,7 @@ sealed trait Activity {
   */
 case class PresenceGame(
     name: String,
+    createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
     applicationId: Option[RawSnowflake],
     details: Option[String],
@@ -490,6 +503,7 @@ case class PresenceGame(
 case class PresenceStreaming(
     name: String,
     uri: Option[String],
+    createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
     applicationId: Option[RawSnowflake],
     details: Option[String],
@@ -503,6 +517,7 @@ case class PresenceStreaming(
   */
 case class PresenceListening(
     name: String,
+    createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
     details: Option[String],
     assets: Option[ActivityAsset]
@@ -513,6 +528,7 @@ case class PresenceListening(
   */
 case class PresenceWatching(
     name: String,
+    createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
     details: Option[String],
     assets: Option[ActivityAsset]
@@ -520,6 +536,7 @@ case class PresenceWatching(
 
 case class PresenceCustom(
     name: String,
+    createdAt: Instant,
     state: Option[String],
     emoji: Option[ActivityEmoji]
 ) extends Activity {

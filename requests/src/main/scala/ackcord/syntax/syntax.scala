@@ -266,8 +266,14 @@ package object syntax {
         maxAge: Int = 86400,
         maxUses: Int = 0,
         temporary: Boolean = false,
-        unique: Boolean = false
-    ) = CreateChannelInvite(channel.id, CreateChannelInviteData(maxAge, maxUses, temporary, unique))
+        unique: Boolean = false,
+        targetUser: Option[UserId],
+        targetUserType: Option[Int]
+    ) =
+      CreateChannelInvite(
+        channel.id,
+        CreateChannelInviteData(maxAge, maxUses, temporary, unique, targetUser, targetUserType)
+      )
 
     /**
       * Delete multiple messages at the same time.
@@ -1211,7 +1217,7 @@ package object syntax {
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
         channelId: Option[ChannelId] = None
-    ) = ModifyWebhookWithToken(webhook.id, webhook.token, ModifyWebhookData(name, avatar, channelId))
+    ) = webhook.token.map(ModifyWebhookWithToken(webhook.id, _, ModifyWebhookData(name, avatar, channelId)))
 
     /**
       * Delete this webhook.
@@ -1221,8 +1227,7 @@ package object syntax {
     /**
       * Delete this webhook with a token. Doesn't require authentication.
       */
-    def deleteWithToken =
-      DeleteWebhookWithToken(webhook.id, webhook.token)
+    def deleteWithToken = webhook.token.map(DeleteWebhookWithToken(webhook.id, _))
   }
 
   implicit class AckCordSyntax(private val ackCord: AckCord.type) extends AnyVal {
@@ -1257,13 +1262,16 @@ package object syntax {
       */
     def createGuild(
         name: String,
-        region: String,
-        icon: Option[ImageData],
-        verificationLevel: VerificationLevel,
-        defaultMessageNotifications: NotificationLevel,
-        explicitContentFilter: FilterLevel,
-        roles: Seq[Role],
-        channels: Seq[CreateGuildChannelData]
+        region: Option[String] = None,
+        icon: Option[ImageData] = None,
+        verificationLevel: Option[VerificationLevel] = None,
+        defaultMessageNotifications: Option[NotificationLevel] = None,
+        explicitContentFilter: Option[FilterLevel] = None,
+        roles: Option[Seq[Role]] = None,
+        channels: Option[Seq[CreateGuildChannelData]] = None,
+        afkChannelId: Option[ChannelId] = None,
+        afkTimeout: Option[Int] = None,
+        systemChannelId: Option[ChannelId] = None
     ) =
       CreateGuild(
         CreateGuildData(
@@ -1274,7 +1282,10 @@ package object syntax {
           defaultMessageNotifications,
           explicitContentFilter,
           roles,
-          channels
+          channels,
+          afkChannelId,
+          afkTimeout,
+          systemChannelId
         )
       )
 

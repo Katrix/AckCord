@@ -578,8 +578,15 @@ object GatewayEvent {
     * @param roles Thew new roles for the guild member.
     * @param user The user of the updated guild member.
     * @param nick Nick of the user if one was set.
+    * @param premiumSince When the user bosted the guild.
     */
-  case class GuildMemberUpdateData(guildId: GuildId, roles: Seq[RoleId], user: User, nick: Option[String]) //TODO: Nick can probably be null here
+  case class GuildMemberUpdateData(
+      guildId: GuildId,
+      roles: Seq[RoleId],
+      user: User,
+      nick: Option[String], //TODO: Nick can probably be null here
+      premiumSince: Option[OffsetDateTime]
+  )
 
   /**
     * Sent to the shard when a guild member is updated.
@@ -746,6 +753,7 @@ object GatewayEvent {
       channelId: ChannelId,
       messageId: MessageId,
       guildId: Option[GuildId],
+      member: Option[RawGuildMember],
       emoji: PartialEmoji
   )
 
@@ -807,7 +815,9 @@ object GatewayEvent {
       guildId: GuildId,
       status: PresenceStatus,
       activities: Seq[RawActivity],
-      clientStatus: ClientStatus
+      clientStatus: ClientStatus,
+      premiumSince: Option[OffsetDateTime],
+      nick: Option[String]
   )
 
   /**
@@ -826,7 +836,13 @@ object GatewayEvent {
     * @param userId The user that began typing.
     * @param timestamp When user started typing.
     */
-  case class TypingStartData(channelId: ChannelId, guildId: Option[GuildId], userId: UserId, timestamp: Instant)
+  case class TypingStartData(
+      channelId: ChannelId,
+      guildId: Option[GuildId],
+      userId: UserId,
+      timestamp: Instant,
+      member: Option[RawGuildMember]
+  )
 
   /**
     * Sent to the shard when a user starts typing in a channel.

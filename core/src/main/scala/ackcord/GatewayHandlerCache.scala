@@ -210,6 +210,7 @@ object GatewayHandlerCache {
                       data.roles.flatMap(state.current.getRole(data.guildId, _)),
                       data.user,
                       data.nick,
+                      data.premiumSince,
                       state
                     )
                   },
@@ -335,7 +336,7 @@ object GatewayHandlerCache {
                   guild    <- state.current.getGuild(data.guildId)
                   user     <- state.current.getUser(data.user.id)
                   presence <- guild.presences.get(user.id)
-                } yield api.PresenceUpdate(guild, user, data.roles, presence, state),
+                } yield api.PresenceUpdate(guild, user, data.roles, presence, data.nick, data.premiumSince, state),
               PresenceUpdater,
               registry
             )

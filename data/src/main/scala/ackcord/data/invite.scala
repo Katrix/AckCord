@@ -39,6 +39,7 @@ case class Invite(
     code: String,
     guild: Option[InviteGuild],
     channel: InviteChannel,
+    inviter: Option[User],
     targetUser: Option[InviteTargetUser],
     targetUserType: Option[Int],
     approximatePresenceCount: Option[Int],
@@ -50,7 +51,6 @@ case class Invite(
   * @param code An invite code.
   * @param guild The guild the invite is for.
   * @param channel The channel the invite is for.
-  * @param inviter The user that created the invite.
   * @param uses How many times the invite has been used.
   * @param maxUses How many times this invite can be used.
   * @param maxAge The duration in seconds when the invite will expire
@@ -61,7 +61,6 @@ case class InviteWithMetadata(
     code: String,
     guild: Option[InviteGuild],
     channel: InviteChannel,
-    inviter: User,
     uses: Int,
     maxUses: Int,
     maxAge: Int,

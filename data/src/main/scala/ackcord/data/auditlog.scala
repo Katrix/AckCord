@@ -27,7 +27,6 @@ package ackcord.data
 import scala.collection.immutable
 
 import ackcord.CacheSnapshot
-import ackcord.data.raw.RawRole
 import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
 
 /**
@@ -37,7 +36,12 @@ import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
   * @param users The users found in the log
   * @param auditLogEntries The entries of the log
   */
-case class AuditLog(webhooks: Seq[Webhook], users: Seq[User], auditLogEntries: Seq[AuditLogEntry])
+case class AuditLog(
+    webhooks: Seq[Webhook],
+    users: Seq[User],
+    auditLogEntries: Seq[AuditLogEntry],
+    integrations: Seq[PartialIntegration]
+)
 
 /**
   * An individual audit log event
@@ -60,6 +64,13 @@ case class AuditLogEntry(
     reason: Option[String]
 ) extends GetUser
 
+case class PartialIntegration(
+    id: IntegrationId,
+    name: String,
+    `type`: String,
+    account: IntegrationAccount
+)
+
 /**
   * A type of change that an entry can represent
   */
@@ -78,6 +89,9 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   case object MemberBanRemove        extends AuditLogEvent(23)
   case object MemberUpdate           extends AuditLogEvent(24)
   case object MemberRoleUpdate       extends AuditLogEvent(25)
+  case object MemberMove             extends AuditLogEvent(26)
+  case object MemberDisconnect       extends AuditLogEvent(27)
+  case object BotAdd                 extends AuditLogEvent(28)
   case object RoleCreate             extends AuditLogEvent(30)
   case object RoleUpdate             extends AuditLogEvent(31)
   case object RoleDelete             extends AuditLogEvent(32)
@@ -91,6 +105,12 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   case object EmojiUpdate            extends AuditLogEvent(61)
   case object EmojiDelete            extends AuditLogEvent(62)
   case object MessageDelete          extends AuditLogEvent(72)
+  case object MessageBulkDelete      extends AuditLogEvent(73)
+  case object MessagePin             extends AuditLogEvent(74)
+  case object MessageUnpin           extends AuditLogEvent(75)
+  case object IntegrationCreate      extends AuditLogEvent(80)
+  case object IntegrationUpdate      extends AuditLogEvent(81)
+  case object IntegrationDelete      extends AuditLogEvent(82)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 }
@@ -103,6 +123,7 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   *                       Present for MemberPrune.
   * @param channelId The channelId of the deleted message.
   *                  Present for MessageDelete.
+  * @param messageId The message that was targeted. Present for MessagePin and MessageUnpin
   * @param count The amount of deleted messages. Present for MessageDelete.
   * @param id The id of the overwritten object. Present for overwrite events.
   * @param `type` The type of the overwritten object.
@@ -113,6 +134,7 @@ case class OptionalAuditLogInfo(
     deleteMemberDays: Option[String],
     membersRemoved: Option[String],
     channelId: Option[ChannelId],
+    messageId: Option[MessageId],
     count: Option[String],
     id: Option[UserOrRoleId],
     `type`: Option[PermissionOverwriteType],
@@ -225,13 +247,19 @@ object AuditLogChange {
   /**
     * Role added
     */
-  case class $Add(oldValue: Option[Seq[RawRole]], newValue: Option[Seq[RawRole]]) extends AuditLogChange[Seq[RawRole]]
+  case class $Add(oldValue: Option[Seq[PartialRole]], newValue: Option[Seq[PartialRole]])
+      extends AuditLogChange[Seq[PartialRole]]
 
   /**
     * Role removed
     */
-  case class $Remove(oldValue: Option[Seq[RawRole]], newValue: Option[Seq[RawRole]])
-      extends AuditLogChange[Seq[RawRole]]
+  case class $Remove(oldValue: Option[Seq[PartialRole]], newValue: Option[Seq[PartialRole]])
+      extends AuditLogChange[Seq[PartialRole]]
+
+  case class PartialRole(
+      name: String,
+      id: RoleId
+  )
 
   /**
     * Prune delete duration changed
@@ -247,6 +275,19 @@ object AuditLogChange {
     * Widget channelId changed
     */
   case class WidgetChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
+      extends AuditLogChange[ChannelId] {
+
+    def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
+      oldValue.flatMap(c.getGuildChannel)
+
+    def newChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
+      newValue.flatMap(c.getGuildChannel)
+  }
+
+  /**
+    * System channelId changed
+    */
+  case class SystemChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
       extends AuditLogChange[ChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
@@ -289,6 +330,11 @@ object AuditLogChange {
     */
   case class ApplicationId(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake])
       extends AuditLogChange[RawSnowflake]
+
+  /**
+    * Ratelimit changed
+    */
+  case class RateLimitPerUser(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 
   /**
     * Permissions of role changed
@@ -408,4 +454,19 @@ object AuditLogChange {
     * Type of created object
     */
   case class TypeString(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /**
+    * Integration emoticons enabled/disabled changed
+    */
+  case class EnableEmoticons(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+
+  /**
+    * Integration expire behavior changed
+    */
+  case class ExpireBehavior(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+
+  /**
+    * Integration grace period changed
+    */
+  case class ExpireGracePeriod(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 }

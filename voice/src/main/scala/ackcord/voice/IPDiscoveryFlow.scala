@@ -51,12 +51,12 @@ class IPDiscoveryFlow(openValve: () => Unit)
         val data = grab(in)
         log.debug(s"Grabbing data for IP discovery $data")
         val byteBuf = data.asByteBuffer.order(ByteOrder.BIG_ENDIAN)
-        val tpe = byteBuf.getShort
+        val tpe     = byteBuf.getShort
 
         require(tpe == 0x2, s"Was expecting IP discovery result, got $tpe")
 
         byteBuf.getShort //Length
-        byteBuf.getInt //SSRC
+        byteBuf.getInt   //SSRC
         val nullTermString = new Array[Byte](64)
         byteBuf.get(nullTermString)
         val address = new String(nullTermString, 0, nullTermString.iterator.takeWhile(_ != 0).length)

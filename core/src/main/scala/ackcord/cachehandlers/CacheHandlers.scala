@@ -50,7 +50,9 @@ object CacheHandlers {
               discriminator = partialUser.discriminator.getOrElse(existingUser.discriminator),
               avatar = partialUser.avatar.orElse(existingUser.avatar),
               bot = partialUser.bot.orElse(existingUser.bot),
+              system = partialUser.system.orElse(existingUser.system),
               mfaEnabled = partialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
+              locale = partialUser.locale.orElse(existingUser.locale),
               verified = partialUser.verified.orElse(existingUser.verified),
               email = partialUser.email.orElse(existingUser.email)
             )
@@ -70,7 +72,9 @@ object CacheHandlers {
                 discriminator = discriminator,
                 avatar = partialUser.avatar,
                 bot = partialUser.bot,
+                system = partialUser.system,
                 mfaEnabled = partialUser.mfaEnabled,
+                locale = partialUser.locale,
                 verified = partialUser.verified,
                 email = partialUser.email,
                 flags = partialUser.flags,
@@ -168,6 +172,7 @@ object CacheHandlers {
           name = obj.name,
           icon = obj.icon,
           splash = obj.splash,
+          discoverySplash = obj.discoverySplash,
           isOwner = obj.owner,
           ownerId = obj.ownerId,
           permissions = obj.permissions,
@@ -187,6 +192,8 @@ object CacheHandlers {
           widgetEnabled = obj.widgetEnabled,
           widgetChannelId = obj.widgetChannelId,
           systemChannelId = obj.systemChannelId,
+          systemChannelFlags = obj.systemChannelFlags,
+          rulesChannelId = obj.rulesChannelId,
           joinedAt = obj.joinedAt.orElse(oldGuild.map(_.joinedAt)).get,
           large = obj.large.orElse(oldGuild.map(_.large)).get,
           memberCount = obj.memberCount.orElse(oldGuild.map(_.memberCount)).get,
@@ -273,7 +280,7 @@ object CacheHandlers {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberUpdateData, registry: CacheTypeRegistry)(
           implicit log: Logger
       ): Unit = {
-        val GuildMemberUpdateData(guildId, roles, user, nick) = obj
+        val GuildMemberUpdateData(guildId, roles, user, nick, _) = obj
 
         val eitherMember = for {
           guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj")
@@ -448,13 +455,18 @@ object CacheHandlers {
 
           updater.handle(builder, newMessage, registry)
         }
+
+        obj.member.foreach(registry.updateData(builder)(_))
       }
     }
 
   val lastTypedUpdater: CacheUpdater[TypingStartData] = new CacheUpdater[TypingStartData] {
     override def handle(builder: CacheSnapshotBuilder, obj: TypingStartData, registry: CacheTypeRegistry)(
         implicit log: Logger
-    ): Unit = builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
+    ): Unit = {
+      builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
+      obj.member.foreach(registry.updateData(builder)(_))
+    }
   }
 
   val userUpdater: CacheUpdater[User] = new CacheUpdater[User] {

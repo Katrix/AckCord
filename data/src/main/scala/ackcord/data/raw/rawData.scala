@@ -23,7 +23,7 @@
  */
 package ackcord.data.raw
 
-import java.time.OffsetDateTime
+import java.time.{Instant, OffsetDateTime}
 
 import ackcord.SnowflakeMap
 import ackcord.data._
@@ -305,7 +305,7 @@ case class PartialRawGuildMember(
     mute: Boolean
 ) {
 
-  def toGuildMember(userId: UserId, guildId: GuildId) =
+  def toGuildMember(userId: UserId, guildId: GuildId): GuildMember =
     GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
 }
 
@@ -381,6 +381,7 @@ case class RawMessage(
     mentionEveryone: Boolean,
     mentions: Seq[User],
     mentionRoles: Seq[RoleId],
+    mentionChannels: Option[Seq[ChannelMention]],
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
@@ -388,7 +389,9 @@ case class RawMessage(
     pinned: Boolean,
     `type`: MessageType,
     activity: Option[RawMessageActivity],
-    application: Option[MessageApplication]
+    application: Option[MessageApplication],
+    messageReference: Option[MessageReference],
+    flags: Option[MessageFlags]
 ) {
 
   /**
@@ -409,6 +412,7 @@ case class RawMessage(
       mentionEveryone,
       mentions.map(_.id),
       mentionRoles,
+      mentionChannels.getOrElse(Nil),
       attachment,
       embeds,
       reactions.getOrElse(Seq.empty),
@@ -416,7 +420,9 @@ case class RawMessage(
       pinned,
       `type`,
       activity.map(_.toMessageActivity),
-      application
+      application,
+      messageReference,
+      flags
     )
 }
 
@@ -426,6 +432,7 @@ case class RawMessage(
   * @param name The name of the guild.
   * @param icon The icon hash.
   * @param splash The splash hash.
+  * @param discoverySplash The discovery splash hash.
   * @param owner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
   * @param permissions The permissions of the current user without overwrites.
@@ -446,6 +453,8 @@ case class RawMessage(
   * @param widgetEnabled If the widget is enabled.
   * @param widgetChannelId The channel id for the widget.
   * @param systemChannelId The channel which system messages are sent to.
+  * @param systemChannelFlags The flags for the system channel
+  * @param rulesChannelId The id for the channel where the rules of a guild are stored.
   * @param joinedAt When the client joined the guild.
   * @param large If this guild is above the large threshold.
   * @param unavailable If this guild is unavailable.
@@ -467,6 +476,7 @@ case class RawGuild(
     name: String,
     icon: Option[String],
     splash: Option[String],
+    discoverySplash: Option[String],
     owner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
@@ -486,6 +496,8 @@ case class RawGuild(
     widgetEnabled: Option[Boolean],
     widgetChannelId: Option[ChannelId],
     systemChannelId: Option[ChannelId],
+    systemChannelFlags: SystemChannelFlags,
+    rulesChannelId: Option[ChannelId],
     joinedAt: Option[OffsetDateTime],
     large: Option[Boolean],
     unavailable: Option[Boolean],
@@ -526,6 +538,7 @@ case class RawGuild(
         name,
         icon,
         splash,
+        discoverySplash,
         owner,
         ownerId,
         permissions,
@@ -545,6 +558,8 @@ case class RawGuild(
         widgetEnabled,
         widgetChannelId,
         systemChannelId,
+        systemChannelFlags,
+        rulesChannelId,
         joinedAt,
         large,
         memberCount,
@@ -617,6 +632,7 @@ case class RawActivity(
     name: String,
     `type`: Int,
     url: Option[String],
+    createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
     applicationId: Option[RawSnowflake],
     details: Option[String],
@@ -633,12 +649,15 @@ case class RawActivity(
     )
 
   def toActivity: Either[String, Activity] = `type` match {
-    case 0 => Right(PresenceGame(name, timestamps, applicationId, details, state, party.map(_.toParty), assets))
+    case 0 =>
+      Right(PresenceGame(name, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets))
     case 1 =>
-      Right(PresenceStreaming(name, url, timestamps, applicationId, details, state, party.map(_.toParty), assets))
-    case 2 => Right(PresenceListening(name, timestamps, details, assets))
-    case 3 => Right(PresenceWatching(name, timestamps, details, assets))
-    case 4 => Right(PresenceCustom(name, state, emoji))
+      Right(
+        PresenceStreaming(name, url, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+      )
+    case 2 => Right(PresenceListening(name, createdAt, timestamps, details, assets))
+    case 3 => Right(PresenceWatching(name, createdAt, timestamps, details, assets))
+    case 4 => Right(PresenceCustom(name, createdAt, state, emoji))
     case _ => Left(s"Got unknown presence type ${`type`}")
   }
 }
@@ -681,7 +700,9 @@ case class PartialUser(
     discriminator: Option[String],
     avatar: Option[String], //avatar can be null
     bot: Option[Boolean],
+    system: Option[Boolean],
     mfaEnabled: Option[Boolean],
+    locale: Option[String],
     verified: Option[Boolean],
     email: Option[String],
     flags: Option[UserFlags],

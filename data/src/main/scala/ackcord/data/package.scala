@@ -372,6 +372,8 @@ package object data {
     val HouseBalance    = UserFlags(1 << 8)
     val EarlySupporter  = UserFlags(1 << 9)
     val TeamUser        = UserFlags(1 << 10)
+    val System          = UserFlags(1 << 12)
+    val BugHunterLevel2 = UserFlags(1 << 14)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 
@@ -392,6 +394,99 @@ package object data {
       * @param other The flag to check against.
       */
     def hasFlag(other: UserFlags): Boolean = (flags & other) == other
+
+    /**
+      * Check if these flags is not empty.
+      */
+    def isNone: Boolean = flags == 0
+  }
+
+  type MessageFlags = Int @@ MessageFlags.type
+  object MessageFlags {
+
+    private[data] def apply(int: Int): Int @@ MessageFlags.type = tagS[MessageFlags.type](int)
+
+    /**
+      * Create a MessageFlags that has all the flags passed in.
+      */
+    def apply(flags: MessageFlags*): MessageFlags = flags.fold(None)(_ ++ _)
+
+    /**
+      * Create a MessageFlags from an int.
+      */
+    def fromInt(int: Int): Int @@ MessageFlags.type = apply(int)
+
+    val None                 = MessageFlags(0)
+    val Crossposted          = MessageFlags(1 << 0)
+    val IsCrosspost          = MessageFlags(1 << 1)
+    val SuppressEmbeds       = MessageFlags(1 << 2)
+    val SourceMessageDeleted = MessageFlags(1 << 3)
+    val Urgent               = MessageFlags(1 << 4)
+  }
+  implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
+
+    /**
+      * Add a flag to this flag.
+      * @param other The other flag.
+      */
+    def ++(other: MessageFlags): MessageFlags = MessageFlags(flags | other)
+
+    /**
+      * Remove a flag from this flag.
+      * @param other The flag to remove.
+      */
+    def --(other: MessageFlags): MessageFlags = MessageFlags(flags & ~other)
+
+    /**
+      * Check if these flags has a flag.
+      * @param other The flag to check against.
+      */
+    def hasFlag(other: MessageFlags): Boolean = (flags & other) == other
+
+    /**
+      * Check if these flags is not empty.
+      */
+    def isNone: Boolean = flags == 0
+  }
+
+  type SystemChannelFlags = Int @@ SystemChannelFlags.type
+  object SystemChannelFlags {
+
+    private[data] def apply(int: Int): Int @@ SystemChannelFlags.type = tagS[SystemChannelFlags.type](int)
+
+    /**
+      * Create a SystemChannelFlags that has all the flags passed in.
+      */
+    def apply(flags: SystemChannelFlags*): SystemChannelFlags = flags.fold(None)(_ ++ _)
+
+    /**
+      * Create a SystemChannelFlags from an int.
+      */
+    def fromInt(int: Int): Int @@ SystemChannelFlags.type = apply(int)
+
+    val None                        = SystemChannelFlags(0)
+    val SupressJoinNotifications    = SystemChannelFlags(1 << 0)
+    val SupressPremiumSubscribtions = SystemChannelFlags(1 << 1)
+  }
+  implicit class SystemChannelFlagsSyntax(private val flags: SystemChannelFlags) extends AnyVal {
+
+    /**
+      * Add a flag to this flag.
+      * @param other The other flag.
+      */
+    def ++(other: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(flags | other)
+
+    /**
+      * Remove a flag from this flag.
+      * @param other The flag to remove.
+      */
+    def --(other: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(flags & ~other)
+
+    /**
+      * Check if these flags has a flag.
+      * @param other The flag to check against.
+      */
+    def hasFlag(other: SystemChannelFlags): Boolean = (flags & other) == other
 
     /**
       * Check if these flags is not empty.

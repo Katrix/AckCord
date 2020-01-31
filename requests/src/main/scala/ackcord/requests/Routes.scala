@@ -523,6 +523,9 @@ object Routes {
   val guildSplashImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
   )
+  val discoverySplashImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+    cdn / "splashes" / guildId / hash ++ extension +? size toRequest GET
+  )
   val guildBannerImage: (GuildId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "banners" / guildId / hash ++ extension +? size toRequest GET
   )

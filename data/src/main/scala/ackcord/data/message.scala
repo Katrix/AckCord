@@ -134,7 +134,9 @@ case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, avatar: S
   *                      digits when clicking in a users name.
   * @param avatar The users avatar hash.
   * @param bot If this user belongs to a OAuth2 application.
+  * @param system If the user is part of Discord's urgent messaging system.
   * @param mfaEnabled If this user has two factor authentication enabled.
+  * @param locale The user's chosen language.
   * @param verified If this user email is verified. Requires the email OAuth scope.
   * @param email The users email. Requires the email OAuth scope.
   */
@@ -145,7 +147,9 @@ case class User(
     discriminator: String,
     avatar: Option[String],
     bot: Option[Boolean],
+    system: Option[Boolean],
     mfaEnabled: Option[Boolean],
+    locale: Option[String],
     verified: Option[Boolean],
     email: Option[String],
     flags: Option[UserFlags],
@@ -244,12 +248,18 @@ case class MessageApplication(
   * @param mentionEveryone If this message mentions everyone.
   * @param mentions All the users this message mentions.
   * @param mentionRoles All the roles this message mentions.
+  * @param mentionChannels Potentially channels mentioned in the message.
+  *                        Only used for cross posted public channels so far.
   * @param attachment All the attachments of this message.
   * @param embeds All the embeds of this message.
   * @param reactions All the reactions on this message.
   * @param nonce A nonce for this message.
   * @param pinned If this message is pinned.
   * @param messageType The message type
+  * @param activity Sent with rich presence chat embeds
+  * @param application Sent with rich presence chat embeds
+  * @param messageReference Data sent with a crosspost
+  * @param flags Extra features of the message
   */
 case class Message(
     id: MessageId,
@@ -265,6 +275,7 @@ case class Message(
     mentionEveryone: Boolean,
     mentions: Seq[UserId],
     mentionRoles: Seq[RoleId],
+    mentionChannels: Seq[ChannelMention],
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Seq[Reaction],
@@ -272,7 +283,9 @@ case class Message(
     pinned: Boolean,
     messageType: MessageType,
     activity: Option[MessageActivity],
-    application: Option[MessageApplication]
+    application: Option[MessageApplication],
+    messageReference: Option[MessageReference],
+    flags: Option[MessageFlags]
 ) extends GetTChannel {
 
   /**
@@ -327,6 +340,29 @@ case class Message(
 }
 
 /**
+  * Basic info of a channel in a cross posted message.
+  * @param id The id of the channel
+  * @param guildId The guild the channel is in
+  * @param `type` The channel type
+  * @param name The name of the channel
+  */
+case class ChannelMention(
+    id: ChannelId,
+    guildId: GuildId,
+    `type`: ChannelType,
+    name: String
+)
+
+/**
+  * A reference to another message.
+  */
+case class MessageReference(
+    messageId: Option[MessageId],
+    channelId: ChannelId,
+    guildId: Option[GuildId]
+)
+
+/**
   * A reaction to a message
   * @param count The amount of people that have reacted with this emoji.
   * @param me If the client has reacted with this emoji.
@@ -339,7 +375,7 @@ case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
   * @param id The id of the emoji. If it's absent, it's not a guild emoji.
   * @param name The name of the emoji.
   */
-case class PartialEmoji(id: Option[EmojiId], name: String)
+case class PartialEmoji(id: Option[EmojiId], name: Option[String])
 
 /**
   * A received embed.

@@ -69,9 +69,9 @@ sealed trait CmdFactory[A, +Mat] {
   * @param description A description of this command.
   */
 case class BaseCmdFactory[+Mat](
-                                 refiner: CmdRefiner,
-                                 sink: Requests => Sink[Cmd, Mat],
-                                 description: Option[CmdDescription] = None
+    refiner: CmdRefiner,
+    sink: Requests => Sink[Cmd, Mat],
+    description: Option[CmdDescription] = None
 ) extends CmdFactory[Cmd, Mat]
 object BaseCmdFactory {
 
@@ -110,9 +110,9 @@ object BaseCmdFactory {
   * @param description A description of this command.
   */
 case class ParsedCmdFactory[A, +Mat](
-                                      refiner: CmdRefiner,
-                                      sink: Requests => Sink[ParsedCmd[A], Mat],
-                                      description: Option[CmdDescription] = None
+    refiner: CmdRefiner,
+    sink: Requests => Sink[ParsedCmd[A], Mat],
+    description: Option[CmdDescription] = None
 )(implicit val parser: MessageParser[A])
     extends CmdFactory[ParsedCmd[A], Mat]
 object ParsedCmdFactory {

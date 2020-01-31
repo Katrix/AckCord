@@ -31,7 +31,7 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry)(
       implicit log: Logger
   ): Unit = {
-    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _, clientStatus) = obj
+    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _, clientStatus, premiumSince, nick) = obj
 
     registry.updateData(builder)(partialUser)
 
@@ -58,7 +58,7 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
       val membersToUse = if (registry.hasUpdater[GuildMember]) {
         oldMembers
           .get(partialUser.id)
-          .map(member => oldMembers.updated(partialUser.id, member.copy(roleIds = roles)))
+          .map(member => oldMembers.updated(partialUser.id, member.copy(roleIds = roles, nick = nick)))
           .getOrElse(oldMembers)
       } else {
         oldMembers

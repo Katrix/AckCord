@@ -122,7 +122,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case HeartbeatACK =>
             log.debug("Received HeartbeatACK")
             receivedAck = true
-          case Reconnect                 => restart(resumable = true, 100.millis)
+          case Reconnect                 => restart(resumable = true, 0.millis)
           case InvalidSession(resumable) => restart(resumable, 5.seconds)
           case _                         => //Ignore
         }

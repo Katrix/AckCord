@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package ackcord.requests
 
 import scala.concurrent.Future
@@ -42,18 +41,25 @@ object OAuth {
 
   sealed abstract class Scope(val name: String)
   object Scope {
-    case object Bot                  extends Scope("bot")
-    case object Connections          extends Scope("connections")
-    case object Email                extends Scope("email")
-    case object Identify             extends Scope("identify")
-    case object Guilds               extends Scope("guilds")
-    case object GuildsJoin           extends Scope("guilds.join")
-    case object GroupDMJoin          extends Scope("gdm.join")
-    case object MessagesRead         extends Scope("messages.read")
-    case object Rpc                  extends Scope("rpc")
-    case object RpcApi               extends Scope("rpc.api")
-    case object RpcNotificationsRead extends Scope("rpc.notifications.read")
-    case object WebhookIncoming      extends Scope("webhook.incoming")
+    case object Bot                      extends Scope("bot")
+    case object Connections              extends Scope("connections")
+    case object Email                    extends Scope("email")
+    case object Identify                 extends Scope("identify")
+    case object Guilds                   extends Scope("guilds")
+    case object GuildsJoin               extends Scope("guilds.join")
+    case object GroupDMJoin              extends Scope("gdm.join")
+    case object MessagesRead             extends Scope("messages.read")
+    case object Rpc                      extends Scope("rpc")
+    case object RpcApi                   extends Scope("rpc.api")
+    case object RpcNotificationsRead     extends Scope("rpc.notifications.read")
+    case object WebhookIncoming          extends Scope("webhook.incoming")
+    case object ApplicationsBuildsUpload extends Scope("applications.builds.upload")
+    case object ApplicationsBuildsRead   extends Scope("applications.builds.read")
+    case object ApplicationsStoreUpdate  extends Scope("applications.store.update")
+    case object ApplicationsEntitlements extends Scope("applications.entitlements")
+    case object RelationshipsRead        extends Scope("relationships.read")
+    case object ActivitiesRead           extends Scope("activities.read")
+    case object ActivitiesWrite          extends Scope("activities.write")
 
     def fromString(string: String): Option[Scope] = string match {
       case "bot"                    => Some(Bot)
