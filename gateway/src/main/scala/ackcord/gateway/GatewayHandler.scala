@@ -181,6 +181,10 @@ object GatewayHandler {
             case 4007 | 4009 =>
               retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
 
+            case 4012 =>
+              log.error("Invalid intents specified. Stopping JVM")
+              sys.exit(-1)
+
             case _ => throw e
           }
 
@@ -243,6 +247,10 @@ object GatewayHandler {
             //Invalid seq when resuming or session timed out
             case 4007 | 4009 =>
               retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
+
+            case 4012 =>
+              log.error("Invalid intents specified. Stopping JVM")
+              sys.exit(-1)
 
             case _ => throw e
           }

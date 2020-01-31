@@ -31,6 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
+import ackcord.gateway.GatewayIntents
 import ackcord.requests.Ratelimiter
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
@@ -60,10 +61,23 @@ class ClientSettings(
     activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
+    guildSubscriptions: Boolean = true,
+    intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
     val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     val requestSettings: RequestSettings = RequestSettings()
     //TODO: Allow setting ignored and cacheTypeRegistry here at some point
-) extends GatewaySettings(token, largeThreshold, shardNum, shardTotal, idleSince, activity, status, afk) {
+) extends GatewaySettings(
+      token,
+      largeThreshold,
+      shardNum,
+      shardTotal,
+      idleSince,
+      activity,
+      status,
+      afk,
+      guildSubscriptions,
+      intents
+    ) {
 
   implicit val executionContext: ExecutionContext = system.executionContext
 
@@ -150,6 +164,8 @@ object ClientSettings {
       gameStatus: Option[RawActivity] = None,
       status: PresenceStatus = PresenceStatus.Online,
       afk: Boolean = false,
+      guildSubscriptions: Boolean = true,
+      intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
       system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
       requestSettings: RequestSettings = RequestSettings()
   ): ClientSettings =
@@ -162,6 +178,8 @@ object ClientSettings {
       gameStatus,
       status,
       afk,
+      guildSubscriptions,
+      intents,
       system,
       requestSettings
     )

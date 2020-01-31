@@ -33,7 +33,7 @@ import shapeless.tag._
 package object data {
 
   private object SharedTagger extends Tagger[Nothing]
-  private def tagS[U]: Tagger[U] = SharedTagger.asInstanceOf[Tagger[U]]
+  private[ackcord] def tagS[U]: Tagger[U] = SharedTagger.asInstanceOf[Tagger[U]]
 
   type SnowflakeType[A] = Long @@ SnowflakeTag[A]
   object SnowflakeType {

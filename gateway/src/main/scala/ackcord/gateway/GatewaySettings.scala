@@ -42,6 +42,7 @@ import ackcord.data.raw.RawActivity
   * @param guildSubscriptions If member presence events and similar should be
   *                           received. AckCord has not been tested with this
   *                           flag set to false. Continue with caution.
+  * @param intents Sets which events the gateway should send to the bot.
   */
 case class GatewaySettings(
     token: String,
@@ -52,7 +53,8 @@ case class GatewaySettings(
     activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
-    guildSubscriptions: Boolean = true
+    guildSubscriptions: Boolean = true,
+    intents: GatewayIntents = GatewayIntents.AllWithoutPresences
 ) {
   activity.foreach(_.requireCanSend())
 }
