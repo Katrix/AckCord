@@ -23,6 +23,8 @@
  */
 package ackcord.data
 
+import scala.collection.immutable
+
 import ackcord.CacheSnapshot
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
@@ -63,7 +65,7 @@ case class Webhook(
 
 sealed abstract class WebhookType(val value: Int) extends IntEnumEntry
 object WebhookType extends IntEnum[WebhookType] with IntCirceEnumWithUnknown[WebhookType] {
-  override def values: IndexedSeq[WebhookType] = findValues
+  override def values: immutable.IndexedSeq[WebhookType] = findValues
 
   case object Incomming       extends WebhookType(1)
   case object ChannelFollower extends WebhookType(2)

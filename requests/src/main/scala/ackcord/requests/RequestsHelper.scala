@@ -24,6 +24,7 @@
 
 package ackcord.requests
 
+import scala.collection.immutable
 import scala.concurrent.Future
 
 import ackcord.{CacheSnapshot, RequestPermissionException}
@@ -53,8 +54,8 @@ class RequestsHelper(requests: Requests) {
     * a success if all the requests succeed.
     * @param requests The requests to run
     */
-  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): OptionT[Future, Seq[A]] =
-    checkPerms(requests).semiflatMap(_ => this.requests.manyFutureSuccess(requests))
+  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): OptionT[Future, immutable.Seq[A]] =
+    checkPerms(requests).semiflatMap(_ => this.requests.manyFutureSuccess(immutable.Seq(requests: _*)))
 
   //From here on it's all convenience methods
 

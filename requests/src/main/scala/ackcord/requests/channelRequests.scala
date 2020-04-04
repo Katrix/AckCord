@@ -25,6 +25,8 @@ package ackcord.requests
 
 import java.nio.file.{Files, Path}
 
+import scala.collection.immutable
+
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
@@ -277,7 +279,7 @@ sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumE
 object AllowedMentionTypes
     extends StringEnum[AllowedMentionTypes]
     with StringCirceEnumWithUnknown[AllowedMentionTypes] {
-  override def values: IndexedSeq[AllowedMentionTypes] = findValues
+  override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
 
   case object Roles               extends AllowedMentionTypes("roles")
   case object Users               extends AllowedMentionTypes("users")

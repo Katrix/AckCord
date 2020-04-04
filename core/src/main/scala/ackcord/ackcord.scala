@@ -70,6 +70,7 @@ package object ackcord {
   type JsonUndefined = util.JsonUndefined.type
 
   type SourceRequest[A]       = StreamInstances.SourceRequest[A]
+  type OptionTRequest[A]      = Streamable.OptionTRequest[A]
   type FutureVectorRequest[A] = Future[Vector[A]]
 
   implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] =

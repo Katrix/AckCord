@@ -444,7 +444,7 @@ case class ReceivedEmbed(
 
 sealed abstract class EmbedType(val value: String) extends StringEnumEntry
 object EmbedType extends StringEnum[EmbedType] with StringCirceEnumWithUnknown[EmbedType] {
-  override def values: IndexedSeq[EmbedType] = findValues
+  override def values: immutable.IndexedSeq[EmbedType] = findValues
 
   case object Rich                extends EmbedType("rich")
   case object Image               extends EmbedType("image")

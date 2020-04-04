@@ -37,6 +37,7 @@ import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import cats.syntax.all._
+import cats.instances.future._
 
 class NewCommandsController(requests: Requests) extends CommandController(requests) {
 
@@ -79,8 +80,8 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
     }
 
   val timeDiff: NamedCommand[NotUsed] =
-    Command.named("%", Seq("timeDiff"), mustMention = true).async[SourceRequest] { implicit m =>
-      import requestRunner._
+    Command.named("%", Seq("timeDiff"), mustMention = true).async[OptionTRequest] { implicit m =>
+      import requestHelper._
       for {
         channel <- optionPure(m.message.channelId.tResolve)
         sentMsg <- run(channel.sendMessage("Msg"))

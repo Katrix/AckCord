@@ -128,7 +128,10 @@ trait DiscordClient {
   @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
   def onEvent[G[_]](handler: APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) = onEventStreamable(_ => PartialFunction.fromFunction(handler))
+  ): (UniqueKillSwitch, Future[Done]) =
+    onEventStreamable(_ => {
+      case x => handler(x)
+    })
 
   /**
     * Runs a function whenever [[APIMessage]]s are received.

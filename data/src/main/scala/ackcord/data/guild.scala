@@ -683,7 +683,7 @@ sealed abstract class IntegrationExpireBehavior(val value: Int) extends IntEnumE
 object IntegrationExpireBehavior
     extends IntEnum[IntegrationExpireBehavior]
     with IntCirceEnumWithUnknown[IntegrationExpireBehavior] {
-  override def values: IndexedSeq[IntegrationExpireBehavior] = findValues
+  override def values: immutable.IndexedSeq[IntegrationExpireBehavior] = findValues
 
   case object RemoveRole     extends IntegrationExpireBehavior(0)
   case object Kick           extends IntegrationExpireBehavior(1)

@@ -29,6 +29,7 @@ import java.time.{Instant, OffsetDateTime}
 import ackcord.CacheSnapshot.BotUser
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data._
+import ackcord.util.CoreCompat
 import shapeless.tag.@@
 
 /**
@@ -99,11 +100,11 @@ object MemoryCacheSnapshot {
 
     builder.messageMap.foreach {
       case (_, messageMap) =>
-        messageMap.filterInPlace((_, m) => m.timestamp.isAfter(messagesCleanThreshold))
+        CoreCompat.filterInPlace(messageMap)((_, m) => m.timestamp.isAfter(messagesCleanThreshold))
     }
 
     builder.lastTypedMap.foreach {
-      case (_, typedMap) => typedMap.filterInPlace((_, i) => i.isAfter(typedCleanThreshold))
+      case (_, typedMap) => CoreCompat.filterInPlace(typedMap)((_, i) => i.isAfter(typedCleanThreshold))
     }
 
     processor
