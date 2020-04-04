@@ -27,7 +27,8 @@ package ackcord.data
 import scala.collection.immutable
 
 import ackcord.CacheSnapshot
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import ackcord.util.IntCirceEnumWithUnknown
+import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * Root audit log object. Received from [[ackcord.requests.GetGuildAuditLog]]
@@ -75,7 +76,7 @@ case class PartialIntegration(
   * A type of change that an entry can represent
   */
 sealed abstract class AuditLogEvent(val value: Int) extends IntEnumEntry
-object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEvent] {
+object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown[AuditLogEvent] {
   case object GuildUpdate            extends AuditLogEvent(1)
   case object ChannelCreate          extends AuditLogEvent(10)
   case object ChannelUpdate          extends AuditLogEvent(11)
@@ -113,6 +114,10 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnum[AuditLogEv
   case object IntegrationDelete      extends AuditLogEvent(82)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
+
+  case class Unknown(i: Int) extends AuditLogEvent(i)
+
+  override def createUnknown(value: Int): AuditLogEvent = Unknown(value)
 }
 
 /**

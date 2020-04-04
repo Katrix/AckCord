@@ -568,7 +568,8 @@ object CacheHandlers {
           if (registry.hasDeleter[GroupDMChannel]) {
             builder.groupDmChannelMap.remove(rawChannel.id)
           }
-        case ChannelType.LFG => //We do nothing here for now
+        case ChannelType.Unknown(_) =>
+          builder.dmChannelMap.remove(rawChannel.id)
       }
     }
   }

@@ -28,6 +28,7 @@ import java.time.{Instant, OffsetDateTime}
 import scala.collection.immutable
 
 import ackcord.data.raw.RawEmoji
+import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 
@@ -43,7 +44,7 @@ sealed trait UnknownStatusGuild {
   * The different verification levels that can be used for a guild.
   */
 sealed abstract class VerificationLevel(val value: Int) extends IntEnumEntry
-object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnum[VerificationLevel] {
+object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnumWithUnknown[VerificationLevel] {
 
   /** Unrestricted access */
   case object NoVerification extends VerificationLevel(0)
@@ -61,13 +62,17 @@ object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnum[Ve
   case object VeryHigh extends VerificationLevel(4)
 
   override def values: immutable.IndexedSeq[VerificationLevel] = findValues
+
+  case class Unknown(i: Int) extends VerificationLevel(i)
+
+  override def createUnknown(value: Int): VerificationLevel = Unknown(value)
 }
 
 /**
   * The different notification levels that can be used for a guild
   */
 sealed abstract class NotificationLevel(val value: Int) extends IntEnumEntry
-object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnum[NotificationLevel] {
+object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnumWithUnknown[NotificationLevel] {
 
   /** All messages trigger a notification */
   case object AllMessages extends NotificationLevel(0)
@@ -76,13 +81,17 @@ object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnum[No
   case object OnlyMentions extends NotificationLevel(1)
 
   override def values: immutable.IndexedSeq[NotificationLevel] = findValues
+
+  case class Unknown(i: Int) extends NotificationLevel(i)
+
+  override def createUnknown(value: Int): NotificationLevel = Unknown(value)
 }
 
 /**
   * The different explicit content filter levels to use for a guild.
   */
 sealed abstract class FilterLevel(val value: Int) extends IntEnumEntry
-object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnum[FilterLevel] {
+object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnumWithUnknown[FilterLevel] {
 
   /** No filtering is done. */
   case object Disabled extends FilterLevel(0)
@@ -94,24 +103,34 @@ object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnum[FilterLevel] {
   case object AllMembers extends FilterLevel(2)
 
   override def values: immutable.IndexedSeq[FilterLevel] = findValues
+
+  case class Unknown(i: Int) extends FilterLevel(i)
+
+  override def createUnknown(value: Int): FilterLevel = Unknown(value)
 }
 
 sealed abstract class MFALevel(val value: Int) extends IntEnumEntry
-object MFALevel extends IntEnum[MFALevel] with IntCirceEnum[MFALevel] {
-  case object NoneMFA  extends MFALevel(0)
-  case object Elevated extends MFALevel(1)
-
+object MFALevel extends IntEnum[MFALevel] with IntCirceEnumWithUnknown[MFALevel] {
   override def values: immutable.IndexedSeq[MFALevel] = findValues
+
+  case object NoneMFA        extends MFALevel(0)
+  case object Elevated       extends MFALevel(1)
+  case class Unknown(i: Int) extends MFALevel(i)
+
+  override def createUnknown(value: Int): MFALevel = Unknown(value)
 }
 
 sealed abstract class PremiumTier(val value: Int) extends IntEnumEntry
-object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
-  case object None  extends PremiumTier(0)
-  case object Tier1 extends PremiumTier(1)
-  case object Tier2 extends PremiumTier(2)
-  case object Tier3 extends PremiumTier(3)
-
+object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnumWithUnknown[PremiumTier] {
   override def values: immutable.IndexedSeq[PremiumTier] = findValues
+
+  case object None           extends PremiumTier(0)
+  case object Tier1          extends PremiumTier(1)
+  case object Tier2          extends PremiumTier(2)
+  case object Tier3          extends PremiumTier(3)
+  case class Unknown(i: Int) extends PremiumTier(i)
+
+  override def createUnknown(value: Int): PremiumTier = Unknown(value)
 }
 
 /**
@@ -282,7 +301,7 @@ case class Guild(
 case class UnavailableGuild(id: GuildId, unavailable: Boolean) extends UnknownStatusGuild
 
 sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
-object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnum[GuildFeature] {
+object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
   case object InviteSplash         extends GuildFeature("INVITE_SPLASH")
@@ -299,6 +318,9 @@ object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnum[GuildF
   case object Banner               extends GuildFeature("BANNER")
   case object PublicDisabled       extends GuildFeature("PUBLIC_DISABLED")
   case object WelcomeScreenEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
+  case class Unknown(str: String)  extends GuildFeature(str)
+
+  override def createUnknown(value: String): GuildFeature = Unknown(value)
 }
 
 /**
@@ -595,14 +617,17 @@ case class ActivityEmoji(
   * The different statuses a user can have
   */
 sealed abstract class PresenceStatus(val value: String) extends StringEnumEntry
-object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnum[PresenceStatus] {
-  case object Online       extends PresenceStatus("online")
-  case object DoNotDisturb extends PresenceStatus("dnd")
-  case object Idle         extends PresenceStatus("idle")
-  case object Invisible    extends PresenceStatus("invisible")
-  case object Offline      extends PresenceStatus("offline")
-
+object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnumWithUnknown[PresenceStatus] {
   override def values: immutable.IndexedSeq[PresenceStatus] = findValues
+
+  case object Online              extends PresenceStatus("online")
+  case object DoNotDisturb        extends PresenceStatus("dnd")
+  case object Idle                extends PresenceStatus("idle")
+  case object Invisible           extends PresenceStatus("invisible")
+  case object Offline             extends PresenceStatus("offline")
+  case class Unknown(str: String) extends PresenceStatus(str)
+
+  override def createUnknown(value: String): PresenceStatus = Unknown(value)
 }
 
 /**
@@ -657,11 +682,14 @@ case class Integration(
 sealed abstract class IntegrationExpireBehavior(val value: Int) extends IntEnumEntry
 object IntegrationExpireBehavior
     extends IntEnum[IntegrationExpireBehavior]
-    with IntCirceEnum[IntegrationExpireBehavior] {
+    with IntCirceEnumWithUnknown[IntegrationExpireBehavior] {
   override def values: IndexedSeq[IntegrationExpireBehavior] = findValues
 
-  case object RemoveRole extends IntegrationExpireBehavior(0)
-  case object Kick       extends IntegrationExpireBehavior(1)
+  case object RemoveRole     extends IntegrationExpireBehavior(0)
+  case object Kick           extends IntegrationExpireBehavior(1)
+  case class Unknown(i: Int) extends IntegrationExpireBehavior(i)
+
+  override def createUnknown(value: Int): IntegrationExpireBehavior = Unknown(value)
 }
 
 /**

@@ -27,6 +27,7 @@ import java.time.OffsetDateTime
 
 import scala.collection.immutable
 
+import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 
@@ -34,19 +35,19 @@ import enumeratum.values._
   * Different type of channels
   */
 sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
-object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
-  case object GuildText     extends ChannelType(0)
-  case object DM            extends ChannelType(1)
-  case object GuildVoice    extends ChannelType(2)
-  case object GroupDm       extends ChannelType(3)
-  case object GuildCategory extends ChannelType(4)
-  case object GuildNews     extends ChannelType(5)
-  case object GuildStore    extends ChannelType(6)
-
-  //Not API documented
-  case object LFG extends ChannelType(8)
-
+object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[ChannelType] {
   override def values: immutable.IndexedSeq[ChannelType] = findValues
+
+  case object GuildText      extends ChannelType(0)
+  case object DM             extends ChannelType(1)
+  case object GuildVoice     extends ChannelType(2)
+  case object GroupDm        extends ChannelType(3)
+  case object GuildCategory  extends ChannelType(4)
+  case object GuildNews      extends ChannelType(5)
+  case object GuildStore     extends ChannelType(6)
+  case class Unknown(i: Int) extends ChannelType(i)
+
+  override def createUnknown(value: Int): ChannelType = Unknown(value)
 }
 
 /**
@@ -56,11 +57,14 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnum[ChannelType] {
 sealed abstract class PermissionOverwriteType(val value: String) extends StringEnumEntry
 object PermissionOverwriteType
     extends StringEnum[PermissionOverwriteType]
-    with StringCirceEnum[PermissionOverwriteType] {
-  case object Role   extends PermissionOverwriteType("role")
-  case object Member extends PermissionOverwriteType("member")
-
+    with StringCirceEnumWithUnknown[PermissionOverwriteType] {
   override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
+
+  case object Role                extends PermissionOverwriteType("role")
+  case object Member              extends PermissionOverwriteType("member")
+  case class Unknown(str: String) extends PermissionOverwriteType(str)
+
+  override def createUnknown(value: String): PermissionOverwriteType = Unknown(value)
 }
 
 /**

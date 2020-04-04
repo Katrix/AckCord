@@ -339,16 +339,16 @@ object VoiceWsHandler {
         }
 
       case Resumed                => //NO-OP
-      case IgnoreMessage12        => //NO-OP
       case IgnoreClientDisconnect => //NO-OP
 
       //Client sent events. Just here to make the exhaustivity checker happy
       //TODO: Fix this at some point
-      case Heartbeat(_)      =>
-      case Identify(_)       =>
-      case Resume(_)         =>
-      case SelectProtocol(_) =>
-      case Speaking(_)       =>
+      case Heartbeat(_)           =>
+      case Identify(_)            =>
+      case Resume(_)              =>
+      case SelectProtocol(_)      =>
+      case Speaking(_)            =>
+      case UnknownVoiceMessage(_) =>
     }
   }
 

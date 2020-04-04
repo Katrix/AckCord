@@ -26,10 +26,10 @@ package ackcord.voice
 import scala.collection.immutable
 
 import ackcord.data._
-import ackcord.util.{JsonOption, JsonUndefined}
+import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonUndefined}
 import akka.NotUsed
 import akka.util.ByteString
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * Messages sent to the voice websocket.
@@ -215,14 +215,6 @@ case object Resumed extends VoiceMessage[NotUsed] {
 }
 
 /**
-  * Message for OpCode 12, should be ignored
-  */
-case object IgnoreMessage12 extends VoiceMessage[NotUsed] {
-  override def op: VoiceOpCode = VoiceOpCode.Op12Ignore
-  override def d: NotUsed      = NotUsed
-}
-
-/**
   * Message for OpCode 13, should be ignored
   */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
@@ -231,23 +223,32 @@ case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
 }
 
 /**
+  * Message for unknown voice opcode
+  */
+case class UnknownVoiceMessage(op: VoiceOpCode) extends VoiceMessage[NotUsed] {
+  override def d: NotUsed = NotUsed
+}
+
+/**
   * Voice opcode used by voice websocket
   * @param value The int value of the code
   */
 sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry
-object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnum[VoiceOpCode] {
-  object Identify           extends VoiceOpCode(0)
-  object SelectProtocol     extends VoiceOpCode(1)
-  object Ready              extends VoiceOpCode(2)
-  object Heartbeat          extends VoiceOpCode(3)
-  object SessionDescription extends VoiceOpCode(4)
-  object Speaking           extends VoiceOpCode(5)
-  object HeartbeatACK       extends VoiceOpCode(6)
-  object Resume             extends VoiceOpCode(7)
-  object Hello              extends VoiceOpCode(8)
-  object Resumed            extends VoiceOpCode(9)
-  object Op12Ignore         extends VoiceOpCode(12) //This should be ignored
-  object ClientDisconnect   extends VoiceOpCode(13)
-
+object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnumWithUnknown[VoiceOpCode] {
   override def values: immutable.IndexedSeq[VoiceOpCode] = findValues
+
+  object Identify            extends VoiceOpCode(0)
+  object SelectProtocol      extends VoiceOpCode(1)
+  object Ready               extends VoiceOpCode(2)
+  object Heartbeat           extends VoiceOpCode(3)
+  object SessionDescription  extends VoiceOpCode(4)
+  object Speaking            extends VoiceOpCode(5)
+  object HeartbeatACK        extends VoiceOpCode(6)
+  object Resume              extends VoiceOpCode(7)
+  object Hello               extends VoiceOpCode(8)
+  object Resumed             extends VoiceOpCode(9)
+  object ClientDisconnect    extends VoiceOpCode(13)
+  case class Unknown(i: Int) extends VoiceOpCode(i)
+
+  override def createUnknown(value: Int): VoiceOpCode = Unknown(value)
 }

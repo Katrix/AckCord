@@ -27,7 +27,8 @@ package ackcord.data
 import scala.collection.immutable
 
 import ackcord.data.raw.PartialUser
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import ackcord.util.IntCirceEnumWithUnknown
+import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * A discord team.
@@ -58,9 +59,12 @@ case class TeamMember(
 )
 
 sealed abstract class TeamMembershipState(val value: Int) extends IntEnumEntry
-object TeamMembershipState extends IntEnum[TeamMembershipState] with IntCirceEnum[TeamMembershipState] {
-  case object Invited  extends TeamMembershipState(1)
-  case object Accepted extends TeamMembershipState(2)
-
+object TeamMembershipState extends IntEnum[TeamMembershipState] with IntCirceEnumWithUnknown[TeamMembershipState] {
   override def values: immutable.IndexedSeq[TeamMembershipState] = findValues
+
+  case object Invited        extends TeamMembershipState(1)
+  case object Accepted       extends TeamMembershipState(2)
+  case class Unknown(i: Int) extends TeamMembershipState(i)
+
+  override def createUnknown(value: Int): TeamMembershipState = Unknown(value)
 }

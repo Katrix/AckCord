@@ -33,11 +33,11 @@ import enumeratum.values.{StringEnum, StringEnumEntry}
   */
 sealed abstract class WidgetImageStyle(val value: String) extends StringEnumEntry
 object WidgetImageStyle extends StringEnum[WidgetImageStyle] {
+  override def values: immutable.IndexedSeq[WidgetImageStyle] = findValues
+
   case object Shield  extends WidgetImageStyle("shield")
   case object Banner1 extends WidgetImageStyle("banner1")
   case object Banner2 extends WidgetImageStyle("banner2")
   case object Banner3 extends WidgetImageStyle("banner3")
   case object Banner4 extends WidgetImageStyle("banner4")
-
-  override def values: immutable.IndexedSeq[WidgetImageStyle] = findValues
 }

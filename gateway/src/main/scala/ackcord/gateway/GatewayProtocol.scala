@@ -247,6 +247,7 @@ object GatewayProtocol extends DiscordProtocol {
       case GatewayOpCode.InvalidSession      => dCursor.as[Boolean].map(InvalidSession)
       case GatewayOpCode.Hello               => dCursor.as[HelloData].map(Hello)
       case GatewayOpCode.HeartbeatACK        => Right(HeartbeatACK)
+      case op @ GatewayOpCode.Unknown(_)     => Right(UnknownGatewayMessage(op))
     }
   }
 

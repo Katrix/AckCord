@@ -30,10 +30,10 @@ import scala.collection.immutable
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.gateway.GatewayProtocol._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
+import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.{Eval, Later, Now}
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, Encoder, Json}
 
@@ -256,11 +256,19 @@ case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
 }
 
 /**
+  * All unknown gateway messages.
+  */
+case class UnknownGatewayMessage(op: GatewayOpCode) extends EagerGatewayMessage[NotUsed] {
+  override def nowD: NotUsed                 = NotUsed
+  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+}
+
+/**
   * All the different opcodes used by the gateway.
   * @param value The number of the opcode.
   */
 sealed abstract class GatewayOpCode(val value: Int) extends IntEnumEntry
-object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnum[GatewayOpCode] {
+object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnumWithUnknown[GatewayOpCode] {
   object Dispatch            extends GatewayOpCode(0)
   object Heartbeat           extends GatewayOpCode(1)
   object Identify            extends GatewayOpCode(2)
@@ -275,6 +283,10 @@ object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnum[GatewayOpC
   object HeartbeatACK        extends GatewayOpCode(11)
 
   override def values: immutable.IndexedSeq[GatewayOpCode] = findValues
+
+  case class Unknown(i: Int) extends GatewayOpCode(i)
+
+  override def createUnknown(value: Int): GatewayOpCode = Unknown(value)
 }
 
 /**

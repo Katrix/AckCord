@@ -86,8 +86,8 @@ object VoiceWsProtocol extends DiscordProtocol {
         case Resume(d)              => d.asJson
         case Hello(d)               => d.asJson
         case Resumed                => Json.obj()
-        case IgnoreMessage12        => Json.obj()
         case IgnoreClientDisconnect => Json.obj()
+        case UnknownVoiceMessage(_) => Json.obj()
       }
 
       JsonOption.removeUndefinedToObj(
@@ -117,8 +117,8 @@ object VoiceWsProtocol extends DiscordProtocol {
       case VoiceOpCode.Resume             => mkMsg(Resume)
       case VoiceOpCode.Resumed            => Right(Resumed)
       case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
-      case VoiceOpCode.Op12Ignore         => Right(IgnoreMessage12) //We don't know what to do with this
       case VoiceOpCode.Hello              => mkMsg(Hello)
+      case tpe @ VoiceOpCode.Unknown(_)   => Right(UnknownVoiceMessage(tpe))
     }
   }
 }

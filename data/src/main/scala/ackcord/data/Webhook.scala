@@ -24,7 +24,8 @@
 package ackcord.data
 
 import ackcord.CacheSnapshot
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import ackcord.util.IntCirceEnumWithUnknown
+import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * A webhook
@@ -61,9 +62,12 @@ case class Webhook(
 }
 
 sealed abstract class WebhookType(val value: Int) extends IntEnumEntry
-object WebhookType extends IntEnum[WebhookType] with IntCirceEnum[WebhookType] {
+object WebhookType extends IntEnum[WebhookType] with IntCirceEnumWithUnknown[WebhookType] {
   override def values: IndexedSeq[WebhookType] = findValues
 
   case object Incomming       extends WebhookType(1)
   case object ChannelFollower extends WebhookType(2)
+  case class Unknown(i: Int)  extends WebhookType(i)
+
+  override def createUnknown(value: Int): WebhookType = Unknown(value)
 }

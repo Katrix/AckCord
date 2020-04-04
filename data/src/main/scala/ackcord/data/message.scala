@@ -30,7 +30,8 @@ import scala.collection.immutable
 import scala.util.Try
 
 import ackcord.CacheSnapshot
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry, StringCirceEnum, StringEnum, StringEnumEntry}
+import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
+import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
 
 sealed trait ImageFormat {
   def extensions: Seq[String]
@@ -69,7 +70,9 @@ object ImageData {
   * An enum of all the different message types.
   */
 sealed abstract class MessageType(val value: Int) extends IntEnumEntry
-object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
+object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[MessageType] {
+  override def values: immutable.IndexedSeq[MessageType] = findValues
+
   case object Default                      extends MessageType(0)
   case object RecipientAdd                 extends MessageType(1)
   case object RecipientRemove              extends MessageType(2)
@@ -85,17 +88,21 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
   case object ChannelFollowAdd             extends MessageType(12)
   case object GuildDiscoveryDisqualified   extends MessageType(14)
   case object GuildDiscoveryRequalified    extends MessageType(15)
+  case class Unknown(i: Int)               extends MessageType(i)
 
-  override def values: immutable.IndexedSeq[MessageType] = findValues
+  override def createUnknown(value: Int): MessageType = Unknown(value)
 }
 
 sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
-object PremiumType extends IntEnum[PremiumType] with IntCirceEnum[PremiumType] {
-  case object None         extends PremiumType(0)
-  case object NitroClassic extends PremiumType(1)
-  case object Nitro        extends PremiumType(2)
-
+object PremiumType extends IntEnum[PremiumType] with IntCirceEnumWithUnknown[PremiumType] {
   override def values: immutable.IndexedSeq[PremiumType] = findValues
+
+  case object None           extends PremiumType(0)
+  case object NitroClassic   extends PremiumType(1)
+  case object Nitro          extends PremiumType(2)
+  case class Unknown(i: Int) extends PremiumType(i)
+
+  override def createUnknown(value: Int): PremiumType = Unknown(value)
 }
 
 /**
@@ -197,23 +204,30 @@ case class Connection(
     visibility: ConnectionVisibility
 )
 sealed abstract class ConnectionVisibility(val value: Int) extends IntEnumEntry
-object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceEnum[ConnectionVisibility] {
+object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceEnumWithUnknown[ConnectionVisibility] {
+
+  override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
 
   //We use a different name here so that people don't accidentially switch up this and Option.None
   case object NoneVisibility extends ConnectionVisibility(0)
   case object Everyone       extends ConnectionVisibility(1)
 
-  override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
+  case class Unknown(i: Int) extends ConnectionVisibility(i)
+
+  override def createUnknown(value: Int): ConnectionVisibility = Unknown(value)
 }
 
 sealed abstract class MessageActivityType(val value: Int) extends IntEnumEntry
-object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnum[MessageActivityType] {
-  case object Join        extends MessageActivityType(1)
-  case object Spectate    extends MessageActivityType(2)
-  case object Listen      extends MessageActivityType(3)
-  case object JoinRequest extends MessageActivityType(5)
-
+object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnumWithUnknown[MessageActivityType] {
   override def values: immutable.IndexedSeq[MessageActivityType] = findValues
+
+  case object Join           extends MessageActivityType(1)
+  case object Spectate       extends MessageActivityType(2)
+  case object Listen         extends MessageActivityType(3)
+  case object JoinRequest    extends MessageActivityType(5)
+  case class Unknown(i: Int) extends MessageActivityType(i)
+
+  override def createUnknown(value: Int): MessageActivityType = Unknown(value)
 }
 
 /**
@@ -429,15 +443,18 @@ case class ReceivedEmbed(
 }
 
 sealed abstract class EmbedType(val value: String) extends StringEnumEntry
-object EmbedType extends StringEnum[EmbedType] with StringCirceEnum[EmbedType] {
+object EmbedType extends StringEnum[EmbedType] with StringCirceEnumWithUnknown[EmbedType] {
   override def values: IndexedSeq[EmbedType] = findValues
 
-  case object Rich    extends EmbedType("rich")
-  case object Image   extends EmbedType("image")
-  case object Video   extends EmbedType("video")
-  case object GifV    extends EmbedType("gifv")
-  case object Article extends EmbedType("article")
-  case object Link    extends EmbedType("link")
+  case object Rich                extends EmbedType("rich")
+  case object Image               extends EmbedType("image")
+  case object Video               extends EmbedType("video")
+  case object GifV                extends EmbedType("gifv")
+  case object Article             extends EmbedType("article")
+  case object Link                extends EmbedType("link")
+  case class Unknown(str: String) extends EmbedType(str)
+
+  override def createUnknown(value: String): EmbedType = Unknown(value)
 }
 
 /**

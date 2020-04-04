@@ -29,13 +29,13 @@ import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined, StringCirceEnumWithUnknown}
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import enumeratum.values.{StringCirceEnum, StringEnum, StringEnumEntry}
+import enumeratum.values.{StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
 
@@ -274,12 +274,17 @@ object AllowedMention {
 }
 
 sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
-object AllowedMentionTypes extends StringEnum[AllowedMentionTypes] with StringCirceEnum[AllowedMentionTypes] {
+object AllowedMentionTypes
+    extends StringEnum[AllowedMentionTypes]
+    with StringCirceEnumWithUnknown[AllowedMentionTypes] {
   override def values: IndexedSeq[AllowedMentionTypes] = findValues
 
-  case object Roles    extends AllowedMentionTypes("roles")
-  case object Users    extends AllowedMentionTypes("users")
-  case object Everyone extends AllowedMentionTypes("everyone")
+  case object Roles               extends AllowedMentionTypes("roles")
+  case object Users               extends AllowedMentionTypes("users")
+  case object Everyone            extends AllowedMentionTypes("everyone")
+  case class Unknown(str: String) extends AllowedMentionTypes(str)
+
+  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
 }
 
 /**

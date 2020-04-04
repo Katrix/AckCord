@@ -88,7 +88,7 @@ class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGateway.flatMap { uri =>
-      val cache = Cache.create
+      val cache = Cache.create()
       val clientActor = actorSystem.systemActorOf(
         DiscordClientActor(Seq(DiscordShard(uri, this, cache, Nil, CacheTypeRegistry.default)), cache),
         "DiscordClient"
@@ -117,7 +117,7 @@ class ClientSettings(
 
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
-        val cache  = Cache.create
+        val cache  = Cache.create()
         val shards = DiscordShard.many(uri, receivedShardTotal, this, cache, Nil, CacheTypeRegistry.default)
 
         val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")
