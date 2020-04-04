@@ -318,6 +318,9 @@ object Routes {
     upcast(queries.toRequest(GET))
   }
   val deleteAllReactions: (ChannelId, MessageId) => RequestRoute = upcast(reactions.toRequest(DELETE))
+  val deleteAllReactionsForEmoji: (ChannelId, MessageId, String) => RequestRoute = upcast(
+    reactions / emoji / "emoji-object" toRequest DELETE
+  )
 
   val channelPermissions: RouteFunction[(ChannelId, UserOrRoleId)] = channel / "permissions" / permissionOverwriteId
 
@@ -356,10 +359,11 @@ object Routes {
   val deleteGuildEmoji: (GuildId, EmojiId) => RequestRoute = upcast(guildEmoji.toRequest(DELETE))
 
   //Guild routes
-  val createGuild: RequestRoute            = upcast(guilds.toRequest(POST))
-  val getGuild: GuildId => RequestRoute    = upcast(guild.toRequest(GET))
-  val modifyGuild: GuildId => RequestRoute = upcast(guild.toRequest(PATCH))
-  val deleteGuild: GuildId => RequestRoute = upcast(guild.toRequest(DELETE))
+  val createGuild: RequestRoute                = upcast(guilds.toRequest(POST))
+  val getGuild: GuildId => RequestRoute        = upcast(guild.toRequest(GET))
+  val getGuildPreview: GuildId => RequestRoute = upcast(guild / "preview" toRequest GET)
+  val modifyGuild: GuildId => RequestRoute     = upcast(guild.toRequest(PATCH))
+  val deleteGuild: GuildId => RequestRoute     = upcast(guild.toRequest(DELETE))
 
   val guildChannels: RouteFunction[GuildId]                 = guild / "channels"
   val getGuildChannels: GuildId => RequestRoute             = upcast(guildChannels.toRequest(GET))

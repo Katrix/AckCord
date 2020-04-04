@@ -35,6 +35,7 @@ import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
+import enumeratum.values.{StringCirceEnum, StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
 
@@ -257,6 +258,30 @@ object CreateMessageFile {
 
 }
 
+case class AllowedMention(
+    parse: Seq[AllowedMentionTypes] = Seq.empty,
+    roles: Seq[RoleId] = Seq.empty,
+    users: Seq[UserId] = Seq.empty
+)
+object AllowedMention {
+  val none: AllowedMention = AllowedMention()
+  val all: AllowedMention = AllowedMention(
+    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
+  )
+
+  //noinspection NameBooleanParameters
+  implicit val codec: Codec[AllowedMention] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+}
+
+sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
+object AllowedMentionTypes extends StringEnum[AllowedMentionTypes] with StringCirceEnum[AllowedMentionTypes] {
+  override def values: IndexedSeq[AllowedMentionTypes] = findValues
+
+  case object Roles    extends AllowedMentionTypes("roles")
+  case object Users    extends AllowedMentionTypes("users")
+  case object Everyone extends AllowedMentionTypes("everyone")
+}
+
 /**
   * @param content The content of the message.
   * @param nonce A nonce used for optimistic message sending.
@@ -270,7 +295,8 @@ case class CreateMessageData(
     nonce: Option[RawSnowflake] = None,
     tts: Boolean = false,
     files: Seq[CreateMessageFile] = Seq.empty,
-    embed: Option[OutgoingEmbed] = None
+    embed: Option[OutgoingEmbed] = None,
+    allowedMentions: AllowedMention = AllowedMention.all
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -283,7 +309,13 @@ object CreateMessageData {
 
   //We handle this here as the file argument needs special treatment
   implicit val encoder: Encoder[CreateMessageData] = (a: CreateMessageData) =>
-    Json.obj("content" -> a.content.asJson, "nonce" -> a.nonce.asJson, "tts" -> a.tts.asJson, "embed" -> a.embed.asJson)
+    Json.obj(
+      "content" := a.content,
+      "nonce" := a.nonce,
+      "tts" := a.tts,
+      "embed" := a.embed,
+      "allowed_mentions" := a.allowedMentions
+    )
 }
 
 /**
@@ -295,7 +327,7 @@ case class CreateMessage(channelId: ChannelId, params: CreateMessageData)
   override def paramsEncoder: Encoder[CreateMessageData] = CreateMessageData.encoder
   override def requestBody: RequestEntity = {
     this match {
-      case CreateMessage(_, CreateMessageData(_, _, _, files, _)) if files.nonEmpty =>
+      case CreateMessage(_, CreateMessageData(_, _, _, files, _, _)) if files.nonEmpty =>
         val jsonPart = FormData.BodyPart(
           "payload_json",
           HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
@@ -411,6 +443,18 @@ object GetReactions {
   */
 case class DeleteAllReactions(channelId: ChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteAllReactions(channelId, messageId)
+
+  override def requiredPermissions: Permission = Permission.ManageMessages
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsChannel(channelId, requiredPermissions)
+}
+
+/**
+  * Clear all reactions for a single emoji from a message.
+  */
+case class DeleteAllReactionsForEmoji(channelId: ChannelId, messageId: MessageId, emoji: String)
+    extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.deleteAllReactionsForEmoji(channelId, messageId, emoji)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =

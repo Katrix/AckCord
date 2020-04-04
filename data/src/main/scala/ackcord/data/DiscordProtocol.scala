@@ -85,6 +85,9 @@ trait DiscordProtocol {
   implicit val rawGuildCodec: Codec[RawGuild] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val rawGuildPreviewCodec: Codec[GuildPreview] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val partialUserCodec: Codec[PartialUser] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 

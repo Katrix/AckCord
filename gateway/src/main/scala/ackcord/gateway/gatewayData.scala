@@ -663,6 +663,46 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
+  case class InviteCreateData(
+      channelId: ChannelId,
+      code: String,
+      createdAt: OffsetDateTime,
+      guildId: Option[GuildId],
+      inviter: Option[User],
+      maxAge: Int,
+      maxUses: Int,
+      temporary: Boolean,
+      uses: Int
+  )
+
+  /**
+    * Sent when an invite is created.
+    */
+  case class InviteCreate(rawData: Json, data: Later[Decoder.Result[InviteCreateData]])
+      extends OptGuildEvent[InviteCreateData]
+      with ChannelEvent[InviteCreateData] {
+    override def name: String                           = "INVITE_CREATE"
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
+    override def channelId: Eval[Result[ChannelId]]     = mapData(_.channelId)
+  }
+
+  case class InviteDeleteData(
+      channelId: ChannelId,
+      guildId: Option[GuildId],
+      code: String
+  )
+
+  /**
+    * Sent when an invite is deleted.
+    */
+  case class InviteDelete(rawData: Json, data: Later[Decoder.Result[InviteDeleteData]])
+      extends OptGuildEvent[InviteDeleteData]
+      with ChannelEvent[InviteDeleteData] {
+    override def name: String                           = "INVITE_DELETE"
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
+    override def channelId: Eval[Result[ChannelId]]     = mapData(_.channelId)
+  }
+
   /**
     * Sent to the shard when a message is created (posted).
     * @param data The sent message.
@@ -795,6 +835,32 @@ object GatewayEvent {
       extends ChannelEvent[MessageReactionRemoveAllData]
       with OptGuildEvent[MessageReactionRemoveAllData] {
     override def name: String = "MESSAGE_REACTION_REMOVE_ALL"
+
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
+  }
+
+  /**
+    * @param channelId The channel of the message.
+    * @param messageId The message the user removed the reactions from.
+    * @param guildId The guild this was done in. Can be missing.
+    * @param emoji The emoji that was deleted.
+    */
+  case class MessageReactionRemoveEmojiData(
+      channelId: ChannelId,
+      messageId: MessageId,
+      guildId: Option[GuildId],
+      emoji: PartialEmoji
+  )
+
+  /**
+    * Sent to the shard when a user removes all reactions of a specific emoji
+    * from a message.
+    */
+  case class MessageReactionRemoveEmoji(rawData: Json, data: Later[Decoder.Result[MessageReactionRemoveEmojiData]])
+      extends ChannelEvent[MessageReactionRemoveEmojiData]
+      with OptGuildEvent[MessageReactionRemoveEmojiData] {
+    override def name: String = "MESSAGE_REACTION_REMOVE_EMOJI"
 
     override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
     override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)

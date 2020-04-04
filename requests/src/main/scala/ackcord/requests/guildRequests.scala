@@ -86,6 +86,15 @@ case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild, Option[G
 }
 
 /**
+  * Get a guild preview by it's id. Only usable for public guilds.
+  */
+case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildPreview] {
+  override def route: RequestRoute = Routes.getGuildPreview(guildId)
+
+  override def responseDecoder: Decoder[GuildPreview] = Decoder[GuildPreview]
+}
+
+/**
   * @param name The new name of the guild
   * @param region The new voice region for the guild
   * @param verificationLevel The new verification level to use for the guild.
@@ -801,7 +810,7 @@ case class CreateGuildIntegration(
   *                        (Twitch only)
   */
 case class ModifyGuildIntegrationData(
-    expireBehavior: Int /*TODO: Better than Int here*/,
+    expireBehavior: IntegrationExpireBehavior,
     expireGracePeriod: Int,
     enableEmoticons: Boolean
 )

@@ -427,7 +427,7 @@ case class RawMessage(
 }
 
 /**
-  * A a raw guild before going through the cache.
+  * A raw guild before going through the cache.
   * @param id The id of the guild.
   * @param name The name of the guild.
   * @param icon The icon hash.
@@ -452,12 +452,11 @@ case class RawMessage(
   * @param applicationId The application id if this guild is bot created.
   * @param widgetEnabled If the widget is enabled.
   * @param widgetChannelId The channel id for the widget.
-  * @param systemChannelId The channel which system messages are sent to.
+  * @param systemChannelId The channel which notices like welcome and boost messages are sent to.
   * @param systemChannelFlags The flags for the system channel
   * @param rulesChannelId The id for the channel where the rules of a guild are stored.
   * @param joinedAt When the client joined the guild.
   * @param large If this guild is above the large threshold.
-  * @param unavailable If this guild is unavailable.
   * @param memberCount The amount of members in the guild.
   * @param voiceStates The voice states of the guild.
   * @param members The guild members in the guild.
@@ -470,6 +469,9 @@ case class RawMessage(
   * @param banner A banner hash for the guild.
   * @param premiumTier The premium tier of the guild.
   * @param premiumSubscriptionCount How many users that are boosting the server.
+  * @param preferredLocale The preferred locale of a public guild.
+  * @param publicUpdatesChannelId The channel where admin and mods can see
+  *                               public updates are sent to public guilds.
   */
 case class RawGuild(
     id: GuildId,
@@ -513,7 +515,8 @@ case class RawGuild(
     banner: Option[String],
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
-    preferredLocale: Option[String]
+    preferredLocale: Option[String],
+    publicUpdatesChannelId: Option[ChannelId]
 ) {
 
   /**
@@ -575,7 +578,8 @@ case class RawGuild(
         banner,
         premiumTier,
         premiumSubscriptionCount,
-        preferredLocale
+        preferredLocale,
+        publicUpdatesChannelId
       )
     }
   }
@@ -726,16 +730,18 @@ case class RawBan(reason: Option[String], user: User) {
   * @param user The user that created this emoji.
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
+  * @param available If the emoji can be used.
   */
 case class RawEmoji(
     id: EmojiId,
     name: String,
     roles: Seq[RoleId],
     user: Option[User],
-    requireColons: Boolean,
-    managed: Boolean,
-    animated: Boolean
+    requireColons: Option[Boolean],
+    managed: Option[Boolean],
+    animated: Option[Boolean],
+    available: Option[Boolean]
 ) {
 
-  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed, animated)
+  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed, animated, available)
 }

@@ -60,6 +60,12 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val guildRoleDeleteDataCodec: Codec[GatewayEvent.GuildRoleDeleteData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val inviteCreateDataCodec: Codec[GatewayEvent.InviteCreateData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val inviteDeleteDataCodec: Codec[GatewayEvent.InviteDeleteData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val messageDeleteDataCodec: Codec[GatewayEvent.MessageDeleteData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -125,6 +131,9 @@ object GatewayProtocol extends DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val messageReactionRemoveAllDataCodec: Codec[GatewayEvent.MessageReactionRemoveAllData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val messageReactionRemoveEmojiDataCodec: Codec[GatewayEvent.MessageReactionRemoveEmojiData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val webhookUpdateDataCodec: Codec[GatewayEvent.WebhookUpdateData] =
@@ -256,37 +265,40 @@ object GatewayProtocol extends DiscordProtocol {
             case "READY" => createDispatch(GatewayEvent.Ready)
             case "RESUMED" =>
               Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((_: NotUsed) => Json.obj()))
-            case "CHANNEL_CREATE"              => createDispatch(GatewayEvent.ChannelCreate)
-            case "CHANNEL_UPDATE"              => createDispatch(GatewayEvent.ChannelUpdate)
-            case "CHANNEL_DELETE"              => createDispatch(GatewayEvent.ChannelDelete)
-            case "CHANNEL_PINS_UPDATE"         => createDispatch(GatewayEvent.ChannelPinsUpdate)
-            case "GUILD_CREATE"                => createDispatch(GatewayEvent.GuildCreate)
-            case "GUILD_UPDATE"                => createDispatch(GatewayEvent.GuildUpdate)
-            case "GUILD_DELETE"                => createDispatch(GatewayEvent.GuildDelete)
-            case "GUILD_BAN_ADD"               => createDispatch(GatewayEvent.GuildBanAdd)
-            case "GUILD_BAN_REMOVE"            => createDispatch(GatewayEvent.GuildBanRemove)
-            case "GUILD_EMOJIS_UPDATE"         => createDispatch(GatewayEvent.GuildEmojisUpdate)
-            case "GUILD_INTEGRATIONS_UPDATE"   => createDispatch(GatewayEvent.GuildIntegrationsUpdate)
-            case "GUILD_MEMBER_ADD"            => createDispatch(GatewayEvent.GuildMemberAdd)
-            case "GUILD_MEMBER_REMOVE"         => createDispatch(GatewayEvent.GuildMemberRemove)
-            case "GUILD_MEMBER_UPDATE"         => createDispatch(GatewayEvent.GuildMemberUpdate)
-            case "GUILD_MEMBER_CHUNK"          => createDispatch(GatewayEvent.GuildMemberChunk)
-            case "GUILD_ROLE_CREATE"           => createDispatch(GatewayEvent.GuildRoleCreate)
-            case "GUILD_ROLE_UPDATE"           => createDispatch(GatewayEvent.GuildRoleUpdate)
-            case "GUILD_ROLE_DELETE"           => createDispatch(GatewayEvent.GuildRoleDelete)
-            case "MESSAGE_CREATE"              => createDispatch(GatewayEvent.MessageCreate)
-            case "MESSAGE_UPDATE"              => createDispatch(GatewayEvent.MessageUpdate)
-            case "MESSAGE_DELETE"              => createDispatch(GatewayEvent.MessageDelete)
-            case "MESSAGE_DELETE_BULK"         => createDispatch(GatewayEvent.MessageDeleteBulk)
-            case "MESSAGE_REACTION_ADD"        => createDispatch(GatewayEvent.MessageReactionAdd)
-            case "MESSAGE_REACTION_REMOVE"     => createDispatch(GatewayEvent.MessageReactionRemove)
-            case "MESSAGE_REACTION_REMOVE_ALL" => createDispatch(GatewayEvent.MessageReactionRemoveAll)
-            case "PRESENCE_UPDATE"             => createDispatch(GatewayEvent.PresenceUpdate)
-            case "TYPING_START"                => createDispatch(GatewayEvent.TypingStart)
-            case "USER_UPDATE"                 => createDispatch(GatewayEvent.UserUpdate)
-            case "VOICE_STATE_UPDATE"          => createDispatch(GatewayEvent.VoiceStateUpdate)
-            case "VOICE_SERVER_UPDATE"         => createDispatch(GatewayEvent.VoiceServerUpdate)
-            case "WEBHOOK_UPDATE"              => createDispatch(GatewayEvent.WebhookUpdate)
+            case "CHANNEL_CREATE"                => createDispatch(GatewayEvent.ChannelCreate)
+            case "CHANNEL_UPDATE"                => createDispatch(GatewayEvent.ChannelUpdate)
+            case "CHANNEL_DELETE"                => createDispatch(GatewayEvent.ChannelDelete)
+            case "CHANNEL_PINS_UPDATE"           => createDispatch(GatewayEvent.ChannelPinsUpdate)
+            case "GUILD_CREATE"                  => createDispatch(GatewayEvent.GuildCreate)
+            case "GUILD_UPDATE"                  => createDispatch(GatewayEvent.GuildUpdate)
+            case "GUILD_DELETE"                  => createDispatch(GatewayEvent.GuildDelete)
+            case "GUILD_BAN_ADD"                 => createDispatch(GatewayEvent.GuildBanAdd)
+            case "GUILD_BAN_REMOVE"              => createDispatch(GatewayEvent.GuildBanRemove)
+            case "GUILD_EMOJIS_UPDATE"           => createDispatch(GatewayEvent.GuildEmojisUpdate)
+            case "GUILD_INTEGRATIONS_UPDATE"     => createDispatch(GatewayEvent.GuildIntegrationsUpdate)
+            case "GUILD_MEMBER_ADD"              => createDispatch(GatewayEvent.GuildMemberAdd)
+            case "GUILD_MEMBER_REMOVE"           => createDispatch(GatewayEvent.GuildMemberRemove)
+            case "GUILD_MEMBER_UPDATE"           => createDispatch(GatewayEvent.GuildMemberUpdate)
+            case "GUILD_MEMBER_CHUNK"            => createDispatch(GatewayEvent.GuildMemberChunk)
+            case "GUILD_ROLE_CREATE"             => createDispatch(GatewayEvent.GuildRoleCreate)
+            case "GUILD_ROLE_UPDATE"             => createDispatch(GatewayEvent.GuildRoleUpdate)
+            case "GUILD_ROLE_DELETE"             => createDispatch(GatewayEvent.GuildRoleDelete)
+            case "INVITE_CREATE"                 => createDispatch(GatewayEvent.InviteCreate)
+            case "INVITE_DELETE"                 => createDispatch(GatewayEvent.InviteDelete)
+            case "MESSAGE_CREATE"                => createDispatch(GatewayEvent.MessageCreate)
+            case "MESSAGE_UPDATE"                => createDispatch(GatewayEvent.MessageUpdate)
+            case "MESSAGE_DELETE"                => createDispatch(GatewayEvent.MessageDelete)
+            case "MESSAGE_DELETE_BULK"           => createDispatch(GatewayEvent.MessageDeleteBulk)
+            case "MESSAGE_REACTION_ADD"          => createDispatch(GatewayEvent.MessageReactionAdd)
+            case "MESSAGE_REACTION_REMOVE"       => createDispatch(GatewayEvent.MessageReactionRemove)
+            case "MESSAGE_REACTION_REMOVE_ALL"   => createDispatch(GatewayEvent.MessageReactionRemoveAll)
+            case "MESSAGE_REACTION_REMOVE_EMOJI" => createDispatch(GatewayEvent.MessageReactionRemoveEmoji)
+            case "PRESENCE_UPDATE"               => createDispatch(GatewayEvent.PresenceUpdate)
+            case "TYPING_START"                  => createDispatch(GatewayEvent.TypingStart)
+            case "USER_UPDATE"                   => createDispatch(GatewayEvent.UserUpdate)
+            case "VOICE_STATE_UPDATE"            => createDispatch(GatewayEvent.VoiceStateUpdate)
+            case "VOICE_SERVER_UPDATE"           => createDispatch(GatewayEvent.VoiceServerUpdate)
+            case "WEBHOOK_UPDATE"                => createDispatch(GatewayEvent.WebhookUpdate)
             case "PRESENCES_REPLACE" =>
               Right(Dispatch(seq, GatewayEvent.IgnoredEvent("PRESENCES_REPLACE", c.value, Later(Right(())))))
             case _ => Left(DecodingFailure("Invalid message type", c.downField("t").history))

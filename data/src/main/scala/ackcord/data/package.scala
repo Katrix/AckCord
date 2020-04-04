@@ -254,6 +254,7 @@ package object data {
     val ReadMessageHistory  = Permission(0x00010000)
     val MentionEveryone     = Permission(0x00020000)
     val UseExternalEmojis   = Permission(0x00040000)
+    val ViewGuildInsights   = Permission(0x00080000)
     val Connect             = Permission(0x00100000)
     val Speak               = Permission(0x00200000)
     val MuteMembers         = Permission(0x00400000)

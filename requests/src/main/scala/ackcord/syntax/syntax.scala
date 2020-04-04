@@ -109,8 +109,12 @@ package object syntax {
         content: String = "",
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
-        embed: Option[OutgoingEmbed] = None
-    ) = CreateMessage(tChannel.id, CreateMessageData(content, None, tts, files.map(CreateMessageFile.FromPath), embed))
+        embed: Option[OutgoingEmbed] = None,
+        allowedMentions: AllowedMention = AllowedMention.all
+    ) = CreateMessage(
+      tChannel.id,
+      CreateMessageData(content, None, tts, files.map(CreateMessageFile.FromPath), embed, allowedMentions)
+    )
 
     /**
       * Fetch messages around a message id.
@@ -777,7 +781,7 @@ package object syntax {
       */
     def modifyIntegration(
         id: IntegrationId,
-        expireBehavior: Int,
+        expireBehavior: IntegrationExpireBehavior,
         expireGracePeriod: Int,
         enableEmoticons: Boolean
     ) =
@@ -1111,11 +1115,25 @@ package object syntax {
       CreateReaction(message.channelId, message.id, guildEmoji.asString)
 
     /**
+      * Create a reaction for a message.
+      * @param emoji The emoji to react with.
+      */
+    def createReaction(emoji: String) =
+      CreateReaction(message.channelId, message.id, emoji)
+
+    /**
       * Delete the clients reaction to a message.
       * @param guildEmoji The emoji to remove a reaction for.
       */
     def deleteOwnReaction(guildEmoji: Emoji) =
       DeleteOwnReaction(message.channelId, message.id, guildEmoji.asString)
+
+    /**
+      * Delete the clients reaction to a message.
+      * @param emoji The emoji to remove a reaction for.
+      */
+    def deleteOwnReaction(emoji: String) =
+      DeleteOwnReaction(message.channelId, message.id, emoji)
 
     /**
       * Delete the reaction of a user with an emoji.
@@ -1126,6 +1144,14 @@ package object syntax {
       DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId)
 
     /**
+      * Delete the reaction of a user with an emoji.
+      * @param emoji The emoji of the reaction to remove.
+      * @param userId The userId to remove for.
+      */
+    def deleteUserReaction(emoji: String, userId: UserId) =
+      DeleteUserReaction(message.channelId, message.id, emoji, userId)
+
+    /**
       * Fetch all the users that have reacted with an emoji for this message.
       * @param guildEmoji The emoji the get the reactors for.
       */
@@ -1134,14 +1160,36 @@ package object syntax {
         before: Option[UserId] = None,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) =
-      GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit))
+    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit))
+
+    /**
+      * Fetch all the users that have reacted with an emoji for this message.
+      * @param emoji The emoji the get the reactors for.
+      */
+    def fetchReactionsStr(
+        emoji: String,
+        before: Option[UserId] = None,
+        after: Option[UserId] = None,
+        limit: Option[Int] = None
+    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(before, after, limit))
 
     /**
       * Clear all the reactions on this message.
       */
     def deleteAllReactions =
       DeleteAllReactions(message.channelId, message.id)
+
+    /**
+      * Clear all the reactions on this message.
+      */
+    def deleteEmojiReactions(emoji: Emoji) =
+      DeleteAllReactionsForEmoji(message.channelId, message.id, emoji.asString)
+
+    /**
+      * Clear all the reactions on this message.
+      */
+    def deleteEmojiReactions(emoji: String) =
+      DeleteAllReactionsForEmoji(message.channelId, message.id, emoji)
 
     /**
       * Edit this message.

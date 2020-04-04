@@ -204,14 +204,15 @@ object CacheHandlers {
           members = SnowflakeMap.withKey(members)(_.userId),
           channels = SnowflakeMap.withKey(channels)(_.id),
           presences = SnowflakeMap.withKey(presences)(_.userId),
-          maxPresences = obj.maxPresences.getOrElse(5000), //5000 is the default
+          maxPresences = obj.maxPresences.getOrElse(25000), //25000 is the default
           maxMembers = obj.maxMembers,
           vanityUrlCode = obj.vanityUrlCode,
           description = obj.description,
           banner = obj.banner,
           premiumTier = obj.premiumTier,
           premiumSubscriptionCount = obj.premiumSubscriptionCount,
-          preferredLocale = obj.preferredLocale
+          preferredLocale = obj.preferredLocale,
+          publicUpdatesChannelId = obj.publicUpdatesChannelId
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -456,7 +457,11 @@ object CacheHandlers {
           updater.handle(builder, newMessage, registry)
         }
 
-        obj.member.foreach(registry.updateData(builder)(_))
+        registry.getUpdater[GuildMember].foreach { updater =>
+          obj.member.foreach { rawMember =>
+            updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry)
+          }
+        }
       }
     }
 
@@ -465,6 +470,11 @@ object CacheHandlers {
         implicit log: Logger
     ): Unit = {
       builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
+      registry.getUpdater[GuildMember].foreach { updater =>
+        obj.member.foreach { rawMember =>
+          updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry)
+        }
+      }
       obj.member.foreach(registry.updateData(builder)(_))
     }
   }
@@ -677,6 +687,24 @@ object CacheHandlers {
           message <- builder.getMessage(obj.channelId, obj.messageId)
         } {
           updater.handle(builder, message.copy(reactions = Nil), registry)
+        }
+      }
+    }
+
+  val rawMessageReactionEmojiDeleter: CacheDeleter[MessageReactionRemoveEmojiData] =
+    new CacheDeleter[MessageReactionRemoveEmojiData] {
+      override def handle(
+          builder: CacheSnapshotBuilder,
+          obj: MessageReactionRemoveEmojiData,
+          registry: CacheTypeRegistry
+      )(
+          implicit log: Logger
+      ): Unit = {
+        for {
+          updater <- registry.getUpdater[Message]
+          message <- builder.getMessage(obj.channelId, obj.messageId)
+        } {
+          updater.handle(builder, message.copy(reactions = message.reactions.filter(_.emoji != obj.emoji)), registry)
         }
       }
     }

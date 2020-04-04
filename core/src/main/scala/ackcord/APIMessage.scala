@@ -218,6 +218,22 @@ object APIMessage {
   case class GuildRoleDelete(guild: Guild, roleId: Role, cache: CacheState) extends GuildMessage
 
   /**
+    * Sent when an invite is created.
+    * @param guild The guild the invite is for.
+    * @param channel The channel the invite directs to.
+    */
+  case class InviteCreate(guild: Option[Guild], channel: TChannel, invite: CreatedInvite, cache: CacheState)
+      extends ChannelMessage
+
+  /**
+    * Sent when an invite is deleted.
+    * @param guild The guild the invite was for.
+    * @param channel The channel the invite directed to.
+    */
+  case class InviteDelete(guild: Option[Guild], channel: TChannel, code: String, cache: CacheState)
+      extends ChannelMessage
+
+  /**
     * Trait that covers all message messages.
     */
   sealed trait MessageMessage extends APIMessage {
@@ -293,11 +309,29 @@ object APIMessage {
   /**
     * Sent to the client when a user removes all reactions from a message.
     * The emojis of the message can be found in [[cache.previous]].
+    * @param guild The guild of the message.
     * @param channel The channel of the message.
     * @param message The message the user removed the reactions from.
     */
-  case class MessageReactionRemoveAll(channel: TChannel, message: Message, cache: CacheState)
+  case class MessageReactionRemoveAll(guild: Option[Guild], channel: TChannel, message: Message, cache: CacheState)
       extends MessageMessage
+      with ChannelMessage
+
+  /**
+    * Sent to the client when a user removes all reactions of a specific emoji
+    * from a message.
+    * @param guild The guild of the message.
+    * @param channel The channel of the message.
+    * @param message The message the user removed the reactions from.
+    * @param emoji The removed emoji.
+    */
+  case class MessageReactionRemoveEmoji(
+      guild: Option[Guild],
+      channel: TChannel,
+      message: Message,
+      emoji: PartialEmoji,
+      cache: CacheState
+  ) extends MessageMessage
       with ChannelMessage
 
   /**

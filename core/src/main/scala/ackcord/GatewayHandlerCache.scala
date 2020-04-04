@@ -25,7 +25,7 @@ package ackcord
 
 import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
-import ackcord.data.{ChannelId, GuildId, TChannel}
+import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildId, TChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 import ackcord.requests.SupervisionStreams
 import ackcord.syntax._
@@ -83,6 +83,9 @@ object GatewayHandlerCache {
       guildId.fold(state.getTChannel(channelId)) { guildId =>
         state.getGuildChannel(guildId, channelId).flatMap(_.asTChannel)
       }
+
+    def getGuildIfDefined(state: CacheSnapshotWithMaps, guildId: Option[GuildId]): Option[Option[Guild]] =
+      guildId.fold[Option[Option[Guild]]](Some(None))(state.getGuild(_).map(Some.apply))
 
     event.data.value match {
       case Right(_) if event.isInstanceOf[gatewayEv.IgnoredEvent] => None
@@ -258,6 +261,43 @@ object GatewayHandlerCache {
               CacheHandlers.roleDeleteDataDeleter,
               registry
             )
+          case gatewayEv.InviteCreate(_, GetLazy(data)) =>
+            CacheUpdate(
+              data,
+              state =>
+                for {
+                  guild   <- getGuildIfDefined(state.current, data.guildId)
+                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                } yield api.InviteCreate(
+                  guild,
+                  channel,
+                  CreatedInvite(
+                    data.code,
+                    data.guildId,
+                    data.channelId,
+                    data.inviter,
+                    data.uses,
+                    data.maxUses,
+                    data.maxAge,
+                    data.temporary,
+                    data.createdAt
+                  ),
+                  state
+                ),
+              NOOPHandler,
+              registry
+            )
+          case gatewayEv.InviteDelete(_, GetLazy(data)) =>
+            CacheUpdate(
+              data,
+              state =>
+                for {
+                  guild   <- getGuildIfDefined(state.current, data.guildId)
+                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                } yield api.InviteDelete(guild, channel, data.code, state),
+              NOOPHandler,
+              registry
+            )
           case gatewayEv.MessageCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
@@ -322,10 +362,23 @@ object GatewayHandlerCache {
               data,
               state =>
                 for {
+                  guild    <- getGuildIfDefined(state.current, data.guildId)
                   tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
                   message  <- state.current.getMessage(data.channelId, data.messageId)
-                } yield api.MessageReactionRemoveAll(tChannel, message, state),
+                } yield api.MessageReactionRemoveAll(guild, tChannel, message, state),
               CacheHandlers.rawMessageReactionAllDeleter,
+              registry
+            )
+          case gatewayEv.MessageReactionRemoveEmoji(_, GetLazy(data)) =>
+            CacheUpdate(
+              data,
+              state =>
+                for {
+                  guild    <- getGuildIfDefined(state.current, data.guildId)
+                  tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                  message  <- state.current.getMessage(data.channelId, data.messageId)
+                } yield api.MessageReactionRemoveEmoji(guild, tChannel, message, data.emoji, state),
+              CacheHandlers.rawMessageReactionEmojiDeleter,
               registry
             )
           case gatewayEv.PresenceUpdate(_, GetLazy(data)) =>

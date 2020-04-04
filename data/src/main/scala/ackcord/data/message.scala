@@ -30,7 +30,7 @@ import scala.collection.immutable
 import scala.util.Try
 
 import ackcord.CacheSnapshot
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry, StringCirceEnum, StringEnum, StringEnumEntry}
 
 sealed trait ImageFormat {
   def extensions: Seq[String]
@@ -82,12 +82,16 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnum[MessageType] {
   case object UserPremiumGuildTier1        extends MessageType(9)
   case object UserPremiumGuildTier2        extends MessageType(10)
   case object UserPremiumGuildTier3        extends MessageType(11)
+  case object ChannelFollowAdd             extends MessageType(12)
+  case object GuildDiscoveryDisqualified   extends MessageType(14)
+  case object GuildDiscoveryRequalified    extends MessageType(15)
 
   override def values: immutable.IndexedSeq[MessageType] = findValues
 }
 
 sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
 object PremiumType extends IntEnum[PremiumType] with IntCirceEnum[PremiumType] {
+  case object None         extends PremiumType(0)
   case object NitroClassic extends PremiumType(1)
   case object Nitro        extends PremiumType(2)
 
@@ -395,7 +399,7 @@ case class PartialEmoji(id: Option[EmojiId], name: Option[String])
   */
 case class ReceivedEmbed(
     title: Option[String],
-    `type`: Option[String],
+    `type`: Option[EmbedType],
     description: Option[String],
     url: Option[String],
     timestamp: Option[OffsetDateTime],
@@ -422,6 +426,18 @@ case class ReceivedEmbed(
     author = author.flatMap(_.toOutgoing),
     fields = fields.getOrElse(Seq.empty)
   )
+}
+
+sealed abstract class EmbedType(val value: String) extends StringEnumEntry
+object EmbedType extends StringEnum[EmbedType] with StringCirceEnum[EmbedType] {
+  override def values: IndexedSeq[EmbedType] = findValues
+
+  case object Rich    extends EmbedType("rich")
+  case object Image   extends EmbedType("image")
+  case object Video   extends EmbedType("video")
+  case object GifV    extends EmbedType("gifv")
+  case object Article extends EmbedType("article")
+  case object Link    extends EmbedType("link")
 }
 
 /**

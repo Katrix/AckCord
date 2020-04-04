@@ -27,6 +27,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import scala.collection.immutable
 
+import ackcord.data.raw.RawEmoji
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 
@@ -114,6 +115,32 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
 }
 
 /**
+  * A preview of a public guild
+  * @param id The id of the guild.
+  * @param name The name of the guild.
+  * @param icon The icon hash.
+  * @param splash The splash hash.
+  * @param discoverySplash The discovery splash hash.
+  * @param emojis The emojis of the guild.
+  * @param features The enabled guild features.
+  * @param approximateMemberCount An approximate count of the members in the guild.
+  * @param approximatePresenceCount An approximate count of the presences in the guild.
+  * @param description A description for the guild
+  */
+case class GuildPreview(
+    id: GuildId,
+    name: String,
+    icon: Option[String],
+    splash: Option[String],
+    discoverySplash: Option[String],
+    emojis: Seq[RawEmoji],
+    features: Seq[GuildFeature],
+    approximateMemberCount: Int,
+    approximatePresenceCount: Int,
+    description: Option[String]
+)
+
+/**
   * A guild or server in Discord.
   * @param id The id of the guild.
   * @param name The name of the guild.
@@ -139,7 +166,7 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
   * @param applicationId The application id if this guild is bot created.
   * @param widgetEnabled If the widget is enabled.
   * @param widgetChannelId The channel id for the widget.
-  * @param systemChannelId The channel which system messages are sent to.
+  * @param systemChannelId The channel which notices like welcome and boost messages are sent to.
   * @param systemChannelFlags The flags for the system channel
   * @param rulesChannelId The id for the channel where the rules of a guild are stored.
   * @param joinedAt When the client joined the guild.
@@ -156,6 +183,9 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnum[PremiumTier] {
   * @param banner A banner hash for the guild.
   * @param premiumTier The premium tier of the guild.
   * @param premiumSubscriptionCount How many users that are boosting the server.
+  * @param preferredLocale The preferred locale of a public guild.
+  * @param publicUpdatesChannelId The channel where admin and mods can see
+  *                               public updates are sent to public guilds.
   */
 case class Guild(
     id: GuildId,
@@ -198,7 +228,8 @@ case class Guild(
     banner: Option[String],
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
-    preferredLocale: Option[String]
+    preferredLocale: Option[String],
+    publicUpdatesChannelId: Option[ChannelId]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 
@@ -254,19 +285,20 @@ sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnum[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
-  case object InviteSplash   extends GuildFeature("INVITE_SPLASH")
-  case object VipRegions     extends GuildFeature("VIP_REGIONS")
-  case object VanityUrl      extends GuildFeature("VANITY_URL")
-  case object Verified       extends GuildFeature("VERIFIED")
-  case object Partnered      extends GuildFeature("PARTNERED")
-  case object Public         extends GuildFeature("PUBLIC")
-  case object Commerce       extends GuildFeature("COMMERCE")
-  case object News           extends GuildFeature("NEWS")
-  case object Discoverable   extends GuildFeature("DISCOVERABLE")
-  case object Featureable    extends GuildFeature("FEATURABLE")
-  case object AnimatedIcon   extends GuildFeature("ANIMATED_ICON")
-  case object Banner         extends GuildFeature("BANNER")
-  case object PublicDisabled extends GuildFeature("PUBLIC_DISABLED")
+  case object InviteSplash         extends GuildFeature("INVITE_SPLASH")
+  case object VipRegions           extends GuildFeature("VIP_REGIONS")
+  case object VanityUrl            extends GuildFeature("VANITY_URL")
+  case object Verified             extends GuildFeature("VERIFIED")
+  case object Partnered            extends GuildFeature("PARTNERED")
+  case object Public               extends GuildFeature("PUBLIC")
+  case object Commerce             extends GuildFeature("COMMERCE")
+  case object News                 extends GuildFeature("NEWS")
+  case object Discoverable         extends GuildFeature("DISCOVERABLE")
+  case object Featureable          extends GuildFeature("FEATURABLE")
+  case object AnimatedIcon         extends GuildFeature("ANIMATED_ICON")
+  case object Banner               extends GuildFeature("BANNER")
+  case object PublicDisabled       extends GuildFeature("PUBLIC_DISABLED")
+  case object WelcomeScreenEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
 }
 
 /**
@@ -391,26 +423,28 @@ case class GuildMember(
   * @param userId The id of the user that created this emoji.
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
+  * @param available If the emoji can be used.
   */
 case class Emoji(
     id: EmojiId,
     name: String,
     roles: Seq[RoleId],
     userId: Option[UserId],
-    requireColons: Boolean,
-    managed: Boolean,
-    animated: Boolean
+    requireColons: Option[Boolean],
+    managed: Option[Boolean],
+    animated: Option[Boolean],
+    available: Option[Boolean]
 ) {
 
   /**
     * Mention this role so it can be formatted correctly in messages.
     */
-  def mention: String = if (!managed) s"<:$asString:>" else asString
+  def mention: String = if (!managed.getOrElse(false)) s"<:$asString:>" else asString
 
   /**
     * Returns a string representation of this emoji used in requests.
     */
-  def asString: String = if (!managed) s"$name:$id" else s"$name"
+  def asString: String = if (!managed.getOrElse(false)) s"$name:$id" else s"$name"
 
   /**
     * Get the creator of this emoji if it has one.
@@ -612,12 +646,23 @@ case class Integration(
     enabled: Boolean,
     syncing: Boolean,
     roleId: RoleId,
-    expireBehavior: Int, //TODO: Better than Int here
+    enableEmoticons: Option[Boolean],
+    expireBehavior: IntegrationExpireBehavior,
     expireGracePeriod: Int,
     user: User,
     account: IntegrationAccount,
     syncedAt: OffsetDateTime
 )
+
+sealed abstract class IntegrationExpireBehavior(val value: Int) extends IntEnumEntry
+object IntegrationExpireBehavior
+    extends IntEnum[IntegrationExpireBehavior]
+    with IntCirceEnum[IntegrationExpireBehavior] {
+  override def values: IndexedSeq[IntegrationExpireBehavior] = findValues
+
+  case object RemoveRole extends IntegrationExpireBehavior(0)
+  case object Kick       extends IntegrationExpireBehavior(1)
+}
 
 /**
   * @param id The id of the account
