@@ -36,6 +36,7 @@ import shapeless.tag._
   * A mutable builder for creating a new snapshot
   */
 class CacheSnapshotBuilder(
+    seq: Long,
     var botUser: User @@ BotUser,
     var dmChannelMap: mutable.Map[ChannelId, DMChannel],
     var groupDmChannelMap: mutable.Map[ChannelId, GroupDMChannel],
@@ -44,7 +45,8 @@ class CacheSnapshotBuilder(
     var messageMap: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
     var lastTypedMap: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
     var userMap: mutable.Map[UserId, User],
-    var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]]
+    var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]],
+    creationProcessor: MemoryCacheSnapshot.CacheProcessor
 ) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
@@ -54,7 +56,10 @@ class CacheSnapshotBuilder(
         map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]
     ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap.from(map.map { case (k, v) => k -> SnowflakeMap.from(v) })
 
+    val newProcessor = creationProcessor(creationProcessor, this)
+
     MemoryCacheSnapshot(
+      seq = seq + 1,
       botUser = botUser,
       dmChannelMap = SnowflakeMap.from(dmChannelMap),
       groupDmChannelMap = SnowflakeMap.from(groupDmChannelMap),
@@ -63,7 +68,8 @@ class CacheSnapshotBuilder(
       messageMap = convertNested(messageMap),
       lastTypedMap = convertNested(lastTypedMap),
       userMap = SnowflakeMap.from(userMap),
-      banMap = convertNested(banMap)
+      banMap = convertNested(banMap),
+      creationProcessor = newProcessor
     )
   }
   override def getChannelMessages(channelId: ChannelId): mutable.Map[SnowflakeType[Message], Message] =
@@ -88,6 +94,7 @@ object CacheSnapshotBuilder {
       toMutableMap(map.map { case (k, v) => k -> toMutableMap(v) })
 
     new CacheSnapshotBuilder(
+      seq = snapshot.seq,
       botUser = snapshot.botUser,
       dmChannelMap = toMutableMap(snapshot.dmChannelMap),
       groupDmChannelMap = toMutableMap(snapshot.groupDmChannelMap),
@@ -96,7 +103,8 @@ object CacheSnapshotBuilder {
       messageMap = toMutableMapNested(snapshot.messageMap),
       lastTypedMap = toMutableMapNested(snapshot.lastTypedMap),
       userMap = toMutableMap(snapshot.userMap),
-      banMap = toMutableMapNested(snapshot.banMap)
+      banMap = toMutableMapNested(snapshot.banMap),
+      creationProcessor = snapshot.creationProcessor
     )
   }
 }

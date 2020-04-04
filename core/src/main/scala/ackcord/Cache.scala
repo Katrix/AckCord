@@ -87,8 +87,10 @@ object Cache {
   /**
     * Creates a cache for a bot. This should be shared for the whole bot.
     */
-  def create(implicit system: ActorSystem[Nothing]): Cache = {
-    val (publish, subscribe)               = CacheStreams.cacheStreams
+  def create(
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor
+  )(implicit system: ActorSystem[Nothing]): Cache = {
+    val (publish, subscribe)               = CacheStreams.cacheStreams(cacheProcessor)
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
 
     //Keep it drained if nothing else is using it

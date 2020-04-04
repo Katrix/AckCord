@@ -69,7 +69,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   implicit val system: ActorSystem[Nothing] = context.system
   import ExampleMain._
 
-  private val cache = Cache.create
+  private val cache = Cache.create()
 
   private val wsUri = try {
     Await.result(DiscordShard.fetchWsGateway, 30.seconds)

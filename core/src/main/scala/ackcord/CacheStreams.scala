@@ -39,14 +39,14 @@ object CacheStreams {
   /**
     * Creates a set of publish subscribe streams that go through the cache updated.
     */
-  def cacheStreams(
+  def cacheStreams(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(
       implicit system: ActorSystem[Nothing]
   ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     SupervisionStreams
       .addLogAndContinueFunction(
         MergeHub
           .source[CacheEvent](perProducerBufferSize = 16)
-          .via(cacheUpdater)
+          .via(cacheUpdater(cacheProcessor))
           .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
           .addAttributes
       )
@@ -83,7 +83,7 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
-  def cacheUpdater(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+  def cacheUpdater(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
       var state: CacheState    = null
       implicit val log: Logger = system.log
@@ -94,6 +94,7 @@ object CacheStreams {
       {
         case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _, _) =>
           val builder = new CacheSnapshotBuilder(
+            0,
             null, //The event will populate this,
             mutable.Map.empty,
             mutable.Map.empty,
@@ -102,7 +103,8 @@ object CacheStreams {
             mutable.Map.empty,
             mutable.Map.empty,
             mutable.Map.empty,
-            mutable.Map.empty
+            mutable.Map.empty,
+            cacheProcessor
           )
 
           readyEvent.process(builder)

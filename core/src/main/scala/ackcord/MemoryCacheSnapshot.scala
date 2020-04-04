@@ -23,9 +23,11 @@
  */
 package ackcord
 
-import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.time.{Instant, OffsetDateTime}
 
 import ackcord.CacheSnapshot.BotUser
+import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data._
 import shapeless.tag.@@
 
@@ -33,6 +35,7 @@ import shapeless.tag.@@
   * Represents the cache at some point in time
   */
 case class MemoryCacheSnapshot(
+    seq: Long,
     botUser: User @@ BotUser,
     dmChannelMap: SnowflakeMap[Channel, DMChannel],
     groupDmChannelMap: SnowflakeMap[Channel, GroupDMChannel],
@@ -41,7 +44,8 @@ case class MemoryCacheSnapshot(
     messageMap: SnowflakeMap[Channel, SnowflakeMap[Message, Message]],
     lastTypedMap: SnowflakeMap[Channel, SnowflakeMap[User, Instant]],
     userMap: SnowflakeMap[User, User],
-    banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]]
+    banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]],
+    creationProcessor: MemoryCacheSnapshot.CacheProcessor
 ) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = SnowflakeMap[K, V]
@@ -54,4 +58,54 @@ case class MemoryCacheSnapshot(
 
   override def getGuildBans(id: GuildId): SnowflakeMap[User, Ban] =
     banMap.getOrElse(id, SnowflakeMap.empty)
+}
+object MemoryCacheSnapshot {
+
+  /**
+    * An action taken every time a cache is built.
+    */
+  trait CacheProcessor {
+
+    /**
+      * Process the current cache snapshot builder
+      * @param current The current processor being ran
+      * @param builder The builder being worked on
+      * @return The processor to be used for the next update
+      */
+    def apply(current: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor
+  }
+
+  lazy val defaultCacheProcessor: CacheProcessor = everyN(10, 10, cleanGarbage(30, 5))
+
+  /**
+    * A cache processor that will execute another processor every N cache updates.
+    * @param every How often the processor will run
+    * @param remaining How many updates until the processor is run
+    */
+  def everyN(every: Int, remaining: Int, processor: CacheProcessor): CacheProcessor =
+    (_, builder) =>
+      if (remaining > 0) everyN(every, remaining - 1, processor)
+      else processor(everyN(every, every, processor), builder)
+
+  /**
+    * A cache processor that will clean out typical garbage older that a
+    * given time.
+    * @param keepMessagesFor How long messages should be kept for
+    * @param keepTypedFor How long typed notifications should be kept for
+    */
+  def cleanGarbage(keepMessagesFor: Int, keepTypedFor: Int): CacheProcessor = (processor, builder) => {
+    val messagesCleanThreshold = OffsetDateTime.now().minusMinutes(keepMessagesFor)
+    val typedCleanThreshold    = Instant.now().minus(keepTypedFor, ChronoUnit.MINUTES)
+
+    builder.messageMap.foreach {
+      case (_, messageMap) =>
+        messageMap.filterInPlace((_, m) => m.timestamp.isAfter(messagesCleanThreshold))
+    }
+
+    builder.lastTypedMap.foreach {
+      case (_, typedMap) => typedMap.filterInPlace((_, i) => i.isAfter(typedCleanThreshold))
+    }
+
+    processor
+  }
 }
