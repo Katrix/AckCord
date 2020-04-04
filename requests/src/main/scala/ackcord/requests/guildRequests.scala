@@ -55,7 +55,9 @@ case class CreateGuildData(
     defaultMessageNotifications: Option[NotificationLevel],
     explicitContentFilter: Option[FilterLevel],
     roles: Option[Seq[Role]],
-    channels: Option[Seq[CreateGuildChannelData]], //Technically this should be partial channels, but I think this works too
+    channels: Option[
+      Seq[CreateGuildChannelData]
+    ], //Technically this should be partial channels, but I think this works too
     afkChannelId: Option[ChannelId],
     afkTimeout: Option[Int],
     systemChannelId: Option[ChannelId]

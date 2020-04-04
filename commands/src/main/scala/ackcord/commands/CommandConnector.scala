@@ -141,9 +141,7 @@ class CommandConnector(
           message.channelId.tResolve.map { channel =>
             MessageParser
               .parseResultEither(args, command.parser)
-              .map { a =>
-                CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A]
-              }
+              .map(a => CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A])
               .leftMap(e => CommandError(e, channel, cache))
           }.toList
       }

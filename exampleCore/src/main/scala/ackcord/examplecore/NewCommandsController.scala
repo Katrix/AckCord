@@ -43,9 +43,7 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
 
   val hello: NamedCommand[NotUsed] = Command
     .named("%", Seq("hello"), mustMention = true)
-    .withRequest { implicit m =>
-      m.tChannel.sendMessage(s"Hello ${m.user.username}")
-    }
+    .withRequest(implicit m => m.tChannel.sendMessage(s"Hello ${m.user.username}"))
 
   val copy: NamedCommand[Int] =
     Command.named("%", Seq("copy"), mustMention = true).parsing[Int].withRequestOpt { implicit m =>

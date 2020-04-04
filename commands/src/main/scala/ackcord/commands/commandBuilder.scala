@@ -142,9 +142,7 @@ object CommandBuilder {
 
           m.tChannel match {
             case chG: TGuildChannel =>
-              chG.guild.fold[Result[A]](e) { g =>
-                Right(create(chG, g)(m))
-              }
+              chG.guild.fold[Result[A]](e)(g => Right(create(chG, g)(m)))
             case _ => e
           }
         }
@@ -157,9 +155,7 @@ object CommandBuilder {
       _
   ]](create: GuildMember => I ~> O): CommandTransformer[I, O] = new CommandTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
-      Flow[I[A]].mapConcat { m =>
-        m.guild.members.get(m.user.id).map(member => create(member)(m)).toList
-      }
+      Flow[I[A]].mapConcat(m => m.guild.members.get(m.user.id).map(member => create(member)(m)).toList)
   }
 
   def inVoiceChannel[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[_]](

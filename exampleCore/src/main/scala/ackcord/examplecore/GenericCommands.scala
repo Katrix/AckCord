@@ -76,9 +76,7 @@ object GenericCommands {
     sink = requests => {
       //Using the context
       ParsedCmdFlow[GuildChannel]
-        .map { implicit c => cmd =>
-          GetChannel(cmd.args.id) -> GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c)
-        }
+        .map(implicit c => cmd => GetChannel(cmd.args.id) -> GetChannelInfo(cmd.args.guildId, cmd.msg.channelId, c))
         .via(requests.flow)
         .mapConcat {
           case (answer, ctx) =>
@@ -144,9 +142,7 @@ object GenericCommands {
       refiner = CmdInfo(prefix = "!", aliases = aliases),
       sink = _ =>
         ParsedCmdFlow[Int]
-          .mapConcat { implicit c => cmd =>
-            cmd.msg.channelId.tResolve.map(_ -> cmd.args).toList
-          }
+          .mapConcat(implicit c => cmd => cmd.msg.channelId.tResolve.map(_ -> cmd.args).toList)
           .mapConcat { case (channel, args) => List.tabulate(args)(i => channel.sendMessage(s"Msg$i")) }
           .to(sink),
       description = Some(

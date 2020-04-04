@@ -83,7 +83,9 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
-  def cacheUpdater(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+  def cacheUpdater(
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor
+  )(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
       var state: CacheState    = null
       implicit val log: Logger = system.log

@@ -340,9 +340,7 @@ package object syntax {
       * Get the users connected to this voice channel.
       */
     def connectedUsers(implicit c: CacheSnapshot): Seq[User] =
-      c.getGuild(channel.guildId).fold(Nil: Seq[User]) { g =>
-        connectedUsers(g).toList.flatMap(_.resolve)
-      }
+      c.getGuild(channel.guildId).fold(Nil: Seq[User])(g => connectedUsers(g).toList.flatMap(_.resolve))
 
     /**
       * Get the users connected to this voice channel using an preexisting guild.

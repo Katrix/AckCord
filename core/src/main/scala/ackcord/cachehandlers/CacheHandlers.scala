@@ -142,9 +142,7 @@ object CacheHandlers {
       val (users, members) = (userUpdater, guildMemberUpdater) match {
         case (Some(_), Some(_)) =>
           //We use unzip here to get away with a single traversal instead of 2
-          rawMembers.map { rawMember =>
-            rawMember.user -> rawMember.toGuildMember(obj.id)
-          }.unzip
+          rawMembers.map(rawMember => rawMember.user -> rawMember.toGuildMember(obj.id)).unzip
         case (Some(_), None) => rawMembers.map(_.user) -> Nil
         case (None, Some(_)) => Nil                    -> rawMembers.map(_.toGuildMember(obj.id))
         case (None, None)    => Nil                    -> Nil
@@ -471,9 +469,7 @@ object CacheHandlers {
     ): Unit = {
       builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
       registry.getUpdater[GuildMember].foreach { updater =>
-        obj.member.foreach { rawMember =>
-          updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry)
-        }
+        obj.member.foreach(rawMember => updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry))
       }
       obj.member.foreach(registry.updateData(builder)(_))
     }

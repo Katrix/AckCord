@@ -76,9 +76,7 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Comman
       refiner = CmdInfo(prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
       sink = requests =>
         ParsedCmdFlow[NotUsed]
-          .mapConcat { implicit c => cmd =>
-            cmd.msg.tGuildChannel(guildId).toList
-          }
+          .mapConcat(implicit c => cmd => cmd.msg.tGuildChannel(guildId).toList)
           .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
           .toMat(Sink.ignore)(Keep.right),
       description = Some(description)

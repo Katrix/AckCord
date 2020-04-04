@@ -30,9 +30,8 @@ import akka.NotUsed
 
 class MyEvents(requests: Requests) extends EventsController(requests) {
 
-  val printReady: EventListener[APIMessage.Ready, NotUsed] = Event.on[APIMessage.Ready].withSideEffects { _ =>
-    print("Now ready from controller")
-  }
+  val printReady: EventListener[APIMessage.Ready, NotUsed] =
+    Event.on[APIMessage.Ready].withSideEffects(_ => print("Now ready from controller"))
 
   val welcomeNew: EventListener[APIMessage.GuildMemberAdd, NotUsed] =
     GuildUserEvent.on[APIMessage.GuildMemberAdd].withRequestOpt { r =>

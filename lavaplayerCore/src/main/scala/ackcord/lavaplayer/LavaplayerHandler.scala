@@ -82,9 +82,7 @@ object LavaplayerHandler {
   )
 
   def apply(player: AudioPlayer, guildId: GuildId, cache: Cache): Behavior[Command] =
-    Behaviors.setup { context =>
-      inactive(Parameters(player, guildId, cache, context, context.log), Idle)
-    }
+    Behaviors.setup(context => inactive(Parameters(player, guildId, cache, context, context.log), Idle))
 
   private def soundProducer(toggle: AtomicBoolean, player: AudioPlayer) =
     Source.fromGraph(GraphDSL.create() { implicit b =>

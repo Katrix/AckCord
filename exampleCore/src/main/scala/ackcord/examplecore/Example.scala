@@ -71,13 +71,14 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
   private val cache = Cache.create()
 
-  private val wsUri = try {
-    Await.result(DiscordShard.fetchWsGateway, 30.seconds)
-  } catch {
-    case NonFatal(e) =>
-      println("Could not connect to Discord")
-      throw e
-  }
+  private val wsUri =
+    try {
+      Await.result(DiscordShard.fetchWsGateway, 30.seconds)
+    } catch {
+      case NonFatal(e) =>
+        println("Could not connect to Discord")
+        throw e
+    }
 
   private val shard = context.spawn(
     DiscordShard(
@@ -330,9 +331,7 @@ object ExampleMain {
       case _ =>
     }
     import scala.concurrent.ExecutionContext.Implicits.global
-    complete.foreach { _ =>
-      println(s"Command completed: ${parsedCmdFactory.description.get.name}")
-    }
+    complete.foreach(_ => println(s"Command completed: ${parsedCmdFactory.description.get.name}"))
     materialized
   }
 
@@ -373,9 +372,7 @@ object ExampleMain {
       )
     )
     import scala.concurrent.ExecutionContext.Implicits.global
-    complete.foreach { _ =>
-      println(s"Command completed: ${entry.description.name}")
-    }
+    complete.foreach(_ => println(s"Command completed: ${entry.description.name}"))
     materialized
   }
 }

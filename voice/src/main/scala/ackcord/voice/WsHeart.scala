@@ -33,9 +33,7 @@ object WsHeart {
 
   def apply(parent: ActorRef[VoiceWsHandler.Command]): Behavior[Command] =
     Behaviors.setup { ctx =>
-      Behaviors.withTimers { timers =>
-        runningHeart(ctx, timers, parent, None, receivedAck = true)
-      }
+      Behaviors.withTimers(timers => runningHeart(ctx, timers, parent, None, receivedAck = true))
     }
 
   def runningHeart(

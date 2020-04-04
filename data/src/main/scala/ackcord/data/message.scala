@@ -342,9 +342,8 @@ case class Message(
     val optGuildId = channelId.resolve.collect {
       case channel: GuildChannel => channel.guildId
     }
-    val channelList = optGuildId.fold[List[Option[GuildChannel]]](Nil)(
-      guildId => channelMentions.toList.map(_.guildResolve(guildId))
-    )
+    val channelList =
+      optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId => channelMentions.toList.map(_.guildResolve(guildId)))
 
     val withUsers = userList
       .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))

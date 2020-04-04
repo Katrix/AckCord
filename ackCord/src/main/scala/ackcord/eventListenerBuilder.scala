@@ -130,9 +130,7 @@ object EventListenerBuilder {
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
-        .map { i =>
-          i.channel.asTChannel.map(create(_)(i))
-        }
+        .map(i => i.channel.asTChannel.map(create(_)(i)))
         .mapConcat(_.toList)
   }
 

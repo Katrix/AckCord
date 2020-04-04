@@ -296,9 +296,8 @@ object MusicHandler {
           handleFriendlyException(e.exception, Some(e.track), msgQueue, lastTChannel)
 
         case AudioEventWrapper(e: TrackStuckEvent) =>
-          lastTChannel.foreach(
-            tChannel =>
-              msgQueue.offer(tChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track"))
+          lastTChannel.foreach(tChannel =>
+            msgQueue.offer(tChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track"))
           )
           active(parameters, inVChannel, lastTChannel, nextTrack(queue, parameters))
         case AudioEventWrapper(e) => throw new Exception(s"Unknown audio event $e")
@@ -328,8 +327,8 @@ object MusicHandler {
         lastTChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
         Behaviors.same
       case FriendlyException.Severity.FAULT =>
-        lastTChannel.foreach(
-          tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered internal error: ${e.getMessage}"))
+        lastTChannel.foreach(tChannel =>
+          msgQueue.offer(tChannel.sendMessage(s"Encountered internal error: ${e.getMessage}"))
         )
         throw e
     }

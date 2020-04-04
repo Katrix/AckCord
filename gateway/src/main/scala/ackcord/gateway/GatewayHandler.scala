@@ -130,10 +130,10 @@ object GatewayHandler {
             .viaMat(KillSwitches.single)(Keep.right)
             .viaMat(wsFlow(wsUri, parameters, state))(Keep.both)
             .toMat(sink)(Keep.left)
-            .addAttributes(ActorAttributes.supervisionStrategy(e => {
+            .addAttributes(ActorAttributes.supervisionStrategy { e =>
               log.error("Error in stream", e)
               Supervision.Resume
-            }))
+            })
             .named("GatewayWebsocket")
             .run()
 

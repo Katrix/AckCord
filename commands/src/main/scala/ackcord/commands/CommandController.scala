@@ -80,8 +80,8 @@ abstract class CommandController(val requests: Requests) {
         λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, g, m.user, m))
       })
       .andThen(CommandBuilder.withGuildMember { member =>
-        λ[GuildUserCommandMessage ~> GuildMemberCommandMessage](
-          m => GuildMemberCommandMessage.Default(m.tChannel, m.guild, m.user, member, m)
+        λ[GuildUserCommandMessage ~> GuildMemberCommandMessage](m =>
+          GuildMemberCommandMessage.Default(m.tChannel, m.guild, m.user, member, m)
         )
       })
 
@@ -90,8 +90,8 @@ abstract class CommandController(val requests: Requests) {
     */
   val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildCommand.andThen(CommandBuilder.inVoiceChannel { vCh =>
-      λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](
-        m => VoiceGuildCommandMessage.WithGuildMember(m.tChannel, m.guild, m.user, m.guildMember, vCh, m)
+      λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](m =>
+        VoiceGuildCommandMessage.WithGuildMember(m.tChannel, m.guild, m.user, m.guildMember, vCh, m)
       )
     })
 }

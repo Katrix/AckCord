@@ -48,7 +48,7 @@ trait IntCirceEnumWithUnknown[EntryType <: IntEnumEntry]
 }
 
 trait StringCirceEnumWithUnknown[EntryType <: StringEnumEntry]
-  extends StringEnum[EntryType]
+    extends StringEnum[EntryType]
     with ValueEnumWithUnknown[String, EntryType] { self =>
 
   implicit val codec: Codec[EntryType] = new Codec[EntryType] {

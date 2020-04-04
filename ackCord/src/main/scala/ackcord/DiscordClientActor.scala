@@ -94,9 +94,7 @@ object DiscordClientActor {
   def apply(
       shardBehaviors: Seq[Behavior[DiscordShard.Command]],
       cache: Cache
-  ): Behavior[Command] = Behaviors.setup { ctx =>
-    new DiscordClientActor(ctx, shardBehaviors, cache)
-  }
+  ): Behavior[Command] = Behaviors.setup(ctx => new DiscordClientActor(ctx, shardBehaviors, cache))
 
   sealed trait Command
 

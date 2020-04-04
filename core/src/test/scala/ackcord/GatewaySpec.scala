@@ -102,9 +102,7 @@ object MockedGatewayHandler {
 object MockedGateway {
 
   def apply(sendMessageTo: ActorRef[ProcessorCommand]): Behavior[GatewayCommand] = Behaviors.setup { ctx =>
-    Behaviors.withStash(32) { stash =>
-      mocked(ctx, stash, sendMessageTo, null, useCompression = false)
-    }
+    Behaviors.withStash(32)(stash => mocked(ctx, stash, sendMessageTo, null, useCompression = false))
   }
 
   def mocked(

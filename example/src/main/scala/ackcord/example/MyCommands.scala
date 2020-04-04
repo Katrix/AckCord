@@ -42,9 +42,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
     Command
       .named(GeneralCommands, Seq("echo"))
       .parsing[MessageParser.RemainingAsString]
-      .withRequest { r =>
-        r.tChannel.sendMessage(s"ECHO: ${r.parsed.remaining}")
-      }
+      .withRequest(r => r.tChannel.sendMessage(s"ECHO: ${r.parsed.remaining}"))
 
   val guildInfo: NamedCommand[NotUsed] =
     GuildCommand.named(GeneralCommands, Seq("guildInfo")).withRequest { r =>
@@ -57,14 +55,10 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
     }
 
   val ping: NamedCommand[NotUsed] =
-    Command.named(GeneralCommands, Seq("ping")).withSideEffects { _ =>
-      println(s"Received ping command")
-    }
+    Command.named(GeneralCommands, Seq("ping")).withSideEffects(_ => println(s"Received ping command"))
 
   val kill: NamedCommand[NotUsed] =
-    Command.named(GeneralCommands, Seq("kill", "die")).withSideEffects { _ =>
-      client.shutdownJVM()
-    }
+    Command.named(GeneralCommands, Seq("kill", "die")).withSideEffects(_ => client.shutdownJVM())
 
   val playerManager: AudioPlayerManager = new DefaultAudioPlayerManager
   AudioSourceManagers.registerRemoteSources(playerManager)

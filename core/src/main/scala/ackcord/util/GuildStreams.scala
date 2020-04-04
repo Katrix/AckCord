@@ -106,9 +106,7 @@ object GuildStreams {
             None
           case msg: GatewayEvent.GuildCreate =>
             handleLazy(msg.guildId) { guildId =>
-              handleLazy(msg.data) { data =>
-                data.channels.foreach(channelToGuild ++= _.map(_.id -> guildId))
-              }
+              handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id -> guildId)))
               guildId
             }
           case msg: GatewayEvent.ChannelCreate =>

@@ -73,7 +73,9 @@ object RequestStreams {
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
 
   private def requestBucket(route: RequestRoute, response: HttpResponse): String =
-    findCustomHeader(`X-RateLimit-Bucket`, response).fold(route.uriWithoutMajor)(_.identifier) //Sadly this is not always present
+    findCustomHeader(`X-RateLimit-Bucket`, response).fold(route.uriWithoutMajor)(
+      _.identifier
+    ) //Sadly this is not always present
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
@@ -449,7 +451,8 @@ object RequestStreams {
   def jsonDecode: Flow[ResponseEntity, Json, NotUsed] = {
     Flow[ResponseEntity]
       .map { entity =>
-        val isValid = entity.contentType == ContentTypes.NoContentType || entity.contentType == ContentTypes.`application/json`
+        val isValid =
+          entity.contentType == ContentTypes.NoContentType || entity.contentType == ContentTypes.`application/json`
 
         if (isValid) {
           entity
