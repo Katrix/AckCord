@@ -131,7 +131,6 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       }
 
       override def onUpstreamFinish(): Unit = {
-        println("UpFinish")
         if (!restarting) {
           if (!promise.isCompleted) {
             promise.success(Option(resume))
@@ -171,7 +170,6 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
       override def onDownstreamFinish(cause: Throwable): Unit = {
-        println("DownFinish")
         if (!restarting) {
           if (!promise.isCompleted) {
             promise.success(Option(resume))
