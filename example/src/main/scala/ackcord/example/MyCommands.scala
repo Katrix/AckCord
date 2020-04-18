@@ -42,15 +42,15 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
     Command
       .named(GeneralCommands, Seq("echo"))
       .parsing[MessageParser.RemainingAsString]
-      .withRequest(r => r.tChannel.sendMessage(s"ECHO: ${r.parsed.remaining}"))
+      .withRequest(r => r.textChannel.sendMessage(s"ECHO: ${r.parsed.remaining}"))
 
   val guildInfo: NamedCommand[NotUsed] =
     GuildCommand.named(GeneralCommands, Seq("guildInfo")).withRequest { r =>
       val guildName   = r.guild.name
-      val channelName = r.tChannel.name
+      val channelName = r.textChannel.name
       val userNick    = r.guildMember.nick.getOrElse(r.user.username)
 
-      r.tChannel
+      r.textChannel
         .sendMessage(s"This guild is named $guildName, the channel is named $channelName and you are called $userNick")
     }
 
@@ -68,7 +68,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
       val guildId     = r.guild.id
       val url         = r.parsed
       val loadItem    = client.loadTrack(playerManager, url)
-      val joinChannel = client.joinChannel(guildId, r.vChannel.id, playerManager.createPlayer())
+      val joinChannel = client.joinChannel(guildId, r.voiceChannel.id, playerManager.createPlayer())
 
       loadItem.zip(joinChannel).map {
         case (track: AudioTrack, player) =>

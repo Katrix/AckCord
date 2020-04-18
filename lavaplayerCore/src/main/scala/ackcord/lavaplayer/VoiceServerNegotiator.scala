@@ -37,7 +37,7 @@ object VoiceServerNegotiator {
 
   def apply(
       guildId: GuildId,
-      vChannelId: ChannelId,
+      voiceChannelId: ChannelId,
       cache: Cache,
       replyTo: ActorRef[GotVoiceData]
   ): Behavior[Command] = Behaviors.setup { ctx =>
@@ -45,7 +45,7 @@ object VoiceServerNegotiator {
 
     Source
       .single(
-        VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(vChannelId), selfMute = false, selfDeaf = false))
+        VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(voiceChannelId), selfMute = false, selfDeaf = false))
           .asInstanceOf[GatewayMessage[Any]]
       )
       .runWith(cache.gatewayPublish)

@@ -66,7 +66,7 @@ private[lavaplayer] object MovedMonitor {
         Behaviors.same
 
       case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c)) if state.userId == c.current.botUser.id =>
-        handler ! LavaplayerHandler.VChannelMoved(state.channelId)
+        handler ! LavaplayerHandler.VoiceChannelMoved(state.channelId)
         ackTo ! AckSink
         Behaviors.same
 

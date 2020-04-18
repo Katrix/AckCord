@@ -128,7 +128,7 @@ case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends C
 /**
   * A text channel that has text messages
   */
-sealed trait TChannel extends Channel {
+sealed trait TextChannel extends Channel {
 
   /**
     * Points to the last message id in the channel.
@@ -190,7 +190,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
 /**
   * A texual channel in a guild
   */
-sealed trait TGuildChannel extends GuildChannel with TChannel {
+sealed trait TextGuildChannel extends GuildChannel with TextChannel {
 
   /**
     * The topic for this channel.
@@ -213,7 +213,7 @@ sealed trait TGuildChannel extends GuildChannel with TChannel {
   * A news channel in a guild. For the most part you can treat this like any
   * other text channel.
   */
-case class NewsTGuildChannel(
+case class NewsTextGuildChannel(
     id: ChannelId,
     guildId: GuildId,
     name: String,
@@ -224,7 +224,7 @@ case class NewsTGuildChannel(
     nsfw: Boolean,
     parentId: Option[ChannelId],
     lastPinTimestamp: Option[OffsetDateTime]
-) extends TGuildChannel {
+) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 
   def rateLimitPerUser: Option[Int] = None
@@ -233,7 +233,7 @@ case class NewsTGuildChannel(
 /**
   * A normal text channel in a guild
   */
-case class NormalTGuildChannel(
+case class NormalTextGuildChannel(
     id: ChannelId,
     guildId: GuildId,
     name: String,
@@ -245,7 +245,7 @@ case class NormalTGuildChannel(
     nsfw: Boolean,
     parentId: Option[ChannelId],
     lastPinTimestamp: Option[OffsetDateTime]
-) extends TGuildChannel {
+) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
 
@@ -254,7 +254,7 @@ case class NormalTGuildChannel(
   * @param bitrate The bitrate of this channel in bits
   * @param userLimit The max amount of users that can join this channel
   */
-case class VGuildChannel(
+case class VoiceGuildChannel(
     id: ChannelId,
     guildId: GuildId,
     name: String,
@@ -303,7 +303,7 @@ case class GuildStoreChannel(
   */
 case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId)
     extends Channel
-    with TChannel
+    with TextChannel
     with GetUser {
   override def channelType: ChannelType = ChannelType.DM
 }
@@ -325,7 +325,7 @@ case class GroupDMChannel(
     applicationId: Option[RawSnowflake],
     icon: Option[String]
 ) extends Channel
-    with TChannel {
+    with TextChannel {
   override def channelType: ChannelType = ChannelType.GroupDm
 
   /**

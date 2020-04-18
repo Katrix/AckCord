@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 
 import ackcord.oldcommands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
-import ackcord.data.{ChannelId, GuildId, TChannel}
+import ackcord.data.{ChannelId, GuildId, TextChannel}
 import ackcord.examplecore.Compat
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
@@ -101,8 +101,8 @@ object MusicHandler {
 
   def inactive(
       parameters: Parameters,
-      inVChannel: Option[ChannelId],
-      lastTChannel: Option[TChannel],
+      inVoiceChannel: Option[ChannelId],
+      lastTextChannel: Option[TextChannel],
       queue: Queue[AudioTrack]
   ): Behavior[Command] = {
     import parameters._
@@ -119,9 +119,9 @@ object MusicHandler {
 
         case GotoActive =>
           log.debug("MusicReady")
-          active(parameters, inVChannel.get, lastTChannel, nextTrack(queue, parameters))
+          active(parameters, inVoiceChannel.get, lastTextChannel, nextTrack(queue, parameters))
 
-        case QueueUrl(url, tChannel, vChannelId, replyTo) if inVChannel.isEmpty =>
+        case QueueUrl(url, tChannel, vChannelId, replyTo) if inVoiceChannel.isEmpty =>
           //TODO: Stop this at some point
           val lavaplayerReplyHandler = Behaviors.receiveMessage[LavaplayerHandler.Reply] {
             case LavaplayerHandler.MusicReady(_, _) =>
@@ -134,7 +134,7 @@ object MusicHandler {
           }
 
           log.info("Received queue item in Inactive")
-          lavaplayerHandler ! LavaplayerHandler.ConnectVChannel(
+          lavaplayerHandler ! LavaplayerHandler.ConnectVoiceChannel(
             vChannelId,
             replyTo = context.spawnAnonymous(lavaplayerReplyHandler)
           )
@@ -143,10 +143,10 @@ object MusicHandler {
             replyTo ! CommandAck
             context.self ! ReceivedAudioItem(item)
           }
-          inactive(parameters, inVChannel = Some(vChannelId), lastTChannel = Some(tChannel), queue)
+          inactive(parameters, inVoiceChannel = Some(vChannelId), lastTextChannel = Some(tChannel), queue)
 
         case QueueUrl(url, tChannel, vChannelId, replyTo) =>
-          if (inVChannel.contains(vChannelId)) {
+          if (inVoiceChannel.contains(vChannelId)) {
             LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach { item =>
               replyTo ! CommandAck
               context.self ! ReceivedAudioItem(item)
@@ -167,7 +167,7 @@ object MusicHandler {
 
         case ReceivedAudioItem(track: AudioTrack) =>
           log.info("Received track")
-          inactive(parameters, inVChannel, lastTChannel, queueTrack(isActive = false, parameters, queue, track))
+          inactive(parameters, inVoiceChannel, lastTextChannel, queueTrack(isActive = false, parameters, queue, track))
 
         case ReceivedAudioItem(playlist: AudioPlaylist) =>
           log.info("Received playlist")
@@ -176,7 +176,7 @@ object MusicHandler {
               .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
               .fold(queue)(queueTrack(false, parameters, queue, _))
           } else queueTracks(false, parameters, queue, Compat.convertJavaList(playlist.getTracks): _*)
-          inactive(parameters, inVChannel, lastTChannel, newQueue)
+          inactive(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case AudioEventWrapper(_) => Behaviors.same //Ignore
       }
@@ -189,8 +189,8 @@ object MusicHandler {
 
   def active(
       parameters: MusicHandler.Parameters,
-      inVChannel: ChannelId,
-      lastTChannel: Option[TChannel],
+      inVoiceChannel: ChannelId,
+      lastTextChannel: Option[TextChannel],
       queue: Queue[AudioTrack]
   ): Behavior[Command] = {
     import parameters._
@@ -210,7 +210,7 @@ object MusicHandler {
           log.info("Stopped and left")
 
           player.stopTrack()
-          lavaplayerHandler ! LavaplayerHandler.DisconnectVChannel
+          lavaplayerHandler ! LavaplayerHandler.DisconnectVoiceChannel
           replyTo ! CommandAck
 
           inactive(parameters, None, Some(tChannel), Queue.empty)
@@ -219,13 +219,13 @@ object MusicHandler {
           log.info("Stopped and left")
 
           player.stopTrack()
-          lavaplayerHandler ! LavaplayerHandler.DisconnectVChannel
+          lavaplayerHandler ! LavaplayerHandler.DisconnectVoiceChannel
 
           inactive(parameters, None, None, Queue.empty)
 
         case QueueUrl(url, tChannel, vChannelId, replyTo) =>
           log.info("Received queue item")
-          if (vChannelId == inVChannel) {
+          if (vChannelId == inVoiceChannel) {
             LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach { item =>
               replyTo ! CommandAck
               context.self ! ReceivedAudioItem(item)
@@ -239,17 +239,17 @@ object MusicHandler {
 
         case NextTrack(tChannel, replyTo) =>
           replyTo ! CommandAck
-          active(parameters, inVChannel, Some(tChannel), nextTrack(queue, parameters))
+          active(parameters, inVoiceChannel, Some(tChannel), nextTrack(queue, parameters))
 
         case TogglePause(tChannel, replyTo) =>
           player.setPaused(!player.isPaused)
           replyTo ! CommandAck
-          active(parameters, inVChannel, Some(tChannel), queue)
+          active(parameters, inVoiceChannel, Some(tChannel), queue)
 
-        case SentFriendlyException(e) => handleFriendlyException(e, None, msgQueue, lastTChannel)
+        case SentFriendlyException(e) => handleFriendlyException(e, None, msgQueue, lastTextChannel)
         case ReceivedAudioItem(track: AudioTrack) =>
           log.info("Received track")
-          active(parameters, inVChannel, lastTChannel, queueTrack(isActive = true, parameters, queue, track))
+          active(parameters, inVoiceChannel, lastTextChannel, queueTrack(isActive = true, parameters, queue, track))
 
         case ReceivedAudioItem(playlist: AudioPlaylist) =>
           log.info("Received playlist")
@@ -258,7 +258,7 @@ object MusicHandler {
               .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
               .fold(queue)(queueTrack(isActive = true, parameters, queue, _))
           } else queueTracks(isActive = true, parameters, queue, Compat.convertJavaList(playlist.getTracks): _*)
-          active(parameters, inVChannel, lastTChannel, newQueue)
+          active(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case AudioEventWrapper(_: PlayerPauseEvent) =>
           log.info("Paused")
@@ -269,7 +269,7 @@ object MusicHandler {
           Behaviors.same
 
         case AudioEventWrapper(e: TrackStartEvent) =>
-          lastTChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Playing: ${trackName(e.track)}")))
+          lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Playing: ${trackName(e.track)}")))
           Behaviors.same
 
         case AudioEventWrapper(e: TrackEndEvent) =>
@@ -281,7 +281,7 @@ object MusicHandler {
             case AudioTrackEndReason.CLEANUP     => "Leaking audio player"
           }
 
-          lastTChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(msg)))
+          lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(msg)))
 
           val newQueue =
             if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack(queue, parameters)
@@ -290,16 +290,16 @@ object MusicHandler {
               queue
             } else queue
 
-          active(parameters, inVChannel, lastTChannel, newQueue)
+          active(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case AudioEventWrapper(e: TrackExceptionEvent) =>
-          handleFriendlyException(e.exception, Some(e.track), msgQueue, lastTChannel)
+          handleFriendlyException(e.exception, Some(e.track), msgQueue, lastTextChannel)
 
         case AudioEventWrapper(e: TrackStuckEvent) =>
-          lastTChannel.foreach(tChannel =>
+          lastTextChannel.foreach(tChannel =>
             msgQueue.offer(tChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track"))
           )
-          active(parameters, inVChannel, lastTChannel, nextTrack(queue, parameters))
+          active(parameters, inVoiceChannel, lastTextChannel, nextTrack(queue, parameters))
         case AudioEventWrapper(e) => throw new Exception(s"Unknown audio event $e")
         case ReceivedAudioItem(e) => throw new Exception(s"Unknown audio item $e")
         case GotoActive           => Behaviors.same
@@ -317,17 +317,17 @@ object MusicHandler {
       e: FriendlyException,
       track: Option[AudioTrack],
       msgQueue: SourceQueueWithComplete[Request[RawMessage]],
-      lastTChannel: Option[TChannel]
+      lastTextChannel: Option[TextChannel]
   ): Behavior[Command] = {
     e.severity match {
       case FriendlyException.Severity.COMMON =>
-        lastTChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
+        lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
         Behaviors.same
       case FriendlyException.Severity.SUSPICIOUS =>
-        lastTChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
+        lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
         Behaviors.same
       case FriendlyException.Severity.FAULT =>
-        lastTChannel.foreach(tChannel =>
+        lastTextChannel.foreach(tChannel =>
           msgQueue.offer(tChannel.sendMessage(s"Encountered internal error: ${e.getMessage}"))
         )
         throw e
@@ -388,13 +388,13 @@ object MusicHandler {
 
   sealed trait MusicHandlerEvents extends Command {
     def replyTo: ActorRef[CommandAck.type]
-    def tChannel: TChannel
+    def tChannel: TextChannel
   }
-  case class QueueUrl(url: String, tChannel: TChannel, vChannelId: ChannelId, replyTo: ActorRef[CommandAck.type])
+  case class QueueUrl(url: String, tChannel: TextChannel, vChannelId: ChannelId, replyTo: ActorRef[CommandAck.type])
       extends MusicHandlerEvents
-  case class StopMusic(tChannel: TChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
-  case class TogglePause(tChannel: TChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents
-  case class NextTrack(tChannel: TChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
+  case class StopMusic(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
+  case class TogglePause(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents
+  case class NextTrack(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
 
   val playerManager: AudioPlayerManager = {
     val man = new DefaultAudioPlayerManager

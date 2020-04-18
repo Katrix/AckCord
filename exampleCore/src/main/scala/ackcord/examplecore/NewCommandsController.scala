@@ -43,20 +43,20 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
 
   val hello: NamedCommand[NotUsed] = Command
     .named("%", Seq("hello"), mustMention = true)
-    .withRequest(implicit m => m.tChannel.sendMessage(s"Hello ${m.user.username}"))
+    .withRequest(implicit m => m.textChannel.sendMessage(s"Hello ${m.user.username}"))
 
   val copy: NamedCommand[Int] =
     Command.named("%", Seq("copy"), mustMention = true).parsing[Int].withRequestOpt { implicit m =>
-      m.message.tGuildChannel.map(_.sendMessage(s"You said ${m.parsed}"))
+      m.message.textGuildChannel.map(_.sendMessage(s"You said ${m.parsed}"))
     }
 
   val guildInfo: NamedCommand[NotUsed] =
     GuildCommand.named("%", Seq("guildInfo"), mustMention = true).withRequest { implicit m =>
       val guildName   = m.guild.name
-      val channelName = m.tChannel.name
+      val channelName = m.textChannel.name
       val userNick    = m.guildMember.nick.getOrElse(m.user.username)
 
-      m.tChannel.sendMessage(
+      m.textChannel.sendMessage(
         s"This guild is named $guildName, the channel is named $channelName and you are called $userNick"
       )
     }
@@ -66,7 +66,7 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
       .named("%", Seq("parseNum"), mustMention = true)
       .parsing((MessageParser[Int], MessageParser[Int]).tupled)
       .withRequestOpt { implicit m =>
-        m.message.tGuildChannel.map(_.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
+        m.message.textGuildChannel.map(_.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
       }
 
   private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, NotUsed] =
@@ -100,10 +100,10 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
     Command.named("%", Seq("timeDiff2"), mustMention = true).async[Future] { implicit m =>
       //The ExecutionContext is provided by the controller
       for {
-        answer  <- requests.singleFuture(m.tChannel.sendMessage("Msg"))
+        answer  <- requests.singleFuture(m.textChannel.sendMessage("Msg"))
         sentMsg <- Future.fromTry(answer.eitherData.toTry)
         time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)
-        _ <- requests.singleFuture(m.tChannel.sendMessage(s"$time ms between command and response"))
+        _ <- requests.singleFuture(m.textChannel.sendMessage(s"$time ms between command and response"))
       } yield ()
     }
 
@@ -112,6 +112,6 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
       throw new Exception("Failed")
     }
 
-    r.tChannel.sendMessage("Succeeded")
+    r.textChannel.sendMessage("Succeeded")
   }
 }

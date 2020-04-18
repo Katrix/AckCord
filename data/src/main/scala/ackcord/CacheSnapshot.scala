@@ -167,7 +167,7 @@ trait CacheSnapshot {
   /**
     * Get a text channel by id, ignoring if it's a dm or guild channel.
     */
-  def getTChannel(id: ChannelId): Option[TChannel]
+  def getTextChannel(id: ChannelId): Option[TextChannel]
 
   /**
     * Get a role by id without knowing the guild it belongs to.

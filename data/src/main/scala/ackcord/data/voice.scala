@@ -53,7 +53,7 @@ case class VoiceState(
     selfStream: Option[Boolean],
     suppress: Boolean
 ) extends GetGuildOpt
-    with GetVChannelOpt
+    with GetVoiceChannelOpt
     with GetUser
 
 /**

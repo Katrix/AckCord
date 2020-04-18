@@ -50,14 +50,14 @@ object LavaplayerHandler {
   private case object Idle extends InactiveState
 
   private case class Connecting(
-      vChannelId: ChannelId,
+      voiceChannelId: ChannelId,
       sender: ActorRef[Reply],
       negotiator: ActorRef[VoiceServerNegotiator.Command]
   ) extends InactiveState
 
   private case class HasVoiceWs(
       voiceHandler: ActorRef[VoiceHandler.Command],
-      vChannelId: ChannelId,
+      voiceChannelId: ChannelId,
       sender: ActorRef[Reply],
       toggle: AtomicBoolean,
       readyListener: ActorRef[AudioAPIMessage],
@@ -66,7 +66,7 @@ object LavaplayerHandler {
 
   private case class CanSendAudio(
       voiceHandler: ActorRef[VoiceHandler.Command],
-      inVChannelId: ChannelId,
+      inVoiceChannelId: ChannelId,
       toggle: AtomicBoolean,
       sender: ActorRef[Reply],
       readyListener: ActorRef[AudioAPIMessage],
@@ -108,10 +108,10 @@ object LavaplayerHandler {
     }
 
   def handleConflictingConnect(
-      command: ConnectVChannel,
+      command: ConnectVoiceChannel,
       parameters: Parameters,
-      newVChannelId: ChannelId,
-      inVChannelId: ChannelId,
+      newVoiceChannelId: ChannelId,
+      inVoiceChannelId: ChannelId,
       force: Boolean,
       firstSender: ActorRef[Reply],
       newSender: ActorRef[Reply],
@@ -119,7 +119,7 @@ object LavaplayerHandler {
       readyListener: Option[ActorRef[AudioAPIMessage]],
       movedMonitor: Option[ActorRef[MovedMonitor.Command]]
   ): Behavior[Command] = {
-    if (newVChannelId != inVChannelId) {
+    if (newVoiceChannelId != inVoiceChannelId) {
       if (force) {
         parameters.context.child("ServerNegotiator").foreach {
           case negotiator: ActorRef[VoiceServerNegotiator.Command @unchecked] =>
@@ -131,11 +131,11 @@ object LavaplayerHandler {
         readyListener.foreach(parameters.context.stop)
         movedMonitor.foreach(_ ! MovedMonitor.Stop)
 
-        firstSender ! ForcedConnectionFailure(inVChannelId, newVChannelId)
+        firstSender ! ForcedConnectionFailure(inVoiceChannelId, newVoiceChannelId)
 
         inactive(parameters, Idle)
       } else {
-        newSender ! AlreadyConnectedFailure(inVChannelId, newVChannelId)
+        newSender ! AlreadyConnectedFailure(inVoiceChannelId, newVoiceChannelId)
         Behaviors.same
       }
     } else {
@@ -149,7 +149,7 @@ object LavaplayerHandler {
     implicit val system: ActorSystem[Nothing] = context.system
 
     def connect(
-        vChannelId: ChannelId,
+        voiceChannelId: ChannelId,
         endPoint: String,
         userId: UserId,
         sessionId: String,
@@ -177,11 +177,11 @@ object LavaplayerHandler {
       val movedMonitor = context.spawn(MovedMonitor(cache, context.self), "MovedMonitor")
 
       log.debug("Music connecting")
-      inactive(parameters, HasVoiceWs(voiceWs, vChannelId, sender, toggle, readyListenerActor, movedMonitor))
+      inactive(parameters, HasVoiceWs(voiceWs, voiceChannelId, sender, toggle, readyListenerActor, movedMonitor))
     }
 
     (msg, state) match {
-      case (ConnectVChannel(vChannelId, _, replyTo), Idle) =>
+      case (ConnectVoiceChannel(vChannelId, _, replyTo), Idle) =>
         log.debug("Connecting to new voice channel")
         val adaptedSelf = context.messageAdapter[VoiceServerNegotiator.GotVoiceData] { m =>
           GotVoiceData(m.sessionId, m.token, m.endpoint, m.userId)
@@ -191,7 +191,7 @@ object LavaplayerHandler {
 
         inactive(parameters, Connecting(vChannelId, replyTo, negotiator))
 
-      case (connect @ ConnectVChannel(newVChannelId, force, replyTo), Connecting(inVChannelId, firstSender, _)) =>
+      case (connect @ ConnectVoiceChannel(newVChannelId, force, replyTo), Connecting(inVChannelId, firstSender, _)) =>
         handleConflictingConnect(
           connect,
           parameters,
@@ -206,7 +206,7 @@ object LavaplayerHandler {
         )
 
       case (
-          connect @ ConnectVChannel(newVChannelId, force, replyTo),
+          connect @ ConnectVoiceChannel(newVChannelId, force, replyTo),
           HasVoiceWs(voiceHandler, inVChannelId, firstSender, _, readyListener, movedMonitor)
           ) =>
         handleConflictingConnect(
@@ -222,10 +222,10 @@ object LavaplayerHandler {
           Some(movedMonitor)
         )
 
-      case (DisconnectVChannel, Idle) =>
+      case (DisconnectVoiceChannel, Idle) =>
         Behaviors.same
 
-      case (DisconnectVChannel, con: Connecting) =>
+      case (DisconnectVoiceChannel, con: Connecting) =>
         con.negotiator ! VoiceServerNegotiator.Stop
 
         Source
@@ -237,7 +237,7 @@ object LavaplayerHandler {
 
         inactive(parameters, Idle)
 
-      case (DisconnectVChannel, hasWs: HasVoiceWs) =>
+      case (DisconnectVoiceChannel, hasWs: HasVoiceWs) =>
         hasWs.voiceHandler ! VoiceHandler.Logout
 
         Source
@@ -249,17 +249,17 @@ object LavaplayerHandler {
 
         inactive(parameters, Idle)
 
-      case (VChannelMoved(None), _) =>
-        context.self ! DisconnectVChannel
+      case (VoiceChannelMoved(None), _) =>
+        context.self ! DisconnectVoiceChannel
         Behaviors.same
 
-      case (VChannelMoved(Some(_)), Idle) => Behaviors.same
+      case (VoiceChannelMoved(Some(_)), Idle) => Behaviors.same
 
-      case (VChannelMoved(Some(newChannelId)), state: Connecting) =>
-        inactive(parameters, state.copy(vChannelId = newChannelId))
+      case (VoiceChannelMoved(Some(newChannelId)), state: Connecting) =>
+        inactive(parameters, state.copy(voiceChannelId = newChannelId))
 
-      case (VChannelMoved(Some(newChannelId)), state: HasVoiceWs) =>
-        inactive(parameters, state.copy(vChannelId = newChannelId))
+      case (VoiceChannelMoved(Some(newChannelId)), state: HasVoiceWs) =>
+        inactive(parameters, state.copy(voiceChannelId = newChannelId))
 
       case (GotVoiceData(sessionId, token, endpoint, userId), Connecting(inVChannelId, replyTo, _)) =>
         log.debug(s"Received session id, token and endpoint: $sessionId $token $endpoint")
@@ -310,14 +310,14 @@ object LavaplayerHandler {
         voiceHandler ! VoiceHandler.SetSpeaking(speaking)
         Behaviors.same
 
-      case VChannelMoved(None) =>
-        context.self ! DisconnectVChannel
+      case VoiceChannelMoved(None) =>
+        context.self ! DisconnectVoiceChannel
         Behaviors.same
 
-      case VChannelMoved(Some(newChannelId)) =>
-        active(parameters, state.copy(inVChannelId = newChannelId))
+      case VoiceChannelMoved(Some(newChannelId)) =>
+        active(parameters, state.copy(inVoiceChannelId = newChannelId))
 
-      case DisconnectVChannel =>
+      case DisconnectVoiceChannel =>
         voiceHandler ! VoiceHandler.Logout
         movedMonitor ! MovedMonitor.Stop
 
@@ -333,12 +333,12 @@ object LavaplayerHandler {
         log.debug("Left voice channel")
         inactive(parameters, Idle)
 
-      case connect @ ConnectVChannel(newVChannelId, force, replyTo) =>
+      case connect @ ConnectVoiceChannel(newVChannelId, force, replyTo) =>
         handleConflictingConnect(
           connect,
           parameters,
           newVChannelId,
-          inVChannelId,
+          inVoiceChannelId,
           force,
           replyTo,
           replyTo,
@@ -372,33 +372,34 @@ object LavaplayerHandler {
     * @param channelId The channel to connect to
     * @param force If it should connect even if it's already connecting, or is connected to another channel(move)
     */
-  case class ConnectVChannel(channelId: ChannelId, force: Boolean = false, replyTo: ActorRef[Reply]) extends Command
+  case class ConnectVoiceChannel(channelId: ChannelId, force: Boolean = false, replyTo: ActorRef[Reply]) extends Command
 
   /**
     * Disconnect from a voice channel
     */
-  case object DisconnectVChannel extends Command
+  case object DisconnectVoiceChannel extends Command
 
   /**
-    * Sent as a response to [[ConnectVChannel]] when everything is ready.
+    * Sent as a response to [[ConnectVoiceChannel]] when everything is ready.
     */
   case class MusicReady(serverId: RawSnowflake, userId: UserId) extends Reply
 
   /**
-    * Sent as a response to [[ConnectVChannel]] if the client is already
+    * Sent as a response to [[ConnectVoiceChannel]] if the client is already
     * connected to a different voice channel in this guild.
-    * @param connectedVChannelId The currently connected voice channel
-    * @param triedVChannelId The channel that was tried and failed
+    *
+    * @param connectedVoiceChannelId The currently connected voice channel
+    * @param triedVoiceChannelId The channel that was tried and failed
     */
-  case class AlreadyConnectedFailure(connectedVChannelId: ChannelId, triedVChannelId: ChannelId) extends Reply
+  case class AlreadyConnectedFailure(connectedVoiceChannelId: ChannelId, triedVoiceChannelId: ChannelId) extends Reply
 
   /**
     * Sent if a connection initially succeeded, but is forced away by
     * something else.
-    * @param oldVChannelId The old voice channel id before the switch
-    * @param newVChannelId The new voice channel id after the switch
+    * @param oldVoiceChannelId The old voice channel id before the switch
+    * @param newVoiceChannelId The new voice channel id after the switch
     */
-  case class ForcedConnectionFailure(oldVChannelId: ChannelId, newVChannelId: ChannelId) extends Reply
+  case class ForcedConnectionFailure(oldVoiceChannelId: ChannelId, newVoiceChannelId: ChannelId) extends Reply
 
   /**
     * Set if the bot should be playing(speaking) or not. This is required to send sound.
@@ -414,7 +415,7 @@ object LavaplayerHandler {
   private case class WsReady(serverId: RawSnowflake, userId: UserId) extends Command
 
   private case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId) extends Command
-  private[lavaplayer] case class VChannelMoved(newVChannel: Option[ChannelId])                        extends Command
+  private[lavaplayer] case class VoiceChannelMoved(newVoiceChannel: Option[ChannelId])                extends Command
 
   /**
     * Tries to load an item given an identifier and returns it as a future.

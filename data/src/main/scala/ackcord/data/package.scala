@@ -108,21 +108,21 @@ package object data {
       * Resolve the channel represented by this id as a text channel. If a
       * guild id is know, prefer the other tResolve method instead.
       */
-    def tResolve(implicit c: CacheSnapshot): Option[TChannel] = c.getTChannel(channelId)
+    def tResolve(implicit c: CacheSnapshot): Option[TextChannel] = c.getTextChannel(channelId)
 
     /**
       * Resolve the channel represented by this id as a text channel relative
       * to a guild id.
       */
-    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect { case tc: TGuildChannel => tc }
+    def tResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TextGuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect { case tc: TextGuildChannel => tc }
 
     /**
       * Resolve the channel represented by this id as a voice channel relative
       * to a guild id.
       */
-    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[VGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect { case vc: VGuildChannel => vc }
+    def vResolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect { case vc: VoiceGuildChannel => vc }
   }
 
   type MessageId = SnowflakeType[Message]

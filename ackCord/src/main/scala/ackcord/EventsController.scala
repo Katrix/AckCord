@@ -62,25 +62,26 @@ abstract class EventsController(val requests: Requests) {
       }
     )
 
-  val TChannelEvent: EventListenerBuilder[TChannelEventListenerMessage, APIMessage] =
+  val TextChannelEvent: EventListenerBuilder[TextChannelEventListenerMessage, APIMessage] =
     ChannelEvent.andThen(
-      EventListenerBuilder.tChannelEvent { c =>
-        Lambda[ChannelEventListenerMessage ~> TChannelEventListenerMessage](m =>
-          TChannelEventListenerMessage.Default(c, m)
+      EventListenerBuilder.textChannelEvent { c =>
+        Lambda[ChannelEventListenerMessage ~> TextChannelEventListenerMessage](m =>
+          TextChannelEventListenerMessage.Default(c, m)
         )
       }
     )
 
-  val TGuildChannelEvent: EventListenerBuilder[TGuildChannelEventListenerMessage, APIMessage] = ChannelEvent.andThen(
-    EventListenerBuilder.tGuildChannelEvent { (c, g) =>
-      Lambda[ChannelEventListenerMessage ~> TGuildChannelEventListenerMessage](m =>
-        TGuildChannelEventListenerMessage.Default(c, g, m)
-      )
-    }
-  )
+  val TextGuildChannelEvent: EventListenerBuilder[TextGuildChannelEventListenerMessage, APIMessage] =
+    ChannelEvent.andThen(
+      EventListenerBuilder.textGuildChannelEvent { (c, g) =>
+        Lambda[ChannelEventListenerMessage ~> TextGuildChannelEventListenerMessage](m =>
+          TextGuildChannelEventListenerMessage.Default(c, g, m)
+        )
+      }
+    )
 
   val VGuildChannelEvent: EventListenerBuilder[VGuildChannelEventListenerMessage, APIMessage] = ChannelEvent.andThen(
-    EventListenerBuilder.vGuildChannelEvent { (c, g) =>
+    EventListenerBuilder.voiceGuildChannelEvent { (c, g) =>
       Lambda[ChannelEventListenerMessage ~> VGuildChannelEventListenerMessage](m =>
         VGuildChannelEventListenerMessage.Default(c, g, m)
       )

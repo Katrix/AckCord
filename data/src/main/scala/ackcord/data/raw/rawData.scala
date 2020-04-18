@@ -88,7 +88,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           if (`type` == ChannelType.GuildNews) {
-            NewsTGuildChannel(
+            NewsTextGuildChannel(
               id,
               guildId,
               name,
@@ -101,7 +101,7 @@ case class RawChannel(
               lastPinTimestamp
             )
           } else {
-            NormalTGuildChannel(
+            NormalTextGuildChannel(
               id,
               guildId,
               name,
@@ -132,7 +132,7 @@ case class RawChannel(
           bitrate              <- bitrate
           userLimit            <- userLimit
         } yield {
-          VGuildChannel(
+          VoiceGuildChannel(
             id,
             guildId,
             name,
@@ -199,7 +199,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           if (`type` == ChannelType.GuildNews) {
-            NewsTGuildChannel(
+            NewsTextGuildChannel(
               id,
               guildId,
               name,
@@ -212,7 +212,7 @@ case class RawChannel(
               lastPinTimestamp
             )
           } else {
-            NormalTGuildChannel(
+            NormalTextGuildChannel(
               id,
               guildId,
               name,
@@ -236,7 +236,7 @@ case class RawChannel(
           bitrate              <- bitrate
           userLimit            <- userLimit
         } yield {
-          VGuildChannel(
+          VoiceGuildChannel(
             id,
             guildId,
             name,

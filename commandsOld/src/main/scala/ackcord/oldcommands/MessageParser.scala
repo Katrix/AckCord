@@ -311,9 +311,9 @@ trait MessageParserInstances {
       _.getEmoji(_)
     )
 
-  implicit val tChannelParser: MessageParser[TChannel] =
+  implicit val textChannelParser: MessageParser[TextChannel] =
     channelParser.collectWithError("Passed in channel is not a text channel") {
-      case channel: TChannel => channel
+      case channel: TextChannel => channel
     }
 
   implicit val guildChannelParser: MessageParser[GuildChannel] =
@@ -321,9 +321,9 @@ trait MessageParserInstances {
       case channel: GuildChannel => channel
     }
 
-  implicit val tGuildChannelParser: MessageParser[TGuildChannel] =
+  implicit val textGuildChannelParser: MessageParser[TextGuildChannel] =
     channelParser.collectWithError("Passed in channel is not a guild text channel") {
-      case channel: TGuildChannel => channel
+      case channel: TextGuildChannel => channel
     }
 
   /**

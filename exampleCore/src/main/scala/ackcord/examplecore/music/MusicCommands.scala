@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord._
 import ackcord.oldcommands._
-import ackcord.data.{GuildId, TChannel, UserId}
+import ackcord.data.{GuildId, TextChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
@@ -52,7 +52,7 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Comman
         import runner._
         for {
           guild   <- optionPure(guildId.resolve)
-          channel <- optionPure(guild.tChannelById(cmd.msg.channelId))
+          channel <- optionPure(guild.textChannelById(cmd.msg.channelId))
           _ <- liftOptionT[Future, CreateMessage] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
               case Some(vs) if vs.channelId.isDefined =>
@@ -70,13 +70,13 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Comman
   private def simpleCommand(
       aliases: Seq[String],
       description: CmdDescription,
-      mapper: (TChannel, ActorRef[MusicHandler.CommandAck.type]) => MusicHandler.MusicHandlerEvents
+      mapper: (TextChannel, ActorRef[MusicHandler.CommandAck.type]) => MusicHandler.MusicHandlerEvents
   ): ParsedCmdFactory[NotUsed, Future[Done]] =
     ParsedCmdFactory[NotUsed, Future[Done]](
       refiner = CmdInfo(prefix = "&", aliases = aliases, filters = Seq(CmdFilter.InOneGuild(guildId))),
       sink = requests =>
         ParsedCmdFlow[NotUsed]
-          .mapConcat(implicit c => cmd => cmd.msg.tGuildChannel(guildId).toList)
+          .mapConcat(implicit c => cmd => cmd.msg.textGuildChannel(guildId).toList)
           .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
           .toMat(Sink.ignore)(Keep.right),
       description = Some(description)

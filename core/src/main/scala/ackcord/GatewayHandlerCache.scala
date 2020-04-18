@@ -25,7 +25,7 @@ package ackcord
 
 import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
-import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildId, TChannel}
+import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildId, TextChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 import ackcord.requests.SupervisionStreams
 import ackcord.syntax._
@@ -79,9 +79,9 @@ object GatewayHandlerCache {
         state: CacheSnapshotWithMaps,
         guildId: Option[GuildId],
         channelId: ChannelId
-    ): Option[TChannel] =
-      guildId.fold(state.getTChannel(channelId)) { guildId =>
-        state.getGuildChannel(guildId, channelId).flatMap(_.asTChannel)
+    ): Option[TextChannel] =
+      guildId.fold(state.getTextChannel(channelId)) { guildId =>
+        state.getGuildChannel(guildId, channelId).flatMap(_.asTextChannel)
       }
 
     def getGuildIfDefined(state: CacheSnapshotWithMaps, guildId: Option[GuildId]): Option[Option[Guild]] =

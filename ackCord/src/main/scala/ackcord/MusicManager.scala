@@ -51,7 +51,7 @@ object MusicManager {
       })
 
       //TODO: Handle errors
-      actor.ask[LavaplayerHandler.Reply](LavaplayerHandler.ConnectVChannel(channelId, force, _)).onComplete {
+      actor.ask[LavaplayerHandler.Reply](LavaplayerHandler.ConnectVoiceChannel(channelId, force, _)).onComplete {
         case Success(_) => replyTo ! GotPlayer(usedPlayer)
         case Failure(e) => replyTo ! GotError(e)
       }
@@ -61,7 +61,7 @@ object MusicManager {
     case (_, DisconnectFromChannel(guildId, destroyPlayer)) =>
       players.get(guildId).foreach {
         case (player, actor) =>
-          actor ! LavaplayerHandler.DisconnectVChannel
+          actor ! LavaplayerHandler.DisconnectVoiceChannel
 
           if (destroyPlayer) {
             player.destroy()

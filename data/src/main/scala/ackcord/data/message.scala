@@ -304,13 +304,13 @@ case class Message(
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags]
-) extends GetTChannel {
+) extends GetTextChannel {
 
   /**
     * Get the guild this message was sent to, if it was sent to a guild.
     */
   def guild(implicit c: CacheSnapshot): Option[Guild] =
-    guildId.fold(None: Option[Guild])(c.getGuild(_).orElse(tGuildChannel.map(_.guildId).flatMap(c.getGuild)))
+    guildId.fold(None: Option[Guild])(c.getGuild(_).orElse(textGuildChannel.map(_.guildId).flatMap(c.getGuild)))
 
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 

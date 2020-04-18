@@ -89,7 +89,7 @@ object APIMessage {
     * @param channel The channel where the change happened
     * @param mostRecent The time the most recent pinned message was pinned
     */
-  case class ChannelPinsUpdate(channel: TChannel, mostRecent: Option[OffsetDateTime], cache: CacheState)
+  case class ChannelPinsUpdate(channel: TextChannel, mostRecent: Option[OffsetDateTime], cache: CacheState)
       extends ChannelMessage
 
   /**
@@ -222,7 +222,7 @@ object APIMessage {
     * @param guild The guild the invite is for.
     * @param channel The channel the invite directs to.
     */
-  case class InviteCreate(guild: Option[Guild], channel: TChannel, invite: CreatedInvite, cache: CacheState)
+  case class InviteCreate(guild: Option[Guild], channel: TextChannel, invite: CreatedInvite, cache: CacheState)
       extends ChannelMessage
 
   /**
@@ -230,7 +230,7 @@ object APIMessage {
     * @param guild The guild the invite was for.
     * @param channel The channel the invite directed to.
     */
-  case class InviteDelete(guild: Option[Guild], channel: TChannel, code: String, cache: CacheState)
+  case class InviteDelete(guild: Option[Guild], channel: TextChannel, code: String, cache: CacheState)
       extends ChannelMessage
 
   /**
@@ -262,7 +262,7 @@ object APIMessage {
     * @param message The deleted message.
     * @param channel The channel of the message.
     */
-  case class MessageDelete(message: Message, channel: TChannel, cache: CacheState)
+  case class MessageDelete(message: Message, channel: TextChannel, cache: CacheState)
       extends MessageMessage
       with ChannelMessage
 
@@ -272,7 +272,7 @@ object APIMessage {
     * @param messages The deleted messages
     * @param channel The channel of the deleted messages
     */
-  case class MessageDeleteBulk(messages: Seq[Message], channel: TChannel, cache: CacheState) extends ChannelMessage
+  case class MessageDeleteBulk(messages: Seq[Message], channel: TextChannel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user adds a reaction to a message.
@@ -283,7 +283,7 @@ object APIMessage {
     */
   case class MessageReactionAdd(
       user: User,
-      channel: TChannel,
+      channel: TextChannel,
       message: Message,
       emoji: PartialEmoji,
       cache: CacheState
@@ -299,7 +299,7 @@ object APIMessage {
     */
   case class MessageReactionRemove(
       user: User,
-      channel: TChannel,
+      channel: TextChannel,
       message: Message,
       emoji: PartialEmoji,
       cache: CacheState
@@ -313,7 +313,7 @@ object APIMessage {
     * @param channel The channel of the message.
     * @param message The message the user removed the reactions from.
     */
-  case class MessageReactionRemoveAll(guild: Option[Guild], channel: TChannel, message: Message, cache: CacheState)
+  case class MessageReactionRemoveAll(guild: Option[Guild], channel: TextChannel, message: Message, cache: CacheState)
       extends MessageMessage
       with ChannelMessage
 
@@ -327,7 +327,7 @@ object APIMessage {
     */
   case class MessageReactionRemoveEmoji(
       guild: Option[Guild],
-      channel: TChannel,
+      channel: TextChannel,
       message: Message,
       emoji: PartialEmoji,
       cache: CacheState
@@ -359,7 +359,7 @@ object APIMessage {
     * @param user The user that began typing
     * @param timestamp When user started typing
     */
-  case class TypingStart(channel: TChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
+  case class TypingStart(channel: TextChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a user object is updated.

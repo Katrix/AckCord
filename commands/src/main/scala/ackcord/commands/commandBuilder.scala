@@ -128,7 +128,7 @@ object CommandBuilder {
     * lets you build the result command message.
     */
   def onlyInGuild[I[A] <: CommandMessage[A], O[_]](
-      create: (TGuildChannel, Guild) => I ~> O
+      create: (TextGuildChannel, Guild) => I ~> O
   ): CommandFunction[I, O] =
     new CommandFunction[I, O] {
 
@@ -140,8 +140,8 @@ object CommandBuilder {
 
           lazy val e: Result[A] = Left(Some(CommandError.mk(s"This command can only be used in a guild", m)))
 
-          m.tChannel match {
-            case chG: TGuildChannel =>
+          m.textChannel match {
+            case chG: TextGuildChannel =>
               chG.guild.fold[Result[A]](e)(g => Right(create(chG, g)(m)))
             case _ => e
           }
@@ -159,7 +159,7 @@ object CommandBuilder {
   }
 
   def inVoiceChannel[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[_]](
-      create: VGuildChannel => I ~> O
+      create: VoiceGuildChannel => I ~> O
   ): CommandFunction[I, O] = new CommandFunction[I, O] {
     type Result[A] = Either[Option[CommandError], O[A]]
 
@@ -203,7 +203,7 @@ object CommandBuilder {
           .exists(_.channelPermissionsId(guild, m.message.channelId).hasPermissions(neededPermission))
 
         if (allowed) Right(m)
-        else Left(Some(CommandError("You don't have permission to use this command", m.tChannel, m.cache)))
+        else Left(Some(CommandError("You don't have permission to use this command", m.textChannel, m.cache)))
       }
   }
 
@@ -379,7 +379,7 @@ trait CommandMessage[+A] {
   /**
     * The channel the command was used from.
     */
-  def tChannel: TChannel
+  def textChannel: TextChannel
 
   /**
     * The message that invoked the command.
@@ -398,7 +398,7 @@ object CommandMessage {
   case class Default[A](
       requests: Requests,
       cache: CacheSnapshot,
-      tChannel: TChannel,
+      textChannel: TextChannel,
       message: Message,
       parsed: A
   ) extends CommandMessage[A]
@@ -407,7 +407,7 @@ object CommandMessage {
 class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
   override def cache: CacheSnapshot = m.cache
 
-  override def tChannel: TChannel = m.tChannel
+  override def textChannel: TextChannel = m.textChannel
 
   override def message: Message = m.message
 
@@ -419,7 +419,7 @@ class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
   * @tparam A The parsed argument type
   */
 trait GuildCommandMessage[+A] extends CommandMessage[A] {
-  override def tChannel: TGuildChannel
+  override def textChannel: TextGuildChannel
 
   /**
     * The guild this command was used in.
@@ -429,14 +429,14 @@ trait GuildCommandMessage[+A] extends CommandMessage[A] {
 object GuildCommandMessage {
 
   case class Default[A](
-      override val tChannel: TGuildChannel,
+      override val textChannel: TextGuildChannel,
       guild: Guild,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with GuildCommandMessage[A]
 
   case class WithUser[A](
-      override val tChannel: TGuildChannel,
+      override val textChannel: TextGuildChannel,
       guild: Guild,
       user: User,
       m: CommandMessage[A]
@@ -471,7 +471,7 @@ trait GuildMemberCommandMessage[+A] extends GuildCommandMessage[A] with UserComm
 object GuildMemberCommandMessage {
 
   case class Default[A](
-      override val tChannel: TGuildChannel,
+      override val textChannel: TextGuildChannel,
       guild: Guild,
       user: User,
       guildMember: GuildMember,
@@ -485,25 +485,25 @@ trait VoiceGuildCommandMessage[+A] extends GuildCommandMessage[A] with UserComma
   /**
     * The voice channel the user that used this command is in.
     */
-  def vChannel: VGuildChannel
+  def voiceChannel: VoiceGuildChannel
 }
 object VoiceGuildCommandMessage {
 
   case class Default[A](
-      override val tChannel: TGuildChannel,
+      override val textChannel: TextGuildChannel,
       guild: Guild,
       user: User,
-      vChannel: VGuildChannel,
+      voiceChannel: VoiceGuildChannel,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
 
   case class WithGuildMember[A](
-      override val tChannel: TGuildChannel,
+      override val textChannel: TextGuildChannel,
       guild: Guild,
       user: User,
       guildMember: GuildMember,
-      vChannel: VGuildChannel,
+      voiceChannel: VoiceGuildChannel,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
@@ -516,8 +516,8 @@ object VoiceGuildCommandMessage {
   * @param channel The channel the error occoured in
   * @param cache A cache snapshot tied to the execution of the command
   */
-case class CommandError(error: String, channel: TChannel, cache: CacheSnapshot)
+case class CommandError(error: String, channel: TextChannel, cache: CacheSnapshot)
 object CommandError {
   def mk[A](error: String, message: CommandMessage[A]): CommandError =
-    CommandError(error, message.tChannel, message.cache)
+    CommandError(error, message.textChannel, message.cache)
 }

@@ -60,8 +60,8 @@ trait CacheSnapshotWithMaps extends CacheSnapshot {
   override def getChannel(id: ChannelId): Option[Channel] =
     getDmChannel(id).orElse(getGroupDmChannel(id)).orElse(getGuildChannel(id))
 
-  override def getTChannel(id: ChannelId): Option[TChannel] =
-    getChannel(id).collect { case tCh: TChannel => tCh }
+  override def getTextChannel(id: ChannelId): Option[TextChannel] =
+    getChannel(id).collect { case tCh: TextChannel => tCh }
 
   override def getRole(id: RoleId): Option[Role] =
     guildMap.collectFirst { case (_, gMap) if gMap.roles.contains(id) => gMap.roles(id) }

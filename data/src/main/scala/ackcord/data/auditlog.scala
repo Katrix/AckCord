@@ -202,14 +202,14 @@ object AuditLogChange {
     */
   case class AfkChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId] {
 
-    def oldChannel(implicit c: CacheSnapshot): Option[VGuildChannel] =
+    def oldChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {
-        case ch: VGuildChannel => ch
+        case ch: VoiceGuildChannel => ch
       }
 
-    def newChannel(implicit c: CacheSnapshot): Option[VGuildChannel] =
+    def newChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
       newValue.flatMap(c.getGuildChannel).collect {
-        case ch: VGuildChannel => ch
+        case ch: VoiceGuildChannel => ch
       }
   }
 
@@ -382,14 +382,14 @@ object AuditLogChange {
   case class InviteChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
       extends AuditLogChange[ChannelId] {
 
-    def oldChannel(implicit c: CacheSnapshot): Option[TGuildChannel] =
+    def oldChannel(implicit c: CacheSnapshot): Option[TextGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {
-        case ch: TGuildChannel => ch
+        case ch: TextGuildChannel => ch
       }
 
-    def newChannel[F[_]](implicit c: CacheSnapshot): Option[TGuildChannel] =
+    def newChannel[F[_]](implicit c: CacheSnapshot): Option[TextGuildChannel] =
       newValue.flatMap(c.getGuildChannel).collect {
-        case ch: TGuildChannel => ch
+        case ch: TextGuildChannel => ch
       }
   }
 

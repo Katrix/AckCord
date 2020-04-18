@@ -94,7 +94,7 @@ object CmdFilter {
     ): Boolean = guildId.resolve.map(_.members).exists(_.contains(userId))
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.tGuildChannel(guildId).isDefined
+      msg.textGuildChannel(guildId).isDefined
 
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
       None

@@ -26,7 +26,7 @@ package ackcord
 import scala.reflect.ClassTag
 
 import ackcord.commands.{ActionBuilder, ActionFunction, ActionTransformer}
-import ackcord.data.{Channel, Guild, GuildChannel, GuildMember, TChannel, TGuildChannel, User, VGuildChannel}
+import ackcord.data.{Channel, Guild, GuildChannel, GuildMember, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}
@@ -93,8 +93,8 @@ object EventListenerBuilder {
                 .asInstanceOf[GuildChannel]
                 .guild
                 .map(create(_)(i))
-            case e: APIMessage.MessageMessage if e.message.tGuildChannel.nonEmpty =>
-              e.message.tGuildChannel
+            case e: APIMessage.MessageMessage if e.message.textGuildChannel.nonEmpty =>
+              e.message.textGuildChannel
                 .flatMap(_.guild)
                 .map(create(_)(i))
             case e: APIMessage.VoiceStateUpdate if e.voiceState.guildId.isDefined =>
@@ -118,39 +118,39 @@ object EventListenerBuilder {
             case e: APIMessage.ChannelMessage => Some(create(e.channel)(i))
             case e: APIMessage.MessageMessage => c.getChannel(e.message.channelId).map(create(_)(i))
             case APIMessage.VoiceStateUpdate(voiceState, _) if voiceState.channelId.isDefined =>
-              voiceState.vChannel.map(create(_)(i))
+              voiceState.voiceChannel.map(create(_)(i))
             case _ => None
           }
         }
         .mapConcat(_.toList)
   }
 
-  def tChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
-      create: TChannel => I ~> O
+  def textChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
+      create: TextChannel => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
-        .map(i => i.channel.asTChannel.map(create(_)(i)))
+        .map(i => i.channel.asTextChannel.map(create(_)(i)))
         .mapConcat(_.toList)
   }
 
-  def tGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
-      create: (TGuildChannel, Guild) => I ~> O
+  def textGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
+      create: (TextGuildChannel, Guild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
         .map { i =>
           implicit val c: CacheSnapshot = i.cacheSnapshot
           for {
-            tgChannel <- i.channel.asTGuildChannel
+            tgChannel <- i.channel.asTextGuildChannel
             guild     <- tgChannel.guild
           } yield create(tgChannel, guild)(i)
         }
         .mapConcat(_.toList)
   }
 
-  def vGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
-      create: (VGuildChannel, Guild) => I ~> O
+  def voiceGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
+      create: (VoiceGuildChannel, Guild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
@@ -237,29 +237,31 @@ object ChannelEventListenerMessage {
       with ChannelEventListenerMessage[A]
 }
 
-trait TChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] {
-  def channel: TChannel
+trait TextChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] {
+  def channel: TextChannel
 }
-object TChannelEventListenerMessage {
-  case class Default[A](channel: TChannel, m: EventListenerMessage[A])
+object TextChannelEventListenerMessage {
+  case class Default[A](channel: TextChannel, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
-      with TChannelEventListenerMessage[A]
+      with TextChannelEventListenerMessage[A]
 }
 
-trait TGuildChannelEventListenerMessage[A] extends TChannelEventListenerMessage[A] with GuildEventListenerMessage[A] {
-  def channel: TGuildChannel
+trait TextGuildChannelEventListenerMessage[A]
+    extends TextChannelEventListenerMessage[A]
+    with GuildEventListenerMessage[A] {
+  def channel: TextGuildChannel
 }
-object TGuildChannelEventListenerMessage {
-  case class Default[A](channel: TGuildChannel, guild: Guild, m: EventListenerMessage[A])
+object TextGuildChannelEventListenerMessage {
+  case class Default[A](channel: TextGuildChannel, guild: Guild, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
-      with TGuildChannelEventListenerMessage[A]
+      with TextGuildChannelEventListenerMessage[A]
 }
 
 trait VGuildChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] with GuildEventListenerMessage[A] {
-  def channel: VGuildChannel
+  def channel: VoiceGuildChannel
 }
 object VGuildChannelEventListenerMessage {
-  case class Default[A](channel: VGuildChannel, guild: Guild, m: EventListenerMessage[A])
+  case class Default[A](channel: VoiceGuildChannel, guild: Guild, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
       with VGuildChannelEventListenerMessage[A]
 }

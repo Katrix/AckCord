@@ -270,8 +270,8 @@ case class Guild(
   /**
     * Get the AFK channel of this guild.
     */
-  def afkChannel: Option[VGuildChannel] = afkChannelId.flatMap(channels.get).collect {
-    case ch: VGuildChannel => ch
+  def afkChannel: Option[VoiceGuildChannel] = afkChannelId.flatMap(channels.get).collect {
+    case ch: VoiceGuildChannel => ch
   }
 
   /**
@@ -288,8 +288,8 @@ case class Guild(
     * Get the system channel of this guild. This is the first channel new users
     * see when they join the guild.
     */
-  def systemChannel: Option[TGuildChannel] = systemChannelId.flatMap(channels.get).collect {
-    case ch: TGuildChannel => ch
+  def systemChannel: Option[TextGuildChannel] = systemChannelId.flatMap(channels.get).collect {
+    case ch: TextGuildChannel => ch
   }
 }
 

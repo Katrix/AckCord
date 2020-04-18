@@ -547,10 +547,10 @@ object CacheHandlers {
             }
 
             rawChannel.`type` match {
-              case ChannelType.GuildText     => runDelete[NormalTGuildChannel]()
-              case ChannelType.GuildVoice    => runDelete[VGuildChannel]()
+              case ChannelType.GuildText     => runDelete[NormalTextGuildChannel]()
+              case ChannelType.GuildVoice    => runDelete[VoiceGuildChannel]()
               case ChannelType.GuildCategory => runDelete[GuildCategory]()
-              case ChannelType.GuildNews     => runDelete[NewsTGuildChannel]()
+              case ChannelType.GuildNews     => runDelete[NewsTextGuildChannel]()
               case ChannelType.GuildStore    => runDelete[GuildStoreChannel]()
               case _                         => sys.error("impossible")
             }

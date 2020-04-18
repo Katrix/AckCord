@@ -51,14 +51,14 @@ object MyBot extends App {
         {
           case APIMessage.ChannelCreate(channel, _) =>
             for {
-              tChannel <- optionPure(channel.asTChannel)
+              tChannel <- optionPure(channel.asTextChannel)
               _        <- run(tChannel.sendMessage("First"))
             } yield ()
           case APIMessage.ChannelDelete(channel, _) =>
             for {
               guildChannel <- optionPure(channel.asGuildChannel)
               guild        <- optionPure(guildChannel.guild)
-              _            <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+              _            <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
             } yield ()
         }
       }
