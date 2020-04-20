@@ -64,7 +64,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
   AudioSourceManagers.registerRemoteSources(playerManager)
 
   val queue: NamedCommand[String] =
-    GuildVoiceCommand.named(MusicCommands, Seq("queue")).parsing[String].async { r =>
+    GuildVoiceCommand.named(MusicCommands, Seq("queue")).parsing[String].streamed { r =>
       val guildId     = r.guild.id
       val url         = r.parsed
       val loadItem    = client.loadTrack(playerManager, url)

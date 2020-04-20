@@ -353,8 +353,7 @@ object ExampleMain {
   def registerNewCommand[Mat](connector: commands.CommandConnector, helpActor: ActorRef[ExampleHelpCmd.Command])(
       entry: NewCommandsEntry[Mat]
   ): Mat = {
-    val (materialized, complete) =
-      connector.runNewNamedCommand(entry.command)
+    val registration = connector.runNewNamedCommand(entry.command)
 
     //Due to the new commands being a complete break from the old ones, being
     // completely incompatible with some other stuff, we need to do a bit of
@@ -368,11 +367,11 @@ object ExampleMain {
           entry.description.usage,
           entry.description.extra
         ),
-        complete
+        registration.onDone
       )
     )
     import scala.concurrent.ExecutionContext.Implicits.global
-    complete.foreach(_ => println(s"Command completed: ${entry.description.name}"))
-    materialized
+    registration.onDone.foreach(_ => println(s"Command completed: ${entry.description.name}"))
+    registration.materialized
   }
 }

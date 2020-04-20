@@ -24,6 +24,8 @@
 
 package ackcord.commands
 
+import scala.concurrent.Future
+
 import ackcord.requests.{Request, Requests}
 import ackcord.util.Streamable
 import akka.NotUsed
@@ -158,44 +160,64 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @param sinkBlock The sink that will process this action.
     * @tparam Mat The materialized result of running this action.
     */
-  def streamed[Mat](sinkBlock: Sink[O[A], Mat]): Action[A, Mat]
+  def toSink[Mat](sinkBlock: Sink[O[A], Mat]): Action[A, Mat]
 
   /**
     * Creates an action that results in some streamable type G
     * @param block The execution of the action.
     * @tparam G The streamable result type.
     */
-  def async[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    streamed(Flow[O[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
+  def streamed[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
+    toSink(Flow[O[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
     * Creates an action that might do a single request, wrapped in an effect type G
     * @param block The execution of the action.
     * @tparam G The streamable result type.
     */
-  def asyncOptRequest[G[_]](
+  def streamedOptRequest[G[_]](
       block: O[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    streamed(Flow[O[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
+    toSink(Flow[O[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
+
+  /**
+    * Creates an action that results in an async result
+    * @param block The execution of the action.
+    * @tparam G The streamable result type.
+    */
+  def async[G[_]](block: O[A] => Future[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block).to(Sink.ignore))
+
+  /**
+    * Creates an async action that might do a single request
+    * @param block The execution of the action.
+    * @tparam G The streamable result type.
+    */
+  def asyncOptRequest[G[_]](
+      block: O[A] => OptionT[Future, Request[Any]]
+  ): Action[A, NotUsed] =
+    toSink(
+      Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).mapConcat(_.toList).to(requests.sinkIgnore)
+    )
 
   /**
     * Creates an action that will do a single request
     * @param block The execution of the action.
     */
   def withRequest(block: O[A] => Request[Any]): Action[A, NotUsed] =
-    streamed(Flow[O[A]].map(block).to(requests.sinkIgnore))
+    toSink(Flow[O[A]].map(block).to(requests.sinkIgnore))
 
   /**
     * Creates an action that might do a single request
     * @param block The execution of the action.
     */
   def withRequestOpt(block: O[A] => Option[Request[Any]]): Action[A, NotUsed] =
-    streamed(Flow[O[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
+    toSink(Flow[O[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
 
   /**
     * Creates an action that might execute unknown side effects.
     * @param block The execution of the action.
     */
   def withSideEffects(block: O[A] => Unit): Action[A, NotUsed] =
-    streamed(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
+    toSink(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
 }

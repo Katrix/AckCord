@@ -75,34 +75,39 @@ class DiscordClientCore(
 
   override def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) =
+  ): EventRegistration[NotUsed] =
     SupervisionStreams
       .addLogAndContinueFunction(
-        cache.subscribeAPI
-          .collect {
-            case m if handler(m.cache.current).isDefinedAt(m) => handler(m.cache.current)(m)
-          }
-          .flatMapConcat(streamable.toSource)
-          .viaMat(KillSwitches.single)(Keep.right)
-          .toMat(Sink.ignore)(Keep.both)
+        EventRegistration
+          .toSink(
+            cache.subscribeAPI
+              .collect {
+                case m if handler(m.cache.current).isDefinedAt(m) => handler(m.cache.current)(m)
+              }
+              .flatMapConcat(streamable.toSource)
+          )
           .addAttributes
       )
       .run()
 
-  override def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): (Mat, Future[Done]) =
-    SupervisionStreams
+  override def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): EventRegistration[Mat] = {
+    val (reg, mat) = SupervisionStreams
       .addLogAndContinueFunction(
-        cache.subscribeAPI
-          .collect {
-            case msg if listener.refineEvent(msg).isDefined => listener.refineEvent(msg).get
-          }
-          .map(a => EventListenerMessage.Default(a))
-          .watchTermination()(Keep.right)
+        EventRegistration
+          .withRegistration(
+            cache.subscribeAPI
+              .collect {
+                case msg if listener.refineEvent(msg).isDefined => listener.refineEvent(msg).get
+              }
+              .map(a => EventListenerMessage.Default(a))
+          )
           .toMat(listener.sink)(Keep.both)
           .addAttributes
       )
       .run()
-      .swap
+
+    reg.copy(materialized = mat)
+  }
 
   override def shards: Future[Seq[ActorRef[DiscordShard.Command]]] = {
     implicit val timeout: Timeout = Timeout(1.second)

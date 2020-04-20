@@ -29,12 +29,12 @@ import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.syntax._
+import akka.NotUsed
 import akka.stream.SourceShape
-import akka.stream.scaladsl.{GraphDSL, Keep, Merge, Partition, RunnableGraph, Source}
-import akka.{Done, NotUsed}
-import cats.{Monad, MonadError}
+import akka.stream.scaladsl.{GraphDSL, Merge, Partition, RunnableGraph, Source}
 import cats.instances.future._
 import cats.syntax.all._
+import cats.{Monad, MonadError}
 
 /**
   *
@@ -120,7 +120,7 @@ class CommandConnector(
   def newCommandWithErrors[A, Mat](
       prefix: PrefixParser,
       command: ComplexCommand[A, Mat]
-  ): Source[CommandError, (Mat, Future[Done])] = {
+  ): Source[CommandError, CommandRegistration[Mat]] = {
     val commandMessageSource = messages
       .mapAsync(requests.parallelism) {
         case t @ (message, cache) =>
@@ -147,30 +147,32 @@ class CommandConnector(
       }
 
     import requests.system
-    Source.fromGraph(
-      GraphDSL.create(SupervisionStreams.logAndContinue(command.flow).watchTermination()(Keep.both)) {
-        implicit b => thatFlow =>
-          import GraphDSL.Implicits._
+    CommandRegistration.withRegistration(
+      Source.fromGraph(
+        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) {
+          implicit b => thatFlow =>
+            import GraphDSL.Implicits._
 
-          val selfSource = b.add(commandMessageSource)
+            val selfSource = b.add(commandMessageSource)
 
-          val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
-            case Left(_)  => 0
-            case Right(_) => 1
-          }))
-          val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
-          val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
+            val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
+              case Left(_)  => 0
+              case Right(_) => 1
+            }))
+            val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
+            val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
-          val resMerge = b.add(Merge[CommandError](2))
+            val resMerge = b.add(Merge[CommandError](2))
 
-          // format: OFF
-          selfSource ~> selfPartition
-                        selfOut ~> thatFlow ~> resMerge
-                        selfErr ~>             resMerge
-          // format: ON
+            // format: OFF
+            selfSource ~> selfPartition
+            selfOut ~> thatFlow ~> resMerge
+            selfErr ~>             resMerge
+            // format: ON
 
-          SourceShape(resMerge.out)
-      }
+            SourceShape(resMerge.out)
+        }
+      )
     )
   }
 
@@ -184,7 +186,7 @@ class CommandConnector(
     */
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
-  ): Source[CommandError, (Mat, Future[Done])] =
+  ): Source[CommandError, CommandRegistration[Mat]] =
     newCommandWithErrors(
       prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive),
       command
@@ -201,7 +203,7 @@ class CommandConnector(
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] = {
+  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] = {
     import requests.system
     SupervisionStreams.addLogAndContinueFunction(
       newCommandWithErrors(prefix, command)
@@ -224,7 +226,7 @@ class CommandConnector(
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[(Mat, Future[Done])] =
+  def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] =
     newCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
 
   /**
@@ -236,7 +238,7 @@ class CommandConnector(
     * @return The materialized result of running the command, in addition to
     *         a future signaling when the command is done running.
     */
-  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): (Mat, Future[Done]) = {
+  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): CommandRegistration[Mat] = {
     import requests.system
     newCommand(prefix, command).run()
   }
@@ -249,7 +251,7 @@ class CommandConnector(
     * @return The materialized result of running the command, in addition to
     *         a future signaling when the command is done running.
     */
-  def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): (Mat, Future[Done]) =
+  def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): CommandRegistration[Mat] =
     runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
 
   /**
@@ -258,6 +260,6 @@ class CommandConnector(
     * @param commands The commands to run.
     * @return The commands together with their completions.
     */
-  def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], Future[Done])] =
-    commands.map(c => c -> runNewNamedCommand(c)._2)
+  def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], CommandRegistration[_])] =
+    commands.map(c => c -> runNewNamedCommand(c))
 }

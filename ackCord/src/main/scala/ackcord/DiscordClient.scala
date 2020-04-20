@@ -128,10 +128,12 @@ trait DiscordClient {
   @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
   def onEvent[G[_]](handler: APIMessage => G[Unit])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) =
-    onEventStreamable(_ => {
+  ): (UniqueKillSwitch, Future[Done]) = {
+    val reg = onEventStreamable(_ => {
       case x => handler(x)
     })
+    (reg.killSwitch, reg.onDone)
+  }
 
   /**
     * Runs a function whenever [[APIMessage]]s are received.
@@ -141,40 +143,47 @@ trait DiscordClient {
     * @param handler The handler function
     * @param streamable A way to convert your execution type to a stream.
     * @tparam G The execution type
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    * @return An event registration to handle the listener's lifecycle.
     */
   def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
       implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done])
+  ): EventRegistration[NotUsed]
 
   /**
     * Runs a function whenever [[APIMessage]]s are received.
     *
     * @param handler The handler function
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    * @return An event registration to handle the listener's lifecycle.
     */
-  def onEventId(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): (UniqueKillSwitch, Future[Done]) =
+  def onEventSideEffects(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
     onEventStreamable[cats.Id](handler)
+
+  /**
+    * Runs a function whenever [[APIMessage]]s are received without the cache
+    * snapshot.
+    *
+    * @param handler The handler function
+    * @return An event registration to handle the listener's lifecycle.
+    */
+  def onEventSideEffectsIgnore(handler: PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
+    onEventStreamable[cats.Id](_ => handler)
 
   /**
     * Runs an async function whenever [[APIMessage]]s are received.
     *
     * @param handler The handler function
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    * @return An event registration to handle the listener's lifecycle.
     */
-  def onEventOptFuture(
+  def onEventAsync(
       handler: CacheSnapshot => PartialFunction[APIMessage, OptionT[Future, Unit]]
-  ): (UniqueKillSwitch, Future[Done]) =
+  ): EventRegistration[NotUsed] =
     onEventStreamable(handler)
 
   /**
     * Registers an [[EventHandler]] that will be called when an event happens.
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
+    * @return An event registration to handle the listener's lifecycle.
     */
+  @deprecated("Prefer the listener API from now on", since = "0.16.0")
   def registerHandler[G[_], A <: APIMessage](
       handler: EventHandler[G, A]
   )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
@@ -184,21 +193,20 @@ trait DiscordClient {
     * @param listener The listener to run
     * @tparam A The type events this listener takes.
     * @tparam Mat The materialized result of running the listener graph.
-    * @return The materialized result of running the listener, in addition to
-    *         a future signaling when the listener is done running.
+    * @return An event registration to handle the listener's lifecycle.
     */
-  def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): (Mat, Future[Done])
+  def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): EventRegistration[Mat]
 
   /**
     * Starts many listeners at the same time. They must all have a
     * materialized value of NotUsed.
     * @param listeners The listeners to run.
-    * @return The listeners together with their completions.
+    * @return The listeners together with their registrations.
     */
   def bulkRegisterListeners(
       listeners: EventListener[_ <: APIMessage, NotUsed]*
-  ): Seq[(EventListener[_ <: APIMessage, NotUsed], Future[Done])] =
-    listeners.map(l => l -> registerListener(l)._2)
+  ): Seq[(EventListener[_ <: APIMessage, NotUsed], EventRegistration[NotUsed])] =
+    listeners.map(l => l -> registerListener(l))
 
   /**
     * Join a voice channel.

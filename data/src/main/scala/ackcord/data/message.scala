@@ -255,7 +255,7 @@ case class MessageApplication(
   * A message sent to a channel.
   * @param id The id of the message.
   * @param channelId The channel this message was sent to.
-  * @param guildId The guild this message was sent to. Can me missing.
+  * @param guildId The guild this message was sent to.
   * @param authorId The id of the author that sent this message.
   * @param isAuthorUser If the author of this message was a user.
   * @param member The guild member user that sent this message. Can be missing.

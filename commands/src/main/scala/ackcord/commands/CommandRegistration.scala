@@ -21,20 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord
+package ackcord.commands
 
-/**
-  * A handler for a specific event type.
-  *
-  * @tparam A The API message type
-  */
-@deprecated("Use an EventController instead")
-trait EventHandler[G[_], A <: APIMessage] {
+import scala.concurrent.Future
 
-  /**
-    * Called whenever the event for this handler is received.
-    * @param message The event itself.
-    * @param c A cache snapshot associated with the event.
-    */
-  def handle(message: A)(implicit c: CacheSnapshot): G[Unit]
+import akka.Done
+import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
+import akka.stream.{KillSwitches, UniqueKillSwitch}
+
+case class CommandRegistration[Mat](materialized: Mat, onDone: Future[Done], killSwitch: UniqueKillSwitch) {
+
+  def stop(): Unit = killSwitch.shutdown()
+}
+object CommandRegistration {
+  def toSink[A, M](source: Source[A, M]): RunnableGraph[CommandRegistration[M]] =
+    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) {
+      case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
+    }
+
+  def withRegistration[A, M](source: Source[A, M]): Source[A, CommandRegistration[M]] = {
+    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
+      case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
+    }
+  }
 }

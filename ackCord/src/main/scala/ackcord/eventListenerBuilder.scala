@@ -46,7 +46,7 @@ trait EventListenerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventLi
       tag.unapply(msg)
   }
 
-  override def streamed[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] = new EventListener[A, Mat] {
+  override def toSink[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] = new EventListener[A, Mat] {
     override def sink: Sink[EventListenerMessage[A], Mat] =
       self.flow[A].collect { case Right(ma) => ma }.toMat(sinkBlock)(Keep.right)
 

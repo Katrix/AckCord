@@ -78,7 +78,7 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
     }
 
   val timeDiff: NamedCommand[NotUsed] =
-    Command.named("%", Seq("timeDiff"), mustMention = true).async[OptionTRequest] { implicit m =>
+    Command.named("%", Seq("timeDiff"), mustMention = true).streamed[OptionTRequest] { implicit m =>
       import requestHelper._
       for {
         channel <- optionPure(m.message.channelId.tResolve)
@@ -90,14 +90,14 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
       } yield ()
     }
 
-  val ping: NamedCommand[NotUsed] = Command.named("%", Seq("ping"), mustMention = true).streamed {
+  val ping: NamedCommand[NotUsed] = Command.named("%", Seq("ping"), mustMention = true).toSink {
     Flow[CommandMessage[NotUsed]]
       .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
       .to(requests.sinkIgnore)
   }
 
   val timeDiff2: NamedCommand[NotUsed] =
-    Command.named("%", Seq("timeDiff2"), mustMention = true).async[Future] { implicit m =>
+    Command.named("%", Seq("timeDiff2"), mustMention = true).streamed[Future] { implicit m =>
       //The ExecutionContext is provided by the controller
       for {
         answer  <- requests.singleFuture(m.textChannel.sendMessage("Msg"))

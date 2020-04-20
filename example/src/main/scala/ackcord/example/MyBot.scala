@@ -40,14 +40,12 @@ object MyBot extends App {
   settings
     .createClient()
     .foreach { client =>
-      client.onEventId { _ =>
-        {
-          case APIMessage.Ready(_) => println("Now ready")
-        }
+      client.onEventSideEffectsIgnore {
+        case APIMessage.Ready(_) => println("Now ready")
       }
 
       import client.requestsHelper._
-      client.onEventOptFuture { implicit c =>
+      client.onEventAsync { implicit c =>
         {
           case APIMessage.ChannelCreate(channel, _) =>
             for {
@@ -64,12 +62,15 @@ object MyBot extends App {
       }
 
       val myEvents   = new MyEvents(client.requests)
+      val myListeners = new Listeners(client)
       val myCommands = new MyCommands(client, client.requests)
 
       client.bulkRegisterListeners(
         myEvents.printReady,
         myEvents.welcomeNew
       )
+
+      client.registerListener(myListeners.createListeners)
 
       client.commands.bulkRunNamed(
         myCommands.echo,

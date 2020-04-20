@@ -23,18 +23,25 @@
  */
 package ackcord
 
-/**
-  * A handler for a specific event type.
-  *
-  * @tparam A The API message type
-  */
-@deprecated("Use an EventController instead")
-trait EventHandler[G[_], A <: APIMessage] {
+import scala.concurrent.Future
 
-  /**
-    * Called whenever the event for this handler is received.
-    * @param message The event itself.
-    * @param c A cache snapshot associated with the event.
-    */
-  def handle(message: A)(implicit c: CacheSnapshot): G[Unit]
+import akka.Done
+import akka.stream.{KillSwitches, UniqueKillSwitch}
+import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
+
+case class EventRegistration[Mat](materialized: Mat, onDone: Future[Done], killSwitch: UniqueKillSwitch) {
+
+  def stop(): Unit = killSwitch.shutdown()
+}
+object EventRegistration {
+  def toSink[A, M](source: Source[A, M]): RunnableGraph[EventRegistration[M]] =
+    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) {
+      case ((m, killSwitch), done) => EventRegistration(m, done, killSwitch)
+    }
+
+  def withRegistration[A, M](source: Source[A, M]): Source[A, EventRegistration[M]] = {
+    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
+      case ((m, killSwitch), done) => EventRegistration(m, done, killSwitch)
+    }
+  }
 }
