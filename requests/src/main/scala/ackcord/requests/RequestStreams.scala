@@ -50,7 +50,7 @@ object RequestStreams {
       response: HttpResponse
   ): Option[H] =
     response.headers.collectFirst {
-      case h if h.name == companion.name => companion.parse(h.value).toOption
+      case h if h.lowercaseName == companion.lowercaseName => companion.parse(h.value).toOption
     }.flatten
 
   private def remainingRequests(response: HttpResponse): Int =

@@ -112,7 +112,8 @@ class Ratelimiter(
     case request @ WantToPass(route, identifier, _, _) =>
       if (settings.LogRatelimitEvents) {
         log.debug(
-          s"""|Got incoming request: ${route.uriWithMajor} $identifier
+          s"""|
+              |Got incoming request: ${route.uriWithMajor} $identifier
               |RouteLimits: ${uriToBucket.get(route.uriWithoutMajor).flatMap(k => routeLimits.get(k))}
               |Remaining requests: ${remainingRequests.get(route.uriWithMajor)}
               |Requests waiting: ${rateLimits.get(route.uriWithMajor).fold(0)(_.size)}
