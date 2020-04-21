@@ -380,65 +380,40 @@ object RequestStreams {
       parallelism: Int = 4,
       maxRetryCount: Int = 3,
       rateLimitActor: ActorRef[Ratelimiter.Command]
-  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestResponse[Data], Ctx, NotUsed] = {
-    val graph = GraphDSL.create() { implicit builder =>
-      import GraphDSL.Implicits._
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
+    FlowWithContext.fromTuples(
+      Flow[(Request[Data], Ctx)].flatMapMerge(
+        parallelism,
+        i => {
+          val singleFlow = Source
+            .single(i)
+            .via(
+              RequestStreams.requestFlow(
+                credentials,
+                millisecondPrecision,
+                relativeTime,
+                bufferSize,
+                overflowStrategy,
+                maxAllowedWait,
+                parallelism,
+                rateLimitActor
+              )
+            )
+            .map {
+              case (value: RequestResponse[Data], ctx) => value -> ctx
+              case (err: FailedRequest, ctx)           => throw RetryFailedRequestException(err, ctx)
+            }
 
-      val addContextStart =
-        builder.add(Flow[(Request[Data], Ctx)].map(request => (request._1, (0, request._1, request._2))))
-      def requestFlow =
-        RequestStreams
-          .requestFlow[Data, (Int, Request[Data], Ctx)](
-            credentials,
-            millisecondPrecision,
-            relativeTime,
-            bufferSize,
-            overflowStrategy,
-            maxAllowedWait,
-            parallelism,
-            rateLimitActor
-          )
-      val allRequests = builder.add(MergePreferred[(RequestAnswer[Data], (Int, Request[Data], Ctx))](1))
-
-      val partitioner = builder.add(
-        Partition[(RequestAnswer[Data], (Int, Request[Data], Ctx))](2, {
-          case (_: RequestResponse[_], _) => 0
-          case (_: FailedRequest, _)      => 1
-        })
+          singleFlow
+            .recoverWithRetries(maxRetryCount, {
+              case RetryFailedRequestException(_, _) => singleFlow
+            })
+            .recover {
+              case RetryFailedRequestException(err, ctx) => err -> ctx.asInstanceOf[Ctx]
+            }
+        }
       )
-
-      val successful = partitioner.out(0)
-      val unwrapSuccess = builder.add(
-        Flow[(RequestAnswer[Data], (Int, Request[Data], Ctx))]
-          .collect {
-            case (response: RequestResponse[Data], (_, _, ctx)) =>
-              (response, ctx)
-          }
-      )
-
-      //Ratelimiter should take care of the ratelimits through back-pressure
-      val failed = partitioner.out(1)
-
-      val processFailed = builder.add(
-        Flow[(RequestAnswer[Data], (Int, Request[Data], Ctx))]
-          .collect {
-            case (failed: FailedRequest, (trips, request, ctx)) if trips + 1 < maxRetryCount =>
-              (request, (trips + 1, request, ctx))
-          }
-      )
-
-      // format: OFF
-
-      addContextStart       ~> requestFlow ~> allRequests.in(0);allRequests ~> partitioner
-      allRequests.preferred <~ requestFlow <~ processFailed                 <~ failed.outlet
-                                                                               successful    ~> unwrapSuccess
-
-      // format: ON
-
-      FlowShape(addContextStart.in, unwrapSuccess.out)
-    }
-
-    FlowWithContext.fromTuples(Flow.fromGraph(graph))
+    )
   }
 
   def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] = Flow[A].flatMapConcat { a =>

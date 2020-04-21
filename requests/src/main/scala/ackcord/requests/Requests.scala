@@ -114,7 +114,7 @@ case class Requests(
   )
 
   private lazy val rawOrderedRetryFlow =
-    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestResponse[Nothing], Nothing, NotUsed](
+    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestAnswer[Nothing], Nothing, NotUsed](
       RequestStreams.addOrdering(rawRetryFlow.asFlow)
     )
 

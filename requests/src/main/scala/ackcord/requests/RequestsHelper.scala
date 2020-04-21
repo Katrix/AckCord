@@ -37,6 +37,7 @@ import cats.instances.future._
   */
 class RequestsHelper(requests: Requests) {
   import requests.system.executionContext
+  implicit val properties: Requests.RequestProperties = Requests.RequestProperties.retry
 
   private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): OptionT[Future, Unit] =
     if (requests.forall(_.hasPermissions)) OptionT.liftF(Future.unit)

@@ -32,9 +32,11 @@ import akka.stream.{ActorAttributes, Attributes, Supervision}
 object SupervisionStreams {
 
   def addLogAndContinueFunction[G](addAtributes: Attributes => G)(implicit system: ActorSystem[Nothing]): G =
-    addAtributes(ActorAttributes.supervisionStrategy { e =>
-      system.log.error("Unhandled exception in stream", e)
-      Supervision.Resume
+    addAtributes(ActorAttributes.supervisionStrategy {
+      case _: RetryFailedRequestException[_] => Supervision.Stop
+      case e =>
+        system.log.error("Unhandled exception in stream", e)
+        Supervision.Resume
     })
 
   def logAndContinue[M](graph: RunnableGraph[M])(implicit system: ActorSystem[Nothing]): RunnableGraph[M] =
