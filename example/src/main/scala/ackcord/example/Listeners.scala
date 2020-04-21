@@ -33,7 +33,7 @@ class Listeners(client: DiscordClient) extends EventsController(client.requests)
   val MessageEvent: EventListenerBuilder[TextChannelEventListenerMessage, APIMessage.MessageCreate] =
     TextChannelEvent.on[APIMessage.MessageCreate]
 
-  def listen(inChannel: ChannelId, identifier: String): EventListener[APIMessage.MessageCreate, NotUsed] =
+  def listen(inChannel: TextChannelId, identifier: String): EventListener[APIMessage.MessageCreate, NotUsed] =
     MessageEvent.withSideEffects { m =>
       if (m.channel.id == inChannel) {
         println(s"$identifier: ${m.event.message.content}")
@@ -41,7 +41,7 @@ class Listeners(client: DiscordClient) extends EventsController(client.requests)
     }
 
   def stopListen(
-      inChannel: ChannelId,
+      inChannel: TextChannelId,
       identifier: String,
       listener: EventRegistration[NotUsed],
       stopper: EventRegistration[NotUsed]

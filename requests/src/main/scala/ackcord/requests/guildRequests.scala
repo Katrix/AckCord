@@ -58,9 +58,9 @@ case class CreateGuildData(
     channels: Option[
       Seq[CreateGuildChannelData]
     ], //Technically this should be partial channels, but I think this works too
-    afkChannelId: Option[ChannelId],
+    afkChannelId: Option[VoiceGuildChannelId],
     afkTimeout: Option[Int],
-    systemChannelId: Option[ChannelId]
+    systemChannelId: Option[TextGuildChannelId]
 ) {
   require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
 }
@@ -116,13 +116,13 @@ case class ModifyGuildData(
     verificationLevel: Option[VerificationLevel] = None,
     defaultMessageNotifications: Option[NotificationLevel] = None,
     explicitContentFilter: Option[FilterLevel] = None,
-    afkChannelId: Option[ChannelId] = None,
+    afkChannelId: Option[VoiceGuildChannelId] = None,
     afkTimeout: Option[Int] = None,
     icon: Option[ImageData] = None,
     ownerId: Option[UserId] = None,
     splash: Option[ImageData] = None,
     banner: Option[ImageData] = None,
-    systemChannelId: Option[ChannelId] = None
+    systemChannelId: Option[TextGuildChannelId] = None
 )
 
 /**
@@ -183,7 +183,7 @@ case class CreateGuildChannelData(
     userLimit: JsonOption[Int] = JsonUndefined,
     rateLimitPerUser: JsonOption[Int] = JsonUndefined,
     permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
-    parentId: JsonOption[ChannelId] = JsonUndefined,
+    parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
     nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
   require(name.length >= 2 && name.length <= 100, "A channel name has to be between 2 and 100 characters")
@@ -231,7 +231,7 @@ case class CreateGuildChannel(
   * @param id The channel id
   * @param position It's new position
   */
-case class ModifyGuildChannelPositionsData(id: ChannelId, position: Int)
+case class ModifyGuildChannelPositionsData(id: GuildChannelId, position: Int)
 
 /**
   * Modify the positions of several channels.
@@ -351,7 +351,7 @@ case class ModifyGuildMemberData(
     roles: JsonOption[Seq[RoleId]] = JsonUndefined,
     mute: JsonOption[Boolean] = JsonUndefined,
     deaf: JsonOption[Boolean] = JsonUndefined,
-    channelId: JsonOption[ChannelId] = JsonUndefined
+    channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined
 )
 object ModifyGuildMemberData {
   implicit val encoder: Encoder[ModifyGuildMemberData] = (a: ModifyGuildMemberData) =>

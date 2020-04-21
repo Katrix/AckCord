@@ -40,7 +40,7 @@ case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
   * Create a new webhook in a channel.
   */
 case class CreateWebhook(
-    channelId: ChannelId,
+    channelId: TextChannelId,
     params: CreateWebhookData,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateWebhook, CreateWebhookData, Webhook] {
@@ -59,7 +59,7 @@ case class CreateWebhook(
 /**
   * Get the webhooks in a channel.
   */
-case class GetChannelWebhooks(channelId: ChannelId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
+case class GetChannelWebhooks(channelId: TextChannelId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
 
   override def responseDecoder: Decoder[Seq[Webhook]] = Decoder[Seq[Webhook]]
@@ -112,7 +112,7 @@ case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extend
 case class ModifyWebhookData(
     name: Option[String] = None,
     avatar: Option[ImageData] = None,
-    channelId: Option[ChannelId] = None
+    channelId: Option[TextGuildChannelId] = None
 )
 
 /**

@@ -236,8 +236,8 @@ package object syntax {
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
@@ -321,8 +321,8 @@ package object syntax {
         position: JsonOption[Int] = JsonUndefined,
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
@@ -409,21 +409,21 @@ package object syntax {
       * Get a channel by id in this category.
       * @param id The id of the channel.
       */
-    def channelById(id: ChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] =
+    def channelById(id: GuildChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] =
       channels.find(_.id == id)
 
     /**
       * Get a channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def channelById(id: ChannelId, guild: Guild): Option[GuildChannel] = channels(guild).find(_.id == id)
+    def channelById(id: GuildChannelId, guild: Guild): Option[GuildChannel] = channels(guild).find(_.id == id)
 
     /**
       * Get a text channel by id in this category.
       * @param id The id of the channel.
       */
     def textChannelById(
-        id: ChannelId
+        id: TextGuildChannelId
     )(implicit snapshot: CacheSnapshot): Option[TextGuildChannel] =
       channelById(id).collect {
         case channel: TextGuildChannel => channel
@@ -433,7 +433,7 @@ package object syntax {
       * Get a text channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def textChannelById(id: ChannelId, guild: Guild): Option[TextGuildChannel] = channelById(id, guild).collect {
+    def textChannelById(id: TextGuildChannelId, guild: Guild): Option[TextGuildChannel] = channelById(id, guild).collect {
       case channel: TextGuildChannel => channel
     }
 
@@ -442,7 +442,7 @@ package object syntax {
       * @param id The id of the channel.
       */
     def voiceChannelById[F[_]](
-        id: ChannelId
+        id: VoiceGuildChannelId
     )(implicit snapshot: CacheSnapshot): Option[VoiceGuildChannel] =
       channelById(id).collect {
         case channel: VoiceGuildChannel => channel
@@ -452,7 +452,7 @@ package object syntax {
       * Get a voice channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def voiceChannelById(id: ChannelId, guild: Guild): Option[VoiceGuildChannel] = channelById(id, guild).collect {
+    def voiceChannelById(id: VoiceGuildChannelId, guild: Guild): Option[VoiceGuildChannel] = channelById(id, guild).collect {
       case channel: VoiceGuildChannel => channel
     }
 
@@ -507,7 +507,7 @@ package object syntax {
     def modify(
         name: JsonOption[String] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRoleTag, PermissionOverwrite]] = JsonUndefined
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined
     ) = ModifyChannel(
       category.id,
       ModifyChannelData(
@@ -540,7 +540,7 @@ package object syntax {
         region: Option[String] = None,
         verificationLevel: Option[VerificationLevel] = None,
         defaultMessageNotifications: Option[NotificationLevel] = None,
-        afkChannelId: Option[ChannelId] = None,
+        afkChannelId: Option[VoiceGuildChannelId] = None,
         afkTimeout: Option[Int] = None,
         icon: Option[ImageData] = None,
         ownerId: Option[UserId] = None,
@@ -579,7 +579,7 @@ package object syntax {
         topic: JsonOption[String] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined,
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
@@ -608,7 +608,7 @@ package object syntax {
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[ChannelId] = JsonUndefined,
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
@@ -647,7 +647,7 @@ package object syntax {
       * Modify the positions of several channels.
       * @param newPositions A map between the channelId and the new positions.
       */
-    def modifyChannelPositions(newPositions: SnowflakeMap[Channel, Int]) =
+    def modifyChannelPositions(newPositions: SnowflakeMap[GuildChannel, Int]) =
       ModifyGuildChannelPositions(
         guild.id,
         newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq
@@ -843,22 +843,22 @@ package object syntax {
     /**
       * Get a channel by id in this guild.
       */
-    def channelById(id: ChannelId): Option[GuildChannel] = guild.channels.get(id)
+    def channelById(id: GuildChannelId): Option[GuildChannel] = guild.channels.get(id)
 
     /**
       * Get a text channel by id in this guild.
       */
-    def textChannelById(id: ChannelId): Option[TextGuildChannel] = channelById(id).flatMap(_.asTextGuildChannel)
+    def textChannelById(id: TextGuildChannelId): Option[TextGuildChannel] = channelById(id).flatMap(_.asTextGuildChannel)
 
     /**
       * Get a voice channel by id in this guild.
       */
-    def voiceChannelById(id: ChannelId): Option[VoiceGuildChannel] = channelById(id).flatMap(_.asVGuildChannel)
+    def voiceChannelById(id: VoiceGuildChannelId): Option[VoiceGuildChannel] = channelById(id).flatMap(_.asVGuildChannel)
 
     /**
       * Get a category by id in this guild.
       */
-    def categoryById(id: ChannelId): Option[GuildCategory] = channelById(id).flatMap(_.asCategory)
+    def categoryById(id: SnowflakeType[GuildCategory]): Option[GuildCategory] = channelById(id).flatMap(_.asCategory)
 
     /**
       * Get all the channels with a name.
@@ -1019,7 +1019,7 @@ package object syntax {
         roles: JsonOption[Seq[RoleId]] = JsonUndefined,
         mute: JsonOption[Boolean] = JsonUndefined,
         deaf: JsonOption[Boolean] = JsonUndefined,
-        channelId: JsonOption[ChannelId] = JsonUndefined
+        channelId: JsonOption[VoiceGuildChannelId] = JsonUndefined
     ) =
       ModifyGuildMember(
         guildMember.guildId,
@@ -1250,7 +1250,7 @@ package object syntax {
     def modify(
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[ChannelId] = None
+        channelId: Option[TextGuildChannelId] = None
     ) = ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId))
 
     /**
@@ -1262,7 +1262,7 @@ package object syntax {
     def modifyWithToken(
         name: Option[String] = None,
         avatar: Option[ImageData] = None,
-        channelId: Option[ChannelId] = None
+        channelId: Option[TextGuildChannelId] = None
     ) = webhook.token.map(ModifyWebhookWithToken(webhook.id, _, ModifyWebhookData(name, avatar, channelId)))
 
     /**
@@ -1315,9 +1315,9 @@ package object syntax {
         explicitContentFilter: Option[FilterLevel] = None,
         roles: Option[Seq[Role]] = None,
         channels: Option[Seq[CreateGuildChannelData]] = None,
-        afkChannelId: Option[ChannelId] = None,
+        afkChannelId: Option[VoiceGuildChannelId] = None,
         afkTimeout: Option[Int] = None,
-        systemChannelId: Option[ChannelId] = None
+        systemChannelId: Option[TextGuildChannelId] = None
     ) =
       CreateGuild(
         CreateGuildData(

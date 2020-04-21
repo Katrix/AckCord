@@ -89,7 +89,7 @@ abstract class HelpCmd[Command](ctx: ActorContext[Command]) extends AbstractBeha
         if (page > 0) {
           sendMessageAndAck(replyTo, CreateMessage(msg.channelId, createReplyAll(msg, page - 1)))
         } else {
-          msg.channelId.tResolve match {
+          msg.channelId.resolve match {
             case Some(channel) => sendMessageAndAck(replyTo, channel.sendMessage(s"Invalid page $page"))
             case None          => sendAck(replyTo)
           }

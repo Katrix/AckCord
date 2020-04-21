@@ -51,22 +51,22 @@ trait DiscordProtocol {
 
   implicit val permissionCodec: Codec[Permission] = Codec.from(
     Decoder[Long].emap(i => Right(Permission.fromLong(i))),
-    Encoder[Long].contramap(identity)
+    Encoder[Long].contramap(_.toLong)
   )
 
   implicit val userFlagsCodec: Codec[UserFlags] = Codec.from(
     Decoder[Int].emap(i => Right(UserFlags.fromInt(i))),
-    Encoder[Int].contramap(identity)
+    Encoder[Int].contramap(_.toInt)
   )
 
   implicit val messageFlagsCodec: Codec[MessageFlags] = Codec.from(
     Decoder[Int].emap(i => Right(MessageFlags.fromInt(i))),
-    Encoder[Int].contramap(identity)
+    Encoder[Int].contramap(_.toInt)
   )
 
   implicit val systemChannelFlagsCodec: Codec[SystemChannelFlags] = Codec.from(
     Decoder[Int].emap(i => Right(SystemChannelFlags.fromInt(i))),
-    Encoder[Int].contramap(identity)
+    Encoder[Int].contramap(_.toInt)
   )
 
   implicit val offsetDateTimeCodec: Codec[OffsetDateTime] = Codec.from(
@@ -227,7 +227,7 @@ trait DiscordProtocol {
 
     for {
       id              <- c.get[MessageId]("id")
-      channelId       <- c.get[ChannelId]("channel_id")
+      channelId       <- c.get[TextChannelId]("channel_id")
       guildId         <- c.get[Option[GuildId]]("guild_id")
       author          <- if (isWebhook) c.get[WebhookAuthor]("author") else c.get[User]("author")
       member          <- c.get[Option[PartialRawGuildMember]]("member")

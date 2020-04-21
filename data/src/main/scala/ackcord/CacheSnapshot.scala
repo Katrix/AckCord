@@ -47,14 +47,14 @@ trait CacheSnapshot {
     *
     * $optionalMap
     */
-  def dmChannelMap: MapType[Channel, DMChannel]
+  def dmChannelMap: MapType[DMChannel, DMChannel]
 
   /**
     * The current group dm channels.
     *
     * $optionalMap
     */
-  def groupDmChannelMap: MapType[Channel, GroupDMChannel]
+  def groupDmChannelMap: MapType[GroupDMChannel, GroupDMChannel]
 
   /**
     * The guilds currently not available.
@@ -75,14 +75,14 @@ trait CacheSnapshot {
     *
     * $optionalMap
     */
-  def messageMap: MapType[Channel, MapType[Message, Message]]
+  def messageMap: MapType[TextChannel, MapType[Message, Message]]
 
   /**
     * The point each user typed for each channel.
     *
     * $optionalMap
     */
-  def lastTypedMap: MapType[Channel, MapType[User, Instant]]
+  def lastTypedMap: MapType[TextChannel, MapType[User, Instant]]
 
   /**
     * All the users currently tracked.
@@ -108,7 +108,7 @@ trait CacheSnapshot {
   /**
     * Get a dm channel by id.
     */
-  def getDmChannel(id: ChannelId): Option[DMChannel]
+  def getDmChannel(id: SnowflakeType[DMChannel]): Option[DMChannel]
 
   /**
     * Get the dm channel for a specific user.
@@ -118,7 +118,7 @@ trait CacheSnapshot {
   /**
     * Get a group dm channel by id.
     */
-  def getGroupDmChannel(id: ChannelId): Option[GroupDMChannel]
+  def getGroupDmChannel(id: SnowflakeType[GroupDMChannel]): Option[GroupDMChannel]
 
   /**
     * Get a guild by id.
@@ -135,12 +135,12 @@ trait CacheSnapshot {
     *
     * $optionalMap
     */
-  def getChannelMessages(channelId: ChannelId): MapType[Message, Message]
+  def getChannelMessages(channelId: TextChannelId): MapType[Message, Message]
 
   /**
     * Get a message, specifying both the channel, and message id.
     */
-  def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message]
+  def getMessage(channelId: TextChannelId, messageId: MessageId): Option[Message]
 
   /**
     * Get a message by id without knowing the channel it belongs to.
@@ -152,12 +152,12 @@ trait CacheSnapshot {
     * @param guildId The guild id
     * @param id The channel id
     */
-  def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel]
+  def getGuildChannel(guildId: GuildId, id: GuildChannelId): Option[GuildChannel]
 
   /**
     * Get a guild channel by id without knowing the guild it belongs to.
     */
-  def getGuildChannel(id: ChannelId): Option[GuildChannel]
+  def getGuildChannel(id: GuildChannelId): Option[GuildChannel]
 
   /**
     * Get a channel by id, ignoring if it's a dm or guild channel.
@@ -167,7 +167,7 @@ trait CacheSnapshot {
   /**
     * Get a text channel by id, ignoring if it's a dm or guild channel.
     */
-  def getTextChannel(id: ChannelId): Option[TextChannel]
+  def getTextChannel(id: TextChannelId): Option[TextChannel]
 
   /**
     * Get a role by id without knowing the guild it belongs to.
@@ -187,12 +187,12 @@ trait CacheSnapshot {
   /**
     * Get a map of when users last typed in a channel.
     */
-  def getChannelLastTyped(channelId: ChannelId): MapType[User, Instant]
+  def getChannelLastTyped(channelId: TextChannelId): MapType[User, Instant]
 
   /**
     * Get the instant a user last typed in a channel.
     */
-  def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant]
+  def getLastTyped(channelId: TextChannelId, userId: UserId): Option[Instant]
 
   //For implementers, remember to check if the user to return is the bot user
   /**

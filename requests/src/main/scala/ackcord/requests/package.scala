@@ -23,7 +23,7 @@
  */
 package ackcord
 
-import ackcord.data.{ChannelId, GuildId, Permission}
+import ackcord.data.{ChannelId, GuildChannel, GuildChannelId, GuildId, Permission}
 
 package object requests {
 
@@ -56,12 +56,12 @@ package object requests {
     */
   def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val opt = for {
-      gChannel <- c.getGuildChannel(channelId)
+      gChannel <- c.getGuildChannel(channelId.asChannelId[GuildChannel])
       guild    <- gChannel.guild
       botUser = c.botUser
       botUserMember <- guild.members.get(botUser.id)
-    } yield botUserMember.channelPermissionsId(guild, channelId).hasPermissions(permissions)
+    } yield botUserMember.channelPermissionsId(guild, channelId.asChannelId[GuildChannel]).hasPermissions(permissions)
 
-    opt.getOrElse(false)
+    opt.getOrElse(true)
   }
 }

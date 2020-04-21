@@ -29,7 +29,7 @@ import scala.reflect.ClassTag
 
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
-import ackcord.data.{ChannelId, GuildId}
+import ackcord.data.{GuildId, VoiceGuildChannelId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.{Done, NotUsed}
 import akka.actor.typed._
@@ -221,7 +221,7 @@ trait DiscordClient {
     */
   def joinChannel(
       guildId: GuildId,
-      channelId: ChannelId,
+      channelId: VoiceGuildChannelId,
       createPlayer: => AudioPlayer,
       force: Boolean = false,
       timeoutDur: FiniteDuration = 30.seconds

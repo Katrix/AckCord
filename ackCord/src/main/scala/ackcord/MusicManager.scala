@@ -26,7 +26,7 @@ package ackcord
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 
-import ackcord.data.{ChannelId, GuildId}
+import ackcord.data.{GuildId, VoiceGuildChannelId}
 import ackcord.lavaplayer.LavaplayerHandler
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
@@ -86,7 +86,7 @@ object MusicManager {
 
   private[ackcord] case class ConnectToChannel(
       guildId: GuildId,
-      channelId: ChannelId,
+      channelId: VoiceGuildChannelId,
       force: Boolean,
       createPlayer: () => AudioPlayer,
       timeout: FiniteDuration,

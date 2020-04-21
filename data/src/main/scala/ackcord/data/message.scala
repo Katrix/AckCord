@@ -165,7 +165,8 @@ case class User(
     email: Option[String],
     flags: Option[UserFlags],
     premiumType: Option[PremiumType]
-) extends Author[User] {
+) extends Author[User]
+    with UserOrRole {
 
   /**
     * Mention this user.
@@ -251,41 +252,143 @@ case class MessageApplication(
     name: String
 )
 
+sealed trait Message {
+
+  /** The id of the message. */
+  def id: MessageId
+
+  /** The channel this message was sent to. */
+  def channelId: TextChannelId
+
+  /** The id of the author that sent this message. */
+  def authorId: RawSnowflake
+
+  /** The content of this message. */
+  def content: String
+
+  /** The timestamp this message was created. */
+  def timestamp: OffsetDateTime
+
+  /** The timestamp this message was last edited. */
+  def editedTimestamp: Option[OffsetDateTime]
+
+  /** If this message is has text-to-speech enabled. */
+  def tts: Boolean
+
+  /** If this message mentions everyone. */
+  def mentionEveryone: Boolean
+
+  /** All the users this message mentions. */
+  def mentions: Seq[UserId]
+
+  /**
+    * Potentially channels mentioned in the message.
+    * Only used for cross posted public channels so far.
+    */
+  def mentionChannels: Seq[ChannelMention]
+
+  /** All the attachments of this message. */
+  def attachment: Seq[Attachment]
+
+  /** All the embeds of this message. */
+  def embeds: Seq[ReceivedEmbed]
+
+  /** All the reactions on this message. */
+  def reactions: Seq[Reaction]
+
+  /** A nonce for this message. */
+  def nonce: Option[String]
+
+  /** If this message is pinned. */
+  def pinned: Boolean
+
+  /** The message type. */
+  def messageType: MessageType
+
+  /** Sent with rich presence chat embeds. */
+  def activity: Option[MessageActivity]
+
+  /** Sent with rich presence chat embeds. */
+  def application: Option[MessageApplication]
+
+  /** Data sent with a crosspost. */
+  def messageReference: Option[MessageReference]
+
+  /** Extra features of the message. */
+  def flags: Option[MessageFlags]
+
+  /**
+    * If the author is a user, their user id.
+    */
+  def authorUserId: Option[UserId]
+
+  /**
+    * Gets the author of this message, ignoring the case where the author might be a webhook.
+    */
+  def authorUser(implicit c: CacheSnapshot): Option[User]
+
+  /**
+    * Expands all mentions in the message.
+    */
+  def formatMentions(implicit c: CacheSnapshot): String
+
+  private[ackcord] def withReactions(reactions: Seq[Reaction]): Message
+}
+
 /**
-  * A message sent to a channel.
-  * @param id The id of the message.
-  * @param channelId The channel this message was sent to.
-  * @param guildId The guild this message was sent to.
-  * @param authorId The id of the author that sent this message.
-  * @param isAuthorUser If the author of this message was a user.
-  * @param member The guild member user that sent this message. Can be missing.
-  * @param content The content of this message.
-  * @param timestamp The timestamp this message was created.
-  * @param editedTimestamp The timestamp this message was last edited.
-  * @param tts If this message is has text-to-speech enabled.
-  * @param mentionEveryone If this message mentions everyone.
-  * @param mentions All the users this message mentions.
-  * @param mentionRoles All the roles this message mentions.
-  * @param mentionChannels Potentially channels mentioned in the message.
-  *                        Only used for cross posted public channels so far.
-  * @param attachment All the attachments of this message.
-  * @param embeds All the embeds of this message.
-  * @param reactions All the reactions on this message.
-  * @param nonce A nonce for this message.
-  * @param pinned If this message is pinned.
-  * @param messageType The message type
-  * @param activity Sent with rich presence chat embeds
-  * @param application Sent with rich presence chat embeds
-  * @param messageReference Data sent with a crosspost
-  * @param flags Extra features of the message
+  * A message sent to a non guild channel.
   */
-case class Message(
+case class DMMessage(
     id: MessageId,
-    channelId: ChannelId,
-    guildId: Option[GuildId],
+    channelId: TextChannelId,
+    authorId: UserId,
+    content: String,
+    timestamp: OffsetDateTime,
+    editedTimestamp: Option[OffsetDateTime],
+    tts: Boolean,
+    mentionEveryone: Boolean,
+    mentions: Seq[UserId],
+    mentionChannels: Seq[ChannelMention],
+    attachment: Seq[Attachment],
+    embeds: Seq[ReceivedEmbed],
+    reactions: Seq[Reaction],
+    nonce: Option[String],
+    pinned: Boolean,
+    messageType: MessageType,
+    activity: Option[MessageActivity],
+    application: Option[MessageApplication],
+    messageReference: Option[MessageReference],
+    flags: Option[MessageFlags]
+) extends Message {
+
+  override def authorUserId: Option[UserId] = Some(authorId)
+
+  override def authorUser(implicit c: CacheSnapshot): Option[User] =
+    c.getUser(authorId)
+
+  override def formatMentions(implicit c: CacheSnapshot): String = {
+    val userList = mentions.toList.flatMap(_.resolve)
+
+    userList.foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
+  }
+
+  override private[ackcord] def withReactions(reactions: Seq[Reaction]): DMMessage = copy(reactions = reactions)
+}
+
+/**
+  * A message sent to a guild channel.
+  * @param guildId The guild this message was sent to.
+  * @param isAuthorUser If the author of this message was a user.
+  * @param member The guild member user that sent this message.
+  * @param mentionRoles All the roles this message mentions.
+  */
+case class GuildMessage(
+    id: MessageId,
+    channelId: TextGuildChannelId,
+    guildId: GuildId,
     authorId: RawSnowflake,
     isAuthorUser: Boolean,
-    member: Option[GuildMember],
+    member: GuildMember,
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -304,46 +407,40 @@ case class Message(
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags]
-) extends GetTextChannel {
+) extends Message {
 
   /**
-    * Get the guild this message was sent to, if it was sent to a guild.
+    * Get the guild this message was sent to.
     */
   def guild(implicit c: CacheSnapshot): Option[Guild] =
-    guildId.fold(None: Option[Guild])(c.getGuild(_).orElse(textGuildChannel.map(_.guildId).flatMap(c.getGuild)))
+    c.getGuild(guildId)
 
-  def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
+  override def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
-  /**
-    * Gets the author of this message, ignoring the case where the author might be a webhook.
-    */
-  def authorUser(implicit c: CacheSnapshot): Option[User] =
+  override def authorUser(implicit c: CacheSnapshot): Option[User] =
     authorUserId.fold(None: Option[User])(c.getUser)
 
   private val channelRegex = """<#(\d+)>""".r
 
-  def channelMentions: Seq[ChannelId] = {
+  def channelMentions: Seq[TextGuildChannelId] = {
     channelRegex
       .findAllMatchIn(content)
       .flatMap { m =>
         Try {
-          ChannelId(RawSnowflake(m.group(1)))
+          TextGuildChannelId(RawSnowflake(m.group(1)))
         }.toOption
       }
       .toSeq
   }
 
-  /**
-    * Formats mentions in this message to their normal syntax with names.
-    */
-  def formatMentions(implicit c: CacheSnapshot): String = {
+  override def formatMentions(implicit c: CacheSnapshot): String = {
     val userList = mentions.toList.flatMap(_.resolve)
     val roleList = mentionRoles.toList.flatMap(_.resolve)
     val optGuildId = channelId.resolve.collect {
       case channel: GuildChannel => channel.guildId
     }
     val channelList =
-      optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId => channelMentions.toList.map(_.guildResolve(guildId)))
+      optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId => channelMentions.toList.map(_.resolve(guildId)))
 
     val withUsers = userList
       .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
@@ -354,6 +451,8 @@ case class Message(
 
     withChannels
   }
+
+  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildMessage = copy(reactions = reactions)
 }
 
 /**
@@ -364,7 +463,7 @@ case class Message(
   * @param name The name of the channel
   */
 case class ChannelMention(
-    id: ChannelId,
+    id: TextChannelId,
     guildId: GuildId,
     `type`: ChannelType,
     name: String
@@ -375,7 +474,7 @@ case class ChannelMention(
   */
 case class MessageReference(
     messageId: Option[MessageId],
-    channelId: ChannelId,
+    channelId: TextChannelId,
     guildId: Option[GuildId]
 )
 

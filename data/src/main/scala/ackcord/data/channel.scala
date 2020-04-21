@@ -130,6 +130,8 @@ case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends C
   */
 sealed trait TextChannel extends Channel {
 
+  override def id: TextChannelId
+
   /**
     * Points to the last message id in the channel.
     * The id might not point to a valid or existing message.
@@ -147,6 +149,8 @@ sealed trait TextChannel extends Channel {
   * A channel within a guild
   */
 sealed trait GuildChannel extends Channel with GetGuild {
+
+  override def id: GuildChannelId
 
   /**
     * The id of the containing guild
@@ -166,7 +170,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * The permission overwrites for this channel
     */
-  def permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite]
+  def permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite]
 
   /**
     * If this channel is marked as NSFW.
@@ -176,7 +180,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * The id of the category this channel is in.
     */
-  def parentId: Option[ChannelId]
+  def parentId: Option[SnowflakeType[GuildCategory]]
 
   /**
     * Gets the category for this channel if it has one.
@@ -191,6 +195,8 @@ sealed trait GuildChannel extends Channel with GetGuild {
   * A texual channel in a guild
   */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
+
+  override def id: TextGuildChannelId
 
   /**
     * The topic for this channel.
@@ -214,15 +220,15 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   * other text channel.
   */
 case class NewsTextGuildChannel(
-    id: ChannelId,
+    id: SnowflakeType[NewsTextGuildChannel],
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
     nsfw: Boolean,
-    parentId: Option[ChannelId],
+    parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
@@ -234,16 +240,16 @@ case class NewsTextGuildChannel(
   * A normal text channel in a guild
   */
 case class NormalTextGuildChannel(
-    id: ChannelId,
+    id: SnowflakeType[NormalTextGuildChannel],
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     topic: Option[String],
     lastMessageId: Option[MessageId],
     rateLimitPerUser: Option[Int],
     nsfw: Boolean,
-    parentId: Option[ChannelId],
+    parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
@@ -255,15 +261,15 @@ case class NormalTextGuildChannel(
   * @param userLimit The max amount of users that can join this channel
   */
 case class VoiceGuildChannel(
-    id: ChannelId,
+    id: SnowflakeType[VoiceGuildChannel],
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     bitrate: Int,
     userLimit: Int,
     nsfw: Boolean,
-    parentId: Option[ChannelId]
+    parentId: Option[SnowflakeType[GuildCategory]]
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
@@ -272,13 +278,13 @@ case class VoiceGuildChannel(
   * A category in a guild
   */
 case class GuildCategory(
-    id: ChannelId,
+    id: SnowflakeType[GuildCategory],
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     nsfw: Boolean,
-    parentId: Option[ChannelId]
+    parentId: Option[SnowflakeType[GuildCategory]]
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildCategory
 }
@@ -287,13 +293,13 @@ case class GuildCategory(
   * A store channel in a guild
   */
 case class GuildStoreChannel(
-    id: ChannelId,
+    id: SnowflakeType[GuildStoreChannel],
     guildId: GuildId,
     name: String,
     position: Int,
-    permissionOverwrites: SnowflakeMap[UserOrRoleTag, PermissionOverwrite],
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
     nsfw: Boolean,
-    parentId: Option[ChannelId]
+    parentId: Option[SnowflakeType[GuildCategory]]
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildStore
 }
@@ -301,7 +307,7 @@ case class GuildStoreChannel(
 /**
   * A DM text channel
   */
-case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: UserId)
+case class DMChannel(id: SnowflakeType[DMChannel], lastMessageId: Option[MessageId], userId: UserId)
     extends Channel
     with TextChannel
     with GetUser {
@@ -317,7 +323,7 @@ case class DMChannel(id: ChannelId, lastMessageId: Option[MessageId], userId: Us
   * @param icon The icon hash for this group dm
   */
 case class GroupDMChannel(
-    id: ChannelId,
+    id: SnowflakeType[GroupDMChannel],
     name: String,
     users: Seq[UserId],
     lastMessageId: Option[MessageId],

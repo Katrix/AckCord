@@ -372,7 +372,7 @@ trait MessageParserInstances {
 
         val res = eitherToF(
           optMatch.flatMap { m =>
-            val snowflake = SnowflakeType[C](RawSnowflake(m.group(1)))
+            val snowflake = _root_.ackcord.data.SnowflakeType[C](RawSnowflake(m.group(1)))
             getObj(c, snowflake).toRight(s"${name.capitalize} not found")
           }
         )

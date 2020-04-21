@@ -50,14 +50,14 @@ object LavaplayerHandler {
   private case object Idle extends InactiveState
 
   private case class Connecting(
-      voiceChannelId: ChannelId,
+      voiceChannelId: VoiceGuildChannelId,
       sender: ActorRef[Reply],
       negotiator: ActorRef[VoiceServerNegotiator.Command]
   ) extends InactiveState
 
   private case class HasVoiceWs(
       voiceHandler: ActorRef[VoiceHandler.Command],
-      voiceChannelId: ChannelId,
+      voiceChannelId: VoiceGuildChannelId,
       sender: ActorRef[Reply],
       toggle: AtomicBoolean,
       readyListener: ActorRef[AudioAPIMessage],
@@ -66,7 +66,7 @@ object LavaplayerHandler {
 
   private case class CanSendAudio(
       voiceHandler: ActorRef[VoiceHandler.Command],
-      inVoiceChannelId: ChannelId,
+      inVoiceChannelId: VoiceGuildChannelId,
       toggle: AtomicBoolean,
       sender: ActorRef[Reply],
       readyListener: ActorRef[AudioAPIMessage],
@@ -110,8 +110,8 @@ object LavaplayerHandler {
   def handleConflictingConnect(
       command: ConnectVoiceChannel,
       parameters: Parameters,
-      newVoiceChannelId: ChannelId,
-      inVoiceChannelId: ChannelId,
+      newVoiceChannelId: VoiceGuildChannelId,
+      inVoiceChannelId: VoiceGuildChannelId,
       force: Boolean,
       firstSender: ActorRef[Reply],
       newSender: ActorRef[Reply],
@@ -149,7 +149,7 @@ object LavaplayerHandler {
     implicit val system: ActorSystem[Nothing] = context.system
 
     def connect(
-        voiceChannelId: ChannelId,
+        voiceChannelId: VoiceGuildChannelId,
         endPoint: String,
         userId: UserId,
         sessionId: String,
@@ -372,7 +372,7 @@ object LavaplayerHandler {
     * @param channelId The channel to connect to
     * @param force If it should connect even if it's already connecting, or is connected to another channel(move)
     */
-  case class ConnectVoiceChannel(channelId: ChannelId, force: Boolean = false, replyTo: ActorRef[Reply]) extends Command
+  case class ConnectVoiceChannel(channelId: VoiceGuildChannelId, force: Boolean = false, replyTo: ActorRef[Reply]) extends Command
 
   /**
     * Disconnect from a voice channel
@@ -391,7 +391,7 @@ object LavaplayerHandler {
     * @param connectedVoiceChannelId The currently connected voice channel
     * @param triedVoiceChannelId The channel that was tried and failed
     */
-  case class AlreadyConnectedFailure(connectedVoiceChannelId: ChannelId, triedVoiceChannelId: ChannelId) extends Reply
+  case class AlreadyConnectedFailure(connectedVoiceChannelId: VoiceGuildChannelId, triedVoiceChannelId: VoiceGuildChannelId) extends Reply
 
   /**
     * Sent if a connection initially succeeded, but is forced away by
@@ -399,7 +399,7 @@ object LavaplayerHandler {
     * @param oldVoiceChannelId The old voice channel id before the switch
     * @param newVoiceChannelId The new voice channel id after the switch
     */
-  case class ForcedConnectionFailure(oldVoiceChannelId: ChannelId, newVoiceChannelId: ChannelId) extends Reply
+  case class ForcedConnectionFailure(oldVoiceChannelId: VoiceGuildChannelId, newVoiceChannelId: VoiceGuildChannelId) extends Reply
 
   /**
     * Set if the bot should be playing(speaking) or not. This is required to send sound.
@@ -415,7 +415,7 @@ object LavaplayerHandler {
   private case class WsReady(serverId: RawSnowflake, userId: UserId) extends Command
 
   private case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId) extends Command
-  private[lavaplayer] case class VoiceChannelMoved(newVoiceChannel: Option[ChannelId])                extends Command
+  private[lavaplayer] case class VoiceChannelMoved(newVoiceChannel: Option[VoiceGuildChannelId])                extends Command
 
   /**
     * Tries to load an item given an identifier and returns it as a future.
@@ -454,5 +454,5 @@ object LavaplayerHandler {
     */
   class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
 
-  class ForcedConnectedException(inChannel: ChannelId) extends Exception("Connection was forced to another channel")
+  class ForcedConnectedException(inChannel: VoiceGuildChannelId) extends Exception("Connection was forced to another channel")
 }

@@ -153,7 +153,7 @@ case class StatusUpdate(nowD: StatusData) extends EagerGatewayMessage[StatusData
   * @param selfMute If the bot should mute itself.
   * @param selfDeaf If the bot should deafen itself.
   */
-case class VoiceStateUpdateData(guildId: GuildId, channelId: Option[ChannelId], selfMute: Boolean, selfDeaf: Boolean)
+case class VoiceStateUpdateData(guildId: GuildId, channelId: Option[VoiceGuildChannelId], selfMute: Boolean, selfDeaf: Boolean)
 
 /**
   * Sent by the bot to connect to a voice channel.
@@ -423,7 +423,7 @@ object GatewayEvent {
     */
   case class ChannelPinsUpdateData(
       guildId: Option[GuildId],
-      channelId: ChannelId,
+      channelId: TextChannelId,
       timestamp: JsonOption[OffsetDateTime]
   )
 
@@ -676,7 +676,7 @@ object GatewayEvent {
   }
 
   case class InviteCreateData(
-      channelId: ChannelId,
+      channelId: GuildChannelId,
       code: String,
       createdAt: OffsetDateTime,
       guildId: Option[GuildId],
@@ -699,7 +699,7 @@ object GatewayEvent {
   }
 
   case class InviteDeleteData(
-      channelId: ChannelId,
+      channelId: GuildChannelId,
       guildId: Option[GuildId],
       code: String
   )
@@ -727,7 +727,7 @@ object GatewayEvent {
   //RawPartialMessage is defined explicitly because we need to handle the author
   case class RawPartialMessage(
       id: MessageId,
-      channelId: ChannelId,
+      channelId: TextChannelId,
       author: JsonOption[Author[_]],
       content: JsonOption[String],
       timestamp: JsonOption[OffsetDateTime],
@@ -759,7 +759,7 @@ object GatewayEvent {
     * @param channelId The channel of the message.
     * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageDeleteData(id: MessageId, channelId: ChannelId, guildId: Option[GuildId])
+  case class MessageDeleteData(id: MessageId, channelId: TextChannelId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when a message is deleted.
@@ -778,7 +778,7 @@ object GatewayEvent {
     * @param channelId The channel of the deleted messages.
     * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: ChannelId, guildId: Option[GuildId])
+  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: TextChannelId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when multiple messages are deleted at the same time.
@@ -802,7 +802,7 @@ object GatewayEvent {
     */
   case class MessageReactionData(
       userId: UserId,
-      channelId: ChannelId,
+      channelId: TextChannelId,
       messageId: MessageId,
       guildId: Option[GuildId],
       member: Option[RawGuildMember],
@@ -838,7 +838,7 @@ object GatewayEvent {
     * @param messageId The message the user removed the reactions from.
     * @param guildId The guild this was done in. Can be missing.
     */
-  case class MessageReactionRemoveAllData(channelId: ChannelId, messageId: MessageId, guildId: Option[GuildId])
+  case class MessageReactionRemoveAllData(channelId: TextChannelId, messageId: MessageId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when a user removes all reactions from a message.
@@ -859,7 +859,7 @@ object GatewayEvent {
     * @param emoji The emoji that was deleted.
     */
   case class MessageReactionRemoveEmojiData(
-      channelId: ChannelId,
+      channelId: TextChannelId,
       messageId: MessageId,
       guildId: Option[GuildId],
       emoji: PartialEmoji
@@ -915,7 +915,7 @@ object GatewayEvent {
     * @param timestamp When user started typing.
     */
   case class TypingStartData(
-      channelId: ChannelId,
+      channelId: TextChannelId,
       guildId: Option[GuildId],
       userId: UserId,
       timestamp: Instant,
@@ -964,7 +964,7 @@ object GatewayEvent {
     * @param guildId The guild of the updated webhook.
     * @param channelId The channel for the webhook.
     */
-  case class WebhookUpdateData(guildId: GuildId, channelId: ChannelId)
+  case class WebhookUpdateData(guildId: GuildId, channelId: TextChannelId)
 
   /**
     * Sent to the shard when guilds webhooks are updated.

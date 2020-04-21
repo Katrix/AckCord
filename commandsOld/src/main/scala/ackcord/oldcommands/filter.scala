@@ -94,7 +94,10 @@ object CmdFilter {
     ): Boolean = guildId.resolve.map(_.members).exists(_.contains(userId))
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      msg.textGuildChannel(guildId).isDefined
+      msg match {
+        case guildMessage: GuildMessage => guildMessage.guildId == guildId
+        case _                          => false
+      }
 
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
       None
@@ -113,11 +116,10 @@ object CmdFilter {
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean = {
       val allowed = for {
-        channel      <- msg.channelId.tResolve
-        guildChannel <- channel.asGuildChannel
+        guildChannel <- msg.channelId.asChannelId[TextGuildChannel].resolve
         guild        <- guildChannel.guild
         member       <- guild.members.get(UserId(msg.authorId))
-      } yield member.channelPermissionsId(guild, msg.channelId).hasPermissions(neededPermission)
+      } yield member.channelPermissionsId(guild, guildChannel.id).hasPermissions(neededPermission)
 
       allowed.getOrElse(false)
     }
@@ -136,7 +138,7 @@ object CmdFilter {
       c.getUser(userId).exists(_.bot.getOrElse(false))
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
-      UserId(msg.authorId).resolve.exists(u => !u.bot.getOrElse(false) && msg.isAuthorUser)
+      UserId(msg.authorId).resolve.exists(u => !u.bot.getOrElse(false) && msg.authorUserId.isDefined)
 
     override def errorMessage(msg: Message)(implicit c: CacheSnapshot): Option[String] =
       None

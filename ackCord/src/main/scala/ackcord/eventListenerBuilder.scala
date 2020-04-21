@@ -26,7 +26,7 @@ package ackcord
 import scala.reflect.ClassTag
 
 import ackcord.commands.{ActionBuilder, ActionFunction, ActionTransformer}
-import ackcord.data.{Channel, Guild, GuildChannel, GuildMember, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
+import ackcord.data.{Channel, Guild, GuildChannel, GuildMember, GuildMessage, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}
@@ -93,10 +93,8 @@ object EventListenerBuilder {
                 .asInstanceOf[GuildChannel]
                 .guild
                 .map(create(_)(i))
-            case e: APIMessage.MessageMessage if e.message.textGuildChannel.nonEmpty =>
-              e.message.textGuildChannel
-                .flatMap(_.guild)
-                .map(create(_)(i))
+            case e: APIMessage.MessageMessage if e.message.isInstanceOf[GuildMessage] =>
+              e.message.asInstanceOf[GuildMessage].guildId.resolve.map(create(_)(i))
             case e: APIMessage.VoiceStateUpdate if e.voiceState.guildId.isDefined =>
               e.voiceState.guild.map(create(_)(i))
 

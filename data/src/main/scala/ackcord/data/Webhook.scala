@@ -44,7 +44,7 @@ case class Webhook(
     id: SnowflakeType[Webhook],
     `type`: WebhookType,
     guildId: Option[GuildId],
-    channelId: ChannelId,
+    channelId: TextGuildChannelId,
     user: Option[User],
     name: Option[String],
     avatar: Option[String],

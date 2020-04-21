@@ -23,7 +23,7 @@
  */
 package ackcord.util
 
-import ackcord.data.{ChannelId, GuildId}
+import ackcord.data.{ChannelId, GuildChannel, GuildChannelId, GuildId, GuildMessage}
 import ackcord.gateway.{ComplexGatewayEvent, GatewayEvent}
 import ackcord.syntax._
 import ackcord.{APIMessage, MemoryCacheSnapshot}
@@ -55,7 +55,10 @@ object GuildStreams {
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>
           implicit val c: MemoryCacheSnapshot = msg.cache.current
-          msg.message.textGuildChannel.map(_.guildId)
+          msg.message match {
+            case guildMessage: GuildMessage => Some(guildMessage.guildId)
+            case _                          => None
+          }
         case APIMessage.VoiceStateUpdate(state, _) => state.guildId
       }
 
@@ -75,7 +78,7 @@ object GuildStreams {
       log: LoggingAdapter
   ): Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
     Flow[Msg].statefulMapConcat { () =>
-      val channelToGuild = collection.mutable.Map.empty[ChannelId, GuildId]
+      val channelToGuild = collection.mutable.Map.empty[GuildChannelId, GuildId]
 
       def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
         later.value match {
@@ -106,16 +109,18 @@ object GuildStreams {
             None
           case msg: GatewayEvent.GuildCreate =>
             handleLazy(msg.guildId) { guildId =>
-              handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id -> guildId)))
+              handleLazy(msg.data)(data =>
+                data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> guildId))
+              )
               guildId
             }
           case msg: GatewayEvent.ChannelCreate =>
             handleLazyOpt(msg.guildId) { guildId =>
-              handleLazy(msg.channelId)(channelToGuild.put(_, guildId))
+              handleLazy(msg.channelId)(id => channelToGuild.put(id.asChannelId[GuildChannel], guildId))
               guildId
             }
           case msg: GatewayEvent.ChannelDelete =>
-            handleLazy(msg.channelId)(channelToGuild.remove)
+            handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
             lazyOptToOption(msg.guildId)
           case msg: GatewayEvent.GuildEvent[_] =>
             lazyToOption(msg.guildId)
@@ -124,7 +129,7 @@ object GuildStreams {
           case msg: GatewayEvent.OptGuildEvent[_] =>
             lazyOptToOption(msg.guildId)
           case msg: GatewayEvent.ChannelEvent[_] =>
-            handleLazy(msg.channelId)(channelToGuild.get).flatten
+            handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
         }
 
         List(msg -> optGuildId)

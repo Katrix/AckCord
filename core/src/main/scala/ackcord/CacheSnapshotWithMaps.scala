@@ -32,12 +32,12 @@ import ackcord.data._
   */
 trait CacheSnapshotWithMaps extends CacheSnapshot {
 
-  override def getDmChannel(id: ChannelId): Option[DMChannel] = dmChannelMap.get(id)
+  override def getDmChannel(id: SnowflakeType[DMChannel]): Option[DMChannel] = dmChannelMap.get(id)
 
   override def getUserDmChannel(id: UserId): Option[DMChannel] =
     dmChannelMap.find(_._2.userId == id).map(_._2)
 
-  override def getGroupDmChannel(id: ChannelId): Option[GroupDMChannel] =
+  override def getGroupDmChannel(id: SnowflakeType[GroupDMChannel]): Option[GroupDMChannel] =
     groupDmChannelMap.get(id)
 
   override def getGuild(id: GuildId): Option[Guild] = guildMap.get(id)
@@ -45,22 +45,24 @@ trait CacheSnapshotWithMaps extends CacheSnapshot {
   override def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] =
     getGuild(id).orElse(unavailableGuildMap.get(id))
 
-  override def getMessage(channelId: ChannelId, messageId: MessageId): Option[Message] =
+  override def getMessage(channelId: TextChannelId, messageId: MessageId): Option[Message] =
     messageMap.get(channelId).flatMap(_.get(messageId))
 
   override def getMessage(messageId: MessageId): Option[Message] =
     messageMap.collectFirst { case (_, chMap) if chMap.contains(messageId) => chMap(messageId) }
 
-  override def getGuildChannel(guildId: GuildId, id: ChannelId): Option[GuildChannel] =
+  override def getGuildChannel(guildId: GuildId, id: GuildChannelId): Option[GuildChannel] =
     guildMap.get(guildId).flatMap(_.channels.get(id))
 
-  override def getGuildChannel(id: ChannelId): Option[GuildChannel] =
+  override def getGuildChannel(id: GuildChannelId): Option[GuildChannel] =
     guildMap.collectFirst { case (_, gMap) if gMap.channels.contains(id) => gMap.channels(id) }
 
   override def getChannel(id: ChannelId): Option[Channel] =
-    getDmChannel(id).orElse(getGroupDmChannel(id)).orElse(getGuildChannel(id))
+    getDmChannel(id.asChannelId[DMChannel])
+      .orElse(getGroupDmChannel(id.asChannelId[GroupDMChannel]))
+      .orElse(getGuildChannel(id.asChannelId[GuildChannel]))
 
-  override def getTextChannel(id: ChannelId): Option[TextChannel] =
+  override def getTextChannel(id: TextChannelId): Option[TextChannel] =
     getChannel(id).collect { case tCh: TextChannel => tCh }
 
   override def getRole(id: RoleId): Option[Role] =
@@ -72,7 +74,7 @@ trait CacheSnapshotWithMaps extends CacheSnapshot {
   override def getEmoji(id: EmojiId): Option[Emoji] =
     guildMap.collectFirst { case (_, gMap) if gMap.emojis.contains(id) => gMap.emojis(id) }
 
-  override def getLastTyped(channelId: ChannelId, userId: UserId): Option[Instant] =
+  override def getLastTyped(channelId: TextChannelId, userId: UserId): Option[Instant] =
     lastTypedMap.get(channelId).flatMap(_.get(userId))
 
   override def getUser(id: UserId): Option[User] =

@@ -91,7 +91,7 @@ case class InviteWithMetadata(
 case class CreatedInvite(
     code: String,
     guildId: Option[GuildId],
-    channelId: ChannelId,
+    channelId: GuildChannelId,
     inviter: Option[User],
     uses: Int,
     maxUses: Int,
@@ -115,7 +115,7 @@ case class InviteGuild(id: GuildId, name: String, splash: Option[String], icon: 
   * @param name The channel name
   * @param `type` The type of channel
   */
-case class InviteChannel(id: ChannelId, name: String, `type`: ChannelType)
+case class InviteChannel(id: GuildChannelId, name: String, `type`: ChannelType)
 
 /**
   * The target user of an invite.

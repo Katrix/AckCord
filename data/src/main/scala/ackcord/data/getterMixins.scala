@@ -53,41 +53,14 @@ trait GetUser {
   def user(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(userId)
 }
 
-trait GetTextChannel {
-  def channelId: ChannelId
-
-  /**
-    * Resolve the channelId of this object as a dm channel
-    */
-  def dmChannel(implicit snapshot: CacheSnapshot): Option[DMChannel] = snapshot.getDmChannel(channelId)
-
-  /**
-    * Resolve the channelId of this object as a TextGuildChannel
-    */
-  def textGuildChannel(implicit snapshot: CacheSnapshot): Option[TextGuildChannel] =
-    snapshot.getGuildChannel(channelId).collect {
-      case guildChannel: TextGuildChannel => guildChannel
-    }
-
-  /**
-    * Resolve the channelId of this object as a TextGuildChannel using an provided guildId
-    */
-  def textGuildChannel(
-      guildId: GuildId
-  )(implicit snapshot: CacheSnapshot): Option[TextGuildChannel] =
-    snapshot.getGuildChannel(guildId, channelId).collect {
-      case guildChannel: TextGuildChannel => guildChannel
-    }
-}
-
 trait GetVoiceChannelOpt {
-  def channelId: Option[ChannelId]
+  def channelId: Option[VoiceGuildChannelId]
 
   /**
     * Resolve the channelId of this object as a voice channel.
     */
   def voiceChannel(implicit snapshot: CacheSnapshot): Option[Channel] =
-    channelId.flatMap(snapshot.getChannel).collect {
+    channelId.flatMap(snapshot.getGuildChannel).collect {
       case voiceChannel: VoiceGuildChannel => voiceChannel
     }
 }

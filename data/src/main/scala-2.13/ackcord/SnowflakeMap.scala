@@ -118,16 +118,16 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   final override def size: Int = inner.size
 
-  final override def get(key: Key): Option[V] = inner.get(key)
+  final override def get(key: Key): Option[V] = inner.get(key.toUnsignedLong)
 
-  final override def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key, default)
+  final override def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key.toUnsignedLong, default)
 
-  final override def apply(key: Key): V = inner.apply(key)
+  final override def apply(key: Key): V = inner.apply(key.toUnsignedLong)
 
-  override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1, kv._2))
+  override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1.toUnsignedLong, kv._2))
 
   override def updated[V1 >: V](key: Key, value: V1): SnowflakeMap[K, V1] =
-    new SnowflakeMap(inner.updated(key, value))
+    new SnowflakeMap(inner.updated(key.toUnsignedLong, value))
 
   /**
     * Updates the map, using the provided function to resolve conflicts if the key is already present.
@@ -147,9 +147,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @return       The updated map.
     */
   def updateWith[S >: V](key: Key, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.updateWith(key, value, f))
+    new SnowflakeMap(inner.updateWith(key.toUnsignedLong, value, f))
 
-  override def removed(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner.removed(key))
+  override def removed(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner.removed(key.toUnsignedLong))
 
   /**
     * A combined transform and filter function. Returns an `SnowflakeMap` such that
@@ -234,13 +234,13 @@ object SnowflakeMap {
     * Create a snowflake map with a single value.
     */
   def singleton[K, V](key: SnowflakeType[K], value: V): SnowflakeMap[K, V] =
-    new SnowflakeMap(LongMap.singleton(key, value))
+    new SnowflakeMap(LongMap.singleton(key.toUnsignedLong, value))
 
   /**
     * Create a snowflake map from multiple values.
     */
   def apply[K, V](elems: (SnowflakeType[K], V)*): SnowflakeMap[K, V] =
-    new SnowflakeMap(LongMap.apply(elems: _*))
+    new SnowflakeMap(LongMap.apply(elems.map(t => t._1.toUnsignedLong -> t._2): _*))
 
   /**
     * Create a snowflake map from an IterableOnce of snowflakes and values.

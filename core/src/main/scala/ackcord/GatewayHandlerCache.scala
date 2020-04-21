@@ -25,7 +25,7 @@ package ackcord
 
 import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
-import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildId, TextChannel}
+import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildChannel, GuildId, TextChannel, TextChannelId, TextGuildChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 import ackcord.requests.SupervisionStreams
 import ackcord.syntax._
@@ -78,10 +78,10 @@ object GatewayHandlerCache {
     def getChannelUsingMaybeGuildId(
         state: CacheSnapshotWithMaps,
         guildId: Option[GuildId],
-        channelId: ChannelId
+        channelId: TextChannelId
     ): Option[TextChannel] =
       guildId.fold(state.getTextChannel(channelId)) { guildId =>
-        state.getGuildChannel(guildId, channelId).flatMap(_.asTextChannel)
+        channelId.asChannelId[TextGuildChannel].resolve(guildId)(state)
       }
 
     def getGuildIfDefined(state: CacheSnapshotWithMaps, guildId: Option[GuildId]): Option[Option[Guild]] =
@@ -98,21 +98,21 @@ object GatewayHandlerCache {
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuildChannel(data.id).map(ch => api.ChannelCreate(ch, state)),
+              state => state.current.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelCreate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry
             )
           case gatewayEv.ChannelUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuildChannel(data.id).map(ch => api.ChannelUpdate(ch, state)),
+              state => state.current.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelUpdate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry
             )
           case gatewayEv.ChannelDelete(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.previous.getGuildChannel(data.id).map(ch => api.ChannelDelete(ch, state)),
+              state => state.previous.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelDelete(ch, state)),
               CacheHandlers.rawChannelDeleter,
               registry
             )
@@ -267,7 +267,7 @@ object GatewayHandlerCache {
               state =>
                 for {
                   guild   <- getGuildIfDefined(state.current, data.guildId)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId.asChannelId[TextChannel])
                 } yield api.InviteCreate(
                   guild,
                   channel,
@@ -293,7 +293,7 @@ object GatewayHandlerCache {
               state =>
                 for {
                   guild   <- getGuildIfDefined(state.current, data.guildId)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
+                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId.asChannelId[TextChannel])
                 } yield api.InviteDelete(guild, channel, data.code, state),
               NOOPHandler,
               registry
@@ -429,7 +429,7 @@ object GatewayHandlerCache {
               state =>
                 for {
                   guild   <- state.current.getGuild(data.guildId)
-                  channel <- guild.channels.get(data.channelId)
+                  channel <- guild.channels.get(data.channelId.asChannelId[GuildChannel])
                 } yield api.WebhookUpdate(guild, channel, state),
               NOOPHandler,
               registry

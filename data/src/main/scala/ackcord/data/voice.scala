@@ -42,7 +42,7 @@ import ackcord.data.raw.RawGuildMember
   */
 case class VoiceState(
     guildId: Option[GuildId],
-    channelId: Option[ChannelId],
+    channelId: Option[VoiceGuildChannelId],
     userId: UserId,
     member: Option[RawGuildMember],
     sessionId: String,

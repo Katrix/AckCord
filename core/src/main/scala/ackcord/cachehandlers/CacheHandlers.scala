@@ -407,22 +407,41 @@ object CacheHandlers {
           updater <- registry.getUpdater[Message]
           message <- builder.getMessage(obj.channelId, obj.id)
         } {
-          val newMessage = message.copy(
-            authorId = obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId),
-            isAuthorUser = obj.author.map(_.isUser).getOrElse(message.isAuthorUser),
-            content = obj.content.getOrElse(message.content),
-            timestamp = obj.timestamp.getOrElse(message.timestamp),
-            editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
-            tts = obj.tts.getOrElse(message.tts),
-            mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
-            mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
-            mentionRoles = obj.mentionRoles.getOrElse(message.mentionRoles),
-            attachment = obj.attachment.getOrElse(message.attachment),
-            embeds = obj.embeds.getOrElse(message.embeds),
-            reactions = obj.reactions.getOrElse(message.reactions),
-            nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
-            pinned = obj.pinned.getOrElse(message.pinned)
-          )
+          val newMessage = message match {
+            case dmMessage: DMMessage =>
+              dmMessage.copy(
+                authorId = UserId(obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId)),
+                content = obj.content.getOrElse(message.content),
+                timestamp = obj.timestamp.getOrElse(message.timestamp),
+                editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
+                tts = obj.tts.getOrElse(message.tts),
+                mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
+                mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
+                attachment = obj.attachment.getOrElse(message.attachment),
+                embeds = obj.embeds.getOrElse(message.embeds),
+                reactions = obj.reactions.getOrElse(message.reactions),
+                nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
+                pinned = obj.pinned.getOrElse(message.pinned)
+              )
+            case guildMessage: GuildMessage =>
+              guildMessage.copy(
+                authorId = obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId),
+                isAuthorUser = obj.author.map(_.isUser).getOrElse(guildMessage.isAuthorUser),
+                content = obj.content.getOrElse(message.content),
+                timestamp = obj.timestamp.getOrElse(message.timestamp),
+                editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
+                tts = obj.tts.getOrElse(message.tts),
+                mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
+                mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
+                mentionRoles = obj.mentionRoles.getOrElse(guildMessage.mentionRoles),
+                attachment = obj.attachment.getOrElse(message.attachment),
+                embeds = obj.embeds.getOrElse(message.embeds),
+                reactions = obj.reactions.getOrElse(message.reactions),
+                nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
+                pinned = obj.pinned.getOrElse(message.pinned)
+              )
+          }
+
           updater.handle(builder, newMessage, registry)
         }
 
@@ -446,10 +465,10 @@ object CacheHandlers {
               emoji.copy(count = emoji.count + 1, me = isMe)
             }
 
-            message.copy(reactions = toNotChange ++ changed)
+            message.withReactions(toNotChange ++ changed)
           } else {
             val isMe = builder.botUser.id == obj.userId
-            message.copy(reactions = Reaction(1, isMe, obj.emoji) +: message.reactions)
+            message.withReactions(Reaction(1, isMe, obj.emoji) +: message.reactions)
           }
 
           updater.handle(builder, newMessage, registry)
@@ -542,7 +561,11 @@ object CacheHandlers {
           registry.getUpdater[Guild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
               rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
-                guildUpdater.handle(builder, guild.copy(channels = guild.channels - rawChannel.id), registry)
+                guildUpdater.handle(
+                  builder,
+                  guild.copy(channels = guild.channels - rawChannel.id.asChannelId[GuildChannel]),
+                  registry
+                )
               }
             }
 
@@ -557,15 +580,14 @@ object CacheHandlers {
           }
         case ChannelType.DM =>
           if (registry.hasDeleter[DMChannel]) {
-            builder.dmChannelMap.remove(rawChannel.id)
+            builder.dmChannelMap.remove(rawChannel.id.asChannelId[DMChannel])
           }
 
         case ChannelType.GroupDm =>
           if (registry.hasDeleter[GroupDMChannel]) {
-            builder.groupDmChannelMap.remove(rawChannel.id)
+            builder.groupDmChannelMap.remove(rawChannel.id.asChannelId[GroupDMChannel])
           }
         case ChannelType.Unknown(_) =>
-          builder.dmChannelMap.remove(rawChannel.id)
       }
     }
   }
@@ -664,7 +686,7 @@ object CacheHandlers {
             emoji.copy(count = emoji.count - 1, me = isMe)
           }
 
-          val newMessage = message.copy(reactions = toNotChange ++ changed)
+          val newMessage = message.withReactions(toNotChange ++ changed)
           updater.handle(builder, newMessage, registry)
         }
       }
@@ -683,7 +705,7 @@ object CacheHandlers {
           updater <- registry.getUpdater[Message]
           message <- builder.getMessage(obj.channelId, obj.messageId)
         } {
-          updater.handle(builder, message.copy(reactions = Nil), registry)
+          updater.handle(builder, message.withReactions(Nil), registry)
         }
       }
     }
@@ -701,7 +723,7 @@ object CacheHandlers {
           updater <- registry.getUpdater[Message]
           message <- builder.getMessage(obj.channelId, obj.messageId)
         } {
-          updater.handle(builder, message.copy(reactions = message.reactions.filter(_.emoji != obj.emoji)), registry)
+          updater.handle(builder, message.withReactions(message.reactions.filter(_.emoji != obj.emoji)), registry)
         }
       }
     }

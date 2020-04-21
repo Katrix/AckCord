@@ -38,12 +38,12 @@ import shapeless.tag._
 class CacheSnapshotBuilder(
     seq: Long,
     var botUser: User @@ BotUser,
-    var dmChannelMap: mutable.Map[ChannelId, DMChannel],
-    var groupDmChannelMap: mutable.Map[ChannelId, GroupDMChannel],
+    var dmChannelMap: mutable.Map[SnowflakeType[DMChannel], DMChannel],
+    var groupDmChannelMap: mutable.Map[SnowflakeType[GroupDMChannel], GroupDMChannel],
     var unavailableGuildMap: mutable.Map[GuildId, UnavailableGuild],
     var guildMap: mutable.Map[GuildId, Guild],
-    var messageMap: mutable.Map[ChannelId, mutable.Map[MessageId, Message]],
-    var lastTypedMap: mutable.Map[ChannelId, mutable.Map[UserId, Instant]],
+    var messageMap: mutable.Map[TextChannelId, mutable.Map[MessageId, Message]],
+    var lastTypedMap: mutable.Map[TextChannelId, mutable.Map[UserId, Instant]],
     var userMap: mutable.Map[UserId, User],
     var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]],
     creationProcessor: MemoryCacheSnapshot.CacheProcessor
@@ -72,10 +72,10 @@ class CacheSnapshotBuilder(
       creationProcessor = newProcessor
     )
   }
-  override def getChannelMessages(channelId: ChannelId): mutable.Map[SnowflakeType[Message], Message] =
+  override def getChannelMessages(channelId: TextChannelId): mutable.Map[SnowflakeType[Message], Message] =
     messageMap.getOrElseUpdate(channelId, mutable.Map.empty)
 
-  override def getChannelLastTyped(channelId: ChannelId): mutable.Map[SnowflakeType[User], Instant] =
+  override def getChannelLastTyped(channelId: TextChannelId): mutable.Map[SnowflakeType[User], Instant] =
     lastTypedMap.getOrElseUpdate(channelId, mutable.Map.empty)
 
   override def getGuildBans(id: GuildId): mutable.Map[SnowflakeType[User], Ban] =

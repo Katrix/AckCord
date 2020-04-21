@@ -71,7 +71,7 @@ case class RawChannel(
     icon: Option[String],
     ownerId: Option[UserId],
     applicationId: Option[RawSnowflake],
-    parentId: Option[ChannelId],
+    parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime]
 ) {
 
@@ -89,7 +89,7 @@ case class RawChannel(
         } yield {
           if (`type` == ChannelType.GuildNews) {
             NewsTextGuildChannel(
-              id,
+              SnowflakeType(id),
               guildId,
               name,
               position,
@@ -102,7 +102,7 @@ case class RawChannel(
             )
           } else {
             NormalTextGuildChannel(
-              id,
+              SnowflakeType(id),
               guildId,
               name,
               position,
@@ -121,7 +121,7 @@ case class RawChannel(
           recipients <- recipients
           if recipients.nonEmpty
         } yield {
-          DMChannel(id, lastMessageId, recipients.head.id)
+          DMChannel(SnowflakeType(id), lastMessageId, recipients.head.id)
         }
       case ChannelType.GuildVoice =>
         for {
@@ -133,7 +133,7 @@ case class RawChannel(
           userLimit            <- userLimit
         } yield {
           VoiceGuildChannel(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -150,7 +150,7 @@ case class RawChannel(
           recipients <- recipients
           ownerId    <- ownerId
         } yield {
-          GroupDMChannel(id, name, recipients.map(_.id), lastMessageId, ownerId, applicationId, icon)
+          GroupDMChannel(SnowflakeType(id), name, recipients.map(_.id), lastMessageId, ownerId, applicationId, icon)
         }
       case ChannelType.GuildCategory =>
         for {
@@ -160,7 +160,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildCategory(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -177,7 +177,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildStoreChannel(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -200,7 +200,7 @@ case class RawChannel(
         } yield {
           if (`type` == ChannelType.GuildNews) {
             NewsTextGuildChannel(
-              id,
+              SnowflakeType(id),
               guildId,
               name,
               position,
@@ -213,7 +213,7 @@ case class RawChannel(
             )
           } else {
             NormalTextGuildChannel(
-              id,
+              SnowflakeType(id),
               guildId,
               name,
               position,
@@ -237,7 +237,7 @@ case class RawChannel(
           userLimit            <- userLimit
         } yield {
           VoiceGuildChannel(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -256,7 +256,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildCategory(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -272,7 +272,7 @@ case class RawChannel(
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildStoreChannel(
-            id,
+            SnowflakeType(id),
             guildId,
             name,
             position,
@@ -369,7 +369,7 @@ case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[Strin
 //Remember to automatic derivation for encoder and decoder here
 case class RawMessage(
     id: MessageId,
-    channelId: ChannelId,
+    channelId: TextChannelId,
     guildId: Option[GuildId],
     author: Author[_],
     member: Option[PartialRawGuildMember], //Hope this is correct
@@ -396,33 +396,62 @@ case class RawMessage(
   /**
     * Convert this to a normal message.
     */
-  def toMessage: Message =
-    Message(
-      id,
-      channelId,
-      guildId,
-      RawSnowflake(author.id),
-      author.isUser,
-      member.map(_.toGuildMember(UserId(author.id), guildId.get)),
-      content,
-      timestamp,
-      editedTimestamp,
-      tts,
-      mentionEveryone,
-      mentions.map(_.id),
-      mentionRoles,
-      mentionChannels.getOrElse(Nil),
-      attachment,
-      embeds,
-      reactions.getOrElse(Seq.empty),
-      nonce.map(_.fold(_.toString, identity)),
-      pinned,
-      `type`,
-      activity.map(_.toMessageActivity),
-      application,
-      messageReference,
-      flags
-    )
+  def toMessage: Message = {
+    guildId match {
+      case Some(guildId) =>
+        GuildMessage(
+          id,
+          channelId.asChannelId[TextGuildChannel],
+          guildId,
+          author.id,
+          author.isUser,
+          member.get.toGuildMember(UserId(author.id), guildId),
+          content,
+          timestamp,
+          editedTimestamp,
+          tts,
+          mentionEveryone,
+          mentions.map(_.id),
+          mentionRoles,
+          mentionChannels.getOrElse(Nil),
+          attachment,
+          embeds,
+          reactions.getOrElse(Seq.empty),
+          nonce.map(_.fold(_.toString, identity)),
+          pinned,
+          `type`,
+          activity.map(_.toMessageActivity),
+          application,
+          messageReference,
+          flags
+        )
+
+      case None =>
+        DMMessage(
+          id,
+          channelId,
+          UserId(author.id),
+          content,
+          timestamp,
+          editedTimestamp,
+          tts,
+          mentionEveryone,
+          mentions.map(_.id),
+          mentionChannels.getOrElse(Nil),
+          attachment,
+          embeds,
+          reactions.getOrElse(Seq.empty),
+          nonce.map(_.fold(_.toString, identity)),
+          pinned,
+          `type`,
+          activity.map(_.toMessageActivity),
+          application,
+          messageReference,
+          flags
+        )
+
+    }
+  }
 }
 
 /**
@@ -482,10 +511,10 @@ case class RawGuild(
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
-    afkChannelId: Option[ChannelId], //AfkChannelId can be null
+    afkChannelId: Option[VoiceGuildChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     embedEnabled: Option[Boolean],
-    embedChannelId: Option[ChannelId],
+    embedChannelId: Option[GuildChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -495,10 +524,10 @@ case class RawGuild(
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean],
-    widgetChannelId: Option[ChannelId],
-    systemChannelId: Option[ChannelId],
+    widgetChannelId: Option[GuildChannelId],
+    systemChannelId: Option[TextGuildChannelId],
     systemChannelFlags: SystemChannelFlags,
-    rulesChannelId: Option[ChannelId],
+    rulesChannelId: Option[TextGuildChannelId],
     joinedAt: Option[OffsetDateTime],
     large: Option[Boolean],
     unavailable: Option[Boolean],
@@ -515,7 +544,7 @@ case class RawGuild(
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
     preferredLocale: Option[String],
-    publicUpdatesChannelId: Option[ChannelId]
+    publicUpdatesChannelId: Option[TextGuildChannelId]
 ) {
 
   /**

@@ -27,7 +27,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord._
 import ackcord.oldcommands._
-import ackcord.data.{GuildId, TextChannel, UserId}
+import ackcord.data.{GuildId, TextChannel, TextGuildChannel, UserId}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import ackcord.requests.CreateMessage
 import ackcord.syntax._
@@ -52,7 +52,7 @@ class MusicCommands(guildId: GuildId, musicHandler: ActorRef[MusicHandler.Comman
         import runner._
         for {
           guild   <- optionPure(guildId.resolve)
-          channel <- optionPure(guild.textChannelById(cmd.msg.channelId))
+          channel <- optionPure(guild.textChannelById(cmd.msg.channelId.asChannelId[TextGuildChannel]))
           _ <- liftOptionT[Future, CreateMessage] {
             OptionT(guild.voiceStateFor(UserId(cmd.msg.authorId)) match {
               case Some(vs) if vs.channelId.isDefined =>

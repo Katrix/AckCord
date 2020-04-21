@@ -29,7 +29,7 @@ import scala.concurrent.duration._
 
 import ackcord.oldcommands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
-import ackcord.data.{ChannelId, GuildId, TextChannel}
+import ackcord.data.{ChannelId, GuildId, TextChannel, VoiceGuildChannelId}
 import ackcord.examplecore.Compat
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
@@ -101,7 +101,7 @@ object MusicHandler {
 
   def inactive(
       parameters: Parameters,
-      inVoiceChannel: Option[ChannelId],
+      inVoiceChannel: Option[VoiceGuildChannelId],
       lastTextChannel: Option[TextChannel],
       queue: Queue[AudioTrack]
   ): Behavior[Command] = {
@@ -189,7 +189,7 @@ object MusicHandler {
 
   def active(
       parameters: MusicHandler.Parameters,
-      inVoiceChannel: ChannelId,
+      inVoiceChannel: VoiceGuildChannelId,
       lastTextChannel: Option[TextChannel],
       queue: Queue[AudioTrack]
   ): Behavior[Command] = {
@@ -390,7 +390,7 @@ object MusicHandler {
     def replyTo: ActorRef[CommandAck.type]
     def tChannel: TextChannel
   }
-  case class QueueUrl(url: String, tChannel: TextChannel, vChannelId: ChannelId, replyTo: ActorRef[CommandAck.type])
+  case class QueueUrl(url: String, tChannel: TextChannel, vChannelId: VoiceGuildChannelId, replyTo: ActorRef[CommandAck.type])
       extends MusicHandlerEvents
   case class StopMusic(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
   case class TogglePause(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents

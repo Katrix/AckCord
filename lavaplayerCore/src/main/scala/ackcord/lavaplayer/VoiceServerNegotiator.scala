@@ -24,7 +24,7 @@
 
 package ackcord.lavaplayer
 
-import ackcord.data.{ChannelId, GuildId, UserId}
+import ackcord.data.{ChannelId, GuildId, UserId, VoiceGuildChannelId}
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import ackcord.{APIMessage, Cache}
 import akka.actor.typed._
@@ -37,7 +37,7 @@ object VoiceServerNegotiator {
 
   def apply(
       guildId: GuildId,
-      voiceChannelId: ChannelId,
+      voiceChannelId: VoiceGuildChannelId,
       cache: Cache,
       replyTo: ActorRef[GotVoiceData]
   ): Behavior[Command] = Behaviors.setup { ctx =>

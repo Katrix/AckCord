@@ -23,6 +23,5 @@
  */
 package ackcord.data
 
-sealed trait SnowflakeTag[+A]
-sealed trait RawSnowflakeTag
-sealed trait UserOrRoleTag
+//This is a stupid way to get around lack of union types
+trait UserOrRole

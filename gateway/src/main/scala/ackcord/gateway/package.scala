@@ -21,18 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package ackcord
-
-import ackcord.data.tagS
-import shapeless.tag.@@
 
 package object gateway {
 
-  type GatewayIntents = Int @@ GatewayIntents.type
+  type GatewayIntents = GatewayIntents.GatewayIntents
   object GatewayIntents {
+    type GatewayIntents
 
-    private[gateway] def apply(int: Int): Int @@ GatewayIntents.type = tagS[GatewayIntents.type](int)
+    private[gateway] def apply(int: Int): GatewayIntents = int.asInstanceOf[GatewayIntents]
 
     /**
       * Create a UserFlag that has all the flags passed in.
@@ -42,7 +39,7 @@ package object gateway {
     /**
       * Create a UserFlag from an int.
       */
-    def fromInt(int: Int): Int @@ GatewayIntents.type = apply(int)
+    def fromInt(int: Int): GatewayIntents = apply(int)
 
     val None: GatewayIntents = GatewayIntents(0)
 
@@ -181,27 +178,29 @@ package object gateway {
   }
   implicit class GatewayIntentsSyntax(private val intents: GatewayIntents) extends AnyVal {
 
+    def toInt: Int = intents.asInstanceOf[Int]
+
     /**
       * Add an intent to these intents.
       * @param other The other intent.
       */
-    def ++(other: GatewayIntents): GatewayIntents = GatewayIntents(intents | other)
+    def ++(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt | other.toInt)
 
     /**
       * Remove an intent from these intents.
       * @param other The intent to remove.
       */
-    def --(other: GatewayIntents): GatewayIntents = GatewayIntents(intents & ~other)
+    def --(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt & ~other.toInt)
 
     /**
       * Check if these intents has an intent.
       * @param other The intent to check against.
       */
-    def hasFlag(other: GatewayIntents): Boolean = (intents & other) == other
+    def hasFlag(other: GatewayIntents): Boolean = (toInt & other.toInt) == other.toInt
 
     /**
       * Check if these intents is empty.
       */
-    def isNone: Boolean = intents == 0
+    def isNone: Boolean = toInt == 0
   }
 }

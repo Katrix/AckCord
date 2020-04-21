@@ -177,7 +177,7 @@ object GatewayProtocol extends DiscordProtocol {
 
     for {
       id        <- c.get[MessageId]("id")
-      channelId <- c.get[ChannelId]("channel_id")
+      channelId <- c.get[TextChannelId]("channel_id")
       author <- {
         if (isWebhook) c.get[JsonOption[WebhookAuthor]]("author")
         else c.get[JsonOption[User]]("author")

@@ -216,10 +216,10 @@ case class Guild(
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
-    afkChannelId: Option[ChannelId],
+    afkChannelId: Option[VoiceGuildChannelId],
     afkTimeout: Int,
     embedEnabled: Option[Boolean],
-    embedChannelId: Option[ChannelId],
+    embedChannelId: Option[GuildChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -229,16 +229,16 @@ case class Guild(
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean],
-    widgetChannelId: Option[ChannelId],
-    systemChannelId: Option[ChannelId],
+    widgetChannelId: Option[GuildChannelId],
+    systemChannelId: Option[TextGuildChannelId],
     systemChannelFlags: SystemChannelFlags,
-    rulesChannelId: Option[ChannelId],
+    rulesChannelId: Option[TextGuildChannelId],
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
     voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
     members: SnowflakeMap[User, GuildMember],
-    channels: SnowflakeMap[Channel, GuildChannel],
+    channels: SnowflakeMap[GuildChannel, GuildChannel],
     presences: SnowflakeMap[User, Presence],
     maxPresences: Int,
     maxMembers: Option[Int],
@@ -248,7 +248,7 @@ case class Guild(
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
     preferredLocale: Option[String],
-    publicUpdatesChannelId: Option[ChannelId]
+    publicUpdatesChannelId: Option[TextGuildChannelId]
 ) extends UnknownStatusGuild {
   override def unavailable: Boolean = false
 
@@ -364,7 +364,7 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def permissionsWithOverridesId(guild: Guild, guildPermissions: Permission, channelId: ChannelId): Permission = {
+  def permissionsWithOverridesId(guild: Guild, guildPermissions: Permission, channelId: GuildChannelId): Permission = {
     if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
     else {
       val res = guild.channels.get(channelId).map { channel =>
@@ -410,7 +410,7 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel given a guild.
     */
-  def channelPermissionsId(guild: Guild, channelId: ChannelId): Permission =
+  def channelPermissionsId(guild: Guild, channelId: GuildChannelId): Permission =
     permissionsWithOverridesId(guild, permissions(guild), channelId)
 
   /**
@@ -698,7 +698,7 @@ object IntegrationExpireBehavior
   */
 case class IntegrationAccount(id: String, name: String)
 
-case class GuildEmbed(enabled: Boolean, channelId: Option[ChannelId])
+case class GuildEmbed(enabled: Boolean, channelId: Option[GuildChannelId])
 
 /**
   * Represents a banned user.

@@ -23,42 +23,10 @@
  */
 package ackcord.data
 
-/**
-  * A role in a guild.
-  * @param id The id of this role.
-  * @param guildId The guildId this role belongs to.
-  * @param name The name of this role.
-  * @param color The color of this role.
-  * @param hoist If this role is listed in the sidebar.
-  * @param position The position of this role.
-  * @param permissions The permissions this role grant.
-  * @param managed If this is a bot role.
-  * @param mentionable If you can mention this role.
-  */
-case class Role(
-    id: RoleId,
-    guildId: GuildId,
-    name: String,
-    color: Int,
-    hoist: Boolean,
-    position: Int,
-    permissions: Permission,
-    managed: Boolean,
-    mentionable: Boolean
-) extends GetGuild with UserOrRole {
+import java.lang.{Long => JLong}
 
-  /**
-    * Mention this role.
-    */
-  def mention: String = s"<@&$id>"
-
-  /**
-    * Check if this role is above another role.
-    */
-  def isAbove(other: Role): Boolean = this.position > other.position
-
-  /**
-    * Check if this role is below another role.
-    */
-  def isBelow(other: Role): Boolean = this.position < other.position
+private[data] trait SnowflakeCompanion[Type] {
+  def apply(content: String): SnowflakeType[Type]         = JLong.parseUnsignedLong(content).asInstanceOf[SnowflakeType[Type]]
+  def apply(long: Long): SnowflakeType[Type]              = long.asInstanceOf[SnowflakeType[Type]]
+  def apply(other: SnowflakeType[_]): SnowflakeType[Type] = other.asInstanceOf[SnowflakeType[Type]]
 }

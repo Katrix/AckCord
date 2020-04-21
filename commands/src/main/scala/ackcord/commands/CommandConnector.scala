@@ -138,7 +138,7 @@ class CommandConnector(
         case (message, cache, args) =>
           implicit val c: CacheSnapshot = cache
 
-          message.channelId.tResolve.map { channel =>
+          message.channelId.resolve.map { channel =>
             MessageParser
               .parseResultEither(args, command.parser)
               .map(a => CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A])

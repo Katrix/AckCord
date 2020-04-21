@@ -26,7 +26,7 @@ package ackcord.util
 
 import scala.collection.mutable
 
-import ackcord.data.{ChannelId, GuildId}
+import ackcord.data.{GuildChannel, GuildChannelId, GuildId}
 import ackcord.gateway.{GatewayEvent, GatewayMessage}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
@@ -42,7 +42,7 @@ class GatewayGuildRouter[Inner](
     shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
 ) extends GuildRouter[GatewayMessage[_], Inner](ctx, replyTo, behavior, notGuildHandler, shutdownBehavior) {
 
-  val channelToGuild = mutable.HashMap.empty[ChannelId, GuildId]
+  val channelToGuild = mutable.HashMap.empty[GuildChannelId, GuildId]
 
   def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
     later.value match {
@@ -65,15 +65,15 @@ class GatewayGuildRouter[Inner](
   override def handleThroughMessage(a: GatewayMessage[_]): Unit = a match {
     case msg: GatewayEvent.GuildCreate =>
       handleLazy(msg.guildId)(guildId => sendToGuild(guildId, msg, handleEvent))
-      handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id -> data.id)))
+      handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> data.id)))
     case msg: GatewayEvent.ChannelCreate =>
       handleLazyOpt(msg.guildId) { guildId =>
         sendToGuild(guildId, msg, handleEvent)
-        handleLazy(msg.channelId)(channelId => channelToGuild.put(channelId, guildId))
+        handleLazy(msg.channelId)(channelId => channelToGuild.put(channelId.asChannelId[GuildChannel], guildId))
       }
     case msg: GatewayEvent.ChannelDelete =>
       handleLazyOpt(msg.guildId)(sendToGuild(_, msg, handleEvent))
-      handleLazy(msg.channelId)(channelToGuild.remove)
+      handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
 
     case msg: GatewayEvent.GuildDelete =>
       handleLazy(msg.data) { guild =>
@@ -93,7 +93,7 @@ class GatewayGuildRouter[Inner](
       }
     case msg: GatewayEvent.ChannelEvent[_] =>
       handleLazy(msg.channelId) { channelId =>
-        channelToGuild.get(channelId).fold(sendToNotGuild(msg, handleEvent))(sendToGuild(_, msg, handleEvent))
+        channelToGuild.get(channelId.asChannelId[GuildChannel]).fold(sendToNotGuild(msg, handleEvent))(sendToGuild(_, msg, handleEvent))
       }
     case _ =>
   }

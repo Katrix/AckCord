@@ -128,7 +128,7 @@ object CommandBuilder {
     * lets you build the result command message.
     */
   def onlyInGuild[I[A] <: CommandMessage[A], O[_]](
-      create: (TextGuildChannel, Guild) => I ~> O
+      create: (TextGuildChannel, GuildMessage, Guild) => I ~> O
   ): CommandFunction[I, O] =
     new CommandFunction[I, O] {
 
@@ -142,7 +142,12 @@ object CommandBuilder {
 
           m.textChannel match {
             case chG: TextGuildChannel =>
-              chG.guild.fold[Result[A]](e)(g => Right(create(chG, g)(m)))
+              chG.guild.fold[Result[A]](e) { guild =>
+                m.message match {
+                  case guildMessage: GuildMessage =>Right(create(chG, guildMessage, guild)(m))
+                  case _ => e
+                }
+              }
             case _ => e
           }
         }
@@ -168,7 +173,7 @@ object CommandBuilder {
       m.guild.voiceStates
         .get(m.user.id)
         .flatMap(_.channelId)
-        .flatMap(_.vResolve(m.guild.id))
+        .flatMap(_.resolve(m.guild.id))
         .toRight(
           Some(CommandError.mk(s"This command can only be used while in a voice channel", m)): Option[CommandError]
         )
@@ -425,11 +430,14 @@ trait GuildCommandMessage[+A] extends CommandMessage[A] {
     * The guild this command was used in.
     */
   def guild: Guild
+
+  override def message: GuildMessage
 }
 object GuildCommandMessage {
 
   case class Default[A](
       override val textChannel: TextGuildChannel,
+      override val message: GuildMessage,
       guild: Guild,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
@@ -437,6 +445,7 @@ object GuildCommandMessage {
 
   case class WithUser[A](
       override val textChannel: TextGuildChannel,
+      override val message: GuildMessage,
       guild: Guild,
       user: User,
       m: CommandMessage[A]
@@ -472,6 +481,7 @@ object GuildMemberCommandMessage {
 
   case class Default[A](
       override val textChannel: TextGuildChannel,
+      override val message: GuildMessage,
       guild: Guild,
       user: User,
       guildMember: GuildMember,
@@ -491,6 +501,7 @@ object VoiceGuildCommandMessage {
 
   case class Default[A](
       override val textChannel: TextGuildChannel,
+      override val message: GuildMessage,
       guild: Guild,
       user: User,
       voiceChannel: VoiceGuildChannel,
@@ -500,6 +511,7 @@ object VoiceGuildCommandMessage {
 
   case class WithGuildMember[A](
       override val textChannel: TextGuildChannel,
+      override val message: GuildMessage,
       guild: Guild,
       user: User,
       guildMember: GuildMember,

@@ -28,7 +28,7 @@ package ackcord
   *
   * @tparam A The API message type
   */
-@deprecated("Use an EventController instead")
+@deprecated("Use an EventController instead", since = "0.16.0")
 trait EventHandler[G[_], A <: APIMessage] {
 
   /**

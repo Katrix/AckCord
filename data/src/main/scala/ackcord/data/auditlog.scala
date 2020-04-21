@@ -138,7 +138,7 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
 case class OptionalAuditLogInfo(
     deleteMemberDays: Option[String],
     membersRemoved: Option[String],
-    channelId: Option[ChannelId],
+    channelId: Option[TextChannelId],
     messageId: Option[MessageId],
     count: Option[String],
     id: Option[UserOrRoleId],
@@ -200,7 +200,8 @@ object AuditLogChange {
   /**
     * AFK channelId changed
     */
-  case class AfkChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId]) extends AuditLogChange[ChannelId] {
+  case class AfkChannelId(oldValue: Option[VoiceGuildChannelId], newValue: Option[VoiceGuildChannelId])
+      extends AuditLogChange[VoiceGuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {
@@ -279,8 +280,8 @@ object AuditLogChange {
   /**
     * Widget channelId changed
     */
-  case class WidgetChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
-      extends AuditLogChange[ChannelId] {
+  case class WidgetChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
+      extends AuditLogChange[GuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
       oldValue.flatMap(c.getGuildChannel)
@@ -292,8 +293,8 @@ object AuditLogChange {
   /**
     * System channelId changed
     */
-  case class SystemChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
-      extends AuditLogChange[ChannelId] {
+  case class SystemChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
+      extends AuditLogChange[TextGuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
       oldValue.flatMap(c.getGuildChannel)
@@ -379,8 +380,8 @@ object AuditLogChange {
   /**
     * Invite channelId changed
     */
-  case class InviteChannelId(oldValue: Option[ChannelId], newValue: Option[ChannelId])
-      extends AuditLogChange[ChannelId] {
+  case class InviteChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
+      extends AuditLogChange[GuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[TextGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {

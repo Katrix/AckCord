@@ -90,12 +90,12 @@ object CmdHelper {
           val errors = filtered.failedFilters.toList.flatMap(_.errorMessage(filtered.cmd.msg))
 
           if (errors.nonEmpty) {
-            filtered.cmd.msg.channelId.tResolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
+            filtered.cmd.msg.channelId.resolve(filtered.cmd.c).map(_.sendMessage(errors.mkString("\n")))
           } else None: Option[CreateMessage]
         case parseError: CmdParseError =>
-          parseError.msg.channelId.tResolve(parseError.cache).map(_.sendMessage(parseError.error))
+          parseError.msg.channelId.resolve(parseError.cache).map(_.sendMessage(parseError.error))
         case error: GenericCmdError =>
-          error.cmd.msg.channelId.tResolve(error.cmd.c).map(_.sendMessage(error.error))
+          error.cmd.msg.channelId.resolve(error.cmd.c).map(_.sendMessage(error.error))
       }
       .mapConcat(_.toList)
 
