@@ -112,27 +112,6 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       relativeTime = true
     )
 
-  val genericCmds: Seq[ParsedCmdFactory[_, NotUsed]] = {
-    import GenericCommands._
-    Seq(
-      PingCmdFactory,
-      SendFileCmdFactory,
-      InfoChannelCmdFactory,
-      TimeDiffCmdFactory,
-      RatelimitTestCmdFactory(
-        "Ratelimit test",
-        Seq("ratelimitTest"),
-        requests.sinkIgnore
-      ),
-      RatelimitTestCmdFactory(
-        "Ordered Ratelimit test",
-        Seq("ratelimitTestOrdered"),
-        requests.sinkIgnore(Requests.RequestProperties.ordered)
-      ),
-      KillCmdFactory
-    )
-  }
-
   val controllerCommands: Seq[NewCommandsEntry[NotUsed]] = {
     val controller = new NewCommandsController(requests)
     Seq(
@@ -147,6 +126,10 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
         commands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
       ),
       NewCommandsEntry(
+        controller.sendFile,
+        commands.CommandDescription("Send file", "Send a file in an embed")
+      ),
+      NewCommandsEntry(
         controller.adminsOnly,
         commands.CommandDescription("Elevanted command", "Command only admins can use")
       ),
@@ -158,6 +141,18 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       NewCommandsEntry(
         controller.maybeFail,
         commands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
+      ),
+      NewCommandsEntry(
+        controller.ratelimitTest("ratelimitTest", requests.sinkIgnore),
+        commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
+      ),
+      NewCommandsEntry(
+        controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore(Requests.RequestProperties.ordered)),
+        commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
+      ),
+      NewCommandsEntry(
+        controller.kill,
+        commands.CommandDescription("Kill", "Kills the bot")
       )
     )
   }
@@ -203,7 +198,6 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   def registerNewCommand[Mat](entry: NewCommandsEntry[Mat]): Mat =
     ExampleMain.registerNewCommand(commandConnector, helpCmdActor)(entry)
 
-  genericCmds.foreach(registerCmd)
   controllerCommands.foreach(registerNewCommand)
   registerCmd(helpCmd)
 
@@ -214,8 +208,8 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     }
     .runForeach(_ => context.self ! RestartShard)
 
-  private val registerCmdObjMusic = new FunctionK[MusicHandler.MatCmdFactory, cats.Id] {
-    override def apply[A](fa: MusicHandler.MatCmdFactory[A]): A = registerCmd(fa)
+  private val registerCmdObjMusic = new FunctionK[NewCommandsEntry, cats.Id] {
+    override def apply[A](fa: NewCommandsEntry[A]): A = registerNewCommand(fa)
   }
 
   val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {

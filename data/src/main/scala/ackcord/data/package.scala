@@ -23,8 +23,6 @@
  */
 package ackcord
 
-import scala.language.implicitConversions
-
 import java.lang.{Long => JLong}
 import java.time.Instant
 

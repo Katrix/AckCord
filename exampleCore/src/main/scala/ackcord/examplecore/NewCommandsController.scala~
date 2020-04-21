@@ -33,12 +33,12 @@ import scala.util.Random
 import ackcord._
 import ackcord.data._
 import ackcord.commands._
-import ackcord.requests.{CreateMessage, Request}
+import ackcord.requests.CreateMessage
 import ackcord.syntax._
 import akka.NotUsed
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed.scaladsl.adapter._
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.Flow
 import cats.syntax.all._
 import cats.instances.future._
 
@@ -116,12 +116,11 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
       } yield ()
     }
 
-  def ratelimitTest(name: String, sink: Sink[Request[_], _]): NamedCommand[Int] =
-    Command.named("!", Seq(name), mustMention = true).parsing[Int].toSink {
-      Flow[CommandMessage[Int]]
-        .mapConcat(implicit m => List.tabulate(m.parsed)(i => m.textChannel.sendMessage(s"Msg$i")))
-        .to(sink)
-    }
+  val ratelimitTest: NamedCommand[Int] = Command.named("!", Seq("ratelimitTest"), mustMention = true).parsing[Int].toSink {
+    Flow[CommandMessage[Int]]
+      .mapConcat(implicit m => List.tabulate(m.parsed)(i => m.textChannel.sendMessage(s"Msg$i")))
+      .to(requests.sinkIgnore)
+  }
 
   val maybeFail: NamedCommand[NotUsed] = Command.named("!", Seq("maybeFail"), mustMention = true).withRequest { r =>
     if (Random.nextInt(100) < 25) {

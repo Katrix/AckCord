@@ -24,7 +24,7 @@
 
 package ackcord.lavaplayer
 
-import ackcord.data.{ChannelId, GuildId, UserId, VoiceGuildChannelId}
+import ackcord.data.{GuildId, UserId, VoiceGuildChannelId}
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
 import ackcord.{APIMessage, Cache}
 import akka.actor.typed._

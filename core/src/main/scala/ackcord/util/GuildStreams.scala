@@ -23,10 +23,10 @@
  */
 package ackcord.util
 
-import ackcord.data.{ChannelId, GuildChannel, GuildChannelId, GuildId, GuildMessage}
+import ackcord.APIMessage
+import ackcord.data.{GuildChannel, GuildChannelId, GuildId, GuildMessage}
 import ackcord.gateway.{ComplexGatewayEvent, GatewayEvent}
 import ackcord.syntax._
-import ackcord.{APIMessage, MemoryCacheSnapshot}
 import akka.NotUsed
 import akka.event.LoggingAdapter
 import akka.stream.scaladsl.Flow
@@ -54,7 +54,6 @@ object GuildStreams {
         case msg: APIMessage.ChannelMessage =>
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>
-          implicit val c: MemoryCacheSnapshot = msg.cache.current
           msg.message match {
             case guildMessage: GuildMessage => Some(guildMessage.guildId)
             case _                          => None

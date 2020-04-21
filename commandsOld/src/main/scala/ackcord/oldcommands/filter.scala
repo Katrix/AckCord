@@ -25,7 +25,6 @@ package ackcord.oldcommands
 
 import ackcord.CacheSnapshot
 import ackcord.data._
-import ackcord.syntax._
 
 /**
   * A command filter is something used to limit the scope in which a command

@@ -25,10 +25,9 @@ package ackcord
 
 import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
-import ackcord.data.{ChannelId, CreatedInvite, Guild, GuildChannel, GuildId, TextChannel, TextChannelId, TextGuildChannel}
+import ackcord.data.{CreatedInvite, Guild, GuildChannel, GuildId, TextChannel, TextChannelId, TextGuildChannel}
 import ackcord.gateway.{ComplexGatewayEvent, Dispatch, GatewayHandler}
 import ackcord.requests.SupervisionStreams
-import ackcord.syntax._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
 import akka.actor.typed.{ActorSystem, Behavior}

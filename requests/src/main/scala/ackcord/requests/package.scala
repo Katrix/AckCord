@@ -23,7 +23,7 @@
  */
 package ackcord
 
-import ackcord.data.{ChannelId, GuildChannel, GuildChannelId, GuildId, Permission}
+import ackcord.data.{ChannelId, GuildChannel, GuildId, Permission}
 
 package object requests {
 

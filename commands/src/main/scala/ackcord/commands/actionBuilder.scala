@@ -183,10 +183,16 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
   /**
     * Creates an action that results in an async result
     * @param block The execution of the action.
-    * @tparam G The streamable result type.
     */
-  def async[G[_]](block: O[A] => Future[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
+  def async(block: O[A] => Future[Unit]): Action[A, NotUsed] =
     toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block).to(Sink.ignore))
+
+  /**
+    * Creates an action that results in an partial async result
+    * @param block The execution of the action.
+    */
+  def asyncOpt(block: O[A] => OptionT[Future, Unit]): Action[A, NotUsed] =
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).to(Sink.ignore))
 
   /**
     * Creates an async action that might do a single request

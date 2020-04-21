@@ -27,15 +27,15 @@ package ackcord.examplecore.music
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
-import ackcord.oldcommands.ParsedCmdFactory
 import ackcord.data.raw.RawMessage
-import ackcord.data.{ChannelId, GuildId, TextChannel, VoiceGuildChannelId}
+import ackcord.data.{GuildId, TextChannel, VoiceGuildChannelId}
 import ackcord.examplecore.Compat
+import ackcord.examplecore.ExampleMain.NewCommandsEntry
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
 import ackcord.syntax._
-import ackcord.{Cache, Requests}
+import ackcord.{Cache, Requests, commands}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
@@ -66,11 +66,10 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: Requests, registerCmd: FunctionK[MatCmdFactory, cats.Id], cache: Cache)(
+  def apply(requests: Requests, registerCmd: FunctionK[NewCommandsEntry, cats.Id], cache: Cache)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
-      import ctx.executionContext
       implicit val system: ActorSystem[Nothing] = ctx.system
       val player                                = MusicHandler.playerManager.createPlayer()
 
@@ -78,9 +77,25 @@ object MusicHandler {
 
       {
         implicit val timeout: Timeout = 30.seconds
-        val cmds                      = new MusicCommands(guildId, ctx.self)
-        import cmds._
-        Seq(QueueCmdFactory, StopCmdFactory, NextCmdFactory, PauseCmdFactory).foreach(registerCmd(_))
+        val cmds                      = new MusicCommands(requests, guildId, ctx.self)
+        Seq(
+          NewCommandsEntry(
+            cmds.queue,
+            commands.CommandDescription("Queue", "Set an url as the url to play")
+          ),
+          NewCommandsEntry(
+            cmds.stop,
+            commands.CommandDescription("Stop music", "Stop music from playing, and leave the channel")
+          ),
+          NewCommandsEntry(
+            cmds.next,
+            commands.CommandDescription("Next track", "Skip to the next track")
+          ),
+          NewCommandsEntry(
+            cmds.pause,
+            commands.CommandDescription("Pause/Play", "Toggle pause on the current player")
+          )
+        ).foreach(registerCmd(_))
       }
 
       inactive(
@@ -371,8 +386,6 @@ object MusicHandler {
     }
   }
 
-  type MatCmdFactory[A] = ParsedCmdFactory[_, A]
-
   final val UseBurstingSender = true
 
   case object CommandAck
@@ -390,8 +403,12 @@ object MusicHandler {
     def replyTo: ActorRef[CommandAck.type]
     def tChannel: TextChannel
   }
-  case class QueueUrl(url: String, tChannel: TextChannel, vChannelId: VoiceGuildChannelId, replyTo: ActorRef[CommandAck.type])
-      extends MusicHandlerEvents
+  case class QueueUrl(
+      url: String,
+      tChannel: TextChannel,
+      vChannelId: VoiceGuildChannelId,
+      replyTo: ActorRef[CommandAck.type]
+  ) extends MusicHandlerEvents
   case class StopMusic(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
   case class TogglePause(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents
   case class NextTrack(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
