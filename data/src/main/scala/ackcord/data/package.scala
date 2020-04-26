@@ -30,8 +30,9 @@ package object data {
 
   type SnowflakeType[+A] = SnowflakeType.SnowflakeType[A]
   object SnowflakeType {
-    sealed trait Tag
-    type SnowflakeType[+A] <: Tag
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type SnowflakeType[+A] <: Base with Tag
     def apply[A](long: Long): SnowflakeType[A]              = long.asInstanceOf[SnowflakeType[A]]
     def apply[A](content: String): SnowflakeType[A]         = apply[A](JLong.parseUnsignedLong(content))
     def apply[A](other: SnowflakeType[_]): SnowflakeType[A] = other.asInstanceOf[SnowflakeType[A]]
@@ -249,8 +250,9 @@ package object data {
     */
   type Permission = Permission.Permission
   object Permission {
-    sealed trait Tag
-    type Permission <: Tag
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type Permission <: Base with Tag
 
     private[data] def apply(long: Long): Permission = long.asInstanceOf[Permission]
 
@@ -376,8 +378,9 @@ package object data {
 
   type UserFlags = UserFlags.UserFlags
   object UserFlags {
-    sealed trait Tag
-    type UserFlags <: Tag
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type UserFlags <: Base with Tag
 
     private[data] def apply(int: Int): UserFlags = int.asInstanceOf[UserFlags]
 
@@ -434,8 +437,9 @@ package object data {
 
   type MessageFlags = MessageFlags.MessageFlags
   object MessageFlags {
-    sealed trait Tag
-    type MessageFlags <: Tag
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type MessageFlags <: Base with Tag
 
     private[data] def apply(int: Int): MessageFlags = int.asInstanceOf[MessageFlags]
 
@@ -486,8 +490,9 @@ package object data {
 
   type SystemChannelFlags = SystemChannelFlags.SystemChannelFlags
   object SystemChannelFlags {
-    sealed trait Tag
-    type SystemChannelFlags <: Tag
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type SystemChannelFlags <: Base with Tag
 
     private[data] def apply(int: Int): SystemChannelFlags = int.asInstanceOf[SystemChannelFlags]
 

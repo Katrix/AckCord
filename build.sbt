@@ -3,10 +3,10 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 lazy val akkaVersion     = "2.6.4"
 lazy val akkaHttpVersion = "10.1.11"
 lazy val circeVersion    = "0.13.0"
-lazy val ackCordVersion  = "0.16.0"
+lazy val ackCordVersion  = "0.16.1"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.2",
   crossScalaVersions := Seq("2.12.10", scalaVersion.value),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
@@ -173,7 +173,7 @@ lazy val lavaplayerCore = project
     name := "lavaplayer-core",
     version := ackCordVersion,
     resolvers += Resolver.JCenterRepository,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.43",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.47",
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
   .dependsOn(core, voice)
