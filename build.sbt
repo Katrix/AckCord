@@ -3,7 +3,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 lazy val akkaVersion     = "2.6.4"
 lazy val akkaHttpVersion = "10.1.11"
 lazy val circeVersion    = "0.13.0"
-lazy val ackCordVersion  = "0.16.0-SNAPSHOT"
+lazy val ackCordVersion  = "0.16.0"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.1",
@@ -41,7 +41,7 @@ lazy val publishSettings = Seq(
     s"ackcord-$old"
   },
   homepage := Some(url("https://github.com/Katrix/AckCord")),
-  developers := List(Developer("Katrix", "Nikolai Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
+  developers := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
   autoAPIMappings := true
 )
 

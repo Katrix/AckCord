@@ -10,10 +10,10 @@ For more info see the see the [microsite](https://ackcord.katsstuff.net/), the e
 Add AckCord to your project by adding these statements to your `build.sbt` file.
 ```scala
 resolvers += Resolver.JCenterRepository
-libraryDependencies += "net.katsstuff" %% "ackcord"                 % "0.15.0" //For high level API, includes all the other modules
-libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "0.15.0" //Low level core API
-libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.15.0" //Low to mid level Commands API
-libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.15.0" //Low level lavaplayer API
+libraryDependencies += "net.katsstuff" %% "ackcord"                 % "0.16.0" //For high level API, includes all the other modules
+libraryDependencies += "net.katsstuff" %% "ackcord-core"            % "0.16.0" //Low level core API
+libraryDependencies += "net.katsstuff" %% "ackcord-commands-core"   % "0.16.0" //Low to mid level Commands API
+libraryDependencies += "net.katsstuff" %% "ackcord-lavaplayer-core" % "0.16.0" //Low level lavaplayer API
 ```
 
 The AckCord module map
