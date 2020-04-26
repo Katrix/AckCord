@@ -221,14 +221,15 @@ lazy val docs = project
   .settings(
     micrositeName := "AckCord",
     micrositeAuthor := "Katrix",
-    micrositeDescription := "A Scala Discord library",
-    micrositeBaseUrl := "",
+    micrositeDescription := "A Discord library built for flexibility and speed",
     micrositeDocumentationUrl := "/api/ackcord",
+    micrositeDocumentationLabelDescription := "ScalaDoc",
     micrositeHomepage := "http://ackcord.katsstuff.net",
     micrositeGithubOwner := "Katrix",
     micrositeGithubRepo := "AckCord",
     micrositeGitterChannel := false,
     micrositeShareOnSocial := false,
+    micrositeTheme := "pattern",
     excludeFilter in ghpagesCleanSite := "CNAME",
     scalacOptions in Compile ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
@@ -258,7 +259,7 @@ lazy val docs = project
       baseDirectory.in(LocalRootProject).value.getAbsolutePath
     )
   )
-  .dependsOn(ackCord, commands)
+  .dependsOn(ackCord)
 
 lazy val ackCordRoot = project
   .in(file("."))

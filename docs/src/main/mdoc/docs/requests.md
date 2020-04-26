@@ -4,61 +4,77 @@ title: Making Requests
 ---
 
 # {{page.title}}
-What use is a Discord library if you can't make REST requests? There are two parts to this, creating a request, and running it. Both have many ways to do things. In AckCord, you don't do request by calling methods. Instead you first create a request object which describes everything about your request. The headers to use, the body to use. The uri to make the request to, and son on.
-
-## Creating a request
-First we need a request object to send. There are two main ways to get such a request object. The first one is to create `Request` objects with requests from the `ackcord.requests` package manually. The second is to import `ackcord.syntax._` and use the extensions methods provided by that. If you use the low level API, you can also specify a context object as part of the request, which you get back from the response. If you need some sort of order from your request, you use this, as requests are sent and received in any order.
-
-## Running the request
-To run requests you would either use a `RequestHelper`, or a `RequestRunner`. 
-
-`RequestHelper` is normally used in low level API where you want to model your behavior as a stream. Here you represent your requests as a `Source`, and the act of sending them as a `Flow` found in `RequestHelper`. You then get a source of response objects. You have to create the `RequestHelper` yourself.
-
-`RequestRunner` helps you use `RequestHelper` from higher level code. While you're still dealing with `Source`s. Generally you just put all your code in a for comprehensions. Sometimes there are dedicated versions of methods for using a `RequestRunner`.
-
-## Example
-
-```scala mdoc:silent
+Requests are how most bot actions are done. Stuff like sending messages, 
+creating channels and managing users. AckCord represents every request as an
+object you construct. There are many ways to send an request, but the most 
+common are through the end action on controllers, and using `RequestsHelper`. 
+To create a request object, you can either just construct it normally, or use 
+the syntax package.
+```scala mdoc:invisible
 import ackcord._
+import ackcord.data._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import cats.Id
+import cats.instances.future._
+
+val clientSettings = ClientSettings("")
+import clientSettings.executionContext
+val client = Await.result(clientSettings.createClient(), Duration.Inf)
+```
+```scala mdoc:silent
+import ackcord.requests._
 import ackcord.syntax._
-import ackcord.requests.CreateMessage
-val token = "<token>"
-val settings = ClientSettings(token)
-import settings.executionContext
 
-val futureClient = settings.createClient()
-
-futureClient.foreach { client =>
-  client.onEvent {
-    client.withCache[SourceRequest, APIMessage] { implicit c => {
-        case APIMessage.ChannelCreate(channel, _) =>
-          import client.sourceRequesterRunner._
-          for {
-            //optionPure lifts an Option into the dsl
-            guildChannel <- optionPure(channel.asGuildChannel)
-            guild        <- optionPure(guildChannel.guild)
-            //optionRequest lifts an optional request into the dsl.
-            msg          <- runOption(guild.tChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
-            //Creating a request without using the extra syntax
-            _            <- run(CreateMessage.mkContent(msg.channelId, "Another message"))
-          } yield ()
-        case _ => client.sourceRequesterRunner.unit
-      }
-    }
+client.onEventSideEffects { implicit c => 
+  {
+    case APIMessage.ChannelCreate(channel: TextGuildChannel, _) =>
+      //There is also CreateMessage.mkContent for this specific pattern
+      val constructManually = CreateMessage(channel.id, CreateMessageData(content = "Hello World"))
+      val usingSyntax = channel.sendMessage(content = "Hello World")
   }
-  
-  //client.login()
 }
 ```
 
-## Access to the low level API
-Accessing the low level API from the high level API is as simple as getting the `RequestHelper` instance in the `DiscordClient` instance.
-```scala mdoc
-futureClient.foreach { client =>
-  val requests: RequestHelper = client.requests
+Next you need to send the request. For this example we will use `RequestsHelper`. 
+This object can be found on the client. That also means it's time to move away
+from `onEventSideEffects`. Even though sending requests can never 
+return option, the `run` command will return an `OptionT[Future, A]`. This is 
+due to the many cache lookup methods that return `Option`s. Think 
+of `OptionT[Future, A]` as a combination of both `Future` and `Option`. 
+When your event handler returns `OptionT[Future, Unit]`, you're recommended 
+to use `DiscordClient#onEventAsync` and `ActionBuilder#asyncOpt` instead.
+
+```scala mdoc:silent
+client.onEventAsync { implicit c => 
+  {
+    case APIMessage.ChannelCreate(channel: TextGuildChannel, _) =>
+      client.requestsHelper.run(channel.sendMessage(content = "Hello World")).map(_ => ())
+  }
+}
+```
+
+The `RequestsHelper` object also contains lots of small helpers to deal with 
+`OptionT[Future, A]` and requests.
+
+```scala mdoc:silent
+client.onEventAsync { implicit c => 
+  {
+    case APIMessage.ChannelCreate(channel, _) =>
+      import client.requestsHelper._
+      for {
+        //optionPure lifts an Option into the dsl
+        guildChannel <- optionPure(channel.asGuildChannel)
+        guild        <- optionPure(guildChannel.guild)
+        //runOption runs an Option[Request].
+        msg          <- runOption(guild.textChannels.headOption.map(_.sendMessage("FIRST")))
+        //Running a request without using the extra syntax
+        _            <- run(CreateMessage.mkContent(msg.channelId, "Another message"))
+      } yield ()
+  }
 }
 ```
 
 ```scala mdoc:invisible
-settings.system.terminate()
+clientSettings.system.terminate()
 ```

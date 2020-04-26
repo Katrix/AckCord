@@ -1,34 +1,50 @@
 options:
-  - title: Getting Started
-    url: getting_started.html
+  - title: Your first bot
+    url: first_bot.html
 
-  - title: Shared concepts
+  - title: Events
+    url: docs/events.html
+
+  - title: CacheSnapshot
     url: docs/cachesnapshot.html
-
-    nested_options:
-      - title: CacheSnapshot
-        url: docs/cachesnapshot.html
-
-      - title: Shared command concepts
-        url: docs/sharedcommands.html
 
   - title: Making Requests
     url: docs/requests.html
 
-  - title: The cache (Advanced)
-    url: docs/cache.html
+  - title: Commands
+    url: docs/commands.html
 
-  - title: Sending custom sound (Advanced)
-    url: docs/sound.html
+  - title: Snowflake types
+    url: docs/snowflakes.html
 
-  - title: High level API commands
-    url: docs/hicommands.html
+  - title: The low level API
+    url: docs/low-level/index.html
 
-  - title: Low level API commands
-    url: docs/locommands.html
+    nested_options:
+      - title: Your first bot (Low level)
+        url: docs/low-level/first_bot.html
 
-  - title: New incubating commands
-    url: docs/newcommands.html
+      - title: Making Requests (Low level)
+        url: docs/low-level/requests.html
+
+  - title: Expanding AckCord
+    url: docs/advanced/index.html
+
+    nested_options:
+      - title: The cache (Advanced)
+        url: docs/advanced/cache.html
+
+      - title: Custom requests (Advanced)
+        url: docs/advanced/custom_request.html
+
+      - title: Sending custom sound (Advanced)
+        url: docs/advanced/sound.html
+
+      - title: ActionBuilder deep dive (Advanced)
+        url: docs/advanced/actionbuilders_deep.html
+
+      - title: Commands deep dive (Advanced)
+        url: docs/advanced/commands_deep.html
 
   - title: The many modules of AckCord
     url: modules.html
