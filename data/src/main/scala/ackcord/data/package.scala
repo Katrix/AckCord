@@ -30,7 +30,8 @@ package object data {
 
   type SnowflakeType[+A] = SnowflakeType.SnowflakeType[A]
   object SnowflakeType {
-    type SnowflakeType[+A]
+    sealed trait Tag
+    type SnowflakeType[+A] <: Tag
     def apply[A](long: Long): SnowflakeType[A]              = long.asInstanceOf[SnowflakeType[A]]
     def apply[A](content: String): SnowflakeType[A]         = apply[A](JLong.parseUnsignedLong(content))
     def apply[A](other: SnowflakeType[_]): SnowflakeType[A] = other.asInstanceOf[SnowflakeType[A]]
@@ -49,7 +50,7 @@ package object data {
 
   private val DiscordEpoch = 1420070400000L
 
-  implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A]) extends AnyVal {
+  implicit class SnowflakeTypeSyntax(private val snowflake: SnowflakeType[_]) extends AnyVal {
     def creationDate: Instant = Instant.ofEpochMilli(DiscordEpoch + (toUnsignedLong >> 22))
     def asString: String      = JLong.toUnsignedString(toUnsignedLong)
 
@@ -248,7 +249,8 @@ package object data {
     */
   type Permission = Permission.Permission
   object Permission {
-    type Permission
+    sealed trait Tag
+    type Permission <: Tag
 
     private[data] def apply(long: Long): Permission = long.asInstanceOf[Permission]
 
@@ -374,7 +376,8 @@ package object data {
 
   type UserFlags = UserFlags.UserFlags
   object UserFlags {
-    type UserFlags
+    sealed trait Tag
+    type UserFlags <: Tag
 
     private[data] def apply(int: Int): UserFlags = int.asInstanceOf[UserFlags]
 
@@ -431,7 +434,8 @@ package object data {
 
   type MessageFlags = MessageFlags.MessageFlags
   object MessageFlags {
-    type MessageFlags
+    sealed trait Tag
+    type MessageFlags <: Tag
 
     private[data] def apply(int: Int): MessageFlags = int.asInstanceOf[MessageFlags]
 
@@ -482,7 +486,8 @@ package object data {
 
   type SystemChannelFlags = SystemChannelFlags.SystemChannelFlags
   object SystemChannelFlags {
-    type SystemChannelFlags
+    sealed trait Tag
+    type SystemChannelFlags <: Tag
 
     private[data] def apply(int: Int): SystemChannelFlags = int.asInstanceOf[SystemChannelFlags]
 

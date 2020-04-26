@@ -143,11 +143,11 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
         commands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
       ),
       NewCommandsEntry(
-        controller.ratelimitTest("ratelimitTest", requests.sinkIgnore),
+        controller.ratelimitTest("ratelimitTest", requests.sinkIgnore[Any]),
         commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
       ),
       NewCommandsEntry(
-        controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore(Requests.RequestProperties.ordered)),
+        controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
         commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
       ),
       NewCommandsEntry(
