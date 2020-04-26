@@ -65,7 +65,9 @@ class GatewayGuildRouter[Inner](
   override def handleThroughMessage(a: GatewayMessage[_]): Unit = a match {
     case msg: GatewayEvent.GuildCreate =>
       handleLazy(msg.guildId)(guildId => sendToGuild(guildId, msg, handleEvent))
-      handleLazy(msg.data)(data => data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> data.id)))
+      handleLazy(msg.data)(data =>
+        data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> data.id))
+      )
     case msg: GatewayEvent.ChannelCreate =>
       handleLazyOpt(msg.guildId) { guildId =>
         sendToGuild(guildId, msg, handleEvent)
@@ -93,7 +95,9 @@ class GatewayGuildRouter[Inner](
       }
     case msg: GatewayEvent.ChannelEvent[_] =>
       handleLazy(msg.channelId) { channelId =>
-        channelToGuild.get(channelId.asChannelId[GuildChannel]).fold(sendToNotGuild(msg, handleEvent))(sendToGuild(_, msg, handleEvent))
+        channelToGuild
+          .get(channelId.asChannelId[GuildChannel])
+          .fold(sendToNotGuild(msg, handleEvent))(sendToGuild(_, msg, handleEvent))
       }
     case _ =>
   }

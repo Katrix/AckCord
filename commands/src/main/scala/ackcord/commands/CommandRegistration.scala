@@ -39,9 +39,8 @@ object CommandRegistration {
       case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
     }
 
-  def withRegistration[A, M](source: Source[A, M]): Source[A, CommandRegistration[M]] = {
+  def withRegistration[A, M](source: Source[A, M]): Source[A, CommandRegistration[M]] =
     source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
       case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
     }
-  }
 }

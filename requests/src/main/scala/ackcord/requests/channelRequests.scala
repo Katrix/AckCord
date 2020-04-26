@@ -196,7 +196,8 @@ object GetChannelMessages {
 /**
   * Get a specific message in a channel.
   */
-case class GetChannelMessage(channelId: TextChannelId, messageId: MessageId) extends NoParamsRequest[RawMessage, Message] {
+case class GetChannelMessage(channelId: TextChannelId, messageId: MessageId)
+    extends NoParamsRequest[RawMessage, Message] {
   override def route: RequestRoute = Routes.getChannelMessage(channelId, messageId)
 
   override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]

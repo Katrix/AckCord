@@ -26,7 +26,17 @@ package ackcord
 import scala.reflect.ClassTag
 
 import ackcord.commands.{ActionBuilder, ActionFunction, ActionTransformer}
-import ackcord.data.{Channel, Guild, GuildChannel, GuildMember, GuildMessage, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
+import ackcord.data.{
+  Channel,
+  Guild,
+  GuildChannel,
+  GuildMember,
+  GuildMessage,
+  TextChannel,
+  TextGuildChannel,
+  User,
+  VoiceGuildChannel
+}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}

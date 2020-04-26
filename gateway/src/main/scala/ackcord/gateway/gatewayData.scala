@@ -153,7 +153,12 @@ case class StatusUpdate(nowD: StatusData) extends EagerGatewayMessage[StatusData
   * @param selfMute If the bot should mute itself.
   * @param selfDeaf If the bot should deafen itself.
   */
-case class VoiceStateUpdateData(guildId: GuildId, channelId: Option[VoiceGuildChannelId], selfMute: Boolean, selfDeaf: Boolean)
+case class VoiceStateUpdateData(
+    guildId: GuildId,
+    channelId: Option[VoiceGuildChannelId],
+    selfMute: Boolean,
+    selfDeaf: Boolean
+)
 
 /**
   * Sent by the bot to connect to a voice channel.

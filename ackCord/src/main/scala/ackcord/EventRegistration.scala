@@ -39,9 +39,8 @@ object EventRegistration {
       case ((m, killSwitch), done) => EventRegistration(m, done, killSwitch)
     }
 
-  def withRegistration[A, M](source: Source[A, M]): Source[A, EventRegistration[M]] = {
+  def withRegistration[A, M](source: Source[A, M]): Source[A, EventRegistration[M]] =
     source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
       case ((m, killSwitch), done) => EventRegistration(m, done, killSwitch)
     }
-  }
 }

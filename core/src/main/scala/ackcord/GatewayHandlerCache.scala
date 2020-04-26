@@ -97,21 +97,30 @@ object GatewayHandlerCache {
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelCreate(ch, state)),
+              state =>
+                state.current
+                  .getGuildChannel(data.id.asChannelId[GuildChannel])
+                  .map(ch => api.ChannelCreate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry
             )
           case gatewayEv.ChannelUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelUpdate(ch, state)),
+              state =>
+                state.current
+                  .getGuildChannel(data.id.asChannelId[GuildChannel])
+                  .map(ch => api.ChannelUpdate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry
             )
           case gatewayEv.ChannelDelete(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.previous.getGuildChannel(data.id.asChannelId[GuildChannel]).map(ch => api.ChannelDelete(ch, state)),
+              state =>
+                state.previous
+                  .getGuildChannel(data.id.asChannelId[GuildChannel])
+                  .map(ch => api.ChannelDelete(ch, state)),
               CacheHandlers.rawChannelDeleter,
               registry
             )
@@ -265,8 +274,12 @@ object GatewayHandlerCache {
               data,
               state =>
                 for {
-                  guild   <- getGuildIfDefined(state.current, data.guildId)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId.asChannelId[TextChannel])
+                  guild <- getGuildIfDefined(state.current, data.guildId)
+                  channel <- getChannelUsingMaybeGuildId(
+                    state.current,
+                    data.guildId,
+                    data.channelId.asChannelId[TextChannel]
+                  )
                 } yield api.InviteCreate(
                   guild,
                   channel,
@@ -291,8 +304,12 @@ object GatewayHandlerCache {
               data,
               state =>
                 for {
-                  guild   <- getGuildIfDefined(state.current, data.guildId)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId.asChannelId[TextChannel])
+                  guild <- getGuildIfDefined(state.current, data.guildId)
+                  channel <- getChannelUsingMaybeGuildId(
+                    state.current,
+                    data.guildId,
+                    data.channelId.asChannelId[TextChannel]
+                  )
                 } yield api.InviteDelete(guild, channel, data.code, state),
               NOOPHandler,
               registry

@@ -144,8 +144,8 @@ object CommandBuilder {
             case chG: TextGuildChannel =>
               chG.guild.fold[Result[A]](e) { guild =>
                 m.message match {
-                  case guildMessage: GuildMessage =>Right(create(chG, guildMessage, guild)(m))
-                  case _ => e
+                  case guildMessage: GuildMessage => Right(create(chG, guildMessage, guild)(m))
+                  case _                          => e
                 }
               }
             case _ => e

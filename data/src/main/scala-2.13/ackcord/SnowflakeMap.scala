@@ -124,7 +124,8 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   final override def apply(key: Key): V = inner.apply(key.toUnsignedLong)
 
-  override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] = new SnowflakeMap(inner.updated(kv._1.toUnsignedLong, kv._2))
+  override def +[V1 >: V](kv: (Key, V1)): SnowflakeMap[K, V1] =
+    new SnowflakeMap(inner.updated(kv._1.toUnsignedLong, kv._2))
 
   override def updated[V1 >: V](key: Key, value: V1): SnowflakeMap[K, V1] =
     new SnowflakeMap(inner.updated(key.toUnsignedLong, value))

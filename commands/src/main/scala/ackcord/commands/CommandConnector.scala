@@ -149,28 +149,27 @@ class CommandConnector(
     import requests.system
     CommandRegistration.withRegistration(
       Source.fromGraph(
-        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) {
-          implicit b => thatFlow =>
-            import GraphDSL.Implicits._
+        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) { implicit b => thatFlow =>
+          import GraphDSL.Implicits._
 
-            val selfSource = b.add(commandMessageSource)
+          val selfSource = b.add(commandMessageSource)
 
-            val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
-              case Left(_)  => 0
-              case Right(_) => 1
-            }))
-            val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
-            val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
+          val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }))
+          val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
+          val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
-            val resMerge = b.add(Merge[CommandError](2))
+          val resMerge = b.add(Merge[CommandError](2))
 
-            // format: OFF
+          // format: OFF
             selfSource ~> selfPartition
             selfOut ~> thatFlow ~> resMerge
             selfErr ~>             resMerge
             // format: ON
 
-            SourceShape(resMerge.out)
+          SourceShape(resMerge.out)
         }
       )
     )
@@ -203,7 +202,10 @@ class CommandConnector(
     *         from.
     * @see [[newCommandWithErrors]]
     */
-  def newCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] = {
+  def newCommand[A, Mat](
+      prefix: PrefixParser,
+      command: ComplexCommand[A, Mat]
+  ): RunnableGraph[CommandRegistration[Mat]] = {
     import requests.system
     SupervisionStreams.addLogAndContinueFunction(
       newCommandWithErrors(prefix, command)

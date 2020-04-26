@@ -45,7 +45,8 @@ case class Role(
     permissions: Permission,
     managed: Boolean,
     mentionable: Boolean
-) extends GetGuild with UserOrRole {
+) extends GetGuild
+    with UserOrRole {
 
   /**
     * Mention this role.

@@ -433,9 +433,10 @@ package object syntax {
       * Get a text channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def textChannelById(id: TextGuildChannelId, guild: Guild): Option[TextGuildChannel] = channelById(id, guild).collect {
-      case channel: TextGuildChannel => channel
-    }
+    def textChannelById(id: TextGuildChannelId, guild: Guild): Option[TextGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: TextGuildChannel => channel
+      }
 
     /**
       * Get a voice channel by id in this category.
@@ -452,9 +453,10 @@ package object syntax {
       * Get a voice channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def voiceChannelById(id: VoiceGuildChannelId, guild: Guild): Option[VoiceGuildChannel] = channelById(id, guild).collect {
-      case channel: VoiceGuildChannel => channel
-    }
+    def voiceChannelById(id: VoiceGuildChannelId, guild: Guild): Option[VoiceGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: VoiceGuildChannel => channel
+      }
 
     /**
       * Get all the channels with a name in this category.
@@ -848,12 +850,14 @@ package object syntax {
     /**
       * Get a text channel by id in this guild.
       */
-    def textChannelById(id: TextGuildChannelId): Option[TextGuildChannel] = channelById(id).flatMap(_.asTextGuildChannel)
+    def textChannelById(id: TextGuildChannelId): Option[TextGuildChannel] =
+      channelById(id).flatMap(_.asTextGuildChannel)
 
     /**
       * Get a voice channel by id in this guild.
       */
-    def voiceChannelById(id: VoiceGuildChannelId): Option[VoiceGuildChannel] = channelById(id).flatMap(_.asVGuildChannel)
+    def voiceChannelById(id: VoiceGuildChannelId): Option[VoiceGuildChannel] =
+      channelById(id).flatMap(_.asVGuildChannel)
 
     /**
       * Get a category by id in this guild.
