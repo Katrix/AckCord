@@ -1,63 +1,74 @@
-<html><head><title>AckCord: CacheSnapshot</title><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Katrix" /><meta name="description" content="A Scala Discord library" /><meta name="og:image" content="/img/poster.png" /><meta name="image" property="og:image" content="/img/poster.png" /><meta name="og:title" content="AckCord: CacheSnapshot" /><meta name="title" property="og:title" content="AckCord: CacheSnapshot" /><meta name="og:site_name" content="AckCord" /><meta name="og:url" content="http://ackcord.katsstuff.net" /><meta name="og:type" content="website" /><meta name="og:description" content="A Scala Discord library" /><link rel="icon" type="image/png" href="/img/favicon.png" /><meta name="twitter:title" content="AckCord: CacheSnapshot" /><meta name="twitter:image" content="/img/poster.png" /><meta name="twitter:description" content="A Scala Discord library" /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" type="image/png" sizes="16x16" href="/img/favicon16x16.png" /><link rel="icon" type="image/png" sizes="24x24" href="/img/favicon24x24.png" /><link rel="icon" type="image/png" sizes="32x32" href="/img/favicon32x32.png" /><link rel="icon" type="image/png" sizes="48x48" href="/img/favicon48x48.png" /><link rel="icon" type="image/png" sizes="57x57" href="/img/favicon57x57.png" /><link rel="icon" type="image/png" sizes="60x60" href="/img/favicon60x60.png" /><link rel="icon" type="image/png" sizes="64x64" href="/img/favicon64x64.png" /><link rel="icon" type="image/png" sizes="70x70" href="/img/favicon70x70.png" /><link rel="icon" type="image/png" sizes="72x72" href="/img/favicon72x72.png" /><link rel="icon" type="image/png" sizes="76x76" href="/img/favicon76x76.png" /><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon96x96.png" /><link rel="icon" type="image/png" sizes="114x114" href="/img/favicon114x114.png" /><link rel="icon" type="image/png" sizes="120x120" href="/img/favicon120x120.png" /><link rel="icon" type="image/png" sizes="128x128" href="/img/favicon128x128.png" /><link rel="icon" type="image/png" sizes="144x144" href="/img/favicon144x144.png" /><link rel="icon" type="image/png" sizes="150x150" href="/img/favicon150x150.png" /><link rel="icon" type="image/png" sizes="152x152" href="/img/favicon152x152.png" /><link rel="icon" type="image/png" sizes="196x196" href="/img/favicon196x196.png" /><link rel="icon" type="image/png" sizes="310x310" href="/img/favicon310x310.png" /><link rel="icon" type="image/png" sizes="310x150" href="/img/favicon310x150.png" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" /><link rel="stylesheet" href="/highlight/styles/default.css" /><link rel="stylesheet" href="/css/style.css" /><link rel="stylesheet" href="/css/palette.css" /><link rel="stylesheet" href="/css/codemirror.css" /></head><body class="docs"><div id="wrapper"><div id="sidebar-wrapper"><ul id="sidebar" class="sidebar-nav"><li class="sidebar-brand"><a href="/" class="brand"><div class="brand-wrapper"><span>AckCord</span></div></a></li> <li><a href="/getting_started.html" class="">Getting Started</a></li> <li><a href="/docs/cachesnapshot.html" class="">Shared concepts</a> <ul class="sub_section"> <li><a href="/docs/cachesnapshot.html" class=" active ">CacheSnapshot</a></li> <li><a href="/docs/sharedcommands.html" class="">Shared command concepts</a></li></ul></li> <li><a href="/docs/requests.html" class="">Making Requests</a></li> <li><a href="/docs/cache.html" class="">The cache (Advanced)</a></li> <li><a href="/docs/sound.html" class="">Sending custom sound (Advanced)</a></li> <li><a href="/docs/hicommands.html" class="">High level API commands</a></li> <li><a href="/docs/locommands.html" class="">Low level API commands</a></li> <li><a href="/docs/newcommands.html" class="">New incubating commands</a></li> <li><a href="/modules.html" class="">The many modules of AckCord</a></li></ul></div><div id="page-content-wrapper"><div class="nav"><div class="container-fluid"><div class="row"><div class="col-lg-12"><div class="action-menu pull-left clearfix"><a href="#menu-toggle" id="menu-toggle"><i class="fa fa-bars" aria-hidden="true"></i></a></div><ul class="pull-right"><li id="gh-eyes-item" class="hidden-xs"><a href="https://github.com/Katrix/AckCord"><i class="fa fa-eye"></i><span>WATCH<span id="eyes" class="label label-default">--</span></span></a></li><li id="gh-stars-item" class="hidden-xs"><a href="https://github.com/Katrix/AckCord"><i class="fa fa-star-o"></i><span>STARS<span id="stars" class="label label-default">--</span></span></a></li></ul></div></div></div></div><div id="content" data-github-owner="Katrix" data-github-repo="AckCord"><div class="content-wrapper"><section><h1 id="cachesnapshot">CacheSnapshot</h1>
+<!DOCTYPE html><html><head><title>AckCord: CacheSnapshot</title><meta charset="utf-8" /><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Katrix" /><meta name="description" content="A Discord library built for flexibility and speed" /><meta name="og:image" content="/img/poster.png" /><meta name="image" property="og:image" content="/img/poster.png" /><meta name="og:title" content="AckCord: CacheSnapshot" /><meta name="title" property="og:title" content="AckCord: CacheSnapshot" /><meta name="og:site_name" content="AckCord" /><meta name="og:url" content="http://ackcord.katsstuff.net" /><meta name="og:type" content="website" /><meta name="og:description" content="A Discord library built for flexibility and speed" /><link rel="icon" type="image/png" href="/img/favicon.png" /><meta name="twitter:title" content="AckCord: CacheSnapshot" /><meta name="twitter:image" content="/img/poster.png" /><meta name="twitter:description" content="A Discord library built for flexibility and speed" /><meta name="twitter:card" content="summary_large_image" /><link rel="icon" type="image/png" sizes="16x16" href="/img/favicon16x16.png" /><link rel="icon" type="image/png" sizes="24x24" href="/img/favicon24x24.png" /><link rel="icon" type="image/png" sizes="32x32" href="/img/favicon32x32.png" /><link rel="icon" type="image/png" sizes="48x48" href="/img/favicon48x48.png" /><link rel="icon" type="image/png" sizes="57x57" href="/img/favicon57x57.png" /><link rel="icon" type="image/png" sizes="60x60" href="/img/favicon60x60.png" /><link rel="icon" type="image/png" sizes="64x64" href="/img/favicon64x64.png" /><link rel="icon" type="image/png" sizes="70x70" href="/img/favicon70x70.png" /><link rel="icon" type="image/png" sizes="72x72" href="/img/favicon72x72.png" /><link rel="icon" type="image/png" sizes="76x76" href="/img/favicon76x76.png" /><link rel="icon" type="image/png" sizes="96x96" href="/img/favicon96x96.png" /><link rel="icon" type="image/png" sizes="114x114" href="/img/favicon114x114.png" /><link rel="icon" type="image/png" sizes="120x120" href="/img/favicon120x120.png" /><link rel="icon" type="image/png" sizes="128x128" href="/img/favicon128x128.png" /><link rel="icon" type="image/png" sizes="144x144" href="/img/favicon144x144.png" /><link rel="icon" type="image/png" sizes="150x150" href="/img/favicon150x150.png" /><link rel="icon" type="image/png" sizes="152x152" href="/img/favicon152x152.png" /><link rel="icon" type="image/png" sizes="196x196" href="/img/favicon196x196.png" /><link rel="icon" type="image/png" sizes="310x310" href="/img/favicon310x310.png" /><link rel="icon" type="image/png" sizes="310x150" href="/img/favicon310x150.png" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" /><link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" /><link rel="stylesheet" href="/highlight/styles/vs.css" /><link rel="stylesheet" href="/css/pattern-style.css" /></head><body class="docs"><div id="wrapper"><div id="sidebar-wrapper"><ul id="sidebar" class="sidebar-nav"><li class="sidebar-brand"><a href="/" class="brand"><div class="brand-wrapper"><span>AckCord</span></div></a></li> <li><a href="/first_bot.html" class="">Your first bot</a></li> <li><a href="/docs/events.html" class="">Events</a></li> <li><a href="/docs/cachesnapshot.html" class=" active ">CacheSnapshot</a></li> <li><a href="/docs/requests.html" class="">Making Requests</a></li> <li><a href="/docs/commands.html" class="">Commands</a></li> <li><a href="/docs/snowflakes.html" class="">Snowflake types</a></li> <li><a href="/docs/low-level/index.html" class="">The low level API</a> <ul class="sub-section"> <li><a href="/docs/low-level/first_bot.html" class="">Your first bot (Low level)</a></li> <li><a href="/docs/low-level/requests.html" class="">Making Requests (Low level)</a></li></ul></li> <li><a href="/docs/advanced/index.html" class="">Expanding AckCord</a> <ul class="sub-section"> <li><a href="/docs/advanced/cache.html" class="">The cache (Advanced)</a></li> <li><a href="/docs/advanced/custom_request.html" class="">Custom requests (Advanced)</a></li> <li><a href="/docs/advanced/sound.html" class="">Sending custom sound (Advanced)</a></li> <li><a href="/docs/advanced/actionbuilders_deep.html" class="">ActionBuilder deep dive (Advanced)</a></li> <li><a href="/docs/advanced/commands_deep.html" class="">Commands deep dive (Advanced)</a></li></ul></li> <li><a href="/modules.html" class="">The many modules of AckCord</a></li></ul></div><div id="page-content-wrapper"><div class="nav"><div class="container-fluid"><div class="row"><div class="col-lg-12"><div class="action-menu pull-left clearfix"><a href="#menu-toggle" id="menu-toggle"><i class="fa fa-bars" aria-hidden="true"></i></a></div><ul class="pull-right"><li id="gh-eyes-item" class="hidden-xs"><a href="https://github.com/Katrix/AckCord" target="_blank" rel="noopener noreferrer"><i class="fa fa-eye"></i><span>Watchers<span id="eyes" class="label label-default">--</span></span></a></li><li id="gh-stars-item" class="hidden-xs"><a href="https://github.com/Katrix/AckCord" target="_blank" rel="noopener noreferrer"><i class="fa fa-star-o"></i><span>Stars<span id="stars" class="label label-default">--</span></span></a></li></ul></div></div></div></div><div id="content" data-github-owner="Katrix" data-github-repo="AckCord"><div class="content-wrapper"><section><h1 id="cachesnapshot">CacheSnapshot</h1>
+<p>When reacting to changes in Discord, there are two main places you can get data from. 
+The first is from the change event itself. This is for example the message 
+created in the <code class="highlighter-rouge">APIMessage.MessageCreate</code> event. The second is from the cache, 
+which up to this point we have been ignoring 
+(hence the ignore in <code class="highlighter-rouge">onEventSideEffectsIgnore</code>). The signature of the 
+non-ignore methods is <code class="highlighter-rouge">CacheSnapshot =&gt; PartialFunction[APIMessage, Unit]</code>. 
+It might look a little weird, but is perfectly valid. Here is an example 
+printing the channel of all new messages. 
+All lookups in the cache return <code class="highlighter-rouge">Option</code>s.</p>
 
-<p>All access to data store in AckCord is represented as a <code class="highlighter-rouge">CacheSnapshot</code>. Many methods in AckCord takes an implicit cache to let you access stuff.</p>
-
-<p>AckCord also provides the <code class="highlighter-rouge">Streamable</code> typeclass for converting <code class="highlighter-rouge">F[A]</code> into a <code class="highlighter-rouge">Source[A, NotUsed]</code>. AckCord provides instances of this type for <code class="highlighter-rouge">Id</code> and <code class="highlighter-rouge">Future</code>, but if you’re dealing with something else, you’ll have to write the typeclass instance yourself. Hopefully you shouldn’t have to deal too much with <code class="highlighter-rouge">Streamable</code> yourself.</p>
-
-<h2 id="cores-cache">Core’s Cache</h2>
-
-<p>If you depend on Core (you most likely do). Then the most common type of snapshot you will encounter is <code class="highlighter-rouge">MemoryCacheSnapshot</code>. You will also encounter a <code class="highlighter-rouge">CacheState</code> when listening to events. This type gives you access to two different snapshots. One for before the event happened, and one for after. Generally you want to use the one after.</p>
-
-<h2 id="easy-access-to-the-cache">Easy access to the cache</h2>
-
-<p>Often times when overriding methods, an implicit cache snapshot will already be present. In some cases when dealing with a function instead though, you may want to extract the cache snapshot as a different parameter to mark it implicit. That’s where the <code class="highlighter-rouge">withCache</code> method for the high level API, and <code class="highlighter-rouge">CmdFlow</code> and <code class="highlighter-rouge">ParsedCmdFlow</code> comes in for the low level API. Using these we can extract the current cache snapshot into a separate function, used like so for the high level API.</p>
-
-<h3 id="example">Example</h3>
-
-<p>As before we create out client as usual.</p>
-
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="k">import</span> <span class="nn">ackcord._</span>
-<span class="k">import</span> <span class="nn">cats.Id</span>
-<span class="k">val</span> <span class="n">token</span> <span class="k">=</span> <span class="s">"&lt;token&gt;"</span>
-<span class="k">val</span> <span class="n">settings</span> <span class="k">=</span> <span class="nc">ClientSettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
-<span class="k">import</span> <span class="nn">settings.executionContext</span>
-
-<span class="k">val</span> <span class="n">futureClient</span> <span class="k">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">createClient</span><span class="o">()</span>
-<span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="c1">//client.login()
-</span><span class="o">}</span>
-</code></pre>
-</div>
-
-<p>Using the <code class="highlighter-rouge">withCache</code> method. (Note: <code class="highlighter-rouge">withCache</code>, type inference and IntelliJ don’t always play nice together)</p>
-
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="n">client</span><span class="o">.</span><span class="n">onEvent</span> <span class="o">{</span>
-    <span class="n">client</span><span class="o">.</span><span class="n">withCache</span><span class="o">[</span><span class="kt">Id</span>, <span class="kt">APIMessage</span><span class="o">]</span> <span class="o">{</span> <span class="k">_</span> <span class="k">=&gt;</span> <span class="o">{</span>
-        <span class="k">case</span> <span class="nc">APIMessage</span><span class="o">.</span><span class="nc">Ready</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="n">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">)</span>
-        <span class="k">case</span> <span class="k">_</span>                   <span class="k">=&gt;</span> 
-      <span class="o">}</span>
-    <span class="o">}</span>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">c</span><span class="o">.</span><span class="py">getTextChannel</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">))</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<p>Ok course you could also create an instance of <code class="highlighter-rouge">EventHandler</code>, and register that instead.</p>
+<p>To increase ergonomics, there are also many ways to get objects from the cache 
+without asking it directly. This assumes an <code class="highlighter-rouge">implicit</code> cache. The first is 
+following ids. You can call <code class="highlighter-rouge">resolve</code> on any id to get the object it 
+corresponds to. In some cases there might be multiple resolve methods, either
+for performance reasons, or to get different objects that both use the same id.</p>
 
-<div class="language-scala highlighter-rouge"><pre class="highlight"><code><span class="n">futureClient</span><span class="o">.</span><span class="n">foreach</span> <span class="o">{</span> <span class="n">client</span> <span class="k">=&gt;</span>
-  <span class="n">client</span><span class="o">.</span><span class="n">registerHandler</span> <span class="o">{</span>
-    <span class="k">new</span> <span class="nc">EventHandler</span><span class="o">[</span><span class="kt">Id</span>, <span class="kt">APIMessage.Ready</span><span class="o">]</span> <span class="o">{</span>
-      <span class="k">override</span> <span class="k">def</span> <span class="n">handle</span><span class="o">(</span><span class="n">message</span><span class="k">:</span> <span class="kt">APIMessage.Ready</span><span class="o">)(</span><span class="k">implicit</span> <span class="n">c</span><span class="k">:</span> <span class="kt">CacheSnapshot</span><span class="o">)</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> 
-        <span class="n">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">)</span>
-    <span class="o">}</span>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">.</span><span class="py">resolve</span><span class="o">)</span>
   <span class="o">}</span>
 <span class="o">}</span>
-</code></pre>
-</div>
+</code></pre></div></div>
 
-<p>As for the flows, I’ll get back to those when talking about commands.</p>
+<p>In addition to that, in many cases you can find methods on the object you’re 
+interacting with taking a cache snapshot, and returning an object directly.</p>
 
-</section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/highlight/highlight.pack.js"></script><script>hljs.configure({languages:['scala','java','bash']});
-hljs.initHighlighting();
-              </script><script src="/js/main.js"></script></body></html>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="k">:</span> <span class="kt">GuildMessage</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> 
+      <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">guild</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="cachestate">CacheState</h2>
+<p>Sometimes when dealing with events, you want to get a cache from just before 
+the current event happened. In those cases it’s time to use the <code class="highlighter-rouge">CacheState</code>. 
+All <code class="highlighter-rouge">APIMessage</code>s contain one. In the example above it was the value we ignored 
+on <code class="highlighter-rouge">APIMessage.MessageCreate</code>. It stores the current and the 
+previous <code class="highlighter-rouge">CacheSnapshot</code>. For example, to get the message before it was edited 
+in <code class="highlighter-rouge">APIMessage.MessageUpdate</code>, we do something like this.</p>
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageUpdate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="nc">CacheState</span><span class="o">(</span><span class="n">current</span><span class="o">,</span> <span class="n">previous</span><span class="o">))</span> <span class="k">=&gt;</span> 
+      <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">id</span><span class="o">.</span><span class="py">resolve</span><span class="o">(</span><span class="n">previous</span><span class="o">))</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">CacheSnapshot</code>s are always immutable. It’s perfectly valid to both store them 
+away for later, or have multiple of them.</p>
+
+</section></div></div></div></div><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script><script src="/highlight/highlight.pack.js"></script><script>
+// For all code blocks, copy the language from the containing div
+// to the inner code tag (where hljs expects it to be)
+const langPrefix = 'language-';
+document.querySelectorAll(`div[class^='${langPrefix}']`).forEach(function(div) {
+  div.classList.forEach(function(cssClass) {
+    if (cssClass.startsWith(langPrefix)) {
+      const lang = cssClass.substring(langPrefix.length);
+      div.querySelectorAll('pre code').forEach(function(code) {
+        code.classList.add(lang);
+      });
+    }
+  });
+});
+
+hljs.configure({languages:['scala','java','bash']});
+hljs.initHighlightingOnLoad();
+      </script><script>console.info('\x57\x65\x62\x73\x69\x74\x65\x20\x62\x75\x69\x6c\x74\x20\x77\x69\x74\x68\x3a\x0a\x20\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x5f\x20\x20\x20\x20\x5f\x5f\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x5f\x20\x5f\x5f\x0a\x20\x20\x20\x5f\x5f\x5f\x5f\x5f\x2f\x20\x2f\x5f\x20\x20\x2f\x20\x2f\x5f\x20\x20\x20\x20\x20\x20\x5f\x5f\x5f\x5f\x20\x5f\x5f\x5f\x20\x20\x28\x5f\x29\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x5f\x20\x20\x5f\x5f\x5f\x5f\x5f\x28\x5f\x29\x20\x2f\x5f\x5f\x5f\x5f\x20\x20\x5f\x5f\x5f\x5f\x5f\x0a\x20\x20\x2f\x20\x5f\x5f\x5f\x2f\x20\x5f\x5f\x20\x5c\x2f\x20\x5f\x5f\x2f\x5f\x5f\x5f\x5f\x5f\x2f\x20\x5f\x5f\x20\x60\x5f\x5f\x20\x5c\x2f\x20\x2f\x20\x5f\x5f\x5f\x2f\x20\x5f\x5f\x5f\x2f\x20\x5f\x5f\x20\x5c\x2f\x20\x5f\x5f\x5f\x2f\x20\x2f\x20\x5f\x5f\x2f\x20\x5f\x20\x5c\x2f\x20\x5f\x5f\x5f\x2f\x0a\x20\x28\x5f\x5f\x20\x20\x29\x20\x2f\x5f\x2f\x20\x2f\x20\x2f\x5f\x2f\x5f\x5f\x5f\x5f\x5f\x2f\x20\x2f\x20\x2f\x20\x2f\x20\x2f\x20\x2f\x20\x2f\x20\x2f\x5f\x5f\x2f\x20\x2f\x20\x20\x2f\x20\x2f\x5f\x2f\x20\x28\x5f\x5f\x20\x20\x29\x20\x2f\x20\x2f\x5f\x2f\x20\x20\x5f\x5f\x28\x5f\x5f\x20\x20\x29\x0a\x2f\x5f\x5f\x5f\x5f\x2f\x5f\x2e\x5f\x5f\x5f\x2f\x5c\x5f\x5f\x2f\x20\x20\x20\x20\x20\x2f\x5f\x2f\x20\x2f\x5f\x2f\x20\x2f\x5f\x2f\x5f\x2f\x5c\x5f\x5f\x5f\x2f\x5f\x2f\x20\x20\x20\x5c\x5f\x5f\x5f\x5f\x2f\x5f\x5f\x5f\x5f\x2f\x5f\x2f\x5c\x5f\x5f\x2f\x5c\x5f\x5f\x5f\x2f\x5f\x5f\x5f\x5f\x2f\x0a\x0a\x68\x74\x74\x70\x73\x3a\x2f\x2f\x34\x37\x64\x65\x67\x2e\x67\x69\x74\x68\x75\x62\x2e\x69\x6f\x2f\x73\x62\x74\x2d\x6d\x69\x63\x72\x6f\x73\x69\x74\x65\x73')</script><script src="/js/main.js"></script></body></html>
