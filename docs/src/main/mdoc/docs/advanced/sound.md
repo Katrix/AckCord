@@ -13,7 +13,7 @@ With that out of the way, let's talk sound. If you want to send sound with
 AckCord, you currently have to wire some stuff up yourself. AckCord still hides 
 most of the implementations, but you are assumed to have some knowledge of how 
 sound sending works in Discord. If you are not familiar with this, read 
-the [Discord docs for voice connections](https://discordapp.com/developers/docs/topics/voice-connections).
+the [Discord docs for voice connections](https://discord.com/developers/docs/topics/voice-connections).
 
 ## Establishing a connection
 The first thing you need to do is to tell Discord that you want to begin 
