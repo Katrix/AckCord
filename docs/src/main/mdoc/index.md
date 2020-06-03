@@ -29,4 +29,4 @@ For more information, either see the the examples or the ScalaDoc.
 
 Or you can just join the Discord server (we got cookies).
 
-[![](https://discordapp.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/5UH627u) 
+[![](https://discord.com/api/guilds/399373512072232961/embed.png?style=banner1)](https://discord.gg/5UH627u) 

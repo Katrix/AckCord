@@ -21,7 +21,7 @@ import ackcord.data._
 ```
 
 Next we need a bot token. You can get one by going to 
-[https://discordapp.com/developers/applications](https://discordapp.com/developers/applications), 
+[https://discord.com/developers/applications](https://discord.com/developers/applications), 
 creating a new application, and then creating a bot for your application.
 ```scala mdoc:silent
 val token = "<token>" //Your Discord token. Be very careful to never give this to anyone else

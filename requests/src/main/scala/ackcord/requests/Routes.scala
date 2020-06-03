@@ -36,7 +36,7 @@ import shapeless._
   */
 object Routes {
 
-  val discord = "discordapp.com"
+  val discord = "discord.com"
 
   val base: Route =
     Route(
