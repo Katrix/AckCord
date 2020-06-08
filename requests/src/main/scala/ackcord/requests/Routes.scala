@@ -37,6 +37,7 @@ import shapeless._
 object Routes {
 
   val discord = "discord.com"
+  val cdnDiscord = "cdn.discordapp.com"
 
   val base: Route =
     Route(
@@ -44,7 +45,7 @@ object Routes {
       s"https://$discord/api/v${AckCord.DiscordApiVersion}",
       s"https://$discord/api/v${AckCord.DiscordApiVersion}"
     )
-  val cdn: Route = Route(s"https://cdn.$discord", s"https://cdn.$discord", s"https://cdn.$discord")
+  val cdn: Route = Route(s"https://$cdnDiscord", s"https://$cdnDiscord", s"https://$cdnDiscord")
 
   //WS
   val gateway: Route    = base / "gateway"
