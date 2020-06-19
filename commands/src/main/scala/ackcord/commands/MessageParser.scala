@@ -90,6 +90,17 @@ trait MessageParser[A] { self =>
         case _                          => error.raise
       }
   }
+
+  /** Try another parser if this one fails. */
+  def orElse[B](that: MessageParser[B]): MessageParser[Either[A, B]] =
+    MessageParser.orElseWith(this, that)(identity)
+
+  /** Try another parser if this one fails, and combine their types. */
+  def orElseWith[B, C](that: MessageParser[B])(f: Either[A, B] => C): MessageParser[C] =
+    MessageParser.orElseWith(this, that)(f)
+
+  /** Runs another parser after this one. */
+  def andThen[B](that: MessageParser[B]): MessageParser[(A, B)] = (this, that).tupled
 }
 object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
@@ -460,6 +471,19 @@ trait MessageParserInstances {
       ): F[Option[A]] =
         parser.parse.map[Option[A]](Some.apply).handle[String](_ => None)
 
+    }
+
+  def orElseWith[A, B, C](parse1: MessageParser[A], parse2: MessageParser[B])(
+      combine: Either[A, B] => C
+  ): MessageParser[C] =
+    new MessageParser[C] {
+      override def parse[F[_]](
+          implicit c: CacheSnapshot,
+          F: Monad[F],
+          E: ApplicativeHandle[F, String],
+          S: MonadState[F, List[String]]
+      ): F[C] =
+        E.handleWith(parse1.parse[F].map(a => combine(Left(a))))(_ => parse2.parse[F].map(b => combine(Right(b))))
     }
 }
 
