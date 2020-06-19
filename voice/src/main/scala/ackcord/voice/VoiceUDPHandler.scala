@@ -81,7 +81,7 @@ object VoiceUDPHandler {
       )
       .onFailure(
         SupervisorStrategy
-          .restartWithBackoff(100.millis, 5.seconds, 1d)
+          .restartWithBackoff(100.millis, 5.seconds, 1D)
           .withResetBackoffAfter(10.seconds)
           .withMaxRestarts(5)
       )

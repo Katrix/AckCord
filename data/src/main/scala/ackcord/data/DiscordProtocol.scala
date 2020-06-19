@@ -120,8 +120,8 @@ trait DiscordProtocol {
   implicit val webhookAuthorCodec: Codec[WebhookAuthor] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val roleCodec
-      : Codec[Role] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None) //Encoding roles is fine, decoding them is not
+  implicit val roleCodec: Codec[Role] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None) //Encoding roles is fine, decoding them is not
 
   implicit val rawRoleCodec: Codec[RawRole] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -242,10 +242,11 @@ trait DiscordProtocol {
       attachment      <- c.get[Seq[Attachment]]("attachments")
       embeds          <- c.get[Seq[ReceivedEmbed]]("embeds")
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
-      nonce <- c
-        .get[Option[Int]]("nonce")
-        .map(_.map(Left.apply))
-        .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
+      nonce <-
+        c
+          .get[Option[Int]]("nonce")
+          .map(_.map(Left.apply))
+          .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
       pinned           <- c.get[Boolean]("pinned")
       tpe              <- c.get[MessageType]("type")
       activity         <- c.get[Option[RawMessageActivity]]("activity")

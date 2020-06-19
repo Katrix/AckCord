@@ -67,19 +67,27 @@ object ActionFunction {
     Flow.fromGraph(GraphDSL.create(flow1, flow2)(combine) { implicit b => (selfFlow, thatFlow) =>
       import GraphDSL.Implicits._
 
-      val selfPartition =
-        b.add(Partition[Either[E, M]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
+      val selfPartition = b.add(
+        Partition[Either[E, M]](
+          2,
+          {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }
+        )
+      )
       val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
       val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
-      val thatPartition =
-        b.add(Partition[Either[E, O]](2, {
-          case Left(_)  => 0
-          case Right(_) => 1
-        }))
+      val thatPartition = b.add(
+        Partition[Either[E, O]](
+          2,
+          {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }
+        )
+      )
       val thatErr = thatPartition.out(0)
       val thatOut = thatPartition.out(1)
 

@@ -584,7 +584,7 @@ case class RawGuild(
         verificationLevel,
         defaultMessageNotifications,
         explicitContentFilter,
-        SnowflakeMap.from(roles.map(r => r.id  -> r.toRole(id))),
+        SnowflakeMap.from(roles.map(r => r.id -> r.toRole(id))),
         SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)),
         features,
         mfaLevel,

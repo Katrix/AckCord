@@ -98,9 +98,10 @@ object GatewayProtocol extends DiscordProtocol {
     )
   implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
     for {
-      guildId <- c
-        .get[GuildId]("guild_id")
-        .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
+      guildId <-
+        c
+          .get[GuildId]("guild_id")
+          .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
       query     <- c.get[String]("query")
       limit     <- c.get[Int]("limit")
       presences <- c.get[Boolean]("presences")
@@ -192,11 +193,12 @@ object GatewayProtocol extends DiscordProtocol {
       attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
       embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
       reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
-      nonce <- c
-        .downField("nonce")
-        .as[JsonOption[Int]]
-        .map(_.map(Left.apply))
-        .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
+      nonce <-
+        c
+          .downField("nonce")
+          .as[JsonOption[Int]]
+          .map(_.map(Left.apply))
+          .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
       pinned    <- c.get[JsonOption[Boolean]]("pinned")
       webhookId <- c.get[JsonOption[String]]("webhook_id")
     } yield GatewayEvent.RawPartialMessage(

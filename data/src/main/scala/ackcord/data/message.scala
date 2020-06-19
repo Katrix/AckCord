@@ -475,7 +475,8 @@ case class GuildGatewayMessage(
     withChannels
   }
 
-  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage = copy(reactions = reactions)
+  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage =
+    copy(reactions = reactions)
 }
 
 /**

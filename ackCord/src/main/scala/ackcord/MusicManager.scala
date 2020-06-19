@@ -45,10 +45,12 @@ object MusicManager {
       implicit val system: ActorSystem[Nothing] = ctx.system
       import ctx.executionContext
 
-      val (usedPlayer, actor) = players.getOrElse(guildId, {
-        val player = createPlayer()
-        (player, ctx.spawn(LavaplayerHandler(player, guildId, cache), guildId.asString))
-      })
+      val (usedPlayer, actor) = players.getOrElse(
+        guildId, {
+          val player = createPlayer()
+          (player, ctx.spawn(LavaplayerHandler(player, guildId, cache), guildId.asString))
+        }
+      )
 
       //TODO: Handle errors
       actor.ask[LavaplayerHandler.Reply](LavaplayerHandler.ConnectVoiceChannel(channelId, force, _)).onComplete {

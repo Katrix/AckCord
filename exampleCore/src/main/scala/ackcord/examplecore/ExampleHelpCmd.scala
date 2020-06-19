@@ -148,7 +148,10 @@ object ExampleHelpCmdFactory {
           name = "Help",
           description = "This command right here",
           usage = "<page|command>",
-          extra = Map("ignore-help-last" -> "") //Ignores the help command when returning if all commands have been unregistered
+          extra =
+            Map(
+              "ignore-help-last" -> ""
+            ) //Ignores the help command when returning if all commands have been unregistered
         )
       )
     )

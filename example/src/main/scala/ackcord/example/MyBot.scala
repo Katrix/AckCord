@@ -61,9 +61,9 @@ object MyBot extends App {
         }
       }
 
-      val myEvents   = new MyEvents(client.requests)
+      val myEvents    = new MyEvents(client.requests)
       val myListeners = new Listeners(client)
-      val myCommands = new MyCommands(client, client.requests)
+      val myCommands  = new MyCommands(client, client.requests)
 
       client.bulkRegisterListeners(
         myEvents.printReady,

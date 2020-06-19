@@ -56,7 +56,9 @@ object GatewayHandlerCache {
     val sink = SupervisionStreams.logAndContinue(
       Flow[Dispatch[_]]
         .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
-        .mapAsync(cache.parallelism)(dispatch => Future(eventToCacheUpdate(dispatch, registry, log, configSettings).toList))
+        .mapAsync(cache.parallelism)(dispatch =>
+          Future(eventToCacheUpdate(dispatch, registry, log, configSettings).toList)
+        )
         .mapConcat(identity)
         .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
         .to(cache.publish)

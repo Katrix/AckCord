@@ -155,9 +155,8 @@ object VoiceHandler {
             soundshare -> SpeakingFlag.Soundshare,
             priority   -> SpeakingFlag.Priority
           ).collect {
-              case (b, f) if b => f
-            }
-            .fold(SpeakingFlag.None)(_ ++ _)
+            case (b, f) if b => f
+          }.fold(SpeakingFlag.None)(_ ++ _)
 
           wsHandler ! VoiceWsHandler.SetSpeaking(flags)
           Behaviors.same

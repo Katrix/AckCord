@@ -409,6 +409,7 @@ object MusicHandler {
       vChannelId: VoiceGuildChannelId,
       replyTo: ActorRef[CommandAck.type]
   ) extends MusicHandlerEvents
+
   case class StopMusic(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
   case class TogglePause(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents
   case class NextTrack(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents

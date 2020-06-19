@@ -77,10 +77,10 @@ sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
   */
 case class Dispatch[D](sequence: Int, event: GatewayEvent[D])(implicit val dataEncoder: Encoder[D])
     extends GatewayMessage[D] {
-  override val s: JsonSome[Int]                       = JsonSome(sequence)
+  override val s: JsonSome[Int]             = JsonSome(sequence)
   override val t: JsonSome[GatewayEvent[D]] = JsonSome(event)
-  override def op: GatewayOpCode                      = GatewayOpCode.Dispatch
-  override def d: Later[Decoder.Result[D]]            = event.data
+  override def op: GatewayOpCode            = GatewayOpCode.Dispatch
+  override def d: Later[Decoder.Result[D]]  = event.data
 }
 
 /**
@@ -968,6 +968,5 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
-  case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]])
-      extends GatewayEvent[Unit]
+  case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]]) extends GatewayEvent[Unit]
 }

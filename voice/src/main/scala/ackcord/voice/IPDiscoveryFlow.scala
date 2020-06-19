@@ -65,9 +65,12 @@ class IPDiscoveryFlow(openValve: () => Unit)
         promise.success(VoiceUDPFlow.FoundIP(address, port))
         log.debug("Success doing IP discovery")
 
-        setHandler(in, new InHandler {
-          override def onPush(): Unit = push(out, grab(in))
-        })
+        setHandler(
+          in,
+          new InHandler {
+            override def onPush(): Unit = push(out, grab(in))
+          }
+        )
 
         openValve()
       }

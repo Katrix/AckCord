@@ -206,8 +206,8 @@ object LavaplayerHandler {
         )
 
       case (
-          connect @ ConnectVoiceChannel(newVChannelId, force, replyTo),
-          HasVoiceWs(voiceHandler, inVChannelId, firstSender, _, readyListener, movedMonitor)
+            connect @ ConnectVoiceChannel(newVChannelId, force, replyTo),
+            HasVoiceWs(voiceHandler, inVChannelId, firstSender, _, readyListener, movedMonitor)
           ) =>
         handleConflictingConnect(
           connect,
@@ -269,8 +269,8 @@ object LavaplayerHandler {
         Behaviors.same
 
       case (
-          WsReady(serverId, userId),
-          HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, readyListener, movedMonitor)
+            WsReady(serverId, userId),
+            HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, readyListener, movedMonitor)
           ) =>
         log.debug("Audio ready")
 

@@ -149,11 +149,16 @@ object RequestStreams {
       val buffer     = builder.add(Flow[(Request[Data], Ctx)].buffer(bufferSize, overflowStrategy))
       val ratelimits = builder.add(ratelimitFlow[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
 
-      val partition = builder.add(Partition[(MaybeRequest[Data], Ctx)](2, {
-        case (_: RequestDropped, _) => 1
-        case (_: Request[_], _)     => 0
-      }))
-      val requests = partition.out(0).collect { case (request: Request[Data], ctx)  => request -> ctx }
+      val partition = builder.add(
+        Partition[(MaybeRequest[Data], Ctx)](
+          2,
+          {
+            case (_: RequestDropped, _) => 1
+            case (_: Request[_], _)     => 0
+          }
+        )
+      )
+      val requests = partition.out(0).collect { case (request: Request[Data], ctx) => request -> ctx }
       val dropped  = partition.out(1).collect { case (dropped: RequestDropped, ctx) => dropped -> ctx }
 
       val network = builder.add(
@@ -228,7 +233,8 @@ object RequestStreams {
     val withLogging =
       if (AckCordRequestSettings().LogSentREST)
         baseFlow.log(
-          "Sent REST request", { request =>
+          "Sent REST request",
+          { request =>
             val loggingBody = request.bodyForLogging.fold("")(body => s" and content $body")
             s"to ${request.route.uri} with method ${request.route.method}$loggingBody"
           }
@@ -405,9 +411,12 @@ object RequestStreams {
             }
 
           singleFlow
-            .recoverWithRetries(maxRetryCount, {
-              case RetryFailedRequestException(_, _) => singleFlow
-            })
+            .recoverWithRetries(
+              maxRetryCount,
+              {
+                case RetryFailedRequestException(_, _) => singleFlow
+              }
+            )
             .recover {
               case RetryFailedRequestException(err, ctx) => err -> ctx.asInstanceOf[Ctx]
             }

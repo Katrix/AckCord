@@ -50,9 +50,12 @@ object StreamInstances {
 
       override def raiseError[A](e: Throwable): SourceRequest[A] = Source.failed(e)
       override def handleErrorWith[A](fa: SourceRequest[A])(f: Throwable => SourceRequest[A]): SourceRequest[A] =
-        fa.recoverWithRetries[A](5, {
-          case e: Throwable => f(e).mapMaterializedValue(_ => NotUsed)
-        })
+        fa.recoverWithRetries[A](
+          5,
+          {
+            case e: Throwable => f(e).mapMaterializedValue(_ => NotUsed)
+          }
+        )
     }
 
   implicit def flowInstance[In, Mat]: Functor[Flow[In, *, Mat]] = new Functor[Flow[In, *, Mat]] {

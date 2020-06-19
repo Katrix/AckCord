@@ -373,8 +373,7 @@ trait DeriveMessageParser {
   implicit lazy val hNilParser: MessageParser[HNil] = Monad[MessageParser].pure(HNil)
 
   implicit def hListParser[Head, Tail <: HList](
-      implicit
-      headParser: Lazy[MessageParser[Head]],
+      implicit headParser: Lazy[MessageParser[Head]],
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :: Tail] = new MessageParser[Head :: Tail] {
     override def parse[F[_]](
@@ -400,8 +399,7 @@ trait DeriveMessageParser {
   }
 
   implicit def coProductParser[Head, Tail <: Coproduct](
-      implicit
-      headParser: Lazy[MessageParser[Head]],
+      implicit headParser: Lazy[MessageParser[Head]],
       tailParser: Lazy[MessageParser[Tail]]
   ): MessageParser[Head :+: Tail] = new MessageParser[Head :+: Tail] {
     override def parse[F[_]](

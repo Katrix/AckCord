@@ -132,10 +132,10 @@ class Ratelimiter(
       Behaviors.same
 
     case UpdateRatelimits(
-        route,
-        RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
-        isGlobal,
-        identifier
+          route,
+          RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
+          isGlobal,
+          identifier
         ) =>
       if (settings.LogRatelimitEvents) {
         log.debug(

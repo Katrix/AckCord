@@ -108,7 +108,8 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     new Requests(
       BotAuthentication(settings.token),
       ratelimiter,
-      millisecondPrecision = false, //My system is pretty bad at syncing stuff up, so I need to be very generous when it comes to ratelimits
+      millisecondPrecision =
+        false, //My system is pretty bad at syncing stuff up, so I need to be very generous when it comes to ratelimits
       relativeTime = true
     )
 

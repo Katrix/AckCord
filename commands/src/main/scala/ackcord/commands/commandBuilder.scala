@@ -145,7 +145,7 @@ object CommandBuilder {
               chG.guild.fold[Result[A]](e) { guild =>
                 m.message match {
                   case guildMessage: GuildGatewayMessage => Right(create(chG, guildMessage, guild)(m))
-                  case _                          => e
+                  case _                                 => e
                 }
               }
             case _ => e
@@ -253,10 +253,15 @@ object CommandBuilder {
       import GraphDSL.Implicits._
       val selfFlowShape = b.add(selfFlow)
 
-      val selfPartition = b.add(Partition[Either[Option[CommandError], M[A]]](2, {
-        case Left(_)  => 0
-        case Right(_) => 1
-      }))
+      val selfPartition = b.add(
+        Partition[Either[Option[CommandError], M[A]]](
+          2,
+          {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }
+        )
+      )
       val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible"))).mapConcat(_.toList)
       val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
@@ -436,19 +441,19 @@ trait GuildCommandMessage[+A] extends CommandMessage[A] {
 object GuildCommandMessage {
 
   case class Default[A](
-                         override val textChannel: TextGuildChannel,
-                         override val message: GuildGatewayMessage,
-                         guild: Guild,
-                         m: CommandMessage[A]
+      override val textChannel: TextGuildChannel,
+      override val message: GuildGatewayMessage,
+      guild: Guild,
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with GuildCommandMessage[A]
 
   case class WithUser[A](
-                          override val textChannel: TextGuildChannel,
-                          override val message: GuildGatewayMessage,
-                          guild: Guild,
-                          user: User,
-                          m: CommandMessage[A]
+      override val textChannel: TextGuildChannel,
+      override val message: GuildGatewayMessage,
+      guild: Guild,
+      user: User,
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with GuildCommandMessage[A]
       with UserCommandMessage[A]
@@ -480,12 +485,12 @@ trait GuildMemberCommandMessage[+A] extends GuildCommandMessage[A] with UserComm
 object GuildMemberCommandMessage {
 
   case class Default[A](
-                         override val textChannel: TextGuildChannel,
-                         override val message: GuildGatewayMessage,
-                         guild: Guild,
-                         user: User,
-                         guildMember: GuildMember,
-                         m: CommandMessage[A]
+      override val textChannel: TextGuildChannel,
+      override val message: GuildGatewayMessage,
+      guild: Guild,
+      user: User,
+      guildMember: GuildMember,
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with GuildMemberCommandMessage[A]
 }
@@ -500,23 +505,23 @@ trait VoiceGuildCommandMessage[+A] extends GuildCommandMessage[A] with UserComma
 object VoiceGuildCommandMessage {
 
   case class Default[A](
-                         override val textChannel: TextGuildChannel,
-                         override val message: GuildGatewayMessage,
-                         guild: Guild,
-                         user: User,
-                         voiceChannel: VoiceGuildChannel,
-                         m: CommandMessage[A]
+      override val textChannel: TextGuildChannel,
+      override val message: GuildGatewayMessage,
+      guild: Guild,
+      user: User,
+      voiceChannel: VoiceGuildChannel,
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
 
   case class WithGuildMember[A](
-                                 override val textChannel: TextGuildChannel,
-                                 override val message: GuildGatewayMessage,
-                                 guild: Guild,
-                                 user: User,
-                                 guildMember: GuildMember,
-                                 voiceChannel: VoiceGuildChannel,
-                                 m: CommandMessage[A]
+      override val textChannel: TextGuildChannel,
+      override val message: GuildGatewayMessage,
+      guild: Guild,
+      user: User,
+      guildMember: GuildMember,
+      voiceChannel: VoiceGuildChannel,
+      m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with VoiceGuildCommandMessage[A]
       with GuildMemberCommandMessage[A]

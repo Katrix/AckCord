@@ -86,7 +86,7 @@ class GatewayGuildRouter[Inner](
         }
       }
 
-    case msg: GatewayEvent.GuildEvent[_]           => handleLazy(msg.guildId)(sendToGuild(_, msg, handleEvent))
+    case msg: GatewayEvent.GuildEvent[_] => handleLazy(msg.guildId)(sendToGuild(_, msg, handleEvent))
     case msg: GatewayEvent.OptGuildEvent[_] =>
       handleLazy(msg.guildId) {
         case None          => sendToNotGuild(msg, handleEvent)

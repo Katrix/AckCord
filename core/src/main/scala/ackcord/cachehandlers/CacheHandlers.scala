@@ -130,9 +130,10 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: RawGuild, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      val userUpdater        = registry.getUpdater[User]
-      val guildUpdater       = registry.getUpdater[Guild]
-      val guildMemberUpdater = guildUpdater.flatMap(_ => registry.getUpdater[GuildMember]) //We only want the member updater if we have a guild
+      val userUpdater  = registry.getUpdater[User]
+      val guildUpdater = registry.getUpdater[Guild]
+      val guildMemberUpdater =
+        guildUpdater.flatMap(_ => registry.getUpdater[GuildMember]) //We only want the member updater if we have a guild
 
       val rawMembers =
         obj.members
@@ -182,7 +183,7 @@ object CacheHandlers {
           verificationLevel = obj.verificationLevel,
           defaultMessageNotifications = obj.defaultMessageNotifications,
           explicitContentFilter = obj.explicitContentFilter,
-          roles = SnowflakeMap.from(obj.roles.map(r => r.id   -> r.toRole(obj.id))),
+          roles = SnowflakeMap.from(obj.roles.map(r => r.id -> r.toRole(obj.id))),
           emojis = SnowflakeMap.from(obj.emojis.map(e => e.id -> e.toEmoji)),
           features = obj.features,
           mfaLevel = obj.mfaLevel,

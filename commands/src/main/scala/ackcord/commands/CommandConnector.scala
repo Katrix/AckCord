@@ -37,7 +37,6 @@ import cats.syntax.all._
 import cats.{Monad, MonadError}
 
 /**
-  *
   * @param messages A source of messages and their cache. All the messages
   *                 that will be considered for commands.
   * @param requests A request helper to send errors and pass to command
@@ -154,10 +153,15 @@ class CommandConnector(
 
           val selfSource = b.add(commandMessageSource)
 
-          val selfPartition = b.add(Partition[Either[CommandError, CommandMessage[A]]](2, {
-            case Left(_)  => 0
-            case Right(_) => 1
-          }))
+          val selfPartition = b.add(
+            Partition[Either[CommandError, CommandMessage[A]]](
+              2,
+              {
+                case Left(_)  => 0
+                case Right(_) => 1
+              }
+            )
+          )
           val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
           val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
