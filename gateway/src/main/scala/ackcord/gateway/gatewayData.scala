@@ -62,7 +62,7 @@ sealed trait GatewayMessage[D] {
     */
   def dataEncoder: Encoder[D]
 
-  def t: JsonOption[ComplexGatewayEvent[D, _]] = JsonUndefined
+  def t: JsonOption[GatewayEvent[D]] = JsonUndefined
 }
 
 sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
@@ -75,10 +75,10 @@ sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
   * @param sequence The seq number.
   * @param event The sent event.
   */
-case class Dispatch[D](sequence: Int, event: ComplexGatewayEvent[D, _])(implicit val dataEncoder: Encoder[D])
+case class Dispatch[D](sequence: Int, event: GatewayEvent[D])(implicit val dataEncoder: Encoder[D])
     extends GatewayMessage[D] {
   override val s: JsonSome[Int]                       = JsonSome(sequence)
-  override val t: JsonSome[ComplexGatewayEvent[D, _]] = JsonSome(event)
+  override val t: JsonSome[GatewayEvent[D]] = JsonSome(event)
   override def op: GatewayOpCode                      = GatewayOpCode.Dispatch
   override def d: Later[Decoder.Result[D]]            = event.data
 }
@@ -297,9 +297,8 @@ object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnumWithUnknown
 /**
   * Base trait for all gateway events.
   * @tparam D The data this event carries.
-  * @tparam HandlerType The type the cache handler takes.
   */
-sealed trait ComplexGatewayEvent[D, HandlerType] {
+sealed trait GatewayEvent[D] {
 
   /**
     * The name of this event.
@@ -321,11 +320,6 @@ sealed trait ComplexGatewayEvent[D, HandlerType] {
     */
   def mapData[A](f: D => A): Eval[Decoder.Result[A]] = data.map(_.map(f))
 }
-
-/**
-  * A simpler gateway event where the data type and the handler type are the same.
-  */
-sealed trait SimpleGatewayEvent[D] extends ComplexGatewayEvent[D, D]
 
 object GatewayEvent {
 
@@ -349,14 +343,14 @@ object GatewayEvent {
     * Sent to the shard when Discord is ready to serve requests. No requests
     * should be sent before this has been received.
     */
-  case class Ready(rawData: Json, data: Later[Decoder.Result[ReadyData]]) extends SimpleGatewayEvent[ReadyData] {
+  case class Ready(rawData: Json, data: Later[Decoder.Result[ReadyData]]) extends GatewayEvent[ReadyData] {
     override def name: String = "READY"
   }
 
   /**
     * Sent to the shard when a previously interrupted connection is resumed.
     */
-  case class Resumed(rawData: Json) extends SimpleGatewayEvent[NotUsed] {
+  case class Resumed(rawData: Json) extends GatewayEvent[NotUsed] {
     override def name: String = "RESUMED"
 
     override def data: Later[Result[NotUsed]] = Later(Right(NotUsed))
@@ -365,7 +359,7 @@ object GatewayEvent {
   /**
     * Base trait for all events that include an optional guild.
     */
-  sealed trait OptGuildEvent[D] extends SimpleGatewayEvent[D] {
+  sealed trait OptGuildEvent[D] extends GatewayEvent[D] {
 
     /**
       * The guild id for this event.
@@ -413,7 +407,7 @@ object GatewayEvent {
   /**
     * Base trait for an event that includes a channel.
     */
-  sealed trait ChannelEvent[D] extends SimpleGatewayEvent[D] {
+  sealed trait ChannelEvent[D] extends GatewayEvent[D] {
 
     /**
       * The channel associated with this event.
@@ -445,7 +439,7 @@ object GatewayEvent {
   /**
     * Base trait for all simple events that include an optional guild.
     */
-  sealed trait GuildEvent[D] extends SimpleGatewayEvent[D] {
+  sealed trait GuildEvent[D] extends GatewayEvent[D] {
 
     /**
       * The guild id for this event.
@@ -487,18 +481,11 @@ object GatewayEvent {
   case class UserWithGuildId(guildId: GuildId, user: User)
 
   /**
-    * Base trait for all complex events that include an optional guild.
-    */
-  sealed trait ComplexGuildEvent[D, HandlerType] extends ComplexGatewayEvent[D, HandlerType] {
-    def guildId: Eval[Decoder.Result[GuildId]]
-  }
-
-  /**
     * Sent to the shard when an user is banned from a guild.
     * @param data The banned user with a guildId of what guild the user was banned from.
     */
   case class GuildBanAdd(rawData: Json, data: Later[Decoder.Result[UserWithGuildId]])
-      extends ComplexGuildEvent[UserWithGuildId, (GuildId, RawBan)] {
+      extends GuildEvent[UserWithGuildId] {
     override def name: String                           = "GUILD_BAN_ADD"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
@@ -508,7 +495,7 @@ object GatewayEvent {
     * @param data The unbanned user with a guildId of what guild the user was unbanned from.
     */
   case class GuildBanRemove(rawData: Json, data: Later[Decoder.Result[UserWithGuildId]])
-      extends ComplexGuildEvent[UserWithGuildId, (GuildId, User)] {
+      extends GuildEvent[UserWithGuildId] {
     override def name: String                           = "GUILD_BAN_REMOVE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
@@ -941,7 +928,7 @@ object GatewayEvent {
     * Sent to the shard when a user object is updated.
     * @param data The new user.
     */
-  case class UserUpdate(rawData: Json, data: Later[Decoder.Result[User]]) extends SimpleGatewayEvent[User] {
+  case class UserUpdate(rawData: Json, data: Later[Decoder.Result[User]]) extends GatewayEvent[User] {
     override def name: String = "USER_UPDATE"
   }
 
@@ -982,5 +969,5 @@ object GatewayEvent {
   }
 
   case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]])
-      extends SimpleGatewayEvent[Unit]
+      extends GatewayEvent[Unit]
 }

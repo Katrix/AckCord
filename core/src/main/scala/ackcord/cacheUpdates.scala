@@ -24,6 +24,7 @@
 package ackcord
 
 import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder, CacheTypeRegistry}
+import ackcord.gateway.Dispatch
 import org.slf4j.Logger
 
 /**
@@ -44,13 +45,15 @@ trait CacheEvent {
   *                  event.
   * @param handler The handler to process the data of this event with.
   * @param registry The handler registry that the event will use to update the snapshot.
+  * @param dispatch The low level message that created this update.
   * @tparam Data The data it contains.
   */
 case class APIMessageCacheUpdate[Data](
     data: Data,
     sendEvent: CacheState => Option[APIMessage],
     handler: CacheHandler[Data],
-    registry: CacheTypeRegistry
+    registry: CacheTypeRegistry,
+    dispatch: Dispatch[_]
 ) extends CacheEvent {
 
   override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =

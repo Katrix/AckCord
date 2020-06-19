@@ -258,7 +258,7 @@ object GatewayProtocol extends DiscordProtocol {
       .flatMap { seq =>
         //We use the apply method on the companion object here
         def createDispatch[Data: Decoder: Encoder](
-            create: (Json, Later[Decoder.Result[Data]]) => ComplexGatewayEvent[Data, _]
+            create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
         ): Either[DecodingFailure, Dispatch[Data]] = Right(Dispatch(seq, create(c.value, Later(dC.as[Data]))))
 
         c.get[String]("t")

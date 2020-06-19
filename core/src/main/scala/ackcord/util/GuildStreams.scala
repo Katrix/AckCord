@@ -25,13 +25,14 @@ package ackcord.util
 
 import ackcord.APIMessage
 import ackcord.data.{GuildChannel, GuildChannelId, GuildId, GuildMessage}
-import ackcord.gateway.{ComplexGatewayEvent, GatewayEvent}
+import ackcord.gateway.GatewayEvent
+import ackcord.gateway.GatewayEvent.IgnoredEvent
 import ackcord.syntax._
 import akka.NotUsed
-import akka.event.LoggingAdapter
 import akka.stream.scaladsl.Flow
 import cats.Eval
 import io.circe.Decoder
+import org.slf4j.Logger
 
 object GuildStreams {
 
@@ -65,49 +66,48 @@ object GuildStreams {
     }
 
   /**
-    * A flow which tries to find out which guild a given GatewayEvent event belongs to.
+    * A function which tries to find out which guild a given GatewayEvent
+    * event belongs to.
     *
     * Handles
     * - [[ackcord.gateway.GatewayEvent.GuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.ComplexGuildEvent]]
     * - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
     * - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
+    *
+    * The function returned by this contains multiple state, and is not
+    * safe to share.
     */
-  def withGuildInfoGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](
-      log: LoggingAdapter
-  ): Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
-    Flow[Msg].statefulMapConcat { () =>
-      val channelToGuild = collection.mutable.Map.empty[GuildChannelId, GuildId]
+  def createGatewayGuildInfoExtractor(log: Logger): GatewayEvent[_] => Option[GuildId] = {
+    val channelToGuild = collection.mutable.Map.empty[GuildChannelId, GuildId]
 
-      def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
-        later.value match {
-          case Right(value) => Some(f(value))
-          case Left(e) =>
-            log.error(e, "Failed to parse payload")
-            None
-        }
+    def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
+      later.value match {
+        case Right(value) => Some(f(value))
+        case Left(e) =>
+          log.error("Failed to parse payload", e)
+          None
       }
+    }
 
       def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
-        later.value match {
-          case Right(value) => value.map(f)
-          case Left(e) =>
-            log.error(e, "Failed to parse payload")
-            None
-        }
+      later.value match {
+        case Right(value) => value.map(f)
+        case Left(e) =>
+          log.error("Failed to parse payload", e)
+          None
       }
+    }
 
       def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] = handleLazy(later)(identity)
 
-      def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] =
-        handleLazyOpt(later)(identity)
+    def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] =
+      handleLazyOpt(later)(identity)
 
-      msg => {
-        val optGuildId = msg match {
-          case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate) =>
-            None
-          case msg: GatewayEvent.GuildCreate =>
-            handleLazy(msg.guildId) { guildId =>
+    {
+      case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate | _: IgnoredEvent) =>
+        None
+      case msg: GatewayEvent.GuildCreate =>
+        handleLazy(msg.guildId) { guildId =>
               handleLazy(msg.data)(data =>
                 data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> guildId))
               )
@@ -120,19 +120,31 @@ object GuildStreams {
             }
           case msg: GatewayEvent.ChannelDelete =>
             handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
-            lazyOptToOption(msg.guildId)
-          case msg: GatewayEvent.GuildEvent[_] =>
-            lazyToOption(msg.guildId)
-          case msg: GatewayEvent.ComplexGuildEvent[_, _] =>
-            lazyToOption(msg.guildId)
-          case msg: GatewayEvent.OptGuildEvent[_] =>
-            lazyOptToOption(msg.guildId)
-          case msg: GatewayEvent.ChannelEvent[_] =>
-            handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
-        }
+        lazyOptToOption(msg.guildId)
+      case msg: GatewayEvent.GuildEvent[_] =>
+        lazyToOption(msg.guildId)
+      case msg: GatewayEvent.OptGuildEvent[_] =>
+        lazyOptToOption(msg.guildId)
+      case msg: GatewayEvent.ChannelEvent[_] =>
+        handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
+    }
+  }
 
-        List(msg -> optGuildId)
-      }
+  /**
+    * A flow which tries to find out which guild a given GatewayEvent event belongs to.
+    *
+    * Handles
+    * - [[ackcord.gateway.GatewayEvent.GuildEvent]]
+    * - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    * - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
+    */
+  def withGuildInfoGatewayEvent[Msg <: GatewayEvent[_]](
+      log: Logger
+  ): Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
+    Flow[Msg].statefulMapConcat { () =>
+      val extractor = createGatewayGuildInfoExtractor(log)
+
+      msg => List(msg -> extractor(msg))
     }
 
   /**
@@ -173,9 +185,9 @@ object GuildStreams {
     *
     * @param guildId The only guildID to allow through.
     */
-  def guildFilterGatewayEvent[Msg <: ComplexGatewayEvent[_, _]](
+  def guildFilterGatewayEvent[Msg <: GatewayEvent[_]](
       guildId: GuildId,
-      log: LoggingAdapter
+      log: Logger
   ): Flow[Msg, Msg, NotUsed] =
     withGuildInfoGatewayEvent[Msg](log).collect {
       case (msg @ (_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate), _) => msg
@@ -197,7 +209,7 @@ object GuildStreams {
   /**
     * Creates a subflow grouped by what GuildId an event belongs to.
     */
-  def gatewayEventGroupByGuildId[Msg <: ComplexGatewayEvent[_, _]](log: LoggingAdapter) =
+  def gatewayEventGroupByGuildId[Msg <: GatewayEvent[_]](log: Logger) =
     withGuildInfoGatewayEvent[Msg](log)
       .collect {
         case (msg, Some(guildId)) => msg -> guildId

@@ -35,12 +35,14 @@ import akka.{NotUsed, actor => classic}
   * @param publish A sink used for publishing. Any elements connected to this
   *                sink is published to the cache.
   * @param subscribe A source to subscribe to. All updates are pushed here.
+  * @param parallelism How many cache updates to construct at the same time.
   */
 case class Cache(
     publish: Sink[CacheEvent, NotUsed],
     subscribe: Source[(CacheEvent, CacheState), NotUsed],
     gatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    gatewaySubscribe: Source[GatewayMessage[Any], NotUsed]
+    gatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    parallelism: Int
 )(implicit system: ActorSystem[Nothing]) {
 
   /**
@@ -86,9 +88,12 @@ object Cache {
 
   /**
     * Creates a cache for a bot. This should be shared for the whole bot.
+    * @param cacheProcessor A function to run on each cache update.
+    * @param parallelism How many cache updates to construct at the same time.
     */
   def create(
-      cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
+      parallelism: Int = 4
   )(implicit system: ActorSystem[Nothing]): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams(cacheProcessor)
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
@@ -96,6 +101,6 @@ object Cache {
     //Keep it drained if nothing else is using it
     subscribe.runWith(Sink.ignore)
 
-    Cache(publish, subscribe, gatewayPublish, gatewaySubscribe)
+    Cache(publish, subscribe, gatewayPublish, gatewaySubscribe, parallelism)
   }
 }

@@ -41,12 +41,21 @@ object CacheStreams {
     */
   def cacheStreams(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(
       implicit system: ActorSystem[Nothing]
-  ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
+  ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) =
+    cacheStreamsCustom(cacheUpdater(cacheProcessor))
+
+  /**
+    * Creates a set of publish subscribe streams that go through a custom cache
+    * update procedure you decide.
+    */
+  def cacheStreamsCustom(
+      updater: Flow[CacheEvent, (CacheEvent, CacheState), NotUsed]
+  )(implicit system: ActorSystem[Nothing]): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     SupervisionStreams
       .addLogAndContinueFunction(
         MergeHub
           .source[CacheEvent](perProducerBufferSize = 16)
-          .via(cacheUpdater(cacheProcessor))
+          .via(updater)
           .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
           .addAttributes
       )
@@ -74,7 +83,7 @@ object CacheStreams {
   def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
-        case (APIMessageCacheUpdate(_, sendEvent, _, _), state) => sendEvent(state)
+        case (APIMessageCacheUpdate(_, sendEvent, _, _, _), state) => sendEvent(state)
       }
       .mapConcat(_.toList)
   }
@@ -94,7 +103,7 @@ object CacheStreams {
       def isReady: Boolean = state != null
 
       {
-        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _, _) =>
+        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _, _, _) =>
           val builder = new CacheSnapshotBuilder(
             0,
             null, //The event will populate this,

@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.gateway.{ComplexGatewayEvent, GatewayHandler}
+import ackcord.gateway.{GatewayEvent, GatewayHandler}
 import ackcord.requests.{RequestStreams, Routes}
 import akka.Done
 import akka.actor.typed._
@@ -48,7 +48,7 @@ object DiscordShard {
       gatewayUri: Uri,
       settings: GatewaySettings,
       cache: Cache,
-      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]],
+      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
       cacheTypeRegistry: Logger => CacheTypeRegistry,
       context: ActorContext[Command],
       timers: TimerScheduler[Command],
@@ -77,7 +77,7 @@ object DiscordShard {
       wsUri: Uri,
       settings: GatewaySettings,
       cache: Cache,
-      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
       cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
   ): Behavior[Command] = Behaviors.setup { context =>
     Behaviors.withTimers { timers =>
@@ -146,7 +146,7 @@ object DiscordShard {
       shardTotal: Int,
       settings: GatewaySettings,
       cache: Cache,
-      ignoredEvents: Seq[Class[_ <: ComplexGatewayEvent[_, _]]] = Nil,
+      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
       cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
   ): Seq[Behavior[Command]] = for (i <- 0 until shardTotal) yield {
     apply(
