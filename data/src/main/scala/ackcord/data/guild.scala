@@ -225,7 +225,7 @@ case class Guild(
     explicitContentFilter: FilterLevel,
     roles: SnowflakeMap[Role, Role],
     emojis: SnowflakeMap[Emoji, Emoji],
-    features: Seq[GuildFeature], //TODO: What is a feature?
+    features: Seq[GuildFeature],
     mfaLevel: MFALevel,
     applicationId: Option[RawSnowflake],
     widgetEnabled: Option[Boolean],
