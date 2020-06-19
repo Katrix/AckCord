@@ -408,7 +408,7 @@ object CacheHandlers {
           message <- builder.getMessage(obj.channelId, obj.id)
         } {
           val newMessage = message match {
-            case dmMessage: DMMessage =>
+            case dmMessage: SparseMessage =>
               dmMessage.copy(
                 authorId = UserId(obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId)),
                 content = obj.content.getOrElse(message.content),
@@ -423,7 +423,7 @@ object CacheHandlers {
                 nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
                 pinned = obj.pinned.getOrElse(message.pinned)
               )
-            case guildMessage: GuildMessage =>
+            case guildMessage: GuildGatewayMessage =>
               guildMessage.copy(
                 authorId = obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId),
                 isAuthorUser = obj.author.map(_.isUser).getOrElse(guildMessage.isAuthorUser),

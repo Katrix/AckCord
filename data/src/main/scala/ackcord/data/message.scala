@@ -260,8 +260,14 @@ sealed trait Message {
   /** The channel this message was sent to. */
   def channelId: TextChannelId
 
+  /** True if the author is a user. */
+  def isAuthorUser: Boolean
+
   /** The id of the author that sent this message. */
   def authorId: RawSnowflake
+
+  /** The username of the author. */
+  def authorUsername: String
 
   /** The content of this message. */
   def content: String
@@ -318,14 +324,24 @@ sealed trait Message {
   def flags: Option[MessageFlags]
 
   /**
+    * Get the guild this message was sent to.
+    */
+  def guild(implicit c: CacheSnapshot): Option[Guild]
+
+  /**
+    * Get the guild member of the one that sent this message.
+    */
+  def guildMember(implicit c: CacheSnapshot): Option[GuildMember]
+
+  /**
     * If the author is a user, their user id.
     */
-  def authorUserId: Option[UserId]
+  def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
   /**
     * Gets the author of this message, ignoring the case where the author might be a webhook.
     */
-  def authorUser(implicit c: CacheSnapshot): Option[User]
+  def authorUser(implicit c: CacheSnapshot): Option[User] = authorUserId.fold(None: Option[User])(c.getUser)
 
   /**
     * Expands all mentions in the message.
@@ -336,12 +352,17 @@ sealed trait Message {
 }
 
 /**
-  * A message sent to a non guild channel.
+  * A message missing the guild info. This can be because it was sent to a DM channel,
+  * or because it was retrieved later through a REST call. Note that a message
+  * can still be sent to a guild, but be missing the guild info.
+  * For example if it's gotten from a REST request.
   */
-case class DMMessage(
+case class SparseMessage(
     id: MessageId,
     channelId: TextChannelId,
-    authorId: UserId,
+    authorId: RawSnowflake,
+    isAuthorUser: Boolean,
+    authorUsername: String,
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -361,10 +382,15 @@ case class DMMessage(
     flags: Option[MessageFlags]
 ) extends Message {
 
-  override def authorUserId: Option[UserId] = Some(authorId)
+  override def guild(implicit c: CacheSnapshot): Option[Guild] =
+    channelId.asChannelId[GuildChannel].resolve.flatMap(_.guild)
 
-  override def authorUser(implicit c: CacheSnapshot): Option[User] =
-    c.getUser(authorId)
+  override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] =
+    for {
+      userId <- authorUserId
+      g      <- guild
+      member <- g.members.get(userId)
+    } yield member
 
   override def formatMentions(implicit c: CacheSnapshot): String = {
     val userList = mentions.toList.flatMap(_.resolve)
@@ -372,23 +398,26 @@ case class DMMessage(
     userList.foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
   }
 
-  override private[ackcord] def withReactions(reactions: Seq[Reaction]): DMMessage = copy(reactions = reactions)
+  override private[ackcord] def withReactions(reactions: Seq[Reaction]): SparseMessage = copy(reactions = reactions)
 }
 
 /**
-  * A message sent to a guild channel.
+  * A message sent with additional guild info. Note that a message can still
+  * be sent to a guild, but be missing the guild info.
+  * For example if it's gotten from a REST request.
   * @param guildId The guild this message was sent to.
   * @param isAuthorUser If the author of this message was a user.
   * @param member The guild member user that sent this message.
   * @param mentionRoles All the roles this message mentions.
   */
-case class GuildMessage(
+case class GuildGatewayMessage(
     id: MessageId,
     channelId: TextGuildChannelId,
     guildId: GuildId,
     authorId: RawSnowflake,
     isAuthorUser: Boolean,
-    member: GuildMember,
+    authorUsername: String,
+    member: Option[GuildMember],
     content: String,
     timestamp: OffsetDateTime,
     editedTimestamp: Option[OffsetDateTime],
@@ -409,16 +438,10 @@ case class GuildMessage(
     flags: Option[MessageFlags]
 ) extends Message {
 
-  /**
-    * Get the guild this message was sent to.
-    */
-  def guild(implicit c: CacheSnapshot): Option[Guild] =
+  override def guild(implicit c: CacheSnapshot): Option[Guild] =
     c.getGuild(guildId)
 
-  override def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
-
-  override def authorUser(implicit c: CacheSnapshot): Option[User] =
-    authorUserId.fold(None: Option[User])(c.getUser)
+  override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] = member
 
   private val channelRegex = """<#(\d+)>""".r
 
@@ -452,7 +475,7 @@ case class GuildMessage(
     withChannels
   }
 
-  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildMessage = copy(reactions = reactions)
+  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage = copy(reactions = reactions)
 }
 
 /**

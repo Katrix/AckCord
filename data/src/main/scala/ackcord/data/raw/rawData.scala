@@ -399,13 +399,14 @@ case class RawMessage(
   def toMessage: Message = {
     guildId match {
       case Some(guildId) =>
-        GuildMessage(
+        GuildGatewayMessage(
           id,
           channelId.asChannelId[TextGuildChannel],
           guildId,
           author.id,
           author.isUser,
-          member.get.toGuildMember(UserId(author.id), guildId),
+          author.username,
+          member.map(_.toGuildMember(UserId(author.id), guildId)),
           content,
           timestamp,
           editedTimestamp,
@@ -427,10 +428,12 @@ case class RawMessage(
         )
 
       case None =>
-        DMMessage(
+        SparseMessage(
           id,
           channelId,
-          UserId(author.id),
+          author.id,
+          author.isUser,
+          author.username,
           content,
           timestamp,
           editedTimestamp,

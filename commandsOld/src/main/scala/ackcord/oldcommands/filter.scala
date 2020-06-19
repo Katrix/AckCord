@@ -94,7 +94,7 @@ object CmdFilter {
 
     override def isAllowed(msg: Message)(implicit c: CacheSnapshot): Boolean =
       msg match {
-        case guildMessage: GuildMessage => guildMessage.guildId == guildId
+        case guildMessage: GuildGatewayMessage => guildMessage.guildId == guildId
         case _                          => false
       }
 

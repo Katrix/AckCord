@@ -31,7 +31,7 @@ import ackcord.data.{
   Guild,
   GuildChannel,
   GuildMember,
-  GuildMessage,
+  GuildGatewayMessage,
   TextChannel,
   TextGuildChannel,
   User,
@@ -103,8 +103,8 @@ object EventListenerBuilder {
                 .asInstanceOf[GuildChannel]
                 .guild
                 .map(create(_)(i))
-            case e: APIMessage.MessageMessage if e.message.isInstanceOf[GuildMessage] =>
-              e.message.asInstanceOf[GuildMessage].guildId.resolve.map(create(_)(i))
+            case e: APIMessage.MessageMessage if e.message.isInstanceOf[GuildGatewayMessage] =>
+              e.message.asInstanceOf[GuildGatewayMessage].guildId.resolve.map(create(_)(i))
             case e: APIMessage.VoiceStateUpdate if e.voiceState.guildId.isDefined =>
               e.voiceState.guild.map(create(_)(i))
 

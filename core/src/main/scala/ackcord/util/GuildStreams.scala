@@ -24,7 +24,7 @@
 package ackcord.util
 
 import ackcord.APIMessage
-import ackcord.data.{GuildChannel, GuildChannelId, GuildId, GuildMessage}
+import ackcord.data.{GuildChannel, GuildChannelId, GuildId, GuildGatewayMessage}
 import ackcord.gateway.GatewayEvent
 import ackcord.gateway.GatewayEvent.IgnoredEvent
 import ackcord.syntax._
@@ -56,8 +56,8 @@ object GuildStreams {
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>
           msg.message match {
-            case guildMessage: GuildMessage => Some(guildMessage.guildId)
-            case _                          => None
+            case guildMessage: GuildGatewayMessage => Some(guildMessage.guildId)
+            case _                                 => None
           }
         case APIMessage.VoiceStateUpdate(state, _) => state.guildId
       }
@@ -89,7 +89,7 @@ object GuildStreams {
       }
     }
 
-      def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
+    def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
       later.value match {
         case Right(value) => value.map(f)
         case Left(e) =>
@@ -98,7 +98,7 @@ object GuildStreams {
       }
     }
 
-      def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] = handleLazy(later)(identity)
+    def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] = handleLazy(later)(identity)
 
     def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] =
       handleLazyOpt(later)(identity)
@@ -108,18 +108,18 @@ object GuildStreams {
         None
       case msg: GatewayEvent.GuildCreate =>
         handleLazy(msg.guildId) { guildId =>
-              handleLazy(msg.data)(data =>
-                data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> guildId))
-              )
-              guildId
-            }
-          case msg: GatewayEvent.ChannelCreate =>
-            handleLazyOpt(msg.guildId) { guildId =>
-              handleLazy(msg.channelId)(id => channelToGuild.put(id.asChannelId[GuildChannel], guildId))
-              guildId
-            }
-          case msg: GatewayEvent.ChannelDelete =>
-            handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
+          handleLazy(msg.data)(data =>
+            data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> guildId))
+          )
+          guildId
+        }
+      case msg: GatewayEvent.ChannelCreate =>
+        handleLazyOpt(msg.guildId) { guildId =>
+          handleLazy(msg.channelId)(id => channelToGuild.put(id.asChannelId[GuildChannel], guildId))
+          guildId
+        }
+      case msg: GatewayEvent.ChannelDelete =>
+        handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
         lazyOptToOption(msg.guildId)
       case msg: GatewayEvent.GuildEvent[_] =>
         lazyToOption(msg.guildId)
