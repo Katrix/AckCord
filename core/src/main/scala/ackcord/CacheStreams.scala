@@ -26,7 +26,7 @@ package ackcord
 import scala.collection.mutable
 
 import ackcord.cachehandlers.CacheSnapshotBuilder
-import ackcord.gateway.GatewayEvent.ReadyData
+import ackcord.data.{User, UserId}
 import ackcord.gateway.GatewayMessage
 import ackcord.requests.SupervisionStreams
 import akka.NotUsed
@@ -42,7 +42,7 @@ object CacheStreams {
   def cacheStreams(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(
       implicit system: ActorSystem[Nothing]
   ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) =
-    cacheStreamsCustom(cacheUpdater(cacheProcessor))
+    cacheStreamsCustom(cacheUpdater(emptyStartingCache(cacheProcessor)))
 
   /**
     * Creates a set of publish subscribe streams that go through a custom cache
@@ -89,49 +89,58 @@ object CacheStreams {
   }
 
   /**
+    * Creates a new empty cache snapshot builder. This is not thread safe, and
+    * should not be updated from multiple threads at the same time.
+    */
+  def emptyStartingCache(cacheProcessor: MemoryCacheSnapshot.CacheProcessor): CacheSnapshotBuilder = {
+    val dummyUser = User(
+      UserId("0"),
+      "Placeholder",
+      "0000",
+      None,
+      None,
+      None,
+      None,
+      None,
+      None,
+      None,
+      None,
+      None
+    )
+
+    new CacheSnapshotBuilder(
+      0,
+      shapeless.tag[CacheSnapshot.BotUser](dummyUser), //The ready event will populate this,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      mutable.Map.empty,
+      cacheProcessor
+    )
+  }
+
+  /**
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
   def cacheUpdater(
-      cacheProcessor: MemoryCacheSnapshot.CacheProcessor
+      cacheBuilder: CacheSnapshotBuilder
   )(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
-      var state: CacheState    = null
+      var state: CacheState = CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
+
       implicit val log: Logger = system.log
 
-      //We only handle events when we are ready to, and we have received the ready event.
-      def isReady: Boolean = state != null
+      { handlerEvent: CacheEvent =>
+        handlerEvent.process(cacheBuilder)
+        cacheBuilder.executeProcessor()
 
-      {
-        case readyEvent @ APIMessageCacheUpdate(_: ReadyData, _, _, _, _) =>
-          val builder = new CacheSnapshotBuilder(
-            0,
-            null, //The event will populate this,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            mutable.Map.empty,
-            cacheProcessor
-          )
-
-          readyEvent.process(builder)
-
-          val snapshot = builder.toImmutable
-          state = CacheState(snapshot, snapshot)
-          List(readyEvent -> state)
-        case handlerEvent: CacheEvent if isReady =>
-          val builder = CacheSnapshotBuilder(state.current)
-          handlerEvent.process(builder)
-
-          state = state.update(builder.toImmutable)
-          List(handlerEvent -> state)
-        case _ if !isReady =>
-          log.error("Received event before ready")
-          Nil
+        state = state.update(cacheBuilder.toImmutable)
+        List(handlerEvent -> state)
       }
     }
 }

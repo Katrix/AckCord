@@ -46,7 +46,7 @@ case class MemoryCacheSnapshot(
     lastTypedMap: SnowflakeMap[TextChannel, SnowflakeMap[User, Instant]],
     userMap: SnowflakeMap[User, User],
     banMap: SnowflakeMap[Guild, SnowflakeMap[User, Ban]],
-    creationProcessor: MemoryCacheSnapshot.CacheProcessor
+    processor: MemoryCacheSnapshot.CacheProcessor
 ) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = SnowflakeMap[K, V]
@@ -74,19 +74,28 @@ object MemoryCacheSnapshot {
       * @return The processor to be used for the next update
       */
     def apply(current: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor
+
+    def safeApply(current: CacheProcessor, next: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor =
+      if (this eq current) next
+      else current(next, builder)
   }
 
   lazy val defaultCacheProcessor: CacheProcessor = everyN(10, 10, cleanGarbage(30, 5))
 
   /**
     * A cache processor that will execute another processor every N cache updates.
+    *
     * @param every How often the processor will run
     * @param remaining How many updates until the processor is run
     */
-  def everyN(every: Int, remaining: Int, processor: CacheProcessor): CacheProcessor =
-    (_, builder) =>
-      if (remaining > 0) everyN(every, remaining - 1, processor)
-      else processor(everyN(every, every, processor), builder)
+  //noinspection ConvertExpressionToSAM
+  def everyN(every: Int, remaining: Int, doAction: CacheProcessor): CacheProcessor = new CacheProcessor {
+    override def apply(processor: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor =
+      if (remaining > 0)
+        safeApply(processor, everyN(every, remaining - 1, doAction), builder)
+      else
+        safeApply(processor, doAction(everyN(every, every, doAction), builder), builder)
+  }
 
   /**
     * A cache processor that will clean out typical garbage older that a

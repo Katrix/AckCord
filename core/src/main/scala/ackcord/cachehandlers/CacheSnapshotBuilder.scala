@@ -46,17 +46,18 @@ class CacheSnapshotBuilder(
     var lastTypedMap: mutable.Map[TextChannelId, mutable.Map[UserId, Instant]],
     var userMap: mutable.Map[UserId, User],
     var banMap: mutable.Map[GuildId, mutable.Map[UserId, Ban]],
-    creationProcessor: MemoryCacheSnapshot.CacheProcessor
+    var processor: MemoryCacheSnapshot.CacheProcessor
 ) extends CacheSnapshotWithMaps {
 
   override type MapType[K, V] = mutable.Map[SnowflakeType[K], V]
+
+  def executeProcessor(): Unit =
+    this.processor = processor(processor, this)
 
   def toImmutable: MemoryCacheSnapshot = {
     def convertNested[K1, K2, V](
         map: mutable.Map[SnowflakeType[K1], mutable.Map[SnowflakeType[K2], V]]
     ): SnowflakeMap[K1, SnowflakeMap[K2, V]] = SnowflakeMap.from(map.map { case (k, v) => k -> SnowflakeMap.from(v) })
-
-    val newProcessor = creationProcessor(creationProcessor, this)
 
     MemoryCacheSnapshot(
       seq = seq + 1,
@@ -69,7 +70,7 @@ class CacheSnapshotBuilder(
       lastTypedMap = convertNested(lastTypedMap),
       userMap = SnowflakeMap.from(userMap),
       banMap = convertNested(banMap),
-      creationProcessor = newProcessor
+      processor = processor
     )
   }
   override def getChannelMessages(channelId: TextChannelId): mutable.Map[SnowflakeType[Message], Message] =
@@ -80,6 +81,9 @@ class CacheSnapshotBuilder(
 
   override def getGuildBans(id: GuildId): mutable.Map[SnowflakeType[User], Ban] =
     banMap.getOrElseUpdate(id, mutable.Map.empty)
+
+  def copy: CacheSnapshotBuilder = CacheSnapshotBuilder(toImmutable)
+
 }
 object CacheSnapshotBuilder {
   def apply(snapshot: MemoryCacheSnapshot): CacheSnapshotBuilder = {
@@ -104,7 +108,7 @@ object CacheSnapshotBuilder {
       lastTypedMap = toMutableMapNested(snapshot.lastTypedMap),
       userMap = toMutableMap(snapshot.userMap),
       banMap = toMutableMapNested(snapshot.banMap),
-      creationProcessor = snapshot.creationProcessor
+      processor = snapshot.processor
     )
   }
 }
