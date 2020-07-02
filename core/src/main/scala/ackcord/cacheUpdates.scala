@@ -23,8 +23,13 @@
  */
 package ackcord
 
+import scala.reflect.ClassTag
+
 import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder, CacheTypeRegistry}
 import ackcord.gateway.Dispatch
+import ackcord.requests.{BaseRESTRequest, Request, RequestAnswer, RequestResponse}
+import akka.NotUsed
+import akka.stream.scaladsl.{Flow, Sink}
 import org.slf4j.Logger
 
 /**
@@ -58,4 +63,52 @@ case class APIMessageCacheUpdate[Data](
 
   override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =
     handler.handle(builder, data, registry)
+}
+
+/**
+  * A cache event that will try to put the data of the response into the cache.
+  * @param requestResponse The response to the request.
+  * @param request The request used to get the response.
+  * @param registry The handler registry that the event will use to update the snapshot.
+  * @tparam Data The type of the request response.
+  */
+case class RequestCacheUpdate[Data](
+    requestResponse: RequestResponse[Data],
+    request: Request[Data],
+    registry: CacheTypeRegistry
+) extends CacheEvent {
+
+  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit = {
+    registry.getUpdater(ClassTag[Data](requestResponse.data.getClass)) match {
+      case Some(updater) => updater.handle(builder, requestResponse.data, registry)
+      case None =>
+        request match {
+          case request: BaseRESTRequest[Data, nice] =>
+            val niceData = request.toNiceResponse(requestResponse.data)
+            registry.updateData(builder)(niceData)(ClassTag[nice](niceData.getClass))
+
+          case _ =>
+        }
+    }
+  }
+}
+object RequestCacheUpdate {
+
+  /**
+    * An extra processor for [[Requests]] which will try to place the gotten
+    * objects in the cache. Note: This might fail to place the type in the
+    * registry if there is no handler for it in the cache registry passed in.
+    *
+    * @param cache The cache to place the objects in.
+    * @param registry The cache registry to use for finding cache handlers.
+    */
+  def requestsProcessor[Data](
+      cache: Cache,
+      registry: CacheTypeRegistry
+  ): Sink[(Request[Data], RequestAnswer[Data]), NotUsed] =
+    Flow[(Request[Data], RequestAnswer[Data])]
+      .collect {
+        case (request, response: RequestResponse[Data]) => RequestCacheUpdate(response, request, registry)
+      }
+      .to(cache.publish)
 }

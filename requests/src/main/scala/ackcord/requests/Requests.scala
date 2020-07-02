@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import scala.language.existentials
+
 import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
@@ -59,7 +61,9 @@ case class Requests(
     maxRetryCount: Int = 3,
     bufferSize: Int = 32,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    maxAllowedWait: FiniteDuration = 2.minutes
+    maxAllowedWait: FiniteDuration = 2.minutes,
+    alsoProcessRequests: Sink[(Request[Data], RequestAnswer[Data]) forSome { type Data }, NotUsed] =
+      Sink.ignore.mapMaterializedValue(_ => NotUsed)
 )(implicit val system: ActorSystem[Nothing]) {
 
   private def ignoreOrReport[Ctx]: Sink[RequestAnswer[Any], Future[Done]] = Sink.foreach {
@@ -68,13 +72,26 @@ case class Requests(
       request.asException.printStackTrace()
   }
 
+  private def addExtraProcessing[Data, Ctx](
+      flowWithCtx: FlowWithContext[Request[Data], (Request[Data], Ctx), RequestAnswer[
+        Data
+      ], (Request[Data], Ctx), NotUsed]
+  ): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
+    flowWithCtx.asFlow
+      .alsoTo(alsoProcessRequests.contramap(in => (in._2._1, in._1)))
+      .asFlowWithContext[Request[Data], Ctx, Ctx]((req, ctx) => (req, (req, ctx)))(_._2._2)
+      .map(_._1)
+
   private lazy val rawFlowWithoutRateLimits =
-    RequestStreams.requestFlowWithoutRatelimit(
-      credentials,
-      millisecondPrecision,
-      relativeTime,
-      parallelism,
-      ratelimitActor
+    addExtraProcessing(
+      RequestStreams
+        .requestFlowWithoutRatelimit[Any, (Request[Any], Any)](
+          credentials,
+          millisecondPrecision,
+          relativeTime,
+          parallelism,
+          ratelimitActor
+        )
     )
 
   /**
@@ -85,7 +102,26 @@ case class Requests(
     rawFlowWithoutRateLimits.asInstanceOf[FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed]]
 
   private lazy val rawFlow =
-    RequestStreams.requestFlow(
+    addExtraProcessing(
+      RequestStreams.requestFlow[Any, (Request[Any], Any)](
+        credentials,
+        millisecondPrecision,
+        relativeTime,
+        bufferSize,
+        overflowStrategy,
+        maxAllowedWait,
+        parallelism,
+        ratelimitActor
+      )
+    )
+
+  private lazy val rawOrderedFlow =
+    FlowWithContext.fromTuples[Request[Any], Any, RequestAnswer[Any], Any, NotUsed](
+      RequestStreams.addOrdering(rawFlow.asFlow)
+    )
+
+  private lazy val rawRetryFlow = addExtraProcessing(
+    RequestStreams.retryRequestFlow[Any, (Request[Any], Any)](
       credentials,
       millisecondPrecision,
       relativeTime,
@@ -93,28 +129,13 @@ case class Requests(
       overflowStrategy,
       maxAllowedWait,
       parallelism,
+      maxRetryCount,
       ratelimitActor
     )
-
-  private lazy val rawOrderedFlow =
-    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestAnswer[Nothing], Nothing, NotUsed](
-      RequestStreams.addOrdering(rawFlow.asFlow)
-    )
-
-  private lazy val rawRetryFlow = RequestStreams.retryRequestFlow(
-    credentials,
-    millisecondPrecision,
-    relativeTime,
-    bufferSize,
-    overflowStrategy,
-    maxAllowedWait,
-    parallelism,
-    maxRetryCount,
-    ratelimitActor
   )
 
   private lazy val rawOrderedRetryFlow =
-    FlowWithContext.fromTuples[Request[Nothing], Nothing, RequestAnswer[Nothing], Nothing, NotUsed](
+    FlowWithContext.fromTuples[Request[Any], Any, RequestAnswer[Any], Any, NotUsed](
       RequestStreams.addOrdering(rawRetryFlow.asFlow)
     )
 
