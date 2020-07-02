@@ -100,7 +100,9 @@ object MemoryCacheSnapshot {
 
     builder.messageMap.foreach {
       case (_, messageMap) =>
-        CoreCompat.filterInPlace(messageMap)((_, m) => m.timestamp.isAfter(messagesCleanThreshold))
+        CoreCompat.filterInPlace(messageMap)((_, m) =>
+          m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold)
+        )
     }
 
     builder.lastTypedMap.foreach {
