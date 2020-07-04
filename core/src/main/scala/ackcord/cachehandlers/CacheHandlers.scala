@@ -599,7 +599,7 @@ object CacheHandlers {
     ): Unit = {
       builder.guildMap.remove(obj.id)
 
-      if (obj.unavailable) {
+      if (obj.unavailable.getOrElse(false)) {
         registry.updateData(builder)(obj)
       }
     }

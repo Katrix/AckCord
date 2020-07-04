@@ -37,7 +37,7 @@ import enumeratum.values._
   */
 sealed trait UnknownStatusGuild {
   def id: GuildId
-  def unavailable: Boolean
+  def unavailable: Option[Boolean]
 }
 
 /**
@@ -250,7 +250,7 @@ case class Guild(
     preferredLocale: Option[String],
     publicUpdatesChannelId: Option[TextGuildChannelId]
 ) extends UnknownStatusGuild {
-  override def unavailable: Boolean = false
+  override def unavailable: Option[Boolean] = Some(false)
 
   /**
     * Get the everyone role in this guild.
@@ -296,9 +296,9 @@ case class Guild(
 /**
   * A guild which is not available.
   * @param id The id of the guild.
-  * @param unavailable If the guild is unavailable.
+  * @param unavailable If the guild is unavailable because of an outage.
   */
-case class UnavailableGuild(id: GuildId, unavailable: Boolean) extends UnknownStatusGuild
+case class UnavailableGuild(id: GuildId, unavailable: Option[Boolean]) extends UnknownStatusGuild
 
 sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {

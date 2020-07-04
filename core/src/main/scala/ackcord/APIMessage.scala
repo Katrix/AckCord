@@ -123,7 +123,7 @@ object APIMessage {
     * @param guild The deleted guild
     * @param unavailable If an outage caused this event
     */
-  case class GuildDelete(guild: Guild, unavailable: Boolean, cache: CacheState) extends GuildMessage
+  case class GuildDelete(guild: Guild, unavailable: Option[Boolean], cache: CacheState) extends GuildMessage
 
   /**
     * Sent to the client when an user is banned from a guild. If you need the

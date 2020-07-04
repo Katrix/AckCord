@@ -79,7 +79,7 @@ class GatewayGuildRouter[Inner](
 
     case msg: GatewayEvent.GuildDelete =>
       handleLazy(msg.data) { guild =>
-        if (!guild.unavailable) {
+        if (!guild.unavailable.getOrElse(false)) {
           stopHandler(guild.id)
         } else {
           sendToGuild(guild.id, msg, handleEvent)

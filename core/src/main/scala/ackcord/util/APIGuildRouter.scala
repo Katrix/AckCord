@@ -41,9 +41,9 @@ class APIGuildRouter[Inner](
   override def handleThroughMessage(a: APIMessage): Unit = a match {
     case msg: APIMessage.Ready =>
       msg.cache.current.unavailableGuildMap.keys.foreach(sendToGuild(_, msg, handleEvent))
-    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg, handleEvent)
-    case APIMessage.GuildDelete(guild, false, _)                  => stopHandler(guild.id)
-    case msg: APIMessage.GuildMessage                             => sendToGuild(msg.guild.id, msg, handleEvent)
+    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate)                       => sendToAll(msg, handleEvent)
+    case APIMessage.GuildDelete(guild, unavailable, _) if !unavailable.getOrElse(false) => stopHandler(guild.id)
+    case msg: APIMessage.GuildMessage                                                   => sendToGuild(msg.guild.id, msg, handleEvent)
     case msg: APIMessage.ChannelMessage =>
       msg.channel match {
         case ch: GuildChannel => sendToGuild(ch.guildId, msg, handleEvent)
