@@ -199,8 +199,8 @@ object GatewayHandler {
           retryLogin(parameters, state, timers, wsFlow)
 
         case Logout =>
-          //TODO: Fix receiving logout right before going to active
-          Behaviors.same
+          log.warn("Logged out before connection could be established. This is likely a bug")
+          Behaviors.stopped
       }
       .receiveSignal {
         case (_, PostStop) =>
