@@ -203,7 +203,7 @@ case class Requests(
   /**
     * Sends a single request, and grabs the data if it's available.
     * @param request The request to send.
-    * @return A source of the single request answer.
+    * @return A source of the successful request answer.
     */
   def singleSuccess[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -220,7 +220,7 @@ case class Requests(
 
   /**
     * Sends a single request and gets the success response as a future if it's
-    * available.
+    * available. If the request fails, the future fails.
     * @param request The request to send.
     */
   def singleFutureSuccess[Data](request: Request[Data])(
@@ -250,7 +250,7 @@ case class Requests(
   /**
     * Sends many requests, and grabs the data if it's available.
     * @param requests The requests to send.
-    * @return A source of the request answers.
+    * @return A source of the successful request answers.
     */
   def manySuccess[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -274,7 +274,17 @@ case class Requests(
   def manyFutureSuccess[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
   ): Future[immutable.Seq[Data]] =
-    manySuccess(requests)(properties).runWith(Sink.seq)
+    manyFuture(requests).flatMap { answers =>
+      val validResponses = answers.collect {
+        case RequestResponse(data, _, _, _) => data
+      }
+
+      if (answers.length == validResponses.length)
+        Future.successful(validResponses)
+      else
+        Future.failed(answers.collectFirst { case r: FailedRequest => r.asException }.get)
+
+    }(system.executionContext)
 
   /**
     * Sends many requests and ignores the result.
