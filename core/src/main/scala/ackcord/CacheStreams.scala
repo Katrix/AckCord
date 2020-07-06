@@ -23,13 +23,10 @@
  */
 package ackcord
 
-import scala.collection.mutable
-
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data.{User, UserId}
 import ackcord.gateway.GatewayMessage
 import ackcord.requests.SupervisionStreams
-import ackcord.util.GuildStreams
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
@@ -116,14 +113,14 @@ object CacheStreams {
     new CacheSnapshotBuilder(
       0,
       shapeless.tag[CacheSnapshot.BotUser](dummyUser), //The ready event will populate this,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
-      mutable.Map.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
+      SnowflakeMap.empty,
       cacheProcessor
     )
   }
