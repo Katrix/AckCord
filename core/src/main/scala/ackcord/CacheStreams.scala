@@ -29,6 +29,7 @@ import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data.{User, UserId}
 import ackcord.gateway.GatewayMessage
 import ackcord.requests.SupervisionStreams
+import ackcord.util.GuildStreams
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
@@ -39,24 +40,28 @@ object CacheStreams {
   /**
     * Creates a set of publish subscribe streams that go through the cache updated.
     */
-  def cacheStreams(cacheProcessor: MemoryCacheSnapshot.CacheProcessor)(
+  def cacheStreams(
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor,
+      bufferSize: PubSubBufferSize = PubSubBufferSize()
+  )(
       implicit system: ActorSystem[Nothing]
   ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) =
-    cacheStreamsCustom(cacheUpdater(emptyStartingCache(cacheProcessor)))
+    cacheStreamsCustom(cacheUpdater(emptyStartingCache(cacheProcessor)), bufferSize)
 
   /**
     * Creates a set of publish subscribe streams that go through a custom cache
     * update procedure you decide.
     */
   def cacheStreamsCustom(
-      updater: Flow[CacheEvent, (CacheEvent, CacheState), NotUsed]
+      updater: Flow[CacheEvent, (CacheEvent, CacheState), NotUsed],
+      bufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     SupervisionStreams
       .addLogAndContinueFunction(
         MergeHub
-          .source[CacheEvent](perProducerBufferSize = 16)
+          .source[CacheEvent](bufferSize.perProducer)
           .via(updater)
-          .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+          .toMat(BroadcastHub.sink(bufferSize.consumer))(Keep.both)
           .addAttributes
       )
       .run()
@@ -65,14 +70,14 @@ object CacheStreams {
   /**
     * Creates a set of publish subscribe streams for gateway events.
     */
-  def gatewayEvents[D](
+  def gatewayEvents[D](bufferSize: PubSubBufferSize = PubSubBufferSize())(
       implicit system: ActorSystem[Nothing]
   ): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) =
     SupervisionStreams
       .addLogAndContinueFunction(
         MergeHub
-          .source[GatewayMessage[D]](perProducerBufferSize = 16)
-          .toMat(BroadcastHub.sink(bufferSize = 256))(Keep.both)
+          .source[GatewayMessage[D]](bufferSize.perProducer)
+          .toMat(BroadcastHub.sink(bufferSize.consumer))(Keep.both)
           .addAttributes
       )
       .run()

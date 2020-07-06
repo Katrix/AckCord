@@ -93,10 +93,12 @@ object Cache {
     */
   def create(
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
-      parallelism: Int = 4
+      parallelism: Int = 4,
+      cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
+      gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
   )(implicit system: ActorSystem[Nothing]): Cache = {
-    val (publish, subscribe)               = CacheStreams.cacheStreams(cacheProcessor)
-    val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any]
+    val (publish, subscribe)               = CacheStreams.cacheStreams(cacheProcessor, cacheBufferSize)
+    val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any](gatewayEventsBufferSize)
 
     //Keep it drained if nothing else is using it
     subscribe.runWith(Sink.ignore)
