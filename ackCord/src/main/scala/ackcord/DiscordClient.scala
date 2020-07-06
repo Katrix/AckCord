@@ -25,16 +25,14 @@ package ackcord
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.reflect.ClassTag
 
 import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
 import ackcord.data.{GuildId, VoiceGuildChannelId}
 import ackcord.lavaplayer.LavaplayerHandler
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
-import akka.stream.UniqueKillSwitch
 import akka.util.Timeout
 import cats.data.OptionT
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
@@ -109,33 +107,6 @@ trait DiscordClient {
   def shutdownJVM(timeout: FiniteDuration = 1.minute): Future[Unit]
 
   /**
-    * A stream requester runner.
-    */
-  @deprecated("Prefer using the requests helper instead", since = "0.16")
-  val sourceRequesterRunner: RequestRunner[SourceRequest]
-
-  /**
-    * Runs a function whenever [[APIMessage]]s are received.
-    *
-    * If you use IntelliJ you might have to specify the execution type.
-    * (Normally Id, SourceRequest or Future)
-    * @param handler The handler function
-    * @param streamable A way to convert your execution type to a stream.
-    * @tparam G The execution type
-    * @return A kill switch to cancel this listener, and a future representing
-    *         when it's done.
-    */
-  @deprecated("Prefer onEventStreamable, or one of the methods that fix the execution type", since = "0.16")
-  def onEvent[G[_]](handler: APIMessage => G[Unit])(
-      implicit streamable: Streamable[G]
-  ): (UniqueKillSwitch, Future[Done]) = {
-    val reg = onEventStreamable(_ => {
-      case x => handler(x)
-    })
-    (reg.killSwitch, reg.onDone)
-  }
-
-  /**
     * Runs a function whenever [[APIMessage]]s are received.
     *
     * If you use IntelliJ you might have to specify the execution type.
@@ -178,15 +149,6 @@ trait DiscordClient {
       handler: CacheSnapshot => PartialFunction[APIMessage, OptionT[Future, Unit]]
   ): EventRegistration[NotUsed] =
     onEventStreamable(handler)
-
-  /**
-    * Registers an [[EventHandler]] that will be called when an event happens.
-    * @return An event registration to handle the listener's lifecycle.
-    */
-  @deprecated("Prefer the listener API from now on", since = "0.16.0")
-  def registerHandler[G[_], A <: APIMessage](
-      handler: EventHandler[G, A]
-  )(implicit classTag: ClassTag[A], streamable: Streamable[G]): (UniqueKillSwitch, Future[Done])
 
   /**
     * Registers an [[EventListener]], created inside an [[EventsController]].

@@ -66,9 +66,6 @@ object Routes {
       "Raw route and applied route are unbalanced"
     )
 
-    @deprecated("Prefer uriWithMajor", since = "0.15.0")
-    def rawRoute: String = uriWithMajor
-
     def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 
     def /(next: String): Route =
@@ -132,9 +129,6 @@ object Routes {
       uriWithMajor.count(_ == '/') == applied.toString.count(_ == '/'),
       "Raw route and applied route are unbalanced"
     )
-
-    @deprecated("Prefer uriWithMajor", since = "0.15.0")
-    def rawRoute: String = uriWithMajor
 
     def toRequest(method: HttpMethod): RequestRoute = RequestRoute(this, method)
 

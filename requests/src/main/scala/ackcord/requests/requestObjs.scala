@@ -41,11 +41,7 @@ import akka.http.scaladsl.model._
   * @param uri The uri to send to
   * @param method The method to use
   */
-case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: HttpMethod) {
-
-  @deprecated("Prefer uriWithMajor", since = "0.15.0")
-  def rawRoute: String = uriWithMajor
-}
+case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: HttpMethod)
 object RequestRoute {
 
   /**
@@ -195,31 +191,10 @@ sealed trait RequestAnswer[+Data] {
     */
   def ratelimitInfo: RatelimitInfo
 
-  @deprecated("Prefer ratelimitInfo.tilReset", since = "0.15.0")
-  def tilReset: FiniteDuration = ratelimitInfo.tilReset
-
-  @deprecated("Prefer ratelimitInfo.tilRatelimit", since = "0.15.0")
-  def remainingRequests: Int = ratelimitInfo.tilRatelimit
-
-  @deprecated("Prefer ratelimitInfo.bucketLimit", since = "0.15.0")
-  def uriRequestLimit: Int = ratelimitInfo.bucketLimit
-
   /**
     * The route for this request
     */
   def route: RequestRoute
-
-  /**
-    * The uri for this request.
-    */
-  @deprecated("Prefer route.uri", since = "0.15.0")
-  def uri: Uri = route.uri
-
-  @deprecated("Prefer route.uriWithMajor", since = "0.15.0")
-  def rawRoute: String = route.uriWithMajor
-
-  @deprecated("Prefer ratelimitInfo.ratelimitBucket", since = "0.15.0")
-  def ratelimitBucket: String = ratelimitInfo.bucket
 
   /**
     * An either that either contains the data, or the exception if this is a failure.
@@ -287,7 +262,6 @@ case class RequestRatelimited(
     identifier: UUID
 ) extends FailedRequest {
 
-  override def remainingRequests: Int = 0
   override def asException: RatelimitException =
     new RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
 

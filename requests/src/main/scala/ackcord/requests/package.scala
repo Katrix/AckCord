@@ -27,11 +27,6 @@ import ackcord.data.{ChannelId, GuildChannel, GuildId, Permission}
 
 package object requests {
 
-  @deprecated("Prefer the new name Requests", since = "0.16")
-  val RequestHelper: requests.Requests.type = requests.Requests
-  @deprecated("Prefer the new name Requests", since = "0.16")
-  type RequestHelper = requests.Requests
-
   /**
     * Check if a client has the needed permissions in a guild
     * @param guildId The guild to check for

@@ -24,7 +24,6 @@
 
 package ackcord.cachehandlers
 
-import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import ackcord.SnowflakeMap

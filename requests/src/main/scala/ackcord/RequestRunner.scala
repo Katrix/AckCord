@@ -36,6 +36,7 @@ import akka.stream.scaladsl.{Sink, Source}
 import cats.data.OptionT
 import cats.{Alternative, Applicative, FlatMap, Foldable, Monad}
 
+@deprecated("Prefer RequestHelper", since = "0.17")
 trait RequestRunner[F[_]] {
 
   def run[A](request: Request[A])(implicit c: CacheSnapshot): F[A]
