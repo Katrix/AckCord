@@ -116,13 +116,15 @@ object CacheHandlers {
   val dmChannelUpdater: CacheUpdater[DMChannel] = new CacheUpdater[DMChannel] {
     override def handle(builder: CacheSnapshotBuilder, dmChannel: DMChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
-    ): Unit = builder.dmChannelMap.put(dmChannel.id, dmChannel)
+    ): Unit =
+      builder.dmChannelMap = builder.dmChannelMap.updated(dmChannel.id, dmChannel)
   }
 
   val dmGroupChannelUpdater: CacheUpdater[GroupDMChannel] = new CacheUpdater[GroupDMChannel] {
     override def handle(builder: CacheSnapshotBuilder, groupDmChannel: GroupDMChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
-    ): Unit = builder.groupDmChannelMap.put(groupDmChannel.id, groupDmChannel)
+    ): Unit =
+      builder.groupDmChannelMap = builder.groupDmChannelMap.updated(groupDmChannel.id, groupDmChannel)
   }
 
   val rawGuildUpdater: CacheUpdater[RawGuild] = new CacheUpdater[RawGuild] {
@@ -225,7 +227,7 @@ object CacheHandlers {
       val (guildId, obj) = topObj
 
       if (registry.hasUpdater[Ban]) {
-        builder.getGuildBans(guildId).put(obj.user.id, obj.toBan)
+        builder.banMap = builder.banMap.updated(guildId, builder.getGuildBans(guildId).updated(obj.user.id, obj.toBan))
       }
 
       registry.updateData(builder)(obj.user)
@@ -486,7 +488,10 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: TypingStartData, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      builder.getChannelLastTyped(obj.channelId).put(obj.userId, obj.timestamp)
+      builder.lastTypedMap = builder.lastTypedMap.updated(
+        obj.channelId,
+        builder.getChannelLastTyped(obj.channelId).updated(obj.userId, obj.timestamp)
+      )
       registry.getUpdater[GuildMember].foreach { updater =>
         obj.member.foreach(rawMember => updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry))
       }
@@ -500,7 +505,7 @@ object CacheHandlers {
     ): Unit =
       //We need to check if this should run as the first updater always runs otherwise
       if (registry.hasUpdater[User]) {
-        builder.userMap.update(user.id, user)
+        builder.userMap = builder.userMap.updated(user.id, user)
       }
   }
 
@@ -508,10 +513,10 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: Guild, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      builder.guildMap.put(obj.id, obj)
+      builder.guildMap = builder.guildMap.updated(obj.id, obj)
 
       if (builder.unavailableGuildMap.contains(obj.id)) {
-        builder.unavailableGuildMap.remove(obj.id)
+        builder.unavailableGuildMap = builder.unavailableGuildMap.removed(obj.id)
       }
     }
   }
@@ -538,14 +543,14 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit =
-      builder.getChannelMessages(obj.channelId).put(obj.id, obj)
+      builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).updated(obj.id, obj))
   }
 
   val unavailableGuildUpdater: CacheUpdater[UnavailableGuild] = new CacheUpdater[UnavailableGuild] {
     override def handle(builder: CacheSnapshotBuilder, obj: UnavailableGuild, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit =
-      builder.unavailableGuildMap.put(obj.id, obj)
+      builder.unavailableGuildMap = builder.unavailableGuildMap.updated(obj.id, obj)
   }
 
   //Deletes
@@ -580,12 +585,12 @@ object CacheHandlers {
           }
         case ChannelType.DM =>
           if (registry.hasDeleter[DMChannel]) {
-            builder.dmChannelMap.remove(rawChannel.id.asChannelId[DMChannel])
+            builder.dmChannelMap = builder.dmChannelMap.removed(rawChannel.id.asChannelId[DMChannel])
           }
 
         case ChannelType.GroupDm =>
           if (registry.hasDeleter[GroupDMChannel]) {
-            builder.groupDmChannelMap.remove(rawChannel.id.asChannelId[GroupDMChannel])
+            builder.groupDmChannelMap = builder.groupDmChannelMap.removed(rawChannel.id.asChannelId[GroupDMChannel])
           }
         case ChannelType.Unknown(_) =>
       }
@@ -596,7 +601,7 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: UnavailableGuild, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      builder.guildMap.remove(obj.id)
+      builder.guildMap = builder.guildMap.removed(obj.id)
 
       if (obj.unavailable.getOrElse(false)) {
         registry.updateData(builder)(obj)
@@ -611,7 +616,7 @@ object CacheHandlers {
       val UserWithGuildId(guildId, user) = topObj
 
       if (registry.hasDeleter[Ban]) {
-        builder.banMap.get(guildId).foreach(_.remove(user.id))
+        builder.banMap.get(guildId).foreach(map => builder.banMap.updated(guildId, map.removed(user.id)))
       }
 
       registry.updateData(builder)(user)
@@ -655,7 +660,7 @@ object CacheHandlers {
           implicit log: Logger
       ): Unit = if (registry.hasDeleter[Message]) {
         val MessageDeleteData(id, channelId, _) = obj
-        builder.messageMap.get(channelId).foreach(_.remove(id))
+        builder.messageMap.get(channelId).foreach(map => builder.messageMap.updated(channelId, map.removed(id)))
       }
     }
 
@@ -666,7 +671,7 @@ object CacheHandlers {
       ): Unit =
         if (registry.hasDeleter[Message]) {
           val MessageDeleteBulkData(ids, channelId, _) = obj
-          builder.messageMap.get(channelId).foreach(_ --= ids)
+          builder.messageMap.get(channelId).foreach(map => builder.messageMap.updated(channelId, map.removedAll(ids)))
         }
 
     }
@@ -741,13 +746,13 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: DMChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit =
-      builder.dmChannelMap.remove(obj.id)
+      builder.dmChannelMap = builder.dmChannelMap.removed(obj.id)
   }
 
   val groupDmChannelDeleter: CacheDeleter[GroupDMChannel] = new CacheDeleter[GroupDMChannel] {
     override def handle(builder: CacheSnapshotBuilder, obj: GroupDMChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
-    ): Unit = builder.groupDmChannelMap.remove(obj.id)
+    ): Unit = builder.groupDmChannelMap = builder.groupDmChannelMap.removed(obj.id)
   }
 
   val guildMemberDeleter: CacheDeleter[GuildMember] = new CacheDeleter[GuildMember] {
@@ -771,6 +776,6 @@ object CacheHandlers {
   val messageDeleter: CacheDeleter[Message] = new CacheDeleter[Message] {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: Logger
-    ): Unit = builder.getChannelMessages(obj.channelId).remove(obj.id)
+    ): Unit = builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).removed(obj.id))
   }
 }

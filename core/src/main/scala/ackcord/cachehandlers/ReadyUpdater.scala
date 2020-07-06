@@ -38,6 +38,6 @@ object ReadyUpdater extends CacheUpdater[ReadyData] {
     val guilds = unavailableGuilds.map(g => g.id -> g)
 
     builder.botUser = tag[BotUser](botUser)
-    builder.unavailableGuildMap ++= guilds
+    builder.unavailableGuildMap = builder.unavailableGuildMap ++ guilds
   }
 }

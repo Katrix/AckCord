@@ -107,15 +107,20 @@ object MemoryCacheSnapshot {
     val messagesCleanThreshold = OffsetDateTime.now().minusMinutes(keepMessagesFor)
     val typedCleanThreshold    = Instant.now().minus(keepTypedFor, ChronoUnit.MINUTES)
 
-    builder.messageMap.foreach {
-      case (_, messageMap) =>
-        CoreCompat.filterInPlace(messageMap)((_, m) =>
-          m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold)
-        )
+    builder.messageMap = builder.messageMap.modifyOrRemove { (_, messageMap) =>
+      val newMap = messageMap.modifyOrRemove { (_, m) =>
+        Option.when(m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold))(m)
+      }
+
+      Option.when(newMap.nonEmpty)(newMap)
     }
 
-    builder.lastTypedMap.foreach {
-      case (_, typedMap) => CoreCompat.filterInPlace(typedMap)((_, i) => i.isAfter(typedCleanThreshold))
+    builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
+      val newMap = typedMap.modifyOrRemove { (_, i) =>
+        Option.when(i.isAfter(typedCleanThreshold))(i)
+      }
+
+      Option.when(newMap.nonEmpty)(newMap)
     }
 
     processor
