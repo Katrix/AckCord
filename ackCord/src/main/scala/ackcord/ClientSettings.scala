@@ -36,7 +36,7 @@ import ackcord.gateway.{GatewayEvent, GatewayIntents}
 import ackcord.requests.Ratelimiter
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.stream.OverflowStrategy
 import akka.util.Timeout
 import org.slf4j.Logger
@@ -51,8 +51,11 @@ import org.slf4j.Logger
   * @param activity Send an activity when connecting.
   * @param status The status to use when connecting.
   * @param afk If the bot should be afk when connecting.
+  * @param guildSubscriptions If Discord should sent events about user to your guilds.
+  * @param intents Fine grained control over which events Discord should sent to your bot.
   * @param system The actor system to use.
   * @param requestSettings The request settings to use.
+  * @param cacheSettings Settings the cache will use.
   */
 case class ClientSettings(
     token: String,
@@ -67,12 +70,7 @@ case class ClientSettings(
     intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
     system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     requestSettings: RequestSettings = RequestSettings(),
-    cacheProcessor: CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
-    cacheParallelism: Int = 4,
-    cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
-    gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
-    ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
-    cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+    cacheSettings: CacheSettings = CacheSettings()
 ) {
 
   val gatewaySettings: GatewaySettings = GatewaySettings(
@@ -90,6 +88,27 @@ case class ClientSettings(
 
   implicit val executionContext: ExecutionContext = system.executionContext
 
+  private def createClientWithShards(
+      shards: Cache => Seq[Behavior[DiscordShard.Command]]
+  )(implicit actorSystem: ActorSystem[Nothing]): Future[DiscordClientCore] = {
+    val clientActor = actorSystem.systemActorOf(
+      DiscordClientActor(shards, cacheSettings),
+      "DiscordClient"
+    )
+
+    implicit val timeout: Timeout = Timeout(1.second)
+    clientActor.ask[DiscordClientActor.GetRatelimiterAndCacheReply](DiscordClientActor.GetRatelimiterAndCache).map {
+      case DiscordClientActor.GetRatelimiterAndCacheReply(ratelimiter, cache) =>
+        val requests = requestSettings.toRequests(token, ratelimiter)
+
+        new DiscordClientCore(
+          cache,
+          requests,
+          clientActor
+        )
+    }
+  }
+
   /**
     * Create a [[DiscordClient]] from these settings.
     */
@@ -97,23 +116,9 @@ case class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGateway.flatMap { uri =>
-      val cache = Cache.create(cacheProcessor, cacheParallelism, cacheBufferSize, gatewayEventsBufferSize)
-      val clientActor = actorSystem.systemActorOf(
-        DiscordClientActor(Seq(DiscordShard(uri, gatewaySettings, cache, ignoredEvents, cacheTypeRegistry)), cache),
-        "DiscordClient"
+      createClientWithShards(cache =>
+        Seq(DiscordShard(uri, gatewaySettings, cache, cacheSettings.ignoredEvents, cacheSettings.cacheTypeRegistry))
       )
-
-      implicit val timeout: Timeout = Timeout(1.second)
-      clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
-        case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
-          val requests = requestSettings.toRequests(token, ratelimiter)
-
-          new DiscordClientCore(
-            cache,
-            requests,
-            clientActor
-          )
-      }
     }
   }
 
@@ -126,22 +131,9 @@ case class ClientSettings(
 
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
-        val cache  = Cache.create()
-        val shards = DiscordShard.many(uri, receivedShardTotal, gatewaySettings, cache, Nil, CacheTypeRegistry.default)
-
-        val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")
-
-        implicit val timeout: Timeout = Timeout(1.second)
-        clientActor.ask[DiscordClientActor.GetRatelimiterReply](DiscordClientActor.GetRatelimiter).map {
-          case DiscordClientActor.GetRatelimiterReply(ratelimiter) =>
-            val requests = requestSettings.toRequests(token, ratelimiter)
-
-            new DiscordClientCore(
-              cache,
-              requests,
-              clientActor
-            )
-        }
+        createClientWithShards(
+          DiscordShard.many(uri, receivedShardTotal, gatewaySettings, _, Nil, CacheTypeRegistry.default)
+        )
     }
   }
 }
@@ -179,3 +171,33 @@ case class RequestSettings(
       maxAllowedWait
     )
 }
+
+/**
+  * @param processor A function that runs on the cache right before a cache
+  *                  snapshot is produced.
+  * @param parallelism How many cache updates are constructed in parallel
+  * @param cacheBufferSize Size of the buffer for the cache
+  * @param gatewayEventsBufferSize Size of the buffer for gateway events
+  * @param ignoredEvents Events the cache will ignore. [[APIMessage]]s aren't
+  *                      sent for these either.
+  * @param cacheTypeRegistry     Gives you control over how entities in the cache
+  *                              are updated, and what values are retained in the cache.
+  * @param partitionCacheByGuild Instead of sharing a single cache for the
+  *                              entire application, this partitions the cache by guild.
+  *                              Each guild will in effect receive it's own cache.
+  *                              Cache events not specific to one guild will be
+  *                              sent to all caches.
+  *
+  *                              Unlike then default cache, this one is faster, as cache updates can
+  *                              be done in parallel, but might use more memory, and you need to handle
+  *                              cross guild cache actions yourself.
+  */
+case class CacheSettings(
+    processor: CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
+    parallelism: Int = 4,
+    cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
+    cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default,
+    partitionCacheByGuild: Boolean = false
+)

@@ -37,15 +37,34 @@ import akka.pattern.gracefulStop
 
 class DiscordClientActor(
     ctx: ActorContext[DiscordClientActor.Command],
-    shardBehaviors: Seq[Behavior[DiscordShard.Command]],
-    cache: Cache
+    shardBehaviors: Cache => Seq[Behavior[DiscordShard.Command]],
+    cacheSettings: CacheSettings
 ) extends AbstractBehavior[DiscordClientActor.Command](ctx) {
   import DiscordClientActor._
   implicit val system: ActorSystem[Nothing] = context.system
   import system.executionContext
 
+  val cache: Cache = if (cacheSettings.partitionCacheByGuild) {
+    Cache.createGuildCache(
+      context.spawn(
+        CacheStreams.guildCacheBehavior(CacheStreams.emptyStartingCache(cacheSettings.processor)),
+        "GuildCacheHandler"
+      ),
+      cacheSettings.parallelism,
+      cacheSettings.cacheBufferSize,
+      cacheSettings.gatewayEventsBufferSize
+    )
+  } else {
+    Cache.create(
+      cacheSettings.processor,
+      cacheSettings.parallelism,
+      cacheSettings.cacheBufferSize,
+      cacheSettings.gatewayEventsBufferSize
+    )
+  }
+
   val shards: Seq[ActorRef[DiscordShard.Command]] =
-    shardBehaviors.zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
+    shardBehaviors(cache).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
 
   var shardShutdownManager: ActorRef[DiscordShard.StopShard.type] = _
 
@@ -80,11 +99,11 @@ class DiscordClientActor(
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
-      case DiscordClientActor.Login => login()
-      case Logout(timeout, replyTo) => replyTo ! LogoutReply(logout(timeout))
-      case GetShards(replyTo)       => replyTo ! GetShardsReply(shards)
-      case GetMusicManager(replyTo) => replyTo ! GetMusicManagerReply(musicManager)
-      case GetRatelimiter(replyTo)  => replyTo ! GetRatelimiterReply(rateLimiter)
+      case DiscordClientActor.Login        => login()
+      case Logout(timeout, replyTo)        => replyTo ! LogoutReply(logout(timeout))
+      case GetShards(replyTo)              => replyTo ! GetShardsReply(shards)
+      case GetMusicManager(replyTo)        => replyTo ! GetMusicManagerReply(musicManager)
+      case GetRatelimiterAndCache(replyTo) => replyTo ! GetRatelimiterAndCacheReply(rateLimiter, cache)
     }
 
     Behaviors.same
@@ -92,20 +111,20 @@ class DiscordClientActor(
 }
 object DiscordClientActor {
   def apply(
-      shardBehaviors: Seq[Behavior[DiscordShard.Command]],
-      cache: Cache
-  ): Behavior[Command] = Behaviors.setup(ctx => new DiscordClientActor(ctx, shardBehaviors, cache))
+      shardBehaviors: Cache => Seq[Behavior[DiscordShard.Command]],
+      cacheSettings: CacheSettings
+  ): Behavior[Command] = Behaviors.setup(ctx => new DiscordClientActor(ctx, shardBehaviors, cacheSettings))
 
   sealed trait Command
 
-  case object Login                                                          extends Command
-  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply]) extends Command
-  case class GetShards(replyTo: ActorRef[GetShardsReply])                    extends Command
-  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])        extends Command
-  case class GetRatelimiter(replyTo: ActorRef[GetRatelimiterReply])          extends Command
+  case object Login                                                                 extends Command
+  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply])        extends Command
+  case class GetShards(replyTo: ActorRef[GetShardsReply])                           extends Command
+  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])               extends Command
+  case class GetRatelimiterAndCache(replyTo: ActorRef[GetRatelimiterAndCacheReply]) extends Command
 
   case class LogoutReply(done: Future[Boolean])
   case class GetShardsReply(shards: Seq[ActorRef[DiscordShard.Command]])
   case class GetMusicManagerReply(musicManager: ActorRef[MusicManager.Command])
-  case class GetRatelimiterReply(ratelimiter: ActorRef[Ratelimiter.Command])
+  case class GetRatelimiterAndCacheReply(ratelimiter: ActorRef[Ratelimiter.Command], cache: Cache)
 }

@@ -23,13 +23,20 @@
  */
 package ackcord
 
+import scala.concurrent.duration._
+
 import ackcord.cachehandlers.CacheSnapshotBuilder
-import ackcord.data.{User, UserId}
-import ackcord.gateway.GatewayMessage
+import ackcord.data.{GuildId, User, UserId}
+import ackcord.gateway.GatewayEvent.GuildDelete
+import ackcord.gateway.{Dispatch, GatewayEvent, GatewayMessage}
 import ackcord.requests.SupervisionStreams
+import ackcord.util.GuildStreams
 import akka.NotUsed
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
+import akka.stream.typed.scaladsl.ActorFlow
+import akka.util.Timeout
 import org.slf4j.Logger
 
 object CacheStreams {
@@ -124,6 +131,98 @@ object CacheStreams {
       SnowflakeMap.empty,
       cacheProcessor
     )
+  }
+
+  case class GuildCacheEvent(event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)])
+
+  def guildCacheBehavior(cacheBuilder: CacheSnapshotBuilder): Behavior[GuildCacheEvent] = {
+    def guildUpdaterBehavior(guildCacheBuilder: CacheSnapshotBuilder): Behavior[GuildCacheEvent] = Behaviors.setup {
+      context =>
+        var state: CacheState = CacheState(guildCacheBuilder.toImmutable, guildCacheBuilder.toImmutable)
+
+        Behaviors.receiveMessage {
+          case GuildCacheEvent(event, respondTo) =>
+            event.process(guildCacheBuilder)(context.log)
+            guildCacheBuilder.executeProcessor()
+
+            state = state.update(guildCacheBuilder.toImmutable)
+            respondTo ! ((event, state))
+            Behaviors.same
+        }
+    }
+
+    Behaviors.setup[GuildCacheEvent] { context =>
+      val extract = GuildStreams.createGatewayGuildInfoExtractor(context.log)
+
+      var state: CacheState = CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
+      val guildHandlers: collection.mutable.Map[GuildId, ActorRef[GuildCacheEvent]] =
+        collection.mutable.Map.empty[GuildId, ActorRef[GuildCacheEvent]]
+
+      def sendToAll(event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)]): Unit = {
+        event.process(cacheBuilder)(context.log)
+        cacheBuilder.executeProcessor()
+
+        state = state.update(cacheBuilder.toImmutable)
+        respondTo ! ((event, state))
+      }
+
+      def sendToGuild(id: GuildId, event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)]): Unit = {
+        guildHandlers.getOrElseUpdate(
+          id,
+          context.spawn(guildUpdaterBehavior(cacheBuilder.copy), "GuildCacheUpdater" + id.asString)
+        ) ! GuildCacheEvent(event, respondTo)
+
+        event match {
+          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event)) =>
+            //Two matches because Scala is stupid
+            (event: GatewayEvent[_]) match {
+              case event: GuildDelete =>
+                event.data.value.foreach { guild =>
+                  if (!guild.unavailable.getOrElse(false)) {
+                    guildHandlers.remove(guild.id)
+                  }
+                }
+
+              case _ =>
+            }
+
+          case _ =>
+        }
+      }
+
+      def handleApiUpdate(
+          update: APIMessageCacheUpdate[_],
+          respondTo: ActorRef[(CacheEvent, CacheState)]
+      ): Unit = {
+        extract(update.dispatch.event) match {
+          case Some(guildId) =>
+            sendToGuild(guildId, update, respondTo)
+          case None =>
+            sendToAll(update, respondTo)
+        }
+
+        Behaviors.same
+      }
+
+      Behaviors.receiveMessage[GuildCacheEvent] {
+        case GuildCacheEvent(update: APIMessageCacheUpdate[_], respondTo) =>
+          handleApiUpdate(update, respondTo)
+          Behaviors.same
+        case GuildCacheEvent(BatchedAPIMessageCacheUpdate(updates), respondTo) =>
+          updates.foreach(handleApiUpdate(_, respondTo))
+          Behaviors.same
+        case GuildCacheEvent(event, respondTo) =>
+          sendToAll(event, respondTo)
+          Behaviors.same
+      }
+    }
+  }
+
+  def guildCacheUpdater(
+      guildCacheUpdateActor: ActorRef[GuildCacheEvent]
+  ): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] = {
+    implicit val timeout: Timeout = Timeout(10.seconds)
+    ActorFlow.ask(4)(guildCacheUpdateActor)(GuildCacheEvent)
   }
 
   /**

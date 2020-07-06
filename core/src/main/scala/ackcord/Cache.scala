@@ -26,7 +26,7 @@ package ackcord
 import scala.collection.immutable
 
 import ackcord.gateway.GatewayMessage
-import akka.actor.typed.ActorSystem
+import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Sink, Source}
 import akka.{NotUsed, actor => classic}
 
@@ -87,7 +87,7 @@ case class Cache(
 object Cache {
 
   /**
-    * Creates a cache for a bot. This should be shared for the whole bot.
+    * Creates a cache for a bot.
     * @param cacheProcessor A function to run on each cache update.
     * @param parallelism How many cache updates to construct at the same time.
     */
@@ -95,9 +95,36 @@ object Cache {
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
       parallelism: Int = 4,
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
-      gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+      gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): Cache = {
     val (publish, subscribe)               = CacheStreams.cacheStreams(cacheProcessor, cacheBufferSize)
+    val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any](gatewayEventsBufferSize)
+
+    //Keep it drained if nothing else is using it
+    subscribe.runWith(Sink.ignore)
+
+    Cache(publish, subscribe, gatewayPublish, gatewaySubscribe, parallelism)
+  }
+
+  /**
+    * Creates a guild partitioned cache for a bot. Each guild will in effect receive
+    * it's own cache. Cache events not specific to one guild will be sent to
+    * all caches.
+    *
+    * Unlike then default cache, this one is faster, as cache updates can
+    * be done in parallel, but might use more memory, and you need to handle
+    * cross guild cache actions yourself.
+    *
+    * @param parallelism How many cache updates to construct at the same time.
+    */
+  def createGuildCache(
+      guildCacheActor: ActorRef[CacheStreams.GuildCacheEvent],
+      parallelism: Int = 4,
+      cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
+      gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
+  )(implicit system: ActorSystem[Nothing]): Cache = {
+    val (publish, subscribe) =
+      CacheStreams.cacheStreamsCustom(CacheStreams.guildCacheUpdater(guildCacheActor), cacheBufferSize)
     val (gatewayPublish, gatewaySubscribe) = CacheStreams.gatewayEvents[Any](gatewayEventsBufferSize)
 
     //Keep it drained if nothing else is using it
