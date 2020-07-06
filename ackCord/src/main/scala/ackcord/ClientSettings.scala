@@ -28,16 +28,18 @@ import java.time.Instant
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+import ackcord.MemoryCacheSnapshot.CacheProcessor
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
-import ackcord.gateway.GatewayIntents
+import ackcord.gateway.{GatewayEvent, GatewayIntents}
 import ackcord.requests.Ratelimiter
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.OverflowStrategy
 import akka.util.Timeout
+import org.slf4j.Logger
 
 /**
   * Settings used when connecting to Discord.
@@ -52,32 +54,39 @@ import akka.util.Timeout
   * @param system The actor system to use.
   * @param requestSettings The request settings to use.
   */
-class ClientSettings(
+case class ClientSettings(
     token: String,
     largeThreshold: Int = 50,
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,
-    activity: Option[RawActivity] = None,
+    @deprecatedName("gameStatus", since = "0.17") activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
     intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
-    val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
-    val requestSettings: RequestSettings = RequestSettings()
-    //TODO: Allow setting ignored and cacheTypeRegistry here at some point
-) extends GatewaySettings(
-      token,
-      largeThreshold,
-      shardNum,
-      shardTotal,
-      idleSince,
-      activity,
-      status,
-      afk,
-      guildSubscriptions,
-      intents
-    ) {
+    system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
+    requestSettings: RequestSettings = RequestSettings(),
+    cacheProcessor: CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
+    cacheParallelism: Int = 4,
+    cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
+    cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+) {
+
+  val gatewaySettings: GatewaySettings = GatewaySettings(
+    token,
+    largeThreshold,
+    shardNum,
+    shardTotal,
+    idleSince,
+    activity,
+    status,
+    afk,
+    guildSubscriptions,
+    intents
+  )
 
   implicit val executionContext: ExecutionContext = system.executionContext
 
@@ -88,9 +97,9 @@ class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGateway.flatMap { uri =>
-      val cache = Cache.create()
+      val cache = Cache.create(cacheProcessor, cacheParallelism, cacheBufferSize, gatewayEventsBufferSize)
       val clientActor = actorSystem.systemActorOf(
-        DiscordClientActor(Seq(DiscordShard(uri, this, cache, Nil, CacheTypeRegistry.default)), cache),
+        DiscordClientActor(Seq(DiscordShard(uri, gatewaySettings, cache, ignoredEvents, cacheTypeRegistry)), cache),
         "DiscordClient"
       )
 
@@ -118,7 +127,7 @@ class ClientSettings(
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
         val cache  = Cache.create()
-        val shards = DiscordShard.many(uri, receivedShardTotal, this, cache, Nil, CacheTypeRegistry.default)
+        val shards = DiscordShard.many(uri, receivedShardTotal, gatewaySettings, cache, Nil, CacheTypeRegistry.default)
 
         val clientActor = actorSystem.systemActorOf(DiscordClientActor(shards, cache), "DiscordClient")
 
@@ -135,54 +144,6 @@ class ClientSettings(
         }
     }
   }
-
-  override def toString: String =
-    s"ClientSettings($token, $largeThreshold, $shardNum, $shardTotal, $idleSince, " +
-      s"$activity, $status, $afk, $executionContext, $system, $requestSettings)"
-}
-object ClientSettings {
-
-  /**
-    * Settings used when connecting to Discord.
-    * @param token The token for the bot.
-    * @param largeThreshold The large threshold.
-    * @param shardNum The shard index of this shard.
-    * @param shardTotal The amount of shards.
-    * @param idleSince If the bot has been idle, set the time since.
-    * @param gameStatus Send some presence when connecting.
-    * @param status The status to use when connecting.
-    * @param afk If the bot should be afk when connecting.
-    * @param system The actor system to use.
-    * @param requestSettings The request settings to use.
-    */
-  def apply(
-      token: String,
-      largeThreshold: Int = 100,
-      shardNum: Int = 0,
-      shardTotal: Int = 1,
-      idleSince: Option[Instant] = None,
-      gameStatus: Option[RawActivity] = None,
-      status: PresenceStatus = PresenceStatus.Online,
-      afk: Boolean = false,
-      guildSubscriptions: Boolean = true,
-      intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
-      system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
-      requestSettings: RequestSettings = RequestSettings()
-  ): ClientSettings =
-    new ClientSettings(
-      token,
-      largeThreshold,
-      shardNum,
-      shardTotal,
-      idleSince,
-      gameStatus,
-      status,
-      afk,
-      guildSubscriptions,
-      intents,
-      system,
-      requestSettings
-    )
 }
 
 /**
