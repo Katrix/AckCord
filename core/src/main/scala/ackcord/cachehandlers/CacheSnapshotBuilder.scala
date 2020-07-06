@@ -102,7 +102,7 @@ class CacheSnapshotBuilder(
     guildMapWrite = true
     _guildMap
   }
-  def guildMap(map: mutable.Map[GuildId, Guild]): Unit = {
+  def guildMap_=(map: mutable.Map[GuildId, Guild]): Unit = {
     guildMapWrite = true
     _guildMap = map
   }

@@ -226,7 +226,7 @@ object CacheHandlers {
       val (guildId, obj) = topObj
 
       if (registry.hasUpdater[Ban]) {
-        builder.banMap.getOrElseUpdate(guildId, mutable.Map.empty).put(obj.user.id, obj.toBan)
+        builder.getGuildBans(guildId).put(obj.user.id, obj.toBan)
       }
 
       registry.updateData(builder)(obj.user)
