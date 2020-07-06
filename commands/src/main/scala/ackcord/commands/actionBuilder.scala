@@ -176,7 +176,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @tparam G The streamable result type.
     */
   def streamed[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].flatMapConcat(m => streamable.toSource(block(m))).to(Sink.ignore))
+    toSink(Flow[O[A]].flatMapMerge(requests.parallelism, m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
     * Creates an action that might do a single request, wrapped in an effect type G
@@ -186,7 +186,9 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
   def streamedOptRequest[G[_]](
       block: O[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].flatMapConcat(m => streamable.optionToSource(block(m))).to(requests.sinkIgnore))
+    toSink(
+      Flow[O[A]].flatMapMerge(requests.parallelism, m => streamable.optionToSource(block(m))).to(requests.sinkIgnore)
+    )
 
   /**
     * Creates an action that results in an async result
@@ -219,19 +221,32 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @param block The execution of the action.
     */
   def withRequest(block: O[A] => Request[Any]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].map(block).to(requests.sinkIgnore))
+    toSink(
+      Flow[O[A]]
+        .mapAsyncUnordered(requests.parallelism)(m => Future(block(m))(requests.system.executionContext))
+        .to(requests.sinkIgnore)
+    )
 
   /**
     * Creates an action that might do a single request
     * @param block The execution of the action.
     */
   def withRequestOpt(block: O[A] => Option[Request[Any]]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].mapConcat(block(_).toList).to(requests.sinkIgnore))
+    toSink(
+      Flow[O[A]]
+        .mapAsync(requests.parallelism)(m => Future(block(m).toList)(requests.system.executionContext))
+        .mapConcat(identity)
+        .to(requests.sinkIgnore)
+    )
 
   /**
     * Creates an action that might execute unknown side effects.
     * @param block The execution of the action.
     */
   def withSideEffects(block: O[A] => Unit): Action[A, NotUsed] =
-    toSink(Sink.foreach(block).mapMaterializedValue(_ => NotUsed))
+    toSink(
+      Sink
+        .foreachAsync[O[A]](requests.parallelism)(m => Future(block(m))(requests.system.executionContext))
+        .mapMaterializedValue(_ => NotUsed)
+    )
 }

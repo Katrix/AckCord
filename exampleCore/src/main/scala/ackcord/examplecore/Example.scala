@@ -190,7 +190,8 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       .collectType[APIMessage.MessageCreate]
       .map(m => m.message -> m.cache.current)
       .via(killSwitch.flow),
-    requests
+    requests,
+    requests.parallelism
   )
 
   def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =

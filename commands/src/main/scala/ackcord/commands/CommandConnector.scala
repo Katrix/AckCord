@@ -29,9 +29,10 @@ import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.syntax._
+import ackcord.util.StreamBalancer
 import akka.NotUsed
 import akka.stream.SourceShape
-import akka.stream.scaladsl.{GraphDSL, Merge, Partition, RunnableGraph, Source}
+import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Partition, RunnableGraph, Source}
 import cats.instances.future._
 import cats.syntax.all._
 import cats.{Monad, MonadError}
@@ -41,11 +42,15 @@ import cats.{Monad, MonadError}
   *                 that will be considered for commands.
   * @param requests A request helper to send errors and pass to command
   *                 messages
+  * @param parallelism How many command messages are constructed at once.
   */
 class CommandConnector(
     messages: Source[(Message, CacheSnapshot), NotUsed],
-    requests: Requests
+    requests: Requests,
+    parallelism: Int
 ) {
+  import requests.system
+  import requests.system.executionContext
 
   //https://stackoverflow.com/questions/249791/regex-for-quoted-string-with-escaping-quotes
   private val quotedRegex = """(?:"((?:[^"\\]|\\.)+)")|((?:\S)+)""".r
@@ -120,32 +125,28 @@ class CommandConnector(
       prefix: PrefixParser,
       command: ComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] = {
-    val commandMessageSource = messages
-      .mapAsync(requests.parallelism) {
-        case t @ (message, cache) =>
-          import requests.system.executionContext
-          prefix(cache, message).tupleLeft(t)
-      }
-      .mapConcat {
-        case ((message, cache), prefixParser) =>
-          implicit val c: CacheSnapshot = cache
+    val messageSource = messages.mapAsyncUnordered(parallelism) {
+      case t @ (message, cache) =>
+        prefix(cache, message).tupleLeft(t)
+    }
 
-          val parsed = MessageParser.parseEither(stringToArgsQuoted(message.content), prefixParser).map(_._1).toOption
-          parsed.map((message, cache, _)).toList
-      }
-      .mapConcat {
-        case (message, cache, args) =>
-          implicit val c: CacheSnapshot = cache
+    val getCommandMessages = Flow[((Message, CacheSnapshot), MessageParser[Unit])].mapConcat {
+      case ((message, cache), prefixParser) =>
+        implicit val c: CacheSnapshot = cache
 
-          message.channelId.resolve.map { channel =>
-            MessageParser
-              .parseResultEither(args, command.parser)
-              .map(a => CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A])
-              .leftMap(e => CommandError(e, channel, cache))
-          }.toList
-      }
+        val res = for {
+          args    <- MessageParser.parseEither(stringToArgsQuoted(message.content), prefixParser).map(_._1).toOption
+          channel <- message.channelId.resolve
+        } yield MessageParser
+          .parseResultEither(args, command.parser)
+          .map(a => CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A])
+          .leftMap(e => CommandError(e, channel, cache))
 
-    import requests.system
+        res.toList
+    }
+
+    val commandMessageSource = messageSource.via(StreamBalancer.balanceMerge(parallelism, getCommandMessages))
+
     CommandRegistration.withRegistration(
       Source.fromGraph(
         GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) { implicit b => thatFlow =>
@@ -210,7 +211,6 @@ class CommandConnector(
       prefix: PrefixParser,
       command: ComplexCommand[A, Mat]
   ): RunnableGraph[CommandRegistration[Mat]] = {
-    import requests.system
     SupervisionStreams.addLogAndContinueFunction(
       newCommandWithErrors(prefix, command)
         .map {
@@ -244,10 +244,8 @@ class CommandConnector(
     * @return The materialized result of running the command, in addition to
     *         a future signaling when the command is done running.
     */
-  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): CommandRegistration[Mat] = {
-    import requests.system
+  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): CommandRegistration[Mat] =
     newCommand(prefix, command).run()
-  }
 
   /**
     * Starts a named command execution.
