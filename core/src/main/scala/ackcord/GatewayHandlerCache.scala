@@ -49,19 +49,30 @@ object GatewayHandlerCache {
       ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
       registry: CacheTypeRegistry,
       log: Logger,
-      system: ActorSystem[Nothing]
+      system: ActorSystem[Nothing],
+      maxBatch: Long = 1,
+      batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1
   ): Behavior[GatewayHandler.Command] = {
     import system.executionContext
     val configSettings = AckCordGatewaySettings()(system)
-    val sink = SupervisionStreams.logAndContinue(
-      Flow[Dispatch[_]]
-        .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
-        .mapAsync(cache.parallelism)(dispatch =>
-          Future(eventToCacheUpdate(dispatch, registry, log, configSettings).toList)
+    val baseFlow: Flow[Dispatch[_], APIMessageCacheUpdate[_], NotUsed] = Flow[Dispatch[_]]
+      .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
+      .mapAsync(cache.parallelism)(dispatch =>
+        Future(eventToCacheUpdate(dispatch, registry, log, configSettings).toList)
+      )
+      .mapConcat(identity)
+
+    val flowWithBatching = if (maxBatch != 1) {
+      baseFlow
+        .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)((xs, update) =>
+          update.asInstanceOf[APIMessageCacheUpdate[Any]] :: xs.asInstanceOf[List[APIMessageCacheUpdate[Any]]]
         )
-        .mapConcat(identity)
-        .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
-        .to(cache.publish)
+        .map(xs => BatchedAPIMessageCacheUpdate(xs.reverse))
+    } else
+      baseFlow.map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
+
+    val sink = SupervisionStreams.logAndContinue(
+      flowWithBatching.to(cache.publish)
     )(system)
 
     GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)

@@ -65,6 +65,11 @@ case class APIMessageCacheUpdate[Data](
     handler.handle(builder, data, registry)
 }
 
+case class BatchedAPIMessageCacheUpdate(updates: Seq[APIMessageCacheUpdate[_]]) extends CacheEvent {
+  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =
+    updates.foreach(_.process(builder))
+}
+
 /**
   * A cache event that will try to put the data of the response into the cache.
   * @param requestResponse The response to the request.

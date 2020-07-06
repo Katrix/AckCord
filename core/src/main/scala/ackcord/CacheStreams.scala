@@ -85,9 +85,10 @@ object CacheStreams {
   def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
-        case (APIMessageCacheUpdate(_, sendEvent, _, _, _), state) => sendEvent(state)
+        case (APIMessageCacheUpdate(_, sendEvent, _, _, _), state) => sendEvent(state).toList
+        case (BatchedAPIMessageCacheUpdate(updates), state)        => updates.flatMap(_.sendEvent(state).toList)
       }
-      .mapConcat(_.toList)
+      .mapConcat(identity)
   }
 
   /**
