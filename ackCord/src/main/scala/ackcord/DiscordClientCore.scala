@@ -41,7 +41,6 @@ class DiscordClientCore(
     val requests: Requests,
     actor: ActorRef[DiscordClientActor.Command]
 ) extends DiscordClient {
-  import requests.system
 
   val commands = new CommandConnector(
     events.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),

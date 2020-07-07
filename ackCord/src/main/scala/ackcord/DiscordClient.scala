@@ -75,6 +75,8 @@ trait DiscordClient {
 
   def musicManager: Future[ActorRef[MusicManager.Command]]
 
+  implicit val system: ActorSystem[Nothing] = requests.system
+
   implicit val executionContext: ExecutionContextExecutor = requests.system.executionContext
 
   /**
@@ -192,7 +194,6 @@ trait DiscordClient {
       timeoutDur: FiniteDuration = 30.seconds
   ): Future[AudioPlayer] = {
     implicit val timeout: Timeout                  = Timeout(timeoutDur)
-    implicit val actorSystem: ActorSystem[Nothing] = requests.system
 
     musicManager
       .flatMap(
