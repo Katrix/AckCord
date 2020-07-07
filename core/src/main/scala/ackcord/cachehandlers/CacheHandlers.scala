@@ -495,7 +495,6 @@ object CacheHandlers {
       registry.getUpdater[GuildMember].foreach { updater =>
         obj.member.foreach(rawMember => updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry))
       }
-      obj.member.foreach(registry.updateData(builder)(_))
     }
   }
 
@@ -543,7 +542,7 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit =
-      builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).updated(obj.id, obj))
+      builder.messageMap = builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).updated(obj.id, obj))
   }
 
   val unavailableGuildUpdater: CacheUpdater[UnavailableGuild] = new CacheUpdater[UnavailableGuild] {
