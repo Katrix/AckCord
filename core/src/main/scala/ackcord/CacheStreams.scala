@@ -94,7 +94,7 @@ object CacheStreams {
       .collect {
         case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
           val event = sendEvent(state)
-          if(event.isEmpty) {
+          if (event.isEmpty) {
             log.warn(s"Failed to create API message for ${d.event.getClass}")
           }
 

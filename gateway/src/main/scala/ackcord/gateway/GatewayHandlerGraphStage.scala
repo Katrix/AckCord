@@ -45,10 +45,13 @@ import io.circe.{Encoder, parser}
 import io.circe.syntax._
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
-    extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]], Future[
-      Option[ResumeData]
-    ]] {
-  val in: Inlet[GatewayMessage[_]]     = Inlet("GatewayHandlerGraphStage.in")
+    extends GraphStageWithMaterializedValue[
+      FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]],
+      Future[
+        Option[ResumeData]
+      ]
+    ] {
+  val in: Inlet[GatewayMessage[_]]           = Inlet("GatewayHandlerGraphStage.in")
   val dispatchOut: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
 
   val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")

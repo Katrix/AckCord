@@ -35,9 +35,9 @@ object CoreCommands {
     * @param requests A request helper object which will be passed to handlers.
     */
   def create(
-              settings: AbstractCommandSettings,
-              events: Events,
-              requests: Requests
+      settings: AbstractCommandSettings,
+      events: Events,
+      requests: Requests
   ): Commands = {
     import requests.system
     Commands(CmdStreams.cmdStreams(settings, events.subscribeAPI)._2, requests)

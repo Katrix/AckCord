@@ -542,7 +542,8 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit =
-      builder.messageMap = builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).updated(obj.id, obj))
+      builder.messageMap =
+        builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId).updated(obj.id, obj))
   }
 
   val unavailableGuildUpdater: CacheUpdater[UnavailableGuild] = new CacheUpdater[UnavailableGuild] {

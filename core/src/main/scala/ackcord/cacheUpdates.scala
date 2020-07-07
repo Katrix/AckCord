@@ -108,8 +108,8 @@ object RequestCacheUpdate {
     * @param registry The cache registry to use for finding cache handlers.
     */
   def requestsProcessor[Data](
-                               events: Events,
-                               registry: CacheTypeRegistry
+      events: Events,
+      registry: CacheTypeRegistry
   ): Sink[(Request[Data], RequestAnswer[Data]), NotUsed] =
     Flow[(Request[Data], RequestAnswer[Data])]
       .collect {

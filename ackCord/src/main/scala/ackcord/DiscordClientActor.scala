@@ -36,9 +36,9 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.pattern.gracefulStop
 
 class DiscordClientActor(
-                          ctx: ActorContext[DiscordClientActor.Command],
-                          shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
-                          cacheSettings: CacheSettings
+    ctx: ActorContext[DiscordClientActor.Command],
+    shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
+    cacheSettings: CacheSettings
 ) extends AbstractBehavior[DiscordClientActor.Command](ctx) {
   import DiscordClientActor._
   implicit val system: ActorSystem[Nothing] = context.system
@@ -123,8 +123,8 @@ class DiscordClientActor(
 }
 object DiscordClientActor {
   def apply(
-             shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
-             cacheSettings: CacheSettings
+      shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
+      cacheSettings: CacheSettings
   ): Behavior[Command] = Behaviors.setup(ctx => new DiscordClientActor(ctx, shardBehaviors, cacheSettings))
 
   sealed trait Command

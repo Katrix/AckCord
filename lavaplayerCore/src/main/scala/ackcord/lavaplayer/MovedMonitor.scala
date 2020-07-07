@@ -33,8 +33,8 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 private[lavaplayer] object MovedMonitor {
 
   private[lavaplayer] def apply(
-                                 events: Events,
-                                 handler: ActorRef[LavaplayerHandler.Command]
+      events: Events,
+      handler: ActorRef[LavaplayerHandler.Command]
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
       implicit val system: ActorSystem[Nothing] = ctx.system

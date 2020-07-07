@@ -74,11 +74,11 @@ object LavaplayerHandler {
   )
 
   case class Parameters(
-                         player: AudioPlayer,
-                         guildId: GuildId,
-                         events: Events,
-                         context: ActorContext[Command],
-                         log: Logger
+      player: AudioPlayer,
+      guildId: GuildId,
+      events: Events,
+      context: ActorContext[Command],
+      log: Logger
   )
 
   def apply(player: AudioPlayer, guildId: GuildId, events: Events): Behavior[Command] =

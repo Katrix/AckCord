@@ -116,9 +116,7 @@ object MemoryCacheSnapshot {
     }
 
     builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
-      val newMap = typedMap.modifyOrRemove { (_, i) =>
-        Option.when(i.isAfter(typedCleanThreshold))(i)
-      }
+      val newMap = typedMap.modifyOrRemove((_, i) => Option.when(i.isAfter(typedCleanThreshold))(i))
 
       Option.when(newMap.nonEmpty)(newMap)
     }

@@ -45,12 +45,12 @@ object DiscordShard {
   sealed trait Command
 
   case class Parameters(
-                         gatewayUri: Uri,
-                         settings: GatewaySettings,
-                         events: Events,
-                         context: ActorContext[Command],
-                         timers: TimerScheduler[Command],
-                         log: Logger
+      gatewayUri: Uri,
+      settings: GatewaySettings,
+      events: Events,
+      context: ActorContext[Command],
+      timers: TimerScheduler[Command],
+      log: Logger
   )
 
   case class State(

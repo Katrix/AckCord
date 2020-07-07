@@ -57,13 +57,13 @@ import org.slf4j.Logger
 object MusicHandler {
 
   case class Parameters(
-                         helper: Requests,
-                         events: Events,
-                         context: ActorContext[Command],
-                         log: Logger,
-                         player: AudioPlayer,
-                         msgQueue: SourceQueueWithComplete[Request[RawMessage]],
-                         lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
+      helper: Requests,
+      events: Events,
+      context: ActorContext[Command],
+      log: Logger,
+      player: AudioPlayer,
+      msgQueue: SourceQueueWithComplete[Request[RawMessage]],
+      lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
   def apply(requests: Requests, registerCmd: FunctionK[NewCommandsEntry, cats.Id], events: Events)(

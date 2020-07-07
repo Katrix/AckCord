@@ -36,10 +36,10 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 object VoiceServerNegotiator {
 
   def apply(
-             guildId: GuildId,
-             voiceChannelId: VoiceGuildChannelId,
-             events: Events,
-             replyTo: ActorRef[GotVoiceData]
+      guildId: GuildId,
+      voiceChannelId: VoiceGuildChannelId,
+      events: Events,
+      replyTo: ActorRef[GotVoiceData]
   ): Behavior[Command] = Behaviors.setup { ctx =>
     implicit val system: ActorSystem[Nothing] = ctx.system
 

@@ -37,8 +37,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 object MusicManager {
 
   private[ackcord] def apply(
-                              events: Events,
-                              players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
+      events: Events,
+      players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
   ): Behavior[Command] = Behaviors.receive {
     case (ctx, ConnectToChannel(guildId, channelId, force, createPlayer, timeoutDur, replyTo)) =>
       implicit val timeout: Timeout             = Timeout(timeoutDur)

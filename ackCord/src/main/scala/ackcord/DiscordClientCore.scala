@@ -37,9 +37,9 @@ import akka.util.Timeout
 import akka.NotUsed
 
 class DiscordClientCore(
-                         val events: Events,
-                         val requests: Requests,
-                         actor: ActorRef[DiscordClientActor.Command]
+    val events: Events,
+    val requests: Requests,
+    actor: ActorRef[DiscordClientActor.Command]
 ) extends DiscordClient {
   import requests.system
 

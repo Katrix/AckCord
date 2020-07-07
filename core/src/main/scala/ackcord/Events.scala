@@ -129,7 +129,7 @@ object Events {
     import system.executionContext
 
     //Pipe events gotten into the main pubsub
-    if(convertGatewayEventsToApiMessages) {
+    if (convertGatewayEventsToApiMessages) {
       val configSettings = AckCordGatewaySettings()(system)
       val baseSource: Source[APIMessageCacheUpdate[_], NotUsed] =
         receiveGatewaySubscribe

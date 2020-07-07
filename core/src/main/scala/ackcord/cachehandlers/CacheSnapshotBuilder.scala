@@ -67,9 +67,8 @@ class CacheSnapshotBuilder(
       processor = processor
     )
 
-  override def getChannelMessages(channelId: TextChannelId): SnowflakeMap[Message, Message] = {
+  override def getChannelMessages(channelId: TextChannelId): SnowflakeMap[Message, Message] =
     messageMap.getOrElse(channelId, SnowflakeMap.empty)
-  }
 
   override def getChannelLastTyped(channelId: TextChannelId): SnowflakeMap[User, Instant] =
     lastTypedMap.getOrElse(channelId, SnowflakeMap.empty)
