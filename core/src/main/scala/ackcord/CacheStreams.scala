@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data.{GuildId, User, UserId}
 import ackcord.gateway.GatewayEvent.GuildDelete
-import ackcord.gateway.{Dispatch, GatewayMessage}
+import ackcord.gateway.{Dispatch, GatewayEvent, GatewayMessage}
 import ackcord.requests.SupervisionStreams
 import ackcord.util.GuildStreams
 import akka.NotUsed
@@ -86,6 +86,15 @@ object CacheStreams {
       )
       .run()
 
+  private val expectedFailedApiMessageCreation: Set[Class[_]] = Set(
+    classOf[GatewayEvent.MessageReactionAdd],
+    classOf[GatewayEvent.MessageReactionRemove],
+    classOf[GatewayEvent.MessageReactionRemoveAll],
+    classOf[GatewayEvent.MessageReactionRemoveEmoji],
+    classOf[GatewayEvent.MessageDelete],
+    classOf[GatewayEvent.MessageDeleteBulk],
+  )
+
   /**
     * A flow that creates [[APIMessage]]s from update events.
     */
@@ -95,7 +104,12 @@ object CacheStreams {
         case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
           val event = sendEvent(state)
           if (event.isEmpty) {
-            log.warn(s"Failed to create API message for ${d.event.getClass}")
+            if(expectedFailedApiMessageCreation.contains(d.event.getClass)) {
+              log.debug(s"Failed to create API message for ${d.event.getClass}")
+            }
+            else {
+              log.warn(s"Failed to create API message for ${d.event.getClass}")
+            }
           }
 
           event.toList

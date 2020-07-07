@@ -67,14 +67,13 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(channel: GuildChannel, cache: CacheState) extends ChannelMessage
+  case class ChannelCreate(channel: Channel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a channel is edited or updated.
-    * @param channel The channel that was edited. This will always be a
-    *                guild channel
+    * @param channel The channel that was edited.
     */
-  case class ChannelUpdate(channel: GuildChannel, cache: CacheState) extends ChannelMessage
+  case class ChannelUpdate(channel: Channel, cache: CacheState) extends ChannelMessage
 
   /**
     * Sent to the client when a channel is deleted. The current snapshot will

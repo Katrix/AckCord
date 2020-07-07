@@ -73,10 +73,7 @@ object CacheEventCreator {
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state =>
-                state.current
-                  .getGuildChannel(data.id.asChannelId[GuildChannel])
-                  .map(ch => api.ChannelCreate(ch, state)),
+              state => state.current.getChannel(data.id).map(ch => api.ChannelCreate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry,
               dispatch
@@ -84,10 +81,7 @@ object CacheEventCreator {
           case gatewayEv.ChannelUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state =>
-                state.current
-                  .getGuildChannel(data.id.asChannelId[GuildChannel])
-                  .map(ch => api.ChannelUpdate(ch, state)),
+              state => state.current.getChannel(data.id).map(ch => api.ChannelUpdate(ch, state)),
               CacheHandlers.rawChannelUpdater,
               registry,
               dispatch
