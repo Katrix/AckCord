@@ -35,12 +35,12 @@ import akka.NotUsed
 import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
-import io.circe.{Decoder, Encoder, Json}
+import io.circe.{Decoder, DecodingFailure, Encoder, Json}
 
 /**
   * Base trait for all gateway messages.
   */
-sealed trait GatewayMessage[D] {
+sealed trait GatewayMessage[+D] {
 
   /**
     * The op code for the message.
@@ -50,17 +50,12 @@ sealed trait GatewayMessage[D] {
   /**
     * The data for the message.
     */
-  def d: Eval[Decoder.Result[D]]
+  def d: Eval[Either[DecodingFailure, D]]
 
   /**
     * A sequence number for the message if there is one.
     */
   def s: JsonOption[Int] = JsonUndefined
-
-  /**
-    * An encoder for the message.
-    */
-  def dataEncoder: Encoder[D]
 
   def t: JsonOption[GatewayEvent[D]] = JsonUndefined
 }
@@ -75,12 +70,11 @@ sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
   * @param sequence The seq number.
   * @param event The sent event.
   */
-case class Dispatch[D](sequence: Int, event: GatewayEvent[D])(implicit val dataEncoder: Encoder[D])
-    extends GatewayMessage[D] {
-  override val s: JsonSome[Int]             = JsonSome(sequence)
-  override val t: JsonSome[GatewayEvent[D]] = JsonSome(event)
-  override def op: GatewayOpCode            = GatewayOpCode.Dispatch
-  override def d: Later[Decoder.Result[D]]  = event.data
+case class Dispatch[+D](sequence: Int, event: GatewayEvent[D]) extends GatewayMessage[D] {
+  override val s: JsonSome[Int]                    = JsonSome(sequence)
+  override val t: JsonSome[GatewayEvent[D]]        = JsonSome(event)
+  override def op: GatewayOpCode                   = GatewayOpCode.Dispatch
+  override def d: Eval[Either[DecodingFailure, D]] = event.data
 }
 
 /**
@@ -88,8 +82,7 @@ case class Dispatch[D](sequence: Int, event: GatewayEvent[D])(implicit val dataE
   * @param nowD The previous sequence.
   */
 case class Heartbeat(nowD: Option[Int]) extends EagerGatewayMessage[Option[Int]] {
-  override def op: GatewayOpCode                 = GatewayOpCode.Heartbeat
-  override def dataEncoder: Encoder[Option[Int]] = Encoder[Option[Int]]
+  override def op: GatewayOpCode = GatewayOpCode.Heartbeat
 }
 
 /**
@@ -128,8 +121,7 @@ object IdentifyData {
   * Sent by the shard to log in.
   */
 case class Identify(nowD: IdentifyData) extends EagerGatewayMessage[IdentifyData] {
-  override def op: GatewayOpCode                  = GatewayOpCode.Identify
-  override def dataEncoder: Encoder[IdentifyData] = Encoder[IdentifyData]
+  override def op: GatewayOpCode = GatewayOpCode.Identify
 }
 
 /**
@@ -144,8 +136,7 @@ case class StatusData(since: Option[Instant], game: Option[RawActivity], status:
   * Sent when a presence or status changes.
   */
 case class StatusUpdate(nowD: StatusData) extends EagerGatewayMessage[StatusData] {
-  override def op: GatewayOpCode                = GatewayOpCode.StatusUpdate
-  override def dataEncoder: Encoder[StatusData] = Encoder[StatusData]
+  override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
 
 /**
@@ -165,8 +156,7 @@ case class VoiceStateUpdateData(
   * Sent by the bot to connect to a voice channel.
   */
 case class VoiceStateUpdate(nowD: VoiceStateUpdateData) extends EagerGatewayMessage[VoiceStateUpdateData] {
-  override def op: GatewayOpCode                          = GatewayOpCode.VoiceStateUpdate
-  override def dataEncoder: Encoder[VoiceStateUpdateData] = Encoder[VoiceStateUpdateData]
+  override def op: GatewayOpCode = GatewayOpCode.VoiceStateUpdate
 }
 
 /**
@@ -176,8 +166,7 @@ case class VoiceStateUpdate(nowD: VoiceStateUpdateData) extends EagerGatewayMess
   */
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
 case class VoiceServerUpdate(nowD: VoiceServerUpdateData) extends EagerGatewayMessage[VoiceServerUpdateData] {
-  override def op: GatewayOpCode                           = GatewayOpCode.VoiceServerPing
-  override def dataEncoder: Encoder[VoiceServerUpdateData] = Encoder[VoiceServerUpdateData]
+  override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
 }
 
 /**
@@ -191,17 +180,15 @@ case class ResumeData(token: String, sessionId: String, seq: Int)
   * Sent by the shard instead of [[Identify]] when resuming a connection.
   */
 case class Resume(nowD: ResumeData) extends EagerGatewayMessage[ResumeData] {
-  override def op: GatewayOpCode                = GatewayOpCode.Resume
-  override def dataEncoder: Encoder[ResumeData] = Encoder[ResumeData]
+  override def op: GatewayOpCode = GatewayOpCode.Resume
 }
 
 /**
   * Sent by the gateway to indicate that the shard should reconnect.
   */
 case object Reconnect extends EagerGatewayMessage[NotUsed] {
-  override def op: GatewayOpCode             = GatewayOpCode.Reconnect
-  override def nowD: NotUsed                 = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op: GatewayOpCode = GatewayOpCode.Reconnect
+  override def nowD: NotUsed     = NotUsed
 }
 
 /**
@@ -214,18 +201,20 @@ case object Reconnect extends EagerGatewayMessage[NotUsed] {
   */
 case class RequestGuildMembersData(
     guildId: Either[Seq[GuildId], GuildId],
-    query: String = "",
+    query: Option[String] = None,
     limit: Int = 0,
     presences: Boolean = false,
-    userIds: Option[Seq[UserId]]
-)
+    userIds: Option[Seq[UserId]],
+    nonce: Option[String]
+) {
+  require(query.isDefined || userIds.isDefined, "Neither query not userIds is specified")
+}
 
 /**
   * Sent by the shard to receive all the members of a guild, even logged out ones.
   */
 case class RequestGuildMembers(nowD: RequestGuildMembersData) extends EagerGatewayMessage[RequestGuildMembersData] {
-  override def op: GatewayOpCode                             = GatewayOpCode.RequestGuildMembers
-  override def dataEncoder: Encoder[RequestGuildMembersData] = Encoder[RequestGuildMembersData]
+  override def op: GatewayOpCode = GatewayOpCode.RequestGuildMembers
 }
 
 /**
@@ -233,9 +222,8 @@ case class RequestGuildMembers(nowD: RequestGuildMembersData) extends EagerGatew
   * @param resumable If the connection is resumable.
   */
 case class InvalidSession(resumable: Boolean) extends EagerGatewayMessage[Boolean] {
-  override def op: GatewayOpCode             = GatewayOpCode.InvalidSession
-  override def nowD: Boolean                 = resumable
-  override def dataEncoder: Encoder[Boolean] = Encoder[Boolean]
+  override def op: GatewayOpCode = GatewayOpCode.InvalidSession
+  override def nowD: Boolean     = resumable
 }
 
 /**
@@ -248,25 +236,22 @@ case class HelloData(heartbeatInterval: Int)
   * Sent by the gateway as a response to [[Identify]]
   */
 case class Hello(nowD: HelloData) extends EagerGatewayMessage[HelloData] {
-  override def op: GatewayOpCode               = GatewayOpCode.Hello
-  override def dataEncoder: Encoder[HelloData] = Encoder[HelloData]
+  override def op: GatewayOpCode = GatewayOpCode.Hello
 }
 
 /**
   * Sent by the gateway as a response to [[Heartbeat]].
   */
 case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
-  override def op: GatewayOpCode             = GatewayOpCode.HeartbeatACK
-  override def nowD: NotUsed                 = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
+  override def nowD: NotUsed     = NotUsed
 }
 
 /**
   * All unknown gateway messages.
   */
 case class UnknownGatewayMessage(op: GatewayOpCode) extends EagerGatewayMessage[NotUsed] {
-  override def nowD: NotUsed                 = NotUsed
-  override def dataEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
+  override def nowD: NotUsed = NotUsed
 }
 
 /**
@@ -299,7 +284,7 @@ object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnumWithUnknown
   * Base trait for all gateway events.
   * @tparam D The data this event carries.
   */
-sealed trait GatewayEvent[D] {
+sealed trait GatewayEvent[+D] {
 
   /**
     * The name of this event.
@@ -314,7 +299,7 @@ sealed trait GatewayEvent[D] {
   /**
     * The data carried by this event.
     */
-  def data: Later[Decoder.Result[D]]
+  def data: Eval[Either[DecodingFailure, D]]
 
   /**
     * Maps the data in this event without evaluating it.
@@ -612,8 +597,11 @@ object GatewayEvent {
   case class GuildMemberChunkData(
       guildId: GuildId,
       members: Seq[RawGuildMember],
+      chunkIndex: Int,
+      chunkCount: Int,
       notFound: Option[Seq[UserId]],
-      presences: Option[Seq[RawPresence]]
+      presences: Option[Seq[RawPresence]],
+      nonce: Option[String]
   )
 
   /**

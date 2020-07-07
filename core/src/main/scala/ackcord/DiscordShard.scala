@@ -45,14 +45,12 @@ object DiscordShard {
   sealed trait Command
 
   case class Parameters(
-      gatewayUri: Uri,
-      settings: GatewaySettings,
-      cache: Cache,
-      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
-      cacheTypeRegistry: Logger => CacheTypeRegistry,
-      context: ActorContext[Command],
-      timers: TimerScheduler[Command],
-      log: Logger
+                         gatewayUri: Uri,
+                         settings: GatewaySettings,
+                         events: Events,
+                         context: ActorContext[Command],
+                         timers: TimerScheduler[Command],
+                         log: Logger
   )
 
   case class State(
@@ -65,32 +63,25 @@ object DiscordShard {
     * The core actor that controls all the other used actors of AckCord
     * @param wsUri The gateway websocket uri
     * @param settings The settings to use
-    * @param cache The cache to use for this shard
-    * @param ignoredEvents The events that the cache will completely ignore.
-    *                      EXPERIMENTAL: Not completely tested and may produce bugs.
-    * @param cacheTypeRegistry Provides a more fine grained way to ignore certain
-    *                          parts of events based on the data being updated or deleted.
-    *                          EXPERIMENTAL: Not completely tested, and may
-    *                          break your bot.
+    * @param events The events instance to use for this shard
     */
   def apply(
       wsUri: Uri,
       settings: GatewaySettings,
-      cache: Cache,
-      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
-      cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+      events: Events
   ): Behavior[Command] = Behaviors.setup { context =>
     Behaviors.withTimers { timers =>
       val log = context.log
+
       val gatewayHandler = context.spawn(
-        GatewayHandlerCache(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+        GatewayHandler(wsUri, settings, events.gatewayClientConnection),
         "GatewayHandler"
       )
 
       context.watchWith(gatewayHandler, GatewayHandlerTerminated)
 
       shard(
-        Parameters(wsUri, settings, cache, ignoredEvents, cacheTypeRegistry, context, timers, log),
+        Parameters(wsUri, settings, events, context, timers, log),
         State(gatewayHandler)
       )
     }
@@ -122,7 +113,7 @@ object DiscordShard {
 
       case CreateGateway =>
         val newGatewayHandler = context.spawn(
-          GatewayHandlerCache(gatewayUri, settings, cache, ignoredEvents, cacheTypeRegistry(log), log, context.system),
+          GatewayHandler(gatewayUri, settings, events.gatewayClientConnection),
           "GatewayHandler"
         )
         newGatewayHandler ! GatewayLogin
@@ -145,16 +136,12 @@ object DiscordShard {
       wsUri: Uri,
       shardTotal: Int,
       settings: GatewaySettings,
-      cache: Cache,
-      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
-      cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default
+      events: Events
   ): Seq[Behavior[Command]] = for (i <- 0 until shardTotal) yield {
     apply(
       wsUri,
       settings.copy(shardTotal = shardTotal, shardNum = i),
-      cache,
-      ignoredEvents,
-      cacheTypeRegistry
+      events
     )
   }
 

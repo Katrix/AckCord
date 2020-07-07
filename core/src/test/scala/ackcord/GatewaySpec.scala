@@ -42,8 +42,11 @@ object MockedGatewayHandler {
     GatewayHandler(
       Uri./,
       settings,
-      Source.maybe[GatewayMessage[_]].mapMaterializedValue(_ => NotUsed),
-      Sink.ignore.mapMaterializedValue(_ => NotUsed),
+      Flow
+        .fromSinkAndSourceCoupled(
+          Sink.ignore.mapMaterializedValue(_ => NotUsed),
+          Source.maybe[GatewayMessage[_]].mapMaterializedValue(_ => NotUsed)
+        ),
       testingWsFlow(gateway)
     )
 
@@ -51,7 +54,7 @@ object MockedGatewayHandler {
       wsUri: Uri,
       parameters: GatewayHandler.Parameters,
       state: GatewayHandler.State
-  ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     implicit val system: ActorSystem[Nothing] = parameters.context.system
     val response                              = ValidUpgrade(HttpResponse(), None)
 

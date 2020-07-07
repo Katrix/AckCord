@@ -157,16 +157,14 @@ package object gateway {
       */
     val DirectMessageTyping: GatewayIntents = GatewayIntents(1 << 14)
 
-    val AllWithoutPresences: GatewayIntents = GatewayIntents(
+    val AllNonPrivileged: GatewayIntents = GatewayIntents(
       Guilds,
-      GuildMembers,
       GuildBans,
       GuildEmojis,
       GuildIntegrations,
       GuildWebhooks,
       GuildInvites,
       GuildVoiceStates,
-      GuildPresences,
       GuildMessages,
       GuildMessageReactions,
       GuildMessageTyping,
@@ -174,7 +172,7 @@ package object gateway {
       DirectMessagesReactions,
       DirectMessageTyping
     )
-    val All: GatewayIntents = GatewayIntents(AllWithoutPresences, GuildPresences)
+    val All: GatewayIntents = GatewayIntents(AllNonPrivileged, GuildMembers, GuildPresences)
   }
   implicit class GatewayIntentsSyntax(private val intents: GatewayIntents) extends AnyVal {
 

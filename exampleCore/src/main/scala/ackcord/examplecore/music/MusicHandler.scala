@@ -35,7 +35,7 @@ import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
 import ackcord.syntax._
-import ackcord.{Cache, Requests, commands}
+import ackcord.{Events, Requests, commands}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
@@ -57,16 +57,16 @@ import org.slf4j.Logger
 object MusicHandler {
 
   case class Parameters(
-      helper: Requests,
-      cache: Cache,
-      context: ActorContext[Command],
-      log: Logger,
-      player: AudioPlayer,
-      msgQueue: SourceQueueWithComplete[Request[RawMessage]],
-      lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
+                         helper: Requests,
+                         events: Events,
+                         context: ActorContext[Command],
+                         log: Logger,
+                         player: AudioPlayer,
+                         msgQueue: SourceQueueWithComplete[Request[RawMessage]],
+                         lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: Requests, registerCmd: FunctionK[NewCommandsEntry, cats.Id], cache: Cache)(
+  def apply(requests: Requests, registerCmd: FunctionK[NewCommandsEntry, cats.Id], events: Events)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
@@ -101,12 +101,12 @@ object MusicHandler {
       inactive(
         Parameters(
           requests,
-          cache,
+          events,
           ctx,
           ctx.log,
           player,
           Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage]).run(),
-          ctx.spawn(LavaplayerHandler(player, guildId, cache), "LavaplayerHandler")
+          ctx.spawn(LavaplayerHandler(player, guildId, events), "LavaplayerHandler")
         ),
         None,
         None,

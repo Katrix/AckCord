@@ -67,7 +67,7 @@ case class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
-    intents: GatewayIntents = GatewayIntents.AllWithoutPresences,
+    intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     requestSettings: RequestSettings = RequestSettings(),
     cacheSettings: CacheSettings = CacheSettings()
@@ -89,7 +89,7 @@ case class ClientSettings(
   implicit val executionContext: ExecutionContext = system.executionContext
 
   private def createClientWithShards(
-      shards: Cache => Seq[Behavior[DiscordShard.Command]]
+      shards: Events => Seq[Behavior[DiscordShard.Command]]
   )(implicit actorSystem: ActorSystem[Nothing]): Future[DiscordClientCore] = {
     val clientActor = actorSystem.systemActorOf(
       DiscordClientActor(shards, cacheSettings),
@@ -97,8 +97,8 @@ case class ClientSettings(
     )
 
     implicit val timeout: Timeout = Timeout(1.second)
-    clientActor.ask[DiscordClientActor.GetRatelimiterAndCacheReply](DiscordClientActor.GetRatelimiterAndCache).map {
-      case DiscordClientActor.GetRatelimiterAndCacheReply(ratelimiter, cache) =>
+    clientActor.ask[DiscordClientActor.GetRatelimiterAndEventsReply](DiscordClientActor.GetRatelimiterAndEvents).map {
+      case DiscordClientActor.GetRatelimiterAndEventsReply(ratelimiter, cache) =>
         val requests = requestSettings.toRequests(token, ratelimiter)
 
         new DiscordClientCore(
@@ -116,9 +116,7 @@ case class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGateway.flatMap { uri =>
-      createClientWithShards(cache =>
-        Seq(DiscordShard(uri, gatewaySettings, cache, cacheSettings.ignoredEvents, cacheSettings.cacheTypeRegistry))
-      )
+      createClientWithShards(events => Seq(DiscordShard(uri, gatewaySettings, events)))
     }
   }
 
@@ -132,7 +130,7 @@ case class ClientSettings(
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
       case (uri, receivedShardTotal) =>
         createClientWithShards(
-          DiscordShard.many(uri, receivedShardTotal, gatewaySettings, _, Nil, CacheTypeRegistry.default)
+          DiscordShard.many(uri, receivedShardTotal, gatewaySettings, _)
         )
     }
   }
@@ -177,7 +175,8 @@ case class RequestSettings(
   *                  snapshot is produced.
   * @param parallelism How many cache updates are constructed in parallel
   * @param cacheBufferSize Size of the buffer for the cache
-  * @param gatewayEventsBufferSize Size of the buffer for gateway events
+  * @param sendGatewayEventsBufferSize Size of the buffer for sending gateway events
+  * @param receiveGatewayEventsBufferSize Size of the buffer for receiving gateway events
   * @param ignoredEvents Events the cache will ignore. [[APIMessage]]s aren't
   *                      sent for these either.
   * @param cacheTypeRegistry     Gives you control over how entities in the cache
@@ -196,7 +195,8 @@ case class CacheSettings(
     processor: CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
     parallelism: Int = 4,
     cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
-    gatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+    receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
     ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
     cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default,
     partitionCacheByGuild: Boolean = false

@@ -74,15 +74,15 @@ object LavaplayerHandler {
   )
 
   case class Parameters(
-      player: AudioPlayer,
-      guildId: GuildId,
-      cache: Cache,
-      context: ActorContext[Command],
-      log: Logger
+                         player: AudioPlayer,
+                         guildId: GuildId,
+                         events: Events,
+                         context: ActorContext[Command],
+                         log: Logger
   )
 
-  def apply(player: AudioPlayer, guildId: GuildId, cache: Cache): Behavior[Command] =
-    Behaviors.setup(context => inactive(Parameters(player, guildId, cache, context, context.log), Idle))
+  def apply(player: AudioPlayer, guildId: GuildId, events: Events): Behavior[Command] =
+    Behaviors.setup(context => inactive(Parameters(player, guildId, events, context, context.log), Idle))
 
   private def soundProducer(toggle: AtomicBoolean, player: AudioPlayer) =
     Source.fromGraph(GraphDSL.create() { implicit b =>
@@ -174,7 +174,7 @@ object LavaplayerHandler {
         ),
         "VoiceHandler"
       )
-      val movedMonitor = context.spawn(MovedMonitor(cache, context.self), "MovedMonitor")
+      val movedMonitor = context.spawn(MovedMonitor(events, context.self), "MovedMonitor")
 
       log.debug("Music connecting")
       inactive(parameters, HasVoiceWs(voiceWs, voiceChannelId, sender, toggle, readyListenerActor, movedMonitor))
@@ -187,7 +187,7 @@ object LavaplayerHandler {
           GotVoiceData(m.sessionId, m.token, m.endpoint, m.userId)
         }
         val negotiator =
-          context.spawn(VoiceServerNegotiator(guildId, vChannelId, cache, adaptedSelf), "ServerNegotiator")
+          context.spawn(VoiceServerNegotiator(guildId, vChannelId, events, adaptedSelf), "ServerNegotiator")
 
         inactive(parameters, Connecting(vChannelId, replyTo, negotiator))
 
@@ -233,7 +233,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(cache.gatewayPublish)
+          .runWith(events.sendGatewayPublish)
 
         inactive(parameters, Idle)
 
@@ -245,7 +245,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(cache.gatewayPublish)
+          .runWith(events.sendGatewayPublish)
 
         inactive(parameters, Idle)
 
@@ -328,7 +328,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(cache.gatewayPublish)
+          .runWith(events.sendGatewayPublish)
 
         log.debug("Left voice channel")
         inactive(parameters, Idle)

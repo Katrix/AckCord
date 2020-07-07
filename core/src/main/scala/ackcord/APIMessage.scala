@@ -194,7 +194,15 @@ object APIMessage {
     * @param guild The guild requested for.
     * @param members The guild members in this chunk.
     */
-  case class GuildMembersChunk(guild: Guild, members: Seq[GuildMember], cache: CacheState) extends GuildMessage
+  case class GuildMembersChunk(
+      guild: Guild,
+      members: Seq[GuildMember],
+      chunkIndex: Int,
+      chunkCount: Int,
+      notFound: Option[Seq[UserId]],
+      nonce: Option[String],
+      cache: CacheState
+  ) extends GuildMessage
 
   /**
     * Sent to the client when a new role is created.

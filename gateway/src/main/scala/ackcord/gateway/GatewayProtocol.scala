@@ -27,14 +27,17 @@ import java.time.OffsetDateTime
 
 import ackcord.data._
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
-import akka.NotUsed
 import cats.Later
-import cats.syntax.either._
 import io.circe.syntax._
 import io.circe.{derivation, _}
 
 //noinspection NameBooleanParameters
 object GatewayProtocol extends DiscordProtocol {
+
+  implicit val gatewayIntentsCodec: Codec[GatewayIntents] = Codec.from(
+    Decoder[Int].emap(i => Right(GatewayIntents.fromInt(i))),
+    Encoder[Int].contramap(_.toInt)
+  )
 
   implicit val readyDataCodec: Codec[GatewayEvent.ReadyData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -102,11 +105,12 @@ object GatewayProtocol extends DiscordProtocol {
         c
           .get[GuildId]("guild_id")
           .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
-      query     <- c.get[String]("query")
+      query     <- c.get[Option[String]]("query")
       limit     <- c.get[Int]("limit")
       presences <- c.get[Boolean]("presences")
       userIds   <- c.get[Option[Seq[UserId]]]("user_ids")
-    } yield RequestGuildMembersData(guildId, query, limit, presences, userIds)
+      nonce     <- c.get[Option[String]]("nonce")
+    } yield RequestGuildMembersData(guildId, query, limit, presences, userIds, nonce)
 
   implicit val helloDataCodec: Codec[HelloData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -221,14 +225,32 @@ object GatewayProtocol extends DiscordProtocol {
     )
   }
 
-  implicit def wsMessageEncoder[D]: Encoder[GatewayMessage[D]] =
-    (a: GatewayMessage[D]) =>
+  implicit val wsMessageEncoder: Encoder[GatewayMessage[_]] = {
+    case dispatch: Dispatch[_] => encodeDispatch(dispatch)
+    case a =>
+      val d = a match {
+        case Heartbeat(d)              => JsonSome(d.asJson)
+        case Identify(d)               => JsonSome(d.asJson)
+        case StatusUpdate(d)           => JsonSome(d.asJson)
+        case VoiceStateUpdate(d)       => JsonSome(d.asJson)
+        case VoiceServerUpdate(d)      => JsonSome(d.asJson)
+        case Resume(d)                 => JsonSome(d.asJson)
+        case Reconnect                 => JsonUndefined
+        case RequestGuildMembers(d)    => JsonSome(d.asJson)
+        case InvalidSession(resumable) => JsonSome(resumable.asJson)
+        case Hello(d)                  => JsonSome(d.asJson)
+        case HeartbeatACK              => JsonUndefined
+        case UnknownGatewayMessage(_)  => JsonUndefined
+        case d @ Dispatch(_, _)        => sys.error("impossible")
+      }
+
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
-        "d"  -> JsonSome(a.dataEncoder(a.d.value.toTry.get)),
+        "d"  -> d,
         "s"  -> a.s.map(_.asJson),
         "t"  -> a.t.map(_.name.asJson)
       )
+  }
 
   implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
     val dCursor = c.downField("d")
@@ -253,6 +275,15 @@ object GatewayProtocol extends DiscordProtocol {
     }
   }
 
+  private def encodeDispatch[D](dispatch: Dispatch[D]): Json = {
+    JsonOption.removeUndefinedToObj(
+      "op" -> JsonSome(dispatch.op.asJson),
+      "d"  -> JsonSome(dispatch.event.rawData),
+      "s"  -> dispatch.s.map(_.asJson),
+      "t"  -> dispatch.t.map(_.name.asJson)
+    )
+  }
+
   private def decodeDispatch(c: HCursor): Decoder.Result[Dispatch[_]] = {
     val dC = c.downField("d")
 
@@ -265,9 +296,8 @@ object GatewayProtocol extends DiscordProtocol {
 
         c.get[String]("t")
           .flatMap {
-            case "READY" => createDispatch(GatewayEvent.Ready)
-            case "RESUMED" =>
-              Right(Dispatch(seq, GatewayEvent.Resumed(c.value))((_: NotUsed) => Json.obj()))
+            case "READY"                         => createDispatch(GatewayEvent.Ready)
+            case "RESUMED"                       => Right(Dispatch(seq, GatewayEvent.Resumed(c.value)))
             case "CHANNEL_CREATE"                => createDispatch(GatewayEvent.ChannelCreate)
             case "CHANNEL_UPDATE"                => createDispatch(GatewayEvent.ChannelUpdate)
             case "CHANNEL_DELETE"                => createDispatch(GatewayEvent.ChannelDelete)

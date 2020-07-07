@@ -23,7 +23,7 @@
  */
 package ackcord.lavaplayer
 
-import ackcord.{APIMessage, Cache}
+import ackcord.{APIMessage, Events}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.Keep
@@ -33,13 +33,13 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 private[lavaplayer] object MovedMonitor {
 
   private[lavaplayer] def apply(
-      cache: Cache,
-      handler: ActorRef[LavaplayerHandler.Command]
+                                 events: Events,
+                                 handler: ActorRef[LavaplayerHandler.Command]
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
       implicit val system: ActorSystem[Nothing] = ctx.system
 
-      val killSwitch = cache.subscribeAPI
+      val killSwitch = events.subscribeAPI
         .collectType[APIMessage.VoiceStateUpdate]
         .viaMat(KillSwitches.single)(Keep.right)
         .to(

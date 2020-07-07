@@ -305,7 +305,7 @@ object CacheHandlers {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberChunkData, registry: CacheTypeRegistry)(
           implicit log: Logger
       ): Unit = {
-        val GuildMemberChunkData(guildId, newRawMembers, _, rawPresencesOpt) = obj
+        val GuildMemberChunkData(guildId, newRawMembers, _, _, _, rawPresencesOpt, _) = obj
 
         if (registry.hasUpdater[GuildMember]) {
           //We update he so that we only need one lookup for the guild and can quickly create the new member map

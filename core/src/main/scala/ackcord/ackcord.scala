@@ -32,6 +32,9 @@ import cats.{Alternative, Contravariant, Functor, MonadError}
 
 package object ackcord {
 
+  val Cache: Events.type = Events
+  type Cache = Events
+
   val Requests: requests.Requests.type = requests.Requests
   type Requests = requests.Requests
 

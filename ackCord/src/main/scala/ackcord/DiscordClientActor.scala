@@ -36,39 +36,51 @@ import akka.actor.typed.scaladsl.adapter._
 import akka.pattern.gracefulStop
 
 class DiscordClientActor(
-    ctx: ActorContext[DiscordClientActor.Command],
-    shardBehaviors: Cache => Seq[Behavior[DiscordShard.Command]],
-    cacheSettings: CacheSettings
+                          ctx: ActorContext[DiscordClientActor.Command],
+                          shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
+                          cacheSettings: CacheSettings
 ) extends AbstractBehavior[DiscordClientActor.Command](ctx) {
   import DiscordClientActor._
   implicit val system: ActorSystem[Nothing] = context.system
   import system.executionContext
 
-  val cache: Cache = if (cacheSettings.partitionCacheByGuild) {
-    Cache.createGuildCache(
+  val events: Events = if (cacheSettings.partitionCacheByGuild) {
+    Events.createGuildCache(
       context.spawn(
         CacheStreams.guildCacheBehavior(CacheStreams.emptyStartingCache(cacheSettings.processor)),
         "GuildCacheHandler"
       ),
       cacheSettings.parallelism,
+      cacheSettings.ignoredEvents,
+      cacheSettings.cacheTypeRegistry,
+      maxBatch = 1,
+      batchCostFun = _ => 1,
+      convertGatewayEventsToApiMessages = true,
       cacheSettings.cacheBufferSize,
-      cacheSettings.gatewayEventsBufferSize
+      cacheSettings.sendGatewayEventsBufferSize,
+      cacheSettings.receiveGatewayEventsBufferSize
     )
   } else {
-    Cache.create(
+    Events.create(
       cacheSettings.processor,
       cacheSettings.parallelism,
+      cacheSettings.ignoredEvents,
+      cacheSettings.cacheTypeRegistry,
+      maxBatch = 1,
+      batchCostFun = _ => 1,
+      convertGatewayEventsToApiMessages = true,
       cacheSettings.cacheBufferSize,
-      cacheSettings.gatewayEventsBufferSize
+      cacheSettings.sendGatewayEventsBufferSize,
+      cacheSettings.receiveGatewayEventsBufferSize
     )
   }
 
   val shards: Seq[ActorRef[DiscordShard.Command]] =
-    shardBehaviors(cache).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
+    shardBehaviors(events).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
 
   var shardShutdownManager: ActorRef[DiscordShard.StopShard.type] = _
 
-  val musicManager: ActorRef[MusicManager.Command] = context.spawn(MusicManager(cache), "MusicManager")
+  val musicManager: ActorRef[MusicManager.Command] = context.spawn(MusicManager(events), "MusicManager")
 
   val rateLimiter: ActorRef[Ratelimiter.Command] = context.spawn(Ratelimiter(), "Ratelimiter")
 
@@ -99,11 +111,11 @@ class DiscordClientActor(
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
-      case DiscordClientActor.Login        => login()
-      case Logout(timeout, replyTo)        => replyTo ! LogoutReply(logout(timeout))
-      case GetShards(replyTo)              => replyTo ! GetShardsReply(shards)
-      case GetMusicManager(replyTo)        => replyTo ! GetMusicManagerReply(musicManager)
-      case GetRatelimiterAndCache(replyTo) => replyTo ! GetRatelimiterAndCacheReply(rateLimiter, cache)
+      case DiscordClientActor.Login         => login()
+      case Logout(timeout, replyTo)         => replyTo ! LogoutReply(logout(timeout))
+      case GetShards(replyTo)               => replyTo ! GetShardsReply(shards)
+      case GetMusicManager(replyTo)         => replyTo ! GetMusicManagerReply(musicManager)
+      case GetRatelimiterAndEvents(replyTo) => replyTo ! GetRatelimiterAndEventsReply(rateLimiter, events)
     }
 
     Behaviors.same
@@ -111,20 +123,20 @@ class DiscordClientActor(
 }
 object DiscordClientActor {
   def apply(
-      shardBehaviors: Cache => Seq[Behavior[DiscordShard.Command]],
-      cacheSettings: CacheSettings
+             shardBehaviors: Events => Seq[Behavior[DiscordShard.Command]],
+             cacheSettings: CacheSettings
   ): Behavior[Command] = Behaviors.setup(ctx => new DiscordClientActor(ctx, shardBehaviors, cacheSettings))
 
   sealed trait Command
 
-  case object Login                                                                 extends Command
-  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply])        extends Command
-  case class GetShards(replyTo: ActorRef[GetShardsReply])                           extends Command
-  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])               extends Command
-  case class GetRatelimiterAndCache(replyTo: ActorRef[GetRatelimiterAndCacheReply]) extends Command
+  case object Login                                                                   extends Command
+  case class Logout(timeout: FiniteDuration, replyTo: ActorRef[LogoutReply])          extends Command
+  case class GetShards(replyTo: ActorRef[GetShardsReply])                             extends Command
+  case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])                 extends Command
+  case class GetRatelimiterAndEvents(replyTo: ActorRef[GetRatelimiterAndEventsReply]) extends Command
 
   case class LogoutReply(done: Future[Boolean])
   case class GetShardsReply(shards: Seq[ActorRef[DiscordShard.Command]])
   case class GetMusicManagerReply(musicManager: ActorRef[MusicManager.Command])
-  case class GetRatelimiterAndCacheReply(ratelimiter: ActorRef[Ratelimiter.Command], cache: Cache)
+  case class GetRatelimiterAndEventsReply(ratelimiter: ActorRef[Ratelimiter.Command], events: Events)
 }

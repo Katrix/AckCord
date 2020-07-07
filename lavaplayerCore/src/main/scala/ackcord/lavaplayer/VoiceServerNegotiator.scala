@@ -26,7 +26,7 @@ package ackcord.lavaplayer
 
 import ackcord.data.{GuildId, UserId, VoiceGuildChannelId}
 import ackcord.gateway.{GatewayMessage, VoiceStateUpdate, VoiceStateUpdateData}
-import ackcord.{APIMessage, Cache}
+import ackcord.{APIMessage, Events}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.{Keep, Source}
@@ -36,10 +36,10 @@ import akka.stream.{KillSwitches, UniqueKillSwitch}
 object VoiceServerNegotiator {
 
   def apply(
-      guildId: GuildId,
-      voiceChannelId: VoiceGuildChannelId,
-      cache: Cache,
-      replyTo: ActorRef[GotVoiceData]
+             guildId: GuildId,
+             voiceChannelId: VoiceGuildChannelId,
+             events: Events,
+             replyTo: ActorRef[GotVoiceData]
   ): Behavior[Command] = Behaviors.setup { ctx =>
     implicit val system: ActorSystem[Nothing] = ctx.system
 
@@ -48,9 +48,9 @@ object VoiceServerNegotiator {
         VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(voiceChannelId), selfMute = false, selfDeaf = false))
           .asInstanceOf[GatewayMessage[Any]]
       )
-      .runWith(cache.gatewayPublish)
+      .runWith(events.sendGatewayPublish)
 
-    val killSwitch = cache.subscribeAPI
+    val killSwitch = events.subscribeAPI
       .collect {
         case state: APIMessage.VoiceStateUpdate   => state
         case server: APIMessage.VoiceServerUpdate => server

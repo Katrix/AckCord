@@ -48,8 +48,7 @@ object GatewayHandler {
   private[ackcord] case class Parameters(
       rawWsUri: Uri,
       settings: GatewaySettings,
-      source: Source[GatewayMessage[_], NotUsed],
-      sink: Sink[Dispatch[_], NotUsed],
+      handlerFlow: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed],
       context: ActorContext[Command],
       timers: TimerScheduler[Command],
       log: Logger
@@ -66,25 +65,23 @@ object GatewayHandler {
       Uri,
       Parameters,
       State
-  ) => Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])]
+  ) => Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])]
 
   /**
     * Responsible for normal websocket communication with Discord.
     * Some REST messages can't be sent until this has authenticated.
     * @param rawWsUri The raw uri to connect to without params
     * @param settings The settings to use.
-    * @param source A source of gateway messages.
-    * @param sink A sink which will be sent all the dispatches of the gateway.
+    * @param handlerFlow A flow that sends messages to the gateway, and handles received messages.
     */
   def apply(
       rawWsUri: Uri,
       settings: GatewaySettings,
-      source: Source[GatewayMessage[_], NotUsed],
-      sink: Sink[Dispatch[_], NotUsed],
+      handlerFlow: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed],
       wsFlow: WsFlowFunc = defaultWsFlow
   ): Behavior[Command] = Behaviors.setup { context =>
     Behaviors.withTimers { timers =>
-      inactive(Parameters(rawWsUri, settings, source, sink, context, timers, context.log), State(), wsFlow)
+      inactive(Parameters(rawWsUri, settings, handlerFlow, context, timers, context.log), State(), wsFlow)
     }
   }
 
@@ -92,7 +89,7 @@ object GatewayHandler {
       wsUri: Uri,
       parameters: Parameters,
       state: State
-  ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
+  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
     GatewayHandlerGraphStage.flow(wsUri, parameters.settings, state.resume)(parameters.context.system)
 
   private def retryLogin(
@@ -126,16 +123,17 @@ object GatewayHandler {
         case Login =>
           log.info("Logging in")
 
-          val (switch, (wsUpgrade, newResumeData)) = source
-            .viaMat(KillSwitches.single)(Keep.right)
-            .viaMat(wsFlow(wsUri, parameters, state))(Keep.both)
-            .toMat(sink)(Keep.left)
-            .addAttributes(ActorAttributes.supervisionStrategy { e =>
-              log.error("Error in stream", e)
-              Supervision.Resume
-            })
-            .named("GatewayWebsocket")
-            .run()
+          val (switch, (wsUpgrade, newResumeData)) =
+            Flow
+              .fromGraph(KillSwitches.single[GatewayMessage[_]])
+              .viaMat(wsFlow(wsUri, parameters, state))(Keep.both)
+              .join(handlerFlow)
+              .addAttributes(ActorAttributes.supervisionStrategy { e =>
+                log.error("Error in stream", e)
+                Supervision.Resume
+              })
+              .named("GatewayWebsocket")
+              .run()
 
           context.pipeToSelf(newResumeData) {
             case Success(value) => ConnectionDied(value)

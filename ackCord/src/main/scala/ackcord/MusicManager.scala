@@ -37,8 +37,8 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 object MusicManager {
 
   private[ackcord] def apply(
-      cache: Cache,
-      players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
+                              events: Events,
+                              players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
   ): Behavior[Command] = Behaviors.receive {
     case (ctx, ConnectToChannel(guildId, channelId, force, createPlayer, timeoutDur, replyTo)) =>
       implicit val timeout: Timeout             = Timeout(timeoutDur)
@@ -48,7 +48,7 @@ object MusicManager {
       val (usedPlayer, actor) = players.getOrElse(
         guildId, {
           val player = createPlayer()
-          (player, ctx.spawn(LavaplayerHandler(player, guildId, cache), guildId.asString))
+          (player, ctx.spawn(LavaplayerHandler(player, guildId, events), guildId.asString))
         }
       )
 
@@ -58,7 +58,7 @@ object MusicManager {
         case Failure(e) => replyTo ! GotError(e)
       }
 
-      apply(cache, players.updated(guildId, (usedPlayer, actor)))
+      apply(events, players.updated(guildId, (usedPlayer, actor)))
 
     case (_, DisconnectFromChannel(guildId, destroyPlayer)) =>
       players.get(guildId).foreach {
@@ -70,7 +70,7 @@ object MusicManager {
           }
       }
 
-      apply(cache, players - guildId)
+      apply(events, players - guildId)
 
     case (_, SetChannelPlaying(guildId, playing)) =>
       players.get(guildId).foreach {

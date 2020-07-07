@@ -41,19 +41,19 @@ import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
 import io.circe
-import io.circe.parser
+import io.circe.{Encoder, parser}
 import io.circe.syntax._
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
-    extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]], Future[
+    extends GraphStageWithMaterializedValue[FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]], Future[
       Option[ResumeData]
     ]] {
   val in: Inlet[GatewayMessage[_]]     = Inlet("GatewayHandlerGraphStage.in")
-  val dispatchOut: Outlet[Dispatch[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
+  val dispatchOut: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
 
   val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")
 
-  override def shape: FanOutShape2[GatewayMessage[_], GatewayMessage[_], Dispatch[_]] =
+  override def shape: FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]] =
     new FanOutShape2(in, out, dispatchOut)
 
   override def createLogicAndMaterializedValue(
@@ -100,7 +100,9 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       }
 
       override def onPush(): Unit = {
-        grab(in) match {
+        val event = grab(in)
+
+        event match {
           case Hello(data) => handleHello(data)
           case dispatch @ Dispatch(seq, event) =>
             resume = event match {
@@ -118,7 +120,6 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
                 } else null
             }
 
-            emit(dispatchOut, dispatch)
           case Heartbeat(_) => onTimer(HeartbeatTimerKey)
           case HeartbeatACK =>
             log.debug("Received HeartbeatACK")
@@ -127,6 +128,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case InvalidSession(resumable) => restart(resumable, 5.seconds)
           case _                         => //Ignore
         }
+
+        emit(dispatchOut, event)
 
         if (!hasBeenPulled(in)) pull(in)
       }
@@ -192,7 +195,7 @@ object GatewayHandlerGraphStage {
 
   def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem[Nothing]
-  ): Flow[GatewayMessage[_], Dispatch[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
@@ -256,15 +259,16 @@ object GatewayHandlerGraphStage {
     * Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]].
     */
   def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
-    val flow = Flow[GatewayMessage[_]].map { msg =>
-      msg match {
-        case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
-        case _                  =>
-      }
+    val flow = Flow[GatewayMessage[_]].map {
+      case msg: GatewayMessage[d] =>
+        msg match {
+          case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
+          case _                  =>
+        }
 
-      val json = msg.asJson.noSpaces
-      require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
-      TextMessage(json)
+        val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces
+        require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
+        TextMessage(json)
     }
 
     if (AckCordGatewaySettings().LogSentWs) flow.log("Sending payload", _.text) else flow

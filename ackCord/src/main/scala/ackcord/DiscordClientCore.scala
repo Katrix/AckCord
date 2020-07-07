@@ -37,14 +37,14 @@ import akka.util.Timeout
 import akka.NotUsed
 
 class DiscordClientCore(
-    val cache: Cache,
-    val requests: Requests,
-    actor: ActorRef[DiscordClientActor.Command]
+                         val events: Events,
+                         val requests: Requests,
+                         actor: ActorRef[DiscordClientActor.Command]
 ) extends DiscordClient {
   import requests.system
 
   val commands = new CommandConnector(
-    cache.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
+    events.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
     requests,
     requests.parallelism
   )
@@ -58,7 +58,7 @@ class DiscordClientCore(
       .addLogAndContinueFunction(
         EventRegistration
           .toSink(
-            cache.subscribeAPI
+            events.subscribeAPI
               .collect {
                 case m if handler(m.cache.current).isDefinedAt(m) => handler(m.cache.current)(m)
               }
@@ -73,7 +73,7 @@ class DiscordClientCore(
       .addLogAndContinueFunction(
         EventRegistration
           .withRegistration(
-            cache.subscribeAPI
+            events.subscribeAPI
               .collect {
                 case msg if listener.refineEvent(msg).isDefined => listener.refineEvent(msg).get
               }

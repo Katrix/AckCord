@@ -104,16 +104,16 @@ object RequestCacheUpdate {
     * objects in the cache. Note: This might fail to place the type in the
     * registry if there is no handler for it in the cache registry passed in.
     *
-    * @param cache The cache to place the objects in.
+    * @param events The events container to cache the objects in.
     * @param registry The cache registry to use for finding cache handlers.
     */
   def requestsProcessor[Data](
-      cache: Cache,
-      registry: CacheTypeRegistry
+                               events: Events,
+                               registry: CacheTypeRegistry
   ): Sink[(Request[Data], RequestAnswer[Data]), NotUsed] =
     Flow[(Request[Data], RequestAnswer[Data])]
       .collect {
         case (request, response: RequestResponse[Data]) => RequestCacheUpdate(response, request, registry)
       }
-      .to(cache.publish)
+      .to(events.publish)
 }

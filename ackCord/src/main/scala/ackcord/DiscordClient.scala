@@ -51,9 +51,12 @@ trait DiscordClient {
   def shards: Future[Seq[ActorRef[DiscordShard.Command]]]
 
   /**
-    * The cache used by the client
+    * Streams housing events and messages sent to and from Discord.
     */
-  def cache: Cache
+  def events: Events
+
+  @deprecated("Prefer events", since = "0.17")
+  def cache: Events = events
 
   /**
     * The global commands object used by the client

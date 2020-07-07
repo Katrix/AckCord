@@ -28,7 +28,7 @@ import scala.concurrent.duration._
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data.{GuildId, User, UserId}
 import ackcord.gateway.GatewayEvent.GuildDelete
-import ackcord.gateway.{Dispatch, GatewayEvent, GatewayMessage}
+import ackcord.gateway.{Dispatch, GatewayMessage}
 import ackcord.requests.SupervisionStreams
 import ackcord.util.GuildStreams
 import akka.NotUsed
@@ -179,17 +179,11 @@ object CacheStreams {
         ) ! GuildCacheEvent(event, respondTo)
 
         event match {
-          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event)) =>
-            //Two matches because Scala is stupid
-            (event: GatewayEvent[_]) match {
-              case event: GuildDelete =>
-                event.data.value.foreach { guild =>
-                  if (!guild.unavailable.getOrElse(false)) {
-                    guildHandlers.remove(guild.id)
-                  }
-                }
-
-              case _ =>
+          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event: GuildDelete)) =>
+            event.data.value.foreach { guild =>
+              if (!guild.unavailable.getOrElse(false)) {
+                guildHandlers.remove(guild.id)
+              }
             }
 
           case _ =>

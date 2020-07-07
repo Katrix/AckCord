@@ -54,7 +54,7 @@ case class GatewaySettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
-    intents: GatewayIntents = GatewayIntents.AllWithoutPresences
+    intents: GatewayIntents = GatewayIntents.AllNonPrivileged
 ) {
   activity.foreach(_.requireCanSend())
 }

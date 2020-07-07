@@ -23,60 +23,18 @@
  */
 package ackcord
 
-import scala.concurrent.Future
-
 import ackcord.cachehandlers._
 import ackcord.data.raw.RawBan
 import ackcord.data.{CreatedInvite, Guild, GuildChannel, GuildId, TextChannel, TextChannelId, TextGuildChannel}
-import ackcord.gateway.{Dispatch, GatewayEvent, GatewayHandler}
-import ackcord.requests.SupervisionStreams
+import ackcord.gateway.Dispatch
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
-import akka.actor.typed.{ActorSystem, Behavior}
-import akka.http.scaladsl.model.Uri
-import akka.stream.scaladsl.Flow
 import cats.Later
 import cats.syntax.all._
 import io.circe.{ACursor, CursorOp, Decoder, Json}
 import org.slf4j.Logger
 
-object GatewayHandlerCache {
-
-  def apply(
-      wsUri: Uri,
-      settings: GatewaySettings,
-      cache: Cache,
-      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
-      registry: CacheTypeRegistry,
-      log: Logger,
-      system: ActorSystem[Nothing],
-      maxBatch: Long = 1,
-      batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1
-  ): Behavior[GatewayHandler.Command] = {
-    import system.executionContext
-    val configSettings = AckCordGatewaySettings()(system)
-    val baseFlow: Flow[Dispatch[_], APIMessageCacheUpdate[_], NotUsed] = Flow[Dispatch[_]]
-      .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
-      .mapAsync(cache.parallelism)(dispatch =>
-        Future(eventToCacheUpdate(dispatch, registry, log, configSettings).toList)
-      )
-      .mapConcat(identity)
-
-    val flowWithBatching = if (maxBatch != 1) {
-      baseFlow
-        .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)((xs, update) =>
-          update.asInstanceOf[APIMessageCacheUpdate[Any]] :: xs.asInstanceOf[List[APIMessageCacheUpdate[Any]]]
-        )
-        .map(xs => BatchedAPIMessageCacheUpdate(xs.reverse))
-    } else
-      baseFlow.map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
-
-    val sink = SupervisionStreams.logAndContinue(
-      flowWithBatching.to(cache.publish)
-    )(system)
-
-    GatewayHandler(wsUri, settings, cache.gatewaySubscribe, sink)
-  }
+object CacheEventCreator {
 
   private object GetLazy {
     def unapply[A](later: Later[Decoder.Result[A]]): Option[A] = later.value.toOption
@@ -266,7 +224,17 @@ object GatewayHandlerCache {
               state =>
                 state.current
                   .getGuild(data.guildId)
-                  .map(g => api.GuildMembersChunk(g, data.members.map(_.toGuildMember(g.id)), state)),
+                  .map { g =>
+                    api.GuildMembersChunk(
+                      g,
+                      data.members.map(_.toGuildMember(g.id)),
+                      data.chunkIndex,
+                      data.chunkCount,
+                      data.notFound,
+                      data.nonce,
+                      state
+                    )
+                  },
               CacheHandlers.rawGuildMemberChunkUpdater,
               registry,
               dispatch

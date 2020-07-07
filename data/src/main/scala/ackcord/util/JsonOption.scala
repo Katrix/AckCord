@@ -69,7 +69,7 @@ sealed trait JsonOption[+A] {
 
   def toList[A1 >: A]: List[A]
 }
-case class JsonSome[A](value: A) extends JsonOption[A] {
+case class JsonSome[+A](value: A) extends JsonOption[A] {
   override def isNull: Boolean      = false
   override def isUndefined: Boolean = false
   override def isEmpty: Boolean     = false

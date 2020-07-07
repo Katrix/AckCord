@@ -31,16 +31,16 @@ object CoreCommands {
   /**
     * Create a new command handler using a cache.
     * @param settings The settings this handler should use.
-    * @param cache The cache to use for subscribing to created messages.
+    * @param events The events to use for subscribing to created messages.
     * @param requests A request helper object which will be passed to handlers.
     */
   def create(
-      settings: AbstractCommandSettings,
-      cache: Cache,
-      requests: Requests
+              settings: AbstractCommandSettings,
+              events: Events,
+              requests: Requests
   ): Commands = {
     import requests.system
-    Commands(CmdStreams.cmdStreams(settings, cache.subscribeAPI)._2, requests)
+    Commands(CmdStreams.cmdStreams(settings, events.subscribeAPI)._2, requests)
   }
 
   /**
