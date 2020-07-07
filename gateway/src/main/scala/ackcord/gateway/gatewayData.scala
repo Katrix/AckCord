@@ -112,7 +112,8 @@ case class IdentifyData(
     largeThreshold: Int,
     shard: Seq[Int],
     presence: StatusData,
-    guildSubscriptions: Boolean
+    guildSubscriptions: Boolean,
+    intents: GatewayIntents
 )
 object IdentifyData {
 
