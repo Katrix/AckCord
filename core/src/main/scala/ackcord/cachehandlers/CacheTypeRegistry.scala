@@ -41,8 +41,7 @@ class CacheTypeRegistry(
       tpe: String,
       data: => D,
       builder: CacheSnapshotBuilder
-  ): Unit =
-    getWithData[D, HandlerTpe](tpe, handlers).foreach(handler => handler.handle(builder, data, this)(log))
+  ): Unit = getWithData[D, HandlerTpe](tpe, handlers).foreach(handler => handler.handle(builder, data, this)(log))
 
   def updateData[D: ClassTag](builder: CacheSnapshotBuilder)(data: => D): Unit =
     handleWithData(updateHandlers, "updater", data, builder)
@@ -60,7 +59,7 @@ class CacheTypeRegistry(
       .orElse(handlers.find(_._1.isAssignableFrom(tag.runtimeClass)).map(_._2.asInstanceOf[HandlerTpe[D]]))
 
     if (res.isEmpty) {
-      log.debug(s"No $tpe found for ${tag.runtimeClass}")
+      log.debug(s"$tpe not found", new Exception(s"No $tpe found for ${tag.runtimeClass}"))
     }
 
     res
