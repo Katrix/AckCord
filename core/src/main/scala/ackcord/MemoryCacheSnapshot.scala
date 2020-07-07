@@ -26,6 +26,8 @@ package ackcord
 import java.time.temporal.ChronoUnit
 import java.time.{Instant, OffsetDateTime}
 
+import scala.concurrent.duration._
+
 import ackcord.CacheSnapshot.BotUser
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data._
@@ -80,7 +82,17 @@ object MemoryCacheSnapshot {
       else current(next, builder)
   }
 
-  lazy val defaultCacheProcessor: CacheProcessor = everyN(10, 10, cleanGarbage(30, 5))
+  lazy val defaultCacheProcessor: CacheProcessor = everyN(
+    10,
+    10,
+    cleanGarbage(
+      keepMessagesFor = 30.minutes,
+      keepTypedFor = 5.minutes,
+      minMessagesPerChannel = 20,
+      minMessages = 200,
+      alwaysKeep = Set.empty
+    )
+  )
 
   /**
     * A cache processor that will execute another processor every N cache updates.
@@ -102,25 +114,44 @@ object MemoryCacheSnapshot {
     * given time.
     * @param keepMessagesFor How long messages should be kept for
     * @param keepTypedFor How long typed notifications should be kept for
+    * @param alwaysKeep A set of messages that should never be removed from the cache
     */
-  def cleanGarbage(keepMessagesFor: Int, keepTypedFor: Int): CacheProcessor = (processor, builder) => {
-    val messagesCleanThreshold = OffsetDateTime.now().minusMinutes(keepMessagesFor)
-    val typedCleanThreshold    = Instant.now().minus(keepTypedFor, ChronoUnit.MINUTES)
+  def cleanGarbage(
+      keepMessagesFor: FiniteDuration,
+      keepTypedFor: FiniteDuration,
+      minMessagesPerChannel: Int,
+      minMessages: Int,
+      alwaysKeep: Set[MessageId]
+  ): CacheProcessor =
+    (processor, builder) => {
+      val messagesCleanThreshold = OffsetDateTime.now().minusMinutes(keepMessagesFor.toMinutes)
+      val typedCleanThreshold    = Instant.now().minus(keepTypedFor.toMinutes, ChronoUnit.MINUTES)
 
-    builder.messageMap = builder.messageMap.modifyOrRemove { (_, messageMap) =>
-      val newMap = messageMap.modifyOrRemove { (_, m) =>
-        Option.when(m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold))(m)
+      var totalMessages = 0
+
+      builder.messageMap = builder.messageMap.modifyOrRemove { (_, messageMap) =>
+        var channelMessages = 0
+
+        val newMap = messageMap.modifyOrRemove { (_, m) =>
+          totalMessages += 1
+          channelMessages += 1
+          Option.when(
+            m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold)
+              || alwaysKeep.contains(m.id)
+              || channelMessages < minMessagesPerChannel
+              || totalMessages < minMessages
+          )(m)
+        }
+
+        Option.when(newMap.nonEmpty)(newMap)
       }
 
-      Option.when(newMap.nonEmpty)(newMap)
+      builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
+        val newMap = typedMap.modifyOrRemove((_, i) => Option.when(i.isAfter(typedCleanThreshold))(i))
+
+        Option.when(newMap.nonEmpty)(newMap)
+      }
+
+      processor
     }
-
-    builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
-      val newMap = typedMap.modifyOrRemove((_, i) => Option.when(i.isAfter(typedCleanThreshold))(i))
-
-      Option.when(newMap.nonEmpty)(newMap)
-    }
-
-    processor
-  }
 }
