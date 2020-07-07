@@ -89,11 +89,17 @@ object CacheStreams {
   /**
     * A flow that creates [[APIMessage]]s from update events.
     */
-  def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
+  def createApiMessages(log: Logger): Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
-        case (APIMessageCacheUpdate(_, sendEvent, _, _, _), state) => sendEvent(state).toList
-        case (BatchedAPIMessageCacheUpdate(updates), state)        => updates.flatMap(_.sendEvent(state).toList)
+        case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
+          val event = sendEvent(state)
+          if(event.isEmpty) {
+            log.warn(s"Failed to create API message for ${d.event.getClass}")
+          }
+
+          event.toList
+        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state).toList)
       }
       .mapConcat(identity)
   }
