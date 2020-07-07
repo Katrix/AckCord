@@ -193,7 +193,7 @@ trait DiscordClient {
       force: Boolean = false,
       timeoutDur: FiniteDuration = 30.seconds
   ): Future[AudioPlayer] = {
-    implicit val timeout: Timeout                  = Timeout(timeoutDur)
+    implicit val timeout: Timeout = Timeout(timeoutDur)
 
     musicManager
       .flatMap(

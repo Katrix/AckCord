@@ -92,7 +92,7 @@ object CacheStreams {
     classOf[GatewayEvent.MessageReactionRemoveAll],
     classOf[GatewayEvent.MessageReactionRemoveEmoji],
     classOf[GatewayEvent.MessageDelete],
-    classOf[GatewayEvent.MessageDeleteBulk],
+    classOf[GatewayEvent.MessageDeleteBulk]
   )
 
   /**
@@ -104,10 +104,9 @@ object CacheStreams {
         case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
           val event = sendEvent(state)
           if (event.isEmpty) {
-            if(expectedFailedApiMessageCreation.contains(d.event.getClass)) {
+            if (expectedFailedApiMessageCreation.contains(d.event.getClass)) {
               log.debug(s"Failed to create API message for ${d.event.getClass}")
-            }
-            else {
+            } else {
               log.warn(s"Failed to create API message for ${d.event.getClass}")
             }
           }
