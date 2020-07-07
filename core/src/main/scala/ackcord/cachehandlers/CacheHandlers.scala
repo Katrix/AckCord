@@ -481,6 +481,9 @@ object CacheHandlers {
             updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry)
           }
         }
+        registry.getUpdater[User].foreach { updater =>
+          obj.member.foreach(rawMember => updater.handle(builder, rawMember.user, registry))
+        }
       }
     }
 
@@ -494,6 +497,9 @@ object CacheHandlers {
       )
       registry.getUpdater[GuildMember].foreach { updater =>
         obj.member.foreach(rawMember => updater.handle(builder, rawMember.toGuildMember(obj.guildId.get), registry))
+      }
+      registry.getUpdater[User].foreach { updater =>
+        obj.member.foreach(rawMember => updater.handle(builder, rawMember.user, registry))
       }
     }
   }
