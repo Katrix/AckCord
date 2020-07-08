@@ -24,6 +24,7 @@
 package ackcord.example
 
 import ackcord._
+import ackcord.gateway.GatewayIntents
 import ackcord.syntax._
 import cats.instances.future._
 
@@ -34,7 +35,7 @@ object MyBot extends App {
 
   require(args.nonEmpty, "Please provide a token")
   val token    = args.head
-  val settings = ClientSettings(token)
+  val settings = ClientSettings(token, intents = GatewayIntents.AllNonPrivileged)
   import settings.executionContext
 
   settings

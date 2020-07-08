@@ -28,6 +28,7 @@ import java.time.OffsetDateTime
 import ackcord.data._
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import cats.Later
+import cats.syntax.either._
 import io.circe.syntax._
 import io.circe.{derivation, _}
 

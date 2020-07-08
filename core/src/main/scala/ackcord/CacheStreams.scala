@@ -112,7 +112,7 @@ object CacheStreams {
           }
 
           event.toList
-        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state).toList)
+        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state).toList).toList
       }
       .mapConcat(identity)
   }

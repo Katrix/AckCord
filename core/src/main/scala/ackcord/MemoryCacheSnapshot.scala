@@ -31,7 +31,6 @@ import scala.concurrent.duration._
 import ackcord.CacheSnapshot.BotUser
 import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data._
-import ackcord.util.CoreCompat
 import shapeless.tag.@@
 
 /**
@@ -135,21 +134,22 @@ object MemoryCacheSnapshot {
         val newMap = messageMap.modifyOrRemove { (_, m) =>
           totalMessages += 1
           channelMessages += 1
-          Option.when(
+          if (
             m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold)
-              || alwaysKeep.contains(m.id)
-              || channelMessages < minMessagesPerChannel
-              || totalMessages < minMessages
-          )(m)
+            || alwaysKeep.contains(m.id)
+            || channelMessages < minMessagesPerChannel
+            || totalMessages < minMessages
+          ) Some(m)
+          else None
         }
 
-        Option.when(newMap.nonEmpty)(newMap)
+        if (newMap.nonEmpty) Some(newMap) else None
       }
 
       builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
-        val newMap = typedMap.modifyOrRemove((_, i) => Option.when(i.isAfter(typedCleanThreshold))(i))
+        val newMap = typedMap.modifyOrRemove((_, i) => if (i.isAfter(typedCleanThreshold)) Some(i) else None)
 
-        Option.when(newMap.nonEmpty)(newMap)
+        if (newMap.nonEmpty) Some(newMap) else None
       }
 
       processor

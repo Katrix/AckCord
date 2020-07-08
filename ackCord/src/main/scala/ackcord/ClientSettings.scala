@@ -63,7 +63,7 @@ case class ClientSettings(
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,
-    @deprecatedName("gameStatus", since = "0.17") activity: Option[RawActivity] = None,
+    @deprecatedName('gameStatus, since = "0.17") activity: Option[RawActivity] = None,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
