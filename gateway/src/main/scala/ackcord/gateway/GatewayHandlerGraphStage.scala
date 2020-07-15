@@ -140,7 +140,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       override def onUpstreamFinish(): Unit = {
         if (!resumePromise.isCompleted) {
-          resumePromise.success((Option(resume), false))
+          resumePromise.trySuccess((Option(resume), false))
         }
 
         super.onUpstreamFinish()
@@ -150,6 +150,12 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
         resumePromise.failure(ex)
         successullStartPromise.tryFailure(ex)
         super.onUpstreamFailure(ex)
+      }
+
+      override def onDownstreamFinish(cause: Throwable): Unit = {
+        if (!resumePromise.isCompleted) resumePromise.trySuccess((Option(resume), false))
+
+        super.onDownstreamFinish(cause)
       }
 
       override protected def onTimer(timerKey: Any): Unit = {
@@ -172,12 +178,10 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
-      override def onDownstreamFinish(cause: Throwable): Unit = {
-        if (!resumePromise.isCompleted) {
-          resumePromise.success((Option(resume), false))
-        }
-
-        super.onDownstreamFinish(cause)
+      override def postStop(): Unit = {
+        val e = new AbruptStageTerminationException(this)
+        if (!resumePromise.isCompleted) resumePromise.tryFailure(e)
+        if (!successullStartPromise.isCompleted) successullStartPromise.tryFailure(e)
       }
 
       setHandler(out, this)
@@ -212,14 +216,11 @@ object GatewayHandlerGraphStage {
 
         val wsMessages = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
 
-        //TODO: Make overflow strategy configurable
-        val buffer = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
-
         // format: OFF
 
-        msgFlowShape.out ~> buffer ~> wsHandlerShape.in
-                                      wsHandlerShape.out0 ~> wsMessages.in(1)
-        msgFlowShape.in                                   <~ wsMessages.out
+        msgFlowShape.out ~> wsHandlerShape.in
+                            wsHandlerShape.out0 ~> wsMessages.in(1)
+        msgFlowShape.in                         <~ wsMessages.out
 
         // format: ON
 
