@@ -105,7 +105,7 @@ object GatewayHandler {
       timers: TimerScheduler[Command],
       wsFlow: WsFlowFunc
   ): Behavior[Command] = {
-    if (state.retryCount < 5) {
+    if (state.retryCount < 8) {
       val backoffWaitTime =
         if (state.retryCount == 0) 0.seconds
         else Math.pow(2, state.retryCount).seconds
