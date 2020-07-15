@@ -23,6 +23,8 @@
  */
 package ackcord.gateway
 
+import java.util.concurrent.ThreadLocalRandom
+
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
@@ -65,7 +67,9 @@ object GatewayHandler {
       Uri,
       Parameters,
       State
-  ) => Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])]
+  ) => Flow[GatewayMessage[_], GatewayMessage[
+    _
+  ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])]
 
   /**
     * Responsible for normal websocket communication with Discord.
@@ -89,21 +93,85 @@ object GatewayHandler {
       wsUri: Uri,
       parameters: Parameters,
       state: State
-  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] =
+  ): Flow[GatewayMessage[_], GatewayMessage[
+    _
+  ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] =
     GatewayHandlerGraphStage.flow(wsUri, parameters.settings, state.resume)(parameters.context.system)
 
   private def retryLogin(
+      forceWait: Boolean,
       parameters: Parameters,
       state: State,
       timers: TimerScheduler[Command],
       wsFlow: WsFlowFunc
   ): Behavior[Command] = {
     if (state.retryCount < 5) {
-      //TODO: Guard against repeatedly sending identify and failing here. Ratelimits and that stuff
-      timers.startSingleTimer("RetryLogin", Login, 5.seconds)
+      val backoffWaitTime =
+        if (state.retryCount == 0) 0.seconds
+        else Math.pow(2, state.retryCount).seconds
+
+      val waitTime =
+        if (forceWait) Seq(ThreadLocalRandom.current().nextDouble(1, 5).seconds, backoffWaitTime).max
+        else backoffWaitTime
+
+      timers.startSingleTimer("RetryLogin", Login, waitTime)
       inactive(parameters, state.copy(killSwitch = None, retryCount = state.retryCount + 1), wsFlow)
     } else {
       throw new Exception("Max retry count exceeded")
+    }
+  }
+
+  private def handlePeerClosedConnection(
+      e: PeerClosedConnectionException,
+      parameters: Parameters,
+      state: State,
+      timers: TimerScheduler[Command],
+      wsFlow: WsFlowFunc,
+      log: Logger
+  ) = {
+    e.closeCode match {
+      //Unknown error
+      case 4000 =>
+        log.error("An unknown error happened in gateway. Reconnecting")
+        retryLogin(forceWait = false, parameters, state, timers, wsFlow)
+
+      //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
+      //Authenticate failed
+      case 4004 =>
+        log.error("Authentication failed to WS gateway. Stopping JVM")
+        sys.exit(-1)
+
+      //Invalid shard
+      case 4010 =>
+        log.error("Invalid shard passed to WS gateway. Stopping JVM")
+        sys.exit(-1)
+
+      //Sharding required
+      case 4011 =>
+        log.error("Sharding required to log into WS gateway. Stopping JVM")
+        sys.exit(-1)
+
+      // Invalid seq
+      case 4007 =>
+        log.warn("""|Tried to resume with an invalid seq. Likely a bug in AckCord. 
+                    |Submit a bug with a debug log on the issue tracker""".stripMargin)
+        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
+
+      //Session timed out
+      case 4009 =>
+        log.debug("""|Tried to resume with a timed out session""".stripMargin)
+        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
+
+      //Ratelimited
+      case 4008 =>
+        throw new GatewayRatelimitedException(e)
+
+      //Disallowed or invalid intents
+      case 4013 | 4014 =>
+        log.error("Invalid or disallow intents specified. Stopping JVM")
+        sys.exit(-1)
+
+      case _ => throw e
     }
   }
 
@@ -123,7 +191,7 @@ object GatewayHandler {
         case Login =>
           log.info("Logging in")
 
-          val (switch, (wsUpgrade, newResumeData)) =
+          val (switch, (wsUpgrade, newResumeData, loginSuccess)) =
             Flow
               .fromGraph(KillSwitches.single[GatewayMessage[_]])
               .viaMat(wsFlow(wsUri, parameters, state))(Keep.both)
@@ -136,8 +204,8 @@ object GatewayHandler {
               .run()
 
           context.pipeToSelf(newResumeData) {
-            case Success(value) => ConnectionDied(value)
-            case Failure(e)     => SendException(e)
+            case Success((resumeData, shouldWait)) => ConnectionDied(resumeData, shouldWait)
+            case Failure(e)                        => SendException(e)
           }
 
           context.pipeToSelf(wsUpgrade) {
@@ -145,56 +213,39 @@ object GatewayHandler {
             case Failure(e)     => SendException(e)
           }
 
+          context.pipeToSelf(loginSuccess) {
+            case Success(_) => ResetRetryCount
+            case Failure(e) => SendException(e)
+          }
+
           inactive(parameters, state.copy(killSwitch = Some(switch)), wsFlow)
 
         case UpgradeResponse(ValidUpgrade(response, _)) =>
           log.info("Valid login. Going to active. Response: {}", response.entity.toString)
           response.discardEntityBytes()
-          active(parameters, state.copy(retryCount = 0), wsFlow)
+          active(parameters, state, wsFlow)
 
         case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
           response.discardEntityBytes()
           shutdownStream(state)
           throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
 
+        case ResetRetryCount =>
+          log.debug("Managed to connect successfully, resetting retry count")
+          active(parameters, state.copy(retryCount = 0), wsFlow)
+
         case SendException(e: PeerClosedConnectionException) =>
-          e.closeCode match {
-            //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
-            //Authenticate failed
-            case 4004 =>
-              log.error("Authentication failed to WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //Invalid shard
-            case 4010 =>
-              log.error("Invalid shard passed to WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //
-            case 4011 =>
-              log.error("Sharding required to log into WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //Invalid seq when resuming or session timed out
-            case 4007 | 4009 =>
-              retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
-
-            case 4012 =>
-              log.error("Invalid intents specified. Stopping JVM")
-              sys.exit(-1)
-
-            case _ => throw e
-          }
+          handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
         case SendException(e) =>
           log.error("Websocket error. Retry count {}", retryCount, e)
           shutdownStream(state)
-          retryLogin(parameters, state, timers, wsFlow)
+          retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
-        case GatewayHandler.ConnectionDied(_) =>
+        case GatewayHandler.ConnectionDied(_, _) =>
           log.error("Connection died before starting. Retry count {}", retryCount)
           shutdownStream(state)
-          retryLogin(parameters, state, timers, wsFlow)
+          retryLogin(forceWait = false, parameters, state, timers, wsFlow)
 
         case Logout =>
           log.warn("Logged out before connection could be established. This is likely a bug")
@@ -213,7 +264,7 @@ object GatewayHandler {
 
     Behaviors
       .receiveMessage[Command] {
-        case ConnectionDied(newResume) =>
+        case ConnectionDied(newResume, waitBeforeRestart) =>
           if (shuttingDown) {
             log.info("Websocket connection completed. Stopping.")
             Behaviors.stopped
@@ -221,42 +272,20 @@ object GatewayHandler {
             shutdownStream(state)
 
             log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
-            retryLogin(parameters, state.copy(resume = newResume), timers, wsFlow)
+            retryLogin(waitBeforeRestart, parameters, state.copy(resume = newResume), timers, wsFlow)
           }
+
+        case ResetRetryCount =>
+          log.debug("Managed to connect successfully, resetting retry count")
+          active(parameters, state.copy(retryCount = 0), wsFlow)
 
         case SendException(e: PeerClosedConnectionException) =>
-          e.closeCode match {
-            //TODO: Maybe bubble up some of these errors up higher instead of stopping the JVM
-            //Authenticate failed
-            case 4004 =>
-              log.error("Authentication failed to WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //Invalid shard
-            case 4010 =>
-              log.error("Invalid shard passed to WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //
-            case 4011 =>
-              log.error("Sharding required to log into WS gateway. Stopping JVM")
-              sys.exit(-1)
-
-            //Invalid seq when resuming or session timed out
-            case 4007 | 4009 =>
-              retryLogin(parameters, state.copy(resume = None), timers, wsFlow)
-
-            case 4012 =>
-              log.error("Invalid intents specified. Stopping JVM")
-              sys.exit(-1)
-
-            case _ => throw e
-          }
+          handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
         case SendException(e) =>
           log.error("Websocket error. Retry count {}", retryCount, e)
           shutdownStream(state)
-          retryLogin(parameters, state, timers, wsFlow)
+          retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
         case Logout =>
           log.info("Shutting down")
@@ -288,7 +317,8 @@ object GatewayHandler {
     */
   case object Logout extends Command
 
-  private case class ConnectionDied(resume: Option[ResumeData])          extends Command
-  private case class UpgradeResponse(response: WebSocketUpgradeResponse) extends Command
-  private case class SendException(e: Throwable)                         extends Command
+  private case object ResetRetryCount                                                       extends Command
+  private case class ConnectionDied(resume: Option[ResumeData], waitBeforeRestart: Boolean) extends Command
+  private case class UpgradeResponse(response: WebSocketUpgradeResponse)                    extends Command
+  private case class SendException(e: Throwable)                                            extends Command
 }

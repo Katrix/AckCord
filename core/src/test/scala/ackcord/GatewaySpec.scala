@@ -54,7 +54,7 @@ object MockedGatewayHandler {
       wsUri: Uri,
       parameters: GatewayHandler.Parameters,
       state: GatewayHandler.State
-  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] = {
     implicit val system: ActorSystem[Nothing] = parameters.context.system
     val response                              = ValidUpgrade(HttpResponse(), None)
 
@@ -99,7 +99,7 @@ object MockedGatewayHandler {
     }
 
     Flow.fromGraph(graph)
-  }
+  }.mapMaterializedValue(t => (t._1, t._2._1, t._2._2))
 }
 
 object MockedGateway {

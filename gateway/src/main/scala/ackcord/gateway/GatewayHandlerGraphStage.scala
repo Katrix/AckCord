@@ -26,7 +26,6 @@ package ackcord.gateway
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 
-import ackcord.gateway.GatewayHandlerGraphStage.Restart
 import ackcord.gateway.GatewayProtocol._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
@@ -47,9 +46,7 @@ import io.circe.syntax._
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
     extends GraphStageWithMaterializedValue[
       FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]],
-      Future[
-        Option[ResumeData]
-      ]
+      (Future[(Option[ResumeData], Boolean)], Future[Unit])
     ] {
   val in: Inlet[GatewayMessage[_]]           = Inlet("GatewayHandlerGraphStage.in")
   val dispatchOut: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
@@ -61,21 +58,19 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
   override def createLogicAndMaterializedValue(
       inheritedAttributes: Attributes
-  ): (GraphStageLogic, Future[Option[ResumeData]]) = {
-    val promise = Promise[Option[ResumeData]]
+  ): (GraphStageLogic, (Future[(Option[ResumeData], Boolean)], Future[Unit])) = {
+    val resumePromise          = Promise[(Option[ResumeData], Boolean)]
+    val successullStartPromise = Promise[Unit]
 
     val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var resume: ResumeData = prevResume.orNull
       var receivedAck        = false
-      var restarting         = false
 
-      val HeartbeatTimerKey: String                    = "HeartbeatTimer"
-      def restartTimerKey(resumable: Boolean): Restart = Restart(resumable)
+      val HeartbeatTimerKey: String = "HeartbeatTimer"
 
-      def restart(resumable: Boolean, time: FiniteDuration): Unit = {
-        complete(out)
-        restarting = true
-        scheduleOnce(restartTimerKey(resumable), time)
+      def restart(resumable: Boolean, waitBeforeRestart: Boolean): Unit = {
+        resumePromise.success(if (resumable) (Some(resume), waitBeforeRestart) else (None, waitBeforeRestart))
+        completeStage()
       }
 
       def handleHello(data: HelloData): Unit = {
@@ -107,7 +102,13 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
         event match {
           case Hello(data) => handleHello(data)
-          case dispatch @ Dispatch(seq, event) =>
+          case Dispatch(seq, event) =>
+            event match {
+              case GatewayEvent.Ready(_, _) | GatewayEvent.Resumed(_) =>
+                successullStartPromise.success(())
+              case _ =>
+            }
+
             resume = event match {
               case GatewayEvent.Ready(_, readyData) =>
                 readyData.value match {
@@ -127,29 +128,27 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case HeartbeatACK =>
             log.debug("Received HeartbeatACK")
             receivedAck = true
-          case Reconnect                 => restart(resumable = true, 0.millis)
-          case InvalidSession(resumable) => restart(resumable, 5.seconds)
+          case Reconnect                 => restart(resumable = true, waitBeforeRestart = false)
+          case InvalidSession(resumable) => restart(resumable, waitBeforeRestart = true)
           case _                         => //Ignore
         }
 
         emit(dispatchOut, event)
 
-        if (!hasBeenPulled(in)) pull(in)
+        if (!hasBeenPulled(in) && !isClosed(in)) pull(in)
       }
 
       override def onUpstreamFinish(): Unit = {
-        if (!restarting) {
-          if (!promise.isCompleted) {
-            promise.success(Option(resume))
-          }
-
-          super.onUpstreamFinish()
+        if (!resumePromise.isCompleted) {
+          resumePromise.success((Option(resume), false))
         }
+
+        super.onUpstreamFinish()
       }
 
       override def onUpstreamFailure(ex: Throwable): Unit = {
-        promise.failure(ex)
-        println("UpFailure")
+        resumePromise.failure(ex)
+        successullStartPromise.tryFailure(ex)
         super.onUpstreamFailure(ex)
       }
 
@@ -162,13 +161,10 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
             } else {
               val e = new IllegalStateException("Did not receive HeartbeatACK between heartbeats")
               fail(out, e)
-              promise.failure(e)
+              resumePromise.failure(e)
+              successullStartPromise.tryFailure(e)
             }
 
-          case Restart(resumable) =>
-            restarting = false
-            promise.success(if (resumable) Some(resume) else None)
-            completeStage()
         }
       }
 
@@ -177,28 +173,27 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       override def onPull(): Unit = if (!hasBeenPulled(in)) pull(in)
 
       override def onDownstreamFinish(cause: Throwable): Unit = {
-        if (!restarting) {
-          if (!promise.isCompleted) {
-            promise.success(Option(resume))
-          }
-
-          super.onDownstreamFinish(cause)
+        if (!resumePromise.isCompleted) {
+          resumePromise.success((Option(resume), false))
         }
+
+        super.onDownstreamFinish(cause)
       }
 
       setHandler(out, this)
       setHandler(dispatchOut, this)
     }
 
-    (logic, promise.future)
+    (logic, (resumePromise.future, successullStartPromise.future))
   }
 }
 object GatewayHandlerGraphStage {
-  private case class Restart(resumable: Boolean)
 
   def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
       implicit system: ActorSystem[Nothing]
-  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[Option[ResumeData]])] = {
+  ): Flow[GatewayMessage[_], GatewayMessage[
+    _
+  ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] = {
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
@@ -231,7 +226,7 @@ object GatewayHandlerGraphStage {
         FlowShape(wsMessages.in(0), wsHandlerShape.out1)
     }
 
-    Flow.fromGraph(graph)
+    Flow.fromGraph(graph).mapMaterializedValue(t => (t._1, t._2._1, t._2._2))
   }
 
   /**
