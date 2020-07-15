@@ -31,7 +31,7 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.model.{HttpResponse, Uri}
-import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Keep, Merge, Sink, Source}
+import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.ByteString
@@ -79,23 +79,21 @@ object MockedGatewayHandler {
           case Left(e)    => throw e
         }
 
-    val wsGraphStage = new GatewayHandlerGraphStage(parameters.settings, state.resume)
+    val gatewayLifecycle = new GatewayHandlerGraphStage(parameters.settings, state.resume)
 
-    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) { implicit builder => (msgFlowG, wsGraph) =>
+    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) { implicit builder => (network, gatewayLifecycle) =>
       import GraphDSL.Implicits._
 
-      val wsMessages = builder.add(Merge[GatewayMessage[_]](2))
-      val buffer     = builder.add(Flow[GatewayMessage[_]].buffer(32, OverflowStrategy.dropHead))
+      val sendMessages     = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
+      val receivedMessages = builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
 
       // format: OFF
-
-      msgFlowG.out ~> buffer ~> wsGraph.in
-      wsGraph.out0 ~> wsMessages.in(1)
-      msgFlowG.in                            <~ wsMessages.out
-
+      network ~> receivedMessages
+      receivedMessages ~> gatewayLifecycle ~> sendMessages
+      network                                         <~ sendMessages
       // format: ON
 
-      FlowShape(wsMessages.in(0), wsGraph.out1)
+      FlowShape(sendMessages.in(1), receivedMessages.out(1))
     }
 
     Flow.fromGraph(graph)

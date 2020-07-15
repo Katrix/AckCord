@@ -35,7 +35,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketUpgradeResponse}
 import akka.stream._
-import akka.stream.scaladsl.{Compression, Flow, GraphDSL, Keep, Merge}
+import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge}
 import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
@@ -45,16 +45,14 @@ import io.circe.syntax._
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
     extends GraphStageWithMaterializedValue[
-      FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]],
+      FlowShape[GatewayMessage[_], GatewayMessage[_]],
       (Future[(Option[ResumeData], Boolean)], Future[Unit])
     ] {
-  val in: Inlet[GatewayMessage[_]]           = Inlet("GatewayHandlerGraphStage.in")
-  val dispatchOut: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.dispatchOut")
-
+  val in: Inlet[GatewayMessage[_]]   = Inlet("GatewayHandlerGraphStage.in")
   val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")
 
-  override def shape: FanOutShape2[GatewayMessage[_], GatewayMessage[_], GatewayMessage[_]] =
-    new FanOutShape2(in, out, dispatchOut)
+  override def shape: FlowShape[GatewayMessage[_], GatewayMessage[_]] =
+    new FlowShape(in, out)
 
   override def createLogicAndMaterializedValue(
       inheritedAttributes: Attributes
@@ -128,12 +126,14 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case HeartbeatACK =>
             log.debug("Received HeartbeatACK")
             receivedAck = true
-          case Reconnect                 => restart(resumable = true, waitBeforeRestart = false)
-          case InvalidSession(resumable) => restart(resumable, waitBeforeRestart = true)
-          case _                         => //Ignore
+          case Reconnect =>
+            log.debug("Restarting connection because of reconnect")
+            restart(resumable = true, waitBeforeRestart = false)
+          case InvalidSession(resumable) =>
+            log.debug(s"Restarting connection because of invalid session. Resumable: $resumable")
+            restart(resumable, waitBeforeRestart = true)
+          case _ => //Ignore
         }
-
-        emit(dispatchOut, event)
 
         if (!hasBeenPulled(in) && !isClosed(in)) pull(in)
       }
@@ -185,7 +185,6 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       }
 
       setHandler(out, this)
-      setHandler(dispatchOut, this)
     }
 
     (logic, (resumePromise.future, successullStartPromise.future))
@@ -208,23 +207,22 @@ object GatewayHandlerGraphStage {
         }
         .named("GatewayMessageProcessing")
 
-    val wsGraphStage = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
+    val gatewayLifecycle = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
 
-    val graph = GraphDSL.create(msgFlow, wsGraphStage)(Keep.both) {
-      implicit builder => (msgFlowShape, wsHandlerShape) =>
+    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) {
+      implicit builder => (network, gatewayLifecycle) =>
         import GraphDSL.Implicits._
 
-        val wsMessages = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
+        val sendMessages     = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
+        val receivedMessages = builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
 
         // format: OFF
-
-        msgFlowShape.out ~> wsHandlerShape.in
-                            wsHandlerShape.out0 ~> wsMessages.in(1)
-        msgFlowShape.in                         <~ wsMessages.out
-
+        network ~> receivedMessages
+                   receivedMessages ~> gatewayLifecycle ~> sendMessages
+        network                                         <~ sendMessages
         // format: ON
 
-        FlowShape(wsMessages.in(0), wsHandlerShape.out1)
+        FlowShape(sendMessages.in(1), receivedMessages.out(1))
     }
 
     Flow.fromGraph(graph).mapMaterializedValue(t => (t._1, t._2._1, t._2._2))
