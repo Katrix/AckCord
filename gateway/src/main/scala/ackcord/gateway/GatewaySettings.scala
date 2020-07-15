@@ -54,7 +54,8 @@ case class GatewaySettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
-    intents: GatewayIntents = GatewayIntents.AllNonPrivileged
+    intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
+    compress: Compress = Compress.ZLibStreamCompress
 ) {
   activity.foreach(_.requireCanSend())
 }

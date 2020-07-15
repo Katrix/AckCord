@@ -184,7 +184,13 @@ object GatewayHandler {
     import state._
     implicit val oldSystem: classic.ActorSystem = context.system.toClassic
 
-    val wsUri: Uri = rawWsUri.withQuery(Query("v" -> AckCord.DiscordApiVersion, "encoding" -> "json"))
+    val wsUri: Uri = {
+      val alwaysPresent = Seq("v" -> AckCord.DiscordApiVersion, "encoding" -> "json")
+      val query =
+        if (settings.compress == Compress.ZLibStreamCompress) alwaysPresent :+ ("compress" -> "zlib") else alwaysPresent
+
+      rawWsUri.withQuery(Query(query: _*))
+    }
 
     Behaviors
       .receiveMessage[Command] {

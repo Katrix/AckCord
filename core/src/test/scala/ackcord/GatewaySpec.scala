@@ -72,7 +72,7 @@ object MockedGatewayHandler {
     val msgFlow =
       GatewayHandlerGraphStage.createMessage
         .viaMat(wsFlow)(Keep.right)
-        .viaMat(GatewayHandlerGraphStage.parseMessage)(Keep.left)
+        .viaMat(GatewayHandlerGraphStage.parseMessage(parameters.settings.compress))(Keep.left)
         .named("Gateway")
         .collect {
           case Right(msg) => msg

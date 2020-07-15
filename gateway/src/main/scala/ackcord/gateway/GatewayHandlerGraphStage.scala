@@ -35,7 +35,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketUpgradeResponse}
 import akka.stream._
-import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge}
+import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge, Partition}
 import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
@@ -78,7 +78,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
             val identifyObject = IdentifyData(
               token = settings.token,
               properties = IdentifyData.createProperties,
-              compress = true,
+              compress = settings.compress == Compress.PerMessageCompress,
               largeThreshold = settings.largeThreshold,
               shard = Seq(settings.shardNum, settings.shardTotal),
               presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk),
@@ -200,7 +200,7 @@ object GatewayHandlerGraphStage {
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
-        .viaMat(parseMessage)(Keep.left)
+        .viaMat(parseMessage(settings.compress))(Keep.left)
         .collect {
           case Right(msg) => msg
           case Left(e)    => throw new GatewayJsonException(e.show, e)
@@ -231,23 +231,60 @@ object GatewayHandlerGraphStage {
   /**
     * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
     */
-  def parseMessage(
+  def parseMessage(compress: Compress)(
       implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
-    val jsonFlow = Flow[Message]
-      .collect {
-        case t: TextMessage => t.textStream
-        case b: BinaryMessage =>
-          b.dataStream
-            .fold(ByteString.empty)(_ ++ _)
-            .via(Compression.inflate())
-            .map(_.utf8String)
-      }
-      .flatMapConcat(_.fold("")(_ + _))
+    val stringFlow = compress match {
+      case Compress.NoCompress =>
+        Flow[Message]
+          .collect {
+            case t: TextMessage   => t.textStream
+            case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).map(_.utf8String)
+          }
+          .flatMapConcat(_.fold("")(_ + _))
+      case Compress.PerMessageCompress =>
+        Flow[Message]
+          .collect {
+            case t: TextMessage => t.textStream
+            case b: BinaryMessage =>
+              b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
+          }
+          .flatMapConcat(_.fold("")(_ + _))
+      case Compress.ZLibStreamCompress =>
+        val graph = GraphDSL.create() { implicit builder =>
+          import GraphDSL.Implicits._
+
+          val in  = builder.add(Flow[Message])
+          val splitBinary = builder.add(
+            Partition[Message](
+              2,
+              {
+                case _: TextMessage   => 0
+                case _: BinaryMessage => 1
+              }
+            )
+          )
+          val splitBinaryText = splitBinary.out(0).map(_.asInstanceOf[TextMessage])
+          val splitBinaryBinary = splitBinary.out(1).map(_.asInstanceOf[BinaryMessage])
+          val allStrings = builder.add(Merge[String](2))
+
+          val unwrapText = Flow[TextMessage].flatMapConcat(_.textStream.fold("")(_ + _))
+
+          // format: OFF
+          in ~> splitBinary
+                splitBinaryText   ~> unwrapText   ~> allStrings
+                splitBinaryBinary.flatMapConcat(_.dataStream) ~> Compression.inflate().map(_.utf8String) ~> allStrings
+          // format: ON
+
+          FlowShape(in.in, allStrings.out)
+        }
+
+        Flow.fromGraph(graph)
+    }
 
     val withLogging = if (AckCordGatewaySettings().LogReceivedWs) {
-      jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
-    } else jsonFlow
+      stringFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
+    } else stringFlow
 
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }

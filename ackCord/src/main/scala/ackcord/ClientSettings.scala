@@ -32,7 +32,7 @@ import ackcord.MemoryCacheSnapshot.CacheProcessor
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
-import ackcord.gateway.{GatewayEvent, GatewayIntents}
+import ackcord.gateway.{Compress, GatewayEvent, GatewayIntents}
 import ackcord.requests.Ratelimiter
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
@@ -52,6 +52,7 @@ import org.slf4j.Logger
   * @param status The status to use when connecting.
   * @param afk If the bot should be afk when connecting.
   * @param guildSubscriptions If Discord should sent events about user to your guilds.
+  * @param compress What sort of compression the gateway should use.
   * @param intents Fine grained control over which events Discord should sent to your bot.
   * @param system The actor system to use.
   * @param requestSettings The request settings to use.
@@ -67,6 +68,7 @@ case class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
+    compress: Compress = Compress.ZLibStreamCompress,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     requestSettings: RequestSettings = RequestSettings(),
@@ -83,7 +85,8 @@ case class ClientSettings(
     status,
     afk,
     guildSubscriptions,
-    intents
+    intents,
+    compress
   )
 
   implicit val executionContext: ExecutionContext = system.executionContext
