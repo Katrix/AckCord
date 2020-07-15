@@ -26,6 +26,7 @@ package ackcord
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
+import scala.util.{Failure, Success}
 
 import ackcord.requests.Ratelimiter
 import akka.Done
@@ -75,8 +76,7 @@ class DiscordClientActor(
     )
   }
 
-  val shards: Seq[ActorRef[DiscordShard.Command]] =
-    shardBehaviors(events).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
+  var shards: Seq[ActorRef[DiscordShard.Command]] = _
 
   var shardShutdownManager: ActorRef[DiscordShard.StopShard.type] = _
 
@@ -91,8 +91,13 @@ class DiscordClientActor(
       .map(_ => Done)
   }
 
+  private def spawnShards(): Unit = {
+    shards = shardBehaviors(events).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
+  }
+
   def login(): Unit = {
     require(shardShutdownManager == null, "Already logged in")
+    spawnShards()
     shardShutdownManager = context.spawn(ShardShutdownManager(shards), "ShardShutdownManager")
 
     DiscordShard.startShards(shards)
@@ -106,12 +111,17 @@ class DiscordClientActor(
     require(shardShutdownManager != null, "Not logged in")
     promise.completeWith(gracefulStop(shardShutdownManager.toClassic, timeout, DiscordShard.StopShard))
 
+    context.pipeToSelf(promise.future)(_ => LoggedOut)
+
     promise.future
   }
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
       case DiscordClientActor.Login         => login()
+      case LoggedOut                        =>
+        shardShutdownManager = null
+        shards = null
       case Logout(timeout, replyTo)         => replyTo ! LogoutReply(logout(timeout))
       case GetShards(replyTo)               => replyTo ! GetShardsReply(shards)
       case GetMusicManager(replyTo)         => replyTo ! GetMusicManagerReply(musicManager)
@@ -134,6 +144,8 @@ object DiscordClientActor {
   case class GetShards(replyTo: ActorRef[GetShardsReply])                             extends Command
   case class GetMusicManager(replyTo: ActorRef[GetMusicManagerReply])                 extends Command
   case class GetRatelimiterAndEvents(replyTo: ActorRef[GetRatelimiterAndEventsReply]) extends Command
+
+  private case object LoggedOut extends Command
 
   case class LogoutReply(done: Future[Boolean])
   case class GetShardsReply(shards: Seq[ActorRef[DiscordShard.Command]])
