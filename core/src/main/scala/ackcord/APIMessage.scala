@@ -52,9 +52,13 @@ object APIMessage {
     */
   case class Resumed(cache: CacheState) extends APIMessage
 
-  /**
-    * Trait that covers all channel messages
-    */
+  /** A trait that covers all messages that might have an guild associated with them */
+  sealed trait OptGuildMessage extends APIMessage {
+
+    def guild: Option[Guild]
+  }
+
+  /** Trait that covers all channel messages */
   sealed trait ChannelMessage extends APIMessage {
 
     /**
@@ -67,29 +71,54 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(channel: Channel, cache: CacheState) extends ChannelMessage
+  case class ChannelCreate(guild: Option[Guild], channel: Channel, cache: CacheState)
+      extends OptGuildMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when a channel is edited or updated.
     * @param channel The channel that was edited.
     */
-  case class ChannelUpdate(channel: Channel, cache: CacheState) extends ChannelMessage
+  case class ChannelUpdate(guild: Option[Guild], channel: Channel, cache: CacheState)
+      extends OptGuildMessage
+      with ChannelMessage
 
   /**
     * Sent to the client when a channel is deleted. The current snapshot will
     * not contain the channel.
     * @param channel The channel that was deleted.
     */
-  case class ChannelDelete(channel: GuildChannel, cache: CacheState) extends ChannelMessage
+  case class ChannelDelete(guild: Option[Guild], channel: GuildChannel, cache: CacheState)
+      extends OptGuildMessage
+      with ChannelMessage
+
+  /** Trait that covers all channel id messages */
+  sealed trait TextChannelIdMessage extends OptGuildMessage {
+
+    def channelId: TextChannelId
+
+    def channel: Option[TextChannel] =
+      guild.fold(cache.current.getTextChannel(channelId))(
+        _.channels.get(channelId.asChannelId[TextGuildChannel]).collect {
+          case ch: TextGuildChannel => ch
+        }
+      )
+  }
 
   /**
     * Sent to the client when a message is pinned or unpinned in a text
-    * channel. This is not sent when a pinned message is deleted.
-    * @param channel The channel where the change happened
+    * channel where guild information is not available. This is not sent when
+    * a pinned message is deleted.
+    * @param guild The guild where the change happened
+    * @param channelId The channel where the change happened
     * @param mostRecent The time the most recent pinned message was pinned
     */
-  case class ChannelPinsUpdate(channel: TextChannel, mostRecent: Option[OffsetDateTime], cache: CacheState)
-      extends ChannelMessage
+  case class ChannelPinsUpdate(
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      mostRecent: Option[OffsetDateTime],
+      cache: CacheState
+  ) extends TextChannelIdMessage
 
   /**
     * Trait that covers all guild messages.
@@ -230,7 +259,8 @@ object APIMessage {
     * @param channel The channel the invite directs to.
     */
   case class InviteCreate(guild: Option[Guild], channel: TextChannel, invite: CreatedInvite, cache: CacheState)
-      extends ChannelMessage
+      extends OptGuildMessage
+      with ChannelMessage
 
   /**
     * Sent when an invite is deleted.
@@ -238,7 +268,8 @@ object APIMessage {
     * @param channel The channel the invite directed to.
     */
   case class InviteDelete(guild: Option[Guild], channel: TextChannel, code: String, cache: CacheState)
-      extends ChannelMessage
+      extends OptGuildMessage
+      with ChannelMessage
 
   /**
     * Trait that covers all message messages.
@@ -255,91 +286,124 @@ object APIMessage {
     * Sent to the client when a message is created (posted).
     * @param message The sent message
     */
-  case class MessageCreate(message: Message, cache: CacheState) extends MessageMessage
+  case class MessageCreate(guild: Option[Guild], message: Message, cache: CacheState)
+      extends OptGuildMessage
+      with MessageMessage
 
   /**
     * Sent to the client when a message is updated.
     * @param message The new message. The check changes, the old message can
     *                be found in [[cache.previous]].
     */
-  case class MessageUpdate(message: Message, cache: CacheState) extends MessageMessage
+  case class MessageUpdate(guild: Option[Guild], message: Message, cache: CacheState)
+      extends OptGuildMessage
+      with MessageMessage
+
+  /** Trait that covers all message id messages */
+  sealed trait MessageIdMessage extends TextChannelIdMessage {
+
+    def messageId: MessageId
+
+    def message: Option[Message] = cache.current.getMessage(channelId, messageId)
+  }
 
   /**
     * Sent to the client when a message is deleted.
-    * @param message The deleted message.
-    * @param channel The channel of the message.
+    * @param messageId The deleted message.
+    * @param channelId The channel of the message.
     */
-  case class MessageDelete(message: Message, channel: TextChannel, cache: CacheState)
-      extends MessageMessage
-      with ChannelMessage
+  case class MessageDelete(messageId: MessageId, guild: Option[Guild], channelId: TextChannelId, cache: CacheState)
+      extends MessageIdMessage
+      with TextChannelIdMessage
 
   /**
     * Sent to the client when multiple messages are deleted at the same time.
     * Often this is performed by a bot.
-    * @param messages The deleted messages
-    * @param channel The channel of the deleted messages
+    * @param messageIds The deleted messages
+    * @param channelId The channel of the deleted messages
     */
-  case class MessageDeleteBulk(messages: Seq[Message], channel: TextChannel, cache: CacheState) extends ChannelMessage
+  case class MessageDeleteBulk(
+      messageIds: Seq[MessageId],
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      cache: CacheState
+  ) extends TextChannelIdMessage
 
   /**
     * Sent to the client when a user adds a reaction to a message.
+    * @param userId The id of the user that added the reaction.
+    * @param guild The guild the message was sent in.
+    * @param channelId The channel the message was sent in.
+    * @param messageId The id of the message the user added an reaction to.
+    * @param emoji The emoji the user reacted with.
     * @param user The user that added the reaction.
-    * @param channel The channel of the message.
-    * @param message The message the user added an reaction to.
-    * @param emoji The emoji the user reacted with
+    * @param member The guild member that added the reaction.
     */
   case class MessageReactionAdd(
-      user: User,
-      channel: TextChannel,
-      message: Message,
+      userId: UserId,
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      messageId: MessageId,
       emoji: PartialEmoji,
+      user: Option[User],
+      member: Option[GuildMember],
       cache: CacheState
-  ) extends MessageMessage
-      with ChannelMessage
+  ) extends MessageIdMessage
+      with TextChannelIdMessage
 
   /**
     * Sent to the client when a user removes a reaction from a message.
-    * @param user The user that removed the reaction.
-    * @param channel The channel of the message.
-    * @param message The message the user removed an reaction from.
-    * @param emoji The emoji the user reacted with
+    * @param userId The id of the user that added the reaction.
+    * @param guild The guild the message was sent in.
+    * @param channelId The channel the message was sent in.
+    * @param messageId The id of the message the user added an reaction to.
+    * @param emoji The emoji the user removed.
+    * @param user The user that added the reaction.
+    * @param member The guild member that added the reaction.
     */
   case class MessageReactionRemove(
-      user: User,
-      channel: TextChannel,
-      message: Message,
+      userId: UserId,
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      messageId: MessageId,
       emoji: PartialEmoji,
+      user: Option[User],
+      member: Option[GuildMember],
       cache: CacheState
-  ) extends MessageMessage
-      with ChannelMessage
+  ) extends MessageIdMessage
+      with TextChannelIdMessage
 
   /**
     * Sent to the client when a user removes all reactions from a message.
     * The emojis of the message can be found in [[cache.previous]].
     * @param guild The guild of the message.
-    * @param channel The channel of the message.
-    * @param message The message the user removed the reactions from.
+    * @param channelId The id of the channel the message was sent it.
+    * @param messageId The id of the message the user removed the reactions from.
     */
-  case class MessageReactionRemoveAll(guild: Option[Guild], channel: TextChannel, message: Message, cache: CacheState)
-      extends MessageMessage
-      with ChannelMessage
+  case class MessageReactionRemoveAll(
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      messageId: MessageId,
+      cache: CacheState
+  ) extends MessageIdMessage
+      with TextChannelIdMessage
 
   /**
     * Sent to the client when a user removes all reactions of a specific emoji
     * from a message.
     * @param guild The guild of the message.
-    * @param channel The channel of the message.
-    * @param message The message the user removed the reactions from.
+    * @param channelId The id of the channel the message was sent it.
+    * @param messageId The id of the message the user removed the reactions from.
     * @param emoji The removed emoji.
     */
   case class MessageReactionRemoveEmoji(
       guild: Option[Guild],
-      channel: TextChannel,
-      message: Message,
+      channelId: TextChannelId,
+      messageId: MessageId,
       emoji: PartialEmoji,
       cache: CacheState
-  ) extends MessageMessage
-      with ChannelMessage
+  ) extends MessageIdMessage
+      with TextChannelIdMessage
 
   /**
     * Sent to the client when the presence of a user updates.
@@ -362,11 +426,22 @@ object APIMessage {
 
   /**
     * Sent to the client when a user starts typing in a channel
-    * @param channel The channel where the typing happened
-    * @param user The user that began typing
+    * @param guild The guild where the typing happened
+    * @param channelId The id of the channel where the typing happened
+    * @param userId The id of the user that began typing
     * @param timestamp When user started typing
+    * @param user The user that began typing
+    * @param member The member that began typing
     */
-  case class TypingStart(channel: TextChannel, user: User, timestamp: Instant, cache: CacheState) extends ChannelMessage
+  case class TypingStart(
+      guild: Option[Guild],
+      channelId: TextChannelId,
+      userId: UserId,
+      timestamp: Instant,
+      user: Option[User],
+      member: Option[GuildMember],
+      cache: CacheState
+  ) extends TextChannelIdMessage
 
   /**
     * Sent to the client when a user object is updated.

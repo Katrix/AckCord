@@ -48,16 +48,15 @@ object MyBot extends App {
       import client.requestsHelper._
       client.onEventAsync { implicit c =>
         {
-          case APIMessage.ChannelCreate(channel, _) =>
+          case APIMessage.ChannelCreate(_, channel, _) =>
             for {
               tChannel <- optionPure(channel.asTextChannel)
               _        <- run(tChannel.sendMessage("First"))
             } yield ()
-          case APIMessage.ChannelDelete(channel, _) =>
+          case APIMessage.ChannelDelete(optGuild, channel, _) =>
             for {
-              guildChannel <- optionPure(channel.asGuildChannel)
-              guild        <- optionPure(guildChannel.guild)
-              _            <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${guildChannel.name} was deleted")))
+              guild        <- optionPure(optGuild)
+              _            <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))
             } yield ()
         }
       }

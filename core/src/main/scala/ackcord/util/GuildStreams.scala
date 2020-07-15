@@ -52,6 +52,8 @@ object GuildStreams {
           None
         case msg: APIMessage.GuildMessage =>
           Some(msg.guild.id)
+        case msg: APIMessage.OptGuildMessage =>
+          msg.guild.map(_.id)
         case msg: APIMessage.ChannelMessage =>
           msg.channel.asGuildChannel.map(_.guildId)
         case msg: APIMessage.MessageMessage =>

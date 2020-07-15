@@ -44,6 +44,12 @@ class APIGuildRouter[Inner](
     case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate)                       => sendToAll(msg, handleEvent)
     case APIMessage.GuildDelete(guild, unavailable, _) if !unavailable.getOrElse(false) => stopHandler(guild.id)
     case msg: APIMessage.GuildMessage                                                   => sendToGuild(msg.guild.id, msg, handleEvent)
+    case msg: APIMessage.OptGuildMessage =>
+      msg.guild match {
+        case Some(guild) => sendToGuild(guild.id, msg, handleEvent)
+        case None        => sendToNotGuild(msg, handleEvent)
+      }
+
     case msg: APIMessage.ChannelMessage =>
       msg.channel match {
         case ch: GuildChannel => sendToGuild(ch.guildId, msg, handleEvent)

@@ -98,6 +98,8 @@ object EventListenerBuilder {
           (i.event: APIMessage) match {
             case e: APIMessage.GuildMessage =>
               Some(create(e.guild)(i))
+            case e: APIMessage.OptGuildMessage =>
+              e.guild.map(create(_)(i))
             case e: APIMessage.ChannelMessage if e.channel.isInstanceOf[GuildChannel] =>
               e.channel
                 .asInstanceOf[GuildChannel]
@@ -123,8 +125,9 @@ object EventListenerBuilder {
         .map { i =>
           implicit val c: CacheSnapshot = i.cacheSnapshot
           (i.event: APIMessage) match {
-            case e: APIMessage.ChannelMessage => Some(create(e.channel)(i))
-            case e: APIMessage.MessageMessage => c.getChannel(e.message.channelId).map(create(_)(i))
+            case e: APIMessage.ChannelMessage       => Some(create(e.channel)(i))
+            case e: APIMessage.TextChannelIdMessage => e.channel.map(create(_)(i))
+            case e: APIMessage.MessageMessage       => c.getChannel(e.message.channelId).map(create(_)(i))
             case APIMessage.VoiceStateUpdate(voiceState, _) if voiceState.channelId.isDefined =>
               voiceState.voiceChannel.map(create(_)(i))
             case _ => None
@@ -184,19 +187,19 @@ object EventListenerBuilder {
           def doCreate(user: User) = guild.memberById(user.id).map(member => create(guild, user, member)(i))
 
           (i.event: APIMessage) match {
-            case APIMessage.GuildBanAdd(_, user, _)                 => doCreate(user)
-            case APIMessage.GuildBanRemove(_, user, _)              => doCreate(user)
-            case APIMessage.GuildMemberAdd(member, _, _)            => member.user.map(user => create(guild, user, member)(i))
-            case APIMessage.GuildMemberRemove(user, _, _)           => doCreate(user)
-            case APIMessage.GuildMemberUpdate(_, _, user, _, _, _)  => doCreate(user)
-            case APIMessage.MessageCreate(message, _)               => message.authorUser.flatMap(doCreate)
-            case APIMessage.MessageUpdate(message, _)               => message.authorUser.flatMap(doCreate)
-            case APIMessage.MessageReactionAdd(user, _, _, _, _)    => doCreate(user)
-            case APIMessage.MessageReactionRemove(user, _, _, _, _) => doCreate(user)
-            case APIMessage.PresenceUpdate(_, user, _, _, _, _, _)  => doCreate(user)
-            case APIMessage.TypingStart(_, user, _, _)              => doCreate(user)
-            case APIMessage.VoiceStateUpdate(voiceState, _)         => voiceState.user.flatMap(doCreate)
-            case _                                                  => None
+            case APIMessage.GuildBanAdd(_, user, _)                => doCreate(user)
+            case APIMessage.GuildBanRemove(_, user, _)             => doCreate(user)
+            case APIMessage.GuildMemberAdd(member, _, _)           => member.user.map(user => create(guild, user, member)(i))
+            case APIMessage.GuildMemberRemove(user, _, _)          => doCreate(user)
+            case APIMessage.GuildMemberUpdate(_, _, user, _, _, _) => doCreate(user)
+            case APIMessage.MessageCreate(_, message, _)           => message.authorUser.flatMap(doCreate)
+            case APIMessage.MessageUpdate(_, message, _)           => message.authorUser.flatMap(doCreate)
+            case msg: APIMessage.MessageReactionAdd                => msg.user.flatMap(doCreate)
+            case msg: APIMessage.MessageReactionRemove             => msg.user.flatMap(doCreate)
+            case APIMessage.PresenceUpdate(_, user, _, _, _, _, _) => doCreate(user)
+            case msg: APIMessage.TypingStart                       => msg.user.flatMap(doCreate)
+            case APIMessage.VoiceStateUpdate(voiceState, _)        => voiceState.user.flatMap(doCreate)
+            case _                                                 => None
           }
         }
         .mapConcat(_.toList)

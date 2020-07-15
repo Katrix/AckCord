@@ -73,7 +73,7 @@ object CacheEventCreator {
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getChannel(data.id).map(ch => api.ChannelCreate(ch, state)),
+              state => Some(api.ChannelCreate(data.guildId.flatMap(state.current.getGuild), data.toChannel.get, state)),
               CacheHandlers.rawChannelUpdater,
               registry,
               dispatch
@@ -81,7 +81,7 @@ object CacheEventCreator {
           case gatewayEv.ChannelUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getChannel(data.id).map(ch => api.ChannelUpdate(ch, state)),
+              state => Some(api.ChannelUpdate(data.guildId.flatMap(state.current.getGuild), data.toChannel.get, state)),
               CacheHandlers.rawChannelUpdater,
               registry,
               dispatch
@@ -90,9 +90,13 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                state.previous
-                  .getGuildChannel(data.id.asChannelId[GuildChannel])
-                  .map(ch => api.ChannelDelete(ch, state)),
+                Some(
+                  api.ChannelDelete(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.toChannel.get.asInstanceOf[GuildChannel],
+                    state
+                  )
+                ),
               CacheHandlers.rawChannelDeleter,
               registry,
               dispatch
@@ -101,8 +105,14 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                  .map(c => api.ChannelPinsUpdate(c, data.timestamp.toOption, state)),
+                Some(
+                  api.ChannelPinsUpdate(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.timestamp.toOption,
+                    state
+                  )
+                ),
               NOOPHandler,
               registry,
               dispatch
@@ -110,7 +120,7 @@ object CacheEventCreator {
           case gatewayEv.GuildCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuild(data.id).map(g => api.GuildCreate(g, state)),
+              state => Some(api.GuildCreate(data.toGuild.get, state)),
               CacheHandlers.rawGuildUpdater,
               registry,
               dispatch
@@ -118,7 +128,7 @@ object CacheEventCreator {
           case gatewayEv.GuildUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getGuild(data.id).map(g => api.GuildUpdate(g, state)),
+              state => Some(api.GuildUpdate(data.toGuild.get, state)),
               CacheHandlers.rawGuildUpdater,
               registry,
               dispatch
@@ -317,7 +327,7 @@ object CacheEventCreator {
           case gatewayEv.MessageCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getMessage(data.id).map(message => api.MessageCreate(message, state)),
+              state => Some(api.MessageCreate(data.guildId.flatMap(state.current.getGuild), data.toMessage, state)),
               CacheHandlers.rawMessageUpdater,
               registry,
               dispatch
@@ -325,7 +335,10 @@ object CacheEventCreator {
           case gatewayEv.MessageUpdate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => state.current.getMessage(data.id).map(message => api.MessageUpdate(message, state)),
+              state =>
+                state.current
+                  .getMessage(data.id)
+                  .map(message => api.MessageUpdate(message.guild(state.current), message, state)),
               CacheHandlers.rawPartialMessageUpdater,
               registry,
               dispatch
@@ -334,10 +347,7 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  message <- state.previous.getMessage(data.id)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                } yield api.MessageDelete(message, channel, state),
+                Some(api.MessageDelete(data.id, data.guildId.flatMap(state.current.getGuild), data.channelId, state)),
               CacheHandlers.rawMessageDeleter,
               registry,
               dispatch
@@ -346,9 +356,9 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId).map { channel =>
-                  api.MessageDeleteBulk(data.ids.flatMap(state.previous.getMessage(_).toSeq), channel, state)
-                },
+                Some(
+                  api.MessageDeleteBulk(data.ids, data.guildId.flatMap(state.current.getGuild), data.channelId, state)
+                ),
               CacheHandlers.rawMessageBulkDeleter,
               registry,
               dispatch
@@ -357,11 +367,18 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  user     <- state.current.getUser(data.userId)
-                  tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                  message  <- state.current.getMessage(data.channelId, data.messageId)
-                } yield api.MessageReactionAdd(user, tChannel, message, data.emoji, state),
+                Some(
+                  api.MessageReactionAdd(
+                    data.userId,
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.messageId,
+                    data.emoji,
+                    data.member.map(_.user).orElse(state.current.getUser(data.userId)),
+                    data.member.map(_.toGuildMember(data.guildId.get)),
+                    state
+                  )
+                ),
               CacheHandlers.rawMessageReactionUpdater,
               registry,
               dispatch
@@ -370,11 +387,18 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  user     <- state.current.getUser(data.userId)
-                  tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                  message  <- state.current.getMessage(data.channelId, data.messageId)
-                } yield api.MessageReactionRemove(user, tChannel, message, data.emoji, state),
+                Some(
+                  api.MessageReactionRemove(
+                    data.userId,
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.messageId,
+                    data.emoji,
+                    data.member.map(_.user).orElse(state.current.getUser(data.userId)),
+                    data.member.map(_.toGuildMember(data.guildId.get)),
+                    state
+                  )
+                ),
               CacheHandlers.rawMessageReactionDeleter,
               registry,
               dispatch
@@ -383,11 +407,14 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  guild    <- getGuildIfDefined(state.current, data.guildId)
-                  tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                  message  <- state.current.getMessage(data.channelId, data.messageId)
-                } yield api.MessageReactionRemoveAll(guild, tChannel, message, state),
+                Some(
+                  api.MessageReactionRemoveAll(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.messageId,
+                    state
+                  )
+                ),
               CacheHandlers.rawMessageReactionAllDeleter,
               registry,
               dispatch
@@ -396,11 +423,15 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  guild    <- getGuildIfDefined(state.current, data.guildId)
-                  tChannel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                  message  <- state.current.getMessage(data.channelId, data.messageId)
-                } yield api.MessageReactionRemoveEmoji(guild, tChannel, message, data.emoji, state),
+                Some(
+                  api.MessageReactionRemoveEmoji(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.messageId,
+                    data.emoji,
+                    state
+                  )
+                ),
               CacheHandlers.rawMessageReactionEmojiDeleter,
               registry,
               dispatch
@@ -422,10 +453,17 @@ object CacheEventCreator {
             CacheUpdate(
               data,
               state =>
-                for {
-                  user    <- state.current.getUser(data.userId)
-                  channel <- getChannelUsingMaybeGuildId(state.current, data.guildId, data.channelId)
-                } yield api.TypingStart(channel, user, data.timestamp, state),
+                Some(
+                  api.TypingStart(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.channelId,
+                    data.userId,
+                    data.timestamp,
+                    data.member.map(_.user).orElse(state.current.getUser(data.userId)),
+                    data.member.map(_.toGuildMember(data.guildId.get)),
+                    state
+                  )
+                ),
               CacheHandlers.lastTypedUpdater,
               registry,
               dispatch
