@@ -30,7 +30,7 @@ import scala.concurrent.duration._
 import ackcord.data.raw.RawMessage
 import ackcord.data.{GuildId, TextChannel, VoiceGuildChannelId}
 import ackcord.examplecore.Compat
-import ackcord.examplecore.ExampleMain.NewCommandsEntry
+import ackcord.examplecore.ExampleMain.CommandsEntry
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
@@ -66,7 +66,7 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: Requests, registerCmd: FunctionK[NewCommandsEntry, cats.Id], events: Events)(
+  def apply(requests: Requests, registerCmd: FunctionK[CommandsEntry, cats.Id], events: Events)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
@@ -79,19 +79,19 @@ object MusicHandler {
         implicit val timeout: Timeout = 30.seconds
         val cmds                      = new MusicCommands(requests, guildId, ctx.self)
         Seq(
-          NewCommandsEntry(
+          CommandsEntry(
             cmds.queue,
             commands.CommandDescription("Queue", "Set an url as the url to play")
           ),
-          NewCommandsEntry(
+          CommandsEntry(
             cmds.stop,
             commands.CommandDescription("Stop music", "Stop music from playing, and leave the channel")
           ),
-          NewCommandsEntry(
+          CommandsEntry(
             cmds.next,
             commands.CommandDescription("Next track", "Skip to the next track")
           ),
-          NewCommandsEntry(
+          CommandsEntry(
             cmds.pause,
             commands.CommandDescription("Pause/Play", "Toggle pause on the current player")
           )

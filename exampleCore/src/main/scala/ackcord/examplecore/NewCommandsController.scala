@@ -44,18 +44,20 @@ import cats.instances.future._
 
 //Lot's of different examples of how to use commands
 class NewCommandsController(requests: Requests) extends CommandController(requests) {
+  
+  val general = Seq("!")
 
   val hello: NamedCommand[NotUsed] = Command
-    .named("!", Seq("hello"), mustMention = true)
+    .named(general, Seq("hello"), mustMention = true)
     .withRequest(m => m.textChannel.sendMessage(s"Hello ${m.user.username}"))
 
   val copy: NamedCommand[Int] =
-    GuildCommand.named("!", Seq("copy"), mustMention = true).parsing[Int].withRequestOpt { implicit m =>
+    GuildCommand.named(general, Seq("copy"), mustMention = true).parsing[Int].withRequestOpt { implicit m =>
       m.message.channelId.resolve(m.guild.id).map(_.sendMessage(s"You said ${m.parsed}"))
     }
 
   val guildInfo: NamedCommand[NotUsed] =
-    GuildCommand.named("!", Seq("guildInfo"), mustMention = true).withRequest { m =>
+    GuildCommand.named(general, Seq("guildInfo"), mustMention = true).withRequest { m =>
       val guildName   = m.guild.name
       val channelName = m.textChannel.name
       val userNick    = m.guildMember.nick.getOrElse(m.user.username)
@@ -67,11 +69,11 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
 
   val parsingNumbers: NamedCommand[(Int, Int)] =
     Command
-      .named("!", Seq("parseNum"), mustMention = true)
+      .named(general, Seq("parseNum"), mustMention = true)
       .parsing((MessageParser[Int], MessageParser[Int]).tupled)
       .withRequest(m => m.textChannel.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
 
-  val sendFile: NamedCommand[NotUsed] = Command.named("!", Seq("sendFile"), mustMention = true).withRequest { m =>
+  val sendFile: NamedCommand[NotUsed] = Command.named(general, Seq("sendFile"), mustMention = true).withRequest { m =>
     val embed = OutgoingEmbed(
       title = Some("This is an embed"),
       description = Some("This embed is sent together with a file"),
@@ -85,12 +87,12 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
     GuildCommand.andThen(CommandBuilder.needPermission[GuildUserCommandMessage](Permission.Administrator))
 
   val adminsOnly: NamedCommand[NotUsed] =
-    ElevatedCommand.named("!", Seq("adminOnly"), mustMention = true).withSideEffects { _ =>
+    ElevatedCommand.named(general, Seq("adminOnly"), mustMention = true).withSideEffects { _ =>
       println("Command executed by an admin")
     }
 
   val timeDiff: NamedCommand[NotUsed] =
-    Command.named("!", Seq("timeDiff"), mustMention = true).asyncOpt { implicit m =>
+    Command.named(general, Seq("timeDiff"), mustMention = true).asyncOpt { implicit m =>
       import requestHelper._
       for {
         sentMsg <- run(m.textChannel.sendMessage("Msg"))
@@ -99,14 +101,14 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
       } yield ()
     }
 
-  val ping: NamedCommand[NotUsed] = Command.named("!", Seq("ping"), mustMention = true).toSink {
+  val ping: NamedCommand[NotUsed] = Command.named(general, Seq("ping"), mustMention = true).toSink {
     Flow[CommandMessage[NotUsed]]
       .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
       .to(requests.sinkIgnore)
   }
 
   val timeDiff2: NamedCommand[NotUsed] =
-    Command.named("!", Seq("timeDiff2"), mustMention = true).async { implicit m =>
+    Command.named(general, Seq("timeDiff2"), mustMention = true).async { implicit m =>
       //The ExecutionContext is provided by the controller
       for {
         answer  <- requests.singleFuture(m.textChannel.sendMessage("Msg"))
@@ -117,13 +119,13 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
     }
 
   def ratelimitTest(name: String, sink: Sink[Request[_], _]): NamedCommand[Int] =
-    Command.named("!", Seq(name), mustMention = true).parsing[Int].toSink {
+    Command.named(general, Seq(name), mustMention = true).parsing[Int].toSink {
       Flow[CommandMessage[Int]]
         .mapConcat(implicit m => List.tabulate(m.parsed)(i => m.textChannel.sendMessage(s"Msg$i")))
         .to(sink)
     }
 
-  val maybeFail: NamedCommand[NotUsed] = Command.named("!", Seq("maybeFail"), mustMention = true).withRequest { r =>
+  val maybeFail: NamedCommand[NotUsed] = Command.named(general, Seq("maybeFail"), mustMention = true).withRequest { r =>
     if (Random.nextInt(100) < 25) {
       throw new Exception("Failed")
     }
@@ -133,6 +135,6 @@ class NewCommandsController(requests: Requests) extends CommandController(reques
 
   val kill: NamedCommand[NotUsed] =
     ElevatedCommand
-      .named("!", Seq("kill", "die"), mustMention = true)
+      .named(general, Seq("kill", "die"), mustMention = true)
       .withSideEffects(_ => CoordinatedShutdown(requests.system.toClassic).run(CoordinatedShutdown.JvmExitReason))
 }

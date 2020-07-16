@@ -47,17 +47,18 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
   protected val registeredCommands: mutable.Set[HelpCommand.HelpCommandEntry] =
     ConcurrentHashMap.newKeySet[HelpCommand.HelpCommandEntry]().asScala
 
-  val help: ComplexCommand[Option[HelpCommand.Args], NotUsed] =
+  val command: ComplexCommand[Option[HelpCommand.Args], NotUsed] =
     Command.parsing[Option[HelpCommand.Args]].asyncOptRequest { implicit m =>
       m.parsed match {
         case Some(HelpCommand.Args.CommandArgs(query)) =>
           OptionT
             .liftF(filterCommands(query))
-            .map(matches => CreateMessage(m.textChannel.id, createSearchReply(m.message, query, matches)))
+            .semiflatMap(createSearchReply(m.message, query, _))
+            .map(CreateMessage(m.textChannel.id, _))
         case Some(HelpCommand.Args.PageArgs(page)) =>
-          OptionT.some[Future](CreateMessage(m.textChannel.id, createReplyAll(m.message, page)))
+          OptionT.liftF(createReplyAll(m.message, page)).map(CreateMessage(m.textChannel.id, _))
         case None =>
-          OptionT.some[Future](CreateMessage(m.textChannel.id, createReplyAll(m.message, 0)))
+          OptionT.liftF(createReplyAll(m.message, 0)).map(CreateMessage(m.textChannel.id, _))
       }
     }
 
@@ -72,7 +73,12 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
       query: String
   )(implicit m: UserCommandMessage[_]): Future[Seq[HelpCommand.HelpCommandProcessedEntry]] = {
     Future
-      .traverse(registeredCommands)(entry => entry.prefixParser.symbols(m.cache, m.message).map(entry -> _))
+      .traverse(registeredCommands)(entry => entry.prefixParser.canExecute(m.cache, m.message).map(entry -> _))
+      .flatMap { entries =>
+        Future.traverse(entries.collect { case (entry, execute) if execute => entry })(entry =>
+          entry.prefixParser.symbols(m.cache, m.message).map(entry -> _)
+        )
+      }
       .flatMap { withSymbols =>
         val entriesWithSymbolMatch = withSymbols.filter(_._2.exists(query.startsWith))
         Future.traverse(entriesWithSymbolMatch) {
@@ -109,7 +115,7 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
     */
   def createSearchReply(message: Message, query: String, matches: Seq[HelpCommand.HelpCommandProcessedEntry])(
       implicit c: CacheSnapshot
-  ): CreateMessageData
+  ): Future[CreateMessageData]
 
   /**
     * Create a reply for all the commands tracked by this help command.
@@ -117,7 +123,7 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
     * @return Data to create a message describing the commands tracked
     *         by this help command.
     */
-  def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): CreateMessageData
+  def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): Future[CreateMessageData]
 
   def unknownCmd(command: String): Option[CreateMessageData] =
     Some(CreateMessageData(s"Unknown command $command"))

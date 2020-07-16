@@ -34,10 +34,6 @@ import cats.syntax.all._
 trait PrefixParser {
 
   def apply(message: Message)(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]]
-
-  def showInvocation(
-      message: Message
-  )(implicit c: CacheSnapshot, ec: ExecutionContext): Future[Option[String]] = Future.successful(None)
 }
 object PrefixParser {
 
@@ -144,21 +140,4 @@ case class StructuredPrefixParser(
         MessageParser.fail("Can't execute")
       }
     }
-
-  override def showInvocation(
-      message: Message
-  )(implicit c: CacheSnapshot, ec: ExecutionContext): Future[Option[String]] = for {
-    execute     <- canExecute(c, message)
-    mentionHere <- needsMention(c, message)
-    symbolsHere <- symbols(c, message)
-    aliasesHere <- aliases(c, message)
-  } yield {
-    if (execute) {
-      val mention = if (mentionHere) s"${c.botUser.mention} " else ""
-      val symbol  = if (symbolsHere.length > 1) symbolsHere.mkString("(", "|", ")") else symbolsHere.head
-      val alias   = if (aliasesHere.length > 1) aliasesHere.mkString("(", "|", ")") else aliasesHere.head
-
-      Some(mention + symbol + alias)
-    } else None
-  }
 }

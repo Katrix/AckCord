@@ -29,7 +29,7 @@ import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.oldcommands._
+import ackcord.commands.{HelpCommand, PrefixParser}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, Requests}
@@ -39,7 +39,6 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl._
 import akka.actor.typed.scaladsl.adapter._
-import akka.pattern.gracefulStop
 import akka.stream.scaladsl.Keep
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
@@ -65,7 +64,6 @@ object Example {
 
 class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings: GatewaySettings)
     extends AbstractBehavior[ExampleMain.Command](ctx) {
-  import context.executionContext
   implicit val system: ActorSystem[Nothing] = context.system
   import ExampleMain._
 
@@ -105,77 +103,54 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       relativeTime = true
     )
 
-  val controllerCommands: Seq[NewCommandsEntry[NotUsed]] = {
+  val controllerCommands: Seq[CommandsEntry[NotUsed]] = {
     val controller = new NewCommandsController(requests)
     Seq(
-      NewCommandsEntry(controller.hello, commands.CommandDescription("Hello", "Say hello")),
-      NewCommandsEntry(controller.copy, commands.CommandDescription("Copy", "Make the bot say what you said")),
-      NewCommandsEntry(
+      CommandsEntry(controller.hello, commands.CommandDescription("Hello", "Say hello")),
+      CommandsEntry(controller.copy, commands.CommandDescription("Copy", "Make the bot say what you said")),
+      CommandsEntry(
         controller.guildInfo,
         commands.CommandDescription("Guild info", "Prints info about the current guild")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.parsingNumbers,
         commands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.sendFile,
         commands.CommandDescription("Send file", "Send a file in an embed")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.adminsOnly,
         commands.CommandDescription("Elevanted command", "Command only admins can use")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.timeDiff,
         commands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
       ),
-      NewCommandsEntry(controller.ping, commands.CommandDescription("Ping", "Checks if the bot is alive")),
-      NewCommandsEntry(
+      CommandsEntry(controller.ping, commands.CommandDescription("Ping", "Checks if the bot is alive")),
+      CommandsEntry(
         controller.maybeFail,
         commands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.ratelimitTest("ratelimitTest", requests.sinkIgnore[Any]),
         commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
         commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
       ),
-      NewCommandsEntry(
+      CommandsEntry(
         controller.kill,
         commands.CommandDescription("Kill", "Kills the bot")
       )
     )
   }
 
-  private val helpMonitor = context.spawn[HelpCmd.HandlerReply](
-    Behaviors.receiveMessage {
-      case HelpCmd.CommandTerminated(_) => Behaviors.same
-      case HelpCmd.NoCommandsRemaining =>
-        context.self ! CommandsUnregistered
-        Behaviors.same
-    },
-    "HelpMonitor"
-  )
-
-  val helpCmdActor: ActorRef[ExampleHelpCmd.Command] = context.spawn(ExampleHelpCmd(requests, helpMonitor), "HelpCmd")
-  val helpCmd                                        = ExampleHelpCmdFactory(helpCmdActor)
+  val helpCommand = new ExampleHelpCommand(requests)
 
   val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
-
-  //We set up a commands object, which parses potential commands
-  //If you wanted to be fancy, you could use a valve here to stop new commands when shutting down
-  //Here we just shut everything down at once
-  val cmdObj: Commands =
-    CoreCommands
-      .create(
-        CommandSettings(needsMention = true, prefixes = Set("!", "&")),
-        events.subscribeAPI.via(killSwitch.flow),
-        requests
-      )
-      ._2
 
   val commandConnector = new commands.CommandConnector(
     events.subscribeAPI
@@ -186,24 +161,19 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     requests.parallelism
   )
 
-  def registerCmd[Mat](parsedCmdFactory: ParsedCmdFactory[_, Mat]): Mat =
-    ExampleMain.registerCmd(cmdObj, helpCmdActor)(parsedCmdFactory)
+  def registerCommand[Mat](entry: CommandsEntry[Mat]): Mat =
+    ExampleMain.registerNewCommand(commandConnector, helpCommand)(entry)
 
-  def registerNewCommand[Mat](entry: NewCommandsEntry[Mat]): Mat =
-    ExampleMain.registerNewCommand(commandConnector, helpCmdActor)(entry)
+  controllerCommands.foreach(registerCommand)
+  registerCommand(
+    CommandsEntry(
+      helpCommand.command.toNamed(PrefixParser.structured(needsMention = true, Seq("!"), Seq("help"))),
+      commands.CommandDescription("Help", "This command right here", "[query]|[page]")
+    )
+  )
 
-  controllerCommands.foreach(registerNewCommand)
-  registerCmd(helpCmd)
-
-  //Here is an example for a raw simple command
-  cmdObj.subscribeRaw
-    .collect {
-      case RawCmd(_, "!", "restart", _, _) => println("Restart Starting")
-    }
-    .runForeach(_ => context.self ! RestartShard)
-
-  private val registerCmdObjMusic = new FunctionK[NewCommandsEntry, cats.Id] {
-    override def apply[A](fa: NewCommandsEntry[A]): A = registerNewCommand(fa)
+  private val registerCmdObjMusic = new FunctionK[CommandsEntry, cats.Id] {
+    override def apply[A](fa: CommandsEntry[A]): A = registerCommand(fa)
   }
 
   val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
@@ -242,11 +212,6 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   shutdown.addTask("service-unbind", "unregister-commands") { () =>
     implicit val timeout: Timeout = Timeout(shutdown.timeout("service-unbind"))
     context.self.ask[Done](ExampleMain.UnregisterCommands)
-  }
-
-  shutdown.addTask("service-requests-done", "stop-help-command") { () =>
-    val timeout = shutdown.timeout("service-requests-done")
-    gracefulStop(helpCmdActor.toClassic, timeout).map(_ => Done)
   }
 
   shutdown.addTask("service-requests-done", "stop-music") { () =>
@@ -309,20 +274,6 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   }
 }
 object ExampleMain {
-  def registerCmd[Mat](commands: Commands, helpActor: ActorRef[ExampleHelpCmd.Command])(
-      parsedCmdFactory: ParsedCmdFactory[_, Mat]
-  ): Mat = {
-    val (complete, materialized) = commands.subscribe(parsedCmdFactory)(Keep.both)
-    (parsedCmdFactory.refiner, parsedCmdFactory.description) match {
-      case (info: AbstractCmdInfo, Some(description)) =>
-        helpActor ! ExampleHelpCmd.BaseCommandWrapper(HelpCmd.AddCmd(info, description, complete))
-      case _ =>
-    }
-    import scala.concurrent.ExecutionContext.Implicits.global
-    complete.foreach(_ => println(s"Command completed: ${parsedCmdFactory.description.get.name}"))
-    materialized
-  }
-
   sealed trait Command
 
   case class BeginDeathwatch(replyTo: ActorRef[Done])    extends Command
@@ -333,31 +284,17 @@ object ExampleMain {
   case object CommandsUnregistered                       extends Command
 
   //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
-  case class NewCommandsEntry[Mat](
+  case class CommandsEntry[Mat](
       command: commands.NamedComplexCommand[_, Mat],
       description: commands.CommandDescription
   )
 
-  def registerNewCommand[Mat](connector: commands.CommandConnector, helpActor: ActorRef[ExampleHelpCmd.Command])(
-      entry: NewCommandsEntry[Mat]
+  def registerNewCommand[Mat](connector: commands.CommandConnector, helpCommand: HelpCommand)(
+      entry: CommandsEntry[Mat]
   ): Mat = {
     val registration = connector.runNewNamedCommand(entry.command)
+    helpCommand.registerCommand(entry.command.prefixParser, entry.description, registration.onDone)
 
-    //Due to the new commands being a complete break from the old ones, being
-    // completely incompatible with some other stuff, we need to do a bit of
-    // translation and hackery here
-    helpActor ! ExampleHelpCmd.BaseCommandWrapper(
-      HelpCmd.AddCmd(
-        oldcommands.CmdInfo(entry.command.symbols, entry.command.aliases),
-        oldcommands.CmdDescription(
-          entry.description.name,
-          entry.description.description,
-          entry.description.usage,
-          entry.description.extra
-        ),
-        registration.onDone
-      )
-    )
     import scala.concurrent.ExecutionContext.Implicits.global
     registration.onDone.foreach(_ => println(s"Command completed: ${entry.description.name}"))
     registration.materialized

@@ -39,11 +39,13 @@ class MusicCommands(requests: Requests, guildId: GuildId, musicHandler: ActorRef
     system: ActorSystem[Nothing]
 ) extends CommandController(requests) {
 
+  val music = Seq("&")
+
   val VoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildVoiceCommand.andThen(CommandBuilder.inOneGuild(guildId))
 
   val queue: NamedCommand[String] =
-    VoiceCommand.named("&", Seq("q", "queue")).parsing[String].withSideEffects { m =>
+    VoiceCommand.named(music, Seq("q", "queue")).parsing[String].withSideEffects { m =>
       musicHandler.ask[MusicHandler.CommandAck.type](QueueUrl(m.parsed, m.textChannel, m.voiceChannel.id, _))
     }
 
@@ -51,7 +53,7 @@ class MusicCommands(requests: Requests, guildId: GuildId, musicHandler: ActorRef
       aliases: Seq[String],
       mapper: (TextChannel, ActorRef[MusicHandler.CommandAck.type]) => MusicHandler.MusicHandlerEvents
   ): NamedCommand[NotUsed] = {
-    VoiceCommand.andThen(CommandBuilder.inOneGuild(guildId)).named("&", aliases, mustMention = true).toSink {
+    VoiceCommand.andThen(CommandBuilder.inOneGuild(guildId)).named(music, aliases, mustMention = true).toSink {
       Flow[VoiceGuildMemberCommandMessage[NotUsed]]
         .map(_.textChannel)
         .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
