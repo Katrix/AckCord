@@ -23,6 +23,8 @@
  */
 package ackcord.gateway
 
+import java.util.concurrent.ThreadLocalRandom
+
 import scala.concurrent.duration._
 import scala.concurrent.{Future, Promise}
 
@@ -64,33 +66,37 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       var resume: ResumeData = prevResume.orNull
       var receivedAck        = false
 
-      val HeartbeatTimerKey: String = "HeartbeatTimer"
+      val HeartbeatTimerKey: String  = "HeartbeatTimer"
+      val ReidentifyTimerKey: String = "ReidentifyTimer"
 
       def restart(resumable: Boolean, waitBeforeRestart: Boolean): Unit = {
         resumePromise.success(if (resumable) (Some(resume), waitBeforeRestart) else (None, waitBeforeRestart))
         completeStage()
       }
 
-      def handleHello(data: HelloData): Unit = {
-        val response = prevResume match {
-          case Some(resumeData) => Resume(resumeData)
-          case None =>
-            val identifyObject = IdentifyData(
-              token = settings.token,
-              properties = IdentifyData.createProperties,
-              compress = settings.compress == Compress.PerMessageCompress,
-              largeThreshold = settings.largeThreshold,
-              shard = Seq(settings.shardNum, settings.shardTotal),
-              presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk),
-              guildSubscriptions = settings.guildSubscriptions,
-              intents = settings.intents
+      def identify(): Unit = {
+        val message =
+          if (resume != null) Resume(resume)
+          else {
+            Identify(
+              IdentifyData(
+                token = settings.token,
+                properties = IdentifyData.createProperties,
+                compress = settings.compress == Compress.PerMessageCompress,
+                largeThreshold = settings.largeThreshold,
+                shard = Seq(settings.shardNum, settings.shardTotal),
+                presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk),
+                guildSubscriptions = settings.guildSubscriptions,
+                intents = settings.intents
+              )
             )
+          }
 
-            Identify(identifyObject)
-        }
+        push(out, message)
+      }
 
-        push(out, response)
-
+      def handleHello(data: HelloData): Unit = {
+        identify()
         receivedAck = true
         scheduleAtFixedRate(HeartbeatTimerKey, 0.millis, data.heartbeatInterval.millis)
       }
@@ -103,7 +109,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case Dispatch(seq, event) =>
             event match {
               case GatewayEvent.Ready(_, _) | GatewayEvent.Resumed(_) =>
-                successullStartPromise.success(())
+                successullStartPromise.trySuccess(())
               case _ =>
             }
 
@@ -131,7 +137,11 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
             restart(resumable = true, waitBeforeRestart = false)
           case InvalidSession(resumable) =>
             log.debug(s"Restarting connection because of invalid session. Resumable: $resumable")
-            restart(resumable, waitBeforeRestart = true)
+            if (!resumable) {
+              resume = null
+            }
+
+            scheduleOnce(ReidentifyTimerKey, ThreadLocalRandom.current().nextDouble(1, 5).seconds)
           case _ => //Ignore
         }
 
@@ -171,6 +181,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
               successullStartPromise.tryFailure(e)
             }
 
+          case ReidentifyTimerKey =>
+            identify()
         }
       }
 
@@ -254,7 +266,7 @@ object GatewayHandlerGraphStage {
         val graph = GraphDSL.create() { implicit builder =>
           import GraphDSL.Implicits._
 
-          val in  = builder.add(Flow[Message])
+          val in = builder.add(Flow[Message])
           val splitBinary = builder.add(
             Partition[Message](
               2,
@@ -264,9 +276,9 @@ object GatewayHandlerGraphStage {
               }
             )
           )
-          val splitBinaryText = splitBinary.out(0).map(_.asInstanceOf[TextMessage])
+          val splitBinaryText   = splitBinary.out(0).map(_.asInstanceOf[TextMessage])
           val splitBinaryBinary = splitBinary.out(1).map(_.asInstanceOf[BinaryMessage])
-          val allStrings = builder.add(Merge[String](2))
+          val allStrings        = builder.add(Merge[String](2))
 
           val unwrapText = Flow[TextMessage].flatMapConcat(_.textStream.fold("")(_ + _))
 
