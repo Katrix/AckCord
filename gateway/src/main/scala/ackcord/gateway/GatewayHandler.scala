@@ -182,8 +182,10 @@ object GatewayHandler {
     }
   }
 
-  private def shutdownStream(state: State): Unit =
+  private def shutdownStream(state: State, log: Logger): Unit = {
+    log.debug("Shutting down WS stream")
     state.killSwitch.foreach(_.shutdown())
+  }
 
   private def inactive(parameters: Parameters, state: State, wsFlow: WsFlowFunc): Behavior[Command] = {
     import akka.actor.typed.scaladsl.adapter._
@@ -241,7 +243,7 @@ object GatewayHandler {
 
         case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
           response.discardEntityBytes()
-          shutdownStream(state)
+          shutdownStream(state, log)
           throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
 
         case ResetRetryCount =>
@@ -253,7 +255,7 @@ object GatewayHandler {
 
         case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
-          shutdownStream(state)
+          shutdownStream(state, log)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
         case SendException(e, _) =>
@@ -262,7 +264,7 @@ object GatewayHandler {
 
         case GatewayHandler.ConnectionDied(_, _) =>
           log.error("Connection died before starting. Retry count {}", retryCount)
-          shutdownStream(state)
+          shutdownStream(state, log)
           retryLogin(forceWait = false, parameters, state, timers, wsFlow)
 
         case Logout =>
@@ -271,7 +273,7 @@ object GatewayHandler {
       }
       .receiveSignal {
         case (_, PostStop) =>
-          shutdownStream(state)
+          shutdownStream(state, log)
           Behaviors.stopped
       }
   }
@@ -287,7 +289,7 @@ object GatewayHandler {
             log.info("Websocket connection completed. Stopping.")
             Behaviors.stopped
           } else {
-            shutdownStream(state)
+            shutdownStream(state, log)
 
             log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
             retryLogin(waitBeforeRestart, parameters, state.copy(resume = newResume), timers, wsFlow)
@@ -302,7 +304,7 @@ object GatewayHandler {
 
         case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
-          shutdownStream(state)
+          shutdownStream(state, log)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
         case SendException(e, _) =>
@@ -311,7 +313,7 @@ object GatewayHandler {
 
         case Logout =>
           log.info("Shutting down")
-          shutdownStream(state)
+          shutdownStream(state, log)
           active(parameters, state.copy(shuttingDown = true), wsFlow)
 
         case Login =>
@@ -322,7 +324,7 @@ object GatewayHandler {
       }
       .receiveSignal {
         case (_, PostStop) =>
-          shutdownStream(state)
+          shutdownStream(state, log)
           Behaviors.stopped
       }
   }
