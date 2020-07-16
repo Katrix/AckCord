@@ -117,7 +117,7 @@ object DiscordShard {
           "GatewayHandler"
         )
         newGatewayHandler ! GatewayLogin
-        context.watchWith(gatewayHandler, GatewayHandlerTerminated)
+        context.watchWith(newGatewayHandler, GatewayHandlerTerminated)
         shard(parameters, state.copy(gatewayHandler = newGatewayHandler))
 
       case RestartShard =>
