@@ -23,6 +23,7 @@
  */
 package ackcord.gateway
 
+import java.util.UUID
 import java.util.concurrent.ThreadLocalRandom
 
 import scala.concurrent.Future
@@ -60,7 +61,9 @@ object GatewayHandler {
       shuttingDown: Boolean = false,
       resume: Option[ResumeData] = None,
       killSwitch: Option[UniqueKillSwitch] = None,
-      retryCount: Int = 0
+      retryCount: Int = 0,
+      //An unique identifier per WS connection. Makes sure we don't do error handling twice
+      currentIteration: Option[UUID] = None
   )
 
   type WsFlowFunc = (
@@ -115,7 +118,11 @@ object GatewayHandler {
         else backoffWaitTime
 
       timers.startSingleTimer("RetryLogin", Login, waitTime)
-      inactive(parameters, state.copy(killSwitch = None, retryCount = state.retryCount + 1), wsFlow)
+      inactive(
+        parameters,
+        state.copy(killSwitch = None, retryCount = state.retryCount + 1, currentIteration = None),
+        wsFlow
+      )
     } else {
       throw new Exception("Max retry count exceeded")
     }
@@ -196,6 +203,7 @@ object GatewayHandler {
       .receiveMessage[Command] {
         case Login =>
           log.info("Logging in")
+          val iteration = UUID.randomUUID()
 
           val (switch, (wsUpgrade, newResumeData, loginSuccess)) =
             Flow
@@ -211,20 +219,20 @@ object GatewayHandler {
 
           context.pipeToSelf(newResumeData) {
             case Success((resumeData, shouldWait)) => ConnectionDied(resumeData, shouldWait)
-            case Failure(e)                        => SendException(e)
+            case Failure(e)                        => SendException(e, iteration)
           }
 
           context.pipeToSelf(wsUpgrade) {
             case Success(value) => UpgradeResponse(value)
-            case Failure(e)     => SendException(e)
+            case Failure(e)     => SendException(e, iteration)
           }
 
           context.pipeToSelf(loginSuccess) {
             case Success(_) => ResetRetryCount
-            case Failure(e) => SendException(e)
+            case Failure(e) => SendException(e, iteration)
           }
 
-          inactive(parameters, state.copy(killSwitch = Some(switch)), wsFlow)
+          inactive(parameters, state.copy(killSwitch = Some(switch), currentIteration = Some(iteration)), wsFlow)
 
         case UpgradeResponse(ValidUpgrade(response, _)) =>
           log.info("Valid login. Going to active. Response: {}", response.entity.toString)
@@ -240,13 +248,17 @@ object GatewayHandler {
           log.debug("Managed to connect successfully, resetting retry count")
           active(parameters, state.copy(retryCount = 0), wsFlow)
 
-        case SendException(e: PeerClosedConnectionException) =>
+        case SendException(e: PeerClosedConnectionException, iteration) if currentIteration.contains(iteration) =>
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
-        case SendException(e) =>
+        case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
+
+        case SendException(e, _) =>
+          log.debug("Ignoring websocket error as iteration did not match", e)
+          Behaviors.same
 
         case GatewayHandler.ConnectionDied(_, _) =>
           log.error("Connection died before starting. Retry count {}", retryCount)
@@ -285,13 +297,17 @@ object GatewayHandler {
           log.debug("Managed to connect successfully, resetting retry count")
           active(parameters, state.copy(retryCount = 0), wsFlow)
 
-        case SendException(e: PeerClosedConnectionException) =>
+        case SendException(e: PeerClosedConnectionException, iteration) if currentIteration.contains(iteration) =>
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
-        case SendException(e) =>
+        case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
+
+        case SendException(e, _) =>
+          log.debug("Ignoring websocket error as iteration did not match", e)
+          Behaviors.same
 
         case Logout =>
           log.info("Shutting down")
@@ -326,5 +342,5 @@ object GatewayHandler {
   private case object ResetRetryCount                                                       extends Command
   private case class ConnectionDied(resume: Option[ResumeData], waitBeforeRestart: Boolean) extends Command
   private case class UpgradeResponse(response: WebSocketUpgradeResponse)                    extends Command
-  private case class SendException(e: Throwable)                                            extends Command
+  private case class SendException(e: Throwable, iteration: UUID)                           extends Command
 }
