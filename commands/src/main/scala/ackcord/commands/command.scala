@@ -31,24 +31,13 @@ import akka.stream.scaladsl.Flow
   * @tparam A The argument type of the command
   * @tparam Mat The materialized result of creating this command
   */
-trait ComplexCommand[A, Mat] { self =>
-
-  def parser: MessageParser[A]
-
-  def flow: Flow[CommandMessage[A], CommandError, Mat]
+case class ComplexCommand[A, Mat](parser: MessageParser[A], flow: Flow[CommandMessage[A], CommandError, Mat]) {
 
   /**
     * Converts this command into a named command.
-    * @param structuredPrefixParser The prefix parser to use
+    * @param Parser The prefix parser to use
     */
-  def toNamed(structuredPrefixParser: StructuredPrefixParser): NamedComplexCommand[A, Mat] = new NamedComplexCommand[A, Mat] {
-
-    override def prefixParser: StructuredPrefixParser = structuredPrefixParser
-
-    override def parser: MessageParser[A] = self.parser
-
-    override def flow: Flow[CommandMessage[A], CommandError, Mat] = self.flow
-  }
+  def toNamed(Parser: StructuredPrefixParser): NamedComplexCommand[A, Mat] = NamedComplexCommand(this, Parser)
 }
 
 /**
@@ -57,13 +46,10 @@ trait ComplexCommand[A, Mat] { self =>
   * @tparam A The argument type of the command
   * @tparam Mat The materialized result of creating this command
   */
-trait NamedComplexCommand[A, Mat] extends ComplexCommand[A, Mat] {
-
-  /**
-    * The prefix parser to use for this command.
-    */
-  def prefixParser: StructuredPrefixParser
-}
+case class NamedComplexCommand[A, Mat](
+    command: ComplexCommand[A, Mat],
+    prefixParser: StructuredPrefixParser
+)
 
 /**
   * Represents non essential information about a command intended to be

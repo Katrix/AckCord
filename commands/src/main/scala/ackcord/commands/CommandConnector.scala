@@ -146,7 +146,7 @@ class CommandConnector(
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] =
-    newCommandWithErrors(command.prefixParser, command)
+    newCommandWithErrors(command.prefixParser, command.command)
 
   /**
     * Creates a [[RunnableGraph]] for a command.
@@ -185,7 +185,7 @@ class CommandConnector(
     * @see [[newCommandWithErrors]]
     */
   def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] =
-    newCommand(command.prefixParser, command)
+    newCommand(command.prefixParser, command.command)
 
   /**
     * Starts a command execution.
@@ -208,7 +208,7 @@ class CommandConnector(
     *         a future signaling when the command is done running.
     */
   def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): CommandRegistration[Mat] =
-    runNewCommand(command.prefixParser, command)
+    runNewCommand(command.prefixParser, command.command)
 
   /**
     * Starts many named commands at the same time. They must all have a

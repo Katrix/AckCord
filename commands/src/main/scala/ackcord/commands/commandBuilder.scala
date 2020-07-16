@@ -156,12 +156,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * @param sinkBlock The sink that will process this command.
     * @tparam Mat The materialized result of running this command.
     */
-  def toSink[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] = new ComplexCommand[A, Mat] {
-    override def parser: MessageParser[A] = self.parser
-
-    override def flow: Flow[CommandMessage[A], CommandError, Mat] =
-      CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
-  }
+  def toSink[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] =
+    new ComplexCommand[A, Mat](self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A]))
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
     override val defaultMustMention: Boolean = self.defaultMustMention
@@ -371,14 +367,10 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
       override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
     }
 
-  def toSink[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] = new NamedComplexCommand[A, Mat] {
-    override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-    override def parser: MessageParser[A] = self.parser
-
-    override def flow: Flow[CommandMessage[A], CommandError, Mat] =
-      CommandBuilder.streamedFlow(sinkBlock, self.flow[A])
-  }
+  def toSink[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] = NamedComplexCommand(
+    ComplexCommand(self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A])),
+    self.prefixParser
+  )
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedCommandBuilder[M2, A] =
     new NamedCommandBuilder[M2, A] {
