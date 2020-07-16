@@ -244,7 +244,7 @@ object GatewayHandler {
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
         case SendException(e) =>
-          log.error("Websocket error. Retry count {}", retryCount, e)
+          log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
@@ -289,7 +289,7 @@ object GatewayHandler {
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
         case SendException(e) =>
-          log.error("Websocket error. Retry count {}", retryCount, e)
+          log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
 
