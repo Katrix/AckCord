@@ -31,6 +31,7 @@ import ackcord.data._
 import ackcord.util.AckCordRequestSettings
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.{Sink, Source}
 import io.circe._
@@ -48,6 +49,8 @@ trait BaseRESTRequest[RawResponse, NiceResponse] extends Request[RawResponse] { 
 
   override def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[RawResponse] = {
     import system.executionContext
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.rest.ReceivedRESTRequest")
+
     val baseFlow = RequestStreams.jsonDecode
 
     val withLogging =

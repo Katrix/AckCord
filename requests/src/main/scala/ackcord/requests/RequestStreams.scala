@@ -34,6 +34,7 @@ import ackcord.AckCord
 import ackcord.util.AckCordRequestSettings
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -228,6 +229,8 @@ object RequestStreams {
   )(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[Request[Data], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.rest.SentRESTRequest")
+
     val baseFlow = FlowWithContext[Request[Data], Ctx]
 
     val withLogging =

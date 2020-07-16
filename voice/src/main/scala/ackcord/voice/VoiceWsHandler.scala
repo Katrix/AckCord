@@ -36,7 +36,7 @@ import akka.NotUsed
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.actor.typed.scaladsl.adapter._
-import akka.event.Logging
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
@@ -81,6 +81,8 @@ object VoiceWsHandler {
       }
       .flatMapConcat(_.fold("")(_ + _))
 
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.voice.ReceivedWSMessage")
+
     val withLogging =
       if (AckCordVoiceSettings().LogReceivedWs)
         jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
@@ -91,6 +93,8 @@ object VoiceWsHandler {
 
   def createMessage(implicit system: ActorSystem[Nothing]): Flow[VoiceMessage[_], Message, NotUsed] = {
     val baseFlow = Flow[VoiceMessage[_]].map(_.asJson.noSpaces)
+
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.voice.SentWSMessage")
 
     val withLogging =
       if (AckCordVoiceSettings().LogSentWs)

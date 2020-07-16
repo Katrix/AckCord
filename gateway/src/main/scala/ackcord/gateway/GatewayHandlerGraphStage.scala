@@ -30,7 +30,7 @@ import ackcord.gateway.GatewayProtocol._
 import ackcord.util.AckCordGatewaySettings
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
-import akka.event.Logging
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketUpgradeResponse}
@@ -282,6 +282,8 @@ object GatewayHandlerGraphStage {
         Flow.fromGraph(graph)
     }
 
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.ReceivedWSMessage")
+
     val withLogging = if (AckCordGatewaySettings().LogReceivedWs) {
       stringFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else stringFlow
@@ -293,6 +295,8 @@ object GatewayHandlerGraphStage {
     * Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]].
     */
   def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.SentWSMessage")
+
     val flow = Flow[GatewayMessage[_]].map {
       case msg: GatewayMessage[d] =>
         msg match {
