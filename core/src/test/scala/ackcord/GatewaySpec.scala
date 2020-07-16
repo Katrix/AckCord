@@ -54,7 +54,9 @@ object MockedGatewayHandler {
       wsUri: Uri,
       parameters: GatewayHandler.Parameters,
       state: GatewayHandler.State
-  ): Flow[GatewayMessage[_], GatewayMessage[_], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] = {
+  ): Flow[GatewayMessage[_], GatewayMessage[
+    _
+  ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] = {
     implicit val system: ActorSystem[Nothing] = parameters.context.system
     val response                              = ValidUpgrade(HttpResponse(), None)
 
@@ -81,19 +83,20 @@ object MockedGatewayHandler {
 
     val gatewayLifecycle = new GatewayHandlerGraphStage(parameters.settings, state.resume)
 
-    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) { implicit builder => (network, gatewayLifecycle) =>
-      import GraphDSL.Implicits._
+    val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) {
+      implicit builder => (network, gatewayLifecycle) =>
+        import GraphDSL.Implicits._
 
-      val sendMessages     = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
-      val receivedMessages = builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
+        val sendMessages     = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
+        val receivedMessages = builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
 
-      // format: OFF
+        // format: OFF
       network ~> receivedMessages
       receivedMessages ~> gatewayLifecycle ~> sendMessages
       network                                         <~ sendMessages
       // format: ON
 
-      FlowShape(sendMessages.in(1), receivedMessages.out(1))
+        FlowShape(sendMessages.in(1), receivedMessages.out(1))
     }
 
     Flow.fromGraph(graph)

@@ -26,7 +26,6 @@ package ackcord
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
-import scala.util.{Failure, Success}
 
 import ackcord.requests.Ratelimiter
 import akka.Done
@@ -91,9 +90,8 @@ class DiscordClientActor(
       .map(_ => Done)
   }
 
-  private def spawnShards(): Unit = {
+  private def spawnShards(): Unit =
     shards = shardBehaviors(events).zipWithIndex.map(t => context.spawn(t._1, s"Shard${t._2}"))
-  }
 
   def login(): Unit = {
     require(shardShutdownManager == null, "Already logged in")
@@ -118,8 +116,8 @@ class DiscordClientActor(
 
   override def onMessage(msg: Command): Behavior[Command] = {
     msg match {
-      case DiscordClientActor.Login         => login()
-      case LoggedOut                        =>
+      case DiscordClientActor.Login => login()
+      case LoggedOut =>
         shardShutdownManager = null
         shards = null
       case Logout(timeout, replyTo)         => replyTo ! LogoutReply(logout(timeout))

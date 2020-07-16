@@ -55,8 +55,8 @@ object MyBot extends App {
             } yield ()
           case APIMessage.ChannelDelete(optGuild, channel, _) =>
             for {
-              guild        <- optionPure(optGuild)
-              _            <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))
+              guild <- optionPure(optGuild)
+              _     <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))
             } yield ()
         }
       }

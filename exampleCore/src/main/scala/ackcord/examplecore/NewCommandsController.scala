@@ -44,7 +44,7 @@ import cats.instances.future._
 
 //Lot's of different examples of how to use commands
 class NewCommandsController(requests: Requests) extends CommandController(requests) {
-  
+
   val general = Seq("!")
 
   val hello: NamedCommand[NotUsed] = Command

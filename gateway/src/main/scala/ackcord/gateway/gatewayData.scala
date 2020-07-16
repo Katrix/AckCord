@@ -29,13 +29,12 @@ import scala.collection.immutable
 
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.gateway.GatewayProtocol._
 import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
-import io.circe.{Decoder, DecodingFailure, Encoder, Json}
+import io.circe.{Decoder, DecodingFailure, Json}
 
 /**
   * Base trait for all gateway messages.

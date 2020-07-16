@@ -77,7 +77,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
       def identify(): Unit = {
         val message =
           if (resume != null) Resume(resume)
-          else {
+          else
             Identify(
               IdentifyData(
                 token = settings.token,
@@ -90,7 +90,6 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
                 intents = settings.intents
               )
             )
-          }
 
         push(out, message)
       }
@@ -176,7 +175,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
               emit(out, Heartbeat(Option(resume).map(_.seq)))
             } else {
               val e = new IllegalStateException("Did not receive HeartbeatACK between heartbeats")
-              fail(out, e)
+              failStage(e)
               resumePromise.failure(e)
               successullStartPromise.tryFailure(e)
             }
