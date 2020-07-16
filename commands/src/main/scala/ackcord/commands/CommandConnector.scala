@@ -23,10 +23,8 @@
  */
 package ackcord.commands
 
-import scala.concurrent.Future
-
 import ackcord.CacheSnapshot
-import ackcord.data.{Message, User}
+import ackcord.data.Message
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.syntax._
 import ackcord.util.StreamBalancer
@@ -35,7 +33,6 @@ import akka.stream.SourceShape
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Partition, RunnableGraph, Source}
 import cats.instances.future._
 import cats.syntax.all._
-import cats.{Monad, MonadError}
 
 /**
   * @param messages A source of messages and their cache. All the messages
@@ -69,48 +66,6 @@ class CommandConnector(
     }
   }
 
-  type PrefixParser = (CacheSnapshot, Message) => Future[MessageParser[Unit]]
-
-  private val mentionParser: (CacheSnapshot, Message) => MessageParser[Unit] = { (cache, message) =>
-    val botUser = cache.botUser
-
-    //We do a quick check first before parsing the message
-    val quickCheck = message.mentions.contains(botUser.id)
-    lazy val err   = MonadError[MessageParser, String].raiseError[Unit]("")
-
-    if (quickCheck) {
-      MessageParser[User].flatMap { user =>
-        if (user == botUser) Monad[MessageParser].unit
-        else err
-      }
-    } else err
-  }
-
-  /**
-    * Creates a prefix parser for a command.
-    * @param symbol The symbol to parse before the command.
-    * @param aliases A list of aliases for this command.
-    * @param mustMention If the command requires a mention before the prefix and alias.
-    */
-  def prefix(
-      symbol: String,
-      aliases: Seq[String],
-      mustMention: Boolean = true,
-      caseSensitive: Boolean = false
-  ): PrefixParser = {
-    val messageParserF = MessageParser.messageParserMonad
-
-    val first: (CacheSnapshot, Message) => MessageParser[Unit] =
-      if (mustMention) mentionParser
-      else (_, _) => messageParserF.unit
-
-    Function.untupled(
-      first.tupled
-        .andThen(_ *> MessageParser.startsWith(symbol) *> MessageParser.oneOf(aliases, caseSensitive).void)
-        .andThen(Future.successful)
-    )
-  }
-
   /**
     * Composes a command's flow and the source of messages to consider
     * for commands.
@@ -125,9 +80,9 @@ class CommandConnector(
       prefix: PrefixParser,
       command: ComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] = {
+
     val messageSource = messages.mapAsyncUnordered(parallelism) {
-      case t @ (message, cache) =>
-        prefix(cache, message).tupleLeft(t)
+      case t @ (message, cache) => prefix(message)(cache, requests.system.executionContext).tupleLeft(t)
     }
 
     val getCommandMessages = Flow[((Message, CacheSnapshot), MessageParser[Unit])].mapConcat {
@@ -191,10 +146,7 @@ class CommandConnector(
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] =
-    newCommandWithErrors(
-      prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive),
-      command
-    )
+    newCommandWithErrors(command.prefixParser, command)
 
   /**
     * Creates a [[RunnableGraph]] for a command.
@@ -233,7 +185,7 @@ class CommandConnector(
     * @see [[newCommandWithErrors]]
     */
   def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] =
-    newCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
+    newCommand(command.prefixParser, command)
 
   /**
     * Starts a command execution.
@@ -256,7 +208,7 @@ class CommandConnector(
     *         a future signaling when the command is done running.
     */
   def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): CommandRegistration[Mat] =
-    runNewCommand(prefix(command.symbol, command.aliases, command.requiresMention, command.caseSensitive), command)
+    runNewCommand(command.prefixParser, command)
 
   /**
     * Starts many named commands at the same time. They must all have a

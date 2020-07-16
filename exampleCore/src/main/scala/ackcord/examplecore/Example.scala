@@ -348,7 +348,7 @@ object ExampleMain {
     // translation and hackery here
     helpActor ! ExampleHelpCmd.BaseCommandWrapper(
       HelpCmd.AddCmd(
-        oldcommands.CmdInfo(entry.command.symbol, entry.command.aliases),
+        oldcommands.CmdInfo(entry.command.symbols, entry.command.aliases),
         oldcommands.CmdDescription(
           entry.description.name,
           entry.description.description,

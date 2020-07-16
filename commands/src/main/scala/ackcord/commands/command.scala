@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 package ackcord.commands
 
 import akka.stream.scaladsl.Flow
@@ -48,24 +47,9 @@ trait ComplexCommand[A, Mat] {
 trait NamedComplexCommand[A, Mat] extends ComplexCommand[A, Mat] {
 
   /**
-    * The prefix symbol to use for this command.
+    * The prefix parser to use for this command.
     */
-  def symbol: String
-
-  /**
-    * The valid aliases of this command.
-    */
-  def aliases: Seq[String]
-
-  /**
-    * If this command requires a mention when invoking it.
-    */
-  def requiresMention: Boolean
-
-  /**
-    * If the aliases of this command should be matched with case sensitivity.
-    */
-  def caseSensitive: Boolean
+  def prefixParser: StructuredPrefixParser
 }
 
 /**

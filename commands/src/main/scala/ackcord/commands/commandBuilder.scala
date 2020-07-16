@@ -23,6 +23,8 @@
  */
 package ackcord.commands
 
+import scala.concurrent.Future
+
 import ackcord.CacheSnapshot
 import ackcord.data._
 import ackcord.requests.Requests
@@ -55,13 +57,13 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * Converts this builder into a builder that will create [[NamedComplexCommand]].
     * These don't need to be provided a name when registering them.
     *
-    * @param namedSymbol The symbol to use when invoking the command
+    * @param namedSymbols The symbols to use when invoking the command
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
     * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
     */
   def named(
-      namedSymbol: String,
+      namedSymbols: Seq[String],
       namedAliases: Seq[String],
       mustMention: Boolean = defaultMustMention,
       aliasesCaseSensitive: Boolean = false
@@ -69,13 +71,64 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     new NamedCommandBuilder[M, A] {
       override val defaultMustMention: Boolean = self.defaultMustMention
 
-      override def symbol: String = namedSymbol
+      override def prefixParser: StructuredPrefixParser =
+        PrefixParser.structured(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
 
-      override def aliases: Seq[String] = namedAliases
+      override def requests: Requests = self.requests
 
-      override def requiresMention: Boolean = mustMention
+      override def parser: MessageParser[A] = self.parser
 
-      override def caseSensitive: Boolean = aliasesCaseSensitive
+      override def flow[B]: Flow[CommandMessage[B], Either[Option[CommandError], M[B]], NotUsed] = self.flow[B]
+    }
+
+  /**
+    * Converts this builder into a builder that will create [[NamedComplexCommand]].
+    * These don't need to be provided a name when registering them.
+    *
+    * @param namedSymbols The symbols to use when invoking the command
+    * @param namedAliases The valid aliases to use when invoking the command
+    * @param mustMention If the command requires a mention
+    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
+    */
+  def namedFunction(
+      namedSymbols: (CacheSnapshot, Message) => Seq[String],
+      namedAliases: (CacheSnapshot, Message) => Seq[String],
+      mustMention: (CacheSnapshot, Message) => Boolean = (_, _) => defaultMustMention,
+      aliasesCaseSensitive: (CacheSnapshot, Message) => Boolean = (_, _) => false
+  ): NamedCommandBuilder[M, A] =
+    new NamedCommandBuilder[M, A] {
+      override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override def prefixParser: StructuredPrefixParser =
+        PrefixParser.structuredFunction(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
+
+      override def requests: Requests = self.requests
+
+      override def parser: MessageParser[A] = self.parser
+
+      override def flow[B]: Flow[CommandMessage[B], Either[Option[CommandError], M[B]], NotUsed] = self.flow[B]
+    }
+
+  /**
+    * Converts this builder into a builder that will create [[NamedComplexCommand]].
+    * These don't need to be provided a name when registering them.
+    *
+    * @param namedSymbols The symbols to use when invoking the command
+    * @param namedAliases The valid aliases to use when invoking the command
+    * @param mustMention If the command requires a mention
+    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
+    */
+  def namedAsync(
+      namedSymbols: (CacheSnapshot, Message) => Future[Seq[String]],
+      namedAliases: (CacheSnapshot, Message) => Future[Seq[String]],
+      mustMention: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(defaultMustMention),
+      aliasesCaseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false)
+  ): NamedCommandBuilder[M, A] =
+    new NamedCommandBuilder[M, A] {
+      override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override def prefixParser: StructuredPrefixParser =
+        PrefixParser.structuredAsync(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
 
       override def requests: Requests = self.requests
 
@@ -287,24 +340,9 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
   override type Action[B, Mat] = NamedComplexCommand[B, Mat]
 
   /**
-    * The prefix symbol to use for the command this builder will create.
+    * The prefix parser to use for commands created from this builder
     */
-  def symbol: String
-
-  /**
-    * The valid aliases for the command this builder will create.
-    */
-  def aliases: Seq[String]
-
-  /**
-    * If the command this builder will create requires a mention when invoking it.
-    */
-  def requiresMention: Boolean
-
-  /**
-    * If the aliases of the command this builder will create should be case sensitive
-    */
-  def caseSensitive: Boolean
+  def prefixParser: StructuredPrefixParser
 
   /**
     * Set the default value for must mention when creating a named command.
@@ -324,13 +362,7 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
     new NamedCommandBuilder[M, B] {
       override val defaultMustMention: Boolean = self.defaultMustMention
 
-      override def symbol: String = self.symbol
-
-      override def aliases: Seq[String] = self.aliases
-
-      override def requiresMention: Boolean = self.requiresMention
-
-      override def caseSensitive: Boolean = self.caseSensitive
+      override def prefixParser: StructuredPrefixParser = self.prefixParser
 
       override def requests: Requests = self.requests
 
@@ -340,13 +372,7 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
     }
 
   def toSink[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] = new NamedComplexCommand[A, Mat] {
-    override def symbol: String = self.symbol
-
-    override def aliases: Seq[String] = self.aliases
-
-    override def requiresMention: Boolean = self.requiresMention
-
-    override def caseSensitive: Boolean = self.caseSensitive
+    override def prefixParser: StructuredPrefixParser = self.prefixParser
 
     override def parser: MessageParser[A] = self.parser
 
@@ -358,13 +384,7 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
     new NamedCommandBuilder[M2, A] {
       override val defaultMustMention: Boolean = self.defaultMustMention
 
-      override def symbol: String = self.symbol
-
-      override def aliases: Seq[String] = self.aliases
-
-      override def requiresMention: Boolean = self.requiresMention
-
-      override def caseSensitive: Boolean = self.caseSensitive
+      override def prefixParser: StructuredPrefixParser = self.prefixParser
 
       override def requests: Requests = self.requests
 

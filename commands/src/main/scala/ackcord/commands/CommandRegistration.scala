@@ -29,7 +29,11 @@ import akka.Done
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 
-case class CommandRegistration[Mat](materialized: Mat, onDone: Future[Done], killSwitch: UniqueKillSwitch) {
+case class CommandRegistration[Mat](
+    materialized: Mat,
+    onDone: Future[Done],
+    killSwitch: UniqueKillSwitch
+) {
 
   def stop(): Unit = killSwitch.shutdown()
 }

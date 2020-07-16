@@ -35,8 +35,8 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
 
   override def defaultMustMention: Boolean = true
 
-  val GeneralCommands = "!"
-  val MusicCommands   = "&"
+  val GeneralCommands = Seq("!")
+  val MusicCommands   = Seq("&")
 
   val echo: NamedCommand[MessageParser.RemainingAsString] =
     Command

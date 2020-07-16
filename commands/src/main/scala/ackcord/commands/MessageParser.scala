@@ -31,8 +31,8 @@ import scala.util.Try
 import scala.util.matching.Regex
 
 import ackcord.CacheSnapshot
-import ackcord.data._
 import ackcord.commands.MessageParser.RemainingAsString
+import ackcord.data._
 import akka.NotUsed
 import cats.data.StateT
 import cats.mtl.syntax.all._
@@ -191,6 +191,15 @@ trait MessageParserInstances {
   private def eitherToF[F[_], A](either: Either[String, A])(implicit E: ApplicativeHandle[F, String]): F[A] =
     either.fold(_.raise, E.applicative.pure)
 
+  def unit: MessageParser[Unit] = new MessageParser[Unit] {
+    override def parse[F[_]](
+        implicit c: CacheSnapshot,
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[Unit] = F.unit
+  }
+
   /**
     * Matches a literal string
     * @param lit The string to match
@@ -246,28 +255,25 @@ trait MessageParserInstances {
     }
 
   /**
-    * Matches one of the strings passed in
-    * @param seq The strings to try
-    * @param caseSensitive If the match should be case sensitive
+    * Matches one of the parsers passed in
+    * @param seq The parsers to try
     */
-  def oneOf(seq: Seq[String], caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
-    private val valid = seq.map(s => if (caseSensitive) s else s.toLowerCase(Locale.ROOT)).toSet
-
-    private def validContains(s: String) = valid.contains(if (caseSensitive) s else s.toLowerCase(Locale.ROOT))
+  def oneOf[A](seq: Seq[MessageParser[A]]): MessageParser[A] = new MessageParser[A] {
 
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
         E: ApplicativeHandle[F, String],
         S: MonadState[F, List[String]]
-    ): F[String] = S.get.flatMap {
-      case Nil                                 => E.raise("No more arguments left")
-      case head :: tail if validContains(head) => S.set(tail).as(head)
-      case head :: _ =>
-        val err =
-          if (valid.size <= 5) s"Was expecting one of ${seq.mkString(", ")}, but found $head"
-          else s"$head did not match one of the valid choices"
-        E.raise(err)
+    ): F[A] = {
+      //A poor mans traverse
+      F.tailRecM[Seq[MessageParser[A]], Option[A]](seq) {
+        case Seq()           => F.pure(Right(None))
+        case Seq(x, xs @ _*) => E.handle(x.parse.map(a => a.some.asRight[Seq[MessageParser[A]]]))(_ => Left(xs))
+      }.flatMap {
+        case Some(a) => F.pure(a)
+        case None    => seq.head.parse
+      }
     }
   }
 
@@ -325,6 +331,19 @@ trait MessageParserInstances {
           case Left(e)      => e.raise
         }
     }
+  }
+
+  /**
+    * A message parser that always fails.
+    * @param e The error to return
+    */
+  def fail[A](e: String): MessageParser[A] = new MessageParser[A] {
+    override def parse[F[_]](
+        implicit c: CacheSnapshot,
+        F: Monad[F],
+        E: ApplicativeHandle[F, String],
+        S: MonadState[F, List[String]]
+    ): F[A] = E.raise(e)
   }
 
   /**
