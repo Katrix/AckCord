@@ -26,14 +26,14 @@ package ackcord
 import scala.collection.immutable
 import scala.concurrent.Future
 
-import ackcord.cachehandlers.CacheTypeRegistry
+import ackcord.cachehandlers.{CacheHandler, CacheTypeRegistry}
 import ackcord.gateway.{Dispatch, GatewayEvent, GatewayMessage}
 import ackcord.requests.SupervisionStreams
 import ackcord.util.AckCordGatewaySettings
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor => classic}
-import org.slf4j.Logger
+import org.slf4j.{Logger, LoggerFactory}
 
 /**
   * Houses streams to interact with events and messages sent to and from Discord.
@@ -79,7 +79,7 @@ case class Events(
   /**
     * A source used to subscribe to [[APIMessage]]s sent to this cache.
     */
-  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages(system.log))
+  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages)
 
   /**
     * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
@@ -138,7 +138,12 @@ object Events {
           .mapAsync(parallelism)(dispatch =>
             Future(
               CacheEventCreator
-                .eventToCacheUpdate(dispatch, cacheTypeRegistry(system.log), system.log, configSettings)
+                .eventToCacheUpdate(
+                  dispatch,
+                  cacheTypeRegistry(LoggerFactory.getLogger(classOf[CacheHandler[_]])),
+                  system.log,
+                  configSettings
+                )
                 .toList
             )
           )

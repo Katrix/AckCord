@@ -37,9 +37,11 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import akka.stream.typed.scaladsl.ActorFlow
 import akka.util.Timeout
-import org.slf4j.Logger
+import org.slf4j.{Logger, LoggerFactory}
 
 object CacheStreams {
+
+  private val logger = LoggerFactory.getLogger(this.getClass)
 
   /**
     * Creates a set of publish subscribe streams that go through the cache updated.
@@ -98,16 +100,16 @@ object CacheStreams {
   /**
     * A flow that creates [[APIMessage]]s from update events.
     */
-  def createApiMessages(log: Logger): Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
+  def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
         case (APIMessageCacheUpdate(_, sendEvent, _, _, d), state) =>
           val event = sendEvent(state)
           if (event.isEmpty) {
             if (expectedFailedApiMessageCreation.contains(d.event.getClass)) {
-              log.debug(s"Failed to create API message for ${d.event.getClass}")
+              logger.debug(s"Failed to create API message for ${d.event.getClass}")
             } else {
-              log.warn(s"Failed to create API message for ${d.event.getClass}")
+              logger.warn(s"Failed to create API message for ${d.event.getClass}")
             }
           }
 
