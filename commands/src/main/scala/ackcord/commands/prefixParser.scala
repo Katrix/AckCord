@@ -132,7 +132,9 @@ case class StructuredPrefixParser(
           if (mentionHere) mentionParser
           else MessageParser.unit
 
-        val symbols = MessageParser.oneOf(symbolsHere.map(MessageParser.startsWith(_)))
+        val symbols =
+          if (symbolsHere.isEmpty || symbolsHere.forall(_.isEmpty)) MessageParser.unit
+          else MessageParser.oneOf(symbolsHere.map(MessageParser.startsWith(_)))
         val aliases = MessageParser.oneOf(aliasesHere.map(MessageParser.literal(_, caseSensitiveHere)))
 
         mention *> symbols *> aliases.void
