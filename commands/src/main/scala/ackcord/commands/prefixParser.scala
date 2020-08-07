@@ -41,14 +41,16 @@ object PrefixParser {
       needsMention: Boolean,
       symbols: Seq[String],
       aliases: Seq[String],
-      caseSensitive: Boolean = false
+      caseSensitive: Boolean = false,
+      mentionOrPrefix: Boolean = true
   ): StructuredPrefixParser =
     StructuredPrefixParser(
       (_, _) => Future.successful(needsMention),
       (_, _) => Future.successful(symbols),
       (_, _) => Future.successful(aliases),
       (_, _) => Future.successful(caseSensitive),
-      (_, _) => Future.successful(true)
+      (_, _) => Future.successful(true),
+      (_, _) => Future.successful(mentionOrPrefix)
     )
 
   def structuredFunction(
@@ -56,14 +58,16 @@ object PrefixParser {
       symbols: (CacheSnapshot, Message) => Seq[String],
       aliases: (CacheSnapshot, Message) => Seq[String],
       caseSensitive: (CacheSnapshot, Message) => Boolean = (_, _) => false,
-      canExecute: (CacheSnapshot, Message) => Boolean = (_, _) => true
+      canExecute: (CacheSnapshot, Message) => Boolean = (_, _) => true,
+      mentionOrPrefix: (CacheSnapshot, Message) => Boolean = (_, _) => true
   ): StructuredPrefixParser =
     StructuredPrefixParser(
       Function.untupled(needsMention.tupled.andThen(Future.successful)),
       Function.untupled(symbols.tupled.andThen(Future.successful)),
       Function.untupled(aliases.tupled.andThen(Future.successful)),
       Function.untupled(caseSensitive.tupled.andThen(Future.successful)),
-      Function.untupled(canExecute.tupled.andThen(Future.successful))
+      Function.untupled(canExecute.tupled.andThen(Future.successful)),
+      Function.untupled(mentionOrPrefix.tupled.andThen(Future.successful))
     )
 
   def structuredAsync(
@@ -71,8 +75,10 @@ object PrefixParser {
       symbols: (CacheSnapshot, Message) => Future[Seq[String]],
       aliases: (CacheSnapshot, Message) => Future[Seq[String]],
       caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false),
-      canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
-  ): StructuredPrefixParser = StructuredPrefixParser(needsMention, symbols, aliases, caseSensitive, canExecute)
+      canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true),
+      mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
+  ): StructuredPrefixParser =
+    StructuredPrefixParser(needsMention, symbols, aliases, caseSensitive, canExecute, mentionOrPrefix)
 
   def fromFunctionAsync(f: (CacheSnapshot, Message) => Future[MessageParser[Unit]]): PrefixParser =
     new PrefixParser {
@@ -95,22 +101,28 @@ object PrefixParser {
   * @param needsMention If the command needs a mention
   * @param symbols The valid prefix symbols for the command
   * @param aliases The aliases for the command
+  * @param caseSensitive If the aliases should be case sensitive
+  * @param canExecute A early precheck if the command can execute at all
+  * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
+  *                        If needsMention is also true, skips the symbol check.
   */
 case class StructuredPrefixParser(
     needsMention: (CacheSnapshot, Message) => Future[Boolean],
     symbols: (CacheSnapshot, Message) => Future[Seq[String]],
     aliases: (CacheSnapshot, Message) => Future[Seq[String]],
     caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false),
-    canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
+    canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true),
+    mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
 ) extends PrefixParser {
 
   override def apply(message: Message)(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]] =
     for {
-      execute           <- canExecute(c, message)
-      mentionHere       <- needsMention(c, message)
-      symbolsHere       <- symbols(c, message)
-      aliasesHere       <- aliases(c, message)
-      caseSensitiveHere <- caseSensitive(c, message)
+      execute             <- canExecute(c, message)
+      mentionHere         <- needsMention(c, message)
+      symbolsHere         <- symbols(c, message)
+      aliasesHere         <- aliases(c, message)
+      caseSensitiveHere   <- caseSensitive(c, message)
+      mentionOrPrefixHere <- mentionOrPrefix(c, message)
     } yield {
       if (execute) {
         val mentionParser: MessageParser[Unit] = {
@@ -128,16 +140,21 @@ case class StructuredPrefixParser(
           } else err
         }
 
-        val mention =
-          if (mentionHere) mentionParser
-          else MessageParser.unit
+        val symbolsEmpty = symbolsHere.isEmpty || symbolsHere.forall(_.isEmpty)
 
         val symbols =
-          if (symbolsHere.isEmpty || symbolsHere.forall(_.isEmpty)) MessageParser.unit
-          else MessageParser.oneOf(symbolsHere.map(MessageParser.startsWith(_)))
+          if (symbolsEmpty) MessageParser.unit
+          else MessageParser.oneOf(symbolsHere.map(MessageParser.startsWith(_))).void
         val aliases = MessageParser.oneOf(aliasesHere.map(MessageParser.literal(_, caseSensitiveHere)))
 
-        mention *> symbols *> aliases.void
+        if (mentionHere && mentionOrPrefixHere)
+          mentionParser *> aliases.void
+        else if (mentionOrPrefixHere && symbolsEmpty)
+          mentionParser *> aliases.void
+        else if (mentionOrPrefixHere)
+          MessageParser.oneOf(Seq(mentionParser, symbols)) *> aliases.void
+        else
+          symbols *> aliases.void
       } else {
         MessageParser.fail("Can't execute")
       }

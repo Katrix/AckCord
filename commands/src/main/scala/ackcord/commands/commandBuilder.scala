@@ -49,6 +49,11 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
   val defaultMustMention: Boolean
 
   /**
+    * Set the default value for mention or prefix when creating a named command.
+    */
+  val defaultMentionOrPrefix: Boolean
+
+  /**
     * The parser used for parsing the arguments this command takes.
     */
   def parser: MessageParser[A]
@@ -63,6 +68,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
   def namedParser(structuredPrefixParser: StructuredPrefixParser): NamedCommandBuilder[M, A] =
     new NamedCommandBuilder[M, A] {
       override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
       override def prefixParser: StructuredPrefixParser = structuredPrefixParser
 
@@ -81,14 +88,17 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
     * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
+    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
+    *                        If needsMention is also true, skips the symbol check.
     */
   def named(
       namedSymbols: Seq[String],
       namedAliases: Seq[String],
       mustMention: Boolean = defaultMustMention,
-      aliasesCaseSensitive: Boolean = false
+      aliasesCaseSensitive: Boolean = false,
+      mentionOrPrefix: Boolean = defaultMentionOrPrefix
   ): NamedCommandBuilder[M, A] = namedParser(
-    PrefixParser.structured(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
+    PrefixParser.structured(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive, mentionOrPrefix)
   )
 
   /**
@@ -99,14 +109,26 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
     * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
+    * @param canExecute A early precheck if the command can execute at all
+    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
+    *                        If needsMention is also true, skips the symbol check.
     */
   def namedFunction(
       namedSymbols: (CacheSnapshot, Message) => Seq[String],
       namedAliases: (CacheSnapshot, Message) => Seq[String],
       mustMention: (CacheSnapshot, Message) => Boolean = (_, _) => defaultMustMention,
-      aliasesCaseSensitive: (CacheSnapshot, Message) => Boolean = (_, _) => false
+      aliasesCaseSensitive: (CacheSnapshot, Message) => Boolean = (_, _) => false,
+      canExecute: (CacheSnapshot, Message) => Boolean = (_, _) => true,
+      mentionOrPrefix: (CacheSnapshot, Message) => Boolean = (_, _) => defaultMentionOrPrefix
   ): NamedCommandBuilder[M, A] = namedParser(
-    PrefixParser.structuredFunction(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
+    PrefixParser.structuredFunction(
+      mustMention,
+      namedSymbols,
+      namedAliases,
+      aliasesCaseSensitive,
+      canExecute,
+      mentionOrPrefix
+    )
   )
 
   /**
@@ -117,14 +139,26 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * @param namedAliases The valid aliases to use when invoking the command
     * @param mustMention If the command requires a mention
     * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
+    * @param canExecute A early precheck if the command can execute at all
+    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
+    *                        If needsMention is also true, skips the symbol check.
     */
   def namedAsync(
       namedSymbols: (CacheSnapshot, Message) => Future[Seq[String]],
       namedAliases: (CacheSnapshot, Message) => Future[Seq[String]],
       mustMention: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(defaultMustMention),
-      aliasesCaseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false)
+      aliasesCaseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false),
+      canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true),
+      mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(defaultMentionOrPrefix)
   ): NamedCommandBuilder[M, A] = namedParser(
-    PrefixParser.structuredAsync(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive)
+    PrefixParser.structuredAsync(
+      mustMention,
+      namedSymbols,
+      namedAliases,
+      aliasesCaseSensitive,
+      canExecute,
+      mentionOrPrefix
+    )
   )
 
   /**
@@ -133,6 +167,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     */
   def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] = new CommandBuilder[M, B] {
     override val defaultMustMention: Boolean = self.defaultMustMention
+
+    override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
     override def requests: Requests = self.requests
 
@@ -151,6 +187,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
     override val defaultMustMention: Boolean = self.defaultMustMention
+
+    override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
     override def requests: Requests = self.requests
 
@@ -271,9 +309,15 @@ object CommandBuilder {
   /**
     * Creates a raw command builder without any extra processing.
     */
-  def rawBuilder(requestHelper: Requests, defaultMustMentionVal: Boolean): CommandBuilder[CommandMessage, NotUsed] =
+  def rawBuilder(
+      requestHelper: Requests,
+      defaultMustMentionVal: Boolean,
+      defaultMentionOrPrefixVal: Boolean
+  ): CommandBuilder[CommandMessage, NotUsed] =
     new CommandBuilder[CommandMessage, NotUsed] {
       override val defaultMustMention: Boolean = defaultMustMentionVal
+
+      override val defaultMentionOrPrefix: Boolean = defaultMentionOrPrefixVal
 
       override def requests: Requests = requestHelper
 
@@ -336,6 +380,11 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
   val defaultMustMention: Boolean
 
   /**
+    * Set the default value for mention or prefix when creating a named command.
+    */
+  val defaultMentionOrPrefix: Boolean
+
+  /**
     * The parser used for parsing the arguments this command takes.
     */
   def parser: MessageParser[A]
@@ -351,6 +400,8 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
       override def description: CommandDescription = descriptionObj
 
       override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
       override def parser: MessageParser[A] = self.parser
 
@@ -378,6 +429,8 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
     new NamedCommandBuilder[M, B] {
       override val defaultMustMention: Boolean = self.defaultMustMention
 
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
+
       override def prefixParser: StructuredPrefixParser = self.prefixParser
 
       override def requests: Requests = self.requests
@@ -395,6 +448,8 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedCommandBuilder[M2, A] =
     new NamedCommandBuilder[M2, A] {
       override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
       override def prefixParser: StructuredPrefixParser = self.prefixParser
 
@@ -433,6 +488,11 @@ trait NamedDescribedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessag
   val defaultMustMention: Boolean
 
   /**
+    * Set the default value for mention or prefix when creating a named command.
+    */
+  val defaultMentionOrPrefix: Boolean
+
+  /**
     * The parser used for parsing the arguments this command takes.
     */
   def parser: MessageParser[A]
@@ -444,6 +504,8 @@ trait NamedDescribedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessag
   def parsing[B](implicit newParser: MessageParser[B]): NamedDescribedCommandBuilder[M, B] =
     new NamedDescribedCommandBuilder[M, B] {
       override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
       override def prefixParser: StructuredPrefixParser = self.prefixParser
 
@@ -465,6 +527,8 @@ trait NamedDescribedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessag
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedDescribedCommandBuilder[M2, A] =
     new NamedDescribedCommandBuilder[M2, A] {
       override val defaultMustMention: Boolean = self.defaultMustMention
+
+      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
 
       override def prefixParser: StructuredPrefixParser = self.prefixParser
 

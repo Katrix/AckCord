@@ -45,14 +45,19 @@ abstract class CommandController(val requests: Requests) {
   /**
     * Determines the default value for if a mention should required.
     */
-  def defaultMustMention: Boolean = true
+  def defaultMustMention: Boolean = false
+
+  /**
+    * Determines the default value for mention or prefix when creating a named command.
+    */
+  def defaultMentionOrPrefix: Boolean = false
 
   /**
     * The base command builder that you can build off if you don't like the
     * default provided builder.
     */
   val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] =
-    CommandBuilder.rawBuilder(requests, defaultMustMention)
+    CommandBuilder.rawBuilder(requests, defaultMustMention, defaultMentionOrPrefix)
 
   /**
     * The default command builder you will use to create most of your commands.
