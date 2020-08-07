@@ -86,7 +86,8 @@ class Ratelimiter(
     case ResetRatelimit(uriWithMajor, bucket) =>
       if (settings.LogRatelimitEvents) {
         log.debug(
-          s"""|Reseting ratelimit for: $uriWithMajor
+          s"""|
+              |Reseting ratelimit for: $uriWithMajor
               |Bucket: $bucket
               |Limit: ${routeLimits.get(bucket)}
               |Current time: ${System.currentTimeMillis()}
@@ -133,13 +134,15 @@ class Ratelimiter(
 
     case UpdateRatelimits(
           route,
-          RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
+          ratelimitInfo @ RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
           isGlobal,
           identifier
         ) =>
       if (settings.LogRatelimitEvents) {
         log.debug(
-          s"""|Updating ratelimits info: ${route.uriWithMajor} $identifier
+          s"""|
+              |Updating ratelimits info: ${route.method.value} ${route.uriWithMajor} $identifier
+              |IsValid ${ratelimitInfo.isValid}
               |Bucket: $bucket
               |BucketLimit: $bucketLimit
               |Global: $isGlobal
@@ -150,30 +153,51 @@ class Ratelimiter(
         )
       }
 
-      //We don't update the remainingRequests map here as the information we get here is slightly outdated
+      if (ratelimitInfo.isValid) {
+        //We don't update the remainingRequests map here as the information we get here is slightly outdated
+        routeLimits.put(bucket, bucketLimit)
+        uriToBucket.put(route.uriWithoutMajor, bucket)
 
-      routeLimits.put(bucket, bucketLimit)
-      uriToBucket.put(route.uriWithoutMajor, bucket)
-
-      if (isGlobal) {
-        globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
-        timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
-      } else {
-        timers.startSingleTimer(
-          route.uriWithMajor,
-          ResetRatelimit(route.uriWithMajor, bucket),
-          timeTilReset
-        )
+        if (isGlobal) {
+          globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
+          timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
+        } else {
+          timers.startSingleTimer(
+            route.uriWithMajor,
+            ResetRatelimit(route.uriWithMajor, bucket),
+            timeTilReset
+          )
+        }
       }
 
       Behaviors.same
 
     case TimedOut(uri, actorRef) =>
-      rateLimits.get(uri).foreach(_.dequeueFirst(_.replyTo == actorRef))
+      rateLimits.get(uri).flatMap(_.dequeueFirst(_.replyTo == actorRef)).foreach {
+        case WantToPass(route, identifier, _, _) =>
+          if (settings.LogRatelimitEvents) {
+            log.debug(
+              s"""|
+                  |Ratelimit timed out: ${route.method.value} ${route.uriWithMajor} $identifier
+                  |Current time: ${System.currentTimeMillis()}
+                  |""".stripMargin
+            )
+          }
+      }
       Behaviors.same
 
     case GlobalTimedOut(actorRef) =>
-      globalLimited.dequeueFirst(_.replyTo == actorRef)
+      globalLimited.dequeueFirst(_.replyTo == actorRef).foreach {
+        case WantToPass(route, identifier, _, _) =>
+          if (settings.LogRatelimitEvents) {
+            log.debug(
+              s"""|
+                  |Ratelimit timed out globally: ${route.method.value} ${route.uriWithMajor} $identifier
+                  |Current time: ${System.currentTimeMillis()}
+                  |""".stripMargin
+            )
+          }
+      }
       Behaviors.same
   }
 
@@ -186,6 +210,17 @@ class Ratelimiter(
         if (remaining <= 0 || queue.isEmpty) remaining
         else {
           val request = queue.dequeue()
+          if (settings.LogRatelimitEvents) {
+            val WantToPass(route, identifier, _, _) = request
+            log.debug(
+              s"""|
+                  |Releasing request: ${route.method.value} ${route.uriWithMajor} $identifier
+                  |Remaining requests: $remaining
+                  |Current time: ${System.currentTimeMillis()}
+                  |""".stripMargin
+            )
+          }
+
           sendResponse(request)
           context.unwatch(request.replyTo)
           release(remaining - 1)
@@ -194,6 +229,7 @@ class Ratelimiter(
 
       if (isGlobalRatelimited) {
         queue.dequeueAll(_ => true).foreach { request =>
+          log.debug("\nReleasing all requests due to global")
           context.unwatch(request.replyTo)
           handleWantToPassGlobal(request)
         }

@@ -340,14 +340,12 @@ object RequestStreams {
           case _                               => false
         }
 
-        if (answer.ratelimitInfo.isValid) {
-          rateLimitActor ! Ratelimiter.UpdateRatelimits(
-            answer.route,
-            answer.ratelimitInfo,
-            isGlobal,
-            answer.identifier
-          )
-        }
+        rateLimitActor ! Ratelimiter.UpdateRatelimits(
+          answer.route,
+          answer.ratelimitInfo,
+          isGlobal,
+          answer.identifier
+        )
       }
       .async
       .named("SendAnswersToRatelimiter")
