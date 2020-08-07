@@ -62,7 +62,7 @@ class CacheTypeRegistry(
       log.debug(s"$tpe not found", new Exception(s"No $tpe found for ${tag.runtimeClass}"))
     }
 
-    res
+    res.filter(!_.ignore)
   }
 
   def getUpdater[D: ClassTag]: Option[CacheUpdater[D]] =
@@ -89,16 +89,19 @@ object CacheTypeRegistry {
     classOf[User]             -> CacheHandlers.userUpdater,
     classOf[UnavailableGuild] -> CacheHandlers.unavailableGuildUpdater,
     classOf[Message]          -> CacheHandlers.messageUpdater,
-    classOf[Role]             -> CacheHandlers.roleUpdater
+    classOf[Role]             -> CacheHandlers.roleUpdater,
+    classOf[Ban]              -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
+    classOf[Emoji]            -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
+    classOf[Presence]         -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
   )
 
   private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(
-    classOf[Ban]   -> CacheUpdater.dummy[Ban],
-    classOf[Emoji] -> CacheUpdater.dummy[Emoji]
+    classOf[Ban]   -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
+    classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false)
   )
 
   private val allUpdaters: Map[Class[_], CacheUpdater[_]] =
-    noPresencesUpdaters + (classOf[Presence] -> CacheUpdater.dummy[Presence])
+    noPresencesUpdaters + (classOf[Presence] -> CacheUpdater.dummy[Presence](shouldBeIgnored = false))
 
   private val noBanDeleters: Map[Class[_], CacheDeleter[_]] = Map(
     classOf[GuildChannel]   -> CacheHandlers.guildChannelDeleter,
@@ -106,10 +109,12 @@ object CacheTypeRegistry {
     classOf[GroupDMChannel] -> CacheHandlers.groupDmChannelDeleter,
     classOf[GuildMember]    -> CacheHandlers.guildMemberDeleter,
     classOf[Role]           -> CacheHandlers.roleDeleter,
-    classOf[Message]        -> CacheHandlers.messageDeleter
+    classOf[Message]        -> CacheHandlers.messageDeleter,
+    classOf[Ban]            -> CacheDeleter.dummy[Ban](shouldBeIgnored = true)
   )
 
-  private val allDeleters: Map[Class[_], CacheDeleter[_]] = noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban])
+  private val allDeleters: Map[Class[_], CacheDeleter[_]] =
+    noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban](shouldBeIgnored = false))
 
   def default(log: Logger) = new CacheTypeRegistry(allUpdaters, allDeleters, log)
 

@@ -37,6 +37,12 @@ sealed trait CacheHandler[-Obj] {
     * @param log A logging adapter
     */
   def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(implicit log: Logger): Unit
+
+  /**
+    * If true, the Cache registry won't return this if asked for a type of
+    * this handler, but it won't report an error
+    */
+  def ignore: Boolean = false
 }
 
 /**
@@ -44,10 +50,12 @@ sealed trait CacheHandler[-Obj] {
   */
 trait CacheDeleter[-Obj] extends CacheHandler[Obj]
 object CacheDeleter {
-  def dummy[Obj]: CacheDeleter[Obj] = new CacheDeleter[Obj] {
+  def dummy[Obj](shouldBeIgnored: Boolean): CacheDeleter[Obj] = new CacheDeleter[Obj] {
     override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = ()
+
+    override def ignore: Boolean = shouldBeIgnored
   }
 }
 
@@ -56,10 +64,12 @@ object CacheDeleter {
   */
 trait CacheUpdater[-Obj] extends CacheHandler[Obj]
 object CacheUpdater {
-  def dummy[Obj]: CacheUpdater[Obj] = new CacheUpdater[Obj] {
+  def dummy[Obj](shouldBeIgnored: Boolean): CacheUpdater[Obj] = new CacheUpdater[Obj] {
     override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = ()
+
+    override def ignore: Boolean = shouldBeIgnored
   }
 }
 
