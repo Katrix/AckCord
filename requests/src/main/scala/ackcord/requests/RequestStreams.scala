@@ -65,7 +65,12 @@ object RequestStreams {
       findCustomHeader(`X-RateLimit-Reset-After`, response).fold(-1.millis)(_.resetIn)
     } else {
       findCustomHeader(`X-RateLimit-Reset`, response).fold(-1.millis) { header =>
-        (header.resetAt.toEpochMilli - System.currentTimeMillis()).millis
+        // A race condition exists with using the absolute rate limit
+        // if the reset time sent from Discord is before the time that this line runs
+        // then this value would be negative and RatelimitInfo would be invalid
+        // Taking the max of the difference and 1 millisecond ensures that the next
+        // rate limit reset is in the future.
+        (header.resetAt.toEpochMilli - System.currentTimeMillis()).millis.max(1.milli)
       }
     }
   }
