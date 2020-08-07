@@ -58,7 +58,7 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
         case Some(HelpCommand.Args.PageArgs(page)) =>
           OptionT.liftF(createReplyAll(m.message, page)).map(CreateMessage(m.textChannel.id, _))
         case None =>
-          OptionT.liftF(createReplyAll(m.message, 0)).map(CreateMessage(m.textChannel.id, _))
+          OptionT.liftF(createReplyAll(m.message, 1)).map(CreateMessage(m.textChannel.id, _))
       }
     }
 

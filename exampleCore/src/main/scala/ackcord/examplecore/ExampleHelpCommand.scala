@@ -45,7 +45,7 @@ class ExampleHelpCommand(requests: Requests) extends HelpCommand(requests) {
   )
 
   override def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): Future[CreateMessageData] = {
-    if (page < 0) {
+    if (page <= 0) {
       Future.successful(CreateMessageData(embed = Some(OutgoingEmbed(description = Some("Invalid Page")))))
     } else {
       Future
@@ -65,9 +65,9 @@ class ExampleHelpCommand(requests: Requests) extends HelpCommand(requests) {
                 HelpCommand.HelpCommandProcessedEntry(needsMention, symbols, aliases, caseSensitive, entry.description)
             }
             .sortBy(e => (e.symbols.head, e.aliases.head))
-            .slice(page * 10, (page + 1) * 10)
+            .slice((page - 1) * 10, page * 10)
 
-          val maxPages = Math.max(registeredCommands.size / 10, 1)
+          val maxPages = Math.max(Math.ceil(registeredCommands.size / 10D).toInt, 1)
           if (commandSlice.isEmpty) {
             CreateMessageData(s"Max pages: $maxPages")
           } else {
@@ -76,7 +76,7 @@ class ExampleHelpCommand(requests: Requests) extends HelpCommand(requests) {
               embed = Some(
                 OutgoingEmbed(
                   fields = commandSlice.map(createContent(_)),
-                  footer = Some(OutgoingEmbedFooter(s"Page: ${page + 1} of $maxPages"))
+                  footer = Some(OutgoingEmbedFooter(s"Page: $page of $maxPages"))
                 )
               )
             )
