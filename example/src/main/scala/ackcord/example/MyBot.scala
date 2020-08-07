@@ -24,6 +24,7 @@
 package ackcord.example
 
 import ackcord._
+import ackcord.commands.PrefixParser
 import ackcord.gateway.GatewayIntents
 import ackcord.syntax._
 import cats.instances.future._
@@ -61,9 +62,10 @@ object MyBot extends App {
         }
       }
 
-      val myEvents    = new MyEvents(client.requests)
-      val myListeners = new Listeners(client)
-      val myCommands  = new MyCommands(client, client.requests)
+      val myEvents      = new MyEvents(client.requests)
+      val myListeners   = new Listeners(client)
+      val myCommands    = new MyCommands(client, client.requests)
+      val myHelpCommand = new MyHelpCommand(client.requests)
 
       client.bulkRegisterListeners(
         myEvents.printReady,
@@ -72,12 +74,27 @@ object MyBot extends App {
 
       client.registerListener(myListeners.createListeners)
 
-      client.commands.bulkRunNamed(
-        myCommands.echo,
+      client.commands.runNewCommand(
+        PrefixParser.structured(needsMention = true, Seq("!"), Seq("help")),
+        myHelpCommand.command
+      )
+
+      client.commands.bulkRunNamedWithHelp(
+        myHelpCommand,
+        myCommands.hello,
+        myCommands.copy,
+        myCommands.setShouldMention,
+        myCommands.modifyPrefixSymbols,
         myCommands.guildInfo,
+        myCommands.sendFile,
+        myCommands.adminsOnly,
+        myCommands.timeDiff,
         myCommands.ping,
-        myCommands.kill,
-        myCommands.queue
+        myCommands.maybeFail,
+        myCommands.ratelimitTest("ratelimitTest", client.requests.sinkIgnore[Any]),
+        myCommands
+          .ratelimitTest("ratelimitTestOrdered", client.requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
+        myCommands.kill
       )
 
       client.login()
