@@ -211,6 +211,24 @@ class CommandConnector(
     runNewCommand(command.prefixParser, command.command)
 
   /**
+    * Starts a named command execution and registers it with the help command.
+    * @param command The named command to run.
+    * @param helpCommand The help command to register the commandf with.
+    * @tparam A The type of arguments this command uses.
+    * @tparam Mat The materialized result of running the command graph.
+    * @return The materialized result of running the command, in addition to
+    *         a future signaling when the command is done running.
+    */
+  def runNewNamedCommandWithHelp[A, Mat](
+      command: NamedDescribedComplexCommand[A, Mat],
+      helpCommand: HelpCommand
+  ): CommandRegistration[Mat] = {
+    val registration = runNewCommand(command.prefixParser, command.command)
+    helpCommand.registerCommand(command.prefixParser, command.description, registration.onDone)
+    registration
+  }
+
+  /**
     * Starts many named commands at the same time. They must all have a
     * materialized value of NotUsed.
     * @param commands The commands to run.
@@ -218,4 +236,16 @@ class CommandConnector(
     */
   def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], CommandRegistration[_])] =
     commands.map(c => c -> runNewNamedCommand(c))
+
+  /**
+    * Starts many named commands at the same time and registers them with the
+    * help command. They must all have a materialized value of NotUsed.
+    * @param commands The commands to run.
+    * @return The commands together with their completions.
+    */
+  def bulkRunNamedWithHelp(
+      helpCommand: HelpCommand,
+      commands: NamedDescribedCommand[_]*
+  ): Seq[(NamedDescribedCommand[_], CommandRegistration[_])] =
+    commands.map(c => c -> runNewNamedCommandWithHelp(c, helpCommand))
 }

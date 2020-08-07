@@ -33,6 +33,7 @@ package object commands {
   type GuildUserCommandMessage[+A]        = GuildCommandMessage[A] with UserCommandMessage[A]
   type VoiceGuildMemberCommandMessage[+A] = GuildMemberCommandMessage[A] with VoiceGuildCommandMessage[A]
 
-  type Command[A]      = ackcord.commands.ComplexCommand[A, NotUsed]
-  type NamedCommand[A] = ackcord.commands.NamedComplexCommand[A, NotUsed]
+  type Command[A]               = ackcord.commands.ComplexCommand[A, NotUsed]
+  type NamedCommand[A]          = ackcord.commands.NamedComplexCommand[A, NotUsed]
+  type NamedDescribedCommand[A] = ackcord.commands.NamedDescribedComplexCommand[A, NotUsed]
 }

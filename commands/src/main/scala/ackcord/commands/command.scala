@@ -49,6 +49,22 @@ case class ComplexCommand[A, Mat](parser: MessageParser[A], flow: Flow[CommandMe
 case class NamedComplexCommand[A, Mat](
     command: ComplexCommand[A, Mat],
     prefixParser: StructuredPrefixParser
+) {
+
+  def toDescribed(description: CommandDescription): NamedDescribedComplexCommand[A, Mat] =
+    NamedDescribedComplexCommand(command, prefixParser, description)
+}
+
+/**
+  * A constructed command execution with a name and a description.
+  *
+  * @tparam A The argument type of the command
+  * @tparam Mat The materialized result of creating this command
+  */
+case class NamedDescribedComplexCommand[A, Mat](
+    command: ComplexCommand[A, Mat],
+    prefixParser: StructuredPrefixParser,
+    description: CommandDescription
 )
 
 /**
