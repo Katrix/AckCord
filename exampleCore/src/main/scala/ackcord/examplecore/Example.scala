@@ -23,17 +23,18 @@
  */
 package ackcord.examplecore
 
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
 import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.commands.{HelpCommand, PrefixParser}
+import ackcord.commands.{CommandConnector, CommandDescription, HelpCommand, NamedDescribedCommand, NamedDescribedComplexCommand, PrefixParser}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, Requests}
 import ackcord.util.{APIGuildRouter, GuildRouter}
+import akka.Done
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
@@ -43,7 +44,6 @@ import akka.stream.scaladsl.Keep
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{KillSwitches, SharedKillSwitch, UniqueKillSwitch}
 import akka.util.Timeout
-import akka.{Done, NotUsed}
 import cats.arrow.FunctionK
 import org.slf4j.Logger
 
@@ -66,6 +66,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     extends AbstractBehavior[ExampleMain.Command](ctx) {
   implicit val system: ActorSystem[Nothing] = context.system
   import ExampleMain._
+  import system.executionContext
 
   private val events = Events.create(
     //We can set some gateway events here that we want AckCord to completely
@@ -103,56 +104,39 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       relativeTime = true
     )
 
-  val controllerCommands: Seq[CommandsEntry[NotUsed]] = {
-    val controller = new NewCommandsController(requests)
+  val controllerCommands: Seq[NamedDescribedCommand[_]] = {
+    val controller = new CommandsController(requests)
     Seq(
-      CommandsEntry(controller.hello, commands.CommandDescription("Hello", "Say hello")),
-      CommandsEntry(controller.copy, commands.CommandDescription("Copy", "Make the bot say what you said")),
-      CommandsEntry(
-        controller.guildInfo,
-        commands.CommandDescription("Guild info", "Prints info about the current guild")
-      ),
-      CommandsEntry(
-        controller.parsingNumbers,
-        commands.CommandDescription("Parse numbers", "Have the bot parse two numbers")
-      ),
-      CommandsEntry(
-        controller.sendFile,
-        commands.CommandDescription("Send file", "Send a file in an embed")
-      ),
-      CommandsEntry(
-        controller.adminsOnly,
-        commands.CommandDescription("Elevanted command", "Command only admins can use")
-      ),
-      CommandsEntry(
-        controller.timeDiff,
-        commands.CommandDescription("Time diff", "Checks the time between sending and seeing a message")
-      ),
-      CommandsEntry(controller.ping, commands.CommandDescription("Ping", "Checks if the bot is alive")),
-      CommandsEntry(
-        controller.maybeFail,
-        commands.CommandDescription("MaybeFail", "A command that sometimes fails and throws an exception")
-      ),
-      CommandsEntry(
-        controller.ratelimitTest("ratelimitTest", requests.sinkIgnore[Any]),
-        commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
-      ),
-      CommandsEntry(
-        controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
-        commands.CommandDescription("Ratelimit test", "Checks that ratelimiting is working as intended")
-      ),
-      CommandsEntry(
-        controller.kill,
-        commands.CommandDescription("Kill", "Kills the bot")
-      )
+      controller.hello,
+      controller.copy,
+      controller.setShouldMention,
+      controller.modifyPrefixSymbols,
+      controller.guildInfo,
+      controller.sendFile,
+      controller.adminsOnly,
+      controller.timeDiff,
+      controller.ping,
+      controller.maybeFail,
+      controller.ratelimitTest("ratelimitTest", requests.sinkIgnore[Any]),
+      controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
+      controller.kill
     )
+  }
+
+  events.subscribeAPI.runForeach {
+    case mc: APIMessage.MessageCreate =>
+      import ackcord.syntax._
+      if (mc.message.content.startsWith("Msg")) {
+        requests.singleIgnore(mc.message.createReaction("❌"))(Requests.RequestProperties.retry)
+      }
+    case _ =>
   }
 
   val helpCommand = new ExampleHelpCommand(requests)
 
   val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
 
-  val commandConnector = new commands.CommandConnector(
+  val commandConnector = new CommandConnector(
     events.subscribeAPI
       .collectType[APIMessage.MessageCreate]
       .map(m => m.message -> m.cache.current)
@@ -161,19 +145,18 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     requests.parallelism
   )
 
-  def registerCommand[Mat](entry: CommandsEntry[Mat]): Mat =
+  def registerCommand[Mat](entry: NamedDescribedComplexCommand[_, Mat]): Mat =
     ExampleMain.registerNewCommand(commandConnector, helpCommand)(entry)
 
   controllerCommands.foreach(registerCommand)
   registerCommand(
-    CommandsEntry(
-      helpCommand.command.toNamed(PrefixParser.structured(needsMention = true, Seq("!"), Seq("help"))),
-      commands.CommandDescription("Help", "This command right here", "[query]|[page]")
-    )
+    helpCommand.command
+      .toNamed(PrefixParser.structured(needsMention = true, Seq("!"), Seq("help")))
+      .toDescribed(CommandDescription("Help", "This command right here", "[query]|[page]"))
   )
 
-  private val registerCmdObjMusic = new FunctionK[CommandsEntry, cats.Id] {
-    override def apply[A](fa: CommandsEntry[A]): A = registerCommand(fa)
+  private val registerCmdObjMusic = new FunctionK[NamedDescribedComplexCommand[_, *], cats.Id] {
+    override def apply[A](fa: NamedDescribedComplexCommand[_, A]): A = registerCommand(fa)
   }
 
   val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
@@ -283,20 +266,11 @@ object ExampleMain {
   case object RestartShard                               extends Command
   case object CommandsUnregistered                       extends Command
 
-  //Ass of now, you are still responsible for binding the command logic to names and descriptions yourself
-  case class CommandsEntry[Mat](
-      command: commands.NamedComplexCommand[_, Mat],
-      description: commands.CommandDescription
-  )
-
-  def registerNewCommand[Mat](connector: commands.CommandConnector, helpCommand: HelpCommand)(
-      entry: CommandsEntry[Mat]
-  ): Mat = {
-    val registration = connector.runNewNamedCommand(entry.command)
-    helpCommand.registerCommand(entry.command.prefixParser, entry.description, registration.onDone)
-
-    import scala.concurrent.ExecutionContext.Implicits.global
-    registration.onDone.foreach(_ => println(s"Command completed: ${entry.description.name}"))
+  def registerNewCommand[Mat](connector: CommandConnector, helpCommand: HelpCommand)(
+      command: NamedDescribedComplexCommand[_, Mat]
+  )(implicit ec: ExecutionContext): Mat = {
+    val registration = connector.runNewNamedCommandWithHelp(command, helpCommand)
+    registration.onDone.foreach(_ => println(s"Command completed: ${command.description.name}"))
     registration.materialized
   }
 }

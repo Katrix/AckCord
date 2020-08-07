@@ -27,10 +27,10 @@ package ackcord.examplecore.music
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
+import ackcord.commands.NamedDescribedComplexCommand
 import ackcord.data.raw.RawMessage
 import ackcord.data.{GuildId, TextChannel, VoiceGuildChannelId}
 import ackcord.examplecore.Compat
-import ackcord.examplecore.ExampleMain.CommandsEntry
 import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
@@ -43,12 +43,7 @@ import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 import com.sedmelluq.discord.lavaplayer.player.event._
-import com.sedmelluq.discord.lavaplayer.player.{
-  AudioConfiguration,
-  AudioPlayer,
-  AudioPlayerManager,
-  DefaultAudioPlayerManager
-}
+import com.sedmelluq.discord.lavaplayer.player.{AudioConfiguration, AudioPlayer, AudioPlayerManager, DefaultAudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}
@@ -66,7 +61,7 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: Requests, registerCmd: FunctionK[CommandsEntry, cats.Id], events: Events)(
+  def apply(requests: Requests, registerCmd: FunctionK[NamedDescribedComplexCommand[_, *], cats.Id], events: Events)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
@@ -78,23 +73,12 @@ object MusicHandler {
       {
         implicit val timeout: Timeout = 30.seconds
         val cmds                      = new MusicCommands(requests, guildId, ctx.self)
+
         Seq(
-          CommandsEntry(
-            cmds.queue,
-            commands.CommandDescription("Queue", "Set an url as the url to play")
-          ),
-          CommandsEntry(
-            cmds.stop,
-            commands.CommandDescription("Stop music", "Stop music from playing, and leave the channel")
-          ),
-          CommandsEntry(
-            cmds.next,
-            commands.CommandDescription("Next track", "Skip to the next track")
-          ),
-          CommandsEntry(
-            cmds.pause,
-            commands.CommandDescription("Pause/Play", "Toggle pause on the current player")
-          )
+          cmds.queue,
+          cmds.stop,
+          cmds.next,
+          cmds.pause
         ).foreach(registerCmd(_))
       }
 

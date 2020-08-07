@@ -24,7 +24,13 @@
 package ackcord.examplecore.music
 
 import ackcord._
-import ackcord.commands.{CommandBuilder, CommandController, NamedCommand, VoiceGuildMemberCommandMessage}
+import ackcord.commands.{
+  CommandBuilder,
+  CommandController,
+  NamedCommand,
+  NamedDescribedCommand,
+  VoiceGuildMemberCommandMessage
+}
 import ackcord.data.{GuildId, TextChannel}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import akka.NotUsed
@@ -44,26 +50,39 @@ class MusicCommands(requests: Requests, guildId: GuildId, musicHandler: ActorRef
   val VoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildVoiceCommand.andThen(CommandBuilder.inOneGuild(guildId))
 
-  val queue: NamedCommand[String] =
-    VoiceCommand.named(music, Seq("q", "queue")).parsing[String].withSideEffects { m =>
-      musicHandler.ask[MusicHandler.CommandAck.type](QueueUrl(m.parsed, m.textChannel, m.voiceChannel.id, _))
-    }
+  val queue: NamedDescribedCommand[String] =
+    VoiceCommand
+      .named(music, Seq("q", "queue"))
+      .described("Queue", "Set an url as the url to play")
+      .parsing[String]
+      .withSideEffects { m =>
+        musicHandler.ask[MusicHandler.CommandAck.type](QueueUrl(m.parsed, m.textChannel, m.voiceChannel.id, _))
+      }
 
   private def simpleCommand(
       aliases: Seq[String],
+      name: String,
+      description: String,
       mapper: (TextChannel, ActorRef[MusicHandler.CommandAck.type]) => MusicHandler.MusicHandlerEvents
-  ): NamedCommand[NotUsed] = {
-    VoiceCommand.andThen(CommandBuilder.inOneGuild(guildId)).named(music, aliases, mustMention = true).toSink {
-      Flow[VoiceGuildMemberCommandMessage[NotUsed]]
-        .map(_.textChannel)
-        .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
-        .toMat(Sink.ignore)(Keep.none)
-    }
+  ): NamedDescribedCommand[NotUsed] = {
+    VoiceCommand
+      .andThen(CommandBuilder.inOneGuild(guildId))
+      .named(music, aliases, mustMention = true)
+      .described(name, description)
+      .toSink {
+        Flow[VoiceGuildMemberCommandMessage[NotUsed]]
+          .map(_.textChannel)
+          .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
+          .toMat(Sink.ignore)(Keep.none)
+      }
   }
 
-  val stop: NamedCommand[NotUsed] = simpleCommand(Seq("s", "stop"), StopMusic.apply)
+  val stop: NamedDescribedCommand[NotUsed] =
+    simpleCommand(Seq("s", "stop"), "Stop music", "Stop music from playing, and leave the channel", StopMusic.apply)
 
-  val next: NamedCommand[NotUsed] = simpleCommand(Seq("n", "next"), NextTrack.apply)
+  val next: NamedDescribedCommand[NotUsed] =
+    simpleCommand(Seq("n", "next"), "Next track", "Skip to the next track", NextTrack.apply)
 
-  val pause: NamedCommand[NotUsed] = simpleCommand(Seq("p", "pause"), TogglePause.apply)
+  val pause: NamedDescribedCommand[NotUsed] =
+    simpleCommand(Seq("p", "pause"), "Pause/Play", "Toggle pause on the current player", TogglePause.apply)
 }
