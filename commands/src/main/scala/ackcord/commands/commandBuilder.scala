@@ -30,33 +30,34 @@ import ackcord.data._
 import ackcord.requests.Requests
 import akka.NotUsed
 import akka.stream.FlowShape
-import akka.stream.scaladsl.{Flow, GraphDSL, Keep, Partition, Sink}
+import akka.stream.scaladsl.{Flow, GraphDSL, Partition, Sink}
 import cats.~>
 
 /**
   * A [[CommandFunction]] from a command message to an output. Used for
   * creating commands.
+  * @param defaultMustMention Set the default value for must mention when
+  *                           creating a named command.
+  * @param defaultMentionOrPrefix Set the default value for mention or prefix
+  *                               when creating a named command.
+  * @param parser The parser used for parsing the arguments this command takes.
   * @tparam M The command message type used by the command.
   * @tparam A The argument type of this command builder.
   */
-trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandError, A] { self =>
+case class CommandBuilder[+M[_], A](
+    requests: Requests,
+    defaultMustMention: Boolean,
+    defaultMentionOrPrefix: Boolean,
+    parser: MessageParser[A],
+    actionFunction: ActionFunction[CommandMessage, M, CommandError]
+) extends ActionBuilder[CommandMessage, M, CommandError, A] { self =>
 
   override type Action[B, Mat] = ComplexCommand[B, Mat]
 
   /**
-    * Set the default value for must mention when creating a named command.
+    * A flow that represents this mapping.
     */
-  val defaultMustMention: Boolean
-
-  /**
-    * Set the default value for mention or prefix when creating a named command.
-    */
-  val defaultMentionOrPrefix: Boolean
-
-  /**
-    * The parser used for parsing the arguments this command takes.
-    */
-  def parser: MessageParser[A]
+  override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
     * Converts this builder into a builder that will create [[NamedComplexCommand]].
@@ -66,19 +67,7 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     *                               commands created by this builder.
     */
   def namedParser(structuredPrefixParser: StructuredPrefixParser): NamedCommandBuilder[M, A] =
-    new NamedCommandBuilder[M, A] {
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def prefixParser: StructuredPrefixParser = structuredPrefixParser
-
-      override def requests: Requests = self.requests
-
-      override def parser: MessageParser[A] = self.parser
-
-      override def flow[B]: Flow[CommandMessage[B], Either[Option[CommandError], M[B]], NotUsed] = self.flow[B]
-    }
+    new NamedCommandBuilder(this, structuredPrefixParser)
 
   /**
     * Converts this builder into a builder that will create [[NamedComplexCommand]].
@@ -97,9 +86,16 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
       mustMention: Boolean = defaultMustMention,
       aliasesCaseSensitive: Boolean = false,
       mentionOrPrefix: Boolean = defaultMentionOrPrefix
-  ): NamedCommandBuilder[M, A] = namedParser(
-    PrefixParser.structured(mustMention, namedSymbols, namedAliases, aliasesCaseSensitive, mentionOrPrefix)
-  )
+  ): NamedCommandBuilder[M, A] =
+    namedParser(
+      PrefixParser.structured(
+        mustMention,
+        namedSymbols,
+        namedAliases,
+        aliasesCaseSensitive,
+        mentionOrPrefix
+      )
+    )
 
   /**
     * Converts this builder into a builder that will create [[NamedComplexCommand]].
@@ -165,17 +161,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
     * Creates a new command builder parsing a specific type.
     * @tparam B The type to parse
     */
-  def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] = new CommandBuilder[M, B] {
-    override val defaultMustMention: Boolean = self.defaultMustMention
-
-    override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-    override def requests: Requests = self.requests
-
-    override def parser: MessageParser[B] = newParser
-
-    override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
-  }
+  def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] =
+    copy(parser = newParser)
 
   /**
     * Creates a command from a sink.
@@ -185,18 +172,8 @@ trait CommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandE
   def toSink[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] =
     new ComplexCommand[A, Mat](self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A]))
 
-  override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] = new CommandBuilder[M2, A] {
-    override val defaultMustMention: Boolean = self.defaultMustMention
-
-    override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-    override def requests: Requests = self.requests
-
-    override def parser: MessageParser[A] = self.parser
-
-    override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M2[C]], NotUsed] =
-      ActionFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
-  }
+  override def andThen[M2[_]](f: CommandFunction[M, M2]): CommandBuilder[M2, A] =
+    copy(actionFunction = actionFunction.andThen(f))
 }
 object CommandBuilder {
 
@@ -310,22 +287,17 @@ object CommandBuilder {
     * Creates a raw command builder without any extra processing.
     */
   def rawBuilder(
-      requestHelper: Requests,
-      defaultMustMentionVal: Boolean,
-      defaultMentionOrPrefixVal: Boolean
+      requests: Requests,
+      defaultMustMention: Boolean,
+      defaultMentionOrPrefix: Boolean
   ): CommandBuilder[CommandMessage, NotUsed] =
-    new CommandBuilder[CommandMessage, NotUsed] {
-      override val defaultMustMention: Boolean = defaultMustMentionVal
-
-      override val defaultMentionOrPrefix: Boolean = defaultMentionOrPrefixVal
-
-      override def requests: Requests = requestHelper
-
-      override def parser: MessageParser[NotUsed] = MessageParser.notUsedParser
-
-      override def flow[A]: Flow[CommandMessage[A], Either[Option[CommandError], CommandMessage[A]], NotUsed] =
-        Flow[CommandMessage[A]].map(Right.apply)
-    }
+    new CommandBuilder[CommandMessage, NotUsed](
+      requests,
+      defaultMustMention,
+      defaultMentionOrPrefix,
+      MessageParser.notUsedParser,
+      ActionFunction.identity
+    )
 
   private[ackcord] def streamedFlow[M[_], A, Mat](
       sinkBlock: Sink[M[A], Mat],
@@ -362,53 +334,46 @@ object CommandBuilder {
 /**
   * A [[CommandFunction]] from a command message to an output. Used for
   * creating commands.
+  * @param defaultMustMention Set the default value for must mention when
+  *                           creating a named command.
+  * @param defaultMentionOrPrefix Set the default value for mention or prefix
+  *                               when creating a named command.
+  * @param prefixParser The prefix parser to use for commands created from this builder.
+  * @param parser The parser used for parsing the arguments this command takes.
   * @tparam M The command message type used by the command.
   * @tparam A The argument type of this command builder.
   */
-trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandError, A] { self =>
+case class NamedCommandBuilder[+M[_], A](
+    requests: Requests,
+    defaultMustMention: Boolean,
+    defaultMentionOrPrefix: Boolean,
+    prefixParser: StructuredPrefixParser,
+    parser: MessageParser[A],
+    actionFunction: ActionFunction[CommandMessage, M, CommandError]
+) extends ActionBuilder[CommandMessage, M, CommandError, A] {
+
+  def this(builder: CommandBuilder[M, A], prefixParser: StructuredPrefixParser) =
+    this(
+      builder.requests,
+      builder.defaultMustMention,
+      builder.defaultMentionOrPrefix,
+      prefixParser,
+      builder.parser,
+      builder.actionFunction
+    )
 
   override type Action[B, Mat] = NamedComplexCommand[B, Mat]
 
   /**
-    * The prefix parser to use for commands created from this builder
+    * A flow that represents this mapping.
     */
-  def prefixParser: StructuredPrefixParser
-
-  /**
-    * Set the default value for must mention when creating a named command.
-    */
-  val defaultMustMention: Boolean
-
-  /**
-    * Set the default value for mention or prefix when creating a named command.
-    */
-  val defaultMentionOrPrefix: Boolean
-
-  /**
-    * The parser used for parsing the arguments this command takes.
-    */
-  def parser: MessageParser[A]
+  override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
     * Adds a description to this builder
     */
-  def described(descriptionObj: CommandDescription): NamedDescribedCommandBuilder[M, A] =
-    new NamedDescribedCommandBuilder[M, A] {
-
-      override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-      override def description: CommandDescription = descriptionObj
-
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def parser: MessageParser[A] = self.parser
-
-      override def requests: Requests = self.requests
-
-      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
-    }
+  def described(description: CommandDescription): NamedDescribedCommandBuilder[M, A] =
+    new NamedDescribedCommandBuilder[M, A](this, description)
 
   /**
     * Adds a description to this builder
@@ -426,121 +391,73 @@ trait NamedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, Com
     * @tparam B The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[M, B] =
-    new NamedCommandBuilder[M, B] {
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-      override def requests: Requests = self.requests
-
-      override def parser: MessageParser[B] = newParser
-
-      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
-    }
+    copy(parser = newParser)
 
   def toSink[Mat](sinkBlock: Sink[M[A], Mat]): NamedComplexCommand[A, Mat] = NamedComplexCommand(
-    ComplexCommand(self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A])),
-    self.prefixParser
+    ComplexCommand(parser, CommandBuilder.streamedFlow(sinkBlock, flow[A])),
+    prefixParser
   )
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedCommandBuilder[M2, A] =
-    new NamedCommandBuilder[M2, A] {
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-      override def requests: Requests = self.requests
-
-      override def parser: MessageParser[A] = self.parser
-
-      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M2[C]], NotUsed] =
-        ActionFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
-    }
+    copy(actionFunction = actionFunction.andThen(f))
 }
 
 /**
   * A [[CommandFunction]] from a command message to an output. Used for
   * creating commands.
+  * @param defaultMustMention Set the default value for must mention when
+  *                           creating a named command.
+  * @param defaultMentionOrPrefix Set the default value for mention or prefix
+  *                               when creating a named command.
+  * @param prefixParser The prefix parser to use for commands created from this builder.
+  * @param description The description to use for commands created from this builder.
+  * @param parser The parser used for parsing the arguments this command takes.
   * @tparam M The command message type used by the command.
   * @tparam A The argument type of this command builder.
   */
-trait NamedDescribedCommandBuilder[+M[_], A] extends ActionBuilder[CommandMessage, M, CommandError, A] { self =>
+case class NamedDescribedCommandBuilder[+M[_], A](
+    requests: Requests,
+    defaultMustMention: Boolean,
+    defaultMentionOrPrefix: Boolean,
+    prefixParser: StructuredPrefixParser,
+    description: CommandDescription,
+    parser: MessageParser[A],
+    actionFunction: ActionFunction[CommandMessage, M, CommandError]
+) extends ActionBuilder[CommandMessage, M, CommandError, A] {
+
+  def this(builder: NamedCommandBuilder[M, A], description: CommandDescription) =
+    this(
+      builder.requests,
+      builder.defaultMustMention,
+      builder.defaultMentionOrPrefix,
+      builder.prefixParser,
+      description,
+      builder.parser,
+      builder.actionFunction
+    )
 
   override type Action[B, Mat] = NamedDescribedComplexCommand[B, Mat]
 
   /**
-    * The prefix parser to use for commands created from this builder
+    * A flow that represents this mapping.
     */
-  def prefixParser: StructuredPrefixParser
-
-  /**
-    * The description to use for commands created from this builder
-    */
-  def description: CommandDescription
-
-  /**
-    * Set the default value for must mention when creating a named command.
-    */
-  val defaultMustMention: Boolean
-
-  /**
-    * Set the default value for mention or prefix when creating a named command.
-    */
-  val defaultMentionOrPrefix: Boolean
-
-  /**
-    * The parser used for parsing the arguments this command takes.
-    */
-  def parser: MessageParser[A]
+  override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
     * Creates a new command builder parsing a specific type.
     * @tparam B The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): NamedDescribedCommandBuilder[M, B] =
-    new NamedDescribedCommandBuilder[M, B] {
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-      override def description: CommandDescription = self.description
-
-      override def requests: Requests = self.requests
-
-      override def parser: MessageParser[B] = newParser
-
-      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = self.flow
-    }
+    copy(parser = newParser)
 
   def toSink[Mat](sinkBlock: Sink[M[A], Mat]): NamedDescribedComplexCommand[A, Mat] = NamedDescribedComplexCommand(
-    ComplexCommand(self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A])),
-    self.prefixParser,
-    self.description
+    ComplexCommand(parser, CommandBuilder.streamedFlow(sinkBlock, flow[A])),
+    prefixParser,
+    description
   )
 
   override def andThen[M2[_]](f: CommandFunction[M, M2]): NamedDescribedCommandBuilder[M2, A] =
-    new NamedDescribedCommandBuilder[M2, A] {
-      override val defaultMustMention: Boolean = self.defaultMustMention
-
-      override val defaultMentionOrPrefix: Boolean = self.defaultMentionOrPrefix
-
-      override def prefixParser: StructuredPrefixParser = self.prefixParser
-
-      override def description: CommandDescription = self.description
-
-      override def requests: Requests = self.requests
-
-      override def parser: MessageParser[A] = self.parser
-
-      override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M2[C]], NotUsed] =
-        ActionFunction.flowViaEither(self.flow[C], f.flow[C])(Keep.right)
-    }
+    copy(actionFunction = actionFunction.andThen(f))
 }
 
 /**

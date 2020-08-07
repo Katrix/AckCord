@@ -42,19 +42,16 @@ import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}
 import cats.~>
 
-trait EventListenerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventListenerMessage, M, Nothing, A] { self =>
+case class EventListenerBuilder[+M[_], A <: APIMessage](
+    requests: Requests,
+    refineEvent: APIMessage => Option[A],
+    actionFunction: ActionFunction[EventListenerMessage, M, Nothing]
+) extends ActionBuilder[EventListenerMessage, M, Nothing, A] { self =>
   override type Action[B, Mat] = EventListener[B, Mat]
 
-  def refineEvent(msg: APIMessage): Option[A]
+  override def flow[C]: Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = actionFunction.flow[C]
 
-  def on[B <: A](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = new EventListenerBuilder[M, B] {
-    override def requests: Requests = self.requests
-
-    override def flow[C]: Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = self.flow
-
-    override def refineEvent(msg: APIMessage): Option[B] =
-      tag.unapply(msg)
-  }
+  def on[B <: A](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = copy(refineEvent = tag.unapply)
 
   override def toSink[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] = new EventListener[A, Mat] {
     override def sink: Sink[EventListenerMessage[A], Mat] =
@@ -64,28 +61,14 @@ trait EventListenerBuilder[+M[_], A <: APIMessage] extends ActionBuilder[EventLi
   }
 
   override def andThen[O2[_]](that: ActionFunction[M, O2, Nothing]): EventListenerBuilder[O2, A] =
-    new EventListenerBuilder[O2, A] {
-      override def refineEvent(msg: APIMessage): Option[A] = self.refineEvent(msg)
-
-      override def requests: Requests = self.requests
-
-      override def flow[B]: Flow[EventListenerMessage[B], Either[Option[Nothing], O2[B]], NotUsed] =
-        ActionFunction.flowViaEither(self.flow[B], that.flow[B])(Keep.right)
-    }
+    copy(actionFunction = actionFunction.andThen(that))
 }
 object EventListenerBuilder {
   type EventFunction[-I[_], +O[_]]    = ActionFunction[I, O, Nothing]
   type EventTransformer[-I[_], +O[_]] = ActionTransformer[I, O, Nothing]
 
-  def rawBuilder(requestsObj: Requests): EventListenerBuilder[EventListenerMessage, APIMessage] =
-    new EventListenerBuilder[EventListenerMessage, APIMessage] {
-      override def refineEvent(msg: APIMessage): Option[APIMessage] = Some(msg)
-
-      override def requests: Requests = requestsObj
-
-      override def flow[A]: Flow[EventListenerMessage[A], Either[Option[Nothing], EventListenerMessage[A]], NotUsed] =
-        Flow[EventListenerMessage[A]].map(Right.apply)
-    }
+  def rawBuilder(requests: Requests): EventListenerBuilder[EventListenerMessage, APIMessage] =
+    EventListenerBuilder(requests, Some(_), ActionFunction.identity)
 
   def guildEvent[I[A] <: EventListenerMessage[A], O[_]](
       create: Guild => I ~> O

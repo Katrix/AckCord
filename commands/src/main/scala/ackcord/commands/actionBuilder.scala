@@ -57,6 +57,10 @@ trait ActionFunction[-I[_], +O[_], E] { self =>
 }
 object ActionFunction {
 
+  def identity[M[_], E]: ActionFunction[M, M, E] = new ActionFunction[M, M, E] {
+    override def flow[A]: Flow[M[A], Either[Option[E], M[A]], NotUsed] = Flow[M[A]].map(Right.apply)
+  }
+
   /**
     * Flow for short circuiting eithers.
     */
