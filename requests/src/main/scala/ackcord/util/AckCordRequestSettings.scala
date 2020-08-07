@@ -22,6 +22,10 @@
  * SOFTWARE.
  */
 package ackcord.util
+import java.util.concurrent.TimeUnit
+
+import scala.concurrent.duration._
+
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.Config
 
@@ -35,6 +39,7 @@ class AckCordRequestSettings(config: Config) {
   val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
 
   val LogRatelimitEvents: Boolean = getBoolean("ackcord.logging.log-ratelimit-events")
+  val SpuriousWakeup: FiniteDuration = getDuration("ackcord.requests.spurious-wakeup", TimeUnit.SECONDS).seconds
 }
 object AckCordRequestSettings {
 

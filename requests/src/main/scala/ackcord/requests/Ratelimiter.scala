@@ -59,6 +59,25 @@ class Ratelimiter(
     globalLimited.enqueue(request)
   }
 
+  def scheduleSpuriousWakeup(route: RequestRoute): Unit = {
+    if (settings.SpuriousWakeup.toMillis > 0 && !timers.isTimerActive(route.uriWithMajor)) {
+      uriToBucket.get(route.uriWithoutMajor).foreach { bucket =>
+        if (settings.LogRatelimitEvents) {
+          log.debug(s"""|
+                        |Scheduling spurious wakeup for: ${route.uriWithMajor}
+                        |In: ${settings.SpuriousWakeup}
+                        |""".stripMargin)
+        }
+
+        timers.startSingleTimer(
+          route.uriWithMajor,
+          ResetRatelimit(route.uriWithMajor, bucket, spurious = true),
+          settings.SpuriousWakeup
+        )
+      }
+    }
+  }
+
   def handleWantToPassNotGlobal[A](request: WantToPass[A]): Unit = {
     val WantToPass(route, _, sender, _) = request
 
@@ -79,20 +98,26 @@ class Ratelimiter(
     } else {
       context.watchWith(sender, TimedOut(route.uriWithMajor, sender))
       rateLimits.getOrElseUpdate(route.uriWithMajor, mutable.Queue.empty).enqueue(request)
+      scheduleSpuriousWakeup(route)
     }
   }
 
   override def onMessage(msg: Command): Behavior[Command] = msg match {
-    case ResetRatelimit(uriWithMajor, bucket) =>
+    case ResetRatelimit(uriWithMajor, bucket, spurious) =>
       if (settings.LogRatelimitEvents) {
         log.debug(
           s"""|
               |Reseting ratelimit for: $uriWithMajor
+              |Spurious: $spurious
               |Bucket: $bucket
               |Limit: ${routeLimits.get(bucket)}
               |Current time: ${System.currentTimeMillis()}
               |""".stripMargin
         )
+      }
+
+      if (spurious) {
+        log.warn(s"Encountered spurious wakeup for route $uriWithMajor")
       }
 
       routeLimits.get(bucket) match {
@@ -164,10 +189,12 @@ class Ratelimiter(
         } else {
           timers.startSingleTimer(
             route.uriWithMajor,
-            ResetRatelimit(route.uriWithMajor, bucket),
+            ResetRatelimit(route.uriWithMajor, bucket, spurious = false),
             timeTilReset
           )
         }
+      } else {
+        scheduleSpuriousWakeup(route)
       }
 
       Behaviors.same
@@ -278,8 +305,8 @@ object Ratelimiter {
       identifier: UUID
   ) extends Command
 
-  private case object GlobalTimer                                             extends Command
-  private case class ResetRatelimit(uriWithMajor: String, bucket: String)     extends Command
-  private case class TimedOut[A](uriWithMajor: String, actorRef: ActorRef[A]) extends Command
-  private case class GlobalTimedOut[A](actorRef: ActorRef[A])                 extends Command
+  private case object GlobalTimer                                                            extends Command
+  private case class ResetRatelimit(uriWithMajor: String, bucket: String, spurious: Boolean) extends Command
+  private case class TimedOut[A](uriWithMajor: String, actorRef: ActorRef[A])                extends Command
+  private case class GlobalTimedOut[A](actorRef: ActorRef[A])                                extends Command
 }
