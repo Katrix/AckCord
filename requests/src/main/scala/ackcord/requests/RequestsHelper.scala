@@ -48,10 +48,7 @@ class RequestsHelper(requests: Requests) {
     * @param request The request to run
     */
   def run[A](request: Request[A])(implicit c: CacheSnapshot): OptionT[Future, A] =
-    checkPerms(Seq(request)).semiflatMap(_ => requests.singleFuture(request)).semiflatMap {
-      case RequestResponse(data, _, _, _) => Future.successful(data)
-      case request: FailedRequest         => Future.failed(request.asException)
-    }
+    checkPerms(Seq(request)).semiflatMap(_ => requests.singleFutureSuccess(request))
 
   /**
     * Runs many requests in order, and returns the result. The result is only

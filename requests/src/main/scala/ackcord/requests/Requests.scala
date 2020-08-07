@@ -177,8 +177,11 @@ case class Requests(
   /**
     * A generic flow for making requests. Only returns successful requests.
     * $backpressures
+    *
+    * @param ignoreFailures If true, failures will be logged and then ignored.
+    *                       If false, throws the failures
     */
-  def flowSuccess[Data, Ctx](
+  def flowSuccess[Data, Ctx](ignoreFailures: Boolean = true)(
       implicit properties: RequestProperties = RequestProperties.default
   ): FlowWithContext[Request[Data], Ctx, Data, Ctx, NotUsed] =
     flow[Data, Ctx](properties)
@@ -186,8 +189,12 @@ case class Requests(
         case RequestResponse(data, _, _, _) =>
           Some(data)
         case request: FailedRequest =>
-          request.asException.printStackTrace()
-          None
+          if (ignoreFailures) {
+            request.asException.printStackTrace()
+            None
+          } else {
+            throw request.asException
+          }
       }
       .collect { case Some(value) => value }
 
@@ -207,7 +214,8 @@ case class Requests(
     */
   def singleSuccess[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Source[Data, NotUsed] = Source.single(request -> NotUsed).via(flowSuccess(properties).asFlow.map(_._1))
+  ): Source[Data, NotUsed] =
+    Source.single(request -> NotUsed).via(flowSuccess(ignoreFailures = false)(properties).asFlow.map(_._1))
 
   /**
     * Sends a single request and gets the response as a future.
@@ -250,11 +258,13 @@ case class Requests(
   /**
     * Sends many requests, and grabs the data if it's available.
     * @param requests The requests to send.
+    * @param ignoreFailures If true, failures will be logged and then ignored.
+    *                       If false, throws the failures
     * @return A source of the successful request answers.
     */
-  def manySuccess[Data](requests: immutable.Seq[Request[Data]])(
+  def manySuccess[Data](requests: immutable.Seq[Request[Data]], ignoreFailures: Boolean = true)(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Source[Data, NotUsed] = Source(requests.map(_ -> NotUsed)).via(flowSuccess(properties).asFlow.map(_._1))
+  ): Source[Data, NotUsed] = Source(requests.map(_ -> NotUsed)).via(flowSuccess(ignoreFailures)(properties).asFlow.map(_._1))
 
   /**
     * Sends many requests and gets the responses as a future.
@@ -274,17 +284,7 @@ case class Requests(
   def manyFutureSuccess[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
   ): Future[immutable.Seq[Data]] =
-    manyFuture(requests).flatMap { answers =>
-      val validResponses = answers.collect {
-        case RequestResponse(data, _, _, _) => data
-      }
-
-      if (answers.length == validResponses.length)
-        Future.successful(validResponses)
-      else
-        Future.failed(answers.collectFirst { case r: FailedRequest => r.asException }.get)
-
-    }(system.executionContext)
+    manySuccess(requests, ignoreFailures = false).runWith(Sink.seq)
 
   /**
     * Sends many requests and ignores the result.
