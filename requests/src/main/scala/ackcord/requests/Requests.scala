@@ -264,7 +264,8 @@ case class Requests(
     */
   def manySuccess[Data](requests: immutable.Seq[Request[Data]], ignoreFailures: Boolean = true)(
       implicit properties: RequestProperties = RequestProperties.default
-  ): Source[Data, NotUsed] = Source(requests.map(_ -> NotUsed)).via(flowSuccess(ignoreFailures)(properties).asFlow.map(_._1))
+  ): Source[Data, NotUsed] =
+    Source(requests.map(_ -> NotUsed)).via(flowSuccess(ignoreFailures)(properties).asFlow.map(_._1))
 
   /**
     * Sends many requests and gets the responses as a future.
