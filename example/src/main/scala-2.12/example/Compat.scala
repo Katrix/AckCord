@@ -21,28 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.util
-import java.util.concurrent.TimeUnit
+package ackcord.example
 
-import scala.concurrent.duration._
+import scala.annotation.tailrec
 
-import akka.actor.typed.ActorSystem
-import com.typesafe.config.Config
+object Compat {
 
-/**
-  * Settings that AckCord uses for requests. See the reference config for more info.
-  */
-class AckCordRequestSettings(config: Config) {
-  import config._
-
-  val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
-  val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
-
-  val LogRatelimitEvents: Boolean    = getBoolean("ackcord.logging.log-ratelimit-events")
-  val SpuriousWakeup: FiniteDuration = getDuration("ackcord.requests.spurious-wakeup", TimeUnit.SECONDS).seconds
-}
-object AckCordRequestSettings {
-
-  def apply()(implicit system: ActorSystem[Nothing]): AckCordRequestSettings =
-    new AckCordRequestSettings(system.settings.config)
+  @tailrec
+  def updateWith[K, V](map: collection.concurrent.Map[K, V], key: K)(f: Option[V] => Option[V]): Option[V] = {
+    val previousValue = map.get(key)
+    val nextValue     = f(previousValue)
+    (previousValue, nextValue) match {
+      case (None, None)                                             => None
+      case (None, Some(next)) if map.putIfAbsent(key, next).isEmpty => nextValue
+      case (Some(prev), None) if map.remove(key, prev)              => None
+      case (Some(prev), Some(next)) if map.replace(key, prev, next) => nextValue
+      case _                                                        => updateWith(map, key)(f)
+    }
+  }
 }

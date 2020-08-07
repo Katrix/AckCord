@@ -24,13 +24,7 @@
 package ackcord.examplecore.music
 
 import ackcord._
-import ackcord.commands.{
-  CommandBuilder,
-  CommandController,
-  NamedCommand,
-  NamedDescribedCommand,
-  VoiceGuildMemberCommandMessage
-}
+import ackcord.commands.{CommandBuilder, CommandController, NamedDescribedCommand, VoiceGuildMemberCommandMessage}
 import ackcord.data.{GuildId, TextChannel}
 import ackcord.examplecore.music.MusicHandler.{NextTrack, QueueUrl, StopMusic, TogglePause}
 import akka.NotUsed

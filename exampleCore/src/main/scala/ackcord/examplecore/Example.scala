@@ -29,7 +29,14 @@ import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.commands.{CommandConnector, CommandDescription, HelpCommand, NamedDescribedCommand, NamedDescribedComplexCommand, PrefixParser}
+import ackcord.commands.{
+  CommandConnector,
+  CommandDescription,
+  HelpCommand,
+  NamedDescribedCommand,
+  NamedDescribedComplexCommand,
+  PrefixParser
+}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, Requests}
@@ -155,15 +162,16 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
       .toDescribed(CommandDescription("Help", "This command right here", "[query]|[page]"))
   )
 
-  private val registerCmdObjMusic = new FunctionK[NamedDescribedComplexCommand[_, *], cats.Id] {
-    override def apply[A](fa: NamedDescribedComplexCommand[_, A]): A = registerCommand(fa)
-  }
+  private def registerCmdObjMusic[A]: FunctionK[NamedDescribedComplexCommand[A, *], cats.Id] =
+    new FunctionK[NamedDescribedComplexCommand[A, *], cats.Id] {
+      override def apply[C](fa: NamedDescribedComplexCommand[A, C]): C = registerCommand(fa)
+    }
 
   val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
     context.spawn(
       APIGuildRouter.partitioner(
         None,
-        MusicHandler(requests, registerCmdObjMusic, events),
+        MusicHandler(requests, registerCmdObjMusic[Any], events),
         None,
         GuildRouter.OnShutdownSendMsg(MusicHandler.Shutdown)
       ),

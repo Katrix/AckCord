@@ -107,14 +107,14 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
       .withRequest { m =>
         m.parsed._1 match {
           case "add" | "+" =>
-            prefixSymbolsMap.updateWith(m.guild.id) {
+            Compat.updateWith(prefixSymbolsMap, m.guild.id) {
               case Some(existing) => Some((existing :+ m.parsed._2).distinct)
               case None           => Some(Seq(m.parsed._2))
             }
             m.textChannel.sendMessage(s"Added ${m.parsed._2} as a prefix symbol")
 
           case "set" | "=" =>
-            prefixSymbolsMap.updateWith(m.guild.id) {
+            Compat.updateWith(prefixSymbolsMap, m.guild.id) {
               case Some(_) => Some(Seq(m.parsed._2))
               case None    => Some(Seq(m.parsed._2))
             }
@@ -122,7 +122,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
           case "remove" | "-" =>
             //Race condition here, but I don't care
             if (prefixSymbolsMap.get(m.guild.id).exists(_.length > 1)) {
-              prefixSymbolsMap.updateWith(m.guild.id) {
+              Compat.updateWith(prefixSymbolsMap, m.guild.id) {
                 case Some(Seq(_))   => throw new Exception("Race condition")
                 case None           => throw new Exception("Race condition")
                 case Some(existing) => Some(existing.filter(_ != m.parsed._2))

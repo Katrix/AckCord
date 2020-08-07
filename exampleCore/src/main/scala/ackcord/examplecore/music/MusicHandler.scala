@@ -27,7 +27,7 @@ package ackcord.examplecore.music
 import scala.collection.immutable.Queue
 import scala.concurrent.duration._
 
-import ackcord.commands.NamedDescribedComplexCommand
+import ackcord.commands.{NamedDescribedCommand, NamedDescribedComplexCommand}
 import ackcord.data.raw.RawMessage
 import ackcord.data.{GuildId, TextChannel, VoiceGuildChannelId}
 import ackcord.examplecore.Compat
@@ -35,7 +35,7 @@ import ackcord.lavaplayer.LavaplayerHandler
 import ackcord.lavaplayer.LavaplayerHandler.AudioEventSender
 import ackcord.requests.Request
 import ackcord.syntax._
-import ackcord.{Events, Requests, commands}
+import ackcord.{Events, Requests}
 import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.OverflowStrategy
@@ -43,7 +43,12 @@ import akka.stream.scaladsl.{Source, SourceQueueWithComplete}
 import akka.util.Timeout
 import cats.arrow.FunctionK
 import com.sedmelluq.discord.lavaplayer.player.event._
-import com.sedmelluq.discord.lavaplayer.player.{AudioConfiguration, AudioPlayer, AudioPlayerManager, DefaultAudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.player.{
+  AudioConfiguration,
+  AudioPlayer,
+  AudioPlayerManager,
+  DefaultAudioPlayerManager
+}
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
 import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}
@@ -61,7 +66,7 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(requests: Requests, registerCmd: FunctionK[NamedDescribedComplexCommand[_, *], cats.Id], events: Events)(
+  def apply(requests: Requests, registerCmd: FunctionK[NamedDescribedComplexCommand[Any, *], cats.Id], events: Events)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
@@ -79,7 +84,7 @@ object MusicHandler {
           cmds.stop,
           cmds.next,
           cmds.pause
-        ).foreach(registerCmd(_))
+        ).foreach { command: NamedDescribedCommand[_] => registerCmd(command.asInstanceOf[NamedDescribedCommand[Any]]) }
       }
 
       inactive(

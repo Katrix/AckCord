@@ -34,4 +34,7 @@ private[examplecore] object Compat {
     queue.enqueueAll(tail)
 
   def convertJavaList[A](jList: java.util.List[A]): Seq[A] = jList.asScala.toSeq
+
+  def updateWith[K, V](map: collection.concurrent.Map[K, V], key: K)(f: Option[V] => Option[V]): Option[V] =
+    map.updateWith(key)(f)
 }
