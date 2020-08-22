@@ -29,7 +29,7 @@ import akka.NotUsed
 
 class MyCommands(requests: Requests) extends CommandController(requests) {
   val hello: NamedCommand[NotUsed] = Command
-    .named("!", Seq("hello"), mustMention = true)
+    .named(Seq("m!"), Seq("hello"))
     .withRequest(m => m.textChannel.sendMessage(s"Hello ${m.user.username}"))
 }
 ```
@@ -46,6 +46,15 @@ Like with events we need to register our commands. We do this using an
 val myCommands = new MyCommands(client.requests)
 client.commands.runNewNamedCommand(myCommands.hello)
 ```
+
+If you have many named commands, you can bulk register them all using `bulkRunNamed`.
+
+## Help command
+AckCord comes built in with a partially premade help command controller.
+Complete it by extending `HelpCommand` and implementing the missing functions.
+Each command needs to also be registered with the help command. This can be 
+done either by calling `HelpCommand#registerCommand`, or through the 
+command connector through `runNewNamedCommandWithHelp` and `bulkRunNamedWithHelp`.
 
 There are many useful `CommandBuilder`s. Make sure to give them all a look.
 

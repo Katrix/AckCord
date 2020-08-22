@@ -26,7 +26,7 @@ val client = Await.result(clientSettings.createClient(), Duration.Inf)
 ```
 ```scala mdoc:silent
 client.onEventSideEffectsIgnore {
-  case APIMessage.MessageCreate(message, _) => println(message.content)
+  case APIMessage.MessageCreate(_, message, _) => println(message.content)
 }
 ```
 

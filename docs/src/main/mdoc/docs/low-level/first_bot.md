@@ -52,7 +52,7 @@ if you want to fine tune your bot.
 ```scala mdoc:silent
 val cache = Cache.create()
 val ratelimiter = system.systemActorOf(Ratelimiter(), "Ratelimiter")
-val requests = new RequestHelper(BotAuthentication(token), ratelimiter)
+val requests = new Requests(BotAuthentication(token), ratelimiter)
 ```
 
 Now that we have all the pieces we want, we can create our event listener. 

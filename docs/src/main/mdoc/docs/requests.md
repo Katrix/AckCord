@@ -28,7 +28,7 @@ import ackcord.syntax._
 
 client.onEventSideEffects { implicit c => 
   {
-    case APIMessage.ChannelCreate(channel: TextGuildChannel, _) =>
+    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _) =>
       //There is also CreateMessage.mkContent for this specific pattern
       val constructManually = CreateMessage(channel.id, CreateMessageData(content = "Hello World"))
       val usingSyntax = channel.sendMessage(content = "Hello World")
@@ -48,7 +48,7 @@ to use `DiscordClient#onEventAsync` and `ActionBuilder#asyncOpt` instead.
 ```scala mdoc:silent
 client.onEventAsync { implicit c => 
   {
-    case APIMessage.ChannelCreate(channel: TextGuildChannel, _) =>
+    case APIMessage.ChannelCreate(_, channel: TextGuildChannel, _) =>
       client.requestsHelper.run(channel.sendMessage(content = "Hello World")).map(_ => ())
   }
 }
@@ -60,7 +60,7 @@ The `RequestsHelper` object also contains lots of small helpers to deal with
 ```scala mdoc:silent
 client.onEventAsync { implicit c => 
   {
-    case APIMessage.ChannelCreate(channel, _) =>
+    case APIMessage.ChannelCreate(_, channel, _) =>
       import client.requestsHelper._
       for {
         //optionPure lifts an Option into the dsl

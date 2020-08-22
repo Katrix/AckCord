@@ -28,7 +28,7 @@ val client = Await.result(clientSettings.createClient(), Duration.Inf)
 ```
 ```scala mdoc:silent
 client.onEventSideEffects { c => {
-    case APIMessage.MessageCreate(message, _) => println(c.getTextChannel(message.channelId))
+    case APIMessage.MessageCreate(_, message, _) => println(c.getTextChannel(message.channelId))
   }
 }
 ```
@@ -41,7 +41,7 @@ for performance reasons, or to get different objects that both use the same id.
 
 ```scala mdoc:silent
 client.onEventSideEffects { implicit c => {
-    case APIMessage.MessageCreate(message, _) => println(message.channelId.resolve)
+    case APIMessage.MessageCreate(_, message, _) => println(message.channelId.resolve)
   }
 }
 ```
@@ -51,7 +51,7 @@ interacting with taking a cache snapshot, and returning an object directly.
 
 ```scala mdoc:silent
 client.onEventSideEffects { implicit c => {
-    case APIMessage.MessageCreate(message: GuildMessage, _) => 
+    case APIMessage.MessageCreate(_, message: GuildGatewayMessage, _) => 
       println(message.guild)
   }
 }
@@ -66,7 +66,7 @@ previous `CacheSnapshot`. For example, to get the message before it was edited
 in `APIMessage.MessageUpdate`, we do something like this.
 ```scala mdoc:silent
 client.onEventSideEffects { c => {
-    case APIMessage.MessageUpdate(message, CacheState(current, previous)) => 
+    case APIMessage.MessageUpdate(_, message, CacheState(current, previous)) => 
       println(message.id.resolve(previous))
   }
 }
