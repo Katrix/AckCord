@@ -15,11 +15,8 @@ import ackcord._
 import ackcord.data._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import cats.Id
-import cats.instances.future._
 
 val clientSettings = ClientSettings("")
-import clientSettings.executionContext
 val client = Await.result(clientSettings.createClient(), Duration.Inf)
 ```
 ```scala mdoc:silent

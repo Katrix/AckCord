@@ -40,10 +40,14 @@ you can then listen for specific messages and events. Once you have set
 everything up, you call login.
 ```scala mdoc:silent
 val clientSettings = ClientSettings(token)
-import clientSettings.executionContext
+//The client settings contains an excecution context that you can use before you have access to the client
+//import clientSettings.executionContext 
 
 //In real code, please dont block on the client construction
 val client = Await.result(clientSettings.createClient(), Duration.Inf)
+
+//The client also contains an execution context
+//import client.executionContext 
 
 client.onEventSideEffectsIgnore {
   case APIMessage.Ready(_) => println("Now ready")

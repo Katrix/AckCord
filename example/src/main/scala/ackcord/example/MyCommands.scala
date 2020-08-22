@@ -38,7 +38,6 @@ import ackcord.requests.{CreateMessage, Request}
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 import cats.syntax.all._
-import cats.instances.future._
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayerManager, DefaultAudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.track.{AudioPlaylist, AudioTrack}

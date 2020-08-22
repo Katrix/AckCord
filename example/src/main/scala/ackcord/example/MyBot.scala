@@ -27,7 +27,6 @@ import ackcord._
 import ackcord.commands.PrefixParser
 import ackcord.gateway.GatewayIntents
 import ackcord.syntax._
-import cats.instances.future._
 
 object MyBot extends App {
 

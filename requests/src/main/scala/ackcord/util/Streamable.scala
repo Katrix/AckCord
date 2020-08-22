@@ -25,6 +25,7 @@ package ackcord.util
 
 import scala.concurrent.Future
 
+import ackcord.OptFuture
 import akka.NotUsed
 import akka.stream.scaladsl.Source
 import cats.{Foldable, Id}
@@ -40,8 +41,6 @@ trait Streamable[F[_]] {
 }
 object Streamable {
   def apply[F[_]](implicit F: Streamable[F]): Streamable[F] = F
-
-  type OptionTRequest[A] = OptionT[Future, A]
 
   implicit val idStreamable: Streamable[Id] = new Streamable[Id] {
     override def toSource[A](fa: Id[A]): Source[A, NotUsed]                 = Source.single(fa)
@@ -62,6 +61,10 @@ object Streamable {
 
   implicit val futureOptionTStreamable: Streamable[OptionT[Future, *]] = new Streamable[OptionT[Future, *]] {
     override def toSource[A](fa: OptionT[Future, A]): Source[A, NotUsed] = Source.future(fa.value).mapConcat(_.toList)
+  }
+
+  implicit val optFutureStreamable: Streamable[OptFuture] = new Streamable[OptFuture] {
+    override def toSource[A](fa: OptFuture[A]): Source[A, NotUsed] = Source.future(fa.value).mapConcat(_.toList)
   }
 
   implicit val sourceStreamable: Streamable[Source[*, NotUsed]] = new Streamable[Source[?, NotUsed]] {

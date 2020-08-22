@@ -15,8 +15,6 @@ import ackcord._
 import ackcord.data._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import cats.Id
-import cats.instances.future._
 
 val clientSettings = ClientSettings("")
 import clientSettings.executionContext
@@ -39,10 +37,10 @@ client.onEventSideEffects { implicit c =>
 Next you need to send the request. For this example we will use `RequestsHelper`. 
 This object can be found on the client. That also means it's time to move away
 from `onEventSideEffects`. Even though sending requests can never 
-return option, the `run` command will return an `OptionT[Future, A]`. This is 
-due to the many cache lookup methods that return `Option`s. Think 
-of `OptionT[Future, A]` as a combination of both `Future` and `Option`. 
-When your event handler returns `OptionT[Future, Unit]`, you're recommended 
+return option, the `run` command will return an `OptFuture[A]`. 
+`OptFuture[A]` is a wrapper around `Future[Option[A]]`. This is done
+due to the many cache lookup methods that return `Option`s.
+When your event handler returns `OptFuture[Unit]`, you're recommended 
 to use `DiscordClient#onEventAsync` and `ActionBuilder#asyncOpt` instead.
 
 ```scala mdoc:silent
@@ -55,7 +53,7 @@ client.onEventAsync { implicit c =>
 ```
 
 The `RequestsHelper` object also contains lots of small helpers to deal with 
-`OptionT[Future, A]` and requests.
+`OptFuture[A]` and requests.
 
 ```scala mdoc:silent
 client.onEventAsync { implicit c => 

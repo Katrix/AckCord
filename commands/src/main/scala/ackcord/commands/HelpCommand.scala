@@ -29,12 +29,10 @@ import scala.concurrent.Future
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-import ackcord.CacheSnapshot
+import ackcord.{CacheSnapshot, OptFuture}
 import ackcord.data.Message
 import ackcord.requests.{CreateMessage, CreateMessageData, Requests}
 import akka.{Done, NotUsed}
-import cats.data.OptionT
-import cats.instances.future._
 import cats.syntax.all._
 
 /**
@@ -51,14 +49,14 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
     Command.parsing[Option[HelpCommand.Args]].asyncOptRequest { implicit m =>
       m.parsed match {
         case Some(HelpCommand.Args.CommandArgs(query)) =>
-          OptionT
-            .liftF(filterCommands(query))
+          OptFuture
+            .fromFuture(filterCommands(query))
             .semiflatMap(createSearchReply(m.message, query, _))
             .map(CreateMessage(m.textChannel.id, _))
         case Some(HelpCommand.Args.PageArgs(page)) =>
-          OptionT.liftF(createReplyAll(m.message, page)).map(CreateMessage(m.textChannel.id, _))
+          OptFuture.fromFuture(createReplyAll(m.message, page)).map(CreateMessage(m.textChannel.id, _))
         case None =>
-          OptionT.liftF(createReplyAll(m.message, 1)).map(CreateMessage(m.textChannel.id, _))
+          OptFuture.fromFuture(createReplyAll(m.message, 1)).map(CreateMessage(m.textChannel.id, _))
       }
     }
 

@@ -21,10 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
 import scala.language.implicitConversions
-
-import scala.concurrent.Future
 
 import ackcord.util.StreamInstances
 import akka.stream.scaladsl.{Flow, Sink, Source}
@@ -67,9 +64,7 @@ package object ackcord {
   val JsonUndefined: util.JsonUndefined.type = util.JsonUndefined
   type JsonUndefined = util.JsonUndefined.type
 
-  type SourceRequest[A]       = StreamInstances.SourceRequest[A]
-  type OptionTRequest[A]      = Streamable.OptionTRequest[A]
-  type FutureVectorRequest[A] = Future[Vector[A]]
+  type SourceRequest[A] = StreamInstances.SourceRequest[A]
 
   implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] =
     StreamInstances.SourceFlatmap(source)

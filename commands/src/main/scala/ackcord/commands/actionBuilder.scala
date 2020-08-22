@@ -26,6 +26,7 @@ package ackcord.commands
 
 import scala.concurrent.Future
 
+import ackcord.OptFuture
 import ackcord.requests.{Request, Requests}
 import ackcord.util.Streamable
 import akka.NotUsed
@@ -205,7 +206,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * Creates an action that results in an partial async result
     * @param block The execution of the action.
     */
-  def asyncOpt(block: O[A] => OptionT[Future, Unit]): Action[A, NotUsed] =
+  def asyncOpt(block: O[A] => OptFuture[Unit]): Action[A, NotUsed] =
     toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).to(Sink.ignore))
 
   /**
@@ -214,7 +215,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @tparam G The streamable result type.
     */
   def asyncOptRequest[G[_]](
-      block: O[A] => OptionT[Future, Request[Any]]
+      block: O[A] => OptFuture[Request[Any]]
   ): Action[A, NotUsed] =
     toSink(
       Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).mapConcat(_.toList).to(requests.sinkIgnore)

@@ -34,7 +34,6 @@ import akka.NotUsed
 import akka.actor.typed._
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.util.Timeout
-import cats.data.OptionT
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 
@@ -42,8 +41,6 @@ import com.sedmelluq.discord.lavaplayer.track.AudioItem
   * Trait used to interface with Discord stuff from high level.
   */
 trait DiscordClient {
-
-  type OptFuture[A] = OptionT[Future, A]
 
   /**
     * The shards of this client
@@ -151,7 +148,7 @@ trait DiscordClient {
     * @return An event registration to handle the listener's lifecycle.
     */
   def onEventAsync(
-      handler: CacheSnapshot => PartialFunction[APIMessage, OptionT[Future, Unit]]
+      handler: CacheSnapshot => PartialFunction[APIMessage, OptFuture[Unit]]
   ): EventRegistration[NotUsed] =
     onEventStreamable(handler)
 

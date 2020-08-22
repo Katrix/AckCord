@@ -41,7 +41,6 @@ import akka.actor.CoordinatedShutdown
 import akka.actor.typed.scaladsl.adapter._
 import akka.stream.scaladsl.{Flow, Sink}
 import cats.syntax.all._
-import cats.instances.future._
 
 //Lot's of different examples of how to use commands
 class CommandsController(requests: Requests) extends CommandController(requests) {
