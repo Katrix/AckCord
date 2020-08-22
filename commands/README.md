@@ -1,6 +1,6 @@
-# ackcord-commands-new
-This module contains the new experimental command system for AckCord. This is still an experimental module, and may change drastically or be removed altogether.
+# ackcord-commands
+This module contains the command system for AckCord.
 
 ```scala
-libraryDependencies += "net.katsstuff" %% "ackcord-commands-new" % "0.16.1"
+libraryDependencies += "net.katsstuff" %% "ackcord-commands" % "0.17.0"
 ```
