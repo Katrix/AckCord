@@ -538,7 +538,13 @@ object CacheHandlers {
         case Right(guild) =>
           val newVoiceStates =
             obj.channelId.fold(guild.voiceStates - obj.userId)(_ => guild.voiceStates.updated(obj.userId, obj))
-          registry.updateData(builder)(guild.copy(voiceStates = newVoiceStates))
+          val newMembers =
+            obj.member
+              .filter(_ => registry.hasUpdater[RawGuildMemberWithGuild])
+              .fold(guild.members)(member => guild.members.updated(obj.userId, member.toGuildMember(guild.id)))
+
+          registry.updateData(builder)(guild.copy(voiceStates = newVoiceStates, members = newMembers))
+
         case Left(e) => log.warn(e)
       }
     }
