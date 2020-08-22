@@ -118,7 +118,7 @@ object OptFuture {
         OptFuture(fa.value.recover(pf.andThen(Some(_))))
 
       override def recoverWith[A](fa: OptFuture[A])(pf: PartialFunction[Throwable, OptFuture[A]]): OptFuture[A] =
-        OptFuture(fa.value.recoverWith(pf(_).value))
+        OptFuture(fa.value.recoverWith(pf.andThen(_.value)))
 
       override def redeemWith[A, B](
           fa: OptFuture[A]
