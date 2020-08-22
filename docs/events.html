@@ -8,7 +8,7 @@ a new guild, or someone creates a new channel.</p>
 <code class="highlighter-rouge">DiscordClient#onEventSideEffectsIgnore</code> here, and go over the other forms in 
 the next section.</p>
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffectsIgnore</span> <span class="o">{</span>
-  <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">content</span><span class="o">)</span>
+  <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">content</span><span class="o">)</span>
 <span class="o">}</span>
 </code></pre></div></div>
 

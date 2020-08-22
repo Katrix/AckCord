@@ -10,7 +10,7 @@ the syntax package.</p>
 
 <span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> 
   <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="n">channel</span><span class="k">:</span> <span class="kt">TextGuildChannel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">channel</span><span class="k">:</span> <span class="kt">TextGuildChannel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
       <span class="c1">//There is also CreateMessage.mkContent for this specific pattern</span>
       <span class="k">val</span> <span class="nv">constructManually</span> <span class="k">=</span> <span class="nc">CreateMessage</span><span class="o">(</span><span class="nv">channel</span><span class="o">.</span><span class="py">id</span><span class="o">,</span> <span class="nc">CreateMessageData</span><span class="o">(</span><span class="n">content</span> <span class="k">=</span> <span class="s">"Hello World"</span><span class="o">))</span>
       <span class="k">val</span> <span class="nv">usingSyntax</span> <span class="k">=</span> <span class="nv">channel</span><span class="o">.</span><span class="py">sendMessage</span><span class="o">(</span><span class="n">content</span> <span class="k">=</span> <span class="s">"Hello World"</span><span class="o">)</span>
@@ -21,26 +21,26 @@ the syntax package.</p>
 <p>Next you need to send the request. For this example we will use <code class="highlighter-rouge">RequestsHelper</code>. 
 This object can be found on the client. That also means it’s time to move away
 from <code class="highlighter-rouge">onEventSideEffects</code>. Even though sending requests can never 
-return option, the <code class="highlighter-rouge">run</code> command will return an <code class="highlighter-rouge">OptionT[Future, A]</code>. This is 
-due to the many cache lookup methods that return <code class="highlighter-rouge">Option</code>s. Think 
-of <code class="highlighter-rouge">OptionT[Future, A]</code> as a combination of both <code class="highlighter-rouge">Future</code> and <code class="highlighter-rouge">Option</code>. 
-When your event handler returns <code class="highlighter-rouge">OptionT[Future, Unit]</code>, you’re recommended 
+return option, the <code class="highlighter-rouge">run</code> command will return an <code class="highlighter-rouge">OptFuture[A]</code>. 
+<code class="highlighter-rouge">OptFuture[A]</code> is a wrapper around <code class="highlighter-rouge">Future[Option[A]]</code>. This is done
+due to the many cache lookup methods that return <code class="highlighter-rouge">Option</code>s.
+When your event handler returns <code class="highlighter-rouge">OptFuture[Unit]</code>, you’re recommended 
 to use <code class="highlighter-rouge">DiscordClient#onEventAsync</code> and <code class="highlighter-rouge">ActionBuilder#asyncOpt</code> instead.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventAsync</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> 
   <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="n">channel</span><span class="k">:</span> <span class="kt">TextGuildChannel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">channel</span><span class="k">:</span> <span class="kt">TextGuildChannel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
       <span class="nv">client</span><span class="o">.</span><span class="py">requestsHelper</span><span class="o">.</span><span class="py">run</span><span class="o">(</span><span class="nv">channel</span><span class="o">.</span><span class="py">sendMessage</span><span class="o">(</span><span class="n">content</span> <span class="k">=</span> <span class="s">"Hello World"</span><span class="o">)).</span><span class="py">map</span><span class="o">(</span><span class="k">_</span> <span class="k">=&gt;</span> <span class="o">())</span>
   <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
 
 <p>The <code class="highlighter-rouge">RequestsHelper</code> object also contains lots of small helpers to deal with 
-<code class="highlighter-rouge">OptionT[Future, A]</code> and requests.</p>
+<code class="highlighter-rouge">OptFuture[A]</code> and requests.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventAsync</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> 
   <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="n">channel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">ChannelCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">channel</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span>
       <span class="k">import</span> <span class="nn">client.requestsHelper._</span>
       <span class="k">for</span> <span class="o">{</span>
         <span class="c1">//optionPure lifts an Option into the dsl</span>

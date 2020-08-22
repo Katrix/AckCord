@@ -5,7 +5,7 @@ to log in, and print a line to the console when it has done so.</p>
 
 <p>First add AckCord to your project by adding these statements to your <code class="highlighter-rouge">build.sbt</code> file.</p>
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">resolvers</span> <span class="o">+=</span> <span class="nv">Resolver</span><span class="o">.</span><span class="py">JCenterRepository</span>
-<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord"</span> <span class="o">%</span> <span class="s">"0.16.1"</span>
+<span class="n">libraryDependencies</span> <span class="o">+=</span> <span class="s">"net.katsstuff"</span> <span class="o">%%</span> <span class="s">"ackcord"</span> <span class="o">%</span> <span class="s">"0.17.0"</span>
 </code></pre></div></div>
 
 <p>Most of these examples assume these imports.</p>
@@ -29,10 +29,14 @@ use the execution context it contains, and create a client. Using that client
 you can then listen for specific messages and events. Once you have set 
 everything up, you call login.</p>
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">val</span> <span class="nv">clientSettings</span> <span class="k">=</span> <span class="nc">ClientSettings</span><span class="o">(</span><span class="n">token</span><span class="o">)</span>
-<span class="k">import</span> <span class="nn">clientSettings.executionContext</span>
+<span class="c1">//The client settings contains an excecution context that you can use before you have access to the client</span>
+<span class="c1">//import clientSettings.executionContext </span>
 
 <span class="c1">//In real code, please dont block on the client construction</span>
 <span class="k">val</span> <span class="nv">client</span> <span class="k">=</span> <span class="nv">Await</span><span class="o">.</span><span class="py">result</span><span class="o">(</span><span class="nv">clientSettings</span><span class="o">.</span><span class="py">createClient</span><span class="o">(),</span> <span class="nv">Duration</span><span class="o">.</span><span class="py">Inf</span><span class="o">)</span>
+
+<span class="c1">//The client also contains an execution context</span>
+<span class="c1">//import client.executionContext </span>
 
 <span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffectsIgnore</span> <span class="o">{</span>
   <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">Ready</span><span class="o">(</span><span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="s">"Now ready"</span><span class="o">)</span>

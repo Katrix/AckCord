@@ -10,7 +10,7 @@ printing the channel of all new messages.
 All lookups in the cache return <code class="highlighter-rouge">Option</code>s.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">c</span><span class="o">.</span><span class="py">getTextChannel</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">))</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">c</span><span class="o">.</span><span class="py">getTextChannel</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">))</span>
   <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -22,7 +22,7 @@ corresponds to. In some cases there might be multiple resolve methods, either
 for performance reasons, or to get different objects that both use the same id.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">.</span><span class="py">resolve</span><span class="o">)</span>
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">channelId</span><span class="o">.</span><span class="py">resolve</span><span class="o">)</span>
   <span class="o">}</span>
 <span class="o">}</span>
 </code></pre></div></div>
@@ -31,7 +31,7 @@ for performance reasons, or to get different objects that both use the same id.<
 interacting with taking a cache snapshot, and returning an object directly.</p>
 
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="k">implicit</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="n">message</span><span class="k">:</span> <span class="kt">GuildMessage</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> 
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageCreate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">message</span><span class="k">:</span> <span class="kt">GuildGatewayMessage</span><span class="o">,</span> <span class="k">_</span><span class="o">)</span> <span class="k">=&gt;</span> 
       <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">guild</span><span class="o">)</span>
   <span class="o">}</span>
 <span class="o">}</span>
@@ -45,7 +45,7 @@ on <code class="highlighter-rouge">APIMessage.MessageCreate</code>. It stores th
 previous <code class="highlighter-rouge">CacheSnapshot</code>. For example, to get the message before it was edited 
 in <code class="highlighter-rouge">APIMessage.MessageUpdate</code>, we do something like this.</p>
 <div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">client</span><span class="o">.</span><span class="py">onEventSideEffects</span> <span class="o">{</span> <span class="n">c</span> <span class="k">=&gt;</span> <span class="o">{</span>
-    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageUpdate</span><span class="o">(</span><span class="n">message</span><span class="o">,</span> <span class="nc">CacheState</span><span class="o">(</span><span class="n">current</span><span class="o">,</span> <span class="n">previous</span><span class="o">))</span> <span class="k">=&gt;</span> 
+    <span class="k">case</span> <span class="nv">APIMessage</span><span class="o">.</span><span class="py">MessageUpdate</span><span class="o">(</span><span class="k">_</span><span class="o">,</span> <span class="n">message</span><span class="o">,</span> <span class="nc">CacheState</span><span class="o">(</span><span class="n">current</span><span class="o">,</span> <span class="n">previous</span><span class="o">))</span> <span class="k">=&gt;</span> 
       <span class="nf">println</span><span class="o">(</span><span class="nv">message</span><span class="o">.</span><span class="py">id</span><span class="o">.</span><span class="py">resolve</span><span class="o">(</span><span class="n">previous</span><span class="o">))</span>
   <span class="o">}</span>
 <span class="o">}</span>
