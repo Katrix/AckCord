@@ -171,7 +171,7 @@ case class User(
   /**
     * Mention this user.
     */
-  def mention: String = s"<@$id>"
+  def mention: String = s"<@!$id>"
 
   /**
     * Mention this user with their nickname.
