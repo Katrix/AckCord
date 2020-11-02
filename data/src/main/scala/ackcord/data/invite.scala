@@ -97,7 +97,9 @@ case class CreatedInvite(
     maxUses: Int,
     maxAge: Int,
     temporary: Boolean,
-    createdAt: OffsetDateTime
+    createdAt: OffsetDateTime,
+    targetUser: Option[InviteTargetUser],
+    targetUserType: Option[Int]
 )
 
 /**
@@ -105,9 +107,24 @@ case class CreatedInvite(
   * @param id The guild id
   * @param name The guild name
   * @param splash The guild splash hash
+  * @param banner The banner of the guild
+  * @param description The description for the guild
   * @param icon The guild icon hash
+  * @param features The guild features for the guild
+  * @param verificationLevel The verification level of the guild
+  * @param vanityUrlCode The vanity URL code for the guild
   */
-case class InviteGuild(id: GuildId, name: String, splash: Option[String], icon: Option[String])
+case class InviteGuild(
+    id: GuildId,
+    name: String,
+    splash: Option[String],
+    banner: Option[String],
+    description: Option[String],
+    icon: Option[String],
+    features: Seq[GuildFeature],
+    verificationLevel: VerificationLevel,
+    vanityUrlCode: Option[String]
+)
 
 /**
   * A partial channel with the information used by an invite

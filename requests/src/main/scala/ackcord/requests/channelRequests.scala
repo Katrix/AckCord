@@ -67,6 +67,7 @@ case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, 
   */
 case class ModifyChannelData(
     name: JsonOption[String] = JsonUndefined,
+    tpe: JsonOption[ChannelType] = JsonUndefined,
     position: JsonOption[Int] = JsonUndefined,
     topic: JsonOption[String] = JsonUndefined,
     nsfw: JsonOption[Boolean] = JsonUndefined,
@@ -81,11 +82,13 @@ case class ModifyChannelData(
   require(bitrate.forall(b => b >= 8000 && b <= 128000), "Bitrate must be between 8000 and 128000 bits")
   require(userLimit.forall(b => b >= 0 && b <= 99), "User limit must be between 0 and 99 users")
   require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
+  require(tpe.forall(Seq(ChannelType.GuildNews, ChannelType.GuildText).contains))
 }
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
     JsonOption.removeUndefinedToObj(
       "name"                  -> a.name.map(_.asJson),
+      "type"                  -> a.tpe.map(_.asJson),
       "position"              -> a.position.map(_.asJson),
       "topic"                 -> a.topic.map(_.asJson),
       "nsfw"                  -> a.nsfw.map(_.asJson),
@@ -475,6 +478,7 @@ case class DeleteAllReactionsForEmoji(channelId: TextChannelId, messageId: Messa
   */
 case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
+    allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
     embed: JsonOption[OutgoingEmbed] = JsonUndefined,
     flags: JsonOption[MessageFlags] = JsonUndefined
 ) {
@@ -807,7 +811,14 @@ case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsReq
   * @param name The new emoji name.
   * @param roles Whitelist of roles that can use this emoji.
   */
-case class ModifyGuildEmojiData(name: String, roles: Seq[RoleId])
+case class ModifyGuildEmojiData(name: String, roles: JsonOption[Seq[RoleId]] = JsonUndefined)
+object ModifyGuildEmojiData {
+  implicit val encoder: Encoder[ModifyGuildEmojiData] = (a: ModifyGuildEmojiData) =>
+    JsonOption.removeUndefinedToObj(
+      "name"  -> JsonSome(a.name.asJson),
+      "roles" -> a.roles.map(_.asJson)
+    )
+}
 
 /**
   * Modify an existing emoji.
@@ -818,9 +829,8 @@ case class ModifyGuildEmoji(
     params: ModifyGuildEmojiData,
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyGuildEmoji, ModifyGuildEmojiData, RawEmoji, Emoji] {
-  override def route: RequestRoute = Routes.modifyGuildEmoji(guildId, emojiId)
-  override def paramsEncoder: Encoder[ModifyGuildEmojiData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def route: RequestRoute                          = Routes.modifyGuildEmoji(guildId, emojiId)
+  override def paramsEncoder: Encoder[ModifyGuildEmojiData] = ModifyGuildEmojiData.encoder
 
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
   override def toNiceResponse(response: RawEmoji): Emoji = response.toEmoji
@@ -837,7 +847,7 @@ object ModifyGuildEmoji {
       guildId: GuildId,
       name: String,
       roles: Seq[RoleId]
-  ): ModifyGuildEmoji = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, roles))
+  ): ModifyGuildEmoji = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, JsonSome(roles)))
 }
 
 /**
@@ -855,4 +865,42 @@ case class DeleteGuildEmoji(
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): DeleteGuildEmoji = copy(reason = Some(reason))
+}
+
+case class CrosspostMessage(channelId: ChannelId, messageId: MessageId) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.crosspostMessage(channelId, messageId)
+
+  override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
+  override def toNiceResponse(response: RawMessage): Message = response.toMessage
+
+  override def requiredPermissions: Permission = Permission.SendMessages
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsChannel(channelId, requiredPermissions)
+}
+
+/**
+  * @param channelId Source channel id
+  * @param webhookId Id of the created webhook
+  */
+case class FollowedChannel(
+    channelId: ChannelId,
+    webhookId: SnowflakeType[Webhook]
+)
+
+case class FollowNewsChannelData(webhookChannelId: ChannelId)
+
+/**
+  * @param channelId Where to send messages to
+  */
+case class FollowNewsChannel(channelId: ChannelId, params: FollowNewsChannelData)
+    extends RESTRequest[FollowNewsChannelData, FollowedChannel, FollowedChannel] {
+  override def route: RequestRoute = Routes.followNewsChannel(channelId)
+
+  override def paramsEncoder: Encoder[FollowNewsChannelData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+
+  override def responseDecoder: Decoder[FollowedChannel] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+  override def toNiceResponse(response: FollowedChannel): FollowedChannel =
+    response
 }

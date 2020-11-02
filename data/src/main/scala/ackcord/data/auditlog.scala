@@ -127,7 +127,7 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
   * @param membersRemoved The amount of members removed.
   *                       Present for MemberPrune.
   * @param channelId The channelId of the deleted message.
-  *                  Present for MessageDelete.
+  *                  Present for MemberMove, MessagePing, MessageUnpin and MessageDelete.
   * @param messageId The message that was targeted. Present for MessagePin and MessageUnpin
   * @param count The amount of deleted messages. Present for MessageDelete.
   * @param id The id of the overwritten object. Present for overwrite events.

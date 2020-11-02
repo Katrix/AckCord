@@ -462,6 +462,7 @@ case class RawMessage(
   * @param id The id of the guild.
   * @param name The name of the guild.
   * @param icon The icon hash.
+  * @param iconHash Used for template objects.
   * @param splash The splash hash.
   * @param discoverySplash The discovery splash hash.
   * @param owner If the current user is the owner of the guild.
@@ -500,14 +501,18 @@ case class RawMessage(
   * @param banner A banner hash for the guild.
   * @param premiumTier The premium tier of the guild.
   * @param premiumSubscriptionCount How many users that are boosting the server.
-  * @param preferredLocale The preferred locale of a public guild.
+  * @param preferredLocale The preferred locale of a community guild.
   * @param publicUpdatesChannelId The channel where admin and mods can see
   *                               public updates are sent to public guilds.
+  * @param maxVideoChannelUsers The max amount of users in a video call.
+  * @param approximateMemberCount Roughly how many members there is in the guild.
+  * @param approximatePresenceCount Roughly how many presences there is in the guild.
   */
 case class RawGuild(
     id: GuildId,
     name: String,
     icon: Option[String],
+    iconHash: Option[String],
     splash: Option[String],
     discoverySplash: Option[String],
     owner: Option[Boolean],
@@ -516,7 +521,9 @@ case class RawGuild(
     region: String,
     afkChannelId: Option[VoiceGuildChannelId], //AfkChannelId can be null
     afkTimeout: Int,
+    @deprecated("Prefer widgetEnabled", since = "0.18.0")
     embedEnabled: Option[Boolean],
+    @deprecated("Prefer widgetChannelId", since = "0.18.0")
     embedChannelId: Option[GuildChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
@@ -547,7 +554,10 @@ case class RawGuild(
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
     preferredLocale: Option[String],
-    publicUpdatesChannelId: Option[TextGuildChannelId]
+    publicUpdatesChannelId: Option[TextGuildChannelId],
+    maxVideoChannelUsers: Option[Int],
+    approximateMemberCount: Option[Int],
+    approximatePresenceCount: Option[Int]
 ) {
 
   /**
@@ -571,6 +581,7 @@ case class RawGuild(
         id,
         name,
         icon,
+        iconHash,
         splash,
         discoverySplash,
         owner,
@@ -602,7 +613,7 @@ case class RawGuild(
         SnowflakeMap.withKey(channels)(_.id),
         SnowflakeMap
           .from(presences.flatMap(p => p.toPresence.toOption.map(p.user.id -> _))), //We throw away the errors here
-        maxPresences.getOrElse(5000), // The default is 5000
+        maxPresences.getOrElse(25000), // The default is 25000
         maxMembers,
         vanityUrlCode,
         description,
@@ -610,7 +621,10 @@ case class RawGuild(
         premiumTier,
         premiumSubscriptionCount,
         preferredLocale,
-        publicUpdatesChannelId
+        publicUpdatesChannelId,
+        maxVideoChannelUsers,
+        approximateMemberCount,
+        approximatePresenceCount
       )
     }
   }
@@ -693,6 +707,7 @@ case class RawActivity(
     case 2 => Right(PresenceListening(name, createdAt, timestamps, details, assets))
     case 3 => Right(PresenceWatching(name, createdAt, timestamps, details, assets))
     case 4 => Right(PresenceCustom(name, createdAt, state, emoji))
+    case 5 => Right(PresenceCompeting(name, createdAt, timestamps, details, assets))
     case _ => Left(s"Got unknown presence type ${`type`}")
   }
 }
@@ -733,7 +748,7 @@ case class PartialUser(
     id: UserId,
     username: Option[String],
     discriminator: Option[String],
-    avatar: Option[String], //avatar can be null
+    avatar: Option[String],
     bot: Option[Boolean],
     system: Option[Boolean],
     mfaEnabled: Option[Boolean],
@@ -741,7 +756,8 @@ case class PartialUser(
     verified: Option[Boolean],
     email: Option[String],
     flags: Option[UserFlags],
-    premiumType: Option[PremiumType]
+    premiumType: Option[PremiumType],
+    publicFlags: Option[UserFlags]
 )
 
 /**

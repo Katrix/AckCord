@@ -538,15 +538,15 @@ package object syntax {
       * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
       */
     def modify(
-        name: Option[String] = None,
-        region: Option[String] = None,
-        verificationLevel: Option[VerificationLevel] = None,
-        defaultMessageNotifications: Option[NotificationLevel] = None,
-        afkChannelId: Option[VoiceGuildChannelId] = None,
-        afkTimeout: Option[Int] = None,
-        icon: Option[ImageData] = None,
-        ownerId: Option[UserId] = None,
-        splash: Option[ImageData] = None
+        name: JsonOption[String] = JsonUndefined,
+        region: JsonOption[String] = JsonUndefined,
+        verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
+        defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
+        afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+        afkTimeout: JsonOption[Int] = JsonUndefined,
+        icon: JsonOption[ImageData] = JsonUndefined,
+        ownerId: JsonOption[UserId] = JsonUndefined,
+        splash: JsonOption[ImageData] = JsonUndefined
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -736,8 +736,8 @@ package object syntax {
       * Check how many members would be removed if a prune was started now.
       * @param days The number of days to prune for.
       */
-    def fetchPruneCount(days: Int) =
-      GetGuildPruneCount(guild.id, GuildPruneCountData(days))
+    def fetchPruneCount(days: Int, includeRoles: Seq[RoleId] = Nil) =
+      GetGuildPruneCount(guild.id, GuildPruneCountData(days, includeRoles))
 
     /**
       * Begin a prune.
@@ -745,8 +745,9 @@ package object syntax {
       */
     def beginPrune(
         days: Int,
-        computePruneCount: Boolean = guild.memberCount < 1000
-    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount)))
+        computePruneCount: Boolean = guild.memberCount < 1000,
+        includeRoles: Seq[RoleId] = Nil
+    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount), includeRoles))
 
     /**
       * Fetch the voice regions for this guild.
@@ -781,9 +782,9 @@ package object syntax {
       */
     def modifyIntegration(
         id: IntegrationId,
-        expireBehavior: IntegrationExpireBehavior,
-        expireGracePeriod: Int,
-        enableEmoticons: Boolean
+        expireBehavior: JsonOption[IntegrationExpireBehavior] = JsonUndefined,
+        expireGracePeriod: JsonOption[Int] = JsonUndefined,
+        enableEmoticons: JsonOption[Boolean] = JsonUndefined
     ) =
       ModifyGuildIntegration(
         guild.id,
@@ -809,13 +810,13 @@ package object syntax {
       * Fetch the guild embed for this guild.
       */
     def fetchEmbed =
-      GetGuildEmbed(guild.id)
+      GetGuildWidget(guild.id)
 
     /**
       * Modify a guild embed for this guild.
       */
-    def modifyEmbed(embed: GuildEmbed) =
-      ModifyGuildEmbed(guild.id, embed)
+    def modifyEmbed(embed: GuildWidget) =
+      ModifyGuildWidget(guild.id, embed)
 
     /**
       * Get all the text channels in the guild.
@@ -967,8 +968,8 @@ package object syntax {
       * Modify the clients nickname.
       * @param nick The new nickname
       */
-    def setNick(nick: String) =
-      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(nick))
+    def setNick(nick: Option[String]) =
+      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(JsonOption.fromOptionWithNull(nick)))
 
     /**
       * Fetch an audit log for a this guild.
@@ -1072,7 +1073,7 @@ package object syntax {
       * @param guildId The guildId of this emoji.
       */
     def modify(name: String, roles: Seq[RoleId], guildId: GuildId) =
-      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, roles))
+      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, JsonSome(roles)))
 
     /**
       * Delete this emoji.
@@ -1092,11 +1093,11 @@ package object syntax {
       * @param mentionable If this role is mentionable.
       */
     def modify(
-        name: Option[String] = None,
-        permissions: Option[Permission] = None,
-        color: Option[Int] = None,
-        hoist: Option[Boolean] = None,
-        mentionable: Option[Boolean] = None
+        name: JsonOption[String] = JsonUndefined,
+        permissions: JsonOption[Permission] = JsonUndefined,
+        color: JsonOption[Int] = JsonUndefined,
+        hoist: JsonOption[Boolean] = JsonUndefined,
+        mentionable: JsonOption[Boolean] = JsonUndefined
     ) =
       ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable))
 
@@ -1200,8 +1201,10 @@ package object syntax {
       */
     def edit(
         content: JsonOption[String] = JsonUndefined,
-        embed: JsonOption[OutgoingEmbed] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, embed))
+        allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+        embed: JsonOption[OutgoingEmbed] = JsonUndefined,
+        flags: JsonOption[MessageFlags] = JsonUndefined
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, allowedMentions, embed, flags))
 
     /**
       * Delete this message.
@@ -1252,9 +1255,9 @@ package object syntax {
       * @param channelId The channel this webhook should be moved to.
       */
     def modify(
-        name: Option[String] = None,
-        avatar: Option[ImageData] = None,
-        channelId: Option[TextGuildChannelId] = None
+        name: JsonOption[String] = JsonUndefined,
+        avatar: JsonOption[ImageData] = JsonUndefined,
+        channelId: JsonOption[TextGuildChannelId] = JsonUndefined
     ) = ModifyWebhook(webhook.id, ModifyWebhookData(name, avatar, channelId))
 
     /**
@@ -1264,9 +1267,9 @@ package object syntax {
       * @param channelId The channel this webhook should be moved to.
       */
     def modifyWithToken(
-        name: Option[String] = None,
-        avatar: Option[ImageData] = None,
-        channelId: Option[TextGuildChannelId] = None
+        name: JsonOption[String] = JsonUndefined,
+        avatar: JsonOption[ImageData] = JsonUndefined,
+        channelId: JsonOption[TextGuildChannelId] = JsonUndefined
     ) = webhook.token.map(ModifyWebhookWithToken(webhook.id, _, ModifyWebhookData(name, avatar, channelId)))
 
     /**

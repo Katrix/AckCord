@@ -38,7 +38,8 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   *             a webhook with a token.
   * @param name The name of the webhook
   * @param avatar The avatar of the webhook.
-  * @param token The token of the webhook
+  * @param token The token of the webhook.
+  * @param applicationId The bot or OAuth2 application that created the webhook
   */
 case class Webhook(
     id: SnowflakeType[Webhook],
@@ -48,7 +49,8 @@ case class Webhook(
     user: Option[User],
     name: Option[String],
     avatar: Option[String],
-    token: Option[String]
+    token: Option[String],
+    applicationId: Option[RawSnowflake]
 ) extends GetGuildOpt {
 
   /**

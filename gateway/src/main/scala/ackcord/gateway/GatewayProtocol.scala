@@ -26,6 +26,7 @@ package ackcord.gateway
 import java.time.OffsetDateTime
 
 import ackcord.data._
+import ackcord.data.raw.RawMessageActivity
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import cats.Later
 import cats.syntax.either._
@@ -204,8 +205,14 @@ object GatewayProtocol extends DiscordProtocol {
           .as[JsonOption[Int]]
           .map(_.map(Left.apply))
           .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
-      pinned    <- c.get[JsonOption[Boolean]]("pinned")
-      webhookId <- c.get[JsonOption[String]]("webhook_id")
+
+      pinned           <- c.get[JsonOption[Boolean]]("pinned")
+      webhookId        <- c.get[JsonOption[String]]("webhook_id")
+      messageType      <- c.get[JsonOption[MessageType]]("message_type")
+      activity         <- c.get[JsonOption[RawMessageActivity]]("activity")
+      application      <- c.get[JsonOption[MessageApplication]]("application")
+      messageReference <- c.get[JsonOption[MessageReference]]("message_reference")
+      flags            <- c.get[JsonOption[MessageFlags]]("flags")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
@@ -222,7 +229,12 @@ object GatewayProtocol extends DiscordProtocol {
       reactions,
       nonce,
       pinned,
-      webhookId
+      webhookId,
+      messageType,
+      activity,
+      application,
+      messageReference,
+      flags
     )
   }
 

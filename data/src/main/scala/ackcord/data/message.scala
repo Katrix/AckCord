@@ -150,6 +150,9 @@ case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, avatar: O
   * @param locale The user's chosen language.
   * @param verified If this user email is verified. Requires the email OAuth scope.
   * @param email The users email. Requires the email OAuth scope.
+  * @param flags The flags on a user's account.
+  * @param premiumType The type of nitro the account has.
+  * @param publicFlags The public flags on a user's account.
   */
 //Remember to edit PartialUser when editing this
 case class User(
@@ -164,7 +167,8 @@ case class User(
     verified: Option[Boolean],
     email: Option[String],
     flags: Option[UserFlags],
-    premiumType: Option[PremiumType]
+    premiumType: Option[PremiumType],
+    publicFlags: Option[UserFlags]
 ) extends Author[User]
     with UserOrRole {
 
@@ -197,8 +201,8 @@ case class Connection(
     id: String,
     name: String,
     `type`: String,
-    revoked: Boolean,
-    integrations: Seq[Integration], //TODO: Partial
+    revoked: Option[Boolean],
+    integrations: Option[Seq[Integration]], //TODO: Partial
     verified: Boolean,
     friendSync: Boolean,
     showActivity: Boolean,

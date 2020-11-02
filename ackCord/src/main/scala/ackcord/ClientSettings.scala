@@ -28,6 +28,7 @@ import java.time.Instant
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
+import ackcord.DiscordShard.FetchWSGatewayBotInfo
 import ackcord.MemoryCacheSnapshot.CacheProcessor
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
@@ -131,9 +132,9 @@ case class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGatewayWithShards(token).flatMap {
-      case (uri, receivedShardTotal) =>
+      case FetchWSGatewayBotInfo(uri, shards, _) =>
         createClientWithShards(
-          DiscordShard.many(uri, receivedShardTotal, gatewaySettings, _)
+          DiscordShard.many(uri, shards, gatewaySettings, _)
         )
     }
   }

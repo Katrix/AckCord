@@ -573,7 +573,8 @@ object GatewayEvent {
       guildId: GuildId,
       roles: Seq[RoleId],
       user: User,
-      nick: Option[String], //TODO: Nick can probably be null here
+      nick: Option[String],
+      joinedAt: OffsetDateTime,
       premiumSince: Option[OffsetDateTime]
   )
 
@@ -664,7 +665,9 @@ object GatewayEvent {
       maxAge: Int,
       maxUses: Int,
       temporary: Boolean,
-      uses: Int
+      uses: Int,
+      targetUser: Option[InviteTargetUser],
+      targetUserType: Option[Int]
   )
 
   /**
@@ -721,7 +724,12 @@ object GatewayEvent {
       reactions: JsonOption[Seq[Reaction]],
       nonce: JsonOption[Either[Int, String]],
       pinned: JsonOption[Boolean],
-      webhookId: JsonOption[String]
+      webhookId: JsonOption[String],
+      messageType: JsonOption[MessageType],
+      activity: JsonOption[RawMessageActivity],
+      application: JsonOption[MessageApplication],
+      messageReference: JsonOption[MessageReference],
+      flags: JsonOption[MessageFlags]
   )
 
   /**

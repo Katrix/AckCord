@@ -26,7 +26,9 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
+import ackcord.util.{JsonOption, JsonUndefined}
 import io.circe._
+import io.circe.syntax._
 
 /**
   * @param name Name of the webhook
@@ -110,10 +112,18 @@ case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extend
   * @param channelId The channel this webhook should be moved to.
   */
 case class ModifyWebhookData(
-    name: Option[String] = None,
-    avatar: Option[ImageData] = None,
-    channelId: Option[TextGuildChannelId] = None
+    name: JsonOption[String] = JsonUndefined,
+    avatar: JsonOption[ImageData] = JsonUndefined,
+    channelId: JsonOption[TextGuildChannelId] = JsonUndefined
 )
+object ModifyWebhookData {
+  implicit val encoder: Encoder[ModifyWebhookData] = (a: ModifyWebhookData) =>
+    JsonOption.removeUndefinedToObj(
+      "name"       -> a.name.map(_.asJson),
+      "avatar"     -> a.avatar.map(_.asJson),
+      "channel_id" -> a.channelId.map(_.asJson)
+    )
+}
 
 /**
   * Modify a webhook.
@@ -124,7 +134,7 @@ case class ModifyWebhook(
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[ModifyWebhook, ModifyWebhookData, Webhook] {
   override def route: RequestRoute                       = Routes.getWebhook(id)
-  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def paramsEncoder: Encoder[ModifyWebhookData] = ModifyWebhookData.encoder
 
   override def responseDecoder: Decoder[Webhook] = Decoder[Webhook]
 
@@ -144,7 +154,7 @@ case class ModifyWebhookWithToken(
   require(params.channelId.isEmpty, "ModifyWebhookWithToken does not accept a channelId in the request")
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
-  override def paramsEncoder: Encoder[ModifyWebhookData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def paramsEncoder: Encoder[ModifyWebhookData] = ModifyWebhookData.encoder
   override def responseDecoder: Decoder[Webhook]         = Decoder[Webhook]
 
   override def requiredPermissions: Permission = Permission.ManageWebhooks

@@ -80,8 +80,8 @@ case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildD
 /**
   * Get a guild by id.
   */
-case class GetGuild(guildId: GuildId) extends NoParamsRequest[RawGuild, Option[Guild]] {
-  override def route: RequestRoute = Routes.getGuild(guildId)
+case class GetGuild(guildId: GuildId, withCounts: Boolean = false) extends NoParamsRequest[RawGuild, Option[Guild]] {
+  override def route: RequestRoute = Routes.getGuild(guildId, Some(withCounts))
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
   override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
@@ -111,19 +111,36 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
   * @param systemChannelId The new channel which system messages will be sent to.
   */
 case class ModifyGuildData(
-    name: Option[String] = None,
-    region: Option[String] = None,
-    verificationLevel: Option[VerificationLevel] = None,
-    defaultMessageNotifications: Option[NotificationLevel] = None,
-    explicitContentFilter: Option[FilterLevel] = None,
-    afkChannelId: Option[VoiceGuildChannelId] = None,
-    afkTimeout: Option[Int] = None,
-    icon: Option[ImageData] = None,
-    ownerId: Option[UserId] = None,
-    splash: Option[ImageData] = None,
-    banner: Option[ImageData] = None,
-    systemChannelId: Option[TextGuildChannelId] = None
+    name: JsonOption[String] = JsonUndefined,
+    region: JsonOption[String] = JsonUndefined,
+    verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
+    defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
+    explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
+    afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+    afkTimeout: JsonOption[Int] = JsonUndefined,
+    icon: JsonOption[ImageData] = JsonUndefined,
+    ownerId: JsonOption[UserId] = JsonUndefined,
+    splash: JsonOption[ImageData] = JsonUndefined,
+    banner: JsonOption[ImageData] = JsonUndefined,
+    systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined
 )
+object ModifyGuildData {
+  implicit val encoder: Encoder[ModifyGuildData] = (a: ModifyGuildData) =>
+    JsonOption.removeUndefinedToObj(
+      "name"                          -> a.name.map(_.asJson),
+      "region"                        -> a.region.map(_.asJson),
+      "verification_level"            -> a.verificationLevel.map(_.asJson),
+      "default_message_notifications" -> a.defaultMessageNotifications.map(_.asJson),
+      "explicit_content_filter"       -> a.explicitContentFilter.map(_.asJson),
+      "afk_channel_id"                -> a.afkChannelId.map(_.asJson),
+      "afk_timeout"                   -> a.afkTimeout.map(_.asJson),
+      "icon"                          -> a.icon.map(_.asJson),
+      "owner_id"                      -> a.ownerId.map(_.asJson),
+      "splash"                        -> a.splash.map(_.asJson),
+      "banner"                        -> a.banner.map(_.asJson),
+      "system_channel_id"             -> a.systemChannelId.map(_.asJson)
+    )
+}
 
 /**
   * Modify an existing guild.
@@ -134,7 +151,7 @@ case class ModifyGuild(
     reason: Option[String] = None
 ) extends ReasonRequest[ModifyGuild, ModifyGuildData, RawGuild, Option[Guild]] {
   override def route: RequestRoute                     = Routes.modifyGuild(guildId)
-  override def paramsEncoder: Encoder[ModifyGuildData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def paramsEncoder: Encoder[ModifyGuildData] = ModifyGuildData.encoder
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
   override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
@@ -231,7 +248,17 @@ case class CreateGuildChannel(
   * @param id The channel id
   * @param position It's new position
   */
-case class ModifyGuildChannelPositionsData(id: GuildChannelId, position: Int)
+case class ModifyGuildChannelPositionsData(id: GuildChannelId, position: JsonOption[Int] = JsonUndefined)
+object ModifyGuildChannelPositionsData {
+  def apply(id: GuildChannelId, position: Int): ModifyGuildChannelPositionsData =
+    new ModifyGuildChannelPositionsData(id, JsonSome(position))
+
+  implicit val encoder: Encoder[ModifyGuildChannelPositionsData] = (a: ModifyGuildChannelPositionsData) =>
+    JsonOption.removeUndefinedToObj(
+      "id"       -> JsonSome(a.id.asJson),
+      "position" -> a.position.map(_.asJson)
+    )
+}
 
 /**
   * Modify the positions of several channels.
@@ -242,11 +269,8 @@ case class ModifyGuildChannelPositions(
     reason: Option[String] = None
 ) extends NoResponseReasonRequest[ModifyGuildChannelPositions, Seq[ModifyGuildChannelPositionsData]] {
   override def route: RequestRoute = Routes.modifyGuildChannelsPositions(guildId)
-  override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] = {
-    implicit val enc: Encoder[ModifyGuildChannelPositionsData] =
-      derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def paramsEncoder: Encoder[Seq[ModifyGuildChannelPositionsData]] =
     Encoder[Seq[ModifyGuildChannelPositionsData]]
-  }
 
   override def requiredPermissions: Permission = Permission.ManageChannels
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -394,7 +418,13 @@ case class ModifyGuildMember(
   override def withReason(reason: String): ModifyGuildMember = copy(reason = Some(reason))
 }
 
-case class ModifyBotUsersNickData(nick: String)
+case class ModifyBotUsersNickData(nick: JsonOption[String] = JsonUndefined)
+object ModifyBotUsersNickData {
+  implicit val encoder: Encoder[ModifyBotUsersNickData] = (a: ModifyBotUsersNickData) =>
+    JsonOption.removeUndefinedToObj(
+      "nick" -> a.nick.map(_.asJson)
+    )
+}
 
 /**
   * Modify the clients nickname.
@@ -406,7 +436,7 @@ case class ModifyBotUsersNick(
 ) extends NoNiceResponseReasonRequest[ModifyBotUsersNick, ModifyBotUsersNickData, String] {
   override def route: RequestRoute = Routes.modifyCurrentNick(guildId)
   override def paramsEncoder: Encoder[ModifyBotUsersNickData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    ModifyBotUsersNickData.encoder
 
   override def responseDecoder: Decoder[String] = Decoder[String]
 
@@ -418,7 +448,7 @@ case class ModifyBotUsersNick(
 }
 object ModifyBotUsersNick {
   def mk(guildId: GuildId, nick: String): ModifyBotUsersNick =
-    new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(nick))
+    new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(JsonSome(nick)))
 }
 
 /**
@@ -501,17 +531,19 @@ case class CreateGuildBanData(deleteMessageDays: Option[Int], reason: Option[Str
 case class CreateGuildBan(
     guildId: GuildId,
     userId: UserId,
-    queryParams: CreateGuildBanData,
+    params: CreateGuildBanData,
     reason: Option[String] = None
-) extends NoParamsResponseReasonRequest[CreateGuildBan] {
-  override def route: RequestRoute =
-    Routes.createGuildMemberBan(guildId, userId, queryParams.deleteMessageDays, queryParams.reason)
+) extends NoResponseReasonRequest[CreateGuildBan, CreateGuildBanData] {
+  override def route: RequestRoute = Routes.createGuildMemberBan(guildId, userId)
 
   override def requiredPermissions: Permission = Permission.BanMembers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
   override def withReason(reason: String): CreateGuildBan = copy(reason = Some(reason))
+
+  override def paramsEncoder: Encoder[CreateGuildBanData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 }
 object CreateGuildBan {
   def mk(
@@ -629,12 +661,22 @@ case class ModifyGuildRolePositions(
   * @param mentionable If this role is mentionable.
   */
 case class ModifyGuildRoleData(
-    name: Option[String] = None,
-    permissions: Option[Permission] = None,
-    color: Option[Int] = None,
-    hoist: Option[Boolean] = None,
-    mentionable: Option[Boolean] = None
+    name: JsonOption[String] = JsonUndefined,
+    permissions: JsonOption[Permission] = JsonUndefined,
+    color: JsonOption[Int] = JsonUndefined,
+    hoist: JsonOption[Boolean] = JsonUndefined,
+    mentionable: JsonOption[Boolean] = JsonUndefined
 )
+object ModifyGuildRoleData {
+  implicit val encoder: Encoder[ModifyGuildRoleData] = (a: ModifyGuildRoleData) =>
+    JsonOption.removeUndefinedToObj(
+      "name"        -> a.name.map(_.asJson),
+      "permissions" -> a.permissions.map(_.asJson),
+      "color"       -> a.color.map(_.asJson),
+      "hoist"       -> a.hoist.map(_.asJson),
+      "mentionable" -> a.mentionable.map(_.asJson)
+    )
+}
 
 /**
   * Modify a role.
@@ -647,7 +689,7 @@ case class ModifyGuildRole(
 ) extends ReasonRequest[ModifyGuildRole, ModifyGuildRoleData, RawRole, Role] {
   override def route: RequestRoute = Routes.modifyGuildRole(guildId, roleId)
   override def paramsEncoder: Encoder[ModifyGuildRoleData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    ModifyGuildRoleData.encoder
 
   override def responseDecoder: Decoder[RawRole]       = Decoder[RawRole]
   override def toNiceResponse(response: RawRole): Role = response.toRole(guildId)
@@ -678,8 +720,9 @@ case class DeleteGuildRole(
 
 /**
   * @param days The amount of days to prune for.
+  * @param includeRoles Roles that should be ignored when checking for inactive users.
   */
-case class GuildPruneCountData(days: Int) {
+case class GuildPruneCountData(days: Int, includeRoles: Seq[RoleId]) {
   require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
 }
 
@@ -693,7 +736,8 @@ case class GuildPruneCountResponse(pruned: Int)
   */
 case class GetGuildPruneCount(guildId: GuildId, queryParams: GuildPruneCountData)
     extends NoParamsNiceResponseRequest[GuildPruneCountResponse] {
-  override def route: RequestRoute = Routes.getGuildPruneCount(guildId, Some(queryParams.days))
+  override def route: RequestRoute =
+    Routes.getGuildPruneCount(guildId, Some(queryParams.days), Some(queryParams.includeRoles))
 
   override def requiredPermissions: Permission = Permission.KickMembers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -703,15 +747,16 @@ case class GetGuildPruneCount(guildId: GuildId, queryParams: GuildPruneCountData
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 }
 object GetGuildPruneCount {
-  def mk(guildId: GuildId, days: Int): GetGuildPruneCount =
-    new GetGuildPruneCount(guildId, GuildPruneCountData(days))
+  def mk(guildId: GuildId, days: Int, includeRoles: Seq[RoleId] = Nil): GetGuildPruneCount =
+    new GetGuildPruneCount(guildId, GuildPruneCountData(days, includeRoles))
 }
 
 /**
   * @param days The amount of days to prune for.
   * @param computePruneCount If the pruned return field should be present.
+  * @param includeRoles Roles that should be ignored when checking for inactive users.
   */
-case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean])
+case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean], includeRoles: Seq[RoleId])
 
 /**
   * @param pruned The number of members that were removed.
@@ -723,12 +768,11 @@ case class BeginGuildPruneResponse(pruned: Option[Int])
   */
 case class BeginGuildPrune(
     guildId: GuildId,
-    queryParams: BeginGuildPruneData,
+    params: BeginGuildPruneData,
     reason: Option[String] = None
-) extends NoParamsNiceResponseRequest[BeginGuildPruneResponse]
-    with NoParamsNiceResponseReasonRequest[BeginGuildPrune, BeginGuildPruneResponse] {
-  override def route: RequestRoute =
-    Routes.beginGuildPrune(guildId, Some(queryParams.days), queryParams.computePruneCount)
+) extends NoNiceResponseRequest[BeginGuildPruneData, BeginGuildPruneResponse]
+    with NoNiceResponseReasonRequest[BeginGuildPrune, BeginGuildPruneData, BeginGuildPruneResponse] {
+  override def route: RequestRoute = Routes.beginGuildPrune(guildId)
 
   override def requiredPermissions: Permission = Permission.KickMembers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -738,14 +782,18 @@ case class BeginGuildPrune(
 
   override def responseDecoder: Decoder[BeginGuildPruneResponse] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+
+  override def paramsEncoder: Encoder[BeginGuildPruneData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 }
 object BeginGuildPrune {
   def mk(
       guildId: GuildId,
       days: Int,
-      computePruneCount: Boolean = true
+      computePruneCount: Boolean = true,
+      includeRoles: Seq[RoleId] = Nil
   ): BeginGuildPrune =
-    new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount)))
+    new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount), includeRoles))
 }
 
 /**
@@ -773,8 +821,9 @@ case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest
 /**
   * Get the integrations for this guild.
   */
-case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Integration]] {
-  override def route: RequestRoute = Routes.getGuildIntegrations(guildId)
+case class GetGuildIntegrations(guildId: GuildId, includeApplications: Boolean = false)
+    extends NoParamsNiceResponseRequest[Seq[Integration]] {
+  override def route: RequestRoute = Routes.getGuildIntegrations(guildId, Some(includeApplications))
 
   override def responseDecoder: Decoder[Seq[Integration]] = Decoder[Seq[Integration]]
 
@@ -812,10 +861,18 @@ case class CreateGuildIntegration(
   *                        (Twitch only)
   */
 case class ModifyGuildIntegrationData(
-    expireBehavior: IntegrationExpireBehavior,
-    expireGracePeriod: Int,
-    enableEmoticons: Boolean
+    expireBehavior: JsonOption[IntegrationExpireBehavior] = JsonUndefined,
+    expireGracePeriod: JsonOption[Int] = JsonUndefined,
+    enableEmoticons: JsonOption[Boolean] = JsonUndefined
 )
+object ModifyGuildIntegrationData {
+  implicit val encoder: Encoder[ModifyGuildIntegrationData] = (a: ModifyGuildIntegrationData) =>
+    JsonOption.removeUndefinedToObj(
+      "expire_behavior"     -> a.expireBehavior.map(_.asJson),
+      "expire_grace_period" -> a.expireGracePeriod.map(_.asJson),
+      "enable_emoticons"    -> a.enableEmoticons.map(_.asJson)
+    )
+}
 
 /**
   * Modify an existing integration for a guild.
@@ -827,7 +884,7 @@ case class ModifyGuildIntegration(
 ) extends NoResponseRequest[ModifyGuildIntegrationData] {
   override def route: RequestRoute = Routes.modifyGuildIntegration(guildId, integrationId)
   override def paramsEncoder: Encoder[ModifyGuildIntegrationData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    ModifyGuildIntegrationData.encoder
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -857,12 +914,12 @@ case class SyncGuildIntegration(guildId: GuildId, integrationId: IntegrationId) 
 }
 
 /**
-  * Get the guild embed for a guild.
+  * Get the guild widget for a guild.
   */
-case class GetGuildEmbed(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildEmbed] {
-  override def route: RequestRoute = Routes.getGuildEmbed(guildId)
+case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidget] {
+  override def route: RequestRoute = Routes.getGuildWidget(guildId)
 
-  override def responseDecoder: Decoder[GuildEmbed] = Decoder[GuildEmbed]
+  override def responseDecoder: Decoder[GuildWidget] = Decoder[GuildWidget]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -870,14 +927,14 @@ case class GetGuildEmbed(guildId: GuildId) extends NoParamsNiceResponseRequest[G
 }
 
 /**
-  * Modify a guild embed for a guild.
+  * Modify a guild widget for a guild.
   */
-case class ModifyGuildEmbed(guildId: GuildId, params: GuildEmbed)
-    extends NoNiceResponseRequest[GuildEmbed, GuildEmbed] {
-  override def route: RequestRoute                = Routes.modifyGuildEmbed(guildId)
-  override def paramsEncoder: Encoder[GuildEmbed] = Encoder[GuildEmbed]
+case class ModifyGuildWidget(guildId: GuildId, params: GuildWidget)
+    extends NoNiceResponseRequest[GuildWidget, GuildWidget] {
+  override def route: RequestRoute                 = Routes.modifyGuildWidget(guildId)
+  override def paramsEncoder: Encoder[GuildWidget] = Encoder[GuildWidget]
 
-  override def responseDecoder: Decoder[GuildEmbed] = Decoder[GuildEmbed]
+  override def responseDecoder: Decoder[GuildWidget] = Decoder[GuildWidget]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -942,9 +999,16 @@ case object GetCurrentUser extends NoParamsNiceResponseRequest[User] {
 }
 
 case class ModifyCurrentUserData(
-    username: Option[String],
-    avatar: Option[ImageData]
+    username: JsonOption[String],
+    avatar: JsonOption[ImageData]
 )
+object ModifyCurrentUserData {
+  implicit val encoder: Encoder[ModifyCurrentUserData] = (a: ModifyCurrentUserData) =>
+    JsonOption.removeUndefinedToObj(
+      "username" -> a.username.map(_.asJson),
+      "avatar"   -> a.avatar.map(_.asJson)
+    )
+}
 
 /**
   * Modify the current user.
@@ -952,7 +1016,7 @@ case class ModifyCurrentUserData(
 case class ModifyCurrentUser(params: ModifyCurrentUserData) extends NoNiceResponseRequest[ModifyCurrentUserData, User] {
   override def route: RequestRoute = Routes.modifyCurrentUser
   override def paramsEncoder: Encoder[ModifyCurrentUserData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    ModifyCurrentUserData.encoder
   override def responseDecoder: Decoder[User] = Decoder[User]
 }
 
@@ -965,7 +1029,14 @@ case class GetUser(userId: UserId) extends NoParamsNiceResponseRequest[User] {
   override def responseDecoder: Decoder[User] = Decoder[User]
 }
 
-case class GetUserGuildsGuild(id: GuildId, name: String, icon: Option[String], owner: Boolean, permissions: Permission)
+case class GetUserGuildsGuild(
+    id: GuildId,
+    name: String,
+    icon: Option[String],
+    owner: Boolean,
+    permissions: Permission,
+    features: Seq[GuildFeature]
+)
 
 /**
   * @param before Get guilds before this id.

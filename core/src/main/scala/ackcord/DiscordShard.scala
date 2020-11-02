@@ -204,12 +204,25 @@ object DiscordShard {
       }
   }
 
+  case class FetchWSGatewayBotInfo(
+      gateway: Uri,
+      shards: Int,
+      sessionStartLimits: SessionStartLimits
+  )
+
+  case class SessionStartLimits(
+      total: Int,
+      remaining: Int,
+      resetAfter: Duration,
+      maxConcurrency: Int
+  )
+
   /**
     * Fetch the websocket gateway with information about how many shards should be used.
     * @param system The actor system to use.
     * @return An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[(Uri, Int)] = {
+  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
     import akka.actor.typed.scaladsl.adapter._
     import system.executionContext
     val http = Http(system.toClassic)
@@ -234,13 +247,18 @@ object DiscordShard {
         val res = for {
           gateway <- c.get[String]("url")
           shards  <- c.get[Int]("shards")
-          // TODO: Use these
-          total      <- startLimit.get[Int]("total")
-          remaining  <- startLimit.get[Int]("remaining")
-          resetAfter <- startLimit.get[Int]("reset_after")
+          // TODO: Use these better
+          total          <- startLimit.get[Int]("total")
+          remaining      <- startLimit.get[Int]("remaining")
+          resetAfter     <- startLimit.get[Int]("reset_after")
+          maxConcurrency <- startLimit.get[Int]("max_concurrency")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
-          (gateway: Uri, shards)
+          FetchWSGatewayBotInfo(
+            gateway,
+            shards,
+            SessionStartLimits(total, remaining, resetAfter.millis, maxConcurrency)
+          )
         }
 
         Future.fromTry(res.fold(Failure.apply, Success.apply))

@@ -298,13 +298,16 @@ trait DiscordProtocol {
   implicit val inviteWithMetadataCodec: Codec[InviteWithMetadata] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val guildEmbedCodec: Codec[GuildEmbed] =
+  implicit val guildWidgetCodec: Codec[GuildWidget] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val integrationAccountCodec: Codec[IntegrationAccount] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val partialIntegrationCodec: Codec[PartialIntegration] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val integrationApplicationCodec: Codec[IntegrationApplication] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val integrationCodec: Codec[Integration] =
@@ -332,6 +335,9 @@ trait DiscordProtocol {
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
   implicit val partialRoleCodec: Codec[PartialRole] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val templateCodec: Codec[Template] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = (c: HCursor) => {

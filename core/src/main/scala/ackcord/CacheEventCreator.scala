@@ -214,6 +214,7 @@ object CacheEventCreator {
                       data.roles.flatMap(state.current.getRole(data.guildId, _)),
                       data.user,
                       data.nick,
+                      data.joinedAt,
                       data.premiumSince,
                       state
                     )
@@ -300,7 +301,9 @@ object CacheEventCreator {
                     data.maxUses,
                     data.maxAge,
                     data.temporary,
-                    data.createdAt
+                    data.createdAt,
+                    data.targetUser,
+                    data.targetUserType
                   ),
                   state
                 ),

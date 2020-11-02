@@ -36,7 +36,7 @@ import akka.util.ByteString
   * Base traits for all traits to get images
   */
 trait ImageRequest extends Request[ByteString] {
-  require(desiredSize >= 16 && desiredSize <= 2048, "Can't request an image smaller than 16 or bigger than 2048")
+  require(desiredSize >= 16 && desiredSize <= 4096, "Can't request an image smaller than 16 or bigger than 4096")
   require(ImageRequest.isPowerOf2(desiredSize), "Can only request an image sizes that are powers of 2")
   require(allowedFormats.contains(format), "That format is not allowed for this image")
 

@@ -161,9 +161,11 @@ case class GuildPreview(
 
 /**
   * A guild or server in Discord.
+  *
   * @param id The id of the guild.
   * @param name The name of the guild.
   * @param icon The icon hash.
+  * @param iconHash Used for template objects.
   * @param splash The splash hash.
   * @param discoverySplash The discovery splash hash.
   * @param isOwner If the current user is the owner of the guild.
@@ -202,14 +204,22 @@ case class GuildPreview(
   * @param banner A banner hash for the guild.
   * @param premiumTier The premium tier of the guild.
   * @param premiumSubscriptionCount How many users that are boosting the server.
-  * @param preferredLocale The preferred locale of a public guild.
+  * @param preferredLocale The preferred locale of a community guild.
   * @param publicUpdatesChannelId The channel where admin and mods can see
   *                               public updates are sent to public guilds.
+  * @param maxVideoChannelUsers The max amount of users in a video call.
+  * @param approximateMemberCount Roughly how many members there is in the guild.
+  *                               Present when gotten from the [[ackcord.requests.GetGuild]]
+  *                               endpoint with `withCounts = true`
+  * @param approximatePresenceCount Roughly how many presences there is in the guild.
+  *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
+  *                                 endpoint with `withCounts = true`
   */
 case class Guild(
     id: GuildId,
     name: String,
     icon: Option[String],
+    iconHash: Option[String],
     splash: Option[String],
     discoverySplash: Option[String],
     isOwner: Option[Boolean],
@@ -248,7 +258,10 @@ case class Guild(
     premiumTier: PremiumTier,
     premiumSubscriptionCount: Option[Int],
     preferredLocale: Option[String],
-    publicUpdatesChannelId: Option[TextGuildChannelId]
+    publicUpdatesChannelId: Option[TextGuildChannelId],
+    maxVideoChannelUsers: Option[Int],
+    approximateMemberCount: Option[Int],
+    approximatePresenceCount: Option[Int]
 ) extends UnknownStatusGuild {
   override def unavailable: Option[Boolean] = Some(false)
 
@@ -275,8 +288,9 @@ case class Guild(
   }
 
   /**
-    * Get the AFK channel of this guild.
+    * Get the embed channel of this guild.
     */
+  @deprecated("Prefer widgetChannel", since = "0.18.0")
   def embedChannel: Option[GuildChannel] = embedChannelId.flatMap(channels.get)
 
   /**
@@ -309,14 +323,13 @@ object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnk
   case object VanityUrl            extends GuildFeature("VANITY_URL")
   case object Verified             extends GuildFeature("VERIFIED")
   case object Partnered            extends GuildFeature("PARTNERED")
-  case object Public               extends GuildFeature("PUBLIC")
+  case object Community            extends GuildFeature("COMMUNITY")
   case object Commerce             extends GuildFeature("COMMERCE")
   case object News                 extends GuildFeature("NEWS")
   case object Discoverable         extends GuildFeature("DISCOVERABLE")
   case object Featureable          extends GuildFeature("FEATURABLE")
   case object AnimatedIcon         extends GuildFeature("ANIMATED_ICON")
   case object Banner               extends GuildFeature("BANNER")
-  case object PublicDisabled       extends GuildFeature("PUBLIC_DISABLED")
   case object WelcomeScreenEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
   case class Unknown(str: String)  extends GuildFeature(str)
 
@@ -605,6 +618,17 @@ case class PresenceCustom(
 }
 
 /**
+  * The presence of someone competing in something
+  */
+case class PresenceCompeting(
+    name: String,
+    createdAt: Instant,
+    timestamps: Option[ActivityTimestamps],
+    details: Option[String],
+    assets: Option[ActivityAsset]
+) extends Activity
+
+/**
   * The emoji of a custom status.
   */
 case class ActivityEmoji(
@@ -657,12 +681,14 @@ case class Presence(userId: UserId, activity: Option[Activity], status: Presence
   * @param `type` The type of the integration
   * @param enabled If the integration is enabled
   * @param syncing If the integration is synced
-  * @param roleId Role that this integration uses for subscribers
+  * @param roleId Role that this integration uses for subscribers, or guild id for Discord integrations
   * @param expireBehavior The behavior of expiring subscribers.
   * @param expireGracePeriod The grace period before expiring subscribers.
   * @param user The user for this integration
   * @param account Account information
-  * @param syncedAt When the integration last synced
+  * @param syncedAt When the integration last synced'
+  * @param subscriberCount How many subscribers this integration has. 0 for Discord
+  * @param revoked If this integration has been revoked
   */
 case class Integration(
     id: IntegrationId,
@@ -674,10 +700,25 @@ case class Integration(
     enableEmoticons: Option[Boolean],
     expireBehavior: IntegrationExpireBehavior,
     expireGracePeriod: Int,
-    user: User,
+    user: Option[User],
     account: IntegrationAccount,
-    syncedAt: OffsetDateTime
+    syncedAt: OffsetDateTime,
+    subscriberCount: Int,
+    revoked: Boolean,
+    application: Option[IntegrationApplication]
 )
+
+sealed abstract class IntegrationType(val value: String) extends StringEnumEntry
+object IntegrationType extends StringEnum[IntegrationType] with StringCirceEnumWithUnknown[IntegrationType] {
+  override def values: immutable.IndexedSeq[IntegrationType] = findValues
+
+  case object Twitch            extends IntegrationType("twitch")
+  case object Youtube           extends IntegrationType("youtube")
+  case object Discord           extends IntegrationType("discord")
+  case class Unknown(s: String) extends IntegrationType(s)
+
+  override def createUnknown(value: String): IntegrationType = Unknown(value)
+}
 
 sealed abstract class IntegrationExpireBehavior(val value: Int) extends IntEnumEntry
 object IntegrationExpireBehavior
@@ -693,12 +734,29 @@ object IntegrationExpireBehavior
 }
 
 /**
+  * @param id The id of the application
+  * @param name The name of the application
+  * @param icon The icon hash of the application
+  * @param description The description of the application
+  * @param summary The summary of the application
+  * @param bot The bot user of the application
+  */
+case class IntegrationApplication(
+    id: RawSnowflake,
+    name: String,
+    icon: Option[String],
+    description: String,
+    summary: String,
+    bot: Option[User]
+)
+
+/**
   * @param id The id of the account
   * @param name The name of the account
   */
 case class IntegrationAccount(id: String, name: String)
 
-case class GuildEmbed(enabled: Boolean, channelId: Option[GuildChannelId])
+case class GuildWidget(enabled: Boolean, channelId: Option[GuildChannelId])
 
 /**
   * Represents a banned user.

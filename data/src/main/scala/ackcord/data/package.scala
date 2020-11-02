@@ -394,18 +394,20 @@ package object data {
       */
     def fromInt(int: Int): UserFlags = apply(int)
 
-    val None: UserFlags            = UserFlags(0)
-    val DiscordEmployee: UserFlags = UserFlags(1 << 0)
-    val DiscordPartner: UserFlags  = UserFlags(1 << 1)
-    val HypeSquadEvents: UserFlags = UserFlags(1 << 2)
-    val BugHunter: UserFlags       = UserFlags(1 << 3)
-    val HouseBravery: UserFlags    = UserFlags(1 << 6)
-    val HouseBrilliance: UserFlags = UserFlags(1 << 7)
-    val HouseBalance: UserFlags    = UserFlags(1 << 8)
-    val EarlySupporter: UserFlags  = UserFlags(1 << 9)
-    val TeamUser: UserFlags        = UserFlags(1 << 10)
-    val System: UserFlags          = UserFlags(1 << 12)
-    val BugHunterLevel2: UserFlags = UserFlags(1 << 14)
+    val None: UserFlags                      = UserFlags(0)
+    val DiscordEmployee: UserFlags           = UserFlags(1 << 0)
+    val PartneredServerOwner: UserFlags      = UserFlags(1 << 1)
+    val HypeSquadEvents: UserFlags           = UserFlags(1 << 2)
+    val BugHunter: UserFlags                 = UserFlags(1 << 3)
+    val HouseBravery: UserFlags              = UserFlags(1 << 6)
+    val HouseBrilliance: UserFlags           = UserFlags(1 << 7)
+    val HouseBalance: UserFlags              = UserFlags(1 << 8)
+    val EarlySupporter: UserFlags            = UserFlags(1 << 9)
+    val TeamUser: UserFlags                  = UserFlags(1 << 10)
+    val System: UserFlags                    = UserFlags(1 << 12)
+    val BugHunterLevel2: UserFlags           = UserFlags(1 << 14)
+    val VerifiedBot: UserFlags               = UserFlags(1 << 16)
+    val EarlyVerifiedBotDeveloper: UserFlags = UserFlags(1 << 17)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 

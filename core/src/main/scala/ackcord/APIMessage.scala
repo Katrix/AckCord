@@ -212,6 +212,7 @@ object APIMessage {
       roles: Seq[Role],
       user: User,
       nick: Option[String],
+      joinedAt: OffsetDateTime,
       premiumSince: Option[OffsetDateTime],
       cache: CacheState
   ) extends GuildMessage

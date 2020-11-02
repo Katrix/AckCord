@@ -53,7 +53,10 @@ object CacheHandlers {
               mfaEnabled = partialUser.mfaEnabled.orElse(existingUser.mfaEnabled),
               locale = partialUser.locale.orElse(existingUser.locale),
               verified = partialUser.verified.orElse(existingUser.verified),
-              email = partialUser.email.orElse(existingUser.email)
+              email = partialUser.email.orElse(existingUser.email),
+              flags = partialUser.flags.orElse(existingUser.flags),
+              premiumType = partialUser.premiumType.orElse(existingUser.premiumType),
+              publicFlags = partialUser.publicFlags.orElse(existingUser.publicFlags)
             )
           }
 
@@ -77,7 +80,8 @@ object CacheHandlers {
                 verified = partialUser.verified,
                 email = partialUser.email,
                 flags = partialUser.flags,
-                premiumType = partialUser.premiumType
+                premiumType = partialUser.premiumType,
+                publicFlags = partialUser.publicFlags
               )
             }
           }
@@ -171,6 +175,7 @@ object CacheHandlers {
           id = obj.id,
           name = obj.name,
           icon = obj.icon,
+          iconHash = obj.iconHash,
           splash = obj.splash,
           discoverySplash = obj.discoverySplash,
           isOwner = obj.owner,
@@ -212,7 +217,10 @@ object CacheHandlers {
           premiumTier = obj.premiumTier,
           premiumSubscriptionCount = obj.premiumSubscriptionCount,
           preferredLocale = obj.preferredLocale,
-          publicUpdatesChannelId = obj.publicUpdatesChannelId
+          publicUpdatesChannelId = obj.publicUpdatesChannelId,
+          maxVideoChannelUsers = obj.maxVideoChannelUsers,
+          approximateMemberCount = obj.approximateMemberCount,
+          approximatePresenceCount = obj.approximatePresenceCount
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -281,7 +289,7 @@ object CacheHandlers {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberUpdateData, registry: CacheTypeRegistry)(
           implicit log: Logger
       ): Unit = {
-        val GuildMemberUpdateData(guildId, roles, user, nick, _) = obj
+        val GuildMemberUpdateData(guildId, roles, user, nick, joinedAt, _) = obj
 
         val eitherMember = for {
           guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj")
@@ -291,7 +299,7 @@ object CacheHandlers {
         eitherMember match {
           case Right(guildMember) =>
             registry.updateData(builder) {
-              guildMember.copy(nick = nick, roleIds = roles)
+              guildMember.copy(nick = nick, roleIds = roles, joinedAt = joinedAt)
             }
           case Left(e) => log.warn(e)
         }
@@ -423,7 +431,12 @@ object CacheHandlers {
                 embeds = obj.embeds.getOrElse(message.embeds),
                 reactions = obj.reactions.getOrElse(message.reactions),
                 nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
-                pinned = obj.pinned.getOrElse(message.pinned)
+                pinned = obj.pinned.getOrElse(message.pinned),
+                messageType = obj.messageType.getOrElse(message.messageType),
+                activity = obj.activity.map(_.toMessageActivity).orElseIfUndefined(message.activity),
+                application = obj.application.orElseIfUndefined(message.application),
+                messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
+                flags = obj.flags.orElseIfUndefined(message.flags)
               )
             case guildMessage: GuildGatewayMessage =>
               guildMessage.copy(
@@ -440,7 +453,12 @@ object CacheHandlers {
                 embeds = obj.embeds.getOrElse(message.embeds),
                 reactions = obj.reactions.getOrElse(message.reactions),
                 nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
-                pinned = obj.pinned.getOrElse(message.pinned)
+                pinned = obj.pinned.getOrElse(message.pinned),
+                messageType = obj.messageType.getOrElse(message.messageType),
+                activity = obj.activity.map(_.toMessageActivity).orElseIfUndefined(message.activity),
+                application = obj.application.orElseIfUndefined(message.application),
+                messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
+                flags = obj.flags.orElseIfUndefined(message.flags)
               )
           }
 
