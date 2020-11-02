@@ -85,7 +85,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
                 compress = settings.compress == Compress.PerMessageCompress,
                 largeThreshold = settings.largeThreshold,
                 shard = Seq(settings.shardNum, settings.shardTotal),
-                presence = StatusData(settings.idleSince, settings.activity, settings.status, afk = settings.afk),
+                presence = StatusData(settings.idleSince, settings.activities, settings.status, afk = settings.afk),
                 guildSubscriptions = settings.guildSubscriptions,
                 intents = settings.intents
               )
@@ -311,7 +311,7 @@ object GatewayHandlerGraphStage {
     val flow = Flow[GatewayMessage[_]].map {
       case msg: GatewayMessage[d] =>
         msg match {
-          case StatusUpdate(data) => data.game.foreach(_.requireCanSend())
+          case StatusUpdate(data) => data.activities.foreach(_.foreach(_.requireCanSend()))
           case _                  =>
         }
 

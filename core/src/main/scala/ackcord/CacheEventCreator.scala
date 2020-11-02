@@ -73,7 +73,14 @@ object CacheEventCreator {
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
             CacheUpdate(
               data,
-              state => Some(api.ChannelCreate(data.guildId.flatMap(state.current.getGuild), data.toChannel.get, state)),
+              state =>
+                Some(
+                  api.ChannelCreate(
+                    data.guildId.flatMap(state.current.getGuild),
+                    data.toGuildChannel(data.guildId.get).get,
+                    state
+                  )
+                ),
               CacheHandlers.rawChannelUpdater,
               registry,
               dispatch
@@ -447,7 +454,7 @@ object CacheEventCreator {
                   guild    <- state.current.getGuild(data.guildId)
                   user     <- state.current.getUser(data.user.id)
                   presence <- guild.presences.get(user.id)
-                } yield api.PresenceUpdate(guild, user, data.roles, presence, data.nick, data.premiumSince, state),
+                } yield api.PresenceUpdate(guild, user, presence, state),
               PresenceUpdater,
               registry,
               dispatch

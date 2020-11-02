@@ -71,7 +71,7 @@ object APIMessage {
     * Sent to the client when a new channel is created.
     * @param channel The channel that was created.
     */
-  case class ChannelCreate(guild: Option[Guild], channel: Channel, cache: CacheState)
+  case class ChannelCreate(guild: Option[Guild], channel: GuildChannel, cache: CacheState)
       extends OptGuildMessage
       with ChannelMessage
 
@@ -410,18 +410,12 @@ object APIMessage {
     * Sent to the client when the presence of a user updates.
     * @param guild The guild where the update took place
     * @param user The user of the presence
-    * @param roleIds The roles of the user
     * @param presence The new presence
-    * @param nick The nickname of the user if they have one.
-    * @param premiumSince When the user boosted the guild.
     */
   case class PresenceUpdate(
       guild: Guild,
       user: User,
-      roleIds: Seq[RoleId],
       presence: Presence,
-      nick: Option[String],
-      premiumSince: Option[OffsetDateTime],
       cache: CacheState
   ) extends GuildMessage
 

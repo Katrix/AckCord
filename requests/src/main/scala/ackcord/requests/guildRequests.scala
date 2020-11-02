@@ -914,12 +914,12 @@ case class SyncGuildIntegration(guildId: GuildId, integrationId: IntegrationId) 
 }
 
 /**
-  * Get the guild widget for a guild.
+  * Get the guild widget settings for a guild.
   */
-case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidget] {
+case class GetGuildWidgetSettings(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidgetSettings] {
   override def route: RequestRoute = Routes.getGuildWidget(guildId)
 
-  override def responseDecoder: Decoder[GuildWidget] = Decoder[GuildWidget]
+  override def responseDecoder: Decoder[GuildWidgetSettings] = Decoder[GuildWidgetSettings]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -929,16 +929,25 @@ case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[
 /**
   * Modify a guild widget for a guild.
   */
-case class ModifyGuildWidget(guildId: GuildId, params: GuildWidget)
-    extends NoNiceResponseRequest[GuildWidget, GuildWidget] {
-  override def route: RequestRoute                 = Routes.modifyGuildWidget(guildId)
-  override def paramsEncoder: Encoder[GuildWidget] = Encoder[GuildWidget]
+case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings)
+    extends NoNiceResponseRequest[GuildWidgetSettings, GuildWidgetSettings] {
+  override def route: RequestRoute                         = Routes.modifyGuildWidget(guildId)
+  override def paramsEncoder: Encoder[GuildWidgetSettings] = Encoder[GuildWidgetSettings]
 
-  override def responseDecoder: Decoder[GuildWidget] = Decoder[GuildWidget]
+  override def responseDecoder: Decoder[GuildWidgetSettings] = Decoder[GuildWidgetSettings]
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
+}
+
+/**
+  * Get the guild widget for a guild.
+  */
+case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidget] {
+  override def route: RequestRoute = Routes.getGuildWidgetJson(guildId)
+
+  override def responseDecoder: Decoder[GuildWidget] = Decoder[GuildWidget]
 }
 
 case class VanityUrlResponse(code: String)

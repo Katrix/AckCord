@@ -31,7 +31,7 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
   override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry)(
       implicit log: Logger
   ): Unit = {
-    val PresenceUpdateData(partialUser, roles, rawActivity, guildId, status, _, clientStatus, premiumSince, nick) = obj
+    val PresenceUpdateData(partialUser, guildId, status, rawActivities, clientStatus) = obj
 
     registry.updateData(builder)(partialUser)
 
@@ -41,30 +41,20 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
     } {
 
       val presencesToUse = if (registry.hasUpdater[Presence]) {
-        val newActivity = rawActivity.map(_.toActivity).flatMap {
+        val newActivities = rawActivities.map(_.toActivity).flatMap {
           case Right(activity) => Some(activity)
           case Left(e) =>
             log.warn(e)
             None
         }
 
-        val newPresence = Presence(partialUser.id, newActivity, status, clientStatus)
+        val newPresence = Presence(partialUser.id, status, newActivities, clientStatus)
         oldGuild.presences.updated(partialUser.id, newPresence)
       } else {
         oldGuild.presences
       }
 
-      val oldMembers = oldGuild.members
-      val membersToUse = if (registry.hasUpdater[GuildMember]) {
-        oldMembers
-          .get(partialUser.id)
-          .map(member => oldMembers.updated(partialUser.id, member.copy(roleIds = roles, nick = nick)))
-          .getOrElse(oldMembers)
-      } else {
-        oldMembers
-      }
-
-      val newGuild = oldGuild.copy(presences = presencesToUse, members = membersToUse)
+      val newGuild = oldGuild.copy(presences = presencesToUse)
 
       guildHandler.handle(builder, newGuild, registry)
     }

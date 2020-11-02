@@ -55,7 +55,6 @@ import akka.{Done, NotUsed}
 case class Requests(
     credentials: HttpCredentials,
     ratelimitActor: ActorRef[Ratelimiter.Command],
-    millisecondPrecision: Boolean = true,
     relativeTime: Boolean = false,
     parallelism: Int = 4,
     maxRetryCount: Int = 3,
@@ -87,7 +86,6 @@ case class Requests(
       RequestStreams
         .requestFlowWithoutRatelimit[Any, (Request[Any], Any)](
           credentials,
-          millisecondPrecision,
           relativeTime,
           parallelism,
           ratelimitActor
@@ -105,7 +103,6 @@ case class Requests(
     addExtraProcessing(
       RequestStreams.requestFlow[Any, (Request[Any], Any)](
         credentials,
-        millisecondPrecision,
         relativeTime,
         bufferSize,
         overflowStrategy,
@@ -123,7 +120,6 @@ case class Requests(
   private lazy val rawRetryFlow = addExtraProcessing(
     RequestStreams.retryRequestFlow[Any, (Request[Any], Any)](
       credentials,
-      millisecondPrecision,
       relativeTime,
       bufferSize,
       overflowStrategy,

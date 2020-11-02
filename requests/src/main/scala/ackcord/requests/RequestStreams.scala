@@ -85,17 +85,11 @@ object RequestStreams {
 
   private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
 
-  private val millisecondPrecisionHeader = `X-RateLimit-Precision`("millisecond")
-
   /**
     * A basic request flow which will send requests to Discord, and
     * receive responses. This flow does not account for ratelimits. Only
     * use it if you know what you're doing.
     * @param credentials The credentials to use when sending the requests.
-    * @param millisecondPrecision Sets if the requests should use millisecond
-    *                             precision for the ratelimits. If using this,
-    *                             make sure your system is properly synced to
-    *                             an NTP server.
     * @param relativeTime Sets if the ratelimit reset should be calculated
     *                     using relative time instead of absolute time. Might
     *                     help with out of sync time on your device, but can
@@ -103,13 +97,12 @@ object RequestStreams {
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
       credentials: HttpCredentials,
-      millisecondPrecision: Boolean,
       relativeTime: Boolean,
       parallelism: Int = 4,
       rateLimitActor: ActorRef[Ratelimiter.Command]
   )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
     FlowWithContext.fromTuples(
-      createHttpRequestFlow[Data, Ctx](credentials, millisecondPrecision)
+      createHttpRequestFlow[Data, Ctx](credentials)
         .via(requestHttpFlow)
         .via(Flow.apply[(Try[HttpResponse], (Request[Data], Ctx))].map(t => ((t._1, t._2._1), t._2._2)))
         .via(requestParser[Data, Ctx](relativeTime, parallelism))
@@ -121,10 +114,6 @@ object RequestStreams {
     * A request flow which will send requests to Discord, and receive responses.
     * If it encounters a ratelimit it will backpressure.
     * @param credentials The credentials to use when sending the requests.
-    * @param millisecondPrecision Sets if the requests should use millisecond
-    *                             precision for the ratelimits. If using this,
-    *                             make sure your system is properly synced to
-    *                             an NTP server.
     * @param relativeTime Sets if the ratelimit reset should be calculated
     *                     using relative time instead of absolute time. Might
     *                     help with out of sync time on your device, but can
@@ -139,7 +128,6 @@ object RequestStreams {
     */
   def requestFlow[Data, Ctx](
       credentials: HttpCredentials,
-      millisecondPrecision: Boolean,
       relativeTime: Boolean,
       bufferSize: Int = 100,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
@@ -170,7 +158,6 @@ object RequestStreams {
       val network = builder.add(
         requestFlowWithoutRatelimit[Data, Ctx](
           credentials,
-          millisecondPrecision,
           relativeTime,
           parallelism,
           rateLimitActor
@@ -228,10 +215,7 @@ object RequestStreams {
     )
   }
 
-  private def createHttpRequestFlow[Data, Ctx](
-      credentials: HttpCredentials,
-      millisecondPrecision: Boolean
-  )(
+  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[Request[Data], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
     implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.rest.SentRESTRequest")
@@ -256,8 +240,7 @@ object RequestStreams {
         val httpRequest = HttpRequest(
           route.method,
           route.uri,
-          immutable.Seq(auth, userAgent) ++
-            Seq(millisecondPrecisionHeader).filter(_ => millisecondPrecision) ++ request.extraHeaders,
+          immutable.Seq(auth, userAgent) ++ request.extraHeaders,
           request.requestBody
         )
 
@@ -366,10 +349,6 @@ object RequestStreams {
   /**
     * A request flow that will retry failed requests.
     * @param credentials The credentials to use when sending the requests.
-    * @param millisecondPrecision Sets if the requests should use millisecond
-    *                             precision for the ratelimits. If using this,
-    *                             make sure your system is properly synced to
-    *                             an NTP server.
     * @param relativeTime Sets if the ratelimit reset should be calculated
     *                     using relative time instead of absolute time. Might
     *                     help with out of sync time on your device, but can
@@ -384,7 +363,6 @@ object RequestStreams {
     */
   def retryRequestFlow[Data, Ctx](
       credentials: HttpCredentials,
-      millisecondPrecision: Boolean,
       relativeTime: Boolean,
       bufferSize: Int = 100,
       overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
@@ -402,7 +380,6 @@ object RequestStreams {
             .via(
               RequestStreams.requestFlow(
                 credentials,
-                millisecondPrecision,
                 relativeTime,
                 bufferSize,
                 overflowStrategy,

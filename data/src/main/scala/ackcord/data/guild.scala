@@ -175,8 +175,6 @@ case class GuildPreview(
   * @param afkChannelId The channelId of the AFK channel.
   * @param afkTimeout The amount of seconds you need to be AFK before being
   *                   moved to the AFK channel.
-  * @param embedEnabled If the embed is enabled.
-  * @param embedChannelId The channelId for the embed.
   * @param verificationLevel The verification level for the guild.
   * @param defaultMessageNotifications The notification level for the guild.
   * @param explicitContentFilter The explicit content filter level for the guild.
@@ -228,8 +226,6 @@ case class Guild(
     region: String,
     afkChannelId: Option[VoiceGuildChannelId],
     afkTimeout: Int,
-    embedEnabled: Option[Boolean],
-    embedChannelId: Option[GuildChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -286,12 +282,6 @@ case class Guild(
   def afkChannel: Option[VoiceGuildChannel] = afkChannelId.flatMap(channels.get).collect {
     case ch: VoiceGuildChannel => ch
   }
-
-  /**
-    * Get the embed channel of this guild.
-    */
-  @deprecated("Prefer widgetChannel", since = "0.18.0")
-  def embedChannel: Option[GuildChannel] = embedChannelId.flatMap(channels.get)
 
   /**
     * Get the widget channel of this guild.
@@ -667,11 +657,10 @@ case class ClientStatus(
 /**
   * The presence for a user
   * @param userId The user id
-  * @param activity The activity of the presence
   * @param status The status of the user
   * @param clientStatus The status of the user over several platforms
   */
-case class Presence(userId: UserId, activity: Option[Activity], status: PresenceStatus, clientStatus: ClientStatus)
+case class Presence(userId: UserId, status: PresenceStatus, activities: Seq[Activity], clientStatus: ClientStatus)
     extends GetUser
 
 /**
@@ -756,7 +745,32 @@ case class IntegrationApplication(
   */
 case class IntegrationAccount(id: String, name: String)
 
-case class GuildWidget(enabled: Boolean, channelId: Option[GuildChannelId])
+case class GuildWidgetSettings(enabled: Boolean, channelId: Option[GuildChannelId])
+
+/** The object returned when getting the widget for a guild */
+case class GuildWidget(
+    id: GuildId,
+    name: String,
+    instantInvite: String,
+    channels: Seq[GuildWidgetChannel],
+    members: Seq[GuildWidgetMember],
+    presenceCount: Int
+)
+
+case class GuildWidgetChannel(
+    id: GuildChannelId,
+    name: String,
+    position: Int
+)
+
+case class GuildWidgetMember(
+    id: UserId,
+    username: String,
+    discriminator: String,
+    avatar: Option[String],
+    status: PresenceStatus,
+    avatarUrl: String
+)
 
 /**
   * Represents a banned user.

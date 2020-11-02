@@ -179,7 +179,7 @@ object EventListenerBuilder {
             case APIMessage.MessageUpdate(_, message, _)              => message.authorUser.flatMap(doCreate)
             case msg: APIMessage.MessageReactionAdd                   => msg.user.flatMap(doCreate)
             case msg: APIMessage.MessageReactionRemove                => msg.user.flatMap(doCreate)
-            case APIMessage.PresenceUpdate(_, user, _, _, _, _, _)    => doCreate(user)
+            case APIMessage.PresenceUpdate(_, user, _, _)             => doCreate(user)
             case msg: APIMessage.TypingStart                          => msg.user.flatMap(doCreate)
             case APIMessage.VoiceStateUpdate(voiceState, _)           => voiceState.user.flatMap(doCreate)
             case _                                                    => None

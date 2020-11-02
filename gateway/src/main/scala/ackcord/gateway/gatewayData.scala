@@ -125,11 +125,16 @@ case class Identify(nowD: IdentifyData) extends EagerGatewayMessage[IdentifyData
 
 /**
   * @param since If present, instant when the user went idle.
-  * @param game The presence text.
+  * @param activities The presence activities.
   * @param status The status of the user.
   * @param afk If the user is AFK.
   */
-case class StatusData(since: Option[Instant], game: Option[RawActivity], status: PresenceStatus, afk: Boolean)
+case class StatusData(
+    since: Option[Instant],
+    activities: Option[Seq[RawActivity]],
+    status: PresenceStatus,
+    afk: Boolean
+)
 
 /**
   * Sent when a presence or status changes.
@@ -868,22 +873,16 @@ object GatewayEvent {
 
   /**
     * @param user The user of the presence.
-    * @param roles The roles of the user.
-    * @param game The new presence message.
     * @param guildId The guild where the update took place.
     * @param status The new status.
     * @param activities The current activites of the user.
     */
   case class PresenceUpdateData(
       user: PartialUser,
-      roles: Seq[RoleId],
-      game: Option[RawActivity],
       guildId: GuildId,
       status: PresenceStatus,
       activities: Seq[RawActivity],
-      clientStatus: ClientStatus,
-      premiumSince: Option[OffsetDateTime],
-      nick: Option[String]
+      clientStatus: ClientStatus
   )
 
   /**

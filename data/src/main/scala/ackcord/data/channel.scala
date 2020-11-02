@@ -27,7 +27,7 @@ import java.time.OffsetDateTime
 
 import scala.collection.immutable
 
-import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
+import ackcord.util.IntCirceEnumWithUnknown
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 
@@ -54,17 +54,17 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   * Permission overwrites can apply to both users and role. This tells you what's
   * being overwritten for a specific overwrite.
   */
-sealed abstract class PermissionOverwriteType(val value: String) extends StringEnumEntry
+sealed abstract class PermissionOverwriteType(val value: Int) extends IntEnumEntry
 object PermissionOverwriteType
-    extends StringEnum[PermissionOverwriteType]
-    with StringCirceEnumWithUnknown[PermissionOverwriteType] {
+    extends IntEnum[PermissionOverwriteType]
+    with IntCirceEnumWithUnknown[PermissionOverwriteType] {
   override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
 
-  case object Role                extends PermissionOverwriteType("role")
-  case object Member              extends PermissionOverwriteType("member")
-  case class Unknown(str: String) extends PermissionOverwriteType(str)
+  case object Role           extends PermissionOverwriteType(0)
+  case object Member         extends PermissionOverwriteType(1)
+  case class Unknown(i: Int) extends PermissionOverwriteType(i)
 
-  override def createUnknown(value: String): PermissionOverwriteType = Unknown(value)
+  override def createUnknown(value: Int): PermissionOverwriteType = Unknown(value)
 }
 
 /**

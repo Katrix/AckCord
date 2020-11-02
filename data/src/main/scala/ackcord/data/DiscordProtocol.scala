@@ -50,8 +50,8 @@ trait DiscordProtocol {
   )
 
   implicit val permissionCodec: Codec[Permission] = Codec.from(
-    Decoder[Long].emap(i => Right(Permission.fromLong(i))),
-    Encoder[Long].contramap(_.toLong)
+    Decoder[BigInt].emap(i => Right(Permission.fromBigInt(i))),
+    Encoder[BigInt].contramap(_.toBigInt)
   )
 
   implicit val userFlagsCodec: Codec[UserFlags] = Codec.from(
@@ -298,7 +298,7 @@ trait DiscordProtocol {
   implicit val inviteWithMetadataCodec: Codec[InviteWithMetadata] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val guildWidgetCodec: Codec[GuildWidget] =
+  implicit val guildWidgetSettingsCodec: Codec[GuildWidgetSettings] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val integrationAccountCodec: Codec[IntegrationAccount] =
@@ -338,6 +338,15 @@ trait DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val templateCodec: Codec[Template] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildWidgetCodec: Codec[GuildWidget] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildWidgetChannelCodec: Codec[GuildWidgetChannel] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildWidgetMemberCodec: Codec[GuildWidgetMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val auditLogChangeDecoder: Decoder[AuditLogChange[_]] = (c: HCursor) => {

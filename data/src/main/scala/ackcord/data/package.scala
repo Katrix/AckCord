@@ -254,7 +254,7 @@ package object data {
     private[data] trait Tag extends Any
     type Permission <: Base with Tag
 
-    private[data] def apply(long: Long): Permission = long.asInstanceOf[Permission]
+    private[data] def apply(bigInt: BigInt): Permission = bigInt.asInstanceOf[Permission]
 
     /**
       * Create a permission that has all the permissions passed in.
@@ -264,7 +264,7 @@ package object data {
     /**
       * Create a permission from an int.
       */
-    def fromLong(long: Long): Permission = apply(long)
+    def fromBigInt(bigInt: BigInt): Permission = apply(bigInt)
 
     val CreateInstantInvite: Permission = Permission(0x00000001)
     val KickMembers: Permission         = Permission(0x00000002)
@@ -332,13 +332,13 @@ package object data {
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {
 
-    def toLong: Long = permission.asInstanceOf[Long]
+    def toBigInt: BigInt = permission.asInstanceOf[BigInt]
 
     /**
       * Add a permission to this permission.
       * @param other The other permission.
       */
-    def addPermissions(other: Permission): Permission = Permission(toLong | other.toLong)
+    def addPermissions(other: Permission): Permission = Permission(toBigInt | other.toBigInt)
 
     /**
       * Add a permission to this permission.
@@ -350,7 +350,7 @@ package object data {
       * Remove a permission from this permission.
       * @param other The permission to remove.
       */
-    def removePermissions(other: Permission): Permission = Permission(toLong & ~other.toLong)
+    def removePermissions(other: Permission): Permission = Permission(toBigInt & ~other.toBigInt)
 
     /**
       * Remove a permission from this permission.
@@ -362,18 +362,18 @@ package object data {
       * Toggle a permission in this permission.
       * @param other The permission to toggle.
       */
-    def togglePermissions(other: Permission): Permission = Permission(toLong ^ other.toLong)
+    def togglePermissions(other: Permission): Permission = Permission(toBigInt ^ other.toBigInt)
 
     /**
       * Check if this permission has a permission.
       * @param other The permission to check against.
       */
-    def hasPermissions(other: Permission): Boolean = (toLong & other.toLong) == other.toLong
+    def hasPermissions(other: Permission): Boolean = (toBigInt & other.toBigInt) == other.toBigInt
 
     /**
       * Check if this permission grants any permissions.
       */
-    def isNone: Boolean = toLong == 0
+    def isNone: Boolean = toBigInt == 0
   }
 
   type UserFlags = UserFlags.UserFlags

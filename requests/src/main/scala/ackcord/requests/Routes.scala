@@ -478,10 +478,11 @@ object Routes {
   val deleteGuildIntegration: (GuildId, IntegrationId) => RequestRoute = upcast(guildIntegration.toRequest(DELETE))
   val syncGuildIntegration: (GuildId, IntegrationId) => RequestRoute   = upcast(guildIntegration / "sync" toRequest PATCH)
 
-  val guildWidget: RouteFunction[GuildId]        = guild / "widget"
-  val getGuildWidget: GuildId => RequestRoute    = upcast(guildWidget.toRequest(GET))
-  val modifyGuildWidget: GuildId => RequestRoute = upcast(guildWidget.toRequest(PATCH))
-  val getGuildVanityUrl: GuildId => RequestRoute = upcast(guild / "vanity-url" toRequest GET)
+  val guildWidget: RouteFunction[GuildId]         = guild / "widget"
+  val getGuildWidget: GuildId => RequestRoute     = upcast(guildWidget.toRequest(GET))
+  val modifyGuildWidget: GuildId => RequestRoute  = upcast(guildWidget.toRequest(PATCH))
+  val getGuildWidgetJson: GuildId => RequestRoute = upcast((guildWidget ++ ".json").toRequest(GET))
+  val getGuildVanityUrl: GuildId => RequestRoute  = upcast(guild / "vanity-url" toRequest GET)
 
   val style: QueryParameter[WidgetImageStyle] = new QueryParameter("style", _.value)
 

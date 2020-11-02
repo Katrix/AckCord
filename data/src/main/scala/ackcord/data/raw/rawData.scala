@@ -472,8 +472,6 @@ case class RawMessage(
   * @param afkChannelId The channelId of the AFK channel.
   * @param afkTimeout The amount of seconds you need to be AFK before being
   *                   moved to the AFK channel.
-  * @param embedEnabled If the embed is enabled.
-  * @param embedChannelId The channelId for the embed.
   * @param verificationLevel The verification level for the guild.
   * @param defaultMessageNotifications The notification level for the guild.
   * @param explicitContentFilter The explicit content filter level for the guild.
@@ -521,10 +519,6 @@ case class RawGuild(
     region: String,
     afkChannelId: Option[VoiceGuildChannelId], //AfkChannelId can be null
     afkTimeout: Int,
-    @deprecated("Prefer widgetEnabled", since = "0.18.0")
-    embedEnabled: Option[Boolean],
-    @deprecated("Prefer widgetChannelId", since = "0.18.0")
-    embedChannelId: Option[GuildChannelId],
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
     explicitContentFilter: FilterLevel,
@@ -590,8 +584,6 @@ case class RawGuild(
         region,
         afkChannelId,
         afkTimeout,
-        embedEnabled,
-        embedChannelId,
         verificationLevel,
         defaultMessageNotifications,
         explicitContentFilter,
@@ -715,19 +707,29 @@ case class RawActivity(
 /**
   * A raw presence.
   * @param user A partial user.
-  * @param game The content of the presence.
   * @param status The presence status.
   */
-case class RawPresence(user: PartialUser, game: Option[RawActivity], status: Option[PresenceStatus]) {
+case class RawPresence(
+    user: PartialUser,
+    status: Option[PresenceStatus],
+    activities: Option[Seq[RawActivity]],
+    clientStatus: Option[ClientStatus]
+) {
 
   def toPresence: Either[String, Presence] = {
     import cats.instances.either._
     import cats.instances.option._
-    Traverse[Option]
-      .traverse(game)(_.toActivity)
-      .map(activity =>
-        Presence(user.id, activity, status.getOrElse(PresenceStatus.Online), ClientStatus(None, None, None))
+    import cats.instances.vector._
+    import cats.syntax.all._
+
+    activities.traverse(act => act.toVector.traverse(_.toActivity)).map { optActs =>
+      Presence(
+        user.id,
+        status.getOrElse(PresenceStatus.Online),
+        optActs.getOrElse(Nil),
+        clientStatus.getOrElse(ClientStatus(None, None, None))
       )
+    }
   }
 }
 

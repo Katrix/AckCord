@@ -809,13 +809,13 @@ package object syntax {
     /**
       * Fetch the guild embed for this guild.
       */
-    def fetchEmbed =
-      GetGuildWidget(guild.id)
+    def fetchWidgetSettings =
+      GetGuildWidgetSettings(guild.id)
 
     /**
       * Modify a guild embed for this guild.
       */
-    def modifyEmbed(embed: GuildWidget) =
+    def modifyWidgetSettings(embed: GuildWidgetSettings) =
       ModifyGuildWidget(guild.id, embed)
 
     /**

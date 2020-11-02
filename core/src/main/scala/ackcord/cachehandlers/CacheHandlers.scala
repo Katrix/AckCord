@@ -184,8 +184,6 @@ object CacheHandlers {
           region = obj.region,
           afkChannelId = obj.afkChannelId,
           afkTimeout = obj.afkTimeout,
-          embedEnabled = obj.embedEnabled,
-          embedChannelId = obj.embedChannelId,
           verificationLevel = obj.verificationLevel,
           defaultMessageNotifications = obj.defaultMessageNotifications,
           explicitContentFilter = obj.explicitContentFilter,
