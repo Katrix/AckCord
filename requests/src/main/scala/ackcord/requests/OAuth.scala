@@ -42,6 +42,7 @@ object OAuth {
   sealed abstract class Scope(val name: String)
   object Scope {
     case object Bot                      extends Scope("bot")
+    case object Commands                 extends Scope("applications.commands")
     case object Connections              extends Scope("connections")
     case object Email                    extends Scope("email")
     case object Identify                 extends Scope("identify")

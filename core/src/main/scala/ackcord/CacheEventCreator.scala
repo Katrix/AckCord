@@ -511,6 +511,15 @@ object CacheEventCreator {
               registry,
               dispatch
             )
+
+          case gatewayEv.InteractionCreate(_, GetLazy(data)) =>
+            CacheUpdate(
+              data,
+              state => Some(api.InteractionCreate(data, state)),
+              NOOPHandler,
+              registry,
+              dispatch
+            )
         }
 
         Some(res)

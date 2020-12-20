@@ -263,7 +263,7 @@ case class RequestRatelimited(
 ) extends FailedRequest {
 
   override def asException: RatelimitException =
-    new RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
+    RatelimitException(global, ratelimitInfo.tilReset, route.uri, identifier)
 
   override def map[B](f: Nothing => B): RequestRatelimited                    = this
   override def filter(f: Nothing => Boolean): RequestRatelimited              = this
@@ -288,7 +288,7 @@ case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) ext
   * because of timing out while waiting for ratelimits.
   */
 case class RequestDropped(route: RequestRoute, identifier: UUID) extends MaybeRequest[Nothing] with FailedRequest {
-  override def asException = new DroppedRequestException(route.uri)
+  override def asException: DroppedRequestException = DroppedRequestException(route.uri)
 
   override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
 

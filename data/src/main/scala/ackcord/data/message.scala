@@ -175,12 +175,12 @@ case class User(
   /**
     * Mention this user.
     */
-  def mention: String = s"<@$id>"
+  def mention: String = id.mention
 
   /**
     * Mention this user with their nickname.
     */
-  def mentionNick: String = s"<@!$id>"
+  def mentionNick: String = id.mentionNick
 
   override def isUser: Boolean = true
 }

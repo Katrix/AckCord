@@ -1,7 +1,7 @@
 /*
  * This file is part of AckCord, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2019 Katrix
+ * Copyright (c) 2020 Katrix
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,45 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.data
+package ackcord
 
-/**
-  * A role in a guild.
-  * @param id The id of this role.
-  * @param guildId The guildId this role belongs to.
-  * @param name The name of this role.
-  * @param color The color of this role.
-  * @param hoist If this role is listed in the sidebar.
-  * @param position The position of this role.
-  * @param permissions The permissions this role grant.
-  * @param managed If this is a bot role.
-  * @param mentionable If you can mention this role.
-  */
-case class Role(
-    id: RoleId,
-    guildId: GuildId,
-    name: String,
-    color: Int,
-    hoist: Boolean,
-    position: Int,
-    permissions: Permission,
-    managed: Boolean,
-    mentionable: Boolean
-) extends GetGuild
-    with UserOrRole {
+import ackcord.data.SnowflakeType
+import ackcord.slashcommands.raw.{ApplicationCommand, RawInteraction}
 
-  /**
-    * Mention this role.
-    */
-  def mention: String = id.mention
+package object slashcommands {
+  type CommandId     = SnowflakeType[ApplicationCommand]
+  type InteractionId = SnowflakeType[RawInteraction]
 
-  /**
-    * Check if this role is above another role.
-    */
-  def isAbove(other: Role): Boolean = this.position > other.position
-
-  /**
-    * Check if this role is below another role.
-    */
-  def isBelow(other: Role): Boolean = this.position < other.position
+  type ~[A, B] = (A, B)
+  object ~ {
+    def unapply[A, B](t: (A, B)): Some[(A, B)] = Some(t)
+  }
 }

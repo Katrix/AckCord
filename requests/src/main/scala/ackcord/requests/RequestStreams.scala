@@ -25,21 +25,20 @@ package ackcord.requests
 
 import java.util.concurrent.TimeoutException
 
-import scala.collection.immutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 import ackcord.AckCord
 import ackcord.util.AckCordRequestSettings
+import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.AskPattern._
-import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Keep, Merge, Partition, Sink, Source}
-import akka.stream.{Attributes, FlowShape, OverflowStrategy}
+import akka.stream.{Attributes, FlowShape}
 import akka.util.{ByteString, Timeout}
 import akka.{Done, NotUsed}
 import io.circe.Json
@@ -83,65 +82,42 @@ object RequestStreams {
       _.identifier
     ) //Sadly this is not always present
 
-  private val userAgent = `User-Agent`(s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})")
+  val defaultUserAgent: `User-Agent` = `User-Agent`(
+    s"DiscordBot (https://github.com/Katrix/AckCord, ${AckCord.Version})"
+  )
 
   /**
     * A basic request flow which will send requests to Discord, and
     * receive responses. This flow does not account for ratelimits. Only
     * use it if you know what you're doing.
-    * @param credentials The credentials to use when sending the requests.
-    * @param relativeTime Sets if the ratelimit reset should be calculated
-    *                     using relative time instead of absolute time. Might
-    *                     help with out of sync time on your device, but can
-    *                     also lead to slightly slower processing of requests.
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
-      credentials: HttpCredentials,
-      relativeTime: Boolean,
-      parallelism: Int = 4,
-      rateLimitActor: ActorRef[Ratelimiter.Command]
+      requestSettings: RequestSettings
   )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
     FlowWithContext.fromTuples(
-      createHttpRequestFlow[Data, Ctx](credentials)
+      createHttpRequestFlow[Data, Ctx](requestSettings)
         .via(requestHttpFlow)
         .via(Flow.apply[(Try[HttpResponse], (Request[Data], Ctx))].map(t => ((t._1, t._2._1), t._2._2)))
-        .via(requestParser[Data, Ctx](relativeTime, parallelism))
+        .via(requestParser[Data, Ctx](requestSettings))
         .asFlow
-        .alsoTo(sendRatelimitUpdates[Data](rateLimitActor).contramap[(RequestAnswer[Data], Ctx)](_._1))
+        .alsoTo(sendRatelimitUpdates[Data](requestSettings).contramap[(RequestAnswer[Data], Ctx)](_._1))
     )
 
   /**
     * A request flow which will send requests to Discord, and receive responses.
     * If it encounters a ratelimit it will backpressure.
-    * @param credentials The credentials to use when sending the requests.
-    * @param relativeTime Sets if the ratelimit reset should be calculated
-    *                     using relative time instead of absolute time. Might
-    *                     help with out of sync time on your device, but can
-    *                     also lead to slightly slower processing of requests.
-    * @param bufferSize The size of the internal buffer used before messages
-    *                   are sent.
-    * @param overflowStrategy The strategy to use if the buffer overflows.
-    * @param maxAllowedWait The maximum allowed wait time for the route
-    *                       specific ratelimits.
-    * @param parallelism The amount of requests to run at the same time.
-    * @param rateLimitActor An actor responsible for keeping track of ratelimits.
     */
   def requestFlow[Data, Ctx](
-      credentials: HttpCredentials,
-      relativeTime: Boolean,
-      bufferSize: Int = 100,
-      overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-      maxAllowedWait: FiniteDuration = 2.minutes,
-      parallelism: Int = 4,
-      rateLimitActor: ActorRef[Ratelimiter.Command]
+      requestSettings: RequestSettings
   )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
-      val in         = builder.add(Flow[(Request[Data], Ctx)])
-      val buffer     = builder.add(Flow[(Request[Data], Ctx)].buffer(bufferSize, overflowStrategy))
-      val ratelimits = builder.add(ratelimitFlow[Data, Ctx](rateLimitActor, maxAllowedWait, parallelism))
+      val in = builder.add(Flow[(Request[Data], Ctx)])
+      val buffer =
+        builder.add(Flow[(Request[Data], Ctx)].buffer(requestSettings.bufferSize, requestSettings.overflowStrategy))
+      val ratelimits = builder.add(ratelimitFlow[Data, Ctx](requestSettings))
 
       val partition = builder.add(
         Partition[(MaybeRequest[Data], Ctx)](
@@ -155,15 +131,8 @@ object RequestStreams {
       val requests = partition.out(0).collect { case (request: Request[Data], ctx) => request -> ctx }
       val dropped  = partition.out(1).collect { case (dropped: RequestDropped, ctx) => dropped -> ctx }
 
-      val network = builder.add(
-        requestFlowWithoutRatelimit[Data, Ctx](
-          credentials,
-          relativeTime,
-          parallelism,
-          rateLimitActor
-        )
-      )
-      val out = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
+      val network = builder.add(requestFlowWithoutRatelimit[Data, Ctx](requestSettings))
+      val out     = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
 
       // format: OFF
       in ~> buffer ~> ratelimits ~> partition
@@ -179,26 +148,18 @@ object RequestStreams {
 
   /**
     * A request flow which obeys route specific rate limits, but not global ones.
-    * @param ratelimiter An actor responsible for keeping track of ratelimits.
-    * @param maxAllowedWait The maximum allowed wait time for the route
-    *                       specific ratelimits.
-    * @param parallelism The amount of requests to run at the same time.
     */
-  def ratelimitFlow[Data, Ctx](
-      ratelimiter: ActorRef[Ratelimiter.Command],
-      maxAllowedWait: FiniteDuration,
-      parallelism: Int = 4
-  )(
+  def ratelimitFlow[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[Request[Data], Ctx, MaybeRequest[Data], Ctx, NotUsed] = {
-    implicit val triggerTimeout: Timeout = Timeout(maxAllowedWait)
+    implicit val triggerTimeout: Timeout = Timeout(requestSettings.maxAllowedWait)
     FlowWithContext.fromTuples(
       Flow[(Request[Data], Ctx)]
-        .mapAsyncUnordered(parallelism) {
+        .mapAsyncUnordered(requestSettings.parallelism) {
           case (request, ctx) =>
             //We don't use ask here to get be able to create a RequestDropped instance
             import system.executionContext
-            val future = ratelimiter.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
+            val future = requestSettings.ratelimitActor.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
               Ratelimiter.WantToPass(request.route, request.identifier, _, (request, ctx))
             )
 
@@ -215,7 +176,7 @@ object RequestStreams {
     )
   }
 
-  private def createHttpRequestFlow[Data, Ctx](credentials: HttpCredentials)(
+  private def createHttpRequestFlow[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[Request[Data], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
     implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.rest.SentRESTRequest")
@@ -236,11 +197,11 @@ object RequestStreams {
     withLogging.via(Flow[(Request[Data], Ctx)].map {
       case (request, ctx) =>
         val route = request.route
-        val auth  = Authorization(credentials)
+        val auth  = requestSettings.credentials.map(Authorization(_))
         val httpRequest = HttpRequest(
           route.method,
           route.uri,
-          immutable.Seq(auth, userAgent) ++ request.extraHeaders,
+          requestSettings.userAgent +: (auth.toSeq ++ request.extraHeaders),
           request.requestBody
         )
 
@@ -255,14 +216,11 @@ object RequestStreams {
     FlowWithContext.fromTuples(Http(system.toClassic).superPool[(Request[Data], Ctx)]())
   }
 
-  private def requestParser[Data, Ctx](
-      relativeTime: Boolean,
-      parallelism: Int
-  )(
+  private def requestParser[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx]
-      .mapAsync(parallelism) {
+      .mapAsync(requestSettings.parallelism) {
         {
           case (response, request) =>
             import system.executionContext
@@ -270,7 +228,7 @@ object RequestStreams {
             val route = request.route
             response match {
               case Success(httpResponse) =>
-                val tilReset     = timeTilReset(relativeTime, httpResponse)
+                val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
                 val tilRatelimit = remainingRequests(httpResponse)
                 val bucketLimit  = requestsForUri(httpResponse)
                 val bucket       = requestBucket(route, httpResponse)
@@ -297,7 +255,7 @@ object RequestStreams {
                     httpResponse.entity.dataBytes
                       .runFold(ByteString.empty)(_ ++ _)
                       .map { eBytes =>
-                        RequestError(new HttpException(e, Some(eBytes.utf8String)), route, request.identifier)
+                        RequestError(HttpException(e, Some(eBytes.utf8String)), route, request.identifier)
                       }
                   case StatusCodes.NoContent =>
                     httpResponse.discardEntityBytes()
@@ -318,9 +276,7 @@ object RequestStreams {
       }
   }.withAttributes(Attributes.name("RequestParser"))
 
-  private def sendRatelimitUpdates[Data](
-      rateLimitActor: ActorRef[Ratelimiter.Command]
-  ): Sink[RequestAnswer[Data], Future[Done]] =
+  private def sendRatelimitUpdates[Data](requestSettings: RequestSettings): Sink[RequestAnswer[Data], Future[Done]] =
     Sink
       .foreach[RequestAnswer[Data]] { answer =>
         val isGlobal = answer match {
@@ -328,7 +284,7 @@ object RequestStreams {
           case _                               => false
         }
 
-        rateLimitActor ! Ratelimiter.UpdateRatelimits(
+        requestSettings.ratelimitActor ! Ratelimiter.UpdateRatelimits(
           answer.route,
           answer.ratelimitInfo,
           isGlobal,
@@ -348,46 +304,17 @@ object RequestStreams {
 
   /**
     * A request flow that will retry failed requests.
-    * @param credentials The credentials to use when sending the requests.
-    * @param relativeTime Sets if the ratelimit reset should be calculated
-    *                     using relative time instead of absolute time. Might
-    *                     help with out of sync time on your device, but can
-    *                     also lead to slightly slower processing of requests.
-    * @param bufferSize The size of the internal buffer used before messages
-    *                   are sent.
-    * @param overflowStrategy The strategy to use if the buffer overflows.
-    * @param maxAllowedWait The maximum allowed wait time for the route
-    *                       specific ratelimits.
-    * @param parallelism The amount of requests to run at the same time.
-    * @param rateLimitActor An actor responsible for keeping track of ratelimits.
     */
   def retryRequestFlow[Data, Ctx](
-      credentials: HttpCredentials,
-      relativeTime: Boolean,
-      bufferSize: Int = 100,
-      overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-      maxAllowedWait: FiniteDuration = 2.minutes,
-      parallelism: Int = 4,
-      maxRetryCount: Int = 3,
-      rateLimitActor: ActorRef[Ratelimiter.Command]
+      requestSettings: RequestSettings
   )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext.fromTuples(
       Flow[(Request[Data], Ctx)].flatMapMerge(
-        parallelism,
+        requestSettings.parallelism,
         i => {
           val singleFlow = Source
             .single(i)
-            .via(
-              RequestStreams.requestFlow(
-                credentials,
-                relativeTime,
-                bufferSize,
-                overflowStrategy,
-                maxAllowedWait,
-                parallelism,
-                rateLimitActor
-              )
-            )
+            .via(RequestStreams.requestFlow(requestSettings))
             .map {
               case (value: RequestResponse[Data], ctx) => value -> ctx
               case (err: FailedRequest, ctx)           => throw RetryFailedRequestException(err, ctx)
@@ -395,7 +322,7 @@ object RequestStreams {
 
           singleFlow
             .recoverWithRetries(
-              maxRetryCount,
+              requestSettings.maxRetryCount,
               {
                 case RetryFailedRequestException(_, _) => singleFlow
               }
@@ -424,12 +351,12 @@ object RequestStreams {
         if (isValid) {
           entity
         } else {
-          throw new HttpJsonDecodeException("Invalid content type for json")
+          throw HttpJsonDecodeException("Invalid content type for json")
         }
       }
       .via(bytestringFromResponse)
       .map {
-        case ByteString.empty => throw new HttpJsonDecodeException("No data for json decode")
+        case ByteString.empty => throw HttpJsonDecodeException("No data for json decode")
         case bytes            => io.circe.jawn.parseByteBuffer(bytes.asByteBuffer)
       }
       .map(_.fold(throw _, identity))
