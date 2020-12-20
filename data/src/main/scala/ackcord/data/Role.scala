@@ -51,7 +51,7 @@ case class Role(
   /**
     * Mention this role.
     */
-  def mention: String = s"<@&$id>"
+  def mention: String = id.mention
 
   /**
     * Check if this role is above another role.
