@@ -45,7 +45,7 @@ sealed trait CommandOrGroup {
 case class Command[Interaction[_], A] private (
     name: String,
     description: String,
-    paramList: Either[A =:= NotUsed, ParamList[A]],
+    paramList: Either[NotUsed =:= A, ParamList[A]],
     filter: CommandTransformer[CommandInteraction, Interaction],
     handle: Interaction[A] => CommandResponse
 ) extends CommandOrGroup {
@@ -53,7 +53,7 @@ case class Command[Interaction[_], A] private (
   override def makeCommandOptions: Seq[ApplicationCommandOption] = {
     val normalList = paramList.map(_.map(identity)).getOrElse(Nil)
     val (defaultParams, nonDefaultParams) = normalList.partition(_.default)
-    if(defaultParams.lengthIs > 1) {
+    if(defaultParams.length > 1) {
       throw new IllegalArgumentException("Can only have one default parameter")
     }
 
@@ -92,7 +92,7 @@ case class Command[Interaction[_], A] private (
 
     val optArgs = paramList match {
       case Right(value) => value.constructValues(optionsMap)
-      case Left(ev)     => Right(ev.flip(NotUsed))
+      case Left(ev)     => Right(ev(NotUsed))
     }
 
     optArgs

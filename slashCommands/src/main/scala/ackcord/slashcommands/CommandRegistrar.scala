@@ -26,6 +26,7 @@ package ackcord.slashcommands
 import java.nio.charset.StandardCharsets
 import java.util.Locale
 
+import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.data.{GuildId, RawSnowflake}
@@ -38,7 +39,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.`Content-Type`
 import akka.stream.scaladsl.{Flow, Sink}
 import akka.util.ByteString
-import akka.{Done, NotUsed}
+import akka.NotUsed
 import cats.syntax.all._
 import io.circe.Decoder
 import io.circe.syntax._
@@ -122,7 +123,7 @@ object CommandRegistrar {
         .map { e =>
           val httpResponse = e.map { response =>
             HttpResponse(
-              headers = Seq(`Content-Type`(ContentType.WithFixedCharset(MediaTypes.`application/json`))),
+              headers = immutable.Seq(`Content-Type`(ContentType.WithFixedCharset(MediaTypes.`application/json`))),
               entity = response.toInteractionResponse.asJson.noSpaces
             )
           }.merge
@@ -186,6 +187,6 @@ object CommandRegistrar {
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] =
     requests.manyFutureSuccess(
-      commands.map(command => CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command)))
+      commands.toVector.map(command => CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command)))
     )
 }

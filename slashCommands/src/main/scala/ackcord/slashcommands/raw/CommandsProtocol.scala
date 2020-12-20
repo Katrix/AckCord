@@ -24,9 +24,9 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.DiscordProtocol
-import ackcord.slashcommands._
 import io.circe._
 import io.circe.syntax._
+import cats.syntax.all._
 
 trait CommandsProtocol extends DiscordProtocol {
   implicit val applicationCommandCodec: Codec[ApplicationCommand] =

@@ -27,7 +27,7 @@ import akka.NotUsed
 
 class CommandBuilder[Interaction[_], A](
     val transformer: CommandTransformer[CommandInteraction, Interaction],
-    implParamList: Either[A =:= NotUsed, ParamList[A]]
+    implParamList: Either[NotUsed =:= A, ParamList[A]]
 ) {
 
   def withTransformer[NewTo[_]](transformer: CommandTransformer[CommandInteraction, NewTo]): CommandBuilder[NewTo, A] =
@@ -58,7 +58,7 @@ class NamedCommandBuilder[Interaction[_], A](
     val name: String,
     val description: String,
     transformer: CommandTransformer[CommandInteraction, Interaction],
-    implParamList: Either[A =:= NotUsed, ParamList[A]]
+    implParamList: Either[NotUsed =:= A, ParamList[A]]
 ) extends CommandBuilder(transformer, implParamList) {
 
   override def withTransformer[NewTo[_]](

@@ -221,7 +221,7 @@ case class ExecuteWebhookData(
     "Please use unique filenames for all files"
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
-  require(embeds.sizeIs <= 10, "Can't send more than 10 embeds with a webhook message")
+  require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
 }
 object ExecuteWebhookData {
 

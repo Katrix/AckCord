@@ -53,7 +53,7 @@ sealed abstract class ApplicationCommandOptionType(val value: Int) extends IntEn
 object ApplicationCommandOptionType
     extends IntEnum[ApplicationCommandOptionType]
     with IntCirceEnumWithUnknown[ApplicationCommandOptionType] {
-  override def values: IndexedSeq[ApplicationCommandOptionType] = findValues
+  override def values: collection.immutable.IndexedSeq[ApplicationCommandOptionType] = findValues
 
   case object SubCommand      extends ApplicationCommandOptionType(1)
   case object SubCommandGroup extends ApplicationCommandOptionType(2)
@@ -86,7 +86,7 @@ case class RawInteraction(
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
 object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
-  override def values: IndexedSeq[InteractionType] = findValues
+  override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
 
   case object Ping               extends InteractionType(1)
   case object ApplicationCommand extends InteractionType(2)
@@ -118,7 +118,7 @@ sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEnt
 object InteractionResponseType
     extends IntEnum[InteractionResponseType]
     with IntCirceEnumWithUnknown[InteractionResponseType] {
-  override def values: IndexedSeq[InteractionResponseType] = findValues
+  override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
 
   case object Pong                     extends InteractionResponseType(1)
   case object Acknowledge              extends InteractionResponseType(2)

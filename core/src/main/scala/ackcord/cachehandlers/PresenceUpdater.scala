@@ -23,7 +23,7 @@
  */
 package ackcord.cachehandlers
 
-import ackcord.data.{Guild, GuildMember, Presence}
+import ackcord.data.{Guild, Presence}
 import ackcord.gateway.GatewayEvent.PresenceUpdateData
 import org.slf4j.Logger
 

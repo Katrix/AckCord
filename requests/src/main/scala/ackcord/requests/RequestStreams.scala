@@ -201,7 +201,7 @@ object RequestStreams {
         val httpRequest = HttpRequest(
           route.method,
           route.uri,
-          requestSettings.userAgent +: (auth.toSeq ++ request.extraHeaders),
+          requestSettings.userAgent +: (auth.toList ++ request.extraHeaders),
           request.requestBody
         )
 
