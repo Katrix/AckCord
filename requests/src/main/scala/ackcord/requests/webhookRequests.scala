@@ -23,10 +23,15 @@
  */
 package ackcord.requests
 
+import scala.concurrent.Future
+
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
+import ackcord.data.raw.RawMessage
 import ackcord.util.{JsonOption, JsonUndefined}
+import akka.actor.typed.ActorSystem
+import akka.http.scaladsl.model.ResponseEntity
 import io.circe._
 import io.circe.syntax._
 
@@ -191,9 +196,111 @@ case class DeleteWebhookWithToken(
   override def withReason(reason: String): DeleteWebhookWithToken = copy(reason = Some(reason))
 }
 
-/*
-TODO
-case class ExecuteWebhook(id: Snowflake, token: String, params: Nothing) extends SimpleRESTRequest[Nothing, Nothing] {
-  override def route: RestRoute = Routes.deleteWebhookWithToken(token, id)
+/**
+  * @param content The content of the message.
+  * @param username The username to use with the message.
+  * @param avatarUrl The avatar url to use with the message.
+  * @param tts If this is a text-to-speech message.
+  * @param files The files to send with this message. You can reference these
+  *              files in the embed using `attachment://filename`.
+  * @param embeds Embeds to send with this message.
+  */
+case class ExecuteWebhookData(
+    content: String = "",
+    username: Option[String] = None,
+    avatarUrl: Option[String] = None,
+    tts: Option[Boolean] = None,
+    files: Seq[CreateMessageFile] = Seq.empty,
+    embeds: Seq[OutgoingEmbed] = Nil,
+    allowedMentions: Option[AllowedMention] = None,
+    flags: MessageFlags = MessageFlags.None
+) {
+  files.foreach(file => require(file.isValid))
+  require(
+    files.map(_.fileName).distinct.lengthCompare(files.length) == 0,
+    "Please use unique filenames for all files"
+  )
+  require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
+  require(embeds.sizeIs <= 10, "Can't send more than 10 embeds with a webhook message")
 }
- */
+object ExecuteWebhookData {
+
+  //We handle this here as the file argument needs special treatment
+  implicit val encoder: Encoder[ExecuteWebhookData] = (a: ExecuteWebhookData) =>
+    Json.obj(
+      "content" := a.content,
+      "username" := a.username,
+      "avatar_url" := a.avatarUrl,
+      "tts" := a.tts,
+      "embeds" := a.embeds,
+      "allowed_mentions" := a.allowedMentions,
+      "flags" := a.flags
+    )
+}
+
+case class ExecuteWebhook(
+    id: SnowflakeType[Webhook],
+    token: String,
+    waitQuery: Boolean = false,
+    params: ExecuteWebhookData
+) extends RESTRequest[ExecuteWebhookData, Option[RawMessage], Option[Message]] {
+  override def route: RequestRoute = Routes.executeWebhook(id, token, Some(waitQuery))
+
+  override def parseResponse(
+      entity: ResponseEntity
+  )(implicit system: ActorSystem[Nothing]): Future[Option[RawMessage]] = {
+    if (waitQuery) super.parseResponse(entity)
+    else {
+      entity.discardBytes()
+      Future.successful(None)
+    }
+  }
+
+  override def paramsEncoder: Encoder[ExecuteWebhookData] =
+    ExecuteWebhookData.encoder
+
+  override def responseDecoder: Decoder[Option[RawMessage]] =
+    Decoder[Option[RawMessage]]
+
+  override def toNiceResponse(response: Option[RawMessage]): Option[Message] = response.map(_.toMessage)
+}
+
+case class EditWebhookMessageData(
+    content: JsonOption[String] = JsonUndefined,
+    username: JsonOption[String] = JsonUndefined,
+    avatarUrl: JsonOption[String] = JsonUndefined,
+    tts: JsonOption[Boolean] = JsonUndefined,
+    embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
+    allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+)
+object EditWebhookMessageData {
+  implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
+    JsonOption.removeUndefinedToObj(
+      "content"          -> a.content.map(_.asJson),
+      "username"         -> a.username.map(_.asJson),
+      "avatar_url"       -> a.avatarUrl.map(_.asJson),
+      "tts"              -> a.tts.map(_.asJson),
+      "embeds"           -> a.embeds.map(_.asJson),
+      "allowed_mentions" -> a.allowedMentions.map(_.asJson)
+    )
+}
+
+case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String, params: EditWebhookMessageData)
+    extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
+  override def route: RequestRoute                            = Routes.editOriginalWebhook(id, token)
+  override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
+
+  override def responseDecoder: Decoder[Json] = Decoder[Json]
+}
+
+case class EditWebhookMessage(
+    id: SnowflakeType[Webhook],
+    token: String,
+    messageId: MessageId,
+    params: EditWebhookMessageData
+) extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
+  override def route: RequestRoute                            = Routes.editWebhookMessage(id, token, messageId)
+  override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
+
+  override def responseDecoder: Decoder[Json] = Decoder[Json]
+}

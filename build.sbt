@@ -131,6 +131,16 @@ lazy val commands = project
   )
   .dependsOn(requests)
 
+val slashCommands = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "slash-commands",
+    version := ackCordVersion,
+    description := "ackCord-slash-commands provides a high level API to interact with Discord's slash commands"
+  )
+  .dependsOn(requests)
+
 lazy val core = project
   .settings(
     commonSettings,

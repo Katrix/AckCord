@@ -149,6 +149,9 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val userWithGuildIdCodec: Codec[GatewayEvent.UserWithGuildId] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val simpleRawInteractionCodec: Codec[GatewayEvent.SimpleRawInteraction] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
@@ -347,7 +350,8 @@ object GatewayProtocol extends DiscordProtocol {
             case "WEBHOOK_UPDATE"                => createDispatch(GatewayEvent.WebhookUpdate)
             case "PRESENCES_REPLACE" =>
               Right(Dispatch(seq, GatewayEvent.IgnoredEvent("PRESENCES_REPLACE", c.value, Later(Right(())))))
-            case _ => Left(DecodingFailure("Invalid message type", c.downField("t").history))
+            case "INTERACTION_CREATE" => createDispatch(GatewayEvent.InteractionCreate)
+            case _                    => Left(DecodingFailure("Invalid message type", c.downField("t").history))
           }
       }
   }

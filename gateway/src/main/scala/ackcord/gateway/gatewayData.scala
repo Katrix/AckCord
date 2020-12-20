@@ -963,5 +963,30 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
+  case class SimpleRawInteraction(
+      id: RawSnowflake,
+      `type`: Int,
+      data: Option[Json],
+      guildId: GuildId,
+      channelId: TextChannelId,
+      member: RawGuildMember,
+      token: String
+  ) {
+
+    def reparse[A: Decoder] = {
+      import io.circe.syntax._
+      import GatewayProtocol._
+      val self: SimpleRawInteraction = this
+      self.asJson.as[A]
+    }
+  }
+
+  case class InteractionCreate(rawData: Json, data: Later[Decoder.Result[SimpleRawInteraction]])
+      extends GuildEvent[SimpleRawInteraction] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "INTERACTION_CREATE"
+  }
+
   case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]]) extends GatewayEvent[Unit]
 }

@@ -461,6 +461,7 @@ package object data {
     val SuppressEmbeds: MessageFlags       = MessageFlags(1 << 2)
     val SourceMessageDeleted: MessageFlags = MessageFlags(1 << 3)
     val Urgent: MessageFlags               = MessageFlags(1 << 4)
+    val Ephermal: MessageFlags             = MessageFlags(1 << 6)
   }
   implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
 
