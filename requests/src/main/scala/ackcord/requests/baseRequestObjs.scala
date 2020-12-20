@@ -54,12 +54,12 @@ trait BaseRESTRequest[RawResponse, NiceResponse] extends Request[RawResponse] { 
     val baseFlow = RequestStreams.jsonDecode
 
     val withLogging =
-      if (AckCordRequestSettings().LogReceivedREST)
+      if (AckCordRequestSettings().LogReceivedREST) {
         baseFlow.log(
           s"Received REST response",
           json => s"From ${route.uri} with method ${route.method.value} and content ${json.noSpaces}"
         )
-      else baseFlow
+      } else baseFlow
 
     withLogging.runWith(Source.single(entity), Sink.head)._2.flatMap { json =>
       Future.fromTry(json.as(responseDecoder).fold(Failure.apply, Success.apply))

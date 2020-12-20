@@ -23,23 +23,19 @@
  */
 package ackcord.examplecore
 
-import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext}
 import scala.util.control.NonFatal
 
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
-import ackcord.commands.{
-  CommandConnector,
-  CommandDescription,
-  HelpCommand,
-  NamedDescribedCommand,
-  NamedDescribedComplexCommand,
-  PrefixParser
-}
+import ackcord.commands._
+import ackcord.data.{GuildId, RawSnowflake}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
-import ackcord.requests.{BotAuthentication, Ratelimiter, Requests}
+import ackcord.requests.{BotAuthentication, Ratelimiter, RequestSettings, Requests}
+import ackcord.slashcommands.CommandRegistrar
+import ackcord.slashcommands.raw.{GetGuildCommands, RawInteraction}
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.Done
 import akka.actor.CoordinatedShutdown
@@ -104,9 +100,11 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
   private val requests: Requests =
     new Requests(
-      BotAuthentication(settings.token),
-      ratelimiter,
-      relativeTime = true
+      RequestSettings(
+        Some(BotAuthentication(settings.token)),
+        ratelimiter,
+        relativeTime = true
+      )
     )
 
   val controllerCommands: Seq[NamedDescribedCommand[_]] = {
@@ -141,13 +139,51 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
 
   val killSwitch: SharedKillSwitch = KillSwitches.shared("Commands")
 
+  val baseSlashCommands = new SlashCommandsController(requests)
+
+  val registerCommands = true
+  if (registerCommands) {
+    requests
+      .singleFuture(GetGuildCommands(RawSnowflake("288367502130413568"), GuildId("269988507378909186")))
+      .onComplete(println)
+
+    /*
+    CommandRegistrar
+      .createGuildCommands(
+        RawSnowflake("288367502130413568"),
+        GuildId("269988507378909186"),
+        requests,
+        baseSlashCommands.groupTest,
+        baseSlashCommands.subcommand,
+        baseSlashCommands.subcommandWithArg
+      )
+      .onComplete(println)
+     */
+  }
+
+  {
+    import ackcord.slashcommands.raw.CommandsProtocol._
+    events
+      .commandInteractions[RawInteraction]
+      .to(
+        CommandRegistrar.gatewayCommands(
+          baseSlashCommands.ping,
+          baseSlashCommands.echo,
+          baseSlashCommands.nudge,
+          baseSlashCommands.asyncTest,
+          baseSlashCommands.groupTest,
+        )("288367502130413568", requests)
+      )
+      .run()
+  }
+
   val commandConnector = new CommandConnector(
     events.subscribeAPI
       .collectType[APIMessage.MessageCreate]
       .map(m => m.message -> m.cache.current)
       .via(killSwitch.flow),
     requests,
-    requests.parallelism
+    requests.settings.parallelism
   )
 
   def registerCommand[Mat](entry: NamedDescribedComplexCommand[_, Mat]): Mat =

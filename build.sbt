@@ -178,7 +178,7 @@ lazy val ackCord = project
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
-  .dependsOn(core, commands, lavaplayerCore)
+  .dependsOn(core, lavaplayerCore, commands, slashCommands)
 
 lazy val exampleCore = project
   .settings(
@@ -190,7 +190,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
     libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.3"
   )
-  .dependsOn(core, lavaplayerCore, commands)
+  .dependsOn(core, lavaplayerCore, commands, slashCommands)
 
 lazy val example = project
   .settings(
@@ -227,6 +227,7 @@ lazy val docs = project
       requests,
       gateway,
       voice,
+      slashCommands,
       core,
       commands,
       lavaplayerCore,
@@ -256,6 +257,7 @@ lazy val ackCordRoot = project
     requests,
     gateway,
     voice,
+    slashCommands,
     core,
     commands,
     lavaplayerCore,

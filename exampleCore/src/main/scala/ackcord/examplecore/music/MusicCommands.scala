@@ -66,7 +66,7 @@ class MusicCommands(requests: Requests, guildId: GuildId, musicHandler: ActorRef
       .toSink {
         Flow[VoiceGuildMemberCommandMessage[NotUsed]]
           .map(_.textChannel)
-          .via(ActorFlow.ask(requests.parallelism)(musicHandler)(mapper))
+          .via(ActorFlow.ask(requests.settings.parallelism)(musicHandler)(mapper))
           .toMat(Sink.ignore)(Keep.none)
       }
   }
