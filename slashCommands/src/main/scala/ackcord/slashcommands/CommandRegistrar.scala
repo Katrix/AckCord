@@ -250,7 +250,7 @@ object CommandRegistrar {
     requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
       Source(
         globalCommands
-          .filter(gc => commands.exists(_.name == gc.name))
+          .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
           .map(gc => (DeleteGuildCommand(applicationId, guildId, gc.id), gc))
           .toVector
       ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
@@ -270,7 +270,7 @@ object CommandRegistrar {
     requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
       Source(
         globalCommands
-          .filter(gc => commands.exists(_.name == gc.name))
+          .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
           .map(gc => (DeleteGlobalCommand(applicationId, gc.id), gc))
           .toVector
       ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
