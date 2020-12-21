@@ -62,8 +62,10 @@ trait CommandsProtocol extends DiscordProtocol {
           res <- (value, options) match {
             case (Some(value), None)   => Right(ApplicationCommandInteractionDataOptionWithValue(name, value))
             case (None, Some(options)) => Right(ApplicationCommandInteractionDataOptionWithOptions(name, options))
-            case (Some(_), Some(_)) | (None, None) =>
+            case (Some(_), Some(_)) =>
               Left(DecodingFailure("Expected either value or options", c.history))
+            case (None, None) =>
+              Right(ApplicationCommandInteractionDataOptionWithOptions(name, Nil))
           }
         } yield res,
       {
