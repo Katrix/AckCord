@@ -82,7 +82,7 @@ case class RawInteraction(
     channelId: TextChannelId,
     member: RawGuildMember,
     token: String,
-    version: Int
+    version: Option[Int]
 )
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
