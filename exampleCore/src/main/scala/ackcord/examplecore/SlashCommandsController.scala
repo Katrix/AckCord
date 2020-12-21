@@ -49,7 +49,7 @@ class SlashCommandsController(requests: Requests) extends CacheSlashCommandContr
 
   val asyncTest: Command[ResolvedCommandInteraction, NotUsed] =
     Command.command("async", "An async test command") { implicit i =>
-      async(implicit token => sendAsyncMessage("Async message"))
+      async()(implicit token => sendAsyncMessage("Async message"))
     }
 
   val asyncEditTest: Command[ResolvedCommandInteraction, (String, String)]  =

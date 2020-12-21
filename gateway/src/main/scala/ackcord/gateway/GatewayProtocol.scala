@@ -41,6 +41,9 @@ object GatewayProtocol extends DiscordProtocol {
     Encoder[Int].contramap(_.toInt)
   )
 
+  implicit val readyApplicationCodec: Codec[GatewayEvent.ReadyApplication] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val readyDataCodec: Codec[GatewayEvent.ReadyData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -351,7 +354,9 @@ object GatewayProtocol extends DiscordProtocol {
             case "PRESENCES_REPLACE" =>
               Right(Dispatch(seq, GatewayEvent.IgnoredEvent("PRESENCES_REPLACE", c.value, Later(Right(())))))
             case "INTERACTION_CREATE" => createDispatch(GatewayEvent.InteractionCreate)
-            case _                    => Left(DecodingFailure("Invalid message type", c.downField("t").history))
+            case "APPLICATION_COMMAND_CREATE" =>
+              Right(Dispatch(seq, GatewayEvent.IgnoredEvent("APPLICATION_COMMAND_CREATE", c.value, Later(Right(())))))
+            case _ => Left(DecodingFailure("Invalid message type", c.downField("t").history))
           }
       }
   }

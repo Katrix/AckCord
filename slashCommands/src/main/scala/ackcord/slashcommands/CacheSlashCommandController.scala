@@ -63,10 +63,10 @@ class CacheSlashCommandController(val requests: Requests)
     )
   )
 
-  val VoiceGuildCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
+  val GuildVoiceCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
     CommandTransformer.inVoiceChannel(voiceChannel =>
       Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
-        BaseVoiceChannelCommandInteraction(i.commandInvocationInfo, i.channel, i.guild, voiceChannel, i.cache)
+        BaseVoiceChannelCommandInteraction(i.commandInvocationInfo, i.textChannel, i.guild, voiceChannel, i.cache)
       )
     )
   )

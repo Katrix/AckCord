@@ -33,7 +33,7 @@ object ReadyUpdater extends CacheUpdater[ReadyData] {
   override def handle(builder: CacheSnapshotBuilder, obj: ReadyData, registry: CacheTypeRegistry)(
       implicit log: Logger
   ): Unit = {
-    val ReadyData(_, botUser, unavailableGuilds, _, _) = obj
+    val ReadyData(_, botUser, unavailableGuilds, _, _, _) = obj
 
     val guilds = unavailableGuilds.map(g => g.id -> g)
 

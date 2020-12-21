@@ -46,7 +46,7 @@ object APIMessage {
     * Sent to the client when Discord is ready to serve requests. No requests
     * should be sent before this has been received.
     */
-  case class Ready(cache: CacheState) extends APIMessage
+  case class Ready(applicationId: RawSnowflake, cache: CacheState) extends APIMessage
 
   /**
     * Sent to the client when a previously interrupted connection is resumed.

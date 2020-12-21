@@ -42,7 +42,7 @@ object MyBot extends App {
     .createClient()
     .foreach { client =>
       client.onEventSideEffectsIgnore {
-        case APIMessage.Ready(_) => println("Now ready")
+        case APIMessage.Ready(_, _) => println("Now ready")
       }
 
       import client.requestsHelper._

@@ -51,9 +51,9 @@ case class Command[Interaction[_], A] private (
 ) extends CommandOrGroup {
 
   override def makeCommandOptions: Seq[ApplicationCommandOption] = {
-    val normalList = paramList.map(_.map(identity)).getOrElse(Nil)
+    val normalList                        = paramList.map(_.map(identity)).getOrElse(Nil)
     val (defaultParams, nonDefaultParams) = normalList.partition(_.default)
-    if(defaultParams.length > 1) {
+    if (defaultParams.length > 1) {
       throw new IllegalArgumentException("Can only have one default parameter")
     }
 
@@ -83,9 +83,9 @@ case class Command[Interaction[_], A] private (
       .getOrElse(Nil)
       .collect {
         case ApplicationCommandInteractionDataOption.ApplicationCommandInteractionDataOptionWithValue(
-        name,
-        value
-        ) =>
+              name,
+              value
+            ) =>
           name.toLowerCase(Locale.ROOT) -> value
       }
       .toMap
@@ -223,22 +223,22 @@ case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocati
     extends CacheCommandInteraction[A]
 
 trait ResolvedCommandInteraction[A] extends CacheCommandInteraction[A] {
-  def channel: TextChannel
+  def textChannel: TextChannel
   def guild: Guild
 }
 case class BaseResolvedCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
-    channel: TextChannel,
+    textChannel: TextChannel,
     guild: Guild,
     cache: CacheSnapshot
 ) extends ResolvedCommandInteraction[A]
 
 trait GuildCommandInteraction[A] extends ResolvedCommandInteraction[A] {
-  def channel: TextGuildChannel
+  def textChannel: TextGuildChannel
 }
 case class BaseGuildCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
-    channel: TextGuildChannel,
+    textChannel: TextGuildChannel,
     guild: Guild,
     cache: CacheSnapshot
 ) extends GuildCommandInteraction[A]
@@ -248,7 +248,7 @@ trait VoiceChannelCommandInteraction[A] extends GuildCommandInteraction[A] {
 }
 case class BaseVoiceChannelCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
-    channel: TextGuildChannel,
+    textChannel: TextGuildChannel,
     guild: Guild,
     voiceChannel: VoiceGuildChannel,
     cache: CacheSnapshot
@@ -300,7 +300,7 @@ object CommandTransformer {
     new CommandTransformer[I, O] {
 
       override def filter[A](from: I[A]): Either[Option[String], O[A]] =
-        from.channel match {
+        from.textChannel match {
           case t: TextGuildChannel => Right(create(t)(from))
           case _                   => Left(Some(s"This command can only be used in a guild"))
         }
@@ -332,7 +332,7 @@ object CommandTransformer {
 
     override def filter[A](from: M[A]): Either[Option[String], M[A]] =
       Either.cond(
-        from.member.channelPermissionsId(from.guild, from.channel.id).hasPermissions(neededPermission),
+        from.member.channelPermissionsId(from.guild, from.textChannel.id).hasPermissions(neededPermission),
         from,
         Some("You don't have permission to use this command")
       )
@@ -345,8 +345,9 @@ class CommandFunction[From[_], To[_]](f: FunctionK[From, To]) extends CommandTra
 
 sealed trait CommandResponse {
   def toInteractionResponse: InteractionResponse = this match {
-    case CommandResponse.Pong           => InteractionResponse(InteractionResponseType.Pong, None)
-    case CommandResponse.Acknowledge(_) => InteractionResponse(InteractionResponseType.Acknowledge, None)
+    case CommandResponse.Pong                  => InteractionResponse(InteractionResponseType.Pong, None)
+    case CommandResponse.Acknowledge(false, _) => InteractionResponse(InteractionResponseType.Acknowledge, None)
+    case CommandResponse.Acknowledge(true, _)  => InteractionResponse(InteractionResponseType.ACKWithSource, None)
     case CommandResponse.ChannelMessage(message, false, _) =>
       slashcommands.raw.InteractionResponse(InteractionResponseType.ChannelMessage, Some(message))
     case CommandResponse.ChannelMessage(message, true, _) =>
@@ -358,8 +359,8 @@ object CommandResponse {
     def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse
   }
 
-  case object Pong                                      extends CommandResponse
-  case class Acknowledge(andThenDo: () => OptFuture[_]) extends CommandResponse
+  case object Pong                                                           extends CommandResponse
+  case class Acknowledge(withSource: Boolean, andThenDo: () => OptFuture[_]) extends CommandResponse
   case class ChannelMessage(
       message: InteractionApplicationCommandCallbackData,
       withSource: Boolean,

@@ -88,6 +88,8 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[Mes
   case object ChannelFollowAdd             extends MessageType(12)
   case object GuildDiscoveryDisqualified   extends MessageType(14)
   case object GuildDiscoveryRequalified    extends MessageType(15)
+  case object Reply                        extends MessageType(19)
+  case object ApplicationCommand           extends MessageType(20)
   case class Unknown(i: Int)               extends MessageType(i)
 
   override def createUnknown(value: Int): MessageType = Unknown(value)

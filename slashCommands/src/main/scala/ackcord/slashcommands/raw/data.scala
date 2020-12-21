@@ -81,7 +81,8 @@ case class RawInteraction(
     guildId: GuildId,
     channelId: TextChannelId,
     member: RawGuildMember,
-    token: String
+    token: String,
+    version: Int
 )
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
@@ -124,6 +125,7 @@ object InteractionResponseType
   case object Acknowledge              extends InteractionResponseType(2)
   case object ChannelMessage           extends InteractionResponseType(3)
   case object ChannelMessageWithSource extends InteractionResponseType(4)
+  case object ACKWithSource            extends InteractionResponseType(5)
   case class Unknown(i: Int)           extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
@@ -133,6 +135,5 @@ case class InteractionApplicationCommandCallbackData(
     tts: Option[Boolean] = None,
     content: String = "",
     embeds: Seq[OutgoingEmbed] = Nil,
-    allowedMentions: Option[AllowedMention] = None,
-    flags: MessageFlags = MessageFlags.None
+    allowedMentions: Option[AllowedMention] = None
 )

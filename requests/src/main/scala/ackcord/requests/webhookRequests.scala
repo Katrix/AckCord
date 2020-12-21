@@ -267,9 +267,6 @@ case class ExecuteWebhook(
 
 case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,
-    username: JsonOption[String] = JsonUndefined,
-    avatarUrl: JsonOption[String] = JsonUndefined,
-    tts: JsonOption[Boolean] = JsonUndefined,
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined
 )
@@ -277,9 +274,6 @@ object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
     JsonOption.removeUndefinedToObj(
       "content"          -> a.content.map(_.asJson),
-      "username"         -> a.username.map(_.asJson),
-      "avatar_url"       -> a.avatarUrl.map(_.asJson),
-      "tts"              -> a.tts.map(_.asJson),
       "embeds"           -> a.embeds.map(_.asJson),
       "allowed_mentions" -> a.allowedMentions.map(_.asJson)
     )
@@ -303,4 +297,8 @@ case class EditWebhookMessage(
   override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
 
   override def responseDecoder: Decoder[Json] = Decoder[Json]
+}
+
+case class DeleteWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.deleteWebhookMessage(id, token, messageId)
 }

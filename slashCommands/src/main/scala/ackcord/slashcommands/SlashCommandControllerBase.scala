@@ -101,18 +101,22 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       _.hcursor.as[String].flatMap(parseMention(roleRegex))
     )
 
-  def async(handle: AsyncToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse =
-    CommandResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
+  def async(
+      showUserInput: Boolean = true
+  )(handle: AsyncToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse =
+    CommandResponse.Acknowledge(showUserInput, () => handle(AsyncToken.fromInteraction(interaction)))
+
+  def acknowledge(showUserInput: Boolean = true): CommandResponse =
+    CommandResponse.Acknowledge(showUserInput, () => OptFuture.unit)
 
   def sendMessage(
       content: String,
       tts: Option[Boolean] = None,
       embeds: Seq[OutgoingEmbed] = Nil,
       allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None,
       showUserInput: Boolean = true
   ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
-    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions, flags),
+    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions),
     showUserInput,
     () => OptFuture.unit
   )
@@ -122,10 +126,9 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       content: String = "",
       tts: Option[Boolean] = None,
       allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None,
       showUserInput: Boolean = true
   ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
-    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions, flags),
+    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions),
     showUserInput,
     () => OptFuture.unit
   )
@@ -157,7 +160,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           flags
         )
       )
-    ).subflatMap(identity)
+    ).map(_.get)
 
   def sendAsyncEmbed(
       embeds: Seq[OutgoingEmbed],
@@ -183,7 +186,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           flags
         )
       )
-    ).subflatMap(identity)
+    ).map(_.get)
 
   def editOriginalMessage(
       content: JsonOption[String] = JsonUndefined,
@@ -197,9 +200,6 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
         async.webhookToken,
         EditWebhookMessageData(
           content,
-          JsonUndefined, //TODO
-          JsonUndefined,
-          tts,
           embeds,
           allowedMentions
         )
@@ -220,9 +220,6 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
         messageId,
         EditWebhookMessageData(
           content,
-          JsonUndefined, //TODO
-          JsonUndefined,
-          tts,
           embeds,
           allowedMentions
         )

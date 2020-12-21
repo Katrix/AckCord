@@ -35,7 +35,13 @@ case class CreateCommandData(
     name: String,
     description: String,
     options: Seq[ApplicationCommandOption]
-)
+) {
+  require(name.length >= 3, "Command name too short. Minimum length is 3")
+  require(name.length <= 32, "Command name too short. Maximum length is 32")
+  require(description.nonEmpty, "Command description too short. Minimum length is 1")
+  require(description.length <= 100, "Command description too short. Maximum length is 100")
+
+}
 object CreateCommandData {
   implicit val encoder: Encoder[CreateCommandData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
@@ -107,7 +113,7 @@ case class DeleteGuildCommand(applicationId: RawSnowflake, guildId: GuildId, com
   override def route: RequestRoute = CommandRoutes.deleteGuildCommand(applicationId, guildId, commandId)
 }
 
-case class InteractionCallback(
+case class CreateInteractionResponse(
     applicationId: RawSnowflake,
     token: String,
     params: InteractionResponse

@@ -313,6 +313,8 @@ sealed trait GatewayEvent[+D] {
 
 object GatewayEvent {
 
+  case class ReadyApplication(id: RawSnowflake, flags: Int)
+
   /**
     * @param v The API version used.
     * @param user The client user.
@@ -326,7 +328,8 @@ object GatewayEvent {
       user: User,
       guilds: Seq[UnavailableGuild],
       sessionId: String,
-      shard: Seq[Int]
+      shard: Seq[Int],
+      application: ReadyApplication
   )
 
   /**

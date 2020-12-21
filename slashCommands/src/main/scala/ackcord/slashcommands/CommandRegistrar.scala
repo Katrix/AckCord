@@ -37,10 +37,11 @@ import ackcord.{CacheSnapshot, OptFuture}
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.`Content-Type`
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.util.ByteString
 import akka.NotUsed
 import cats.syntax.all._
+import com.iwebpp.crypto.TweetNaclFast
 import io.circe.Decoder
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
@@ -70,18 +71,32 @@ object CommandRegistrar {
 
   def extractAsyncPart(response: CommandResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
-      case CommandResponse.Acknowledge(andThenDo)          => () => andThenDo().map(_ => ())
+      case CommandResponse.Acknowledge(_, andThenDo)       => () => andThenDo().map(_ => ())
       case CommandResponse.ChannelMessage(_, _, andThenDo) => () => andThenDo().map(_ => ())
       case _                                               => () => OptFuture.unit
     }
 
   def webFlow(
       commands: CommandOrGroup*
-  )(clientId: String, parallelism: Int = 4)(
+  )(clientId: String, publicKey: String, parallelism: Int = 4)(
       implicit system: ActorSystem[Nothing]
   ): Flow[HttpRequest, (HttpResponse, () => OptFuture[Unit]), NotUsed] = {
     import system.executionContext
     val commandsByName = commands.groupBy(_.name.toLowerCase(Locale.ROOT))
+    //https://stackoverflow.com/a/140861
+    def hexStringToByteArray(s: String) = {
+      val len  = s.length
+      val data = new Array[Byte](len / 2)
+      var i    = 0
+      while (i < len) {
+        data(i / 2) = ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16)).toByte
+
+        i += 2
+      }
+      data
+    }
+
+    val signatureObj = new TweetNaclFast.Signature(hexStringToByteArray(publicKey), new Array(0))
 
     SupervisionStreams.logAndContinue(
       Flow[HttpRequest]
@@ -95,21 +110,33 @@ object CommandRegistrar {
                   _.decodeString(request.entity.contentType.charsetOption.fold(StandardCharsets.UTF_8)(_.nioCharset))
                 )
 
+          val timestamp = request.headers.find(_.lowercaseName == "X-Signature-Timestamp").map(_.value)
           val signature = request.headers.find(_.lowercaseName == "x-signature-ed25519").map(_.value)
 
-          body.map(_ -> signature)
+          body.map((_, timestamp, signature))
         }
         .map {
-          case (body, signature) =>
-            //TODO: Check the signature ed25519
-
-            io.circe.parser
-              .parse(body)
-              .flatMap(_.as[RawInteraction])
-              .leftMap { e =>
-                logger.error(s"Error when decoding command interaction: ${e.show}")
-                HttpResponse(StatusCodes.BadRequest, entity = e.show)
+          case (body, optTimestamp, optSignature) =>
+            for {
+              timestamp <-
+                optTimestamp.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No timestamp in request"))
+              signature <-
+                optSignature.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No signature in request"))
+              _ <- {
+                val isValid =
+                  signatureObj.detached_verify((timestamp + body).getBytes("UTF-8"), hexStringToByteArray(signature))
+                Either.cond(isValid, (), HttpResponse(StatusCodes.Unauthorized, entity = "Invalid signature"))
               }
+              res <- {
+                io.circe.parser
+                  .parse(body)
+                  .flatMap(_.as[RawInteraction])
+                  .leftMap { e =>
+                    logger.error(s"Error when decoding command interaction: ${e.show}")
+                    HttpResponse(StatusCodes.BadRequest, entity = e.show)
+                  }
+              }
+            } yield res
         }
         .map {
           case Right(interaction) =>
@@ -164,7 +191,7 @@ object CommandRegistrar {
         .mapConcat {
           case Right((response, interaction)) =>
             List(
-              InteractionCallback(
+              CreateInteractionResponse(
                 interaction.id,
                 interaction.token,
                 response.toInteractionResponse
@@ -185,8 +212,68 @@ object CommandRegistrar {
       guildId: GuildId,
       requests: Requests,
       commands: CommandOrGroup*
-  ): Future[Seq[ApplicationCommand]] =
+  ): Future[Seq[ApplicationCommand]] = {
+    //Ordered as this will likely be called once with too many requests
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
+
     requests.manyFutureSuccess(
-      commands.toVector.map(command => CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command)))
+      commands.toVector.map(command =>
+        CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
+      )
     )
+  }
+
+  def createGlobalCommands(
+      applicationId: RawSnowflake,
+      requests: Requests,
+      commands: CommandOrGroup*
+  ): Future[Seq[ApplicationCommand]] = {
+    //Ordered as this will likely be called once with too many requests
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
+
+    requests.manyFutureSuccess(
+      commands.toVector.map(command => CreateGlobalCommand(applicationId, CreateCommandData.fromCommand(command)))
+    )
+  }
+
+  def removeUnknownGuildCommands(
+      applicationId: RawSnowflake,
+      guildId: GuildId,
+      requests: Requests,
+      commands: CommandOrGroup*
+  ): Future[Seq[ApplicationCommand]] = {
+    import requests.system
+    import requests.system.executionContext
+    //Ordered as this will likely be called once with too many requests
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
+
+    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+      Source(
+        globalCommands
+          .filter(gc => commands.exists(_.name == gc.name))
+          .map(gc => (DeleteGuildCommand(applicationId, guildId, gc.id), gc))
+          .toVector
+      ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
+    }
+  }
+
+  def removeUnknownGlobalCommands(
+      applicationId: RawSnowflake,
+      requests: Requests,
+      commands: CommandOrGroup*
+  ): Future[Seq[ApplicationCommand]] = {
+    import requests.system
+    import requests.system.executionContext
+    //Ordered as this will likely be called once with too many requests
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
+
+    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+      Source(
+        globalCommands
+          .filter(gc => commands.exists(_.name == gc.name))
+          .map(gc => (DeleteGlobalCommand(applicationId, gc.id), gc))
+          .toVector
+      ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
+    }
+  }
 }

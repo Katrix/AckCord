@@ -567,6 +567,9 @@ object Routes {
   val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
     (webhookWithToken / messageId).toRequest(PATCH)
   )
+  val deleteWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
+    (webhookWithToken / messageId).toRequest(DELETE)
+  )
 
   val size: QueryParameter[Int]               = new QueryParameter("size", _.toString)
   val extension: ConcatParameter[ImageFormat] = new ConcatParameter(_.extension)
