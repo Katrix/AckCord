@@ -52,7 +52,8 @@ class CacheSlashCommandController(val requests: Requests)
         }
       )
     ),
-    Left(implicitly)
+    Left(implicitly),
+    Map.empty
   )
 
   val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] = Command.andThen(

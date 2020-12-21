@@ -36,6 +36,7 @@ import cats.~>
 sealed trait CommandOrGroup {
   def name: String
   def description: String
+  def extra: Map[String, String]
 
   def toCommandOption: ApplicationCommandOption
   def makeCommandOptions: Seq[ApplicationCommandOption]
@@ -45,6 +46,7 @@ sealed trait CommandOrGroup {
 case class Command[Interaction[_], A] private (
     name: String,
     description: String,
+    extra: Map[String, String],
     paramList: Either[NotUsed =:= A, ParamList[A]],
     filter: CommandTransformer[CommandInteraction, Interaction],
     handle: Interaction[A] => CommandResponse
@@ -138,6 +140,7 @@ case class Command[Interaction[_], A] private (
 case class CommandGroup private (
     name: String,
     description: String,
+    extra: Map[String, String],
     commands: Seq[CommandOrGroup]
 ) extends CommandOrGroup {
   override def makeCommandOptions: Seq[ApplicationCommandOption] = commands.map(_.toCommandOption)

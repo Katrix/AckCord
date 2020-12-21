@@ -34,6 +34,7 @@ class StatelessSlashCommandController(val requests: Requests)
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], StatelessCommandInteraction[A]] =
         Right(StatelessCommandInteraction(from.commandInvocationInfo))
     },
-    Left(implicitly)
+    Left(implicitly),
+    Map.empty
   )
 }

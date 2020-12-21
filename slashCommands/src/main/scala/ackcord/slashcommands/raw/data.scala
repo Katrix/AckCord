@@ -24,7 +24,7 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{GuildId, MessageFlags, OutgoingEmbed, RawSnowflake, TextChannelId}
+import ackcord.data.{GuildId, OutgoingEmbed, RawSnowflake, TextChannelId}
 import ackcord.requests.AllowedMention
 import ackcord.slashcommands.{CommandId, InteractionId}
 import ackcord.util.IntCirceEnumWithUnknown
