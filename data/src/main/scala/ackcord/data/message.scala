@@ -450,7 +450,7 @@ case class GuildGatewayMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[List[Sticker]],
-    referencedMessage: Option[RawMessage] // TODO: Is this supposed to be RawMessage or GuildGatewayMessage
+    referencedMessage: Option[Message]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
