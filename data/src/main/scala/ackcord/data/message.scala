@@ -392,7 +392,7 @@ case class SparseMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[List[Sticker]],
-    referencedMessage: Option[RawMessage]
+    referencedMessage: Option[Message]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
