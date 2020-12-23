@@ -550,14 +550,25 @@ object Routes {
 
   val waitQuery: QueryParameter[Boolean] = query[Boolean]("wait", _.toString)
 
-  val executeWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+  val executeWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute = upcast(
     webhookWithToken +? waitQuery toRequest POST
   )
-  val executeSlackWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+  val executeSlackWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute = upcast(
     webhookWithToken / "slack" +? waitQuery toRequest POST
   )
-  val executeGithubWebhook: (SnowflakeType[Webhook], InviteCode, Option[Boolean]) => RequestRoute = upcast(
+  val executeGithubWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute = upcast(
     webhookWithToken / "github" +? waitQuery toRequest POST
+  )
+
+  val messagesWebhook: RouteFunction[(SnowflakeType[Webhook], String)] = webhookWithToken / "messages"
+  val editOriginalWebhook: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    (webhookWithToken / "@original").toRequest(PATCH)
+  )
+  val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
+    (webhookWithToken / messageId).toRequest(PATCH)
+  )
+  val deleteWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
+    (webhookWithToken / messageId).toRequest(DELETE)
   )
 
   val size: QueryParameter[Int]               = new QueryParameter("size", _.toString)

@@ -28,6 +28,7 @@ import java.util.UUID
 
 import scala.annotation.tailrec
 import scala.collection.mutable
+import scala.concurrent.duration._
 
 import ackcord.util.AckCordRequestSettings
 import akka.actor.typed._
@@ -48,6 +49,7 @@ class Ratelimiter(
 
   private val remainingRequests = new mutable.HashMap[String, Int]
   private val rateLimits        = new mutable.HashMap[String, mutable.Queue[WantToPass[_]]]
+  private val ratelimitResets   = new mutable.HashMap[String, Long]
 
   private var globalRatelimitTimeout = 0.toLong
   private val globalLimited          = new mutable.Queue[WantToPass[_]]
@@ -78,20 +80,19 @@ class Ratelimiter(
     }
   }
 
-  def handleWantToPassNotGlobal[A](request: WantToPass[A]): Unit = {
-    val WantToPass(route, _, sender, _) = request
-
-    if (!remainingRequests.contains(route.uriWithMajor)) {
+  def getRemainingRequests(route: RequestRoute): Option[Int] = {
+    remainingRequests.get(route.uriWithMajor).orElse {
       for {
         bucket           <- uriToBucket.get(route.uriWithoutMajor)
         defaultRateLimit <- routeLimits.get(bucket)
-      } {
-        remainingRequests.put(route.uriWithMajor, defaultRateLimit)
-      }
+      } yield defaultRateLimit
     }
+  }
 
-    val remainingOpt = remainingRequests.get(route.uriWithMajor)
+  def handleWantToPassNotGlobal[A](request: WantToPass[A]): Unit = {
+    val WantToPass(route, _, sender, _) = request
 
+    val remainingOpt = getRemainingRequests(route)
     if (remainingOpt.forall(_ > 0)) {
       remainingOpt.foreach(remaining => remainingRequests.put(route.uriWithMajor, remaining - 1))
       sendResponse(request)
@@ -157,6 +158,25 @@ class Ratelimiter(
       }
       Behaviors.same
 
+    case QueryRatelimits(route, replyTo) =>
+      if (isGlobalRatelimited) {
+        replyTo ! Left((globalRatelimitTimeout - System.currentTimeMillis()).millis)
+      } else {
+        getRemainingRequests(route) match {
+          case Some(0) =>
+            val resetDuration =
+              ratelimitResets
+                .get(route.uriWithMajor)
+                .fold(Duration.Inf: Duration)(reset => (reset - System.currentTimeMillis()).millis)
+
+            replyTo ! Left(resetDuration)
+          case Some(remaining) => replyTo ! Right(remaining)
+          case None            => replyTo ! Right(-1)
+        }
+      }
+
+      Behaviors.same
+
     case UpdateRatelimits(
           route,
           ratelimitInfo @ RatelimitInfo(timeTilReset, remainingRequestsAmount, bucketLimit, bucket),
@@ -187,6 +207,7 @@ class Ratelimiter(
           globalRatelimitTimeout = System.currentTimeMillis() + timeTilReset.toMillis
           timers.startSingleTimer(GlobalTimer, GlobalTimer, timeTilReset)
         } else {
+          ratelimitResets.put(route.uriWithMajor, System.currentTimeMillis() + timeTilReset.toMillis)
           timers.startSingleTimer(
             route.uriWithMajor,
             ResetRatelimit(route.uriWithMajor, bucket, spurious = false),
@@ -298,6 +319,7 @@ object Ratelimiter {
 
   case class WantToPass[A](route: RequestRoute, identifier: UUID, replyTo: ActorRef[Response[A]], ret: A)
       extends Command
+  case class QueryRatelimits(route: RequestRoute, replyTo: ActorRef[Either[Duration, Int]]) extends Command
   case class UpdateRatelimits(
       route: RequestRoute,
       ratelimitInfo: RatelimitInfo,

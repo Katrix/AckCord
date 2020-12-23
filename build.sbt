@@ -3,7 +3,7 @@ import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 lazy val akkaVersion     = "2.6.6"
 lazy val akkaHttpVersion = "10.1.11"
 lazy val circeVersion    = "0.13.0"
-lazy val ackCordVersion  = "0.17.1"
+lazy val ackCordVersion  = "0.18.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
@@ -131,6 +131,16 @@ lazy val commands = project
   )
   .dependsOn(requests)
 
+val slashCommands = project
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "slash-commands",
+    version := ackCordVersion,
+    description := "ackCord-slash-commands provides a high level API to interact with Discord's slash commands"
+  )
+  .dependsOn(requests)
+
 lazy val core = project
   .settings(
     commonSettings,
@@ -168,7 +178,7 @@ lazy val ackCord = project
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
-  .dependsOn(core, commands, lavaplayerCore)
+  .dependsOn(core, lavaplayerCore, commands, slashCommands)
 
 lazy val exampleCore = project
   .settings(
@@ -180,7 +190,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
     libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.3"
   )
-  .dependsOn(core, lavaplayerCore, commands)
+  .dependsOn(core, lavaplayerCore, commands, slashCommands)
 
 lazy val example = project
   .settings(
@@ -217,6 +227,7 @@ lazy val docs = project
       requests,
       gateway,
       voice,
+      slashCommands,
       core,
       commands,
       lavaplayerCore,
@@ -246,6 +257,7 @@ lazy val ackCordRoot = project
     requests,
     gateway,
     voice,
+    slashCommands,
     core,
     commands,
     lavaplayerCore,

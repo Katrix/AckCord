@@ -1,7 +1,7 @@
 /*
  * This file is part of AckCord, licensed under the MIT License (MIT).
  *
- * Copyright (c) 2019 Katrix
+ * Copyright (c) 2020 Katrix
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,23 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.cachehandlers
+package ackcord
 
-import ackcord.CacheSnapshot.BotUser
-import ackcord.gateway.GatewayEvent.ReadyData
-import org.slf4j.Logger
-import shapeless.tag
+import ackcord.data.SnowflakeType
+import ackcord.slashcommands.raw.{ApplicationCommand, RawInteraction}
 
-//We handle this one separately as is it's kind of special
-object ReadyUpdater extends CacheUpdater[ReadyData] {
-  override def handle(builder: CacheSnapshotBuilder, obj: ReadyData, registry: CacheTypeRegistry)(
-      implicit log: Logger
-  ): Unit = {
-    val ReadyData(_, botUser, unavailableGuilds, _, _, _) = obj
+package object slashcommands {
+  type CommandId     = SnowflakeType[ApplicationCommand]
+  type InteractionId = SnowflakeType[RawInteraction]
 
-    val guilds = unavailableGuilds.map(g => g.id -> g)
-
-    builder.botUser = tag[BotUser](botUser)
-    builder.unavailableGuildMap = builder.unavailableGuildMap ++ guilds
+  type ~[A, B] = (A, B)
+  object ~ {
+    def unapply[A, B](t: (A, B)): Some[(A, B)] = Some(t)
   }
 }

@@ -161,14 +161,16 @@ case class RequestSettings(
       implicit system: ActorSystem[Nothing]
   ): Requests =
     new Requests(
-      BotAuthentication(token),
-      ratelimitActor,
-      relativeTime,
-      parallelism,
-      maxRetryCount,
-      bufferSize,
-      overflowStrategy,
-      maxAllowedWait
+      ackcord.requests.RequestSettings(
+        Some(BotAuthentication(token)),
+        ratelimitActor,
+        relativeTime,
+        parallelism,
+        maxRetryCount,
+        bufferSize,
+        overflowStrategy,
+        maxAllowedWait
+      )
     )
 }
 

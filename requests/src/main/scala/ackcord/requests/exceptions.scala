@@ -32,7 +32,7 @@ import akka.http.scaladsl.model.{StatusCode, Uri}
 /**
   * An exception for Http errors.
   */
-class HttpException(statusCode: StatusCode, extraInfo: Option[String])
+case class HttpException(statusCode: StatusCode, extraInfo: Option[String])
     extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}${extraInfo.fold("")(e => s" $e")}")
 
 /**
@@ -43,7 +43,7 @@ class HttpException(statusCode: StatusCode, extraInfo: Option[String])
   *                 goes away.
   * @param uri The Uri for the request.
   */
-class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
+case class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
     extends Exception(
       if (global) "Encountered global ratelimit"
       else s"Encountered ratelimit at $uri $identifier"
@@ -53,9 +53,9 @@ class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, id
   * An exception that signals that a request was dropped.
   * @param uri The Uri for the request.
   */
-class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
+case class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
 
 /**
   * An exception thrown when parsing JSON if something goes wrong.
   */
-class HttpJsonDecodeException(message: String) extends Exception(message)
+case class HttpJsonDecodeException(message: String) extends Exception(message)

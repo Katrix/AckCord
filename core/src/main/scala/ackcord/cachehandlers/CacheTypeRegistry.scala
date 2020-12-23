@@ -28,6 +28,7 @@ import scala.reflect.ClassTag
 
 import ackcord.data._
 import ackcord.data.raw.PartialUser
+import ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild
 import org.slf4j.Logger
 
 class CacheTypeRegistry(
@@ -80,19 +81,20 @@ class CacheTypeRegistry(
 object CacheTypeRegistry {
 
   private val noPresencesBansEmojiUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
-    classOf[PartialUser]      -> CacheHandlers.partialUserUpdater,
-    classOf[Guild]            -> CacheHandlers.guildUpdater,
-    classOf[GuildMember]      -> CacheHandlers.guildMemberUpdater,
-    classOf[GuildChannel]     -> CacheHandlers.guildChannelUpdater,
-    classOf[DMChannel]        -> CacheHandlers.dmChannelUpdater,
-    classOf[GroupDMChannel]   -> CacheHandlers.dmGroupChannelUpdater,
-    classOf[User]             -> CacheHandlers.userUpdater,
-    classOf[UnavailableGuild] -> CacheHandlers.unavailableGuildUpdater,
-    classOf[Message]          -> CacheHandlers.messageUpdater,
-    classOf[Role]             -> CacheHandlers.roleUpdater,
-    classOf[Ban]              -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
-    classOf[Emoji]            -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
-    classOf[Presence]         -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
+    classOf[PartialUser]             -> CacheHandlers.partialUserUpdater,
+    classOf[Guild]                   -> CacheHandlers.guildUpdater,
+    classOf[GuildMember]             -> CacheHandlers.guildMemberUpdater,
+    classOf[RawGuildMemberWithGuild] -> CacheHandlers.rawGuildMemberWithGuildUpdater,
+    classOf[GuildChannel]            -> CacheHandlers.guildChannelUpdater,
+    classOf[DMChannel]               -> CacheHandlers.dmChannelUpdater,
+    classOf[GroupDMChannel]          -> CacheHandlers.dmGroupChannelUpdater,
+    classOf[User]                    -> CacheHandlers.userUpdater,
+    classOf[UnavailableGuild]        -> CacheHandlers.unavailableGuildUpdater,
+    classOf[Message]                 -> CacheHandlers.messageUpdater,
+    classOf[Role]                    -> CacheHandlers.roleUpdater,
+    classOf[Ban]                     -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
+    classOf[Emoji]                   -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
+    classOf[Presence]                -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
   )
 
   private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(

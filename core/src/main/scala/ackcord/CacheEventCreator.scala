@@ -67,7 +67,7 @@ object CacheEventCreator {
       case Right(_) =>
         val res = event match {
           case gatewayEv.Ready(_, GetLazy(data)) =>
-            CacheUpdate(data, state => Some(api.Ready(state)), ReadyUpdater, registry, dispatch)
+            CacheUpdate(data, state => Some(api.Ready(data.application.id, state)), ReadyUpdater, registry, dispatch)
           case gatewayEv.Resumed(_) =>
             CacheUpdate(NotUsed, state => Some(api.Resumed(state)), NOOPHandler, registry, dispatch)
           case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
@@ -507,6 +507,15 @@ object CacheEventCreator {
                   guild   <- state.current.getGuild(data.guildId)
                   channel <- guild.channels.get(data.channelId.asChannelId[GuildChannel])
                 } yield api.WebhookUpdate(guild, channel, state),
+              NOOPHandler,
+              registry,
+              dispatch
+            )
+
+          case gatewayEv.InteractionCreate(_, GetLazy(data)) =>
+            CacheUpdate(
+              data,
+              state => Some(api.InteractionCreate(data, state)),
               NOOPHandler,
               registry,
               dispatch

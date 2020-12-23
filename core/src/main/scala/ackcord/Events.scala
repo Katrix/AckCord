@@ -33,6 +33,7 @@ import ackcord.util.AckCordGatewaySettings
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor => classic}
+import io.circe.{Decoder, DecodingFailure}
 import org.slf4j.{Logger, LoggerFactory}
 
 /**
@@ -104,6 +105,15 @@ case class Events(
     subscribeAPI
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
       .runWith(Sink.actorRefWithBackpressure(actor, initMessage, ackMessage, completeMessage, failureMessage))
+
+  /**
+    * Exposes the command interactions sent to this bot. This method is here so that the slash commands and
+    * core module can remain seperated.
+    */
+  def commandInteractions[A: Decoder]: Source[(Either[DecodingFailure, A], Option[CacheSnapshot]), NotUsed] =
+    subscribeAPI
+      .collectType[APIMessage.InteractionCreate]
+      .map(e => e.simpleRawInteraction.reparse -> Some(e.cache.current))
 }
 object Events {
 

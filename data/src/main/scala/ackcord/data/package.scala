@@ -33,9 +33,10 @@ package object data {
     private[data] type Base
     private[data] trait Tag extends Any
     type SnowflakeType[+A] <: Base with Tag
-    def apply[A](long: Long): SnowflakeType[A]              = long.asInstanceOf[SnowflakeType[A]]
-    def apply[A](content: String): SnowflakeType[A]         = apply[A](JLong.parseUnsignedLong(content))
-    def apply[A](other: SnowflakeType[_]): SnowflakeType[A] = other.asInstanceOf[SnowflakeType[A]]
+    def apply[A](long: Long): ackcord.data.SnowflakeType[A]      = long.asInstanceOf[ackcord.data.SnowflakeType[A]]
+    def apply[A](content: String): ackcord.data.SnowflakeType[A] = apply[A](JLong.parseUnsignedLong(content))
+    def apply[A](other: ackcord.data.SnowflakeType[_]): ackcord.data.SnowflakeType[A] =
+      other.asInstanceOf[ackcord.data.SnowflakeType[A]]
 
     /**
       * Creates a snowflake tag for the earliest moment in time. Use this
@@ -87,6 +88,11 @@ package object data {
 
     /** Downcast this id to a kind of channel id */
     def asChannelId[A <: Channel]: SnowflakeType[A] = channelId.asInstanceOf[SnowflakeType[A]]
+
+    /**
+      * Get a mention representation of this channel id.
+      */
+    def mention: String = s"<#$channelId>"
   }
 
   type TextChannelId = SnowflakeType[TextChannel]
@@ -200,6 +206,16 @@ package object data {
       */
     def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
       c.getGuild(guildId).flatMap(_.members.get(userId))
+
+    /**
+      * Mention this user.
+      */
+    def mention: String = s"<@$userId>"
+
+    /**
+      * Mention this user with their nickname.
+      */
+    def mentionNick: String = s"<@!$userId>"
   }
 
   type RoleId = SnowflakeType[Role]
@@ -218,6 +234,11 @@ package object data {
       */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
       c.getRole(guildId, roleId)
+
+    /**
+      * Mention this role.
+      */
+    def mention: String = s"<@&$roleId>"
   }
 
   type UserOrRoleId = SnowflakeType[UserOrRole]
@@ -461,6 +482,7 @@ package object data {
     val SuppressEmbeds: MessageFlags       = MessageFlags(1 << 2)
     val SourceMessageDeleted: MessageFlags = MessageFlags(1 << 3)
     val Urgent: MessageFlags               = MessageFlags(1 << 4)
+    val Ephermal: MessageFlags             = MessageFlags(1 << 6)
   }
   implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
 

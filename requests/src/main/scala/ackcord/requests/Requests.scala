@@ -27,12 +27,9 @@ import scala.language.existentials
 
 import scala.collection.immutable
 import scala.concurrent.Future
-import scala.concurrent.duration._
 
 import ackcord.requests.Requests.RequestProperties
-import akka.actor.typed.{ActorRef, ActorSystem}
-import akka.http.scaladsl.model.headers.HttpCredentials
-import akka.stream.OverflowStrategy
+import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{FlowWithContext, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 
@@ -43,24 +40,9 @@ import akka.{Done, NotUsed}
   * This should be instantiated once per bot, and shared between shards.
   *
   * @define backpressures Backpressures before it hits a ratelimit.
-  * @param millisecondPrecision Sets if the requests should use millisecond
-  *                             precision for the ratelimits. If using this,
-  *                             make sure your system is properly synced to
-  *                             an NTP server.
-  * @param relativeTime Sets if the ratelimit reset should be calculated
-  *                     using relative time instead of absolute time. Might
-  *                     help with out of sync time on your device, but can
-  *                     also lead to slightly slower processing of requests.
   */
 case class Requests(
-    credentials: HttpCredentials,
-    ratelimitActor: ActorRef[Ratelimiter.Command],
-    relativeTime: Boolean = false,
-    parallelism: Int = 4,
-    maxRetryCount: Int = 3,
-    bufferSize: Int = 32,
-    overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    maxAllowedWait: FiniteDuration = 2.minutes,
+    settings: RequestSettings,
     alsoProcessRequests: Sink[(Request[Data], RequestAnswer[Data]) forSome { type Data }, NotUsed] =
       Sink.ignore.mapMaterializedValue(_ => NotUsed)
 )(implicit val system: ActorSystem[Nothing]) {
@@ -82,15 +64,7 @@ case class Requests(
       .map(_._1)
 
   private lazy val rawFlowWithoutRateLimits =
-    addExtraProcessing(
-      RequestStreams
-        .requestFlowWithoutRatelimit[Any, (Request[Any], Any)](
-          credentials,
-          relativeTime,
-          parallelism,
-          ratelimitActor
-        )
-    )
+    addExtraProcessing(RequestStreams.requestFlowWithoutRatelimit[Any, (Request[Any], Any)](settings))
 
   /**
     * A basic request flow which will send requests to Discord, and
@@ -100,17 +74,7 @@ case class Requests(
     rawFlowWithoutRateLimits.asInstanceOf[FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed]]
 
   private lazy val rawFlow =
-    addExtraProcessing(
-      RequestStreams.requestFlow[Any, (Request[Any], Any)](
-        credentials,
-        relativeTime,
-        bufferSize,
-        overflowStrategy,
-        maxAllowedWait,
-        parallelism,
-        ratelimitActor
-      )
-    )
+    addExtraProcessing(RequestStreams.requestFlow[Any, (Request[Any], Any)](settings))
 
   private lazy val rawOrderedFlow =
     FlowWithContext.fromTuples[Request[Any], Any, RequestAnswer[Any], Any, NotUsed](
@@ -118,16 +82,7 @@ case class Requests(
     )
 
   private lazy val rawRetryFlow = addExtraProcessing(
-    RequestStreams.retryRequestFlow[Any, (Request[Any], Any)](
-      credentials,
-      relativeTime,
-      bufferSize,
-      overflowStrategy,
-      maxAllowedWait,
-      parallelism,
-      maxRetryCount,
-      ratelimitActor
-    )
+    RequestStreams.retryRequestFlow[Any, (Request[Any], Any)](settings)
   )
 
   private lazy val rawOrderedRetryFlow =

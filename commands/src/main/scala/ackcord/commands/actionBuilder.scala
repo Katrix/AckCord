@@ -181,7 +181,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @tparam G The streamable result type.
     */
   def streamed[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].flatMapMerge(requests.parallelism, m => streamable.toSource(block(m))).to(Sink.ignore))
+    toSink(Flow[O[A]].flatMapMerge(requests.settings.parallelism, m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
     * Creates an action that might do a single request, wrapped in an effect type G
@@ -192,7 +192,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
       block: O[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
     toSink(
-      Flow[O[A]].flatMapMerge(requests.parallelism, m => streamable.optionToSource(block(m))).to(requests.sinkIgnore)
+      Flow[O[A]].flatMapMerge(requests.settings.parallelism, m => streamable.optionToSource(block(m))).to(requests.sinkIgnore)
     )
 
   /**
@@ -200,14 +200,14 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
     * @param block The execution of the action.
     */
   def async(block: O[A] => Future[Unit]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block).to(Sink.ignore))
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block).to(Sink.ignore))
 
   /**
     * Creates an action that results in an partial async result
     * @param block The execution of the action.
     */
   def asyncOpt(block: O[A] => OptFuture[Unit]): Action[A, NotUsed] =
-    toSink(Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).to(Sink.ignore))
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block(_).value).to(Sink.ignore))
 
   /**
     * Creates an async action that might do a single request
@@ -218,7 +218,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
       block: O[A] => OptFuture[Request[Any]]
   ): Action[A, NotUsed] =
     toSink(
-      Flow[O[A]].mapAsyncUnordered(requests.parallelism)(block(_).value).mapConcat(_.toList).to(requests.sinkIgnore)
+      Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block(_).value).mapConcat(_.toList).to(requests.sinkIgnore)
     )
 
   /**
@@ -228,7 +228,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
   def withRequest(block: O[A] => Request[Any]): Action[A, NotUsed] =
     toSink(
       Flow[O[A]]
-        .mapAsyncUnordered(requests.parallelism)(m => Future(block(m))(requests.system.executionContext))
+        .mapAsyncUnordered(requests.settings.parallelism)(m => Future(block(m))(requests.system.executionContext))
         .to(requests.sinkIgnore)
     )
 
@@ -239,7 +239,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
   def withRequestOpt(block: O[A] => Option[Request[Any]]): Action[A, NotUsed] =
     toSink(
       Flow[O[A]]
-        .mapAsync(requests.parallelism)(m => Future(block(m).toList)(requests.system.executionContext))
+        .mapAsync(requests.settings.parallelism)(m => Future(block(m).toList)(requests.system.executionContext))
         .mapConcat(identity)
         .to(requests.sinkIgnore)
     )
@@ -251,7 +251,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
   def withSideEffects(block: O[A] => Unit): Action[A, NotUsed] =
     toSink(
       Sink
-        .foreachAsync[O[A]](requests.parallelism)(m => Future(block(m))(requests.system.executionContext))
+        .foreachAsync[O[A]](requests.settings.parallelism)(m => Future(block(m))(requests.system.executionContext))
         .mapMaterializedValue(_ => NotUsed)
     )
 }

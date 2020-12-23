@@ -116,7 +116,7 @@ sealed trait Channel {
   /**
     * Get a representation of this channel that can refer to it in messages.
     */
-  def mention: String = s"<#$id>"
+  def mention: String = id.mention
 }
 
 /**

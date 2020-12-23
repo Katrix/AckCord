@@ -45,7 +45,7 @@ class DiscordClientCore(
   val commands = new CommandConnector(
     events.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
     requests,
-    requests.parallelism
+    requests.settings.parallelism
   )
 
   val requestsHelper: RequestsHelper = new RequestsHelper(requests)
