@@ -390,7 +390,9 @@ case class RawMessage(
     activity: Option[RawMessageActivity],
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
-    flags: Option[MessageFlags]
+    flags: Option[MessageFlags],
+    stickers: Option[List[Sticker]],
+    referencedMessage: Option[RawMessage]
 ) {
 
   /**
@@ -424,7 +426,9 @@ case class RawMessage(
           activity.map(_.toMessageActivity),
           application,
           messageReference,
-          flags
+          flags,
+          stickers,
+          referencedMessage
         )
 
       case None =>
@@ -450,7 +454,9 @@ case class RawMessage(
           activity.map(_.toMessageActivity),
           application,
           messageReference,
-          flags
+          flags,
+          stickers,
+          referencedMessage
         )
 
     }

@@ -25,11 +25,10 @@ package ackcord.data
 
 import java.time.OffsetDateTime
 import java.util.Base64
-
 import scala.collection.immutable
 import scala.util.Try
-
 import ackcord.CacheSnapshot
+import ackcord.data.raw.RawMessage
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
 
@@ -390,7 +389,9 @@ case class SparseMessage(
     activity: Option[MessageActivity],
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
-    flags: Option[MessageFlags]
+    flags: Option[MessageFlags],
+    stickers: Option[List[Sticker]],
+    referencedMessage: Option[RawMessage]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -446,7 +447,9 @@ case class GuildGatewayMessage(
     activity: Option[MessageActivity],
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
-    flags: Option[MessageFlags]
+    flags: Option[MessageFlags],
+    stickers: Option[List[Sticker]],
+    referencedMessage: Option[RawMessage] // TODO: Is this supposed to be RawMessage or GuildGatewayMessage
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -774,3 +777,25 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
 }
+
+/**
+  * The structure of a sticker sent in a message.
+  * @param id id of the sticker
+  * @param packId id of the pack the sticker is from
+  * @param name name of the sticker
+  * @param description description of the sticker
+  * @param tags a comma-separated list of tags for the sticker
+  * @param asset sticker asset hash
+  * @param previewAsset sticker preview asset hash
+  * @param formatType	type of sticker format
+  */
+case class Sticker(
+  id: String,
+  packId: String,
+  name: String,
+  description: String,
+  tags: Option[String],
+  asset: String,
+  previewAsset: Option[String],
+  formatType: Int
+)
