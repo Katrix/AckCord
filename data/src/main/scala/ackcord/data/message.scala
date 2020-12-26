@@ -792,7 +792,7 @@ case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   */
 case class Sticker(
     id: StickerId,
-    packId: RawSnowflakef,
+    packId: RawSnowflake,
     name: String,
     description: String,
     tags: Option[String],
