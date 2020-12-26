@@ -791,8 +791,8 @@ case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   * @param formatType	type of sticker format
   */
 case class Sticker(
-    id: String,
-    packId: String,
+    id: StickerId,
+    packId: RawSnowflakef,
     name: String,
     description: String,
     tags: Option[String],
