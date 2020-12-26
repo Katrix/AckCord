@@ -65,6 +65,18 @@ object ImageData {
   }
 }
 
+sealed abstract class FormatType(val value: Int) extends IntEnumEntry
+object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[FormatType] {
+  override def values: IndexedSeq[FormatType] = findValues
+
+  case object PNG extends FormatType(1)
+  case object APNG extends FormatType(2)
+  case object LOTTIE extends FormatType(3)
+  case class Unknown(i: Int) extends FormatType(i)
+
+  override def createUnknown(value: Int): FormatType = Unknown(value)
+}
+
 /**
   * An enum of all the different message types.
   */
@@ -798,5 +810,5 @@ case class Sticker(
     tags: Option[String],
     asset: String,
     previewAsset: Option[String],
-    formatType: Int
+    formatType: FormatType
 )
