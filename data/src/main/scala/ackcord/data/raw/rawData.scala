@@ -391,7 +391,7 @@ case class RawMessage(
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
-    stickers: Option[List[Sticker]],
+    stickers: Option[Seq[Sticker]],
     referencedMessage: Option[RawMessage]
 ) {
 
@@ -428,7 +428,7 @@ case class RawMessage(
           messageReference,
           flags,
           stickers,
-          referencedMessage
+          referencedMessage.map(_.toMessage)
         )
 
       case None =>
@@ -456,7 +456,7 @@ case class RawMessage(
           messageReference,
           flags,
           stickers,
-          referencedMessage
+          referencedMessage.map(_.toMessage)
         )
 
     }

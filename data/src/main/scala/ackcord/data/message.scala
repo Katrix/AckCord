@@ -28,7 +28,6 @@ import java.util.Base64
 import scala.collection.immutable
 import scala.util.Try
 import ackcord.CacheSnapshot
-import ackcord.data.raw.RawMessage
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
 
@@ -403,7 +402,7 @@ case class SparseMessage(
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
-    stickers: Option[List[Sticker]],
+    stickers: Option[Seq[Sticker]],
     referencedMessage: Option[Message]
 ) extends Message {
 
@@ -461,7 +460,7 @@ case class GuildGatewayMessage(
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
-    stickers: Option[List[Sticker]],
+    stickers: Option[Seq[Sticker]],
     referencedMessage: Option[Message]
 ) extends Message {
 
