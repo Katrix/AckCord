@@ -66,7 +66,7 @@ object ImageData {
 
 sealed abstract class FormatType(val value: Int) extends IntEnumEntry
 object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[FormatType] {
-  override def values: IndexedSeq[FormatType] = findValues
+  override def values: immutable.IndexedSeq[FormatType] = findValues
 
   case object PNG extends FormatType(1)
   case object APNG extends FormatType(2)
