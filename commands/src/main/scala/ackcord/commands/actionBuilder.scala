@@ -192,7 +192,9 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
       block: O[A] => OptionT[G, Request[Any]]
   )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
     toSink(
-      Flow[O[A]].flatMapMerge(requests.settings.parallelism, m => streamable.optionToSource(block(m))).to(requests.sinkIgnore)
+      Flow[O[A]]
+        .flatMapMerge(requests.settings.parallelism, m => streamable.optionToSource(block(m)))
+        .to(requests.sinkIgnore)
     )
 
   /**
@@ -218,7 +220,10 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
       block: O[A] => OptFuture[Request[Any]]
   ): Action[A, NotUsed] =
     toSink(
-      Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block(_).value).mapConcat(_.toList).to(requests.sinkIgnore)
+      Flow[O[A]]
+        .mapAsyncUnordered(requests.settings.parallelism)(block(_).value)
+        .mapConcat(_.toList)
+        .to(requests.sinkIgnore)
     )
 
   /**
