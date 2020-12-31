@@ -212,13 +212,15 @@ object GatewayProtocol extends DiscordProtocol {
           .map(_.map(Left.apply))
           .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
 
-      pinned           <- c.get[JsonOption[Boolean]]("pinned")
-      webhookId        <- c.get[JsonOption[String]]("webhook_id")
-      messageType      <- c.get[JsonOption[MessageType]]("message_type")
-      activity         <- c.get[JsonOption[RawMessageActivity]]("activity")
-      application      <- c.get[JsonOption[MessageApplication]]("application")
-      messageReference <- c.get[JsonOption[MessageReference]]("message_reference")
-      flags            <- c.get[JsonOption[MessageFlags]]("flags")
+      pinned            <- c.get[JsonOption[Boolean]]("pinned")
+      webhookId         <- c.get[JsonOption[String]]("webhook_id")
+      messageType       <- c.get[JsonOption[MessageType]]("message_type")
+      activity          <- c.get[JsonOption[RawMessageActivity]]("activity")
+      application       <- c.get[JsonOption[MessageApplication]]("application")
+      messageReference  <- c.get[JsonOption[MessageReference]]("message_reference")
+      flags             <- c.get[JsonOption[MessageFlags]]("flags")
+      stickers          <- c.get[JsonOption[Seq[Sticker]]]("stickers")
+      referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
@@ -240,7 +242,9 @@ object GatewayProtocol extends DiscordProtocol {
       activity,
       application,
       messageReference,
-      flags
+      flags,
+      stickers,
+      referencedMessage
     )
   }
 

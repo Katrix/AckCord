@@ -29,7 +29,11 @@ import java.util.Locale
 
 import scala.annotation.tailrec
 
-import ackcord.slashcommands.raw.{ApplicationCommandOption, ApplicationCommandOptionChoice, ApplicationCommandOptionType}
+import ackcord.slashcommands.raw.{
+  ApplicationCommandOption,
+  ApplicationCommandOptionChoice,
+  ApplicationCommandOptionType
+}
 import cats.Id
 import cats.arrow.FunctionK
 import cats.syntax.either._

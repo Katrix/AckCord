@@ -25,10 +25,8 @@ package ackcord.data
 
 import java.time.OffsetDateTime
 import java.util.Base64
-
 import scala.collection.immutable
 import scala.util.Try
-
 import ackcord.CacheSnapshot
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
@@ -64,6 +62,18 @@ object ImageData {
     val base64Data = Base64.getEncoder.encodeToString(data)
     new ImageData(s"data:${imageType.base64Name};base64,$base64Data")
   }
+}
+
+sealed abstract class FormatType(val value: Int) extends IntEnumEntry
+object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[FormatType] {
+  override def values: immutable.IndexedSeq[FormatType] = findValues
+
+  case object PNG            extends FormatType(1)
+  case object APNG           extends FormatType(2)
+  case object LOTTIE         extends FormatType(3)
+  case class Unknown(i: Int) extends FormatType(i)
+
+  override def createUnknown(value: Int): FormatType = Unknown(value)
 }
 
 /**
@@ -127,6 +137,11 @@ sealed trait Author[A] {
     * The name of the author.
     */
   def username: String
+
+  /**
+    * The discriminator of the author.
+    */
+  def discriminator: String
 }
 
 /**
@@ -135,7 +150,8 @@ sealed trait Author[A] {
   * @param username The name of the webhook
   * @param avatar The webhook's avatar hash
   */
-case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, avatar: Option[String]) extends Author[Webhook] {
+case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, discriminator: String, avatar: Option[String])
+    extends Author[Webhook] {
   override def isUser: Boolean = false
 }
 
@@ -385,7 +401,9 @@ case class SparseMessage(
     activity: Option[MessageActivity],
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
-    flags: Option[MessageFlags]
+    flags: Option[MessageFlags],
+    stickers: Option[Seq[Sticker]],
+    referencedMessage: Option[Message]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -441,7 +459,9 @@ case class GuildGatewayMessage(
     activity: Option[MessageActivity],
     application: Option[MessageApplication],
     messageReference: Option[MessageReference],
-    flags: Option[MessageFlags]
+    flags: Option[MessageFlags],
+    stickers: Option[Seq[Sticker]],
+    referencedMessage: Option[Message]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -769,3 +789,25 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
 }
+
+/**
+  * The structure of a sticker sent in a message.
+  * @param id id of the sticker
+  * @param packId id of the pack the sticker is from
+  * @param name name of the sticker
+  * @param description description of the sticker
+  * @param tags a comma-separated list of tags for the sticker
+  * @param asset sticker asset hash
+  * @param previewAsset sticker preview asset hash
+  * @param formatType	type of sticker format
+  */
+case class Sticker(
+    id: StickerId,
+    packId: RawSnowflake,
+    name: String,
+    description: String,
+    tags: Option[String],
+    asset: String,
+    previewAsset: Option[String],
+    formatType: FormatType
+)

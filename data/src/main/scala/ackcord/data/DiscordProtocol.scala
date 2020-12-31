@@ -195,6 +195,9 @@ trait DiscordProtocol {
   implicit val messageReferenceCodec: Codec[MessageReference] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val stickersCodec: Codec[Sticker] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
       "id"               -> a.id.asJson,
@@ -247,12 +250,14 @@ trait DiscordProtocol {
           .get[Option[Int]]("nonce")
           .map(_.map(Left.apply))
           .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
-      pinned           <- c.get[Boolean]("pinned")
-      tpe              <- c.get[MessageType]("type")
-      activity         <- c.get[Option[RawMessageActivity]]("activity")
-      application      <- c.get[Option[MessageApplication]]("application")
-      messageReference <- c.get[Option[MessageReference]]("message_reference")
-      flags            <- c.get[Option[MessageFlags]]("flags")
+      pinned            <- c.get[Boolean]("pinned")
+      tpe               <- c.get[MessageType]("type")
+      activity          <- c.get[Option[RawMessageActivity]]("activity")
+      application       <- c.get[Option[MessageApplication]]("application")
+      messageReference  <- c.get[Option[MessageReference]]("message_reference")
+      flags             <- c.get[Option[MessageFlags]]("flags")
+      stickers          <- c.get[Option[Seq[Sticker]]]("stickers")
+      referencedMessage <- c.get[Option[RawMessage]]("referenced_message")
     } yield RawMessage(
       id,
       channelId,
@@ -276,7 +281,9 @@ trait DiscordProtocol {
       activity,
       application,
       messageReference,
-      flags
+      flags,
+      stickers,
+      referencedMessage
     )
   }
 

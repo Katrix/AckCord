@@ -299,6 +299,7 @@ case class EditWebhookMessage(
   override def responseDecoder: Decoder[Json] = Decoder[Json]
 }
 
-case class DeleteWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId) extends NoParamsResponseRequest {
+case class DeleteWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId)
+    extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteWebhookMessage(id, token, messageId)
 }
