@@ -171,7 +171,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
           baseSlashCommands.echo,
           baseSlashCommands.nudge,
           baseSlashCommands.asyncTest,
-          baseSlashCommands.groupTest,
+          baseSlashCommands.groupTest
         )("288367502130413568", requests)
       )
       .run()
