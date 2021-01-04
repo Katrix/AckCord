@@ -570,11 +570,8 @@ case class RawGuild(
       joinedAt    <- joinedAt
       large       <- large
       memberCount <- memberCount
-      voiceStates <- voiceStates
-      members     <- members
       rawChannels <- channels
       channels    <- Traverse[List].sequence(rawChannels.map(_.toGuildChannel(id)).toList)
-      presences   <- presences
     } yield {
 
       Guild(
@@ -606,11 +603,13 @@ case class RawGuild(
         joinedAt,
         large,
         memberCount,
-        SnowflakeMap.withKey(voiceStates)(_.userId),
-        SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+        SnowflakeMap.withKey(voiceStates.getOrElse(Nil))(_.userId),
+        SnowflakeMap.from(members.getOrElse(Nil).map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
-        SnowflakeMap
-          .from(presences.flatMap(p => p.toPresence.toOption.map(p.user.id -> _))), //We throw away the errors here
+        //We throw away the errors here
+        SnowflakeMap.from(
+          presences.getOrElse(Nil).flatMap(p => p.toPresence.toOption.map(p.user.id -> _))
+        ),
         maxPresences.getOrElse(25000), // The default is 25000
         maxMembers,
         vanityUrlCode,
