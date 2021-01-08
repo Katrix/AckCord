@@ -560,15 +560,21 @@ object Routes {
     webhookWithToken / "github" +? waitQuery toRequest POST
   )
 
-  val messagesWebhook: RouteFunction[(SnowflakeType[Webhook], String)] = webhookWithToken / "messages"
-  val editOriginalWebhook: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
-    (webhookWithToken / "@original").toRequest(PATCH)
+  val messagesWebhook: RouteFunction[(SnowflakeType[Webhook], String)]             = webhookWithToken / "messages"
+  val originalWebhookMessage: RouteFunction[(SnowflakeType[Webhook], String)]      = messagesWebhook / "@original"
+  val webhookMessage: RouteFunction[((SnowflakeType[Webhook], String), MessageId)] = messagesWebhook / messageId
+
+  val editOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    originalWebhookMessage.toRequest(PATCH)
+  )
+  val deleteOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    originalWebhookMessage.toRequest(PATCH)
   )
   val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
-    (webhookWithToken / messageId).toRequest(PATCH)
+    webhookMessage.toRequest(PATCH)
   )
   val deleteWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
-    (webhookWithToken / messageId).toRequest(DELETE)
+    webhookMessage.toRequest(DELETE)
   )
 
   val size: QueryParameter[Int]               = new QueryParameter("size", _.toString)

@@ -281,10 +281,14 @@ object EditWebhookMessageData {
 
 case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String, params: EditWebhookMessageData)
     extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
-  override def route: RequestRoute                            = Routes.editOriginalWebhook(id, token)
+  override def route: RequestRoute                            = Routes.editOriginalWebhookMessage(id, token)
   override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
 
   override def responseDecoder: Decoder[Json] = Decoder[Json]
+}
+
+case class DeleteOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.deleteOriginalWebhookMessage(id, token)
 }
 
 case class EditWebhookMessage(

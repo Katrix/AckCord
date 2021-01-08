@@ -190,7 +190,6 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
 
   def editOriginalMessage(
       content: JsonOption[String] = JsonUndefined,
-      tts: JsonOption[Boolean] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       allowedMentions: JsonOption[AllowedMention] = JsonUndefined
   )(implicit async: AsyncMessageToken): OptFuture[Json] =
@@ -206,10 +205,13 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       )
     )
 
+  def deleteOriginalMessage(implicit async: AsyncMessageToken): OptFuture[NotUsed] = commandRequest(
+    DeleteOriginalWebhookMessage(async.webhookId, async.webhookToken)
+  )
+
   def editPreviousMessage(
       messageId: MessageId,
       content: JsonOption[String] = JsonUndefined,
-      tts: JsonOption[Boolean] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       allowedMentions: JsonOption[AllowedMention] = JsonUndefined
   )(implicit async: AsyncToken): OptFuture[Json] =
