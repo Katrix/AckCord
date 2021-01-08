@@ -255,7 +255,11 @@ object RequestStreams {
                     httpResponse.entity.dataBytes
                       .runFold(ByteString.empty)(_ ++ _)
                       .map { eBytes =>
-                        RequestError(HttpException(e, Some(eBytes.utf8String)), route, request.identifier)
+                        RequestError(
+                          HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
+                          route,
+                          request.identifier
+                        )
                       }
                   case StatusCodes.NoContent =>
                     httpResponse.discardEntityBytes()

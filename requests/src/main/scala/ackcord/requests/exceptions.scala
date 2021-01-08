@@ -27,13 +27,15 @@ import java.util.UUID
 
 import scala.concurrent.duration.FiniteDuration
 
-import akka.http.scaladsl.model.{StatusCode, Uri}
+import akka.http.scaladsl.model.{HttpMethod, StatusCode, Uri}
 
 /**
   * An exception for Http errors.
   */
-case class HttpException(statusCode: StatusCode, extraInfo: Option[String])
-    extends Exception(s"${statusCode.intValue()}, ${statusCode.reason()}${extraInfo.fold("")(e => s" $e")}")
+case class HttpException(uri: Uri, method: HttpMethod, statusCode: StatusCode, extraInfo: Option[String])
+    extends Exception(
+      s"$method $uri: ${statusCode.intValue()}, ${statusCode.reason()}${extraInfo.fold("")(e => s" $e")}"
+    )
 
 /**
   * An exception that signals than an endpoint is ratelimited.
