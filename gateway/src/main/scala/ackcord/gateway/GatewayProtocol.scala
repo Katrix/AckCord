@@ -360,7 +360,8 @@ object GatewayProtocol extends DiscordProtocol {
       ignored("PRESENCES_REPLACE"),
       ignored("APPLICATION_COMMAND_CREATE"),
       ignored("APPLICATION_COMMAND_UPDATE"),
-      ignored("APPLICATION_COMMAND_DELETE")
+      ignored("APPLICATION_COMMAND_DELETE"),
+      ignored("INTEGRATION_UPDATE")
     )
     res
   }
@@ -371,7 +372,7 @@ object GatewayProtocol extends DiscordProtocol {
       tpe <- c.get[String]("t")
       res <- decoders.getOrElse(
         tpe,
-        (_: Int, _: Json, _: ACursor) => Left(DecodingFailure(s"Invalid message type $tpe", c.downField("t").history))
+        (_: Int, _: Json, _: ACursor) => Left(DecodingFailure(s"Invalid gateway type $tpe", c.downField("t").history))
       )(seq, c.value, c.downField("d"))
     } yield res
 }
