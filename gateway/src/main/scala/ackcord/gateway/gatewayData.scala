@@ -618,7 +618,7 @@ object GatewayEvent {
     */
   case class GuildMemberChunk(rawData: Json, data: Later[Decoder.Result[GuildMemberChunkData]])
       extends GuildEvent[GuildMemberChunkData] {
-    override def name: String = "GUILD_MEMBER_CHUNK"
+    override def name: String = "GUILD_MEMBERS_CHUNK"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }

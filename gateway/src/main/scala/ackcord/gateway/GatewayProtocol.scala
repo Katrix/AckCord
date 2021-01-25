@@ -335,7 +335,7 @@ object GatewayProtocol extends DiscordProtocol {
             case "GUILD_MEMBER_ADD"              => createDispatch(GatewayEvent.GuildMemberAdd)
             case "GUILD_MEMBER_REMOVE"           => createDispatch(GatewayEvent.GuildMemberRemove)
             case "GUILD_MEMBER_UPDATE"           => createDispatch(GatewayEvent.GuildMemberUpdate)
-            case "GUILD_MEMBER_CHUNK"            => createDispatch(GatewayEvent.GuildMemberChunk)
+            case "GUILD_MEMBERS_CHUNK"           => createDispatch(GatewayEvent.GuildMemberChunk)
             case "GUILD_ROLE_CREATE"             => createDispatch(GatewayEvent.GuildRoleCreate)
             case "GUILD_ROLE_UPDATE"             => createDispatch(GatewayEvent.GuildRoleUpdate)
             case "GUILD_ROLE_DELETE"             => createDispatch(GatewayEvent.GuildRoleDelete)
