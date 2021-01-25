@@ -117,7 +117,7 @@ case class Events(
 }
 object Events {
 
-  private def createWithPubSub(
+  def createWithPubSub(
       publish: Sink[CacheEvent, NotUsed],
       subscribe: Source[(CacheEvent, CacheState), NotUsed],
       parallelism: Int = 4,
@@ -125,7 +125,9 @@ object Events {
       cacheTypeRegistry: Logger => CacheTypeRegistry,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
-      convertGatewayEventsToApiMessages: Boolean = true,
+      gatewayToApiMessageConverter: Option[
+        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
+      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): Events = {
@@ -139,34 +141,29 @@ object Events {
     import system.executionContext
 
     //Pipe events gotten into the main pubsub
-    if (convertGatewayEventsToApiMessages) {
-      val configSettings = AckCordGatewaySettings()(system)
-      val baseSource: Source[APIMessageCacheUpdate[_], NotUsed] =
+    gatewayToApiMessageConverter.foreach { apiMessageCreatorFun =>
+      val cacheHandlerLog = LoggerFactory.getLogger(classOf[CacheHandler[_]])
+      val settings        = AckCordGatewaySettings()(system)
+      val apiMessageConverter =
+        apiMessageCreatorFun(cacheTypeRegistry(cacheHandlerLog), cacheHandlerLog)
+
+      val baseSource: Source[APIMessageCacheUpdate[Any], NotUsed] =
         receiveGatewaySubscribe
           .collectType[Dispatch[_]]
           .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
           .mapAsync(parallelism)(dispatch =>
-            Future(
-              CacheEventCreator
-                .eventToCacheUpdate(
-                  dispatch,
-                  cacheTypeRegistry(LoggerFactory.getLogger(classOf[CacheHandler[_]])),
-                  system.log,
-                  configSettings
-                )
-                .toList
-            )
+            Future(CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, cacheHandlerLog, settings).toList)
           )
           .mapConcat(identity)
+          .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
 
-      val sourceWithBatching = if (maxBatch != 1) {
-        baseSource
-          .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)((xs, update) =>
-            update.asInstanceOf[APIMessageCacheUpdate[Any]] :: xs.asInstanceOf[List[APIMessageCacheUpdate[Any]]]
-          )
-          .map(xs => BatchedAPIMessageCacheUpdate(xs.reverse))
-      } else
-        baseSource.map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
+      val sourceWithBatching =
+        if (maxBatch != 1)
+          baseSource
+            .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)((xs, update) => update :: xs)
+            .map(xs => BatchedAPIMessageCacheUpdate(xs.reverse))
+        else
+          baseSource
 
       SupervisionStreams
         .addLogAndContinueFunction(
@@ -198,7 +195,9 @@ object Events {
       cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
-      convertGatewayEventsToApiMessages: Boolean = true,
+      gatewayToApiMessageConverter: Option[
+        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
+      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
@@ -213,7 +212,7 @@ object Events {
       cacheTypeRegistry,
       maxBatch,
       batchCostFun,
-      convertGatewayEventsToApiMessages,
+      gatewayToApiMessageConverter,
       sendGatewayEventsBufferSize,
       receiveGatewayEventsBufferSize
     )
@@ -237,7 +236,9 @@ object Events {
       cacheTypeRegistry: Logger => CacheTypeRegistry,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
-      convertGatewayEventsToApiMessages: Boolean = true,
+      gatewayToApiMessageConverter: Option[
+        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
+      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
@@ -252,7 +253,7 @@ object Events {
       cacheTypeRegistry,
       maxBatch,
       batchCostFun,
-      convertGatewayEventsToApiMessages,
+      gatewayToApiMessageConverter,
       sendGatewayEventsBufferSize,
       receiveGatewayEventsBufferSize
     )

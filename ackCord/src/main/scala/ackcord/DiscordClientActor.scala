@@ -53,12 +53,9 @@ class DiscordClientActor(
       cacheSettings.parallelism,
       cacheSettings.ignoredEvents,
       cacheSettings.cacheTypeRegistry,
-      maxBatch = 1,
-      batchCostFun = _ => 1,
-      convertGatewayEventsToApiMessages = true,
-      cacheSettings.cacheBufferSize,
-      cacheSettings.sendGatewayEventsBufferSize,
-      cacheSettings.receiveGatewayEventsBufferSize
+      cacheBufferSize = cacheSettings.cacheBufferSize,
+      sendGatewayEventsBufferSize = cacheSettings.sendGatewayEventsBufferSize,
+      receiveGatewayEventsBufferSize = cacheSettings.receiveGatewayEventsBufferSize
     )
   } else {
     Events.create(
@@ -66,12 +63,9 @@ class DiscordClientActor(
       cacheSettings.parallelism,
       cacheSettings.ignoredEvents,
       cacheSettings.cacheTypeRegistry,
-      maxBatch = 1,
-      batchCostFun = _ => 1,
-      convertGatewayEventsToApiMessages = true,
-      cacheSettings.cacheBufferSize,
-      cacheSettings.sendGatewayEventsBufferSize,
-      cacheSettings.receiveGatewayEventsBufferSize
+      cacheBufferSize = cacheSettings.cacheBufferSize,
+      sendGatewayEventsBufferSize = cacheSettings.sendGatewayEventsBufferSize,
+      receiveGatewayEventsBufferSize = cacheSettings.receiveGatewayEventsBufferSize
     )
   }
 
