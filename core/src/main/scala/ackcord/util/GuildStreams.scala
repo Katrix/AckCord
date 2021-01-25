@@ -129,6 +129,8 @@ object GuildStreams {
         lazyOptToOption(msg.guildId)
       case msg: GatewayEvent.ChannelEvent[_] =>
         handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
+      case _: GatewayEvent.UnknownEvent[_] =>
+        None
     }
   }
 

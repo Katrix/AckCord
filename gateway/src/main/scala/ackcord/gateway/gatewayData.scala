@@ -978,7 +978,7 @@ object GatewayEvent {
       token: String
   ) {
 
-    def reparse[A: Decoder] = {
+    def reparse[A: Decoder]: Result[A] = {
       import io.circe.syntax._
       import GatewayProtocol._
       val self: SimpleRawInteraction = this
@@ -991,6 +991,18 @@ object GatewayEvent {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTERACTION_CREATE"
+  }
+
+  /**
+    * An unknown event type which AckCord does not know about.
+    *
+    * Extend this if you want to implement custom event types based on stuff Discord sends.
+    */
+  trait UnknownEvent[A] extends GatewayEvent[A]
+  object UnknownEvent {
+    trait UnknownChannelEvent[A]  extends UnknownEvent[A] with ChannelEvent[A]
+    trait UnknownGuildEvent[A]    extends UnknownEvent[A] with GuildEvent[A]
+    trait UnknownOptGuildEvent[A] extends UnknownEvent[A] with OptGuildEvent[A]
   }
 
   case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]]) extends GatewayEvent[Unit]
