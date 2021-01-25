@@ -113,6 +113,8 @@ object MemoryCacheSnapshot {
     * given time.
     * @param keepMessagesFor How long messages should be kept for
     * @param keepTypedFor How long typed notifications should be kept for
+    * @param minMessagesPerChannel Amount of messages to always keep in the cache for each channel
+    * @param minMessages Amount of messages to always keep in the cache
     * @param alwaysKeep A set of messages that should never be removed from the cache
     */
   def cleanGarbage(
