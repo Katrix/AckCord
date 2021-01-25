@@ -33,7 +33,7 @@ import ackcord.MemoryCacheSnapshot.CacheProcessor
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
-import ackcord.gateway.{Compress, GatewayEvent, GatewayIntents}
+import ackcord.gateway.{Compress, GatewayEvent, GatewayIntents, GatewayProtocol}
 import ackcord.requests.Ratelimiter
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
@@ -70,6 +70,7 @@ case class ClientSettings(
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
     compress: Compress = Compress.ZLibStreamCompress,
+    eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     requestSettings: RequestSettings = RequestSettings(),
@@ -87,7 +88,8 @@ case class ClientSettings(
     afk,
     guildSubscriptions,
     intents,
-    compress
+    compress,
+    eventDecoders
   )
 
   implicit val executionContext: ExecutionContext = system.executionContext

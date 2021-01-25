@@ -275,14 +275,14 @@ object GatewayProtocol extends DiscordProtocol {
       )
   }
 
-  implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = (c: HCursor) => {
+  def wsMessageDecoder(decoders: EventDecoders): Decoder[GatewayMessage[_]] = (c: HCursor) => {
     val dCursor = c.downField("d")
 
     val op = c.get[GatewayOpCode]("op")
 
     //We use the apply method on the companion object here
     op.flatMap {
-      case GatewayOpCode.Dispatch            => decodeDispatch(c)
+      case GatewayOpCode.Dispatch            => decodeDispatch(c, decoders)
       case GatewayOpCode.Heartbeat           => dCursor.as[Option[Int]].map(Heartbeat)
       case GatewayOpCode.Identify            => dCursor.as[IdentifyData].map(Identify)
       case GatewayOpCode.StatusUpdate        => dCursor.as[StatusData].map(StatusUpdate)
@@ -307,59 +307,71 @@ object GatewayProtocol extends DiscordProtocol {
     )
   }
 
-  private def decodeDispatch(c: HCursor): Decoder.Result[Dispatch[_]] = {
-    val dC = c.downField("d")
+  type EventDecoders = Map[String, (Int, Json, ACursor) => Decoder.Result[Dispatch[_]]]
+  val ackcordEventDecoders: Map[String, (Int, Json, ACursor) => Decoder.Result[Dispatch[_]]] = {
+    //We use the apply method on the companion object here
+    def createDispatch[Data: Decoder: Encoder](
+        create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
+    ): (Int, Json, ACursor) => Decoder.Result[Dispatch[Data]] = (seq, rawJson, dataCursor) =>
+      Right(Dispatch(seq, create(rawJson, Later(dataCursor.as[Data]))))
 
-    c.get[Int]("s")
-      .flatMap { seq =>
-        //We use the apply method on the companion object here
-        def createDispatch[Data: Decoder: Encoder](
-            create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
-        ): Either[DecodingFailure, Dispatch[Data]] = Right(Dispatch(seq, create(c.value, Later(dC.as[Data]))))
+    def ignored(name: String): (String, (Int, Json, ACursor) => Decoder.Result[Dispatch[Unit]]) =
+      name -> ((seq, rawJson, _) => Right(Dispatch(seq, GatewayEvent.IgnoredEvent(name, rawJson, Later(Right(()))))))
 
-        c.get[String]("t")
-          .flatMap {
-            case "READY"                         => createDispatch(GatewayEvent.Ready)
-            case "RESUMED"                       => Right(Dispatch(seq, GatewayEvent.Resumed(c.value)))
-            case "CHANNEL_CREATE"                => createDispatch(GatewayEvent.ChannelCreate)
-            case "CHANNEL_UPDATE"                => createDispatch(GatewayEvent.ChannelUpdate)
-            case "CHANNEL_DELETE"                => createDispatch(GatewayEvent.ChannelDelete)
-            case "CHANNEL_PINS_UPDATE"           => createDispatch(GatewayEvent.ChannelPinsUpdate)
-            case "GUILD_CREATE"                  => createDispatch(GatewayEvent.GuildCreate)
-            case "GUILD_UPDATE"                  => createDispatch(GatewayEvent.GuildUpdate)
-            case "GUILD_DELETE"                  => createDispatch(GatewayEvent.GuildDelete)
-            case "GUILD_BAN_ADD"                 => createDispatch(GatewayEvent.GuildBanAdd)
-            case "GUILD_BAN_REMOVE"              => createDispatch(GatewayEvent.GuildBanRemove)
-            case "GUILD_EMOJIS_UPDATE"           => createDispatch(GatewayEvent.GuildEmojisUpdate)
-            case "GUILD_INTEGRATIONS_UPDATE"     => createDispatch(GatewayEvent.GuildIntegrationsUpdate)
-            case "GUILD_MEMBER_ADD"              => createDispatch(GatewayEvent.GuildMemberAdd)
-            case "GUILD_MEMBER_REMOVE"           => createDispatch(GatewayEvent.GuildMemberRemove)
-            case "GUILD_MEMBER_UPDATE"           => createDispatch(GatewayEvent.GuildMemberUpdate)
-            case "GUILD_MEMBERS_CHUNK"           => createDispatch(GatewayEvent.GuildMemberChunk)
-            case "GUILD_ROLE_CREATE"             => createDispatch(GatewayEvent.GuildRoleCreate)
-            case "GUILD_ROLE_UPDATE"             => createDispatch(GatewayEvent.GuildRoleUpdate)
-            case "GUILD_ROLE_DELETE"             => createDispatch(GatewayEvent.GuildRoleDelete)
-            case "INVITE_CREATE"                 => createDispatch(GatewayEvent.InviteCreate)
-            case "INVITE_DELETE"                 => createDispatch(GatewayEvent.InviteDelete)
-            case "MESSAGE_CREATE"                => createDispatch(GatewayEvent.MessageCreate)
-            case "MESSAGE_UPDATE"                => createDispatch(GatewayEvent.MessageUpdate)
-            case "MESSAGE_DELETE"                => createDispatch(GatewayEvent.MessageDelete)
-            case "MESSAGE_DELETE_BULK"           => createDispatch(GatewayEvent.MessageDeleteBulk)
-            case "MESSAGE_REACTION_ADD"          => createDispatch(GatewayEvent.MessageReactionAdd)
-            case "MESSAGE_REACTION_REMOVE"       => createDispatch(GatewayEvent.MessageReactionRemove)
-            case "MESSAGE_REACTION_REMOVE_ALL"   => createDispatch(GatewayEvent.MessageReactionRemoveAll)
-            case "MESSAGE_REACTION_REMOVE_EMOJI" => createDispatch(GatewayEvent.MessageReactionRemoveEmoji)
-            case "PRESENCE_UPDATE"               => createDispatch(GatewayEvent.PresenceUpdate)
-            case "TYPING_START"                  => createDispatch(GatewayEvent.TypingStart)
-            case "USER_UPDATE"                   => createDispatch(GatewayEvent.UserUpdate)
-            case "VOICE_STATE_UPDATE"            => createDispatch(GatewayEvent.VoiceStateUpdate)
-            case "VOICE_SERVER_UPDATE"           => createDispatch(GatewayEvent.VoiceServerUpdate)
-            case "WEBHOOK_UPDATE"                => createDispatch(GatewayEvent.WebhookUpdate)
-            case "INTERACTION_CREATE"            => createDispatch(GatewayEvent.InteractionCreate)
-            case s @ ("PRESENCES_REPLACE" | "APPLICATION_COMMAND_CREATE" | "APPLICATION_COMMAND_UPDATE" | "APPLICATION_COMMAND_DELETE") =>
-              Right(Dispatch(seq, GatewayEvent.IgnoredEvent(s, c.value, Later(Right(())))))
-            case s => Left(DecodingFailure(s"Invalid message type $s", c.downField("t").history))
-          }
-      }
+    //Seperate var here to make type inference happy
+    val res: Map[String, (Int, Json, ACursor) => Either[DecodingFailure, Dispatch[Any]]] = Map(
+      "READY"                         -> createDispatch(GatewayEvent.Ready),
+      "RESUMED"                       -> ((seq, rawJson, _) => Right(Dispatch(seq, GatewayEvent.Resumed(rawJson)))),
+      "CHANNEL_CREATE"                -> createDispatch(GatewayEvent.ChannelCreate),
+      "CHANNEL_UPDATE"                -> createDispatch(GatewayEvent.ChannelUpdate),
+      "CHANNEL_DELETE"                -> createDispatch(GatewayEvent.ChannelDelete),
+      "CHANNEL_PINS_UPDATE"           -> createDispatch(GatewayEvent.ChannelPinsUpdate),
+      "GUILD_CREATE"                  -> createDispatch(GatewayEvent.GuildCreate),
+      "GUILD_UPDATE"                  -> createDispatch(GatewayEvent.GuildUpdate),
+      "GUILD_DELETE"                  -> createDispatch(GatewayEvent.GuildDelete),
+      "GUILD_BAN_ADD"                 -> createDispatch(GatewayEvent.GuildBanAdd),
+      "GUILD_BAN_REMOVE"              -> createDispatch(GatewayEvent.GuildBanRemove),
+      "GUILD_EMOJIS_UPDATE"           -> createDispatch(GatewayEvent.GuildEmojisUpdate),
+      "GUILD_INTEGRATIONS_UPDATE"     -> createDispatch(GatewayEvent.GuildIntegrationsUpdate),
+      "GUILD_MEMBER_ADD"              -> createDispatch(GatewayEvent.GuildMemberAdd),
+      "GUILD_MEMBER_REMOVE"           -> createDispatch(GatewayEvent.GuildMemberRemove),
+      "GUILD_MEMBER_UPDATE"           -> createDispatch(GatewayEvent.GuildMemberUpdate),
+      "GUILD_MEMBERS_CHUNK"           -> createDispatch(GatewayEvent.GuildMemberChunk),
+      "GUILD_ROLE_CREATE"             -> createDispatch(GatewayEvent.GuildRoleCreate),
+      "GUILD_ROLE_UPDATE"             -> createDispatch(GatewayEvent.GuildRoleUpdate),
+      "GUILD_ROLE_DELETE"             -> createDispatch(GatewayEvent.GuildRoleDelete),
+      "INVITE_CREATE"                 -> createDispatch(GatewayEvent.InviteCreate),
+      "INVITE_DELETE"                 -> createDispatch(GatewayEvent.InviteDelete),
+      "MESSAGE_CREATE"                -> createDispatch(GatewayEvent.MessageCreate),
+      "MESSAGE_UPDATE"                -> createDispatch(GatewayEvent.MessageUpdate),
+      "MESSAGE_DELETE"                -> createDispatch(GatewayEvent.MessageDelete),
+      "MESSAGE_DELETE_BULK"           -> createDispatch(GatewayEvent.MessageDeleteBulk),
+      "MESSAGE_REACTION_ADD"          -> createDispatch(GatewayEvent.MessageReactionAdd),
+      "MESSAGE_REACTION_REMOVE"       -> createDispatch(GatewayEvent.MessageReactionRemove),
+      "MESSAGE_REACTION_REMOVE_ALL"   -> createDispatch(GatewayEvent.MessageReactionRemoveAll),
+      "MESSAGE_REACTION_REMOVE_EMOJI" -> createDispatch(GatewayEvent.MessageReactionRemoveEmoji),
+      "PRESENCE_UPDATE"               -> createDispatch(GatewayEvent.PresenceUpdate),
+      "TYPING_START"                  -> createDispatch(GatewayEvent.TypingStart),
+      "USER_UPDATE"                   -> createDispatch(GatewayEvent.UserUpdate),
+      "VOICE_STATE_UPDATE"            -> createDispatch(GatewayEvent.VoiceStateUpdate),
+      "VOICE_SERVER_UPDATE"           -> createDispatch(GatewayEvent.VoiceServerUpdate),
+      "WEBHOOK_UPDATE"                -> createDispatch(GatewayEvent.WebhookUpdate),
+      "INTERACTION_CREATE"            -> createDispatch(GatewayEvent.InteractionCreate),
+      ignored("PRESENCES_REPLACE"),
+      ignored("APPLICATION_COMMAND_CREATE"),
+      ignored("APPLICATION_COMMAND_UPDATE"),
+      ignored("APPLICATION_COMMAND_DELETE")
+    )
+    res
   }
+
+  private def decodeDispatch(c: HCursor, decoders: EventDecoders): Decoder.Result[Dispatch[_]] =
+    for {
+      seq <- c.get[Int]("s")
+      tpe <- c.get[String]("t")
+      res <- decoders.getOrElse(
+        tpe,
+        (_: Int, _: Json, _: ACursor) => Left(DecodingFailure(s"Invalid message type $tpe", c.downField("t").history))
+      )(seq, c.value, c.downField("d"))
+    } yield res
 }

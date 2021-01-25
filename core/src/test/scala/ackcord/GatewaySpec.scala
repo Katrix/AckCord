@@ -35,7 +35,7 @@ import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge
 import akka.stream.typed.scaladsl.ActorSource
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.ByteString
-import io.circe.{Encoder, parser}
+import io.circe.{Decoder, Encoder, parser}
 
 object MockedGatewayHandler {
   def apply(settings: GatewaySettings, gateway: ActorRef[MockedGateway.GatewayCommand]) =
@@ -74,7 +74,9 @@ object MockedGatewayHandler {
     val msgFlow =
       GatewayHandlerGraphStage.createMessage
         .viaMat(wsFlow)(Keep.right)
-        .viaMat(GatewayHandlerGraphStage.parseMessage(parameters.settings.compress))(Keep.left)
+        .viaMat(
+          GatewayHandlerGraphStage.parseMessage(parameters.settings.compress, GatewayProtocol.ackcordEventDecoders)
+        )(Keep.left)
         .named("Gateway")
         .collect {
           case Right(msg) => msg
@@ -117,6 +119,9 @@ object MockedGateway {
       useCompression: Boolean
   ): Behavior[GatewayCommand] = {
     import GatewayProtocol._
+    implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] =
+      GatewayProtocol.wsMessageDecoder(GatewayProtocol.ackcordEventDecoders)
+
     Behaviors.receiveMessage {
       case SetClient(newClient) =>
         sendMessagesTo ! HasSetClient

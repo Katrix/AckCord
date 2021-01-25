@@ -42,7 +42,7 @@ import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
 import io.circe
-import io.circe.{Encoder, parser}
+import io.circe.{Decoder, Encoder, parser}
 import io.circe.syntax._
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
@@ -211,7 +211,7 @@ object GatewayHandlerGraphStage {
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
-        .viaMat(parseMessage(settings.compress))(Keep.left)
+        .viaMat(parseMessage(settings.compress, settings.eventDecoders))(Keep.left)
         .collect {
           case Right(msg) => msg
           case Left(e)    => throw new GatewayJsonException(e.show, e)
@@ -242,7 +242,7 @@ object GatewayHandlerGraphStage {
   /**
     * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
     */
-  def parseMessage(compress: Compress)(
+  def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders)(
       implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val stringFlow = compress match {
@@ -299,6 +299,7 @@ object GatewayHandlerGraphStage {
       stringFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else stringFlow
 
+    implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = GatewayProtocol.wsMessageDecoder(eventDecoders)
     withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
   }
 

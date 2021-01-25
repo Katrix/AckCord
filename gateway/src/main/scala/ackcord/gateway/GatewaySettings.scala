@@ -55,7 +55,8 @@ case class GatewaySettings(
     afk: Boolean = false,
     guildSubscriptions: Boolean = true,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
-    compress: Compress = Compress.ZLibStreamCompress
+    compress: Compress = Compress.ZLibStreamCompress,
+    eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders
 ) {
   activities.foreach(_.foreach(_.requireCanSend()))
 }
