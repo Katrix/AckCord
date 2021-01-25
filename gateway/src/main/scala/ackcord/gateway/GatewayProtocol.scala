@@ -356,7 +356,7 @@ object GatewayProtocol extends DiscordProtocol {
             case "VOICE_SERVER_UPDATE"           => createDispatch(GatewayEvent.VoiceServerUpdate)
             case "WEBHOOK_UPDATE"                => createDispatch(GatewayEvent.WebhookUpdate)
             case "INTERACTION_CREATE"            => createDispatch(GatewayEvent.InteractionCreate)
-            case s @ ("PRESENCES_REPLACE" | "APPLICATION_COMMAND_CREATE" | "APPLICATION_COMMAND_UPDATE") =>
+            case s @ ("PRESENCES_REPLACE" | "APPLICATION_COMMAND_CREATE" | "APPLICATION_COMMAND_UPDATE" | "APPLICATION_COMMAND_DELETE") =>
               Right(Dispatch(seq, GatewayEvent.IgnoredEvent(s, c.value, Later(Right(())))))
             case s => Left(DecodingFailure(s"Invalid message type $s", c.downField("t").history))
           }
