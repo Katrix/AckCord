@@ -289,18 +289,16 @@ object CacheHandlers {
       ): Unit = {
         val GuildMemberUpdateData(guildId, roles, user, nick, joinedAt, _) = obj
 
-        val eitherMember = for {
-          guild       <- builder.getGuild(guildId).toRight(s"Can't find guild for user update $obj")
-          guildMember <- guild.members.get(user.id).toRight(s"Can't find member for member update $obj")
-        } yield guildMember
+        val exisitingMember = for {
+          guild       <- builder.getGuild(guildId)
+          guildMember <- guild.members.get(user.id)
+        } yield guildMember.copy(nick = nick, roleIds = roles, joinedAt = joinedAt)
 
-        eitherMember match {
-          case Right(guildMember) =>
-            registry.updateData(builder) {
-              guildMember.copy(nick = nick, roleIds = roles, joinedAt = joinedAt)
-            }
-          case Left(e) => log.warn(e)
-        }
+        registry.updateData(builder)(
+          exisitingMember.getOrElse(
+            GuildMember(user.id, guildId, nick, roles, joinedAt, None, deaf = false, mute = false)
+          )
+        )
 
         registry.updateData(builder)(user)
       }
