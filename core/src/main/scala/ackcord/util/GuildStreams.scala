@@ -61,7 +61,7 @@ object GuildStreams {
             case guildMessage: GuildGatewayMessage => Some(guildMessage.guildId)
             case _                                 => None
           }
-        case APIMessage.VoiceStateUpdate(state, _) => state.guildId
+        case APIMessage.VoiceStateUpdate(state, _, _) => state.guildId
       }
 
       msg -> optGuildId

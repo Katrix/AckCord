@@ -195,7 +195,7 @@ object CacheStreams {
         ) ! GuildCacheEvent(event, respondTo)
 
         event match {
-          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event: GuildDelete)) =>
+          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event: GuildDelete, _)) =>
             event.data.value.foreach { guild =>
               if (!guild.unavailable.getOrElse(false)) {
                 guildHandlers.remove(guild.id)

@@ -35,7 +35,7 @@ import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge
 import akka.stream.typed.scaladsl.ActorSource
 import akka.stream.{FlowShape, OverflowStrategy}
 import akka.util.ByteString
-import io.circe.{Decoder, Encoder, parser}
+import io.circe.{Encoder, parser}
 
 object MockedGatewayHandler {
   def apply(settings: GatewaySettings, gateway: ActorRef[MockedGateway.GatewayCommand]) =
@@ -75,7 +75,11 @@ object MockedGatewayHandler {
       GatewayHandlerGraphStage.createMessage
         .viaMat(wsFlow)(Keep.right)
         .viaMat(
-          GatewayHandlerGraphStage.parseMessage(parameters.settings.compress, GatewayProtocol.ackcordEventDecoders)
+          GatewayHandlerGraphStage.parseMessage(
+            parameters.settings.compress,
+            GatewayProtocol.ackcordEventDecoders,
+            ShardInfo(parameters.settings.shardTotal, parameters.settings.shardNum)
+          )
         )(Keep.left)
         .named("Gateway")
         .collect {
@@ -118,10 +122,6 @@ object MockedGateway {
       client: ActorRef[Message],
       useCompression: Boolean
   ): Behavior[GatewayCommand] = {
-    import GatewayProtocol._
-    implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] =
-      GatewayProtocol.wsMessageDecoder(GatewayProtocol.ackcordEventDecoders)
-
     Behaviors.receiveMessage {
       case SetClient(newClient) =>
         sendMessagesTo ! HasSetClient
@@ -140,7 +140,11 @@ object MockedGateway {
         stash.stash(msg)
         Behaviors.same
       case MessageFromClient(TextMessage.Strict(text)) =>
-        sendMessagesTo ! DecodedGatewayMessage(parser.parse(text).flatMap(_.as[GatewayMessage[_]]))
+        sendMessagesTo ! DecodedGatewayMessage(parser.parse(text).flatMap { json =>
+          //Dummy values for gateway info here
+          GatewayProtocol
+            .decodeWsMessage(GatewayProtocol.ackcordEventDecoders, GatewayInfo(ShardInfo(-1, -1), -1), json.hcursor)
+        })
         Behaviors.same
       case SetUseCompression(compression) => mocked(ctx, stash, sendMessagesTo, client, compression)
     }

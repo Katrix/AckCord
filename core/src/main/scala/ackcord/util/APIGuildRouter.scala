@@ -41,9 +41,9 @@ class APIGuildRouter[Inner](
   override def handleThroughMessage(a: APIMessage): Unit = a match {
     case msg: APIMessage.Ready =>
       msg.cache.current.unavailableGuildMap.keys.foreach(sendToGuild(_, msg, handleEvent))
-    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate)                       => sendToAll(msg, handleEvent)
-    case APIMessage.GuildDelete(guild, unavailable, _) if !unavailable.getOrElse(false) => stopHandler(guild.id)
-    case msg: APIMessage.GuildMessage                                                   => sendToGuild(msg.guild.id, msg, handleEvent)
+    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate)                          => sendToAll(msg, handleEvent)
+    case APIMessage.GuildDelete(guild, unavailable, _, _) if !unavailable.getOrElse(false) => stopHandler(guild.id)
+    case msg: APIMessage.GuildMessage                                                      => sendToGuild(msg.guild.id, msg, handleEvent)
     case msg: APIMessage.OptGuildMessage =>
       msg.guild match {
         case Some(guild) => sendToGuild(guild.id, msg, handleEvent)
@@ -60,7 +60,7 @@ class APIGuildRouter[Inner](
         case Some(guildChannel: GuildChannel) => sendToGuild(guildChannel.guildId, msg, handleEvent)
         case _                                => sendToNotGuild(msg, handleEvent)
       }
-    case msg @ APIMessage.VoiceStateUpdate(state, _) =>
+    case msg @ APIMessage.VoiceStateUpdate(state, _, _) =>
       state.guildId match {
         case Some(guildId) => sendToGuild(guildId, msg, handleEvent)
         case None          => sendToNotGuild(msg, handleEvent)

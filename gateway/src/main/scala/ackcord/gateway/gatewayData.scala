@@ -59,17 +59,45 @@ sealed trait GatewayMessage[+D] {
   def t: JsonOption[GatewayEvent[D]] = JsonUndefined
 }
 
+sealed trait ServerGatewayMessage[+D] extends GatewayMessage[D] {
+
+  /**
+    * Misc info gathered from the gateway this message came from.
+    */
+  def gatewayInfo: GatewayInfo
+}
+
 sealed trait EagerGatewayMessage[D] extends GatewayMessage[D] {
   override def d: Now[Decoder.Result[D]] = Now(Right(nowD))
   def nowD: D
 }
 
 /**
+  * @param maxShards The maximum amount of shards that was specified when this
+  *                  connection was established.
+  * @param shardNum The shard this message belongs to.
+  */
+case class ShardInfo(
+    maxShards: Int,
+    shardNum: Int
+)
+
+/**
+  * @param currentSeq The current seq number when this message was received.
+  *                   Will be -1 if no seq has been received yet.
+  */
+case class GatewayInfo(
+    shardInfo: ShardInfo,
+    currentSeq: Int
+)
+
+/**
   * Sent with each new event.
   * @param sequence The seq number.
   * @param event The sent event.
   */
-case class Dispatch[+D](sequence: Int, event: GatewayEvent[D]) extends GatewayMessage[D] {
+case class Dispatch[+D](sequence: Int, event: GatewayEvent[D], gatewayInfo: GatewayInfo)
+    extends ServerGatewayMessage[D] {
   override val s: JsonSome[Int]                    = JsonSome(sequence)
   override val t: JsonSome[GatewayEvent[D]]        = JsonSome(event)
   override def op: GatewayOpCode                   = GatewayOpCode.Dispatch
@@ -80,7 +108,9 @@ case class Dispatch[+D](sequence: Int, event: GatewayEvent[D]) extends GatewayMe
   * Sent and received to confirm the connection is still going.
   * @param nowD The previous sequence.
   */
-case class Heartbeat(nowD: Option[Int]) extends EagerGatewayMessage[Option[Int]] {
+case class Heartbeat(nowD: Option[Int], gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[Option[Int]]
+    with ServerGatewayMessage[Option[Int]] {
   override def op: GatewayOpCode = GatewayOpCode.Heartbeat
 }
 
@@ -139,7 +169,9 @@ case class StatusData(
 /**
   * Sent when a presence or status changes.
   */
-case class StatusUpdate(nowD: StatusData) extends EagerGatewayMessage[StatusData] {
+case class StatusUpdate(nowD: StatusData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[StatusData]
+    with ServerGatewayMessage[StatusData] {
   override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
 
@@ -169,7 +201,9 @@ case class VoiceStateUpdate(nowD: VoiceStateUpdateData) extends EagerGatewayMess
   * @param endpoint The voice server.
   */
 case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
-case class VoiceServerUpdate(nowD: VoiceServerUpdateData) extends EagerGatewayMessage[VoiceServerUpdateData] {
+case class VoiceServerUpdate(nowD: VoiceServerUpdateData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[VoiceServerUpdateData]
+    with ServerGatewayMessage[VoiceServerUpdateData] {
   override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
 }
 
@@ -183,14 +217,16 @@ case class ResumeData(token: String, sessionId: String, seq: Int)
 /**
   * Sent by the shard instead of [[Identify]] when resuming a connection.
   */
-case class Resume(nowD: ResumeData) extends EagerGatewayMessage[ResumeData] {
+case class Resume(nowD: ResumeData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[ResumeData]
+    with ServerGatewayMessage[ResumeData] {
   override def op: GatewayOpCode = GatewayOpCode.Resume
 }
 
 /**
   * Sent by the gateway to indicate that the shard should reconnect.
   */
-case object Reconnect extends EagerGatewayMessage[NotUsed] {
+case class Reconnect(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[NotUsed] with ServerGatewayMessage[NotUsed] {
   override def op: GatewayOpCode = GatewayOpCode.Reconnect
   override def nowD: NotUsed     = NotUsed
 }
@@ -225,7 +261,9 @@ case class RequestGuildMembers(nowD: RequestGuildMembersData) extends EagerGatew
   * Sent by the gateway if the session is invalid when resuming a connection.
   * @param resumable If the connection is resumable.
   */
-case class InvalidSession(resumable: Boolean) extends EagerGatewayMessage[Boolean] {
+case class InvalidSession(resumable: Boolean, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[Boolean]
+    with ServerGatewayMessage[Boolean] {
   override def op: GatewayOpCode = GatewayOpCode.InvalidSession
   override def nowD: Boolean     = resumable
 }
@@ -239,14 +277,18 @@ case class HelloData(heartbeatInterval: Int)
 /**
   * Sent by the gateway as a response to [[Identify]]
   */
-case class Hello(nowD: HelloData) extends EagerGatewayMessage[HelloData] {
+case class Hello(nowD: HelloData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[HelloData]
+    with ServerGatewayMessage[HelloData] {
   override def op: GatewayOpCode = GatewayOpCode.Hello
 }
 
 /**
   * Sent by the gateway as a response to [[Heartbeat]].
   */
-case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
+case class HeartbeatACK(gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[NotUsed]
+    with ServerGatewayMessage[NotUsed] {
   override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
   override def nowD: NotUsed     = NotUsed
 }
@@ -254,7 +296,9 @@ case object HeartbeatACK extends EagerGatewayMessage[NotUsed] {
 /**
   * All unknown gateway messages.
   */
-case class UnknownGatewayMessage(op: GatewayOpCode) extends EagerGatewayMessage[NotUsed] {
+case class UnknownGatewayMessage(op: GatewayOpCode, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[NotUsed]
+    with ServerGatewayMessage[NotUsed] {
   override def nowD: NotUsed = NotUsed
 }
 

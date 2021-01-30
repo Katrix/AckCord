@@ -42,7 +42,7 @@ import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
 import io.circe
-import io.circe.{Decoder, Encoder, parser}
+import io.circe.{Encoder, parser}
 import io.circe.syntax._
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
@@ -65,9 +65,18 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
     val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var resume: ResumeData = prevResume.orNull
       var receivedAck        = false
+      var currentSeq: Int    = -1
 
       val HeartbeatTimerKey: String  = "HeartbeatTimer"
       val ReidentifyTimerKey: String = "ReidentifyTimer"
+
+      def currentGatewayInfo(): GatewayInfo = GatewayInfo(
+        ShardInfo(
+          settings.shardTotal,
+          settings.shardNum
+        ),
+        currentSeq
+      )
 
       def restart(resumable: Boolean, waitBeforeRestart: Boolean): Unit = {
         resumePromise.success(if (resumable) (Some(resume), waitBeforeRestart) else (None, waitBeforeRestart))
@@ -76,7 +85,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
 
       def identify(): Unit = {
         val message =
-          if (resume != null) Resume(resume)
+          if (resume != null) Resume(resume, currentGatewayInfo())
           else
             Identify(
               IdentifyData(
@@ -104,8 +113,9 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
         val event = grab(in)
 
         event match {
-          case Hello(data) => handleHello(data)
-          case Dispatch(seq, event) =>
+          case Hello(data, _) => handleHello(data)
+          case Dispatch(seq, event, _) =>
+            currentSeq = seq
             event match {
               case GatewayEvent.Ready(_, _) | GatewayEvent.Resumed(_) =>
                 successullStartPromise.trySuccess(())
@@ -127,14 +137,14 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
                 } else null
             }
 
-          case Heartbeat(_) => onTimer(HeartbeatTimerKey)
-          case HeartbeatACK =>
+          case Heartbeat(_, _) => onTimer(HeartbeatTimerKey)
+          case HeartbeatACK(_) =>
             log.debug("Received HeartbeatACK")
             receivedAck = true
-          case Reconnect =>
+          case Reconnect(_) =>
             log.debug("Restarting connection because of reconnect")
             restart(resumable = true, waitBeforeRestart = false)
-          case InvalidSession(resumable) =>
+          case InvalidSession(resumable, _) =>
             log.debug(s"Restarting connection because of invalid session. Resumable: $resumable")
             if (!resumable) {
               resume = null
@@ -172,7 +182,7 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
           case HeartbeatTimerKey =>
             if (receivedAck) {
               log.debug("Sending heartbeat")
-              emit(out, Heartbeat(Option(resume).map(_.seq)))
+              emit(out, Heartbeat(Option(resume).map(_.seq), currentGatewayInfo()))
             } else {
               val e = new IllegalStateException("Did not receive HeartbeatACK between heartbeats")
               failStage(e)
@@ -211,7 +221,9 @@ object GatewayHandlerGraphStage {
     val msgFlow =
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
-        .viaMat(parseMessage(settings.compress, settings.eventDecoders))(Keep.left)
+        .viaMat(
+          parseMessage(settings.compress, settings.eventDecoders, ShardInfo(settings.shardTotal, settings.shardNum))
+        )(Keep.left)
         .collect {
           case Right(msg) => msg
           case Left(e)    => throw new GatewayJsonException(e.show, e)
@@ -242,7 +254,7 @@ object GatewayHandlerGraphStage {
   /**
     * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
     */
-  def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders)(
+  def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders, shardInfo: ShardInfo)(
       implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val stringFlow = compress match {
@@ -299,8 +311,20 @@ object GatewayHandlerGraphStage {
       stringFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else stringFlow
 
-    implicit val wsMessageDecoder: Decoder[GatewayMessage[_]] = GatewayProtocol.wsMessageDecoder(eventDecoders)
-    withLogging.map(parser.parse(_).flatMap(_.as[GatewayMessage[_]]))
+    withLogging.map(parser.parse).statefulMapConcat { () =>
+      var seq = -1
+
+      parsed => {
+        val wsMessageParsed = parsed
+          .flatMap(json => GatewayProtocol.decodeWsMessage(eventDecoders, GatewayInfo(shardInfo, seq), json.hcursor))
+        wsMessageParsed.foreach {
+          case Dispatch(sequence, _, _) => seq = sequence
+          case _                        =>
+        }
+
+        List(wsMessageParsed)
+      }
+    }
   }
 
   /**
@@ -312,8 +336,8 @@ object GatewayHandlerGraphStage {
     val flow = Flow[GatewayMessage[_]].map {
       case msg: GatewayMessage[d] =>
         msg match {
-          case StatusUpdate(data) => data.activities.foreach(_.foreach(_.requireCanSend()))
-          case _                  =>
+          case StatusUpdate(data, _) => data.activities.foreach(_.foreach(_.requireCanSend()))
+          case _                     =>
         }
 
         val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces

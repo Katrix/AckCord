@@ -42,18 +42,18 @@ object MyBot extends App {
     .createClient()
     .foreach { client =>
       client.onEventSideEffectsIgnore {
-        case APIMessage.Ready(_, _) => println("Now ready")
+        case APIMessage.Ready(_, _, _) => println("Now ready")
       }
 
       import client.requestsHelper._
       client.onEventAsync { implicit c =>
         {
-          case APIMessage.ChannelCreate(_, channel, _) =>
+          case APIMessage.ChannelCreate(_, channel, _, _) =>
             for {
               tChannel <- optionPure(channel.asTextChannel)
               _        <- run(tChannel.sendMessage("First"))
             } yield ()
-          case APIMessage.ChannelDelete(optGuild, channel, _) =>
+          case APIMessage.ChannelDelete(optGuild, channel, _, _) =>
             for {
               guild <- optionPure(optGuild)
               _     <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))

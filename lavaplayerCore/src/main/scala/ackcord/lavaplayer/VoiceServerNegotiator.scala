@@ -75,7 +75,7 @@ object VoiceServerNegotiator {
     case InitSink(ackTo) =>
       ackTo ! AckSink
       Behaviors.same
-    case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c)) if state.userId == c.current.botUser.id =>
+    case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c, _)) if state.userId == c.current.botUser.id =>
       ackTo ! AckSink
 
       tokenEndpoint match {
@@ -87,7 +87,7 @@ object VoiceServerNegotiator {
         case None => running(guildId, None, Some(state.sessionId), replyTo, killSwitch)
       }
 
-    case ReceivedEvent(ackTo, APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c)) if guild.id == guildId =>
+    case ReceivedEvent(ackTo, APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c, _)) if guild.id == guildId =>
       ackTo ! AckSink
 
       val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint

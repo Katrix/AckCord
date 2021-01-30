@@ -78,9 +78,15 @@ object CacheEventCreator {
 
     {
       case gatewayEv.Ready(_, GetLazy(data)) =>
-        CacheUpdate(data, state => Some(api.Ready(data.application.id, state)), ReadyUpdater, registry, dispatch)
+        CacheUpdate(
+          data,
+          state => Some(api.Ready(data.application.id, state, dispatch.gatewayInfo)),
+          ReadyUpdater,
+          registry,
+          dispatch
+        )
       case gatewayEv.Resumed(_) =>
-        CacheUpdate(NotUsed, state => Some(api.Resumed(state)), NOOPHandler, registry, dispatch)
+        CacheUpdate(NotUsed, state => Some(api.Resumed(state, dispatch.gatewayInfo)), NOOPHandler, registry, dispatch)
       case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
@@ -94,7 +100,8 @@ object CacheEventCreator {
                   }
                   .orElse(data.toGuildChannel(data.guildId.get))
                   .get,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawChannelUpdater,
@@ -109,7 +116,8 @@ object CacheEventCreator {
               api.ChannelUpdate(
                 data.guildId.flatMap(state.current.getGuild),
                 getChannelUsingMaybeGuildId(state.current, data.guildId, data.id).orElse(data.toChannel).get,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawChannelUpdater,
@@ -129,7 +137,8 @@ object CacheEventCreator {
                   }
                   .orElse(data.toChannel.asInstanceOf[Option[GuildChannel]])
                   .get,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawChannelDeleter,
@@ -145,7 +154,8 @@ object CacheEventCreator {
                 data.guildId.flatMap(state.current.getGuild),
                 data.channelId,
                 data.timestamp.toOption,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           NOOPHandler,
@@ -155,7 +165,14 @@ object CacheEventCreator {
       case gatewayEv.GuildCreate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => Some(api.GuildCreate(state.current.getGuild(data.id).orElse(data.toGuild).get, state)),
+          state =>
+            Some(
+              api.GuildCreate(
+                state.current.getGuild(data.id).orElse(data.toGuild).get,
+                state,
+                dispatch.gatewayInfo
+              )
+            ),
           CacheHandlers.rawGuildUpdater,
           registry,
           dispatch
@@ -163,7 +180,14 @@ object CacheEventCreator {
       case gatewayEv.GuildUpdate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => Some(api.GuildUpdate(state.current.getGuild(data.id).orElse(data.toGuild).get, state)),
+          state =>
+            Some(
+              api.GuildUpdate(
+                state.current.getGuild(data.id).orElse(data.toGuild).get,
+                state,
+                dispatch.gatewayInfo
+              )
+            ),
           CacheHandlers.rawGuildUpdater,
           registry,
           dispatch
@@ -171,7 +195,10 @@ object CacheEventCreator {
       case gatewayEv.GuildDelete(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => state.previous.getGuild(data.id).map(g => api.GuildDelete(g, data.unavailable, state)),
+          state =>
+            state.previous
+              .getGuild(data.id)
+              .map(g => api.GuildDelete(g, data.unavailable, state, dispatch.gatewayInfo)),
           CacheHandlers.guildDeleter,
           registry,
           dispatch
@@ -182,7 +209,14 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(g => api.GuildBanAdd(g, state.current.getUser(data.user.id).getOrElse(data.user), state)),
+              .map { g =>
+                api.GuildBanAdd(
+                  g,
+                  state.current.getUser(data.user.id).getOrElse(data.user),
+                  state,
+                  dispatch.gatewayInfo
+                )
+              },
           CacheHandlers.rawBanUpdater,
           registry,
           dispatch
@@ -193,7 +227,14 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(g => api.GuildBanRemove(g, state.current.getUser(data.user.id).getOrElse(data.user), state)),
+              .map { g =>
+                api.GuildBanRemove(
+                  g,
+                  state.current.getUser(data.user.id).getOrElse(data.user),
+                  state,
+                  dispatch.gatewayInfo
+                )
+              },
           CacheHandlers.rawBanDeleter,
           registry,
           dispatch
@@ -204,7 +245,7 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(g => api.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state)),
+              .map(g => api.GuildEmojiUpdate(g, data.emojis.map(_.toEmoji), state, dispatch.gatewayInfo)),
           CacheHandlers.guildEmojisUpdater,
           registry,
           dispatch
@@ -212,7 +253,8 @@ object CacheEventCreator {
       case gatewayEv.GuildIntegrationsUpdate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => state.current.getGuild(data.guildId).map(g => api.GuildIntegrationsUpdate(g, state)),
+          state =>
+            state.current.getGuild(data.guildId).map(g => api.GuildIntegrationsUpdate(g, state, dispatch.gatewayInfo)),
           NOOPHandler,
           registry,
           dispatch
@@ -224,7 +266,7 @@ object CacheEventCreator {
             for {
               g   <- state.current.getGuild(data.guildId)
               mem <- g.members.get(data.user.id)
-            } yield api.GuildMemberAdd(mem, g, state),
+            } yield api.GuildMemberAdd(mem, g, state, dispatch.gatewayInfo),
           CacheHandlers.rawGuildMemberWithGuildUpdater,
           registry,
           dispatch
@@ -235,7 +277,14 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(g => api.GuildMemberRemove(state.current.getUser(data.user.id).getOrElse(data.user), g, state)),
+              .map { g =>
+                api.GuildMemberRemove(
+                  state.current.getUser(data.user.id).getOrElse(data.user),
+                  g,
+                  state,
+                  dispatch.gatewayInfo
+                )
+              },
           CacheHandlers.rawGuildMemberDeleter,
           registry,
           dispatch
@@ -254,7 +303,8 @@ object CacheEventCreator {
                   data.nick,
                   data.joinedAt,
                   data.premiumSince,
-                  state
+                  state,
+                  dispatch.gatewayInfo
                 )
               },
           CacheHandlers.rawGuildMemberUpdater,
@@ -275,7 +325,8 @@ object CacheEventCreator {
                   data.chunkCount,
                   data.notFound,
                   data.nonce,
-                  state
+                  state,
+                  dispatch.gatewayInfo
                 )
               },
           CacheHandlers.rawGuildMemberChunkUpdater,
@@ -289,7 +340,12 @@ object CacheEventCreator {
             state.current
               .getGuild(data.guildId)
               .map { g =>
-                api.GuildRoleCreate(g, g.roles.get(data.role.id).getOrElse(data.role.toRole(data.guildId)), state)
+                api.GuildRoleCreate(
+                  g,
+                  g.roles.get(data.role.id).getOrElse(data.role.toRole(data.guildId)),
+                  state,
+                  dispatch.gatewayInfo
+                )
               },
           CacheHandlers.roleModifyDataUpdater,
           registry,
@@ -302,7 +358,12 @@ object CacheEventCreator {
             state.current
               .getGuild(data.guildId)
               .map { g =>
-                api.GuildRoleUpdate(g, g.roles.get(data.role.id).getOrElse(data.role.toRole(data.guildId)), state)
+                api.GuildRoleUpdate(
+                  g,
+                  g.roles.get(data.role.id).getOrElse(data.role.toRole(data.guildId)),
+                  state,
+                  dispatch.gatewayInfo
+                )
               },
           CacheHandlers.roleModifyDataUpdater,
           registry,
@@ -315,7 +376,7 @@ object CacheEventCreator {
             for {
               previousGuild <- state.previous.getGuild(data.guildId)
               role          <- previousGuild.roles.get(data.roleId)
-            } yield api.GuildRoleDelete(previousGuild, role, state),
+            } yield api.GuildRoleDelete(previousGuild, role, state, dispatch.gatewayInfo),
           CacheHandlers.roleDeleteDataDeleter,
           registry,
           dispatch
@@ -347,7 +408,8 @@ object CacheEventCreator {
                 data.targetUser,
                 data.targetUserType
               ),
-              state
+              state,
+              dispatch.gatewayInfo
             ),
           NOOPHandler,
           registry,
@@ -364,7 +426,7 @@ object CacheEventCreator {
                 data.guildId,
                 data.channelId.asChannelId[TextChannel]
               )
-            } yield api.InviteDelete(guild, channel, data.code, state),
+            } yield api.InviteDelete(guild, channel, data.code, state, dispatch.gatewayInfo),
           NOOPHandler,
           registry,
           dispatch
@@ -377,7 +439,8 @@ object CacheEventCreator {
               api.MessageCreate(
                 data.guildId.flatMap(state.current.getGuild),
                 state.current.getMessage(data.channelId, data.id).getOrElse(data.toMessage),
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawMessageUpdater,
@@ -387,10 +450,20 @@ object CacheEventCreator {
       case gatewayEv.MessageUpdate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state =>
-            state.current
-              .getMessage(data.id)
-              .map(message => api.MessageUpdate(message.guild(state.current), message, state)),
+          state => Some(
+            api.MessageUpdate(
+              data.channelId
+                .resolve(state.current)
+                .collect {
+                  case tc: TextGuildChannel => tc.guild(state.current)
+                }
+                .flatten,
+              data.id,
+              data.channelId,
+              state,
+              dispatch.gatewayInfo
+            )
+          ),
           CacheHandlers.rawPartialMessageUpdater,
           registry,
           dispatch
@@ -399,7 +472,15 @@ object CacheEventCreator {
         CacheUpdate(
           data,
           state =>
-            Some(api.MessageDelete(data.id, data.guildId.flatMap(state.current.getGuild), data.channelId, state)),
+            Some(
+              api.MessageDelete(
+                data.id,
+                data.guildId.flatMap(state.current.getGuild),
+                data.channelId,
+                state,
+                dispatch.gatewayInfo
+              )
+            ),
           CacheHandlers.rawMessageDeleter,
           registry,
           dispatch
@@ -409,7 +490,13 @@ object CacheEventCreator {
           data,
           state =>
             Some(
-              api.MessageDeleteBulk(data.ids, data.guildId.flatMap(state.current.getGuild), data.channelId, state)
+              api.MessageDeleteBulk(
+                data.ids,
+                data.guildId.flatMap(state.current.getGuild),
+                data.channelId,
+                state,
+                dispatch.gatewayInfo
+              )
             ),
           CacheHandlers.rawMessageBulkDeleter,
           registry,
@@ -431,7 +518,8 @@ object CacheEventCreator {
                 guild
                   .flatMap(_.members.get(data.userId))
                   .orElse(data.member.map(_.toGuildMember(data.guildId.get))),
-                state
+                state,
+                dispatch.gatewayInfo
               )
             )
           },
@@ -455,7 +543,8 @@ object CacheEventCreator {
                 guild
                   .flatMap(_.members.get(data.userId))
                   .orElse(data.member.map(_.toGuildMember(data.guildId.get))),
-                state
+                state,
+                dispatch.gatewayInfo
               )
             )
           },
@@ -472,7 +561,8 @@ object CacheEventCreator {
                 data.guildId.flatMap(state.current.getGuild),
                 data.channelId,
                 data.messageId,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawMessageReactionAllDeleter,
@@ -489,7 +579,8 @@ object CacheEventCreator {
                 data.channelId,
                 data.messageId,
                 data.emoji,
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawMessageReactionEmojiDeleter,
@@ -504,7 +595,7 @@ object CacheEventCreator {
               guild    <- state.current.getGuild(data.guildId)
               user     <- state.current.getUser(data.user.id)
               presence <- guild.presences.get(user.id)
-            } yield api.PresenceUpdate(guild, user, presence, state),
+            } yield api.PresenceUpdate(guild, user, presence, state, dispatch.gatewayInfo),
           PresenceUpdater,
           registry,
           dispatch
@@ -524,7 +615,8 @@ object CacheEventCreator {
                 guild
                   .flatMap(_.members.get(data.userId))
                   .orElse(data.member.map(_.toGuildMember(data.guildId.get))),
-                state
+                state,
+                dispatch.gatewayInfo
               )
             )
           },
@@ -535,7 +627,7 @@ object CacheEventCreator {
       case gatewayEv.UserUpdate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => Some(api.UserUpdate(state.current.getUser(data.id).getOrElse(data), state)),
+          state => Some(api.UserUpdate(state.current.getUser(data.id).getOrElse(data), state, dispatch.gatewayInfo)),
           CacheHandlers.userUpdater,
           registry,
           dispatch
@@ -550,7 +642,8 @@ object CacheEventCreator {
                   .flatMap(state.current.getGuild)
                   .flatMap(_.voiceStates.get(data.userId))
                   .getOrElse(data),
-                state
+                state,
+                dispatch.gatewayInfo
               )
             ),
           CacheHandlers.voiceStateUpdater,
@@ -563,7 +656,7 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(g => api.VoiceServerUpdate(data.token, g, data.endpoint, state)),
+              .map(g => api.VoiceServerUpdate(data.token, g, data.endpoint, state, dispatch.gatewayInfo)),
           NOOPHandler,
           registry,
           dispatch
@@ -575,7 +668,7 @@ object CacheEventCreator {
             for {
               guild   <- state.current.getGuild(data.guildId)
               channel <- guild.channels.get(data.channelId.asChannelId[GuildChannel])
-            } yield api.WebhookUpdate(guild, channel, state),
+            } yield api.WebhookUpdate(guild, channel, state, dispatch.gatewayInfo),
           NOOPHandler,
           registry,
           dispatch
@@ -584,7 +677,7 @@ object CacheEventCreator {
       case gatewayEv.InteractionCreate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => Some(api.InteractionCreate(data, state)),
+          state => Some(api.InteractionCreate(data, state, dispatch.gatewayInfo)),
           NOOPHandler,
           registry,
           dispatch
@@ -601,12 +694,13 @@ object CacheEventCreator {
         .andThen(Some(_))
         .applyOrElse(
           dispatch.event,
-          (event: GatewayEvent[_]) => event match {
-            case _: GatewayEvent.UnknownEvent[_] => None
-            case e =>
-              log.error(s"Found unhandled gateway event: ${e.name}")
-              None
-          }
+          (event: GatewayEvent[_]) =>
+            event match {
+              case _: GatewayEvent.UnknownEvent[_] => None
+              case e =>
+                log.error(s"Found unhandled gateway event: ${e.name}")
+                None
+            }
         )
 
   def eventToCacheUpdate(

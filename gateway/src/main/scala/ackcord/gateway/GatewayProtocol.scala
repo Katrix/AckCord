@@ -252,19 +252,19 @@ object GatewayProtocol extends DiscordProtocol {
     case dispatch: Dispatch[_] => encodeDispatch(dispatch)
     case a =>
       val d = a match {
-        case Heartbeat(d)              => JsonSome(d.asJson)
-        case Identify(d)               => JsonSome(d.asJson)
-        case StatusUpdate(d)           => JsonSome(d.asJson)
-        case VoiceStateUpdate(d)       => JsonSome(d.asJson)
-        case VoiceServerUpdate(d)      => JsonSome(d.asJson)
-        case Resume(d)                 => JsonSome(d.asJson)
-        case Reconnect                 => JsonUndefined
-        case RequestGuildMembers(d)    => JsonSome(d.asJson)
-        case InvalidSession(resumable) => JsonSome(resumable.asJson)
-        case Hello(d)                  => JsonSome(d.asJson)
-        case HeartbeatACK              => JsonUndefined
-        case UnknownGatewayMessage(_)  => JsonUndefined
-        case d @ Dispatch(_, _)        => sys.error("impossible")
+        case Heartbeat(d, _)              => JsonSome(d.asJson)
+        case Identify(d)                  => JsonSome(d.asJson)
+        case StatusUpdate(d, _)           => JsonSome(d.asJson)
+        case VoiceStateUpdate(d)          => JsonSome(d.asJson)
+        case VoiceServerUpdate(d, _)      => JsonSome(d.asJson)
+        case Resume(d, _)                 => JsonSome(d.asJson)
+        case Reconnect(_)                 => JsonUndefined
+        case RequestGuildMembers(d)       => JsonSome(d.asJson)
+        case InvalidSession(resumable, _) => JsonSome(resumable.asJson)
+        case Hello(d, _)                  => JsonSome(d.asJson)
+        case HeartbeatACK(_)              => JsonUndefined
+        case UnknownGatewayMessage(_, _)  => JsonUndefined
+        case _ @Dispatch(_, _, _)         => sys.error("impossible")
       }
 
       JsonOption.removeUndefinedToObj(
@@ -275,26 +275,31 @@ object GatewayProtocol extends DiscordProtocol {
       )
   }
 
-  def wsMessageDecoder(decoders: EventDecoders): Decoder[GatewayMessage[_]] = (c: HCursor) => {
+  def decodeWsMessage(
+      decoders: EventDecoders,
+      gatewayInfo: GatewayInfo,
+      c: HCursor
+  ): Decoder.Result[GatewayMessage[_]] = {
     val dCursor = c.downField("d")
 
     val op = c.get[GatewayOpCode]("op")
 
     //We use the apply method on the companion object here
     op.flatMap {
-      case GatewayOpCode.Dispatch            => decodeDispatch(c, decoders)
-      case GatewayOpCode.Heartbeat           => dCursor.as[Option[Int]].map(Heartbeat)
-      case GatewayOpCode.Identify            => dCursor.as[IdentifyData].map(Identify)
-      case GatewayOpCode.StatusUpdate        => dCursor.as[StatusData].map(StatusUpdate)
-      case GatewayOpCode.VoiceStateUpdate    => dCursor.as[VoiceStateUpdateData].map(VoiceStateUpdate)
-      case GatewayOpCode.VoiceServerPing     => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate)
-      case GatewayOpCode.Resume              => dCursor.as[ResumeData].map(Resume)
-      case GatewayOpCode.Reconnect           => Right(Reconnect)
-      case GatewayOpCode.RequestGuildMembers => dCursor.as[RequestGuildMembersData].map(RequestGuildMembers)
-      case GatewayOpCode.InvalidSession      => dCursor.as[Boolean].map(InvalidSession)
-      case GatewayOpCode.Hello               => dCursor.as[HelloData].map(Hello)
-      case GatewayOpCode.HeartbeatACK        => Right(HeartbeatACK)
-      case op @ GatewayOpCode.Unknown(_)     => Right(UnknownGatewayMessage(op))
+      case GatewayOpCode.Dispatch         => decodeDispatch(c, decoders, gatewayInfo.shardInfo)
+      case GatewayOpCode.Heartbeat        => dCursor.as[Option[Int]].map(Heartbeat(_, gatewayInfo))
+      case GatewayOpCode.Identify         => dCursor.as[IdentifyData].map(Identify)
+      case GatewayOpCode.StatusUpdate     => dCursor.as[StatusData].map(StatusUpdate(_, gatewayInfo))
+      case GatewayOpCode.VoiceStateUpdate => dCursor.as[VoiceStateUpdateData].map(VoiceStateUpdate)
+      case GatewayOpCode.VoiceServerPing  => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate(_, gatewayInfo))
+      case GatewayOpCode.Resume           => dCursor.as[ResumeData].map(Resume(_, gatewayInfo))
+      case GatewayOpCode.Reconnect        => Right(Reconnect(gatewayInfo))
+      case GatewayOpCode.RequestGuildMembers =>
+        dCursor.as[RequestGuildMembersData].map(RequestGuildMembers)
+      case GatewayOpCode.InvalidSession  => dCursor.as[Boolean].map(InvalidSession(_, gatewayInfo))
+      case GatewayOpCode.Hello           => dCursor.as[HelloData].map(Hello(_, gatewayInfo))
+      case GatewayOpCode.HeartbeatACK    => Right(HeartbeatACK(gatewayInfo))
+      case op @ GatewayOpCode.Unknown(_) => Right(UnknownGatewayMessage(op, gatewayInfo))
     }
   }
 
@@ -307,21 +312,26 @@ object GatewayProtocol extends DiscordProtocol {
     )
   }
 
-  type EventDecoders = Map[String, (Int, Json, ACursor) => Decoder.Result[Dispatch[_]]]
-  val ackcordEventDecoders: Map[String, (Int, Json, ACursor) => Decoder.Result[Dispatch[_]]] = {
+  type EventDecoder[A] = (Int, Json, ACursor, ShardInfo) => Decoder.Result[Dispatch[A]]
+  type EventDecoders   = Map[String, EventDecoder[_]]
+  val ackcordEventDecoders: EventDecoders = {
     //We use the apply method on the companion object here
     def createDispatch[Data: Decoder: Encoder](
         create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
-    ): (Int, Json, ACursor) => Decoder.Result[Dispatch[Data]] = (seq, rawJson, dataCursor) =>
-      Right(Dispatch(seq, create(rawJson, Later(dataCursor.as[Data]))))
+    ): EventDecoder[Data] = (seq, rawJson, dataCursor, shardInfo) =>
+      Right(Dispatch(seq, create(rawJson, Later(dataCursor.as[Data])), GatewayInfo(shardInfo, seq)))
 
-    def ignored(name: String): (String, (Int, Json, ACursor) => Decoder.Result[Dispatch[Unit]]) =
-      name -> ((seq, rawJson, _) => Right(Dispatch(seq, GatewayEvent.IgnoredEvent(name, rawJson, Later(Right(()))))))
+    def ignored(name: String): (String, EventDecoder[Unit]) =
+      name -> ((seq, rawJson, _, shardInfo) =>
+        Right(Dispatch(seq, GatewayEvent.IgnoredEvent(name, rawJson, Later(Right(()))), GatewayInfo(shardInfo, seq)))
+      )
 
     //Seperate var here to make type inference happy
-    val res: Map[String, (Int, Json, ACursor) => Either[DecodingFailure, Dispatch[Any]]] = Map(
-      "READY"                         -> createDispatch(GatewayEvent.Ready),
-      "RESUMED"                       -> ((seq, rawJson, _) => Right(Dispatch(seq, GatewayEvent.Resumed(rawJson)))),
+    val res: Map[String, EventDecoder[_]] = Map(
+      "READY" -> createDispatch(GatewayEvent.Ready),
+      "RESUMED" -> ((seq: Int, rawJson: Json, _: ACursor, shardInfo: ShardInfo) =>
+        Right(Dispatch(seq, GatewayEvent.Resumed(rawJson), GatewayInfo(shardInfo, seq)))
+      ),
       "CHANNEL_CREATE"                -> createDispatch(GatewayEvent.ChannelCreate),
       "CHANNEL_UPDATE"                -> createDispatch(GatewayEvent.ChannelUpdate),
       "CHANNEL_DELETE"                -> createDispatch(GatewayEvent.ChannelDelete),
@@ -366,13 +376,14 @@ object GatewayProtocol extends DiscordProtocol {
     res
   }
 
-  private def decodeDispatch(c: HCursor, decoders: EventDecoders): Decoder.Result[Dispatch[_]] =
+  private def decodeDispatch(c: HCursor, decoders: EventDecoders, shardInfo: ShardInfo): Decoder.Result[Dispatch[_]] =
     for {
       seq <- c.get[Int]("s")
       tpe <- c.get[String]("t")
       res <- decoders.getOrElse(
         tpe,
-        (_: Int, _: Json, _: ACursor) => Left(DecodingFailure(s"Invalid gateway type $tpe", c.downField("t").history))
-      )(seq, c.value, c.downField("d"))
+        (_: Int, _: Json, _: ACursor, _: ShardInfo) =>
+          Left(DecodingFailure(s"Invalid gateway type $tpe", c.downField("t").history))
+      )(seq, c.value, c.downField("d"), shardInfo)
     } yield res
 }
