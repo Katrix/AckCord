@@ -355,7 +355,7 @@ object GatewayProtocol extends DiscordProtocol {
       "USER_UPDATE"                   -> createDispatch(GatewayEvent.UserUpdate),
       "VOICE_STATE_UPDATE"            -> createDispatch(GatewayEvent.VoiceStateUpdate),
       "VOICE_SERVER_UPDATE"           -> createDispatch(GatewayEvent.VoiceServerUpdate),
-      "WEBHOOK_UPDATE"                -> createDispatch(GatewayEvent.WebhookUpdate),
+      "WEBHOOKS_UPDATE"               -> createDispatch(GatewayEvent.WebhookUpdate),
       "INTERACTION_CREATE"            -> createDispatch(GatewayEvent.InteractionCreate),
       ignored("PRESENCES_REPLACE"),
       ignored("APPLICATION_COMMAND_CREATE"),
