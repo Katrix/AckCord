@@ -48,13 +48,21 @@ package object data {
       * Creates a snowflake for a specific moment. Use this for pagination.
       */
     def fromInstant[A](instant: Instant): SnowflakeType[A] = apply(instant.toEpochMilli - DiscordEpoch << 22)
+
+    implicit def snowflakeOrdering[A]: Ordering[SnowflakeType[A]] = (x: SnowflakeType[A], y: SnowflakeType[A]) =>
+      x.compare(y)
   }
 
   private val DiscordEpoch = 1420070400000L
 
-  implicit class SnowflakeTypeSyntax(private val snowflake: SnowflakeType[_]) extends AnyVal {
+  implicit class SnowflakeTypeSyntax[A](private val snowflake: SnowflakeType[A])
+      extends AnyVal
+      with Ordered[SnowflakeType[A]] {
     def creationDate: Instant = Instant.ofEpochMilli(DiscordEpoch + (toUnsignedLong >> 22))
     def asString: String      = JLong.toUnsignedString(toUnsignedLong)
+
+    override def compare(that: SnowflakeType[A]): Int =
+      java.lang.Long.compareUnsigned(snowflake.toUnsignedLong, that.toUnsignedLong)
 
     def toUnsignedLong: Long = snowflake.asInstanceOf[Long]
   }
