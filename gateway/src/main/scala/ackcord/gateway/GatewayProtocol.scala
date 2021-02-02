@@ -96,26 +96,8 @@ object GatewayProtocol extends DiscordProtocol {
 
   implicit val resumeDataCodec: Codec[ResumeData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val requestGuildMembersDataEncoder: Encoder[RequestGuildMembersData] = (a: RequestGuildMembersData) =>
-    Json.obj(
-      "guild_id"  -> a.guildId.fold(_.asJson, _.asJson),
-      "query"     -> a.query.asJson,
-      "limit"     -> a.limit.asJson,
-      "presences" -> a.presences.asJson,
-      "user_ids"  -> a.userIds.asJson
-    )
-  implicit val requestGuildMembersDataDecoder: Decoder[RequestGuildMembersData] = (c: HCursor) =>
-    for {
-      guildId <-
-        c
-          .get[GuildId]("guild_id")
-          .fold(_ => c.get[Seq[GuildId]]("guild_id").map(Left.apply), r => Right(Right(r)))
-      query     <- c.get[Option[String]]("query")
-      limit     <- c.get[Int]("limit")
-      presences <- c.get[Boolean]("presences")
-      userIds   <- c.get[Option[Seq[UserId]]]("user_ids")
-      nonce     <- c.get[Option[String]]("nonce")
-    } yield RequestGuildMembersData(guildId, query, limit, presences, userIds, nonce)
+  implicit val requestGuildMembersDataCodec: Codec[RequestGuildMembersData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val helloDataCodec: Codec[HelloData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 

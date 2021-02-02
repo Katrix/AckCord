@@ -240,14 +240,15 @@ case class Reconnect(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[NotUs
   * @param userIds Users to fetch.
   */
 case class RequestGuildMembersData(
-    guildId: Either[Seq[GuildId], GuildId],
+    guildId: GuildId,
     query: Option[String] = None,
-    limit: Int = 0,
+    limit: Option[Int] = None,
     presences: Boolean = false,
     userIds: Option[Seq[UserId]],
     nonce: Option[String]
 ) {
   require(query.isDefined || userIds.isDefined, "Neither query not userIds is specified")
+  require(nonce.forall(_.getBytes("UTF-8").length <= 32), "Nonce can only be up to 32 bytes")
 }
 
 /**
