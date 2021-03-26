@@ -392,9 +392,9 @@ case class RawMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
-    referencedMessage: Option[RawMessage]
+    referencedMessage: Option[RawMessage],
+    interaction: Option[MessageInteraction]
 ) {
-
   /**
     * Convert this to a normal message.
     */
@@ -428,7 +428,8 @@ case class RawMessage(
           messageReference,
           flags,
           stickers,
-          referencedMessage.map(_.toMessage)
+          referencedMessage.map(_.toMessage),
+          interaction
         )
 
       case None =>
@@ -456,7 +457,8 @@ case class RawMessage(
           messageReference,
           flags,
           stickers,
-          referencedMessage.map(_.toMessage)
+          referencedMessage.map(_.toMessage),
+          interaction
         )
 
     }

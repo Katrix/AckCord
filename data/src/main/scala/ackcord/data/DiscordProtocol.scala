@@ -198,6 +198,9 @@ trait DiscordProtocol {
   implicit val stickersCodec: Codec[Sticker] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val messageInteractionCodec: Codec[MessageInteraction] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
       "id"               -> a.id.asJson,
@@ -258,6 +261,7 @@ trait DiscordProtocol {
       flags             <- c.get[Option[MessageFlags]]("flags")
       stickers          <- c.get[Option[Seq[Sticker]]]("stickers")
       referencedMessage <- c.get[Option[RawMessage]]("referenced_message")
+      messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
     } yield RawMessage(
       id,
       channelId,
@@ -283,7 +287,8 @@ trait DiscordProtocol {
       messageReference,
       flags,
       stickers,
-      referencedMessage
+      referencedMessage,
+      messageInteraction
     )
   }
 

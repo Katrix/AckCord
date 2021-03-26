@@ -342,6 +342,9 @@ sealed trait Message {
   /** Data sent with a crosspost. */
   def messageReference: Option[MessageReference]
 
+  /** Sent if the message is a response to an Interaction */
+  def interaction: Option[MessageInteraction]
+
   /** Extra features of the message. */
   def flags: Option[MessageFlags]
 
@@ -403,7 +406,8 @@ case class SparseMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
-    referencedMessage: Option[Message]
+    referencedMessage: Option[Message],
+    interaction: Option[MessageInteraction]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -461,7 +465,8 @@ case class GuildGatewayMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
-    referencedMessage: Option[Message]
+    referencedMessage: Option[Message],
+    interaction: Option[MessageInteraction]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -810,4 +815,18 @@ case class Sticker(
     asset: String,
     previewAsset: Option[String],
     formatType: FormatType
+)
+
+/**
+  * This is sent on the message object when the message is a response to an Interaction.
+  * @param id id of the interaction
+  * @param type the type of interaction
+  * @param name the name of the ApplicationCommand
+  * @param user	the user who invoked the interaction
+  */
+case class MessageInteraction(
+    id: String,
+    `type`: InteractionType,
+    name: String,
+    user: User
 )
