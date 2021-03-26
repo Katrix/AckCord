@@ -395,6 +395,7 @@ case class RawMessage(
     referencedMessage: Option[RawMessage],
     interaction: Option[MessageInteraction]
 ) {
+
   /**
     * Convert this to a normal message.
     */
