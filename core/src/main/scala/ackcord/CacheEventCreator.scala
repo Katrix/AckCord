@@ -450,20 +450,21 @@ object CacheEventCreator {
       case gatewayEv.MessageUpdate(_, GetLazy(data)) =>
         CacheUpdate(
           data,
-          state => Some(
-            api.MessageUpdate(
-              data.channelId
-                .resolve(state.current)
-                .collect {
-                  case tc: TextGuildChannel => tc.guild(state.current)
-                }
-                .flatten,
-              data.id,
-              data.channelId,
-              state,
-              dispatch.gatewayInfo
-            )
-          ),
+          state =>
+            Some(
+              api.MessageUpdate(
+                data.channelId
+                  .resolve(state.current)
+                  .collect {
+                    case tc: TextGuildChannel => tc.guild(state.current)
+                  }
+                  .flatten,
+                data.id,
+                data.channelId,
+                state,
+                dispatch.gatewayInfo
+              )
+            ),
           CacheHandlers.rawPartialMessageUpdater,
           registry,
           dispatch

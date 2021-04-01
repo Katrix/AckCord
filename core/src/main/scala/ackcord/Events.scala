@@ -152,7 +152,9 @@ object Events {
           .collectType[Dispatch[_]]
           .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
           .mapAsync(parallelism)(dispatch =>
-            Future(CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, cacheHandlerLog, settings).toList)
+            Future(
+              CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, cacheHandlerLog, settings).toList
+            )
           )
           .mapConcat(identity)
           .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
