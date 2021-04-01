@@ -23,22 +23,70 @@
  */
 package ackcord.slashcommands.raw
 
-import ackcord.data.DiscordProtocol
+import ackcord.data.raw.RawGuildMember
+import ackcord.data.{DiscordProtocol, GuildId, InteractionType, Permission, RawSnowflake, TextChannelId, User}
+import ackcord.slashcommands.InteractionId
+import cats.syntax.all._
 import io.circe._
 import io.circe.syntax._
-import cats.syntax.all._
 
 trait CommandsProtocol extends DiscordProtocol {
   implicit val applicationCommandCodec: Codec[ApplicationCommand] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-  implicit val interactionCodec: Codec[RawInteraction] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionCodec: Codec[Interaction] = Codec.from(
+    (c: HCursor) =>
+      for {
+        id            <- c.get[InteractionId]("id")
+        applicationId <- c.get[RawSnowflake]("application_id")
+        tpe           <- c.get[InteractionType]("type")
+        data          <- c.get[Option[ApplicationCommandInteractionData]]("data")
+        guildId       <- c.get[Option[GuildId]]("guild_id")
+        channelId     <- c.get[TextChannelId]("channel_id")
+        member        <- c.get[Option[RawGuildMember]]("member")
+        permissions   <- c.downField("member").get[Option[Permission]]("permissions")
+        user          <- c.get[Option[User]]("user")
+        token         <- c.get[String]("token")
+        version       <- c.get[Option[Int]]("version")
+      } yield Interaction(
+        id,
+        applicationId,
+        tpe,
+        data,
+        guildId,
+        channelId,
+        member,
+        permissions,
+        user,
+        token,
+        version
+      ),
+    (a: Interaction) =>
+      Json.obj(
+        "id" := a.id,
+        "application_id" := a.applicationId,
+        "type" := a.tpe,
+        "data" := a.data,
+        "guild_id" := a.guildId,
+        "channel_id" := a.channelId,
+        "member" := a.member.map(
+          _.asJson.withObject(o => Json.fromJsonObject(o.add("permissions", a.memberPermission.get.asJson)))
+        ),
+        "user" := a.user,
+        "token" := a.token,
+        "version" := a.version
+      )
+  )
+
   implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val interactionResponseCodec: Codec[InteractionResponse] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val interactionApplicationCommandCallbackDataCodec: Codec[InteractionApplicationCommandCallbackData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 

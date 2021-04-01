@@ -23,10 +23,6 @@
  */
 package ackcord.requests
 
-import java.nio.file.{Files, Path}
-
-import scala.collection.immutable
-
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
@@ -40,6 +36,9 @@ import akka.util.ByteString
 import enumeratum.values.{StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
+
+import java.nio.file.{Files, Path}
+import scala.collection.immutable
 
 /**
   * Get a channel by id.
@@ -264,11 +263,23 @@ object CreateMessageFile {
 
 }
 
+/**
+  * @param parse Which mention types should be allowed.
+  * @param roles The roles to allow mention.
+  * @param users The users to allow mention.
+  * @param repliedUser For replires, if the author of the message you are
+  *                    replying to should be mentioned.
+  */
 case class AllowedMention(
     parse: Seq[AllowedMentionTypes] = Seq.empty,
     roles: Seq[RoleId] = Seq.empty,
-    users: Seq[UserId] = Seq.empty
-)
+    users: Seq[UserId] = Seq.empty,
+    repliedUser: Boolean = false
+) {
+  require(roles.size <= 100, "Too many allowed role mentions")
+  require(users.size <= 100, "Too many allowed user mentions")
+}
+
 object AllowedMention {
   val none: AllowedMention = AllowedMention()
   val all: AllowedMention = AllowedMention(
@@ -300,6 +311,8 @@ object AllowedMentionTypes
   * @param files The files to send with this message. You can reference these
   *              files in the embed using `attachment://filename`.
   * @param embed An embed to send with this message.
+  * @param replyTo The message to reply to
+  * @param replyFailIfNotExist Fail the reply if the message to reply to does not exist.
   */
 case class CreateMessageData(
     content: String = "",
@@ -307,7 +320,9 @@ case class CreateMessageData(
     tts: Boolean = false,
     files: Seq[CreateMessageFile] = Seq.empty,
     embed: Option[OutgoingEmbed] = None,
-    allowedMentions: AllowedMention = AllowedMention.all
+    allowedMentions: AllowedMention = AllowedMention.all,
+    replyTo: Option[MessageId] = None,
+    replyFailIfNotExist: Boolean = true
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -319,14 +334,23 @@ case class CreateMessageData(
 object CreateMessageData {
 
   //We handle this here as the file argument needs special treatment
-  implicit val encoder: Encoder[CreateMessageData] = (a: CreateMessageData) =>
-    Json.obj(
+  implicit val encoder: Encoder[CreateMessageData] = (a: CreateMessageData) => {
+    val base = Json.obj(
       "content" := a.content,
       "nonce" := a.nonce,
       "tts" := a.tts,
       "embed" := a.embed,
       "allowed_mentions" := a.allowedMentions
     )
+
+    a.replyTo.fold(base) { reply =>
+      base.withObject(o =>
+        Json.fromJsonObject(
+          o.add("message_reference", Json.obj("message_id" := reply, "fail_if_not_exist" := a.replyFailIfNotExist))
+        )
+      )
+    }
+  }
 }
 
 /**
@@ -337,15 +361,15 @@ case class CreateMessage(channelId: TextChannelId, params: CreateMessageData)
   override def route: RequestRoute                       = Routes.createMessage(channelId)
   override def paramsEncoder: Encoder[CreateMessageData] = CreateMessageData.encoder
   override def requestBody: RequestEntity = {
-    this match {
-      case CreateMessage(_, CreateMessageData(_, _, _, files, _, _)) if files.nonEmpty =>
-        val jsonPart = FormData.BodyPart(
-          "payload_json",
-          HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
-        )
+    if (params.files.nonEmpty) {
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
 
-        FormData(files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
-      case _ => super.requestBody
+      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+    } else {
+      super.requestBody
     }
   }
 

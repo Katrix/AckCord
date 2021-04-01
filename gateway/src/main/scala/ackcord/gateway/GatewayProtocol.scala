@@ -23,15 +23,15 @@
  */
 package ackcord.gateway
 
-import java.time.OffsetDateTime
-
 import ackcord.data._
 import ackcord.data.raw.RawMessageActivity
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import cats.Later
-import cats.syntax.either._
+import cats.syntax.all._
 import io.circe.syntax._
 import io.circe.{derivation, _}
+
+import java.time.OffsetDateTime
 
 //noinspection NameBooleanParameters
 object GatewayProtocol extends DiscordProtocol {
@@ -110,8 +110,9 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] =
     (a: GatewayEvent.ChannelPinsUpdateData) =>
       JsonOption.removeUndefinedToObj(
-        "channel_id" -> JsonSome(a.channelId.asJson),
-        "timestamp"  -> a.timestamp.map(_.asJson)
+        "guild_id"           -> JsonSome(a.guildId.asJson),
+        "channel_id"         -> JsonSome(a.channelId.asJson),
+        "last_pin_timestamp" -> a.lastPinTimestamp.map(_.asJson)
       )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
@@ -135,6 +136,9 @@ object GatewayProtocol extends DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val simpleRawInteractionCodec: Codec[GatewayEvent.SimpleRawInteraction] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val simpleApplicationCommandWithGuildCodec: Codec[GatewayEvent.SimpleApplicationCommandWithGuildId] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
@@ -350,9 +354,9 @@ object GatewayProtocol extends DiscordProtocol {
       "WEBHOOKS_UPDATE"               -> createDispatch(GatewayEvent.WebhookUpdate),
       "INTERACTION_CREATE"            -> createDispatch(GatewayEvent.InteractionCreate),
       ignored("PRESENCES_REPLACE"),
-      ignored("APPLICATION_COMMAND_CREATE"),
-      ignored("APPLICATION_COMMAND_UPDATE"),
-      ignored("APPLICATION_COMMAND_DELETE"),
+      "APPLICATION_COMMAND_CREATE" -> createDispatch(GatewayEvent.ApplicationCommandCreate),
+      "APPLICATION_COMMAND_UPDATE" -> createDispatch(GatewayEvent.ApplicationCommandUpdate),
+      "APPLICATION_COMMAND_DELETE" -> createDispatch(GatewayEvent.ApplicationCommandDelete),
       ignored("INTEGRATION_UPDATE")
     )
     res

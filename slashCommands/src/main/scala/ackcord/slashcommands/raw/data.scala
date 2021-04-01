@@ -24,7 +24,17 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{GuildId, InteractionResponseType, InteractionType, OutgoingEmbed, RawSnowflake, TextChannelId}
+import ackcord.data.{
+  GuildId,
+  InteractionResponseType,
+  InteractionType,
+  MessageFlags,
+  OutgoingEmbed,
+  Permission,
+  RawSnowflake,
+  TextChannelId,
+  User
+}
 import ackcord.requests.AllowedMention
 import ackcord.slashcommands.{CommandId, InteractionId}
 import ackcord.util.IntCirceEnumWithUnknown
@@ -43,7 +53,6 @@ case class ApplicationCommandOption(
     `type`: ApplicationCommandOptionType,
     name: String,
     description: String,
-    default: Option[Boolean],
     required: Option[Boolean],
     choices: Option[Seq[ApplicationCommandOptionChoice]],
     options: Option[Seq[ApplicationCommandOption]]
@@ -74,13 +83,16 @@ case class ApplicationCommandOptionChoice(
     value: Either[String, Int]
 )
 
-case class RawInteraction(
+case class Interaction(
     id: InteractionId,
-    `type`: InteractionType,
+    applicationId: RawSnowflake,
+    tpe: InteractionType,
     data: Option[ApplicationCommandInteractionData],
-    guildId: GuildId,
+    guildId: Option[GuildId],
     channelId: TextChannelId,
-    member: RawGuildMember,
+    member: Option[RawGuildMember],
+    memberPermission: Option[Permission],
+    user: Option[User],
     token: String,
     version: Option[Int]
 )
@@ -106,7 +118,8 @@ case class InteractionResponse(`type`: InteractionResponseType, data: Option[Int
 
 case class InteractionApplicationCommandCallbackData(
     tts: Option[Boolean] = None,
-    content: String = "",
+    content: Option[String] = None,
     embeds: Seq[OutgoingEmbed] = Nil,
-    allowedMentions: Option[AllowedMention] = None
+    allowedMentions: Option[AllowedMention] = None,
+    flags: MessageFlags = MessageFlags.None
 )

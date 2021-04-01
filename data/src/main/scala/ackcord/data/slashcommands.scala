@@ -20,15 +20,10 @@ object InteractionResponseType
     with IntCirceEnumWithUnknown[InteractionResponseType] {
   override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
 
-  @deprecated("Deprecated by Discord", since = "CHANGEME")
-  case object Acknowledge extends InteractionResponseType(2)
-  @deprecated("Deprecated by Discord", since = "CHANGEME")
-  case object ChannelMessage extends InteractionResponseType(3)
-
-  case object Pong                     extends InteractionResponseType(1)
-  case object ChannelMessageWithSource extends InteractionResponseType(4)
-  case object ACKWithSource            extends InteractionResponseType(5)
-  case class Unknown(i: Int)           extends InteractionResponseType(i)
+  case object Pong                             extends InteractionResponseType(1)
+  case object ChannelMessageWithSource         extends InteractionResponseType(4)
+  case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
+  case class Unknown(i: Int)                   extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
 }

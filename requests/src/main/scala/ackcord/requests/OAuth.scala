@@ -23,11 +23,8 @@
  */
 package ackcord.requests
 
-import scala.concurrent.Future
-
 import ackcord.data.raw.PartialUser
-import ackcord.data.{GuildId, RawSnowflake, Team}
-import ackcord.data.DiscordProtocol._
+import ackcord.data.{GuildId, RawSnowflake, Team, User}
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
@@ -37,12 +34,16 @@ import akka.stream.scaladsl.{Sink, Source}
 import io.circe._
 import io.circe.syntax._
 
+import java.time.OffsetDateTime
+import scala.concurrent.Future
+
 object OAuth {
 
   sealed abstract class Scope(val name: String)
   object Scope {
     case object Bot                      extends Scope("bot")
     case object Commands                 extends Scope("applications.commands")
+    case object CommandsUpdate           extends Scope("applications.commands.update")
     case object Connections              extends Scope("connections")
     case object Email                    extends Scope("email")
     case object Identify                 extends Scope("identify")
@@ -261,8 +262,41 @@ object OAuth {
 
   case object GetCurrentApplicationInformation extends NoParamsNiceResponseRequest[ApplicationInformation] {
     //noinspection NameBooleanParameters
-    override def responseDecoder: Decoder[ApplicationInformation] =
+    override def responseDecoder: Decoder[ApplicationInformation] = {
+      import ackcord.data.DiscordProtocol._
       derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+    }
     override def route: RequestRoute = Routes.getCurrentApplication
   }
+
+  case object GetCurrentAuthorizationInformation extends NoParamsNiceResponseRequest[AuthorizationInformation] {
+    override def responseDecoder: Decoder[AuthorizationInformation] = {
+      import ackcord.data.DiscordProtocol._
+      implicit val applicationDecoder: Decoder[AuthorizationInformationApplication] =
+        derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+
+      derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+    }
+    override def route: RequestRoute = Routes.getCurrentAuthorizationInformation
+  }
+
+  case class AuthorizationInformation(
+      application: AuthorizationInformationApplication,
+      scopes: Seq[String],
+      expires: OffsetDateTime,
+      user: Option[User]
+  )
+
+  case class AuthorizationInformationApplication(
+      id: RawSnowflake,
+      name: String,
+      icon: String,
+      description: String,
+      summary: String,
+      hook: Boolean,
+      botPublic: Boolean,
+      botRequireCodeGrant: Boolean,
+      verifyKey: String
+  )
+
 }

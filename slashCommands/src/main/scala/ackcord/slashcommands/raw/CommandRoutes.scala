@@ -44,6 +44,8 @@ object CommandRoutes {
 
   val getCommands: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(GET))
   val postCommand: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(POST))
+  val putCommands: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(PUT))
+  val getCommand: (RawSnowflake, CommandId) => RequestRoute    = upcast(globalCommand.toRequest(GET))
   val patchCommand: (RawSnowflake, CommandId) => RequestRoute  = upcast(globalCommand.toRequest(PATCH))
   val deleteCommand: (RawSnowflake, CommandId) => RequestRoute = upcast(globalCommand.toRequest(DELETE))
 
@@ -52,6 +54,8 @@ object CommandRoutes {
 
   val getGuildCommands: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(GET))
   val postGuildCommand: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(POST))
+  val putGuildCommands: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(PUT))
+  val getGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute    = upcast(guildCommand.toRequest(GET))
   val patchGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute  = upcast(guildCommand.toRequest(PATCH))
   val deleteGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute = upcast(guildCommand.toRequest(DELETE))
 }

@@ -218,7 +218,8 @@ object CacheHandlers {
           publicUpdatesChannelId = obj.publicUpdatesChannelId,
           maxVideoChannelUsers = obj.maxVideoChannelUsers,
           approximateMemberCount = obj.approximateMemberCount,
-          approximatePresenceCount = obj.approximatePresenceCount
+          approximatePresenceCount = obj.approximatePresenceCount,
+          welcomeScreen = obj.welcomeScreen
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -296,7 +297,7 @@ object CacheHandlers {
 
         registry.updateData(builder)(
           exisitingMember.getOrElse(
-            GuildMember(user.id, guildId, nick, roles, joinedAt, None, deaf = false, mute = false)
+            GuildMember(user.id, guildId, nick, roles, joinedAt, None, deaf = false, mute = false, None)
           )
         )
 

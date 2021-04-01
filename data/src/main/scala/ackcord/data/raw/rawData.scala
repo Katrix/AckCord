@@ -294,6 +294,7 @@ case class RawChannel(
   * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
+  * @param pending True if the member hasn't gotten past the guild screening yet
   */
 case class PartialRawGuildMember(
     nick: Option[String],
@@ -301,11 +302,12 @@ case class PartialRawGuildMember(
     joinedAt: OffsetDateTime,
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
-    mute: Boolean
+    mute: Boolean,
+    pending: Option[Boolean]
 ) {
 
   def toGuildMember(userId: UserId, guildId: GuildId): GuildMember =
-    GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
+    GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
 }
 
 //Remember to edit RawGuildMemberWithGuild when editing this
@@ -318,6 +320,7 @@ case class PartialRawGuildMember(
   * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
+  * @param pending True if the member hasn't gotten past the guild screening yet
   */
 case class RawGuildMember(
     user: User,
@@ -326,14 +329,15 @@ case class RawGuildMember(
     joinedAt: OffsetDateTime,
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
-    mute: Boolean
+    mute: Boolean,
+    pending: Option[Boolean]
 ) {
 
   /**
     * Convert this to a normal guild member.
     */
   def toGuildMember(guildId: GuildId): GuildMember =
-    GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute)
+    GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
 }
 
 /**
@@ -514,6 +518,8 @@ case class RawMessage(
   * @param maxVideoChannelUsers The max amount of users in a video call.
   * @param approximateMemberCount Roughly how many members there is in the guild.
   * @param approximatePresenceCount Roughly how many presences there is in the guild.
+  * @param welcomeScreen The welcome screen shown to new members. Only returned
+  *                      in invite objects.
   */
 case class RawGuild(
     id: GuildId,
@@ -560,7 +566,8 @@ case class RawGuild(
     publicUpdatesChannelId: Option[TextGuildChannelId],
     maxVideoChannelUsers: Option[Int],
     approximateMemberCount: Option[Int],
-    approximatePresenceCount: Option[Int]
+    approximatePresenceCount: Option[Int],
+    welcomeScreen: Option[WelcomeScreen]
 ) {
 
   /**
@@ -624,7 +631,8 @@ case class RawGuild(
         publicUpdatesChannelId,
         maxVideoChannelUsers,
         approximateMemberCount,
-        approximatePresenceCount
+        approximatePresenceCount,
+        welcomeScreen
       )
     }
   }
@@ -649,11 +657,12 @@ case class RawRole(
     position: Int,
     permissions: Permission,
     managed: Boolean,
-    mentionable: Boolean
+    mentionable: Boolean,
+    tags: Option[RoleTags]
 ) {
 
   def toRole(guildId: GuildId): Role =
-    Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable)
+    Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable, tags)
 }
 
 /**

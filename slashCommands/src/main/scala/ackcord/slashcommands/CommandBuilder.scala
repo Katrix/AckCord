@@ -40,7 +40,7 @@ class CommandBuilder[Interaction[_], A](
   def paramList: Option[ParamList[A]] = implParamList.toOption
 
   def withParams[NewA](paramList: ParamList[NewA]): CommandBuilder[Interaction, NewA] = {
-    require(paramList.foldRight(0)((_, acc) => acc + 1) <= 10, "Too many parameters. The maximum is 10")
+    require(paramList.foldRight(0)((_, acc) => acc + 1) <= 25, "Too many parameters. The maximum is 25")
     new CommandBuilder(transformer, Right(paramList), extra)
   }
 
@@ -51,7 +51,7 @@ class CommandBuilder[Interaction[_], A](
     new CommandBuilder(transformer, implParamList, extra)
 
   def group(name: String, description: String)(subcommands: CommandOrGroup*): CommandGroup = {
-    require(subcommands.length <= 10, "Too many subcommands or groups. The maximum is 10")
+    require(subcommands.length <= 25, "Too many subcommands or groups. The maximum is 25")
     CommandGroup(name, description, extra, subcommands)
   }
 
@@ -79,7 +79,7 @@ class NamedCommandBuilder[Interaction[_], A](
     withTransformer(this.transformer.andThen(nextTransformer))
 
   override def withParams[NewA](paramList: ParamList[NewA]): NamedCommandBuilder[Interaction, NewA] = {
-    require(paramList.foldRight(0)((_, acc) => acc + 1) <= 10, "Too many parameters. The maximum is 10")
+    require(paramList.foldRight(0)((_, acc) => acc + 1) <= 25, "Too many parameters. The maximum is 25")
     new NamedCommandBuilder(name, description, transformer, Right(paramList), extra)
   }
 

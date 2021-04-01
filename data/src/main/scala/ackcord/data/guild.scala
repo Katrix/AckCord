@@ -23,14 +23,13 @@
  */
 package ackcord.data
 
-import java.time.{Instant, OffsetDateTime}
-
-import scala.collection.immutable
-
 import ackcord.data.raw.RawEmoji
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
+
+import java.time.{Instant, OffsetDateTime}
+import scala.collection.immutable
 
 /**
   * A guild which that status of is unknown.
@@ -212,6 +211,8 @@ case class GuildPreview(
   * @param approximatePresenceCount Roughly how many presences there is in the guild.
   *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
   *                                 endpoint with `withCounts = true`
+  * @param welcomeScreen The welcome screen shown to new members. Only returned
+  *                      in invite objects.
   */
 case class Guild(
     id: GuildId,
@@ -257,7 +258,8 @@ case class Guild(
     publicUpdatesChannelId: Option[TextGuildChannelId],
     maxVideoChannelUsers: Option[Int],
     approximateMemberCount: Option[Int],
-    approximatePresenceCount: Option[Int]
+    approximatePresenceCount: Option[Int],
+    welcomeScreen: Option[WelcomeScreen]
 ) extends UnknownStatusGuild {
   override def unavailable: Option[Boolean] = Some(false)
 
@@ -298,6 +300,28 @@ case class Guild(
 }
 
 /**
+  * @param description A description of the server
+  * @param welcomeChannels Channels shown on the welcome screen
+  */
+case class WelcomeScreen(
+    description: Option[String],
+    welcomeChannels: Seq[WelcomeScreenChannel]
+)
+
+/**
+  * @param channelId The id the channel is referencing.
+  * @param description The description for the channel
+  * @param emojiId The emoji id if it is a custom one
+  * @param emojiName The emoji name if it is not a custom one
+  */
+case class WelcomeScreenChannel(
+    channelId: GuildChannelId,
+    description: String,
+    emojiId: Option[EmojiId],
+    emojiName: Option[String]
+)
+
+/**
   * A guild which is not available.
   * @param id The id of the guild.
   * @param unavailable If the guild is unavailable because of an outage.
@@ -336,6 +360,7 @@ object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnk
   * @param premiumSince When this user boosted the server.
   * @param deaf If this user is deaf.
   * @param mute IF this user is mute.
+  * @param pending True if the member hasn't gotten past the guild screening yet
   */
 case class GuildMember(
     userId: UserId,
@@ -345,7 +370,8 @@ case class GuildMember(
     joinedAt: OffsetDateTime,
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
-    mute: Boolean
+    mute: Boolean,
+    pending: Option[Boolean]
 ) extends GetUser
     with GetGuild {
 
@@ -663,6 +689,43 @@ case class ClientStatus(
 case class Presence(userId: UserId, status: PresenceStatus, activities: Seq[Activity], clientStatus: ClientStatus)
     extends GetUser
 
+sealed trait Integration {
+
+  /** The id of the integration. */
+  def id: IntegrationId
+
+  /** The integration name. */
+  def name: String
+
+  /** The type of the integration. */
+  def `type`: IntegrationType
+
+  /** If the integration is enabled. */
+  def enabled: Boolean
+
+  /** Account information. */
+  def account: IntegrationAccount
+}
+
+/**
+  * A discord bot/OAuth2 integration.
+  * @param id The id of the integration
+  * @param name The integration name
+  * @param enabled If the integration is enabled
+  * @param account Account information
+  * @param application The bot/OAuth2 application
+  */
+case class DiscordIntegration(
+    id: IntegrationId,
+    name: String,
+    enabled: Boolean,
+    account: IntegrationAccount,
+    application: IntegrationApplication
+) extends Integration {
+
+  override def `type`: IntegrationType = IntegrationType.Discord
+}
+
 /**
   * A server integration
   * @param id The id of the integration
@@ -679,10 +742,10 @@ case class Presence(userId: UserId, status: PresenceStatus, activities: Seq[Acti
   * @param subscriberCount How many subscribers this integration has. 0 for Discord
   * @param revoked If this integration has been revoked
   */
-case class Integration(
+case class ExternalIntegration(
     id: IntegrationId,
     name: String,
-    `type`: String, //TODO: Use enum here
+    `type`: IntegrationType,
     enabled: Boolean,
     syncing: Boolean,
     roleId: RoleId,
@@ -695,7 +758,7 @@ case class Integration(
     subscriberCount: Int,
     revoked: Boolean,
     application: Option[IntegrationApplication]
-)
+) extends Integration
 
 sealed abstract class IntegrationType(val value: String) extends StringEnumEntry
 object IntegrationType extends StringEnum[IntegrationType] with StringCirceEnumWithUnknown[IntegrationType] {

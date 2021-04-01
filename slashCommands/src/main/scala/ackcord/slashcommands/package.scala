@@ -24,11 +24,11 @@
 package ackcord
 
 import ackcord.data.SnowflakeType
-import ackcord.slashcommands.raw.{ApplicationCommand, RawInteraction}
+import ackcord.slashcommands.raw.{ApplicationCommand, Interaction}
 
 package object slashcommands {
   type CommandId     = SnowflakeType[ApplicationCommand]
-  type InteractionId = SnowflakeType[RawInteraction]
+  type InteractionId = SnowflakeType[Interaction]
 
   type ~[A, B] = (A, B)
   object ~ {

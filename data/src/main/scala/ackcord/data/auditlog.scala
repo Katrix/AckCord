@@ -24,11 +24,11 @@
 
 package ackcord.data
 
-import scala.collection.immutable
-
 import ackcord.CacheSnapshot
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
+
+import scala.collection.immutable
 
 /**
   * Root audit log object. Received from [[ackcord.requests.GetGuildAuditLog]]
@@ -171,6 +171,11 @@ object AuditLogChange {
   case class Name(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
   /**
+    * Description changed
+    */
+  case class Description(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /**
     * Icon hash changed
     */
   case class IconHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
@@ -198,6 +203,11 @@ object AuditLogChange {
   case class Region(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
   /**
+    * Region changed
+    */
+  case class PreferredLocale(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+
+  /**
     * AFK channelId changed
     */
   case class AfkChannelId(oldValue: Option[VoiceGuildChannelId], newValue: Option[VoiceGuildChannelId])
@@ -218,6 +228,18 @@ object AuditLogChange {
     * AFK timeout changed
     */
   case class AfkTimeout(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+
+  /**
+    * Rules channel changed
+    */
+  case class RulesChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
+      extends AuditLogChange[TextGuildChannelId]
+
+  /**
+    * Public updates channel changed
+    */
+  case class PublicUpdatesChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
+      extends AuditLogChange[TextGuildChannelId]
 
   /**
     * MFA level changed

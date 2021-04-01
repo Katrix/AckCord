@@ -23,26 +23,27 @@
  */
 package ackcord.slashcommands
 
-import java.nio.charset.StandardCharsets
-import java.util.Locale
-import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
 import ackcord.data.{GuildId, InteractionType, RawSnowflake}
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.slashcommands.raw.CommandsProtocol._
 import ackcord.slashcommands.raw._
 import ackcord.{CacheSnapshot, OptFuture}
+import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.`Content-Type`
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.util.ByteString
-import akka.NotUsed
 import cats.syntax.all._
 import com.iwebpp.crypto.TweetNaclFast
 import io.circe.Decoder
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
+
+import java.nio.charset.StandardCharsets
+import java.util.Locale
+import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, Future}
 
 object CommandRegistrar {
 
@@ -51,10 +52,10 @@ object CommandRegistrar {
   private def handleCommand(
       clientId: String,
       commandsByName: Map[String, Seq[CommandOrGroup]],
-      interaction: RawInteraction,
+      interaction: Interaction,
       optCache: Option[CacheSnapshot]
   ) =
-    interaction.`type` match {
+    interaction.tpe match {
       case InteractionType.Ping => Right(CommandResponse.Pong)
       case InteractionType.ApplicationCommand =>
         for {
@@ -69,9 +70,9 @@ object CommandRegistrar {
 
   def extractAsyncPart(response: CommandResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
-      case CommandResponse.Acknowledge(_, andThenDo)       => () => andThenDo().map(_ => ())
-      case CommandResponse.ChannelMessage(_, _, andThenDo) => () => andThenDo().map(_ => ())
-      case _                                               => () => OptFuture.unit
+      case CommandResponse.Acknowledge(andThenDo)       => () => andThenDo().map(_ => ())
+      case CommandResponse.ChannelMessage(_, andThenDo) => () => andThenDo().map(_ => ())
+      case _                                            => () => OptFuture.unit
     }
 
   def webFlow(
@@ -128,7 +129,7 @@ object CommandRegistrar {
               res <- {
                 io.circe.parser
                   .parse(body)
-                  .flatMap(_.as[RawInteraction])
+                  .flatMap(_.as[Interaction])
                   .leftMap { e =>
                     logger.error(s"Error when decoding command interaction: ${e.show}")
                     HttpResponse(StatusCodes.BadRequest, entity = e.show)
@@ -166,13 +167,13 @@ object CommandRegistrar {
       clientId: String,
       requests: Requests,
       parallelism: Int = 4
-  ): Sink[(Decoder.Result[RawInteraction], Option[CacheSnapshot]), NotUsed] = {
+  ): Sink[(Decoder.Result[Interaction], Option[CacheSnapshot]), NotUsed] = {
     import requests.system
     import requests.system.executionContext
     val commandsByName = commands.groupBy(_.name.toLowerCase(Locale.ROOT))
 
     SupervisionStreams.logAndContinue(
-      Flow[(Decoder.Result[RawInteraction], Option[CacheSnapshot])]
+      Flow[(Decoder.Result[Interaction], Option[CacheSnapshot])]
         .mapConcat {
           case (result, optCache) =>
             result match {
@@ -209,29 +210,43 @@ object CommandRegistrar {
       applicationId: RawSnowflake,
       guildId: GuildId,
       requests: Requests,
+      replaceAll: Boolean,
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.manyFutureSuccess(
-      commands.toVector.map(command =>
-        CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
+    if (replaceAll) {
+      requests.singleFutureSuccess(
+        BulkReplaceGuildCommand(applicationId, guildId, commands.map(CreateCommandData.fromCommand))
       )
-    )
+    } else {
+      requests.manyFutureSuccess(
+        commands.toVector.map(command =>
+          CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
+        )
+      )
+    }
   }
 
   def createGlobalCommands(
       applicationId: RawSnowflake,
       requests: Requests,
+      replaceAll: Boolean,
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
     implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.manyFutureSuccess(
-      commands.toVector.map(command => CreateGlobalCommand(applicationId, CreateCommandData.fromCommand(command)))
-    )
+    if (replaceAll) {
+      requests.singleFutureSuccess(
+        BulkReplaceGlobalCommands(applicationId, commands.map(CreateCommandData.fromCommand))
+      )
+    } else {
+      requests.manyFutureSuccess(
+        commands.toVector.map(command => CreateGlobalCommand(applicationId, CreateCommandData.fromCommand(command)))
+      )
+    }
   }
 
   def removeUnknownGuildCommands(

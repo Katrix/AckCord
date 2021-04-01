@@ -101,35 +101,29 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       _.hcursor.as[String].flatMap(parseMention(roleRegex))
     )
 
-  def async(
-      showUserInput: Boolean = true
-  )(handle: AsyncToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse =
-    CommandResponse.Acknowledge(showUserInput, () => handle(AsyncToken.fromInteraction(interaction)))
+  def async(handle: AsyncToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse =
+    CommandResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
 
-  def acknowledge(showUserInput: Boolean = true): CommandResponse =
-    CommandResponse.Acknowledge(showUserInput, () => OptFuture.unit)
+  def acknowledge: CommandResponse =
+    CommandResponse.Acknowledge(() => OptFuture.unit)
 
   def sendMessage(
       content: String,
       tts: Option[Boolean] = None,
       embeds: Seq[OutgoingEmbed] = Nil,
-      allowedMentions: Option[AllowedMention] = None,
-      showUserInput: Boolean = true
+      allowedMentions: Option[AllowedMention] = None
   ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
-    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions),
-    showUserInput,
+    InteractionApplicationCommandCallbackData(tts, Some(content), embeds, allowedMentions),
     () => OptFuture.unit
   )
 
   def sendEmbed(
       embeds: Seq[OutgoingEmbed],
-      content: String = "",
+      content: Option[String] = None,
       tts: Option[Boolean] = None,
-      allowedMentions: Option[AllowedMention] = None,
-      showUserInput: Boolean = true
+      allowedMentions: Option[AllowedMention] = None
   ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
     InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions),
-    showUserInput,
     () => OptFuture.unit
   )
 
@@ -141,14 +135,12 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
       embeds: Seq[OutgoingEmbed] = Nil,
-      allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None
+      allowedMentions: Option[AllowedMention] = None
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
     commandRequest(
-      ExecuteWebhook(
+      CreateFollowupMessage(
         async.webhookId,
         async.webhookToken,
-        waitQuery = true,
         params = ExecuteWebhookData(
           content,
           None,
@@ -156,8 +148,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           tts,
           files,
           embeds,
-          allowedMentions,
-          flags
+          allowedMentions
         )
       )
     ).map(_.get)
@@ -167,14 +158,12 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       content: String = "",
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
-      allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None
+      allowedMentions: Option[AllowedMention] = None
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
     commandRequest(
-      ExecuteWebhook(
+      CreateFollowupMessage(
         async.webhookId,
         async.webhookToken,
-        waitQuery = true,
         params = ExecuteWebhookData(
           content,
           None,
@@ -182,8 +171,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           tts,
           files,
           embeds,
-          allowedMentions,
-          flags
+          allowedMentions
         )
       )
     ).map(_.get)
@@ -191,6 +179,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
   def editOriginalMessage(
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
+      files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
       allowedMentions: JsonOption[AllowedMention] = JsonUndefined
   )(implicit async: AsyncMessageToken): OptFuture[Json] =
     commandRequest(
@@ -200,6 +189,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
         EditWebhookMessageData(
           content,
           embeds,
+          files,
           allowedMentions
         )
       )
@@ -213,6 +203,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       messageId: MessageId,
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
+      files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
       allowedMentions: JsonOption[AllowedMention] = JsonUndefined
   )(implicit async: AsyncToken): OptFuture[Json] =
     commandRequest(
@@ -223,6 +214,7 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
         EditWebhookMessageData(
           content,
           embeds,
+          files,
           allowedMentions
         )
       )

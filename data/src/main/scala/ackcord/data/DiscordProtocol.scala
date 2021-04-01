@@ -23,16 +23,15 @@
  */
 package ackcord.data
 
-import java.time.{Instant, OffsetDateTime}
-
-import scala.util.Try
-
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
-import cats.syntax.either._
+import cats.syntax.all._
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
+
+import java.time.{Instant, OffsetDateTime}
+import scala.util.Try
 
 //noinspection NameBooleanParameters
 trait DiscordProtocol {
@@ -82,6 +81,12 @@ trait DiscordProtocol {
   implicit val rawChannelCodec: Codec[RawChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val welcomeScreenChannelCodec: Codec[WelcomeScreenChannel] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val welcomeScreenCodec: Codec[WelcomeScreen] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawGuildCodec: Codec[RawGuild] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -119,6 +124,23 @@ trait DiscordProtocol {
 
   implicit val webhookAuthorCodec: Codec[WebhookAuthor] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val roleTagsCodec: Codec[RoleTags] = Codec.from(
+    (c: HCursor) =>
+      for {
+        botId         <- c.get[Option[UserId]]("bot_id")
+        integrationId <- c.get[Option[IntegrationId]]("integration_id")
+      } yield RoleTags(botId, integrationId, c.downField("premium_subscriber").succeeded),
+    (a: RoleTags) => {
+      val base = Json.obj(
+        "bot_id" := a.botId,
+        "integration_id" := a.integrationId
+      )
+
+      if (a.premiumSubscriber) base.withObject(o => Json.fromJsonObject(o.add("premium_subscriber", Json.Null)))
+      else base
+    }
+  )
 
   implicit val roleCodec: Codec[Role] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None) //Encoding roles is fine, decoding them is not
@@ -322,8 +344,26 @@ trait DiscordProtocol {
   implicit val integrationApplicationCodec: Codec[IntegrationApplication] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val integrationCodec: Codec[Integration] =
+  implicit val discordIntegrationCodec: Codec[DiscordIntegration] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val externalIntegrationCodec: Codec[ExternalIntegration] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val integrationCodec: Codec[Integration] = Codec.from(
+    (c: HCursor) =>
+      for {
+        tpe <- c.get[IntegrationType]("type")
+        res <- tpe match {
+          case IntegrationType.Discord => c.as[DiscordIntegration]
+          case _                       => c.as[ExternalIntegration]
+        }
+      } yield res,
+    {
+      case a: DiscordIntegration  => a.asJson
+      case a: ExternalIntegration => a.asJson
+    }
+  )
 
   implicit val voiceRegionCodec: Codec[VoiceRegion] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -371,12 +411,16 @@ trait DiscordProtocol {
 
     c.get[String]("key").flatMap {
       case "name"                          => mkChange(AuditLogChange.Name)
+      case "description"                   => mkChange(AuditLogChange.Description)
       case "icon_hash"                     => mkChange(AuditLogChange.IconHash)
       case "splash_hash"                   => mkChange(AuditLogChange.SplashHash)
       case "owner_id"                      => mkChange(AuditLogChange.OwnerId)
       case "region"                        => mkChange(AuditLogChange.Region)
+      case "preferred_locale"              => mkChange(AuditLogChange.PreferredLocale)
       case "afk_channel_id"                => mkChange(AuditLogChange.AfkChannelId)
       case "afk_timeout"                   => mkChange(AuditLogChange.AfkTimeout)
+      case "rules_channel_id"              => mkChange(AuditLogChange.RulesChannelId)
+      case "public_updates_channel_id"     => mkChange(AuditLogChange.PublicUpdatesChannelId)
       case "mfa_level"                     => mkChange(AuditLogChange.MfaLevel)
       case "verification_level"            => mkChange(AuditLogChange.VerificationLevel)
       case "explicit_content_filter"       => mkChange(AuditLogChange.ExplicitContentFilter)

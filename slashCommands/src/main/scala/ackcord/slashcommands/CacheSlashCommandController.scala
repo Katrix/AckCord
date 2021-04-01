@@ -41,12 +41,12 @@ class CacheSlashCommandController(val requests: Requests)
           case None        => Left(Some("This command can only be used when the bot has access to a cache"))
         }
     }.andThen(
-      CommandTransformer.resolved((channel, guild) =>
+      CommandTransformer.resolved((channel, optGuild) =>
         Lambda[CacheCommandInteraction ~> ResolvedCommandInteraction] { baseInteraction =>
           BaseResolvedCommandInteraction(
             baseInteraction.commandInvocationInfo,
             channel,
-            guild,
+            optGuild,
             baseInteraction.cache
           )
         }
@@ -57,9 +57,9 @@ class CacheSlashCommandController(val requests: Requests)
   )
 
   val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] = Command.andThen(
-    CommandTransformer.onlyInGuild(channel =>
+    CommandTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
       Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
-        BaseGuildCommandInteraction(i.commandInvocationInfo, channel, i.guild, i.cache)
+        BaseGuildCommandInteraction(i.commandInvocationInfo, channel, guild, guildMember, memberPermissions, i.cache)
       )
     )
   )
@@ -67,7 +67,15 @@ class CacheSlashCommandController(val requests: Requests)
   val GuildVoiceCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
     CommandTransformer.inVoiceChannel(voiceChannel =>
       Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
-        BaseVoiceChannelCommandInteraction(i.commandInvocationInfo, i.textChannel, i.guild, voiceChannel, i.cache)
+        BaseVoiceChannelCommandInteraction(
+          i.commandInvocationInfo,
+          i.textChannel,
+          i.guild,
+          i.member,
+          i.memberPermissions,
+          voiceChannel,
+          i.cache
+        )
       )
     )
   )

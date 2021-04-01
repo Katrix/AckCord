@@ -41,7 +41,6 @@ import io.circe.{DecodingFailure, Json}
 
 sealed trait Param[A, F[_]] {
   def name: String
-  def default: Boolean
   def isRequired: Boolean
 
   def ~[B, G[_]](other: Param[B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
@@ -81,7 +80,6 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
     tpe: ApplicationCommandOptionType,
     name: String,
     description: String,
-    default: Boolean,
     isRequired: Boolean,
     choices: Map[String, A],
     makeOptionChoice: (String, Orig) => ApplicationCommandOptionChoice,
@@ -90,7 +88,6 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
     map: Orig => A,
     contramap: A => Orig
 ) extends Param[A, F] {
-  def withDefault(default: Boolean): ChoiceParam[Orig, A, F] = copy(default = default)
 
   def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] = copy(choices = choices)
   def withChoices(choices: Seq[String])(implicit ev: String =:= A): ChoiceParam[Orig, A, F] =
@@ -109,7 +106,6 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
     tpe,
     name,
     description,
-    default,
     isRequired,
     decodePayloadInner.andThen(_.map(f)),
     decodePayload,
@@ -128,7 +124,6 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
     tpe,
     name,
     description,
-    Some(default),
     Some(isRequired),
     Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
     Some(Nil)
@@ -148,7 +143,6 @@ object ChoiceParam {
       tpe,
       name,
       description,
-      default = false,
       isRequired = true,
       Map.empty,
       makeOptionChoice,
@@ -163,13 +157,11 @@ case class ValueParam[Orig, A, F[_]] private[slashcommands] (
     tpe: ApplicationCommandOptionType,
     name: String,
     description: String,
-    default: Boolean,
     isRequired: Boolean,
     decodePayloadInner: Json => Either[DecodingFailure, A],
     decodePayload: Option[Json] => Param.DecodePayloadFunction[F],
     map: Orig => A
 ) extends Param[A, F] {
-  def withDefault(default: Boolean): ValueParam[Orig, A, F] = copy(default = default)
   def required: ValueParam[Orig, A, Id] =
     copy(isRequired = true, decodePayload = Param.decodePayloadRequired)
   def notRequired: ValueParam[Orig, A, Option] =
@@ -182,7 +174,6 @@ case class ValueParam[Orig, A, F[_]] private[slashcommands] (
     tpe,
     name,
     description,
-    Some(default),
     Some(isRequired),
     Some(Nil),
     Some(Nil)
@@ -201,7 +192,6 @@ object ValueParam {
       tpe,
       name,
       description,
-      default = false,
       isRequired = true,
       decodePayloadInner,
       Param.decodePayloadRequired,

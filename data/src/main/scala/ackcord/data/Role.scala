@@ -44,7 +44,8 @@ case class Role(
     position: Int,
     permissions: Permission,
     managed: Boolean,
-    mentionable: Boolean
+    mentionable: Boolean,
+    tags: Option[RoleTags]
 ) extends GetGuild
     with UserOrRole {
 
@@ -63,3 +64,15 @@ case class Role(
     */
   def isBelow(other: Role): Boolean = this.position < other.position
 }
+
+/**
+  * @param botId If this role is for a bot, the bot the role belongs to.
+  * @param integrationId If this role is for an integration, the integration the
+  *                      role belongs to.
+  * @param premiumSubscriber If this role is the premium subscriber role.
+  */
+case class RoleTags(
+    botId: Option[UserId],
+    integrationId: Option[IntegrationId],
+    premiumSubscriber: Boolean
+)

@@ -153,7 +153,7 @@ object CacheEventCreator {
               api.ChannelPinsUpdate(
                 data.guildId.flatMap(state.current.getGuild),
                 data.channelId,
-                data.timestamp.toOption,
+                data.lastPinTimestamp.toOption,
                 state,
                 dispatch.gatewayInfo
               )

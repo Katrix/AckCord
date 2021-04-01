@@ -23,13 +23,13 @@
  */
 package ackcord.requests
 
-import java.net.URLEncoder
-
 import ackcord.AckCord
 import ackcord.data._
 import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.{HttpMethod, Uri}
 import shapeless._
+
+import java.net.URLEncoder
 
 /**
   * All the routes used by AckCord
@@ -465,12 +465,8 @@ object Routes {
   val getGuildVoiceRegions: GuildId => RequestRoute = upcast(guild / "regions" toRequest GET)
   val getGuildInvites: GuildId => RequestRoute      = upcast(guild / "invites" toRequest GET)
 
-  val includeApplicationsQuery: QueryParameter[Boolean] = query("include_applications", _.toString)
-
-  val guildIntegrations: RouteFunction[GuildId] = guild / "integrations"
-  val getGuildIntegrations: (GuildId, Option[Boolean]) => RequestRoute = upcast(
-    (guildIntegrations +? includeApplicationsQuery).toRequest(GET)
-  )
+  val guildIntegrations: RouteFunction[GuildId]        = guild / "integrations"
+  val getGuildIntegrations: GuildId => RequestRoute    = upcast(guildIntegrations.toRequest(GET))
   val createGuildIntegrations: GuildId => RequestRoute = upcast(guildIntegrations.toRequest(POST))
 
   val guildIntegration: RouteFunction[(GuildId, IntegrationId)]        = guildIntegrations / integrationId
@@ -495,6 +491,14 @@ object Routes {
   val templateCodeRoute: RouteFunction[String]        = guilds / "template" / templateCode
   val getTemplate: String => RequestRoute             = upcast(templateCodeRoute.toRequest(GET))
   val createGuildFromTemplate: String => RequestRoute = upcast(templateCodeRoute.toRequest(POST))
+
+  val guildTemplates: RouteFunction[GuildId]                 = guild / "templates"
+  val getGuildTemplates: GuildId => RequestRoute             = upcast(guildTemplates.toRequest(GET))
+  val postGuildTemplate: GuildId => RequestRoute             = upcast(guildTemplates.toRequest(GET))
+  val guildTemplate: RouteFunction[(GuildId, String)]        = guildTemplates / templateCode
+  val putGuildTemplate: (GuildId, String) => RequestRoute    = upcast(guildTemplate.toRequest(PUT))
+  val patchGuildTemplate: (GuildId, String) => RequestRoute  = upcast(guildTemplate.toRequest(PATCH))
+  val deleteGuildTemplate: (GuildId, String) => RequestRoute = upcast(guildTemplate.toRequest(DELETE))
 
   //Invites
   val invites: Route                           = base / "invites"
@@ -564,6 +568,8 @@ object Routes {
   val originalWebhookMessage: RouteFunction[(SnowflakeType[Webhook], String)]      = messagesWebhook / "@original"
   val webhookMessage: RouteFunction[((SnowflakeType[Webhook], String), MessageId)] = messagesWebhook / messageId
 
+  val postFollowupMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(webhookWithToken.toRequest(POST))
+
   val editOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
     originalWebhookMessage.toRequest(PATCH)
   )
@@ -615,9 +621,10 @@ object Routes {
   )
 
   //OAuth
-  val oAuth2: Route                       = base / "oauth2"
-  val oAuth2Authorize: Route              = oAuth2 / "authorize"
-  val oAuth2Token: Route                  = oAuth2 / "token"
-  val oAuth2Revoke: Route                 = oAuth2Token / "revoke"
-  val getCurrentApplication: RequestRoute = (oAuth2 / "applications" / "@me").toRequest(GET)
+  val oAuth2: Route                                    = base / "oauth2"
+  val oAuth2Authorize: Route                           = oAuth2 / "authorize"
+  val oAuth2Token: Route                               = oAuth2 / "token"
+  val oAuth2Revoke: Route                              = oAuth2Token / "revoke"
+  val getCurrentApplication: RequestRoute              = (oAuth2 / "applications" / "@me").toRequest(GET)
+  val getCurrentAuthorizationInformation: RequestRoute = (oAuth2 / "@me").toRequest(GET)
 }

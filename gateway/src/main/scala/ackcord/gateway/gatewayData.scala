@@ -23,10 +23,6 @@
  */
 package ackcord.gateway
 
-import java.time.{Instant, OffsetDateTime}
-
-import scala.collection.immutable
-
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
@@ -35,6 +31,9 @@ import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, DecodingFailure, Json}
+
+import java.time.{Instant, OffsetDateTime}
+import scala.collection.immutable
 
 /**
   * Base trait for all gateway messages.
@@ -456,12 +455,12 @@ object GatewayEvent {
   /**
     * @param guildId The id of the guild where this change happened.
     * @param channelId The channel where the change happened.
-    * @param timestamp The time the most recent pinned message was pinned.
+    * @param lastPinTimestamp The time the most recent pinned message was pinned.
     */
   case class ChannelPinsUpdateData(
       guildId: Option[GuildId],
       channelId: TextChannelId,
-      timestamp: JsonOption[OffsetDateTime]
+      lastPinTimestamp: JsonOption[OffsetDateTime]
   )
 
   /**
@@ -577,14 +576,26 @@ object GatewayEvent {
       joinedAt: OffsetDateTime,
       premiumSince: Option[OffsetDateTime],
       deaf: Boolean,
-      mute: Boolean
+      mute: Boolean,
+      pending: Option[Boolean]
   ) {
-    def toRawGuildMember: RawGuildMember = RawGuildMember(user, nick, roles, joinedAt, premiumSince, deaf, mute)
+    def toRawGuildMember: RawGuildMember =
+      RawGuildMember(user, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
   }
 
   object RawGuildMemberWithGuild {
     def apply(guildId: GuildId, m: RawGuildMember): RawGuildMemberWithGuild =
-      new RawGuildMemberWithGuild(guildId, m.user, m.nick, m.roles, m.joinedAt, m.premiumSince, m.deaf, m.mute)
+      new RawGuildMemberWithGuild(
+        guildId,
+        m.user,
+        m.nick,
+        m.roles,
+        m.joinedAt,
+        m.premiumSince,
+        m.deaf,
+        m.mute,
+        m.pending
+      )
   }
 
   /**
@@ -1024,8 +1035,8 @@ object GatewayEvent {
   ) {
 
     def reparse[A: Decoder]: Result[A] = {
-      import io.circe.syntax._
       import GatewayProtocol._
+      import io.circe.syntax._
       val self: SimpleRawInteraction = this
       self.asJson.as[A]
     }
@@ -1036,6 +1047,44 @@ object GatewayEvent {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTERACTION_CREATE"
+  }
+
+  case class SimpleApplicationCommandWithGuildId(
+      id: RawSnowflake,
+      applicationId: RawSnowflake,
+      name: String,
+      description: String,
+      options: Option[Json],
+      guildId: Option[GuildId]
+  ) {
+
+    def reparse[A: Decoder]: Decoder.Result[A] = {
+      import GatewayProtocol._
+      import io.circe.syntax._
+      val self: SimpleApplicationCommandWithGuildId = this
+      self.asJson.as[A]
+    }
+  }
+
+  case class ApplicationCommandCreate(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
+      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
+
+    override def name: String = "APPLICATION_COMMAND_CREATE"
+  }
+
+  case class ApplicationCommandUpdate(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
+      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
+
+    override def name: String = "APPLICATION_COMMAND_UPDATE"
+  }
+
+  case class ApplicationCommandDelete(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
+      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
+
+    override def name: String = "APPLICATION_COMMAND_DELETE"
   }
 
   /**

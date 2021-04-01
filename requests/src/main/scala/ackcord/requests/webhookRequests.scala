@@ -23,17 +23,18 @@
  */
 package ackcord.requests
 
-import scala.concurrent.Future
-
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw.RawMessage
 import ackcord.util.{JsonOption, JsonUndefined}
 import akka.actor.typed.ActorSystem
-import akka.http.scaladsl.model.ResponseEntity
+import akka.http.scaladsl.model.Multipart.FormData
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, ResponseEntity}
 import io.circe._
 import io.circe.syntax._
+
+import scala.concurrent.Future
 
 /**
   * @param name Name of the webhook
@@ -212,8 +213,7 @@ case class ExecuteWebhookData(
     tts: Option[Boolean] = None,
     files: Seq[CreateMessageFile] = Seq.empty,
     embeds: Seq[OutgoingEmbed] = Nil,
-    allowedMentions: Option[AllowedMention] = None,
-    flags: MessageFlags = MessageFlags.None
+    allowedMentions: Option[AllowedMention] = None
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -233,8 +233,7 @@ object ExecuteWebhookData {
       "avatar_url" := a.avatarUrl,
       "tts" := a.tts,
       "embeds" := a.embeds,
-      "allowed_mentions" := a.allowedMentions,
-      "flags" := a.flags
+      "allowed_mentions" := a.allowedMentions
     )
 }
 
@@ -245,6 +244,19 @@ case class ExecuteWebhook(
     params: ExecuteWebhookData
 ) extends RESTRequest[ExecuteWebhookData, Option[RawMessage], Option[Message]] {
   override def route: RequestRoute = Routes.executeWebhook(id, token, Some(waitQuery))
+
+  override def requestBody: RequestEntity = {
+    if (params.files.nonEmpty) {
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
+
+      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+    } else {
+      super.requestBody
+    }
+  }
 
   override def parseResponse(
       entity: ResponseEntity
@@ -265,11 +277,35 @@ case class ExecuteWebhook(
   override def toNiceResponse(response: Option[RawMessage]): Option[Message] = response.map(_.toMessage)
 }
 
+case class CreateFollowupMessage(
+    id: SnowflakeType[Webhook],
+    token: String,
+    params: ExecuteWebhookData
+) extends RESTRequest[ExecuteWebhookData, Option[RawMessage], Option[Message]] {
+  override def route: RequestRoute = Routes.postFollowupMessage(id, token)
+
+  override def paramsEncoder: Encoder[ExecuteWebhookData] =
+    ExecuteWebhookData.encoder
+
+  override def responseDecoder: Decoder[Option[RawMessage]] =
+    Decoder[Option[RawMessage]]
+
+  override def toNiceResponse(response: Option[RawMessage]): Option[Message] = response.map(_.toMessage)
+}
+
 case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
+    files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined
-)
+) {
+  files.foreach(_.foreach(file => require(file.isValid)))
+  require(
+    files.forall(files => files.map(_.fileName).distinct.lengthCompare(files.length) == 0),
+    "Please use unique filenames for all files"
+  )
+  require(content.forall(_.length <= 2000), "The content of a message can't exceed 2000 characters")
+}
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
     JsonOption.removeUndefinedToObj(
@@ -283,6 +319,19 @@ case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String,
     extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
   override def route: RequestRoute                            = Routes.editOriginalWebhookMessage(id, token)
   override def paramsEncoder: Encoder[EditWebhookMessageData] = EditWebhookMessageData.encoder
+
+  override def requestBody: RequestEntity = {
+    if (params.files != JsonUndefined) {
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
+
+      FormData(params.files.toList.flatMap(_.map(_.toBodyPart)) :+ jsonPart: _*).toEntity()
+    } else {
+      super.requestBody
+    }
+  }
 
   override def responseDecoder: Decoder[Json] = Decoder[Json]
 }

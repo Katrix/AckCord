@@ -323,7 +323,8 @@ object ListGuildMembers {
 /**
   * @param accessToken The OAuth2 access token.
   * @param nick The nickname to give to the user.
-  * @param roles The roles to give to the user.
+  * @param roles The roles to give to the user. If the guild has membership
+  *              screening enabled, this setting this will bypass that.
   * @param mute If the user should be muted.
   * @param deaf If the user should be deafened.
   */
@@ -396,7 +397,7 @@ case class ModifyGuildMember(
     userId: UserId,
     params: ModifyGuildMemberData,
     reason: Option[String] = None
-) extends NoResponseReasonRequest[ModifyGuildMember, ModifyGuildMemberData] {
+) extends ReasonRequest[ModifyGuildMember, ModifyGuildMemberData, RawGuildMember, GuildMember] {
   override def jsonPrinter: Printer = Printer.noSpaces
 
   override def route: RequestRoute                           = Routes.modifyGuildMember(guildId, userId)
@@ -416,6 +417,10 @@ case class ModifyGuildMember(
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
   override def withReason(reason: String): ModifyGuildMember = copy(reason = Some(reason))
+
+  override def responseDecoder: Decoder[RawGuildMember] = Decoder[RawGuildMember]
+
+  override def toNiceResponse(response: RawGuildMember): GuildMember = response.toGuildMember(guildId)
 }
 
 case class ModifyBotUsersNickData(nick: JsonOption[String] = JsonUndefined)
@@ -756,7 +761,9 @@ object GetGuildPruneCount {
   * @param computePruneCount If the pruned return field should be present.
   * @param includeRoles Roles that should be ignored when checking for inactive users.
   */
-case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean], includeRoles: Seq[RoleId])
+case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean], includeRoles: Seq[RoleId]) {
+  require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
+}
 
 /**
   * @param pruned The number of members that were removed.
@@ -821,9 +828,8 @@ case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest
 /**
   * Get the integrations for this guild.
   */
-case class GetGuildIntegrations(guildId: GuildId, includeApplications: Boolean = false)
-    extends NoParamsNiceResponseRequest[Seq[Integration]] {
-  override def route: RequestRoute = Routes.getGuildIntegrations(guildId, Some(includeApplications))
+case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Integration]] {
+  override def route: RequestRoute = Routes.getGuildIntegrations(guildId)
 
   override def responseDecoder: Decoder[Seq[Integration]] = Decoder[Seq[Integration]]
 

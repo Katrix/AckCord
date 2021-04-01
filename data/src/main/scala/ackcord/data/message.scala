@@ -339,7 +339,7 @@ sealed trait Message {
   /** Sent with rich presence chat embeds. */
   def application: Option[MessageApplication]
 
-  /** Data sent with a crosspost. */
+  /** Data sent with a crossposts and replies. */
   def messageReference: Option[MessageReference]
 
   /** Sent if the message is a response to an Interaction */
@@ -347,6 +347,12 @@ sealed trait Message {
 
   /** Extra features of the message. */
   def flags: Option[MessageFlags]
+
+  /** Stickers sent with the message. */
+  def stickers: Option[Seq[Sticker]]
+
+  /** Message associated with the message reference. */
+  def referencedMessage: Option[Message]
 
   /**
     * Get the guild this message was sent to.
@@ -630,10 +636,11 @@ case class ReceivedEmbedThumbnail(
 /**
   * The video part of a received embed.
   * @param url The url of the video.
+  * @param proxyUrl The proxy url of the video.
   * @param height The height of the video.
   * @param width The width of the video.
   */
-case class ReceivedEmbedVideo(url: Option[String], height: Option[Int], width: Option[Int]) {
+case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
   def toOutgoing: Option[OutgoingEmbedVideo] = url.map(OutgoingEmbedVideo)
 }
 
