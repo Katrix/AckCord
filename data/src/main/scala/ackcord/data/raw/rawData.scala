@@ -281,7 +281,7 @@ case class RawChannel(
             parentId
           )
         }
-      case ChannelType.Unknown(_) => throw new IllegalStateException("Not a guild channel")
+      case ChannelType.Unknown(_) => None
     }
   }
 }
