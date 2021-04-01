@@ -24,7 +24,7 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{GuildId, OutgoingEmbed, RawSnowflake, TextChannelId}
+import ackcord.data.{GuildId, InteractionResponseType, InteractionType, OutgoingEmbed, RawSnowflake, TextChannelId}
 import ackcord.requests.AllowedMention
 import ackcord.slashcommands.{CommandId, InteractionId}
 import ackcord.util.IntCirceEnumWithUnknown
@@ -85,17 +85,6 @@ case class RawInteraction(
     version: Option[Int]
 )
 
-sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
-object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
-  override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
-
-  case object Ping               extends InteractionType(1)
-  case object ApplicationCommand extends InteractionType(2)
-  case class Unknown(i: Int)     extends InteractionType(i)
-
-  override def createUnknown(value: Int): InteractionType = Unknown(value)
-}
-
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
@@ -114,22 +103,6 @@ object ApplicationCommandInteractionDataOption {
 }
 
 case class InteractionResponse(`type`: InteractionResponseType, data: Option[InteractionApplicationCommandCallbackData])
-
-sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEntry
-object InteractionResponseType
-    extends IntEnum[InteractionResponseType]
-    with IntCirceEnumWithUnknown[InteractionResponseType] {
-  override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
-
-  case object Pong                     extends InteractionResponseType(1)
-  case object Acknowledge              extends InteractionResponseType(2)
-  case object ChannelMessage           extends InteractionResponseType(3)
-  case object ChannelMessageWithSource extends InteractionResponseType(4)
-  case object ACKWithSource            extends InteractionResponseType(5)
-  case class Unknown(i: Int)           extends InteractionResponseType(i)
-
-  override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
-}
 
 case class InteractionApplicationCommandCallbackData(
     tts: Option[Boolean] = None,

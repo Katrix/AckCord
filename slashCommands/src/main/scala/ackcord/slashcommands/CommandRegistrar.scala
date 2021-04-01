@@ -25,11 +25,9 @@ package ackcord.slashcommands
 
 import java.nio.charset.StandardCharsets
 import java.util.Locale
-
 import scala.collection.immutable
 import scala.concurrent.{ExecutionContext, Future}
-
-import ackcord.data.{GuildId, RawSnowflake}
+import ackcord.data.{GuildId, InteractionType, RawSnowflake}
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.slashcommands.raw.CommandsProtocol._
 import ackcord.slashcommands.raw._
