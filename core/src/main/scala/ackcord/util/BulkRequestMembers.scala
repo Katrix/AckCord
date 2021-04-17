@@ -31,7 +31,7 @@ object BulkRequestMembers {
       events: Events
   )(implicit system: ActorSystem[Nothing]): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
     require(userIds.nonEmpty, "Must request at least one member")
-    val nonce = UUID.randomUUID().toString
+    val nonce = UUID.randomUUID().toString.replace("-", "")
 
     source(
       RequestGuildMembers(
