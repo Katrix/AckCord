@@ -357,7 +357,8 @@ object GatewayProtocol extends DiscordProtocol {
       "APPLICATION_COMMAND_CREATE" -> createDispatch(GatewayEvent.ApplicationCommandCreate),
       "APPLICATION_COMMAND_UPDATE" -> createDispatch(GatewayEvent.ApplicationCommandUpdate),
       "APPLICATION_COMMAND_DELETE" -> createDispatch(GatewayEvent.ApplicationCommandDelete),
-      ignored("INTEGRATION_UPDATE")
+      ignored("INTEGRATION_UPDATE"),
+      ignored("GUILD_JOIN_REQUEST_DELETE")
     )
     res
   }
@@ -369,7 +370,7 @@ object GatewayProtocol extends DiscordProtocol {
       res <- decoders.getOrElse(
         tpe,
         (_: Int, _: Json, _: ACursor, _: ShardInfo) =>
-          Left(DecodingFailure(s"Invalid gateway type $tpe", c.downField("t").history))
+          Left(DecodingFailure(s"Unhandled gateway type $tpe", c.downField("t").history))
       )(seq, c.value, c.downField("d"), shardInfo)
     } yield res
 }
