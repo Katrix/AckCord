@@ -26,7 +26,6 @@ package ackcord.gateway
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
-import akka.NotUsed
 import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
@@ -225,9 +224,9 @@ case class Resume(nowD: ResumeData, gatewayInfo: GatewayInfo)
 /**
   * Sent by the gateway to indicate that the shard should reconnect.
   */
-case class Reconnect(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[NotUsed] with ServerGatewayMessage[NotUsed] {
+case class Reconnect(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[Unit] with ServerGatewayMessage[Unit] {
   override def op: GatewayOpCode = GatewayOpCode.Reconnect
-  override def nowD: NotUsed     = NotUsed
+  override def nowD: Unit        = ()
 }
 
 /**
@@ -287,19 +286,19 @@ case class Hello(nowD: HelloData, gatewayInfo: GatewayInfo)
   * Sent by the gateway as a response to [[Heartbeat]].
   */
 case class HeartbeatACK(gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[NotUsed]
-    with ServerGatewayMessage[NotUsed] {
+    extends EagerGatewayMessage[Unit]
+    with ServerGatewayMessage[Unit] {
   override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
-  override def nowD: NotUsed     = NotUsed
+  override def nowD: Unit        = ()
 }
 
 /**
   * All unknown gateway messages.
   */
 case class UnknownGatewayMessage(op: GatewayOpCode, gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[NotUsed]
-    with ServerGatewayMessage[NotUsed] {
-  override def nowD: NotUsed = NotUsed
+    extends EagerGatewayMessage[Unit]
+    with ServerGatewayMessage[Unit] {
+  override def nowD: Unit = ()
 }
 
 /**
@@ -387,10 +386,10 @@ object GatewayEvent {
   /**
     * Sent to the shard when a previously interrupted connection is resumed.
     */
-  case class Resumed(rawData: Json) extends GatewayEvent[NotUsed] {
+  case class Resumed(rawData: Json) extends GatewayEvent[Unit] {
     override def name: String = "RESUMED"
 
-    override def data: Later[Result[NotUsed]] = Later(Right(NotUsed))
+    override def data: Later[Result[Unit]] = Later(Right(()))
   }
 
   /**
@@ -1035,8 +1034,8 @@ object GatewayEvent {
   ) {
 
     def reparse[A: Decoder]: Result[A] = {
-      import GatewayProtocol._
       import io.circe.syntax._
+      import GatewayProtocol._
       val self: SimpleRawInteraction = this
       self.asJson.as[A]
     }
@@ -1059,8 +1058,8 @@ object GatewayEvent {
   ) {
 
     def reparse[A: Decoder]: Decoder.Result[A] = {
-      import GatewayProtocol._
       import io.circe.syntax._
+      import GatewayProtocol._
       val self: SimpleApplicationCommandWithGuildId = this
       self.asJson.as[A]
     }

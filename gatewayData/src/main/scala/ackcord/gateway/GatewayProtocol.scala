@@ -1,26 +1,3 @@
-/*
- * This file is part of AckCord, licensed under the MIT License (MIT).
- *
- * Copyright (c) 2019 Katrix
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- */
 package ackcord.gateway
 
 import ackcord.data._
@@ -110,8 +87,8 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val channelPinsUpdateDataEncoder: Encoder[GatewayEvent.ChannelPinsUpdateData] =
     (a: GatewayEvent.ChannelPinsUpdateData) =>
       JsonOption.removeUndefinedToObj(
-        "guild_id"           -> JsonSome(a.guildId.asJson),
-        "channel_id"         -> JsonSome(a.channelId.asJson),
+        "guild_id" -> JsonSome(a.guildId.asJson),
+        "channel_id" -> JsonSome(a.channelId.asJson),
         "last_pin_timestamp" -> a.lastPinTimestamp.map(_.asJson)
       )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] =
@@ -145,29 +122,29 @@ object GatewayProtocol extends DiscordProtocol {
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
         Seq(
-          "id"               -> JsonSome(a.id.asJson),
-          "channel_id"       -> JsonSome(a.channelId.asJson),
-          "content"          -> a.content.map(_.asJson),
-          "timestamp"        -> a.timestamp.map(_.asJson),
+          "id" -> JsonSome(a.id.asJson),
+          "channel_id" -> JsonSome(a.channelId.asJson),
+          "content" -> a.content.map(_.asJson),
+          "timestamp" -> a.timestamp.map(_.asJson),
           "edited_timestamp" -> a.editedTimestamp.map(_.asJson),
-          "tts"              -> a.tts.map(_.asJson),
+          "tts" -> a.tts.map(_.asJson),
           "mention_everyone" -> a.mentionEveryone.map(_.asJson),
-          "mentions"         -> a.mentions.map(_.asJson),
-          "mention_roles"    -> a.mentionRoles.map(_.asJson),
-          "attachments"      -> a.attachment.map(_.asJson),
-          "embeds"           -> a.embeds.map(_.asJson),
-          "reactions"        -> a.reactions.map(_.asJson),
-          "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)),
-          "pinned"           -> a.pinned.map(_.asJson),
-          "webhook_id"       -> a.webhookId.map(_.asJson)
+          "mentions" -> a.mentions.map(_.asJson),
+          "mention_roles" -> a.mentionRoles.map(_.asJson),
+          "attachments" -> a.attachment.map(_.asJson),
+          "embeds" -> a.embeds.map(_.asJson),
+          "reactions" -> a.reactions.map(_.asJson),
+          "nonce" -> a.nonce.map(_.fold(_.asJson, _.asJson)),
+          "pinned" -> a.pinned.map(_.asJson),
+          "webhook_id" -> a.webhookId.map(_.asJson)
         )
       )
 
       a.author match {
-        case JsonSome(user: User)             => Json.obj(base :+ "author" -> user.asJson: _*)
+        case JsonSome(user: User) => Json.obj(base :+ "author" -> user.asJson: _*)
         case JsonSome(webhook: WebhookAuthor) => Json.obj(base :+ "author" -> webhook.asJson: _*)
-        case JsonNull                         => Json.obj(base :+ "author" -> Json.Null: _*)
-        case JsonUndefined                    => Json.obj(base: _*)
+        case JsonNull => Json.obj(base :+ "author" -> Json.Null: _*)
+        case JsonUndefined => Json.obj(base: _*)
       }
     }
 
@@ -175,22 +152,22 @@ object GatewayProtocol extends DiscordProtocol {
     val isWebhook = c.keys.exists(_.toSeq.contains("webhook_id"))
 
     for {
-      id        <- c.get[MessageId]("id")
+      id <- c.get[MessageId]("id")
       channelId <- c.get[TextChannelId]("channel_id")
       author <- {
         if (isWebhook) c.get[JsonOption[WebhookAuthor]]("author")
         else c.get[JsonOption[User]]("author")
       }
-      content         <- c.get[JsonOption[String]]("content")
-      timestamp       <- c.get[JsonOption[OffsetDateTime]]("timestamp")
+      content <- c.get[JsonOption[String]]("content")
+      timestamp <- c.get[JsonOption[OffsetDateTime]]("timestamp")
       editedTimestamp <- c.get[JsonOption[OffsetDateTime]]("edited_timestamp")
-      tts             <- c.get[JsonOption[Boolean]]("tts")
+      tts <- c.get[JsonOption[Boolean]]("tts")
       mentionEveryone <- c.get[JsonOption[Boolean]]("mention_everyone")
-      mentions        <- c.get[JsonOption[Seq[User]]]("mentions")
-      mentionRoles    <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
-      attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
-      embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
-      reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
+      mentions <- c.get[JsonOption[Seq[User]]]("mentions")
+      mentionRoles <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
+      attachment <- c.get[JsonOption[Seq[Attachment]]]("attachments")
+      embeds <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
+      reactions <- c.get[JsonOption[Seq[Reaction]]]("reactions")
       nonce <-
         c
           .downField("nonce")
@@ -198,14 +175,14 @@ object GatewayProtocol extends DiscordProtocol {
           .map(_.map(Left.apply))
           .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
 
-      pinned            <- c.get[JsonOption[Boolean]]("pinned")
-      webhookId         <- c.get[JsonOption[String]]("webhook_id")
-      messageType       <- c.get[JsonOption[MessageType]]("message_type")
-      activity          <- c.get[JsonOption[RawMessageActivity]]("activity")
-      application       <- c.get[JsonOption[MessageApplication]]("application")
-      messageReference  <- c.get[JsonOption[MessageReference]]("message_reference")
-      flags             <- c.get[JsonOption[MessageFlags]]("flags")
-      stickers          <- c.get[JsonOption[Seq[Sticker]]]("stickers")
+      pinned <- c.get[JsonOption[Boolean]]("pinned")
+      webhookId <- c.get[JsonOption[String]]("webhook_id")
+      messageType <- c.get[JsonOption[MessageType]]("message_type")
+      activity <- c.get[JsonOption[RawMessageActivity]]("activity")
+      application <- c.get[JsonOption[MessageApplication]]("application")
+      messageReference <- c.get[JsonOption[MessageReference]]("message_reference")
+      flags <- c.get[JsonOption[MessageFlags]]("flags")
+      stickers <- c.get[JsonOption[Seq[Sticker]]]("stickers")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
     } yield GatewayEvent.RawPartialMessage(
       id,
@@ -238,121 +215,121 @@ object GatewayProtocol extends DiscordProtocol {
     case dispatch: Dispatch[_] => encodeDispatch(dispatch)
     case a =>
       val d = a match {
-        case Heartbeat(d, _)              => JsonSome(d.asJson)
-        case Identify(d)                  => JsonSome(d.asJson)
-        case StatusUpdate(d, _)           => JsonSome(d.asJson)
-        case VoiceStateUpdate(d)          => JsonSome(d.asJson)
-        case VoiceServerUpdate(d, _)      => JsonSome(d.asJson)
-        case Resume(d, _)                 => JsonSome(d.asJson)
-        case Reconnect(_)                 => JsonUndefined
-        case RequestGuildMembers(d)       => JsonSome(d.asJson)
+        case Heartbeat(d, _) => JsonSome(d.asJson)
+        case Identify(d) => JsonSome(d.asJson)
+        case StatusUpdate(d, _) => JsonSome(d.asJson)
+        case VoiceStateUpdate(d) => JsonSome(d.asJson)
+        case VoiceServerUpdate(d, _) => JsonSome(d.asJson)
+        case Resume(d, _) => JsonSome(d.asJson)
+        case Reconnect(_) => JsonUndefined
+        case RequestGuildMembers(d) => JsonSome(d.asJson)
         case InvalidSession(resumable, _) => JsonSome(resumable.asJson)
-        case Hello(d, _)                  => JsonSome(d.asJson)
-        case HeartbeatACK(_)              => JsonUndefined
-        case UnknownGatewayMessage(_, _)  => JsonUndefined
-        case _ @Dispatch(_, _, _)         => sys.error("impossible")
+        case Hello(d, _) => JsonSome(d.asJson)
+        case HeartbeatACK(_) => JsonUndefined
+        case UnknownGatewayMessage(_, _) => JsonUndefined
+        case _@Dispatch(_, _, _) => sys.error("impossible")
       }
 
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
-        "d"  -> d,
-        "s"  -> a.s.map(_.asJson),
-        "t"  -> a.t.map(_.name.asJson)
+        "d" -> d,
+        "s" -> a.s.map(_.asJson),
+        "t" -> a.t.map(_.name.asJson)
       )
   }
 
   def decodeWsMessage(
-      decoders: EventDecoders,
-      gatewayInfo: GatewayInfo,
-      c: HCursor
-  ): Decoder.Result[GatewayMessage[_]] = {
+                       decoders: EventDecoders,
+                       gatewayInfo: GatewayInfo,
+                       c: HCursor
+                     ): Decoder.Result[GatewayMessage[_]] = {
     val dCursor = c.downField("d")
 
     val op = c.get[GatewayOpCode]("op")
 
     //We use the apply method on the companion object here
     op.flatMap {
-      case GatewayOpCode.Dispatch         => decodeDispatch(c, decoders, gatewayInfo.shardInfo)
-      case GatewayOpCode.Heartbeat        => dCursor.as[Option[Int]].map(Heartbeat(_, gatewayInfo))
-      case GatewayOpCode.Identify         => dCursor.as[IdentifyData].map(Identify)
-      case GatewayOpCode.StatusUpdate     => dCursor.as[StatusData].map(StatusUpdate(_, gatewayInfo))
+      case GatewayOpCode.Dispatch => decodeDispatch(c, decoders, gatewayInfo.shardInfo)
+      case GatewayOpCode.Heartbeat => dCursor.as[Option[Int]].map(Heartbeat(_, gatewayInfo))
+      case GatewayOpCode.Identify => dCursor.as[IdentifyData].map(Identify)
+      case GatewayOpCode.StatusUpdate => dCursor.as[StatusData].map(StatusUpdate(_, gatewayInfo))
       case GatewayOpCode.VoiceStateUpdate => dCursor.as[VoiceStateUpdateData].map(VoiceStateUpdate)
-      case GatewayOpCode.VoiceServerPing  => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate(_, gatewayInfo))
-      case GatewayOpCode.Resume           => dCursor.as[ResumeData].map(Resume(_, gatewayInfo))
-      case GatewayOpCode.Reconnect        => Right(Reconnect(gatewayInfo))
+      case GatewayOpCode.VoiceServerPing => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate(_, gatewayInfo))
+      case GatewayOpCode.Resume => dCursor.as[ResumeData].map(Resume(_, gatewayInfo))
+      case GatewayOpCode.Reconnect => Right(Reconnect(gatewayInfo))
       case GatewayOpCode.RequestGuildMembers =>
         dCursor.as[RequestGuildMembersData].map(RequestGuildMembers)
-      case GatewayOpCode.InvalidSession  => dCursor.as[Boolean].map(InvalidSession(_, gatewayInfo))
-      case GatewayOpCode.Hello           => dCursor.as[HelloData].map(Hello(_, gatewayInfo))
-      case GatewayOpCode.HeartbeatACK    => Right(HeartbeatACK(gatewayInfo))
-      case op @ GatewayOpCode.Unknown(_) => Right(UnknownGatewayMessage(op, gatewayInfo))
+      case GatewayOpCode.InvalidSession => dCursor.as[Boolean].map(InvalidSession(_, gatewayInfo))
+      case GatewayOpCode.Hello => dCursor.as[HelloData].map(Hello(_, gatewayInfo))
+      case GatewayOpCode.HeartbeatACK => Right(HeartbeatACK(gatewayInfo))
+      case op@GatewayOpCode.Unknown(_) => Right(UnknownGatewayMessage(op, gatewayInfo))
     }
   }
 
   private def encodeDispatch[D](dispatch: Dispatch[D]): Json = {
     JsonOption.removeUndefinedToObj(
       "op" -> JsonSome(dispatch.op.asJson),
-      "d"  -> JsonSome(dispatch.event.rawData),
-      "s"  -> dispatch.s.map(_.asJson),
-      "t"  -> dispatch.t.map(_.name.asJson)
+      "d" -> JsonSome(dispatch.event.rawData),
+      "s" -> dispatch.s.map(_.asJson),
+      "t" -> dispatch.t.map(_.name.asJson)
     )
   }
 
   type EventDecoder[A] = (Int, Json, ACursor, ShardInfo) => Decoder.Result[Dispatch[A]]
-  type EventDecoders   = Map[String, EventDecoder[_]]
+  type EventDecoders = Map[String, EventDecoder[_]]
   val ackcordEventDecoders: EventDecoders = {
     //We use the apply method on the companion object here
-    def createDispatch[Data: Decoder: Encoder](
-        create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
-    ): EventDecoder[Data] = (seq, rawJson, dataCursor, shardInfo) =>
+    def createDispatch[Data: Decoder : Encoder](
+                                                 create: (Json, Later[Decoder.Result[Data]]) => GatewayEvent[Data]
+                                               ): EventDecoder[Data] = (seq, rawJson, dataCursor, shardInfo) =>
       Right(Dispatch(seq, create(rawJson, Later(dataCursor.as[Data])), GatewayInfo(shardInfo, seq)))
 
     def ignored(name: String): (String, EventDecoder[Unit]) =
       name -> ((seq, rawJson, _, shardInfo) =>
         Right(Dispatch(seq, GatewayEvent.IgnoredEvent(name, rawJson, Later(Right(()))), GatewayInfo(shardInfo, seq)))
-      )
+        )
 
     //Seperate var here to make type inference happy
     val res: Map[String, EventDecoder[_]] = Map(
       "READY" -> createDispatch(GatewayEvent.Ready),
       "RESUMED" -> ((seq: Int, rawJson: Json, _: ACursor, shardInfo: ShardInfo) =>
         Right(Dispatch(seq, GatewayEvent.Resumed(rawJson), GatewayInfo(shardInfo, seq)))
-      ),
-      "CHANNEL_CREATE"                -> createDispatch(GatewayEvent.ChannelCreate),
-      "CHANNEL_UPDATE"                -> createDispatch(GatewayEvent.ChannelUpdate),
-      "CHANNEL_DELETE"                -> createDispatch(GatewayEvent.ChannelDelete),
-      "CHANNEL_PINS_UPDATE"           -> createDispatch(GatewayEvent.ChannelPinsUpdate),
-      "GUILD_CREATE"                  -> createDispatch(GatewayEvent.GuildCreate),
-      "GUILD_UPDATE"                  -> createDispatch(GatewayEvent.GuildUpdate),
-      "GUILD_DELETE"                  -> createDispatch(GatewayEvent.GuildDelete),
-      "GUILD_BAN_ADD"                 -> createDispatch(GatewayEvent.GuildBanAdd),
-      "GUILD_BAN_REMOVE"              -> createDispatch(GatewayEvent.GuildBanRemove),
-      "GUILD_EMOJIS_UPDATE"           -> createDispatch(GatewayEvent.GuildEmojisUpdate),
-      "GUILD_INTEGRATIONS_UPDATE"     -> createDispatch(GatewayEvent.GuildIntegrationsUpdate),
-      "GUILD_MEMBER_ADD"              -> createDispatch(GatewayEvent.GuildMemberAdd),
-      "GUILD_MEMBER_REMOVE"           -> createDispatch(GatewayEvent.GuildMemberRemove),
-      "GUILD_MEMBER_UPDATE"           -> createDispatch(GatewayEvent.GuildMemberUpdate),
-      "GUILD_MEMBERS_CHUNK"           -> createDispatch(GatewayEvent.GuildMemberChunk),
-      "GUILD_ROLE_CREATE"             -> createDispatch(GatewayEvent.GuildRoleCreate),
-      "GUILD_ROLE_UPDATE"             -> createDispatch(GatewayEvent.GuildRoleUpdate),
-      "GUILD_ROLE_DELETE"             -> createDispatch(GatewayEvent.GuildRoleDelete),
-      "INVITE_CREATE"                 -> createDispatch(GatewayEvent.InviteCreate),
-      "INVITE_DELETE"                 -> createDispatch(GatewayEvent.InviteDelete),
-      "MESSAGE_CREATE"                -> createDispatch(GatewayEvent.MessageCreate),
-      "MESSAGE_UPDATE"                -> createDispatch(GatewayEvent.MessageUpdate),
-      "MESSAGE_DELETE"                -> createDispatch(GatewayEvent.MessageDelete),
-      "MESSAGE_DELETE_BULK"           -> createDispatch(GatewayEvent.MessageDeleteBulk),
-      "MESSAGE_REACTION_ADD"          -> createDispatch(GatewayEvent.MessageReactionAdd),
-      "MESSAGE_REACTION_REMOVE"       -> createDispatch(GatewayEvent.MessageReactionRemove),
-      "MESSAGE_REACTION_REMOVE_ALL"   -> createDispatch(GatewayEvent.MessageReactionRemoveAll),
+        ),
+      "CHANNEL_CREATE" -> createDispatch(GatewayEvent.ChannelCreate),
+      "CHANNEL_UPDATE" -> createDispatch(GatewayEvent.ChannelUpdate),
+      "CHANNEL_DELETE" -> createDispatch(GatewayEvent.ChannelDelete),
+      "CHANNEL_PINS_UPDATE" -> createDispatch(GatewayEvent.ChannelPinsUpdate),
+      "GUILD_CREATE" -> createDispatch(GatewayEvent.GuildCreate),
+      "GUILD_UPDATE" -> createDispatch(GatewayEvent.GuildUpdate),
+      "GUILD_DELETE" -> createDispatch(GatewayEvent.GuildDelete),
+      "GUILD_BAN_ADD" -> createDispatch(GatewayEvent.GuildBanAdd),
+      "GUILD_BAN_REMOVE" -> createDispatch(GatewayEvent.GuildBanRemove),
+      "GUILD_EMOJIS_UPDATE" -> createDispatch(GatewayEvent.GuildEmojisUpdate),
+      "GUILD_INTEGRATIONS_UPDATE" -> createDispatch(GatewayEvent.GuildIntegrationsUpdate),
+      "GUILD_MEMBER_ADD" -> createDispatch(GatewayEvent.GuildMemberAdd),
+      "GUILD_MEMBER_REMOVE" -> createDispatch(GatewayEvent.GuildMemberRemove),
+      "GUILD_MEMBER_UPDATE" -> createDispatch(GatewayEvent.GuildMemberUpdate),
+      "GUILD_MEMBERS_CHUNK" -> createDispatch(GatewayEvent.GuildMemberChunk),
+      "GUILD_ROLE_CREATE" -> createDispatch(GatewayEvent.GuildRoleCreate),
+      "GUILD_ROLE_UPDATE" -> createDispatch(GatewayEvent.GuildRoleUpdate),
+      "GUILD_ROLE_DELETE" -> createDispatch(GatewayEvent.GuildRoleDelete),
+      "INVITE_CREATE" -> createDispatch(GatewayEvent.InviteCreate),
+      "INVITE_DELETE" -> createDispatch(GatewayEvent.InviteDelete),
+      "MESSAGE_CREATE" -> createDispatch(GatewayEvent.MessageCreate),
+      "MESSAGE_UPDATE" -> createDispatch(GatewayEvent.MessageUpdate),
+      "MESSAGE_DELETE" -> createDispatch(GatewayEvent.MessageDelete),
+      "MESSAGE_DELETE_BULK" -> createDispatch(GatewayEvent.MessageDeleteBulk),
+      "MESSAGE_REACTION_ADD" -> createDispatch(GatewayEvent.MessageReactionAdd),
+      "MESSAGE_REACTION_REMOVE" -> createDispatch(GatewayEvent.MessageReactionRemove),
+      "MESSAGE_REACTION_REMOVE_ALL" -> createDispatch(GatewayEvent.MessageReactionRemoveAll),
       "MESSAGE_REACTION_REMOVE_EMOJI" -> createDispatch(GatewayEvent.MessageReactionRemoveEmoji),
-      "PRESENCE_UPDATE"               -> createDispatch(GatewayEvent.PresenceUpdate),
-      "TYPING_START"                  -> createDispatch(GatewayEvent.TypingStart),
-      "USER_UPDATE"                   -> createDispatch(GatewayEvent.UserUpdate),
-      "VOICE_STATE_UPDATE"            -> createDispatch(GatewayEvent.VoiceStateUpdate),
-      "VOICE_SERVER_UPDATE"           -> createDispatch(GatewayEvent.VoiceServerUpdate),
-      "WEBHOOKS_UPDATE"               -> createDispatch(GatewayEvent.WebhookUpdate),
-      "INTERACTION_CREATE"            -> createDispatch(GatewayEvent.InteractionCreate),
+      "PRESENCE_UPDATE" -> createDispatch(GatewayEvent.PresenceUpdate),
+      "TYPING_START" -> createDispatch(GatewayEvent.TypingStart),
+      "USER_UPDATE" -> createDispatch(GatewayEvent.UserUpdate),
+      "VOICE_STATE_UPDATE" -> createDispatch(GatewayEvent.VoiceStateUpdate),
+      "VOICE_SERVER_UPDATE" -> createDispatch(GatewayEvent.VoiceServerUpdate),
+      "WEBHOOKS_UPDATE" -> createDispatch(GatewayEvent.WebhookUpdate),
+      "INTERACTION_CREATE" -> createDispatch(GatewayEvent.InteractionCreate),
       ignored("PRESENCES_REPLACE"),
       "APPLICATION_COMMAND_CREATE" -> createDispatch(GatewayEvent.ApplicationCommandCreate),
       "APPLICATION_COMMAND_UPDATE" -> createDispatch(GatewayEvent.ApplicationCommandUpdate),
