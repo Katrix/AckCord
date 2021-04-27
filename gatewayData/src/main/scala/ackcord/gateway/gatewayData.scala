@@ -285,9 +285,7 @@ case class Hello(nowD: HelloData, gatewayInfo: GatewayInfo)
 /**
   * Sent by the gateway as a response to [[Heartbeat]].
   */
-case class HeartbeatACK(gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[Unit]
-    with ServerGatewayMessage[Unit] {
+case class HeartbeatACK(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[Unit] with ServerGatewayMessage[Unit] {
   override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
   override def nowD: Unit        = ()
 }

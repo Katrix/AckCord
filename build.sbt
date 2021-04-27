@@ -77,7 +77,7 @@ lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
     commonSettings,
     publishSettings,
     name := "gateway-data",
-    version := ackCordVersion,
+    version := ackCordVersion
   )
   .dependsOn(data)
 
