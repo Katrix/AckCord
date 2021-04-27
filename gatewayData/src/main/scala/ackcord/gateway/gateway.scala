@@ -26,7 +26,6 @@ package ackcord
 package object gateway {
 
   type GatewayIntents = GatewayIntents.GatewayIntents
-
   object GatewayIntents {
     type GatewayIntents
 
@@ -175,28 +174,24 @@ package object gateway {
     )
     val All: GatewayIntents = GatewayIntents(AllNonPrivileged, GuildMembers, GuildPresences)
   }
-
   implicit class GatewayIntentsSyntax(private val intents: GatewayIntents) extends AnyVal {
 
     def toInt: Int = intents.asInstanceOf[Int]
 
     /**
       * Add an intent to these intents.
-      *
       * @param other The other intent.
       */
     def ++(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt | other.toInt)
 
     /**
       * Remove an intent from these intents.
-      *
       * @param other The intent to remove.
       */
     def --(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt & ~other.toInt)
 
     /**
       * Check if these intents has an intent.
-      *
       * @param other The intent to check against.
       */
     def hasFlag(other: GatewayIntents): Boolean = (toInt & other.toInt) == other.toInt
