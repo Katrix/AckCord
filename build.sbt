@@ -71,6 +71,19 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
 lazy val dataJVM = data.jvm
 lazy val dataJS  = data.js
 
+lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
+  .crossType(CrossType.Pure)
+  .settings(
+    commonSettings,
+    publishSettings,
+    name := "gateway-data",
+    version := ackCordVersion
+  )
+  .dependsOn(data)
+
+lazy val gatewayDataJVM = gatewayData.jvm
+lazy val gatewayDataJS  = gatewayData.js
+
 lazy val requests = project
   .settings(
     commonSettings,
@@ -101,7 +114,7 @@ lazy val gateway = project
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
-  .dependsOn(dataJVM)
+  .dependsOn(gatewayDataJVM)
 
 lazy val voice = project
   .settings(
@@ -224,6 +237,7 @@ lazy val docs = project
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       dataJVM,
+      gatewayDataJVM,
       requests,
       gateway,
       voice,
@@ -254,6 +268,8 @@ lazy val ackCordRoot = project
   .aggregate(
     dataJVM,
     dataJS,
+    gatewayDataJVM,
+    gatewayDataJS,
     requests,
     gateway,
     voice,
