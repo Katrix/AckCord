@@ -237,6 +237,7 @@ lazy val docs = project
     autoAPIMappings := true,
     unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
       dataJVM,
+      gatewayDataJVM,
       requests,
       gateway,
       voice,
@@ -267,6 +268,8 @@ lazy val ackCordRoot = project
   .aggregate(
     dataJVM,
     dataJS,
+    gatewayDataJVM,
+    gatewayDataJS,
     requests,
     gateway,
     voice,
