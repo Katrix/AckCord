@@ -276,6 +276,12 @@ package object data {
   type StickerId = SnowflakeType[Sticker]
   object StickerId extends SnowflakeCompanion[Sticker]
 
+  type InteractionId = SnowflakeType[RawInteraction]
+  object InteractionId extends SnowflakeCompanion[RawInteraction]
+
+  type CommandId = SnowflakeType[ApplicationCommand]
+  object CommandId extends SnowflakeCompanion[ApplicationCommand]
+
   /**
     * A permission to do some action. In AckCord this is represented as a
     * value class around int.

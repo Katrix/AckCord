@@ -21,16 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.slashcommands.commands
 
 import ackcord.requests.Requests
+import ackcord.slashcommands.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
 import akka.NotUsed
 
 class StatelessSlashCommandController(val requests: Requests)
     extends SlashCommandControllerBase[StatelessCommandInteraction] {
 
   override val Command: CommandBuilder[StatelessCommandInteraction, NotUsed] = new CommandBuilder(
-    new CommandTransformer[CommandInteraction, StatelessCommandInteraction] {
+    new DataInteractionTransformer[CommandInteraction, StatelessCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], StatelessCommandInteraction[A]] =
         Right(StatelessCommandInteraction(from.commandInvocationInfo))
     },

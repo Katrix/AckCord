@@ -35,9 +35,9 @@ object AsyncToken {
   private[slashcommands] case class Impl(webhookId: SnowflakeType[Webhook], webhookToken: String)
       extends AsyncMessageToken
 
-  private[slashcommands] def fromInteraction(interaction: CommandInteraction[_]): AsyncToken =
+  private[slashcommands] def fromInteraction(interaction: Interaction): AsyncToken =
     Impl(interaction.webhookId, interaction.token)
 
-  private[slashcommands] def fromInteractionWithMessage(interaction: CommandInteraction[_]): AsyncMessageToken =
+  private[slashcommands] def fromInteractionWithMessage(interaction: Interaction): AsyncMessageToken =
     Impl(interaction.webhookId, interaction.token)
 }

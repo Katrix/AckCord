@@ -110,10 +110,21 @@ package object syntax {
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
         embed: Option[OutgoingEmbed] = None,
-        allowedMentions: AllowedMention = AllowedMention.all
+        allowedMentions: AllowedMention = AllowedMention.all,
+        replyTo: Option[MessageId] = None,
+        replyFailIfNotExist: Boolean = true
     ) = CreateMessage(
       textChannel.id,
-      CreateMessageData(content, None, tts, files.map(CreateMessageFile.FromPath), embed, allowedMentions)
+      CreateMessageData(
+        content,
+        None,
+        tts,
+        files.map(CreateMessageFile.FromPath),
+        embed,
+        allowedMentions,
+        replyTo,
+        replyFailIfNotExist
+      )
     )
 
     /**

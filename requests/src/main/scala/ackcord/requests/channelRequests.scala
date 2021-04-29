@@ -23,22 +23,20 @@
  */
 package ackcord.requests
 
+import java.nio.file.{Files, Path}
+
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined, StringCirceEnumWithUnknown}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import enumeratum.values.{StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
-
-import java.nio.file.{Files, Path}
-import scala.collection.immutable
 
 /**
   * Get a channel by id.
@@ -264,47 +262,6 @@ object CreateMessageFile {
 }
 
 /**
-  * @param parse Which mention types should be allowed.
-  * @param roles The roles to allow mention.
-  * @param users The users to allow mention.
-  * @param repliedUser For replires, if the author of the message you are
-  *                    replying to should be mentioned.
-  */
-case class AllowedMention(
-    parse: Seq[AllowedMentionTypes] = Seq.empty,
-    roles: Seq[RoleId] = Seq.empty,
-    users: Seq[UserId] = Seq.empty,
-    repliedUser: Boolean = false
-) {
-  require(roles.size <= 100, "Too many allowed role mentions")
-  require(users.size <= 100, "Too many allowed user mentions")
-}
-
-object AllowedMention {
-  val none: AllowedMention = AllowedMention()
-  val all: AllowedMention = AllowedMention(
-    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
-  )
-
-  //noinspection NameBooleanParameters
-  implicit val codec: Codec[AllowedMention] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-}
-
-sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
-object AllowedMentionTypes
-    extends StringEnum[AllowedMentionTypes]
-    with StringCirceEnumWithUnknown[AllowedMentionTypes] {
-  override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
-
-  case object Roles               extends AllowedMentionTypes("roles")
-  case object Users               extends AllowedMentionTypes("users")
-  case object Everyone            extends AllowedMentionTypes("everyone")
-  case class Unknown(str: String) extends AllowedMentionTypes(str)
-
-  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
-}
-
-/**
   * @param content The content of the message.
   * @param nonce A nonce used for optimistic message sending.
   * @param tts If this is a text-to-speech message.
@@ -510,7 +467,12 @@ case class EditMessageData(
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
-    JsonOption.removeUndefinedToObj("content" -> a.content.map(_.asJson), "embed" -> a.embed.map(_.asJson))
+    JsonOption.removeUndefinedToObj(
+      "content" -> a.content.map(_.asJson),
+      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
+      "embed" -> a.embed.map(_.asJson),
+      "flags" -> a.flags.map(_.asJson)
+    )
 }
 
 /**

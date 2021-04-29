@@ -23,9 +23,16 @@
  */
 package ackcord.slashcommands
 
-import ackcord.data.{GuildId, InteractionType, RawSnowflake}
+import java.nio.charset.StandardCharsets
+import java.util.Locale
+
+import scala.collection.immutable
+import scala.concurrent.{ExecutionContext, Future}
+
+import ackcord.data.DiscordProtocol._
+import ackcord.data._
 import ackcord.requests.{Requests, SupervisionStreams}
-import ackcord.slashcommands.raw.CommandsProtocol._
+import ackcord.slashcommands.commands.CommandOrGroup
 import ackcord.slashcommands.raw._
 import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
@@ -36,43 +43,39 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.util.ByteString
 import cats.syntax.all._
 import com.iwebpp.crypto.TweetNaclFast
-import io.circe.Decoder
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
 
-import java.nio.charset.StandardCharsets
-import java.util.Locale
-import scala.collection.immutable
-import scala.concurrent.{ExecutionContext, Future}
-
-object CommandRegistrar {
+object InteractionsRegistrar {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  private def handleCommand(
+  private def handleInteraction(
       clientId: String,
       commandsByName: Map[String, Seq[CommandOrGroup]],
-      interaction: Interaction,
+      interaction: RawInteraction,
       optCache: Option[CacheSnapshot]
   ) =
     interaction.tpe match {
-      case InteractionType.Ping => Right(CommandResponse.Pong)
+      case InteractionType.Ping => Right(InteractionResponse.Pong)
       case InteractionType.ApplicationCommand =>
-        for {
-          data <- interaction.data.toRight("No data sent for command execution")
-          commands <-
+        interaction.data match {
+          case Some(data: ApplicationCommandInteractionData) =>
             commandsByName
               .get(data.name.toLowerCase(Locale.ROOT))
-              .toRight(s"No command registered named ${data.name.toLowerCase(Locale.ROOT)}")
-        } yield commands.head.handleRaw(clientId, interaction, optCache)
-      case InteractionType.Unknown(i) => Left(s"Unknown interaction type $i")
+              .map(_.head.handleRaw(clientId, interaction, optCache))
+              .toRight(None)
+
+          case _ => Left(Some("None or invalid data sent for command execution"))
+        }
+      case InteractionType.Unknown(i) => Left(Some(s"Unknown interaction type $i"))
     }
 
-  def extractAsyncPart(response: CommandResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
+  def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
-      case CommandResponse.Acknowledge(andThenDo)       => () => andThenDo().map(_ => ())
-      case CommandResponse.ChannelMessage(_, andThenDo) => () => andThenDo().map(_ => ())
-      case _                                            => () => OptFuture.unit
+      case InteractionResponse.Acknowledge(andThenDo)       => () => andThenDo().map(_ => ())
+      case InteractionResponse.ChannelMessage(_, andThenDo) => () => andThenDo().map(_ => ())
+      case _                                                => () => OptFuture.unit
     }
 
   def webFlow(
@@ -129,7 +132,7 @@ object CommandRegistrar {
               res <- {
                 io.circe.parser
                   .parse(body)
-                  .flatMap(_.as[Interaction])
+                  .flatMap(_.as[RawInteraction])
                   .leftMap { e =>
                     logger.error(s"Error when decoding command interaction: ${e.show}")
                     HttpResponse(StatusCodes.BadRequest, entity = e.show)
@@ -137,20 +140,16 @@ object CommandRegistrar {
               }
             } yield res
         }
-        .map {
-          case Right(interaction) =>
-            handleCommand(clientId, commandsByName, interaction, None).leftMap { e =>
-              logger.error(s"Error handling command: $e")
-              HttpResponse(StatusCodes.BadRequest, entity = e)
-            }
-
-          case Left(e) => Left(e)
+        .map(_.map(handleInteraction(clientId, commandsByName, _, None)))
+        .mapConcat {
+          case Left(value)  => List(Left(value))
+          case Right(value) => value.toList.map(Right.apply)
         }
         .map { e =>
           val httpResponse = e.map { response =>
             HttpResponse(
               headers = immutable.Seq(`Content-Type`(ContentType.WithFixedCharset(MediaTypes.`application/json`))),
-              entity = response.toInteractionResponse.asJson.noSpaces
+              entity = response.toRawInteractionResponse.asJson.noSpaces
             )
           }.merge
 
@@ -161,44 +160,32 @@ object CommandRegistrar {
     )
   }
 
-  def gatewayCommands[Mat](
+  def gatewayInteractions[Mat](
       commands: CommandOrGroup*
   )(
       clientId: String,
       requests: Requests,
       parallelism: Int = 4
-  ): Sink[(Decoder.Result[Interaction], Option[CacheSnapshot]), NotUsed] = {
+  ): Sink[(RawInteraction, Option[CacheSnapshot]), NotUsed] = {
     import requests.system
     import requests.system.executionContext
     val commandsByName = commands.groupBy(_.name.toLowerCase(Locale.ROOT))
 
     SupervisionStreams.logAndContinue(
-      Flow[(Decoder.Result[Interaction], Option[CacheSnapshot])]
+      Flow[(RawInteraction, Option[CacheSnapshot])]
         .mapConcat {
-          case (result, optCache) =>
-            result match {
-              case Right(value) => List(value -> optCache)
-              case Left(e) =>
-                logger.error(s"Error reparsing interaction: $e")
-                Nil
-            }
+          case (interaction, optCache) =>
+            handleInteraction(clientId, commandsByName, interaction, optCache)
+              .map(_ -> interaction)
+              .toList
         }
         .map {
-          case (interaction, optCache) =>
-            handleCommand(clientId, commandsByName, interaction, optCache).map(_ -> interaction)
-        }
-        .mapConcat {
-          case Right((response, interaction)) =>
-            List(
-              CreateInteractionResponse(
-                interaction.id,
-                interaction.token,
-                response.toInteractionResponse
-              ) -> extractAsyncPart(response)
-            )
-          case Left(e) =>
-            logger.error(s"Error handling command: $e")
-            Nil
+          case (response, interaction) =>
+            CreateInteractionResponse(
+              interaction.id,
+              interaction.token,
+              response.toRawInteractionResponse
+            ) -> extractAsyncPart(response)
         }
         .via(requests.flowSuccess(ignoreFailures = false))
         .map(_._2)

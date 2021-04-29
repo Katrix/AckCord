@@ -21,27 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.slashcommands.commands
 
 import ackcord.CacheSnapshot
 import ackcord.requests.Requests
+import ackcord.slashcommands._
 import akka.NotUsed
 import cats.~>
 
 class CacheSlashCommandController(val requests: Requests)
     extends SlashCommandControllerBase[ResolvedCommandInteraction] {
 
-  implicit def findCache[A](implicit message: CacheCommandInteraction[A]): CacheSnapshot = message.cache
+  implicit def findCache[A](implicit message: CacheInteraction): CacheSnapshot = message.cache
 
   override val Command: CommandBuilder[ResolvedCommandInteraction, NotUsed] = new CommandBuilder(
-    new CommandTransformer[CommandInteraction, CacheCommandInteraction] {
+    new DataInteractionTransformer[CommandInteraction, CacheCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], CacheCommandInteraction[A]] =
         from.optCache match {
           case Some(value) => Right(BaseCacheCommandInteraction(from.commandInvocationInfo, value))
           case None        => Left(Some("This command can only be used when the bot has access to a cache"))
         }
     }.andThen(
-      CommandTransformer.resolved((channel, optGuild) =>
+      DataInteractionTransformer.resolved((channel, optGuild) =>
         Lambda[CacheCommandInteraction ~> ResolvedCommandInteraction] { baseInteraction =>
           BaseResolvedCommandInteraction(
             baseInteraction.commandInvocationInfo,
@@ -57,7 +58,7 @@ class CacheSlashCommandController(val requests: Requests)
   )
 
   val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] = Command.andThen(
-    CommandTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
+    DataInteractionTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
       Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
         BaseGuildCommandInteraction(i.commandInvocationInfo, channel, guild, guildMember, memberPermissions, i.cache)
       )
@@ -65,7 +66,7 @@ class CacheSlashCommandController(val requests: Requests)
   )
 
   val GuildVoiceCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
-    CommandTransformer.inVoiceChannel(voiceChannel =>
+    DataInteractionTransformer.inVoiceChannel(voiceChannel =>
       Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
         BaseVoiceChannelCommandInteraction(
           i.commandInvocationInfo,

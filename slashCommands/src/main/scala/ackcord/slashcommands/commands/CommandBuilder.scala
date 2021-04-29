@@ -21,20 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.slashcommands.commands
 
+import ackcord.slashcommands.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 import akka.NotUsed
 
 class CommandBuilder[Interaction[_], A](
-    val transformer: CommandTransformer[CommandInteraction, Interaction],
+    val transformer: DataInteractionTransformer[CommandInteraction, Interaction],
     implParamList: Either[NotUsed =:= A, ParamList[A]],
     extra: Map[String, String]
 ) {
 
-  def withTransformer[NewTo[_]](transformer: CommandTransformer[CommandInteraction, NewTo]): CommandBuilder[NewTo, A] =
+  def withTransformer[NewTo[_]](
+      transformer: DataInteractionTransformer[CommandInteraction, NewTo]
+  ): CommandBuilder[NewTo, A] =
     new CommandBuilder(transformer, implParamList, extra)
 
-  def andThen[To2[_]](nextTransformer: CommandTransformer[Interaction, To2]): CommandBuilder[To2, A] =
+  def andThen[To2[_]](nextTransformer: DataInteractionTransformer[Interaction, To2]): CommandBuilder[To2, A] =
     withTransformer(this.transformer.andThen(nextTransformer))
 
   def paramList: Option[ParamList[A]] = implParamList.toOption
@@ -55,7 +58,9 @@ class CommandBuilder[Interaction[_], A](
     CommandGroup(name, description, extra, subcommands)
   }
 
-  def command(name: String, description: String)(handle: Interaction[A] => CommandResponse): Command[Interaction, A] =
+  def command(name: String, description: String)(
+      handle: Interaction[A] => InteractionResponse
+  ): Command[Interaction, A] =
     Command(name, description, extra, implParamList, transformer, handle)
 
   def named(name: String, description: String): NamedCommandBuilder[Interaction, A] =
@@ -65,17 +70,19 @@ class CommandBuilder[Interaction[_], A](
 class NamedCommandBuilder[Interaction[_], A](
     val name: String,
     val description: String,
-    transformer: CommandTransformer[CommandInteraction, Interaction],
+    transformer: DataInteractionTransformer[CommandInteraction, Interaction],
     implParamList: Either[NotUsed =:= A, ParamList[A]],
     extra: Map[String, String]
 ) extends CommandBuilder(transformer, implParamList, extra) {
 
   override def withTransformer[NewTo[_]](
-      transformer: CommandTransformer[CommandInteraction, NewTo]
+      transformer: DataInteractionTransformer[CommandInteraction, NewTo]
   ): NamedCommandBuilder[NewTo, A] =
     new NamedCommandBuilder(name, description, transformer, implParamList, extra)
 
-  override def andThen[To2[_]](nextTransformer: CommandTransformer[Interaction, To2]): NamedCommandBuilder[To2, A] =
+  override def andThen[To2[_]](
+      nextTransformer: DataInteractionTransformer[Interaction, To2]
+  ): NamedCommandBuilder[To2, A] =
     withTransformer(this.transformer.andThen(nextTransformer))
 
   override def withParams[NewA](paramList: ParamList[NewA]): NamedCommandBuilder[Interaction, NewA] = {
@@ -89,6 +96,6 @@ class NamedCommandBuilder[Interaction[_], A](
   override def withExtra(extra: Map[String, String]): NamedCommandBuilder[Interaction, A] =
     new NamedCommandBuilder(name, description, transformer, implParamList, extra)
 
-  def handle(handler: Interaction[A] => CommandResponse): Command[Interaction, A] =
+  def handle(handler: Interaction[A] => InteractionResponse): Command[Interaction, A] =
     Command(name, description, extra, implParamList, transformer, handler)
 }

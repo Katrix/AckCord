@@ -23,13 +23,12 @@
  */
 package ackcord.slashcommands.raw
 
-import ackcord.data.{GuildId, RawSnowflake}
+import ackcord.data.{CommandId, GuildId, RawSnowflake}
 import ackcord.requests.RequestRoute
 import ackcord.requests.Routes._
-import ackcord.slashcommands.CommandId
 import akka.http.scaladsl.model.HttpMethods._
 
-object CommandRoutes {
+object InteractionRoutes {
 
   val commandId = new MinorParameter[CommandId]("commandId", _.asString)
 

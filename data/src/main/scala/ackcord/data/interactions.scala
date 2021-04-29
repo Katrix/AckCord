@@ -21,25 +21,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.raw
+package ackcord.data
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{
-  GuildId,
-  InteractionResponseType,
-  InteractionType,
-  MessageFlags,
-  OutgoingEmbed,
-  Permission,
-  RawSnowflake,
-  TextChannelId,
-  User
-}
-import ackcord.requests.AllowedMention
-import ackcord.slashcommands.{CommandId, InteractionId}
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
-import io.circe._
+import io.circe.Json
+
+sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
+object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
+  override def values: collection.immutable.IndexedSeq[InteractionType] = findValues
+
+  case object Ping               extends InteractionType(1)
+  case object ApplicationCommand extends InteractionType(2)
+  case class Unknown(i: Int)     extends InteractionType(i)
+
+  override def createUnknown(value: Int): InteractionType = Unknown(value)
+}
+
+sealed abstract class InteractionResponseType(val value: Int) extends IntEnumEntry
+object InteractionResponseType
+    extends IntEnum[InteractionResponseType]
+    with IntCirceEnumWithUnknown[InteractionResponseType] {
+  override def values: collection.immutable.IndexedSeq[InteractionResponseType] = findValues
+
+  case object Pong                             extends InteractionResponseType(1)
+  case object ChannelMessageWithSource         extends InteractionResponseType(4)
+  case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
+  case class Unknown(i: Int)                   extends InteractionResponseType(i)
+
+  override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
+}
+
+case class RawInteraction(
+    id: InteractionId,
+    applicationId: RawSnowflake,
+    tpe: InteractionType,
+    data: Option[ApplicationInteractionData],
+    guildId: Option[GuildId],
+    channelId: TextChannelId,
+    member: Option[RawGuildMember],
+    memberPermission: Option[Permission],
+    user: Option[User],
+    token: String,
+    version: Option[Int]
+)
 
 case class ApplicationCommand(
     id: CommandId,
@@ -83,25 +109,14 @@ case class ApplicationCommandOptionChoice(
     value: Either[String, Int]
 )
 
-case class Interaction(
-    id: InteractionId,
-    applicationId: RawSnowflake,
-    tpe: InteractionType,
-    data: Option[ApplicationCommandInteractionData],
-    guildId: Option[GuildId],
-    channelId: TextChannelId,
-    member: Option[RawGuildMember],
-    memberPermission: Option[Permission],
-    user: Option[User],
-    token: String,
-    version: Option[Int]
-)
-
+sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
     options: Option[Seq[ApplicationCommandInteractionDataOption]]
-)
+)                                                                  extends ApplicationInteractionData
+case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
+
 sealed trait ApplicationCommandInteractionDataOption {
   def name: String
 }
@@ -114,9 +129,12 @@ object ApplicationCommandInteractionDataOption {
   ) extends ApplicationCommandInteractionDataOption
 }
 
-case class InteractionResponse(`type`: InteractionResponseType, data: Option[InteractionApplicationCommandCallbackData])
+case class RawInteractionResponse(
+    `type`: InteractionResponseType,
+    data: Option[RawInteractionApplicationCommandCallbackData]
+)
 
-case class InteractionApplicationCommandCallbackData(
+case class RawInteractionApplicationCommandCallbackData(
     tts: Option[Boolean] = None,
     content: Option[String] = None,
     embeds: Seq[OutgoingEmbed] = Nil,

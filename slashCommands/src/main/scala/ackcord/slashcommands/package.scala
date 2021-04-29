@@ -23,13 +23,7 @@
  */
 package ackcord
 
-import ackcord.data.SnowflakeType
-import ackcord.slashcommands.raw.{ApplicationCommand, Interaction}
-
 package object slashcommands {
-  type CommandId     = SnowflakeType[ApplicationCommand]
-  type InteractionId = SnowflakeType[Interaction]
-
   type ~[A, B] = (A, B)
   object ~ {
     def unapply[A, B](t: (A, B)): Some[(A, B)] = Some(t)

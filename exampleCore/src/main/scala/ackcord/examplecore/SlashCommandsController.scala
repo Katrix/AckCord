@@ -24,9 +24,10 @@
 package ackcord.examplecore
 
 import ackcord.JsonSome
-import ackcord.data.UserId
-import ackcord.requests.{AllowedMention, Requests}
-import ackcord.slashcommands.{CacheSlashCommandController, Command, CommandGroup, ResolvedCommandInteraction}
+import ackcord.data.{AllowedMention, UserId}
+import ackcord.requests.Requests
+import ackcord.slashcommands.ResolvedCommandInteraction
+import ackcord.slashcommands.commands.{CacheSlashCommandController, Command, CommandGroup}
 import akka.NotUsed
 
 class SlashCommandsController(requests: Requests) extends CacheSlashCommandController(requests) {

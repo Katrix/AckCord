@@ -25,8 +25,10 @@ package ackcord.data
 
 import java.time.OffsetDateTime
 import java.util.Base64
+
 import scala.collection.immutable
 import scala.util.Try
+
 import ackcord.CacheSnapshot
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
@@ -837,3 +839,41 @@ case class MessageInteraction(
     name: String,
     user: User
 )
+
+/**
+  * @param parse Which mention types should be allowed.
+  * @param roles The roles to allow mention.
+  * @param users The users to allow mention.
+  * @param repliedUser For replires, if the author of the message you are
+  *                    replying to should be mentioned.
+  */
+case class AllowedMention(
+    parse: Seq[AllowedMentionTypes] = Seq.empty,
+    roles: Seq[RoleId] = Seq.empty,
+    users: Seq[UserId] = Seq.empty,
+    repliedUser: Boolean = false
+) {
+  require(roles.size <= 100, "Too many allowed role mentions")
+  require(users.size <= 100, "Too many allowed user mentions")
+}
+
+object AllowedMention {
+  val none: AllowedMention = AllowedMention()
+  val all: AllowedMention = AllowedMention(
+    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
+  )
+}
+
+sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
+object AllowedMentionTypes
+    extends StringEnum[AllowedMentionTypes]
+    with StringCirceEnumWithUnknown[AllowedMentionTypes] {
+  override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
+
+  case object Roles               extends AllowedMentionTypes("roles")
+  case object Users               extends AllowedMentionTypes("users")
+  case object Everyone            extends AllowedMentionTypes("everyone")
+  case class Unknown(str: String) extends AllowedMentionTypes(str)
+
+  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
+}

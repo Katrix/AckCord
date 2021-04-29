@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.slashcommands.commands
 
 import scala.language.implicitConversions
 
@@ -29,11 +29,8 @@ import java.util.Locale
 
 import scala.annotation.tailrec
 
-import ackcord.slashcommands.raw.{
-  ApplicationCommandOption,
-  ApplicationCommandOptionChoice,
-  ApplicationCommandOptionType
-}
+import ackcord.data._
+import ackcord.slashcommands.~
 import cats.Id
 import cats.arrow.FunctionK
 import cats.syntax.either._
@@ -120,7 +117,7 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
       decodePayloadInner = decodePayloadInner.andThen(_.map(map))
     )
 
-  override def toCommandOption: ApplicationCommandOption = raw.ApplicationCommandOption(
+  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
     tpe,
     name,
     description,

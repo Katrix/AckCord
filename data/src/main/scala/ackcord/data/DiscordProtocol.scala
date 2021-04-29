@@ -474,5 +474,114 @@ trait DiscordProtocol {
 
   implicit val teamMemberCodec: Codec[TeamMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val allowedMentionCodec: Codec[AllowedMention] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandCodec: Codec[ApplicationCommand] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
+    Codec.from(
+      (c: HCursor) =>
+        c.get[Int]("component_type").flatMap {
+          case 1 => c.as[ApplicationCommandInteractionData]
+          case n => c.as[Json].map(ApplicationUnknownInteractionData(n, _))
+        },
+      {
+        case a: ApplicationCommandInteractionData         => a.asJson.deepMerge(Json.obj("component_type" := 1))
+        case ApplicationUnknownInteractionData(tpe, data) => data.deepMerge(Json.obj("component_type" := tpe))
+      }
+    )
+
+  implicit val interactionResponseCodec: Codec[RawInteractionResponse] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionApplicationCommandCallbackDataCodec: Codec[RawInteractionApplicationCommandCallbackData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandOptionChoiceCodec: Codec[ApplicationCommandOptionChoice] = Codec.from(
+    (c: HCursor) =>
+      for {
+        name  <- c.get[String]("name")
+        value <- c.get[String]("value").map(Left(_)).orElse(c.get[Int]("value").map(Right(_)))
+      } yield ApplicationCommandOptionChoice(name, value),
+    (a: ApplicationCommandOptionChoice) => Json.obj("name" := a.name, "value" := a.value.fold(_.asJson, _.asJson))
+  )
+
+  implicit val applicationCommandInteractionDataOptionCodec: Codec[ApplicationCommandInteractionDataOption] = {
+    import ApplicationCommandInteractionDataOption._
+    Codec.from(
+      (c: HCursor) =>
+        for {
+          name    <- c.get[String]("name")
+          value   <- c.get[Option[Json]]("value")
+          options <- c.get[Option[Seq[ApplicationCommandInteractionDataOption]]]("options")
+          res <- (value, options) match {
+            case (Some(value), None)   => Right(ApplicationCommandInteractionDataOptionWithValue(name, value))
+            case (None, Some(options)) => Right(ApplicationCommandInteractionDataOptionWithOptions(name, options))
+            case (Some(_), Some(_)) =>
+              Left(DecodingFailure("Expected either value or options", c.history))
+            case (None, None) =>
+              Right(ApplicationCommandInteractionDataOptionWithOptions(name, Nil))
+          }
+        } yield res,
+      {
+        case ApplicationCommandInteractionDataOptionWithValue(name, value) => Json.obj("name" := name, "value" := value)
+        case ApplicationCommandInteractionDataOptionWithOptions(name, options) =>
+          Json.obj("name" := name, "options" := options)
+      }
+    )
+  }
+
+  implicit val interactionCodec: Codec[RawInteraction] = Codec.from(
+    (c: HCursor) =>
+      for {
+        id            <- c.get[InteractionId]("id")
+        applicationId <- c.get[RawSnowflake]("application_id")
+        tpe           <- c.get[InteractionType]("type")
+        data          <- c.get[Option[ApplicationInteractionData]]("data")
+        guildId       <- c.get[Option[GuildId]]("guild_id")
+        channelId     <- c.get[TextChannelId]("channel_id")
+        member        <- c.get[Option[RawGuildMember]]("member")
+        permissions   <- c.downField("member").get[Option[Permission]]("permissions")
+        user          <- c.get[Option[User]]("user")
+        token         <- c.get[String]("token")
+        version       <- c.get[Option[Int]]("version")
+      } yield RawInteraction(
+        id,
+        applicationId,
+        tpe,
+        data,
+        guildId,
+        channelId,
+        member,
+        permissions,
+        user,
+        token,
+        version
+      ),
+    (a: RawInteraction) =>
+      Json.obj(
+        "id" := a.id,
+        "application_id" := a.applicationId,
+        "type" := a.tpe,
+        "data" := a.data,
+        "guild_id" := a.guildId,
+        "channel_id" := a.channelId,
+        "member" := a.member.map(
+          _.asJson.withObject(o => Json.fromJsonObject(o.add("permissions", a.memberPermission.get.asJson)))
+        ),
+        "user" := a.user,
+        "token" := a.token,
+        "version" := a.version
+      )
+  )
 }
 object DiscordProtocol extends DiscordProtocol
