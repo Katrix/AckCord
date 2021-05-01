@@ -272,7 +272,7 @@ trait DiscordProtocol {
       reactions       <- c.get[Option[Seq[Reaction]]]("reactions")
       nonce <-
         c
-          .get[Option[Int]]("nonce")
+          .get[Option[Long]]("nonce")
           .map(_.map(Left.apply))
           .orElse(c.get[Option[String]]("nonce").map(_.map(Right.apply)))
       pinned             <- c.get[Boolean]("pinned")

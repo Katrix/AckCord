@@ -783,7 +783,7 @@ object GatewayEvent {
       attachment: JsonOption[Seq[Attachment]],
       embeds: JsonOption[Seq[ReceivedEmbed]],
       reactions: JsonOption[Seq[Reaction]],
-      nonce: JsonOption[Either[Int, String]],
+      nonce: JsonOption[Either[Long, String]],
       pinned: JsonOption[Boolean],
       webhookId: JsonOption[String],
       messageType: JsonOption[MessageType],
