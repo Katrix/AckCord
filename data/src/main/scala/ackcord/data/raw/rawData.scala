@@ -388,7 +388,7 @@ case class RawMessage(
     attachment: Seq[Attachment],
     embeds: Seq[ReceivedEmbed],
     reactions: Option[Seq[Reaction]], //reactions can be missing
-    nonce: Option[Either[Int, String]],
+    nonce: Option[Either[Long, String]],
     pinned: Boolean,
     `type`: MessageType,
     activity: Option[RawMessageActivity],

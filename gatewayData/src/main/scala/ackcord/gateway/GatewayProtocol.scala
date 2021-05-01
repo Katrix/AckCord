@@ -194,7 +194,7 @@ object GatewayProtocol extends DiscordProtocol {
       nonce <-
         c
           .downField("nonce")
-          .as[JsonOption[Int]]
+          .as[JsonOption[Long]]
           .map(_.map(Left.apply))
           .orElse(c.get[JsonOption[String]]("nonce").map(_.map(Right.apply)))
 
