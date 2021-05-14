@@ -474,6 +474,7 @@ case class GuildMember(
   * @param userId The id of the user that created this emoji.
   * @param requireColons If the emoji requires colons.
   * @param managed If the emoji is managed.
+  * @param animated If the emoji is animated.
   * @param available If the emoji can be used.
   */
 case class Emoji(
@@ -488,9 +489,12 @@ case class Emoji(
 ) {
 
   /**
-    * Mention this role so it can be formatted correctly in messages.
+    * Mention this emoji so it can be formatted correctly in messages.
     */
-  def mention: String = if (!managed.getOrElse(false)) s"<:$asString:>" else asString
+  def mention: String =
+    if (requireColons.getOrElse(false)) s"<:$name:$id>"
+    else if (animated.getOrElse(false)) s"<a:$name:$id>"
+    else s"$name"
 
   /**
     * Returns a string representation of this emoji used in requests.
