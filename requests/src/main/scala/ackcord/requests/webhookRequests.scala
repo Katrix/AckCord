@@ -213,7 +213,8 @@ case class ExecuteWebhookData(
     tts: Option[Boolean] = None,
     files: Seq[CreateMessageFile] = Seq.empty,
     embeds: Seq[OutgoingEmbed] = Nil,
-    allowedMentions: Option[AllowedMention] = None
+    allowedMentions: Option[AllowedMention] = None,
+    components: Option[Seq[ActionRow]] = None
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -222,6 +223,7 @@ case class ExecuteWebhookData(
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
   require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
+  require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
 }
 object ExecuteWebhookData {
 
@@ -233,7 +235,8 @@ object ExecuteWebhookData {
       "avatar_url" := a.avatarUrl,
       "tts" := a.tts,
       "embeds" := a.embeds,
-      "allowed_mentions" := a.allowedMentions
+      "allowed_mentions" := a.allowedMentions,
+      "components" := a.components
     )
 }
 
@@ -297,7 +300,8 @@ case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-    allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+    allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+    components: JsonOption[Seq[ActionRow]] = JsonUndefined
 ) {
   files.foreach(_.foreach(file => require(file.isValid)))
   require(
@@ -305,13 +309,15 @@ case class EditWebhookMessageData(
     "Please use unique filenames for all files"
   )
   require(content.forall(_.length <= 2000), "The content of a message can't exceed 2000 characters")
+  require(components.forall(_.length <= 5), "Can't send more than 5 action rows in a message")
 }
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
     JsonOption.removeUndefinedToObj(
       "content"          -> a.content.map(_.asJson),
       "embeds"           -> a.embeds.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson)
+      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
+      "components"       -> a.components.map(_.asJson)
     )
 }
 

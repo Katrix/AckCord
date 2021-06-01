@@ -367,6 +367,11 @@ sealed trait Message {
   def guildMember(implicit c: CacheSnapshot): Option[GuildMember]
 
   /**
+    * The extra interaction components added to this message.
+    */
+  def components: Seq[ActionRow]
+
+  /**
     * If the author is a user, their user id.
     */
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
@@ -382,6 +387,8 @@ sealed trait Message {
   def formatMentions(implicit c: CacheSnapshot): String
 
   private[ackcord] def withReactions(reactions: Seq[Reaction]): Message
+
+  def updateButton(identifier: String, f: TextButton => Button): Message
 }
 
 /**
@@ -415,7 +422,8 @@ case class SparseMessage(
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
     referencedMessage: Option[Message],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Seq[ActionRow]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -435,6 +443,9 @@ case class SparseMessage(
   }
 
   override private[ackcord] def withReactions(reactions: Seq[Reaction]): SparseMessage = copy(reactions = reactions)
+
+  override def updateButton(identifier: String, f: TextButton => Button): SparseMessage =
+    copy(components = components.map(_.updateButton(identifier, f)))
 }
 
 /**
@@ -474,7 +485,8 @@ case class GuildGatewayMessage(
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
     referencedMessage: Option[Message],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Seq[ActionRow]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -516,6 +528,9 @@ case class GuildGatewayMessage(
 
   override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage =
     copy(reactions = reactions)
+
+  override def updateButton(identifier: String, f: TextButton => Button): GuildGatewayMessage =
+    copy(components = components.map(_.updateButton(identifier, f)))
 }
 
 /**
@@ -554,7 +569,7 @@ case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
   * @param id The id of the emoji. If it's absent, it's not a guild emoji.
   * @param name The name of the emoji.
   */
-case class PartialEmoji(id: Option[EmojiId], name: Option[String])
+case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None)
 
 /**
   * A received embed.

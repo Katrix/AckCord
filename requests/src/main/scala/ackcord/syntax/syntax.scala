@@ -112,7 +112,8 @@ package object syntax {
         embed: Option[OutgoingEmbed] = None,
         allowedMentions: AllowedMention = AllowedMention.all,
         replyTo: Option[MessageId] = None,
-        replyFailIfNotExist: Boolean = true
+        replyFailIfNotExist: Boolean = true,
+        components: Seq[ActionRow] = Nil
     ) = CreateMessage(
       textChannel.id,
       CreateMessageData(
@@ -123,7 +124,8 @@ package object syntax {
         embed,
         allowedMentions,
         replyTo,
-        replyFailIfNotExist
+        replyFailIfNotExist,
+        components
       )
     )
 
@@ -1214,8 +1216,9 @@ package object syntax {
         content: JsonOption[String] = JsonUndefined,
         allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
         embed: JsonOption[OutgoingEmbed] = JsonUndefined,
-        flags: JsonOption[MessageFlags] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, allowedMentions, embed, flags))
+        flags: JsonOption[MessageFlags] = JsonUndefined,
+        components: JsonOption[Seq[ActionRow]] = JsonUndefined
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, allowedMentions, embed, flags, components))
 
     /**
       * Delete this message.

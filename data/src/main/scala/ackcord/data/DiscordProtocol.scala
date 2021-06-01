@@ -223,6 +223,36 @@ trait DiscordProtocol {
   implicit val messageInteractionCodec: Codec[MessageInteraction] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit private val rawButtonCodec: Codec[RawButton] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val buttonEncoder: Encoder[Button] = (a: Button) => {
+    val rawButton = a match {
+      case raw: RawButton => raw
+      case _              => RawButton(a.label, a.customId, a.style, a.emoji, a.url, a.disabled)
+    }
+    rawButton.asJson.deepMerge(Json.obj("type" := 2))
+  }
+
+  implicit val buttonDecoder: Decoder[Button] = (c: HCursor) => {
+    c.as[RawButton].map { button =>
+      val asTextButton = button.customId
+        .map(TextButton(button.label, _, button.style.asInstanceOf[TextButtonStyle], button.emoji, button.disabled))
+
+      val asLinkButton = button.url
+        .filter(_ => button.style == ButtonStyle.Link)
+        .map(LinkButton(button.label, button.emoji, _, button.disabled))
+
+      asTextButton.orElse(asLinkButton).getOrElse(button)
+    }
+  }
+
+  implicit val actionRowCodec: Codec[ActionRow] = {
+    val base: Codec[ActionRow] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+    Codec.from(base, base.mapJson(json => json.deepMerge(Json.obj("type" := 1))))
+  }
+
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
       "id"               -> a.id.asJson,
@@ -241,7 +271,8 @@ trait DiscordProtocol {
       "pinned"           -> a.pinned.asJson,
       "type"             -> a.`type`.asJson,
       "activity"         -> a.activity.asJson,
-      "application"      -> a.application.asJson
+      "application"      -> a.application.asJson,
+      "components"       -> a.components.asJson
     )
 
     a.author match {
@@ -284,6 +315,7 @@ trait DiscordProtocol {
       stickers           <- c.get[Option[Seq[Sticker]]]("stickers")
       referencedMessage  <- c.get[Option[RawMessage]]("referenced_message")
       messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
+      components         <- c.get[Option[Seq[ActionRow]]]("components")
     } yield RawMessage(
       id,
       channelId,
@@ -310,7 +342,8 @@ trait DiscordProtocol {
       flags,
       stickers,
       referencedMessage,
-      messageInteraction
+      messageInteraction,
+      components
     )
   }
 
@@ -487,15 +520,20 @@ trait DiscordProtocol {
   implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val applicationComponentInteractionDataCodec: Codec[ApplicationComponentInteractionData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
       (c: HCursor) =>
         c.get[Int]("component_type").flatMap {
           case 1 => c.as[ApplicationCommandInteractionData]
+          case 2 => c.as[ApplicationComponentInteractionData]
           case n => c.as[Json].map(ApplicationUnknownInteractionData(n, _))
         },
       {
         case a: ApplicationCommandInteractionData         => a.asJson.deepMerge(Json.obj("component_type" := 1))
+        case a: ApplicationComponentInteractionData       => a.asJson.deepMerge(Json.obj("component_type" := 2))
         case ApplicationUnknownInteractionData(tpe, data) => data.deepMerge(Json.obj("component_type" := tpe))
       }
     )
@@ -553,6 +591,7 @@ trait DiscordProtocol {
         permissions   <- c.downField("member").get[Option[Permission]]("permissions")
         user          <- c.get[Option[User]]("user")
         token         <- c.get[String]("token")
+        message       <- c.get[Option[RawMessage]]("message")
         version       <- c.get[Option[Int]]("version")
       } yield RawInteraction(
         id,
@@ -565,6 +604,7 @@ trait DiscordProtocol {
         permissions,
         user,
         token,
+        message,
         version
       ),
     (a: RawInteraction) =>
@@ -580,6 +620,7 @@ trait DiscordProtocol {
         ),
         "user" := a.user,
         "token" := a.token,
+        "message" := a.message,
         "version" := a.version
       )
   )

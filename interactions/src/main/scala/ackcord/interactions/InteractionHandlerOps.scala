@@ -49,14 +49,16 @@ trait InteractionHandlerOps {
       tts: Option[Boolean] = None,
       embeds: Seq[OutgoingEmbed] = Nil,
       allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None
+      flags: MessageFlags = MessageFlags.None,
+      components: Seq[ActionRow] = Nil
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
     RawInteractionApplicationCommandCallbackData(
       tts,
       Some(content),
       embeds,
       allowedMentions,
-      flags
+      flags,
+      if (components.isEmpty) None else Some(components)
     ),
     () => OptFuture.unit
   )
@@ -66,14 +68,16 @@ trait InteractionHandlerOps {
       content: Option[String] = None,
       tts: Option[Boolean] = None,
       allowedMentions: Option[AllowedMention] = None,
-      flags: MessageFlags = MessageFlags.None
+      flags: MessageFlags = MessageFlags.None,
+      components: Seq[ActionRow] = Nil
   ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
     RawInteractionApplicationCommandCallbackData(
       tts,
       content,
       embeds,
       allowedMentions,
-      flags
+      flags,
+      if (components.isEmpty) None else Some(components)
     ),
     () => OptFuture.unit
   )
@@ -86,7 +90,8 @@ trait InteractionHandlerOps {
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
       embeds: Seq[OutgoingEmbed] = Nil,
-      allowedMentions: Option[AllowedMention] = None
+      allowedMentions: Option[AllowedMention] = None,
+      components: Seq[ActionRow] = Nil
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
     interactionRequest(
       CreateFollowupMessage(
@@ -99,7 +104,8 @@ trait InteractionHandlerOps {
           tts,
           files,
           embeds,
-          allowedMentions
+          allowedMentions,
+          if (components.isEmpty) None else Some(components)
         )
       )
     ).map(_.get)
@@ -109,7 +115,8 @@ trait InteractionHandlerOps {
       content: String = "",
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
-      allowedMentions: Option[AllowedMention] = None
+      allowedMentions: Option[AllowedMention] = None,
+      components: Seq[ActionRow] = Nil
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
     interactionRequest(
       CreateFollowupMessage(
@@ -122,7 +129,8 @@ trait InteractionHandlerOps {
           tts,
           files,
           embeds,
-          allowedMentions
+          allowedMentions,
+          if (components.isEmpty) None else Some(components)
         )
       )
     ).map(_.get)
@@ -131,7 +139,8 @@ trait InteractionHandlerOps {
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-      allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+      allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+      components: JsonOption[Seq[ActionRow]] = JsonUndefined
   )(implicit async: AsyncMessageToken): OptFuture[Json] =
     interactionRequest(
       EditOriginalWebhookMessage(
@@ -141,7 +150,8 @@ trait InteractionHandlerOps {
           content,
           embeds,
           files,
-          allowedMentions
+          allowedMentions,
+          components
         )
       )
     )
@@ -155,7 +165,8 @@ trait InteractionHandlerOps {
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-      allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+      allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+      components: JsonOption[Seq[ActionRow]] = JsonUndefined
   )(implicit async: AsyncToken): OptFuture[Json] =
     interactionRequest(
       EditWebhookMessage(
@@ -166,7 +177,8 @@ trait InteractionHandlerOps {
           content,
           embeds,
           files,
-          allowedMentions
+          allowedMentions,
+          components
         )
       )
     )

@@ -71,12 +71,22 @@ trait CommandInteraction[A] extends Interaction {
   def args: A              = commandInvocationInfo.args
 }
 
+trait ButtonInteraction extends Interaction {
+  def message: Message
+}
+
 trait CacheInteraction extends Interaction {
   def cache: CacheSnapshot
   override def optCache: Option[CacheSnapshot] = Some(cache)
 }
+trait CacheButtonInteraction     extends CacheInteraction with ButtonInteraction
 trait CacheCommandInteraction[A] extends CacheInteraction with CommandInteraction[A]
 
+case class BaseCacheButtonInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    cache: CacheSnapshot
+) extends CacheButtonInteraction
 case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocationInfo[A], cache: CacheSnapshot)
     extends CacheCommandInteraction[A]
 
@@ -84,8 +94,16 @@ trait ResolvedInteraction extends CacheInteraction {
   def textChannel: TextChannel
   def optGuild: Option[Guild]
 }
+trait ResolvedButtonInteraction     extends ResolvedInteraction with ButtonInteraction
 trait ResolvedCommandInteraction[A] extends ResolvedInteraction with CommandInteraction[A]
 
+case class BaseResolvedButtonInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    textChannel: TextChannel,
+    optGuild: Option[Guild],
+    cache: CacheSnapshot
+) extends ResolvedButtonInteraction
 case class BaseResolvedCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextChannel,
@@ -102,8 +120,18 @@ trait GuildInteraction extends ResolvedInteraction {
 
   override def optGuild: Option[Guild] = Some(guild)
 }
+trait GuildButtonInteraction     extends GuildInteraction with ButtonInteraction
 trait GuildCommandInteraction[A] extends GuildInteraction with CommandInteraction[A]
 
+case class BaseGuildButtonInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    textChannel: TextGuildChannel,
+    guild: Guild,
+    member: GuildMember,
+    memberPermissions: Permission,
+    cache: CacheSnapshot
+) extends GuildButtonInteraction
 case class BaseGuildCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
@@ -116,8 +144,19 @@ case class BaseGuildCommandInteraction[A](
 trait VoiceChannelInteraction extends GuildInteraction {
   def voiceChannel: VoiceGuildChannel
 }
+trait VoiceChannelButtonInteraction     extends VoiceChannelInteraction with ButtonInteraction
 trait VoiceChannelCommandInteraction[A] extends VoiceChannelInteraction with CommandInteraction[A]
 
+case class BaseVoiceChannelButtonInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    textChannel: TextGuildChannel,
+    guild: Guild,
+    member: GuildMember,
+    memberPermissions: Permission,
+    voiceChannel: VoiceGuildChannel,
+    cache: CacheSnapshot
+) extends VoiceChannelButtonInteraction
 case class BaseVoiceChannelCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
@@ -127,6 +166,13 @@ case class BaseVoiceChannelCommandInteraction[A](
     voiceChannel: VoiceGuildChannel,
     cache: CacheSnapshot
 ) extends VoiceChannelCommandInteraction[A]
+
+case class StatelessButtonInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message
+) extends ButtonInteraction {
+  override def optCache: Option[CacheSnapshot] = None
+}
 
 case class StatelessCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A]
@@ -333,6 +379,8 @@ sealed trait InteractionResponse {
     case InteractionResponse.Pong => RawInteractionResponse(InteractionResponseType.Pong, None)
     case InteractionResponse.Acknowledge(_) =>
       RawInteractionResponse(InteractionResponseType.DeferredChannelMessageWithSource, None)
+    case InteractionResponse.AcknowledgeLoading(_) =>
+      RawInteractionResponse(InteractionResponseType.DeferredMessageUpdate, None)
     case InteractionResponse.ChannelMessage(message, _) =>
       RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
   }
@@ -344,8 +392,9 @@ object InteractionResponse {
     ): InteractionResponse
   }
 
-  case object Pong                                      extends InteractionResponse
-  case class Acknowledge(andThenDo: () => OptFuture[_]) extends InteractionResponse
+  case object Pong                                             extends InteractionResponse
+  case class Acknowledge(andThenDo: () => OptFuture[_])        extends InteractionResponse
+  case class AcknowledgeLoading(andThenDo: () => OptFuture[_]) extends InteractionResponse
   case class ChannelMessage(
       message: RawInteractionApplicationCommandCallbackData,
       andThenDo: () => OptFuture[_]

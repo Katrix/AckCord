@@ -397,7 +397,8 @@ case class RawMessage(
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
     referencedMessage: Option[RawMessage],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Option[Seq[ActionRow]]
 ) {
 
   /**
@@ -434,7 +435,8 @@ case class RawMessage(
           flags,
           stickers,
           referencedMessage.map(_.toMessage),
-          interaction
+          interaction,
+          components.getOrElse(Nil),
         )
 
       case None =>
@@ -463,7 +465,8 @@ case class RawMessage(
           flags,
           stickers,
           referencedMessage.map(_.toMessage),
-          interaction
+          interaction,
+          components.getOrElse(Nil)
         )
 
     }

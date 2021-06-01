@@ -32,6 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.requests.{Requests, SupervisionStreams}
+import ackcord.interactions.buttons.{GlobalRegisteredButtons, RegisteredButtons}
 import ackcord.interactions.commands.CommandOrGroup
 import ackcord.interactions.raw._
 import ackcord.{CacheSnapshot, OptFuture}
@@ -53,6 +54,7 @@ object InteractionsRegistrar {
   private def handleInteraction(
       clientId: String,
       commandsByName: Map[String, Seq[CommandOrGroup]],
+      registeredButtons: RegisteredButtons,
       interaction: RawInteraction,
       optCache: Option[CacheSnapshot]
   ) =
@@ -68,19 +70,37 @@ object InteractionsRegistrar {
 
           case _ => Left(Some("None or invalid data sent for command execution"))
         }
+      case InteractionType.ComponentClicked =>
+        interaction.data match {
+          case Some(data: ApplicationComponentInteractionData) =>
+            registeredButtons
+              .handlerForIdentifier(data.customId)
+              .orElse(GlobalRegisteredButtons.handlerForIdentifier(data.customId))
+              .map(_.handleRaw(clientId, interaction, optCache))
+              .toRight(None)
+
+          case _ => Left(Some("None or invalid data sent for component execution"))
+        }
+
       case InteractionType.Unknown(i) => Left(Some(s"Unknown interaction type $i"))
     }
 
   def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
-      case InteractionResponse.Acknowledge(andThenDo)       => () => andThenDo().map(_ => ())
-      case InteractionResponse.ChannelMessage(_, andThenDo) => () => andThenDo().map(_ => ())
-      case _                                                => () => OptFuture.unit
+      case InteractionResponse.Acknowledge(andThenDo)        => () => andThenDo().map(_ => ())
+      case InteractionResponse.AcknowledgeLoading(andThenDo) => () => andThenDo().map(_ => ())
+      case InteractionResponse.ChannelMessage(_, andThenDo)  => () => andThenDo().map(_ => ())
+      case _                                                 => () => OptFuture.unit
     }
 
   def webFlow(
       commands: CommandOrGroup*
-  )(clientId: String, publicKey: String, parallelism: Int = 4)(
+  )(
+      clientId: String,
+      publicKey: String,
+      registeredButtons: RegisteredButtons = GlobalRegisteredButtons,
+      parallelism: Int = 4
+  )(
       implicit system: ActorSystem[Nothing]
   ): Flow[HttpRequest, (HttpResponse, () => OptFuture[Unit]), NotUsed] = {
     import system.executionContext
@@ -140,7 +160,7 @@ object InteractionsRegistrar {
               }
             } yield res
         }
-        .map(_.map(handleInteraction(clientId, commandsByName, _, None)))
+        .map(_.map(handleInteraction(clientId, commandsByName, registeredButtons, _, None)))
         .mapConcat {
           case Left(value)  => List(Left(value))
           case Right(value) => value.toList.map(Right.apply)
@@ -165,6 +185,7 @@ object InteractionsRegistrar {
   )(
       clientId: String,
       requests: Requests,
+      registeredButtons: RegisteredButtons = GlobalRegisteredButtons,
       parallelism: Int = 4
   ): Sink[(RawInteraction, Option[CacheSnapshot]), NotUsed] = {
     import requests.system
@@ -175,7 +196,7 @@ object InteractionsRegistrar {
       Flow[(RawInteraction, Option[CacheSnapshot])]
         .mapConcat {
           case (interaction, optCache) =>
-            handleInteraction(clientId, commandsByName, interaction, optCache)
+            handleInteraction(clientId, commandsByName, registeredButtons, interaction, optCache)
               .map(_ -> interaction)
               .toList
         }

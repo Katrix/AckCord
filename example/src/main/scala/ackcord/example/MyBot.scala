@@ -25,16 +25,19 @@ package ackcord.example
 
 import ackcord._
 import ackcord.commands.PrefixParser
-import ackcord.gateway.GatewayIntents
+import ackcord.gateway.{GatewayIntents, GatewayMessage}
+import ackcord.interactions.InteractionsRegistrar
 import ackcord.syntax._
+import akka.stream.scaladsl.Flow
 
 object MyBot extends App {
 
   val GeneralCommands = "!"
   val MusicCommands   = "&"
 
-  require(args.nonEmpty, "Please provide a token")
+  require(args.length < 2, "Please provide a token and client id")
   val token    = args.head
+  val clientId = args.tail.head
   val settings = ClientSettings(token, intents = GatewayIntents.AllNonPrivileged)
   import settings.executionContext
 
@@ -95,6 +98,19 @@ object MyBot extends App {
           .ratelimitTest("ratelimitTestOrdered", client.requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
         myCommands.kill
       )
+
+      val buttonCommands = new MyButtonCommands(client.requests)
+
+      client.commands.bulkRunNamedWithHelp(
+        myHelpCommand,
+        buttonCommands.commands: _*
+      )
+
+      import client.system
+
+      client.events.interactions
+        .to(InteractionsRegistrar.gatewayInteractions()(clientId, client.requests))
+        .run()
 
       client.login()
     }

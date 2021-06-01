@@ -107,8 +107,7 @@ case class Events(
       .runWith(Sink.actorRefWithBackpressure(actor, initMessage, ackMessage, completeMessage, failureMessage))
 
   /**
-    * Exposes the command interactions sent to this bot. This method is here so that the slash commands and
-    * core module can remain seperated.
+    * Exposes the command interactions sent to this bot.
     */
   def interactions: Source[(RawInteraction, Option[CacheSnapshot]), NotUsed] =
     subscribeAPI

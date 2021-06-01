@@ -23,7 +23,7 @@
  */
 package ackcord.data
 
-import ackcord.data.raw.RawGuildMember
+import ackcord.data.raw.{RawGuildMember, RawMessage}
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Json
@@ -34,6 +34,7 @@ object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnk
 
   case object Ping               extends InteractionType(1)
   case object ApplicationCommand extends InteractionType(2)
+  case object ComponentClicked   extends InteractionType(3)
   case class Unknown(i: Int)     extends InteractionType(i)
 
   override def createUnknown(value: Int): InteractionType = Unknown(value)
@@ -48,6 +49,7 @@ object InteractionResponseType
   case object Pong                             extends InteractionResponseType(1)
   case object ChannelMessageWithSource         extends InteractionResponseType(4)
   case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
+  case object DeferredMessageUpdate            extends InteractionResponseType(6)
   case class Unknown(i: Int)                   extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
@@ -64,6 +66,7 @@ case class RawInteraction(
     memberPermission: Option[Permission],
     user: Option[User],
     token: String,
+    message: Option[RawMessage],
     version: Option[Int]
 )
 
@@ -115,6 +118,7 @@ case class ApplicationCommandInteractionData(
     name: String,
     options: Option[Seq[ApplicationCommandInteractionDataOption]]
 )                                                                  extends ApplicationInteractionData
+case class ApplicationComponentInteractionData(customId: String)   extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
 
 sealed trait ApplicationCommandInteractionDataOption {
@@ -139,5 +143,6 @@ case class RawInteractionApplicationCommandCallbackData(
     content: Option[String] = None,
     embeds: Seq[OutgoingEmbed] = Nil,
     allowedMentions: Option[AllowedMention] = None,
-    flags: MessageFlags = MessageFlags.None
+    flags: MessageFlags = MessageFlags.None,
+    components: Option[Seq[ActionRow]] = None
 )

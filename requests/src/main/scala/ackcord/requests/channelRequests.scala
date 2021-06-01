@@ -279,7 +279,8 @@ case class CreateMessageData(
     embed: Option[OutgoingEmbed] = None,
     allowedMentions: AllowedMention = AllowedMention.all,
     replyTo: Option[MessageId] = None,
-    replyFailIfNotExist: Boolean = true
+    replyFailIfNotExist: Boolean = true,
+    components: Seq[ActionRow] = Nil
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -287,6 +288,7 @@ case class CreateMessageData(
     "Please use unique filenames for all files"
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
+  require(components.length <= 5, "Can't have more than 5 action rows on a message")
 }
 object CreateMessageData {
 
@@ -297,7 +299,8 @@ object CreateMessageData {
       "nonce" := a.nonce,
       "tts" := a.tts,
       "embed" := a.embed,
-      "allowed_mentions" := a.allowedMentions
+      "allowed_mentions" := a.allowedMentions,
+      "components" := a.components
     )
 
     a.replyTo.fold(base) { reply =>
@@ -461,9 +464,11 @@ case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
     embed: JsonOption[OutgoingEmbed] = JsonUndefined,
-    flags: JsonOption[MessageFlags] = JsonUndefined
+    flags: JsonOption[MessageFlags] = JsonUndefined,
+    components: JsonOption[Seq[ActionRow]] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
+  require(components.forall(_.length <= 5), "Can't have more than 5 action rows on a message")
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
@@ -471,7 +476,8 @@ object EditMessageData {
       "content" -> a.content.map(_.asJson),
       "allowed_mentions" -> a.allowedMentions.map(_.asJson),
       "embed" -> a.embed.map(_.asJson),
-      "flags" -> a.flags.map(_.asJson)
+      "flags" -> a.flags.map(_.asJson),
+      "components" -> a.components.map(_.asJson)
     )
 }
 
