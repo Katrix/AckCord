@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.raw
+package ackcord.interactions.raw
 
 import ackcord.data.{CommandId, GuildId, RawSnowflake}
 import ackcord.requests.RequestRoute

@@ -34,8 +34,8 @@ import ackcord.data.{GuildId, RawSnowflake}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, RequestSettings, Requests}
-import ackcord.slashcommands.InteractionsRegistrar
-import ackcord.slashcommands.raw.GetGuildCommands
+import ackcord.interactions.InteractionsRegistrar
+import ackcord.interactions.raw.GetGuildCommands
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.Done
 import akka.actor.CoordinatedShutdown

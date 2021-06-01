@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.commands
+package ackcord.interactions.commands
 
 import java.util.Locale
 
 import ackcord.data._
-import ackcord.slashcommands._
+import ackcord.interactions._
 import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
 import cats.syntax.either._

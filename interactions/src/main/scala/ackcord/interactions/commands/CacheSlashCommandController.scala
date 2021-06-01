@@ -21,11 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.commands
+package ackcord.interactions.commands
 
 import ackcord.CacheSnapshot
 import ackcord.requests.Requests
-import ackcord.slashcommands._
+import ackcord.interactions._
 import akka.NotUsed
 import cats.~>
 

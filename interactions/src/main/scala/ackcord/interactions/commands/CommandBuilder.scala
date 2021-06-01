@@ -21,9 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.commands
+package ackcord.interactions.commands
 
-import ackcord.slashcommands.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
+import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, InteractionResponse}
 import akka.NotUsed
 
 class CommandBuilder[Interaction[_], A](

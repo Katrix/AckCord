@@ -1,9 +1,9 @@
-package ackcord.slashcommands.commands
+package ackcord.interactions.commands
 
 import scala.util.matching.Regex
 
 import ackcord.data._
-import ackcord.slashcommands.{CommandInteraction, InteractionHandlerOps}
+import ackcord.interactions.{CommandInteraction, InteractionHandlerOps}
 import akka.NotUsed
 import cats.Id
 import io.circe.DecodingFailure

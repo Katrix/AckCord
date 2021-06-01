@@ -21,12 +21,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.raw
+package ackcord.interactions.raw
 
 import ackcord.data._
 import ackcord.data.DiscordProtocol._
 import ackcord.requests._
-import ackcord.slashcommands.commands.CommandOrGroup
+import ackcord.interactions.commands.CommandOrGroup
 import ackcord.util.{JsonOption, JsonUndefined}
 import io.circe._
 import io.circe.syntax._

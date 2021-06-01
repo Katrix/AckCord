@@ -21,23 +21,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord
 
-import ackcord.data.{SnowflakeType, Webhook}
-
-sealed trait AsyncToken {
-  def webhookId: SnowflakeType[Webhook]
-  def webhookToken: String
-}
-sealed trait AsyncMessageToken extends AsyncToken
-
-object AsyncToken {
-  private[slashcommands] case class Impl(webhookId: SnowflakeType[Webhook], webhookToken: String)
-      extends AsyncMessageToken
-
-  private[slashcommands] def fromInteraction(interaction: Interaction): AsyncToken =
-    Impl(interaction.webhookId, interaction.token)
-
-  private[slashcommands] def fromInteractionWithMessage(interaction: Interaction): AsyncMessageToken =
-    Impl(interaction.webhookId, interaction.token)
+package object interactions {
+  type ~[A, B] = (A, B)
+  object ~ {
+    def unapply[A, B](t: (A, B)): Some[(A, B)] = Some(t)
+  }
 }

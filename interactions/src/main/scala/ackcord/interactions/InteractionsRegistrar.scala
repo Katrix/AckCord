@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.interactions
 
 import java.nio.charset.StandardCharsets
 import java.util.Locale
@@ -32,8 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.requests.{Requests, SupervisionStreams}
-import ackcord.slashcommands.commands.CommandOrGroup
-import ackcord.slashcommands.raw._
+import ackcord.interactions.commands.CommandOrGroup
+import ackcord.interactions.raw._
 import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
 import akka.actor.typed.ActorSystem

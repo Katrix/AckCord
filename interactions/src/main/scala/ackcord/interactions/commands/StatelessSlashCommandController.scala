@@ -21,10 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.commands
+package ackcord.interactions.commands
 
 import ackcord.requests.Requests
-import ackcord.slashcommands.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
+import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
 import akka.NotUsed
 
 class StatelessSlashCommandController(val requests: Requests)

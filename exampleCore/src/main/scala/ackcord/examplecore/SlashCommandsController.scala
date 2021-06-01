@@ -26,8 +26,8 @@ package ackcord.examplecore
 import ackcord.JsonSome
 import ackcord.data.{AllowedMention, UserId}
 import ackcord.requests.Requests
-import ackcord.slashcommands.ResolvedCommandInteraction
-import ackcord.slashcommands.commands.{CacheSlashCommandController, Command, CommandGroup}
+import ackcord.interactions.ResolvedCommandInteraction
+import ackcord.interactions.commands.{CacheSlashCommandController, Command, CommandGroup}
 import akka.NotUsed
 
 class SlashCommandsController(requests: Requests) extends CacheSlashCommandController(requests) {
