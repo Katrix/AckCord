@@ -23,13 +23,14 @@
  */
 package ackcord.data
 
+import java.time.{Instant, OffsetDateTime}
+
+import scala.collection.immutable
+
 import ackcord.data.raw.RawEmoji
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
-
-import java.time.{Instant, OffsetDateTime}
-import scala.collection.immutable
 
 /**
   * A guild which that status of is unknown.
@@ -197,7 +198,7 @@ case class GuildPreview(
   * @param maxPresences The maximum amount of presences in the guild.
   * @param maxMembers The maximum amount of members in the guild.
   * @param vanityUrlCode The vanity url code for the guild.
-  * @param description A descriptiom fpr the guild.
+  * @param description A description for a community guild.
   * @param banner A banner hash for the guild.
   * @param premiumTier The premium tier of the guild.
   * @param premiumSubscriptionCount How many users that are boosting the server.
@@ -212,7 +213,8 @@ case class GuildPreview(
   *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
   *                                 endpoint with `withCounts = true`
   * @param welcomeScreen The welcome screen shown to new members. Only returned
-  *                      in invite objects.
+  *                      in an invite's guild object.
+  * @param nsfwLevel The guild NSFW level..
   */
 case class Guild(
     id: GuildId,
@@ -234,7 +236,7 @@ case class Guild(
     emojis: SnowflakeMap[Emoji, Emoji],
     features: Seq[GuildFeature],
     mfaLevel: MFALevel,
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     widgetEnabled: Option[Boolean],
     widgetChannelId: Option[GuildChannelId],
     systemChannelId: Option[TextGuildChannelId],
@@ -259,7 +261,8 @@ case class Guild(
     maxVideoChannelUsers: Option[Int],
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
-    welcomeScreen: Option[WelcomeScreen]
+    welcomeScreen: Option[WelcomeScreen],
+    nsfwLevel: NSFWLevel
 ) extends UnknownStatusGuild {
   override def unavailable: Option[Boolean] = Some(false)
 
@@ -321,6 +324,20 @@ case class WelcomeScreenChannel(
     emojiName: Option[String]
 )
 
+sealed abstract class NSFWLevel(val value: Int) extends IntEnumEntry
+object NSFWLevel extends IntEnum[NSFWLevel] with IntCirceEnumWithUnknown[NSFWLevel] {
+  override def values: IndexedSeq[NSFWLevel] = findValues
+
+  case object Default       extends NSFWLevel(0)
+  case object Explicit      extends NSFWLevel(1)
+  case object Safe          extends NSFWLevel(2)
+  case object AgeRestricted extends NSFWLevel(3)
+
+  case class Unknown(override val value: Int) extends NSFWLevel(value)
+
+  override def createUnknown(value: Int): NSFWLevel = Unknown(value)
+}
+
 /**
   * A guild which is not available.
   * @param id The id of the guild.
@@ -367,7 +384,7 @@ case class GuildMember(
     guildId: GuildId,
     nick: Option[String],
     roleIds: Seq[RoleId],
-    joinedAt: OffsetDateTime,
+    joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
@@ -528,6 +545,17 @@ case class ActivityAsset(
 )
 
 /**
+  * @param join Secret for joining a party.
+  * @param spectate Secret for spectating a game.
+  * @param `match` Secret for a specific instanced match.
+  */
+case class ActivitySecrets(
+    join: Option[String],
+    spectate: Option[String],
+    `match`: Option[String]
+)
+
+/**
   * @param id The id of the party
   * @param currentSize The current size of the party.
   * @param maxSize The max size of the party.
@@ -538,6 +566,8 @@ case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: 
   * The text in a presence
   */
 sealed trait Activity {
+
+  def tpe: ActivityType
 
   /**
     * When this activity was created.
@@ -565,6 +595,22 @@ sealed trait Activity {
   def assets: Option[ActivityAsset]
 }
 
+sealed abstract class ActivityType(val value: Int) extends IntEnumEntry
+object ActivityType extends IntEnum[ActivityType] with IntCirceEnumWithUnknown[ActivityType] {
+  override def values: IndexedSeq[ActivityType] = findValues
+
+  case object Game      extends ActivityType(0)
+  case object Streaming extends ActivityType(1)
+  case object Listening extends ActivityType(2)
+  case object Watching  extends ActivityType(3)
+  case object Custom    extends ActivityType(4)
+  case object Competing extends ActivityType(5)
+
+  case class Unknown(override val value: Int) extends ActivityType(value)
+
+  override def createUnknown(value: Int): ActivityType = Unknown(value)
+}
+
 /**
   * The presence of someone playing a game
   * @param applicationId Application id of the game.
@@ -575,12 +621,18 @@ case class PresenceGame(
     name: String,
     createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     details: Option[String],
     state: Option[String],
     party: Option[ActivityParty],
-    assets: Option[ActivityAsset]
-) extends Activity
+    assets: Option[ActivityAsset],
+    secrets: Option[ActivitySecrets],
+    instance: Option[Boolean],
+    flags: Option[ActivityFlags],
+    buttons: Option[Seq[String]]
+) extends Activity {
+  override def tpe: ActivityType = ActivityType.Game
+}
 
 /**
   * The presence of someone streaming
@@ -594,33 +646,30 @@ case class PresenceStreaming(
     uri: Option[String],
     createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     details: Option[String],
     state: Option[String],
     party: Option[ActivityParty],
     assets: Option[ActivityAsset]
-) extends Activity
+) extends Activity {
+  override def tpe: ActivityType = ActivityType.Streaming
+}
 
 /**
   * The presence of someone listening to music
   */
-case class PresenceListening(
+case class PresenceOther(
+    tpe: ActivityType,
     name: String,
     createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
+    applicationId: Option[ApplicationId],
     details: Option[String],
-    assets: Option[ActivityAsset]
-) extends Activity
-
-/**
-  * The presence of someone watching something
-  */
-case class PresenceWatching(
-    name: String,
-    createdAt: Instant,
-    timestamps: Option[ActivityTimestamps],
-    details: Option[String],
-    assets: Option[ActivityAsset]
+    assets: Option[ActivityAsset],
+    secrets: Option[ActivitySecrets],
+    instance: Option[Boolean],
+    flags: Option[ActivityFlags],
+    buttons: Option[Seq[String]]
 ) extends Activity
 
 case class PresenceCustom(
@@ -635,18 +684,9 @@ case class PresenceCustom(
   override def details: Option[String] = None
 
   override def assets: Option[ActivityAsset] = None
-}
 
-/**
-  * The presence of someone competing in something
-  */
-case class PresenceCompeting(
-    name: String,
-    createdAt: Instant,
-    timestamps: Option[ActivityTimestamps],
-    details: Option[String],
-    assets: Option[ActivityAsset]
-) extends Activity
+  override def tpe: ActivityType = ActivityType.Custom
+}
 
 /**
   * The emoji of a custom status.
@@ -798,7 +838,7 @@ object IntegrationExpireBehavior
   * @param bot The bot user of the application
   */
 case class IntegrationApplication(
-    id: RawSnowflake,
+    id: ApplicationId,
     name: String,
     icon: Option[String],
     description: String,

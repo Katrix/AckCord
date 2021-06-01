@@ -293,11 +293,19 @@ case class CreateFollowupMessage(
   override def toNiceResponse(response: Option[RawMessage]): Option[Message] = response.map(_.toMessage)
 }
 
+/**
+  * @param content The new content of the message.
+  * @param embeds The new embeds of the message.
+  * @param files The new files of the message.
+  * @param allowedMentions The new allowed mentions of the message.
+  * @param attachments The attachments to keep in the new message.
+  */
 case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-    allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+    allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+    attachments: JsonOption[Seq[Attachment]] = JsonUndefined
 ) {
   files.foreach(_.foreach(file => require(file.isValid)))
   require(
@@ -311,7 +319,8 @@ object EditWebhookMessageData {
     JsonOption.removeUndefinedToObj(
       "content"          -> a.content.map(_.asJson),
       "embeds"           -> a.embeds.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson)
+      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
+      "attachments"      -> a.attachments.map(_.asJson)
     )
 }
 

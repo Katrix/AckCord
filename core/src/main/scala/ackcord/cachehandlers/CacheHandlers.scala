@@ -160,12 +160,7 @@ object CacheHandlers {
         val rawChannels  = obj.channels.filter(_ => registry.hasUpdater[GuildChannel]).getOrElse(Seq.empty)
         val rawPresences = obj.presences.filter(_ => registry.hasUpdater[Presence]).getOrElse(Seq.empty)
 
-        val presences = rawPresences.map(_.toPresence).flatMap {
-          case Right(value) => Seq(value)
-          case Left(e) =>
-            log.warn(e)
-            Nil
-        }
+        val presences = rawPresences.map(_.toPresence)
         val channels = rawChannels.flatMap(_.toGuildChannel(obj.id))
 
         val oldGuild = builder.getGuild(obj.id)
@@ -219,7 +214,8 @@ object CacheHandlers {
           maxVideoChannelUsers = obj.maxVideoChannelUsers,
           approximateMemberCount = obj.approximateMemberCount,
           approximatePresenceCount = obj.approximatePresenceCount,
-          welcomeScreen = obj.welcomeScreen
+          welcomeScreen = obj.welcomeScreen,
+          nsfwLevel = obj.nsfwLevel
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -288,12 +284,19 @@ object CacheHandlers {
       override def handle(builder: CacheSnapshotBuilder, obj: GuildMemberUpdateData, registry: CacheTypeRegistry)(
           implicit log: Logger
       ): Unit = {
-        val GuildMemberUpdateData(guildId, roles, user, nick, joinedAt, _) = obj
+        val GuildMemberUpdateData(guildId, roles, user, nick, joinedAt, premiumSince, deaf, mute, pending) = obj
 
         val exisitingMember = for {
           guild       <- builder.getGuild(guildId)
           guildMember <- guild.members.get(user.id)
-        } yield guildMember.copy(nick = nick, roleIds = roles, joinedAt = joinedAt)
+        } yield guildMember.copy(
+          nick = nick,
+          roleIds = roles,
+          joinedAt = joinedAt,
+          premiumSince = premiumSince,
+          deaf = deaf.getOrElse(false),
+          mute = mute.getOrElse(false)
+        )
 
         registry.updateData(builder)(
           exisitingMember.getOrElse(
@@ -331,12 +334,7 @@ object CacheHandlers {
           guild        <- builder.getGuild(guildId)
           rawPresences <- rawPresencesOpt
         } {
-          val presences = rawPresences.map(_.toPresence).flatMap {
-            case Right(value) => Seq(value.userId -> value)
-            case Left(e) =>
-              log.warn(e)
-              Nil
-          }
+          val presences = rawPresences.map(_.toPresence).map(p => p.userId -> p)
 
           registry.updateData(builder)(
             guild.copy(
@@ -410,52 +408,78 @@ object CacheHandlers {
       ): Unit = {
         val newUsers = obj.mentions.getOrElse(Seq.empty)
 
+        val memberHandler = registry.getUpdater[GuildMember]
+
         for {
           updater <- registry.getUpdater[Message]
           message <- builder.getMessage(obj.channelId, obj.id)
         } {
+          //No copy so we make sure we get all the fields
           val newMessage = message match {
-            case dmMessage: SparseMessage =>
-              dmMessage.copy(
-                authorId = UserId(obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId)),
+            case message: SparseMessage =>
+              SparseMessage(
+                id = obj.id,
+                channelId = obj.channelId,
+                authorId = message.authorId,
+                isAuthorUser = message.isAuthorUser,
+                authorUsername = obj.author.map(_.username).getOrElse(message.authorUsername),
                 content = obj.content.getOrElse(message.content),
                 timestamp = obj.timestamp.getOrElse(message.timestamp),
                 editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
                 tts = obj.tts.getOrElse(message.tts),
                 mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
                 mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
+                mentionChannels = obj.mentionChannels.getOrElse(message.mentionChannels),
                 attachment = obj.attachment.getOrElse(message.attachment),
                 embeds = obj.embeds.getOrElse(message.embeds),
                 reactions = obj.reactions.getOrElse(message.reactions),
                 nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
                 pinned = obj.pinned.getOrElse(message.pinned),
-                messageType = obj.messageType.getOrElse(message.messageType),
+                messageType = obj.`type`.getOrElse(message.messageType),
                 activity = obj.activity.map(_.toMessageActivity).orElseIfUndefined(message.activity),
                 application = obj.application.orElseIfUndefined(message.application),
+                applicationId = obj.applicationId.orElseIfUndefined(message.applicationId),
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
-                flags = obj.flags.orElseIfUndefined(message.flags)
+                flags = obj.flags.orElseIfUndefined(message.flags),
+                stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                referencedMessage = message.referencedMessage, //I'm lazy
+                interaction = obj.interaction.orElseIfUndefined(message.interaction),
               )
-            case guildMessage: GuildGatewayMessage =>
-              guildMessage.copy(
-                authorId = obj.author.map(a => RawSnowflake(a.id)).getOrElse(message.authorId),
-                isAuthorUser = obj.author.map(_.isUser).getOrElse(guildMessage.isAuthorUser),
+            case message: GuildGatewayMessage =>
+
+              val member = obj.member.map(_.toGuildMember(UserId(message.authorId), message.guildId))
+              memberHandler.zip(member.toOption).foreach(t => t._1.handle(builder, t._2, registry))
+
+              GuildGatewayMessage(
+                id = obj.id,
+                channelId = message.channelId,
+                guildId = message.guildId,
+                authorId = message.authorId,
+                isAuthorUser = message.isAuthorUser,
+                authorUsername = obj.author.map(_.username).getOrElse(message.authorUsername),
+                member = member.orElseIfUndefined(message.member),
                 content = obj.content.getOrElse(message.content),
                 timestamp = obj.timestamp.getOrElse(message.timestamp),
                 editedTimestamp = obj.editedTimestamp.orElseIfUndefined(message.editedTimestamp),
                 tts = obj.tts.getOrElse(message.tts),
                 mentionEveryone = obj.mentionEveryone.getOrElse(message.mentionEveryone),
                 mentions = obj.mentions.map(_.map(_.id)).getOrElse(message.mentions),
-                mentionRoles = obj.mentionRoles.getOrElse(guildMessage.mentionRoles),
+                mentionRoles = obj.mentionRoles.getOrElse(message.mentionRoles),
+                mentionChannels = obj.mentionChannels.getOrElse(message.mentionChannels),
                 attachment = obj.attachment.getOrElse(message.attachment),
                 embeds = obj.embeds.getOrElse(message.embeds),
                 reactions = obj.reactions.getOrElse(message.reactions),
                 nonce = obj.nonce.map(_.fold(_.toString, identity)).orElseIfUndefined(message.nonce),
                 pinned = obj.pinned.getOrElse(message.pinned),
-                messageType = obj.messageType.getOrElse(message.messageType),
+                messageType = obj.`type`.getOrElse(message.messageType),
                 activity = obj.activity.map(_.toMessageActivity).orElseIfUndefined(message.activity),
                 application = obj.application.orElseIfUndefined(message.application),
+                applicationId = obj.applicationId.orElseIfUndefined(message.applicationId),
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
-                flags = obj.flags.orElseIfUndefined(message.flags)
+                flags = obj.flags.orElseIfUndefined(message.flags),
+                stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                referencedMessage = message.referencedMessage, //I'm lazy
+                interaction = obj.interaction.orElseIfUndefined(message.interaction),
               )
           }
 

@@ -276,6 +276,9 @@ package object data {
   type StickerId = SnowflakeType[Sticker]
   object StickerId extends SnowflakeCompanion[Sticker]
 
+  type ApplicationId = SnowflakeType[Application]
+  object ApplicationId extends SnowflakeCompanion[Application]
+
   /**
     * A permission to do some action. In AckCord this is represented as a
     * value class around int.
@@ -329,6 +332,7 @@ package object data {
     val ManageRoles: Permission         = Permission(0x10000000)
     val ManageWebhooks: Permission      = Permission(0x20000000)
     val ManageEmojis: Permission        = Permission(0x40000000)
+    val UseSlashCommands: Permission    = Permission(0x80000000)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -349,17 +353,21 @@ package object data {
       ReadMessageHistory,
       MentionEveryone,
       UseExternalEmojis,
+      ViewGuildInsights,
       Connect,
       Speak,
       MuteMembers,
       DeafenMembers,
       MoveMembers,
       UseVad,
+      PrioritySpeaker,
+      Stream,
       ChangeNickname,
       ManageNicknames,
       ManageRoles,
       ManageWebhooks,
-      ManageEmojis
+      ManageEmojis,
+      UseSlashCommands
     )
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {
@@ -436,10 +444,10 @@ package object data {
     val HouseBalance: UserFlags              = UserFlags(1 << 8)
     val EarlySupporter: UserFlags            = UserFlags(1 << 9)
     val TeamUser: UserFlags                  = UserFlags(1 << 10)
-    val System: UserFlags                    = UserFlags(1 << 12)
     val BugHunterLevel2: UserFlags           = UserFlags(1 << 14)
     val VerifiedBot: UserFlags               = UserFlags(1 << 16)
     val EarlyVerifiedBotDeveloper: UserFlags = UserFlags(1 << 17)
+    val DiscordCertifiedModerator: UserFlags = UserFlags(1 << 18)
   }
   implicit class UserFlagsSyntax(private val flags: UserFlags) extends AnyVal {
 
@@ -494,6 +502,7 @@ package object data {
     val SourceMessageDeleted: MessageFlags = MessageFlags(1 << 3)
     val Urgent: MessageFlags               = MessageFlags(1 << 4)
     val Ephermal: MessageFlags             = MessageFlags(1 << 6)
+    val Loading: MessageFlags              = MessageFlags(1 << 7)
   }
   implicit class MessageFlagsSyntax(private val flags: MessageFlags) extends AnyVal {
 
@@ -541,9 +550,10 @@ package object data {
       */
     def fromInt(int: Int): SystemChannelFlags = apply(int)
 
-    val None: SystemChannelFlags                        = SystemChannelFlags(0)
-    val SupressJoinNotifications: SystemChannelFlags    = SystemChannelFlags(1 << 0)
-    val SupressPremiumSubscribtions: SystemChannelFlags = SystemChannelFlags(1 << 1)
+    val None: SystemChannelFlags                              = SystemChannelFlags(0)
+    val SupressJoinNotifications: SystemChannelFlags          = SystemChannelFlags(1 << 0)
+    val SupressPremiumSubscribtions: SystemChannelFlags       = SystemChannelFlags(1 << 1)
+    val SupressGuildReminderNotifications: SystemChannelFlags = SystemChannelFlags(1 << 2)
   }
   implicit class SystemChannelFlagsSyntax(private val flags: SystemChannelFlags) extends AnyVal {
 
@@ -566,6 +576,114 @@ package object data {
       * @param other The flag to check against.
       */
     def hasFlag(other: SystemChannelFlags): Boolean = (toInt & other.toInt) == other.toInt
+
+    /**
+      * Check if these flags is not empty.
+      */
+    def isNone: Boolean = toInt == 0
+  }
+
+  type ActivityFlags = ActivityFlags.ActivityFlags
+  object ActivityFlags {
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type ActivityFlags <: Base with Tag
+
+    private[data] def apply(int: Int): ActivityFlags = int.asInstanceOf[ActivityFlags]
+
+    /**
+      * Create a SystemChannelFlags that has all the flags passed in.
+      */
+    def apply(flags: ActivityFlags*): ActivityFlags = flags.fold(None)(_ ++ _)
+
+    /**
+      * Create a ActivityFlags from an int.
+      */
+    def fromInt(int: Int): ActivityFlags = apply(int)
+
+    val None: ActivityFlags        = ActivityFlags(0)
+    val Instance: ActivityFlags    = ActivityFlags(1 << 0)
+    val Join: ActivityFlags        = ActivityFlags(1 << 1)
+    val Spectate: ActivityFlags    = ActivityFlags(1 << 2)
+    val JoinRequest: ActivityFlags = ActivityFlags(1 << 3)
+    val Sync: ActivityFlags        = ActivityFlags(1 << 4)
+    val Play: ActivityFlags        = ActivityFlags(1 << 5)
+  }
+  implicit class ActivityFlagsSyntax(private val flags: ActivityFlags) extends AnyVal {
+
+    def toInt: Int = flags.asInstanceOf[Int]
+
+    /**
+      * Add a flag to this flag.
+      * @param other The other flag.
+      */
+    def ++(other: ActivityFlags): ActivityFlags = ActivityFlags(toInt | other.toInt)
+
+    /**
+      * Remove a flag from this flag.
+      * @param other The flag to remove.
+      */
+    def --(other: ActivityFlags): ActivityFlags = ActivityFlags(toInt & ~other.toInt)
+
+    /**
+      * Check if these flags has a flag.
+      * @param other The flag to check against.
+      */
+    def hasFlag(other: ActivityFlags): Boolean = (toInt & other.toInt) == other.toInt
+
+    /**
+      * Check if these flags is not empty.
+      */
+    def isNone: Boolean = toInt == 0
+  }
+
+  type ApplicationFlags = ApplicationFlags.ApplicationFlags
+  object ApplicationFlags {
+    private[data] type Base
+    private[data] trait Tag extends Any
+    type ApplicationFlags <: Base with Tag
+
+    private[data] def apply(int: Int): ApplicationFlags = int.asInstanceOf[ApplicationFlags]
+
+    /**
+      * Create a ApplicationFlags that has all the flags passed in.
+      */
+    def apply(flags: ApplicationFlags*): ApplicationFlags = flags.fold(None)(_ ++ _)
+
+    /**
+      * Create a ApplicationFlags from an int.
+      */
+    def fromInt(int: Int): ApplicationFlags = apply(int)
+
+    val None: ApplicationFlags                          = ApplicationFlags(0)
+    val GatewayPresence: ApplicationFlags               = ApplicationFlags(1 << 12)
+    val GatewayPresenceLimited: ApplicationFlags        = ApplicationFlags(1 << 13)
+    val GatewayGuildMembers: ApplicationFlags           = ApplicationFlags(1 << 14)
+    val GatewayGuildMembersLimited: ApplicationFlags    = ApplicationFlags(1 << 15)
+    val VerificationPendingGuildLimit: ApplicationFlags = ApplicationFlags(1 << 16)
+    val Embedded: ApplicationFlags                      = ApplicationFlags(1 << 17)
+  }
+  implicit class ApplicationFlagsSyntax(private val flags: ApplicationFlags) extends AnyVal {
+
+    def toInt: Int = flags.asInstanceOf[Int]
+
+    /**
+      * Add a flag to this flag.
+      * @param other The other flag.
+      */
+    def ++(other: ApplicationFlags): ApplicationFlags = ApplicationFlags(toInt | other.toInt)
+
+    /**
+      * Remove a flag from this flag.
+      * @param other The flag to remove.
+      */
+    def --(other: ApplicationFlags): ApplicationFlags = ApplicationFlags(toInt & ~other.toInt)
+
+    /**
+      * Check if these flags has a flag.
+      * @param other The flag to check against.
+      */
+    def hasFlag(other: ApplicationFlags): Boolean = (toInt & other.toInt) == other.toInt
 
     /**
       * Check if these flags is not empty.

@@ -170,19 +170,19 @@ object EventListenerBuilder {
           def doCreate(user: User) = guild.memberById(user.id).map(member => create(guild, user, member)(i))
 
           (i.event: APIMessage) match {
-            case APIMessage.GuildBanAdd(_, user, _, _)                   => doCreate(user)
-            case APIMessage.GuildBanRemove(_, user, _, _)                => doCreate(user)
-            case APIMessage.GuildMemberAdd(member, _, _, _)              => member.user.map(user => create(guild, user, member)(i))
-            case APIMessage.GuildMemberRemove(user, _, _, _)             => doCreate(user)
-            case APIMessage.GuildMemberUpdate(_, _, user, _, _, _, _, _) => doCreate(user)
-            case APIMessage.MessageCreate(_, message, _, _)              => message.authorUser.flatMap(doCreate)
-            case msg: APIMessage.MessageUpdate                           => msg.message.flatMap(_.authorUser).flatMap(doCreate)
-            case msg: APIMessage.MessageReactionAdd                      => msg.user.flatMap(doCreate)
-            case msg: APIMessage.MessageReactionRemove                   => msg.user.flatMap(doCreate)
-            case APIMessage.PresenceUpdate(_, user, _, _, _)             => doCreate(user)
-            case msg: APIMessage.TypingStart                             => msg.user.flatMap(doCreate)
-            case APIMessage.VoiceStateUpdate(voiceState, _, _)           => voiceState.user.flatMap(doCreate)
-            case _                                                       => None
+            case APIMessage.GuildBanAdd(_, user, _, _)         => doCreate(user)
+            case APIMessage.GuildBanRemove(_, user, _, _)      => doCreate(user)
+            case APIMessage.GuildMemberAdd(member, _, _, _)    => member.user.map(user => create(guild, user, member)(i))
+            case APIMessage.GuildMemberRemove(user, _, _, _)   => doCreate(user)
+            case msg: APIMessage.GuildMemberUpdate             => doCreate(msg.user)
+            case APIMessage.MessageCreate(_, message, _, _)    => message.authorUser.flatMap(doCreate)
+            case msg: APIMessage.MessageUpdate                 => msg.message.flatMap(_.authorUser).flatMap(doCreate)
+            case msg: APIMessage.MessageReactionAdd            => msg.user.flatMap(doCreate)
+            case msg: APIMessage.MessageReactionRemove         => msg.user.flatMap(doCreate)
+            case APIMessage.PresenceUpdate(_, user, _, _, _)   => doCreate(user)
+            case msg: APIMessage.TypingStart                   => msg.user.flatMap(doCreate)
+            case APIMessage.VoiceStateUpdate(voiceState, _, _) => voiceState.user.flatMap(doCreate)
+            case _                                             => None
           }
         }
         .mapConcat(_.toList)

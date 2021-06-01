@@ -58,12 +58,12 @@ case class AuditLog(
 case class AuditLogEntry(
     targetId: Option[RawSnowflake],
     changes: Option[Seq[AuditLogChange[_]]],
-    userId: UserId,
+    userId: Option[UserId],
     id: RawSnowflake,
     actionType: AuditLogEvent,
     options: Option[OptionalAuditLogInfo],
     reason: Option[String]
-) extends GetUser
+)
 
 case class PartialIntegration(
     id: IntegrationId,
@@ -356,8 +356,8 @@ object AuditLogChange {
   /**
     * ApplicationId of webhook or bot
     */
-  case class ApplicationId(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake])
-      extends AuditLogChange[RawSnowflake]
+  case class ApplicationId(oldValue: Option[data.ApplicationId], newValue: Option[data.ApplicationId])
+      extends AuditLogChange[data.ApplicationId]
 
   /**
     * Ratelimit changed

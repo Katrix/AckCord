@@ -293,7 +293,7 @@ object Routes {
   val inviteCodeParam: MinorParameter[String]             = new MinorParameter("inviteCode", identity)
   val token: MinorParameter[String]                       = new MinorParameter("token", identity)
   val hash: MinorParameter[String]                        = new MinorParameter("hash", identity)
-  val applicationId: MinorParameter[RawSnowflake]         = new MinorParameter("applicationId", _.asString)
+  val applicationId: MinorParameter[ApplicationId]        = new MinorParameter("applicationId", _.asString)
   val teamId: MinorParameter[SnowflakeType[Team]]         = new MinorParameter("teamId", _.asString)
   val templateCode: MinorParameter[String]                = new MinorParameter("code", identity)
 
@@ -349,9 +349,8 @@ object Routes {
     emojiReactions / userId toRequest DELETE
   )
 
-  val getReactions: (ChannelId, MessageId, Emoji, Option[UserId], Option[UserId], Option[Int]) => RequestRoute = {
+  val getReactions: (ChannelId, MessageId, Emoji, Option[UserId], Option[Int]) => RequestRoute = {
     val queries = emojiReactions +?
-      query[UserId]("before", _.asString) +?
       query[UserId]("after", _.asString) +?
       query[Int]("limit", _.toString, a => require(a >= 1 && a <= 100, "Limit must be between 1 and 100"))
 
@@ -501,9 +500,15 @@ object Routes {
   val deleteGuildTemplate: (GuildId, String) => RequestRoute = upcast(guildTemplate.toRequest(DELETE))
 
   //Invites
-  val invites: Route                           = base / "invites"
-  val inviteCode: RouteFunction[String]        = invites / inviteCodeParam
-  val getInvite: InviteCode => RequestRoute    = upcast(inviteCode.toRequest(GET))
+  val invites: Route                    = base / "invites"
+  val inviteCode: RouteFunction[String] = invites / inviteCodeParam
+  val getInvite: (InviteCode, Option[Boolean], Option[Boolean]) => RequestRoute = {
+    val withParams = inviteCode +?
+      query[Boolean]("with_counts", _.toString) +?
+      query[Boolean]("with_expiration", _.toString)
+
+    upcast(withParams.toRequest(GET))
+  }
   val deleteInvite: InviteCode => RequestRoute = upcast(inviteCode.toRequest(DELETE))
 
   //Users
@@ -524,9 +529,8 @@ object Routes {
   }
   val leaveGuild: GuildId => RequestRoute = upcast(currentUserGuilds / guildId toRequest DELETE)
 
-  val userDMs: Route           = currentUser / "channels"
-  val getUserDMs: RequestRoute = upcast(userDMs.toRequest(GET))
-  val createDM: RequestRoute   = upcast(userDMs.toRequest(POST))
+  val userDMs: Route         = currentUser / "channels"
+  val createDM: RequestRoute = upcast(userDMs.toRequest(POST))
 
   val getUserConnections: RequestRoute = upcast(currentUser / "connections" toRequest GET)
 
@@ -609,10 +613,10 @@ object Routes {
   val userAvatarImage: (UserId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "avatars" / userId / hash ++ extension +? size toRequest GET
   )
-  val applicationIconImage: (RawSnowflake, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+  val applicationIconImage: (ApplicationId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "app-icons" / applicationId / hash ++ extension +? size toRequest GET
   )
-  val applicationAssetImage: (RawSnowflake, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
+  val applicationAssetImage: (ApplicationId, String, ImageFormat, Option[Int]) => RequestRoute = upcast(
     cdn / "app-assets" / applicationId / hash ++ extension +? size toRequest GET
   )
 

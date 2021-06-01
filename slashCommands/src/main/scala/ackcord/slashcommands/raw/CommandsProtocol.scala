@@ -24,7 +24,7 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{DiscordProtocol, GuildId, InteractionType, Permission, RawSnowflake, TextChannelId, User}
+import ackcord.data.{ApplicationId, DiscordProtocol, GuildId, InteractionType, Permission, TextChannelId, User}
 import ackcord.slashcommands.InteractionId
 import cats.syntax.all._
 import io.circe._
@@ -41,7 +41,7 @@ trait CommandsProtocol extends DiscordProtocol {
     (c: HCursor) =>
       for {
         id            <- c.get[InteractionId]("id")
-        applicationId <- c.get[RawSnowflake]("application_id")
+        applicationId <- c.get[ApplicationId]("application_id")
         tpe           <- c.get[InteractionType]("type")
         data          <- c.get[Option[ApplicationCommandInteractionData]]("data")
         guildId       <- c.get[Option[GuildId]]("guild_id")

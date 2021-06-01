@@ -77,8 +77,9 @@ case class GetCustomEmojiImage(
     format: ImageFormat,
     emojiId: EmojiId
 ) extends ImageRequest {
-  override def route: RequestRoute              = Routes.emojiImage(emojiId, format, Some(desiredSize))
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.GIF)
+  override def route: RequestRoute = Routes.emojiImage(emojiId, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
 }
 
 /**
@@ -157,7 +158,7 @@ case class GetUserAvatarImage(
 case class GetApplicationIconImage(
     desiredSize: Int,
     format: ImageFormat,
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     iconHash: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
@@ -170,7 +171,7 @@ case class GetApplicationIconImage(
 case class GetApplicationAssetImage(
     desiredSize: Int,
     format: ImageFormat,
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     assetId: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)

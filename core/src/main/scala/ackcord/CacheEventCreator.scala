@@ -303,6 +303,9 @@ object CacheEventCreator {
                   data.nick,
                   data.joinedAt,
                   data.premiumSince,
+                  data.deaf.getOrElse(false),
+                  data.mute.getOrElse(false),
+                  data.pending.getOrElse(false),
                   state,
                   dispatch.gatewayInfo
                 )
@@ -396,17 +399,18 @@ object CacheEventCreator {
               guild,
               channel,
               CreatedInvite(
-                data.code,
-                data.guildId,
                 data.channelId,
-                data.inviter,
-                data.uses,
-                data.maxUses,
-                data.maxAge,
-                data.temporary,
+                data.code,
                 data.createdAt,
+                data.guildId,
+                data.inviter,
+                data.maxAge,
+                data.maxUses,
                 data.targetUser,
-                data.targetUserType
+                data.targetType,
+                data.targetApplication,
+                data.temporary,
+                data.uses,
               ),
               state,
               dispatch.gatewayInfo

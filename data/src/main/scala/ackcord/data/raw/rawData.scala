@@ -53,6 +53,7 @@ import cats.Traverse
   * @param applicationId The application id of this channel if it's a
   *                      guild channel.
   * @param parentId The category of this channel if it's a guild channel.
+  * @param rtcRegion Channel region to use. Automatic if none.
   */
 case class RawChannel(
     id: ChannelId,
@@ -70,9 +71,11 @@ case class RawChannel(
     recipients: Option[Seq[User]],
     icon: Option[String],
     ownerId: Option[UserId],
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     parentId: Option[SnowflakeType[GuildCategory]],
-    lastPinTimestamp: Option[OffsetDateTime]
+    lastPinTimestamp: Option[OffsetDateTime],
+    rtcRegion: Option[String],
+    videoQualityMode: Option[VideoQualityMode],
 ) {
 
   /**
@@ -141,7 +144,9 @@ case class RawChannel(
             bitrate,
             userLimit,
             nsfw.getOrElse(false),
-            parentId
+            parentId,
+            rtcRegion,
+            videoQualityMode.getOrElse(VideoQualityMode.Auto)
           )
         }
       case ChannelType.GroupDm =>
@@ -245,7 +250,9 @@ case class RawChannel(
             bitrate,
             userLimit,
             nsfw.getOrElse(false),
-            parentId
+            parentId,
+            rtcRegion,
+            videoQualityMode.getOrElse(VideoQualityMode.Auto)
           )
         }
       case ChannelType.GroupDm => throw new IllegalStateException("Not a guild channel")
@@ -299,7 +306,7 @@ case class RawChannel(
 case class PartialRawGuildMember(
     nick: Option[String],
     roles: Seq[RoleId],
-    joinedAt: OffsetDateTime,
+    joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
@@ -326,7 +333,7 @@ case class RawGuildMember(
     user: User,
     nick: Option[String],
     roles: Seq[RoleId],
-    joinedAt: OffsetDateTime,
+    joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
     deaf: Boolean,
     mute: Boolean,
@@ -363,14 +370,25 @@ case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[Strin
   * @param mentionEveryone If this message mentions everyone.
   * @param mentions All the users this message mentions.
   * @param mentionRoles All the roles this message mentions.
+  * @param mentionChannels Potentially channels mentioned in the message.
+  *                        Only used for cross posted public channels so far.
   * @param attachment All the attachments of this message.
   * @param embeds All the embeds of this message.
   * @param reactions All the reactions on this message.
   * @param nonce A nonce for this message.
   * @param pinned If this message is pinned.
-  * @param `type` The message type
+  * @param `type` The message type.
+  * @param activity Sent with rich presence chat embeds.
+  * @param application Sent with rich presence chat embeds.
+  * @param applicationId If an message is a response to an interaction,
+  *                      then this is the id of the interaction's application.
+  * @param messageReference Data sent with a crossposts and replies.
+  * @param flags Extra features of the message.
+  * @param stickers Stickers sent with the message.
+  * @param referencedMessage Message associated with the message reference.
+  * @param interaction Sent if the message is a response to an Interaction.
   */
-//Remember to automatic derivation for encoder and decoder here
+//Remember to edit RawPartialMessage also when editing this
 case class RawMessage(
     id: MessageId,
     channelId: TextChannelId,
@@ -392,7 +410,8 @@ case class RawMessage(
     pinned: Boolean,
     `type`: MessageType,
     activity: Option[RawMessageActivity],
-    application: Option[MessageApplication],
+    application: Option[PartialApplication],
+    applicationId: Option[ApplicationId],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
@@ -430,6 +449,7 @@ case class RawMessage(
           `type`,
           activity.map(_.toMessageActivity),
           application,
+          applicationId,
           messageReference,
           flags,
           stickers,
@@ -459,6 +479,7 @@ case class RawMessage(
           `type`,
           activity.map(_.toMessageActivity),
           application,
+          applicationId,
           messageReference,
           flags,
           stickers,
@@ -520,6 +541,7 @@ case class RawMessage(
   * @param approximatePresenceCount Roughly how many presences there is in the guild.
   * @param welcomeScreen The welcome screen shown to new members. Only returned
   *                      in invite objects.
+  * @param nsfwLevel The guild NSFW level.
   */
 case class RawGuild(
     id: GuildId,
@@ -541,7 +563,7 @@ case class RawGuild(
     emojis: Seq[RawEmoji],
     features: Seq[GuildFeature],
     mfaLevel: MFALevel,
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     widgetEnabled: Option[Boolean],
     widgetChannelId: Option[GuildChannelId],
     systemChannelId: Option[TextGuildChannelId],
@@ -567,7 +589,8 @@ case class RawGuild(
     maxVideoChannelUsers: Option[Int],
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
-    welcomeScreen: Option[WelcomeScreen]
+    welcomeScreen: Option[WelcomeScreen],
+    nsfwLevel: NSFWLevel
 ) {
 
   /**
@@ -616,10 +639,7 @@ case class RawGuild(
         SnowflakeMap.withKey(voiceStates.getOrElse(Nil))(_.userId),
         SnowflakeMap.from(members.getOrElse(Nil).map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
-        //We throw away the errors here
-        SnowflakeMap.from(
-          presences.getOrElse(Nil).flatMap(p => p.toPresence.toOption.map(p.user.id -> _))
-        ),
+        SnowflakeMap.from(presences.getOrElse(Nil).map(p => p.user.id -> p.toPresence)),
         maxPresences.getOrElse(25000), // The default is 25000
         maxMembers,
         vanityUrlCode,
@@ -632,7 +652,8 @@ case class RawGuild(
         maxVideoChannelUsers,
         approximateMemberCount,
         approximatePresenceCount,
-        welcomeScreen
+        welcomeScreen,
+        nsfwLevel
       )
     }
   }
@@ -685,19 +706,27 @@ case class RawActivityParty(id: Option[String], size: Option[Seq[Int]]) {
   * @param state The user's party status.
   * @param party Info about the user's party.
   * @param assets Images for the presence and hover texts.
+  * @param secrets Secrets for rich presence joining and spectating.
+  * @param instance If the activity is an instanced game session.
+  * @param flags Indicates what the payload includes
+  * @param buttons Custom buttons shown for the rich presence
   */
 case class RawActivity(
     name: String,
-    `type`: Int,
+    `type`: ActivityType,
     url: Option[String],
     createdAt: Instant,
     timestamps: Option[ActivityTimestamps],
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     details: Option[String],
     state: Option[String],
     emoji: Option[ActivityEmoji],
     party: Option[RawActivityParty],
-    assets: Option[ActivityAsset]
+    assets: Option[ActivityAsset],
+    secrets: Option[ActivitySecrets],
+    instance: Option[Boolean],
+    flags: Option[ActivityFlags],
+    buttons: Option[Seq[String]]
 ) {
 
   def requireCanSend(): Unit =
@@ -706,18 +735,39 @@ case class RawActivity(
       "Unsupported field sent to Discord in activity"
     )
 
-  def toActivity: Either[String, Activity] = `type` match {
-    case 0 =>
-      Right(PresenceGame(name, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets))
-    case 1 =>
-      Right(
-        PresenceStreaming(name, url, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+  def toActivity: Activity = `type` match {
+    case ActivityType.Game =>
+      PresenceGame(
+        name,
+        createdAt,
+        timestamps,
+        applicationId,
+        details,
+        state,
+        party.map(_.toParty),
+        assets,
+        secrets,
+        instance,
+        flags,
+        buttons
       )
-    case 2 => Right(PresenceListening(name, createdAt, timestamps, details, assets))
-    case 3 => Right(PresenceWatching(name, createdAt, timestamps, details, assets))
-    case 4 => Right(PresenceCustom(name, createdAt, state, emoji))
-    case 5 => Right(PresenceCompeting(name, createdAt, timestamps, details, assets))
-    case _ => Left(s"Got unknown presence type ${`type`}")
+    case ActivityType.Streaming =>
+      PresenceStreaming(name, url, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+    case ActivityType.Custom => PresenceCustom(name, createdAt, state, emoji)
+    case _ =>
+      PresenceOther(
+        `type`,
+        name,
+        createdAt,
+        timestamps,
+        applicationId,
+        details,
+        assets,
+        secrets,
+        instance,
+        flags,
+        buttons
+      )
   }
 }
 
@@ -733,21 +783,12 @@ case class RawPresence(
     clientStatus: Option[ClientStatus]
 ) {
 
-  def toPresence: Either[String, Presence] = {
-    import cats.instances.either._
-    import cats.instances.option._
-    import cats.instances.vector._
-    import cats.syntax.all._
-
-    activities.traverse(act => act.toVector.traverse(_.toActivity)).map { optActs =>
-      Presence(
-        user.id,
-        status.getOrElse(PresenceStatus.Online),
-        optActs.getOrElse(Nil),
-        clientStatus.getOrElse(ClientStatus(None, None, None))
-      )
-    }
-  }
+  def toPresence: Presence = Presence(
+    user.id,
+    status.getOrElse(PresenceStatus.Online),
+    activities.getOrElse(Nil).map(_.toActivity),
+    clientStatus.getOrElse(ClientStatus(None, None, None))
+  )
 }
 
 /**

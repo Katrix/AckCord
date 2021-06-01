@@ -232,6 +232,7 @@ package object syntax {
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
+        tpe: JsonOption[ChannelType] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
@@ -242,6 +243,7 @@ package object syntax {
       channel.id,
       ModifyChannelData(
         name = name,
+        tpe = tpe,
         position = position,
         topic = topic,
         nsfw = nsfw,
@@ -249,7 +251,8 @@ package object syntax {
         bitrate = JsonUndefined,
         userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
-        parentId = category
+        parentId = category,
+        rtcRegion = JsonUndefined
       )
     )
 
@@ -270,13 +273,14 @@ package object syntax {
         maxAge: Int = 86400,
         maxUses: Int = 0,
         temporary: Boolean = false,
-        unique: Boolean = false,
-        targetUser: Option[UserId],
-        targetUserType: Option[Int]
+        unique: Boolean = false
     ) =
-      CreateChannelInvite(
+      CreateChannelInvite.mk(
         channel.id,
-        CreateChannelInviteData(maxAge, maxUses, temporary, unique, targetUser, targetUserType)
+        maxAge,
+        maxUses,
+        temporary,
+        unique
       )
 
     /**
@@ -322,17 +326,22 @@ package object syntax {
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
+        rtcRegion: JsonOption[String] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
         name = name,
+        tpe = JsonUndefined,
         position = position,
+        topic = JsonUndefined,
         nsfw = JsonUndefined,
+        rateLimitPerUser = JsonUndefined,
         bitrate = bitrate,
         userLimit = userLimit,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
-        parentId = category
+        parentId = category,
+        rtcRegion = rtcRegion
       )
     )
 
@@ -533,20 +542,39 @@ package object syntax {
       *                                    for the guild.
       * @param afkChannelId The new afk channel of the guild.
       * @param afkTimeout The new afk timeout in seconds for the guild.
-      * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
+      * @param icon The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
+      *             Can be animated if the guild has the `ANIMATED_ICON` feature.
       * @param ownerId Transfer ownership of this guild. Must be the owner.
-      * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
+      * @param splash The new splash for the guild. Must be 16:9 png/jpeg.
+      *               Only available if the guild has the `INVITE_SPLASH` feature.
+      * @param discoverySplash Thew new discovery slash for the guild's discovery splash.
+      *                        Only available if the guild has the `DISCOVERABLE` feature.
+      * @param banner The new banner for the guild. Must be 16:9 png/jpeg.
+      *               Only available if the guild has the `BANNER` feature.
+      * @param systemChannelId The new channel which system messages will be sent to.
+      * @param systemChannelFlags The new flags for the system channel.
+      * @param preferredLocale The new preferred locale for the guild.
+      * @param features The new enabled features for the guild.
+      * @param description The new description for the guild if it is discoverable.
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
         region: JsonOption[String] = JsonUndefined,
         verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
         defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
+        explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
         afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
         afkTimeout: JsonOption[Int] = JsonUndefined,
         icon: JsonOption[ImageData] = JsonUndefined,
         ownerId: JsonOption[UserId] = JsonUndefined,
-        splash: JsonOption[ImageData] = JsonUndefined
+        splash: JsonOption[ImageData] = JsonUndefined,
+        discoverySplash: JsonOption[ImageData] = JsonUndefined,
+        banner: JsonOption[ImageData] = JsonUndefined,
+        systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
+        systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
+        preferredLocale: JsonOption[String] = JsonUndefined,
+        features: JsonOption[Seq[String]] = JsonUndefined,
+        description: JsonOption[String] = JsonUndefined
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -554,11 +582,19 @@ package object syntax {
         region = region,
         verificationLevel = verificationLevel,
         defaultMessageNotifications = defaultMessageNotifications,
+        explicitContentFilter = explicitContentFilter,
         afkChannelId = afkChannelId,
         afkTimeout = afkTimeout,
         icon = icon,
         ownerId = ownerId,
-        splash = splash
+        splash = splash,
+        discoverySplash = discoverySplash,
+        banner = banner,
+        systemChannelId = systemChannelId,
+        systemChannelFlags = systemChannelFlags,
+        preferredLocale = preferredLocale,
+        features = features,
+        description = description
       )
     )
 
@@ -653,6 +689,16 @@ package object syntax {
       ModifyGuildChannelPositions(
         guild.id,
         newPositions.map(t => ModifyGuildChannelPositionsData(t._1, t._2)).toSeq
+      )
+
+    /**
+      * Modify the positions of several channels.
+      * @param newPositions A sequence indicating the channels to move, and where
+      */
+    def modifyChannelPositions(newPositions: Seq[ModifyGuildChannelPositionsData]) =
+      ModifyGuildChannelPositions(
+        guild.id,
+        newPositions
       )
 
     /**
@@ -765,46 +811,11 @@ package object syntax {
     def fetchIntegrations = GetGuildIntegrations(guild.id)
 
     /**
-      * Attach an integration to this guild.
-      * @param tpe The integration type.
-      * @param id The integration id.
-      */
-    def createIntegration(tpe: String, id: IntegrationId) =
-      CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id))
-
-    /**
-      * Modify an existing integration for this guild.
-      * @param id The id of the integration
-      * @param expireBehavior The behavior of expiring subscribers.
-      * @param expireGracePeriod The grace period before expiring subscribers.
-      * @param enableEmoticons If emojis should be synced for this integration.
-      *                        (Twitch only)
-      */
-    def modifyIntegration(
-        id: IntegrationId,
-        expireBehavior: JsonOption[IntegrationExpireBehavior] = JsonUndefined,
-        expireGracePeriod: JsonOption[Int] = JsonUndefined,
-        enableEmoticons: JsonOption[Boolean] = JsonUndefined
-    ) =
-      ModifyGuildIntegration(
-        guild.id,
-        id,
-        ModifyGuildIntegrationData(expireBehavior, expireGracePeriod, enableEmoticons)
-      )
-
-    /**
       * Delete an integration.
       * @param id The integration id.
       */
     def removeIntegration(id: IntegrationId) =
       DeleteGuildIntegration(guild.id, id)
-
-    /**
-      * Sync an integration
-      * @param id The integration id.
-      */
-    def syncIntegration(id: IntegrationId) =
-      SyncGuildIntegration(guild.id, id)
 
     /**
       * Fetch the guild embed for this guild.
@@ -1160,10 +1171,9 @@ package object syntax {
       */
     def fetchReactions(
         guildEmoji: Emoji,
-        before: Option[UserId] = None,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit))
+    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(after, limit))
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
@@ -1171,10 +1181,9 @@ package object syntax {
       */
     def fetchReactionsStr(
         emoji: String,
-        before: Option[UserId] = None,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(before, after, limit))
+    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(after, limit))
 
     /**
       * Clear all the reactions on this message.
@@ -1201,10 +1210,11 @@ package object syntax {
       */
     def edit(
         content: JsonOption[String] = JsonUndefined,
+        files: Seq[CreateMessageFile] = Seq.empty,
         allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
         embed: JsonOption[OutgoingEmbed] = JsonUndefined,
         flags: JsonOption[MessageFlags] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, allowedMentions, embed, flags))
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embed, flags))
 
     /**
       * Delete this message.
@@ -1214,13 +1224,13 @@ package object syntax {
     /**
       * Pin this message.
       */
-    def pin = AddPinnedChannelMessages(message.channelId, message.id)
+    def pin = PinMessage(message.channelId, message.id)
 
     /**
       * Unpin this message.
       */
     def unpin =
-      DeletePinnedChannelMessages(message.channelId, message.id)
+      UnpinMessage(message.channelId, message.id)
   }
 
   implicit class UserSyntax(private val user: User) extends AnyVal {
@@ -1312,6 +1322,7 @@ package object syntax {
       * @param roles The roles for the new guild. Note, here the snowflake is
       *              just a placeholder.
       * @param channels The channels for the new guild.
+      * @param systemChannelFlags The flags for the system channel.
       */
     def createGuild(
         name: String,
@@ -1324,7 +1335,8 @@ package object syntax {
         channels: Option[Seq[CreateGuildChannelData]] = None,
         afkChannelId: Option[VoiceGuildChannelId] = None,
         afkTimeout: Option[Int] = None,
-        systemChannelId: Option[TextGuildChannelId] = None
+        systemChannelId: Option[TextGuildChannelId] = None,
+        systemChannelFlags: Option[SystemChannelFlags] = None
     ) =
       CreateGuild(
         CreateGuildData(
@@ -1338,7 +1350,8 @@ package object syntax {
           channels,
           afkChannelId,
           afkTimeout,
-          systemChannelId
+          systemChannelId,
+          systemChannelFlags
         )
       )
 

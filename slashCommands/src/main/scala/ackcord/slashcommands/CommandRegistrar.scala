@@ -23,7 +23,7 @@
  */
 package ackcord.slashcommands
 
-import ackcord.data.{GuildId, InteractionType, RawSnowflake}
+import ackcord.data.{ApplicationId, GuildId, InteractionType}
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.slashcommands.raw.CommandsProtocol._
 import ackcord.slashcommands.raw._
@@ -207,7 +207,7 @@ object CommandRegistrar {
   }
 
   def createGuildCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       guildId: GuildId,
       requests: Requests,
       replaceAll: Boolean,
@@ -230,7 +230,7 @@ object CommandRegistrar {
   }
 
   def createGlobalCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       requests: Requests,
       replaceAll: Boolean,
       commands: CommandOrGroup*
@@ -250,7 +250,7 @@ object CommandRegistrar {
   }
 
   def removeUnknownGuildCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       guildId: GuildId,
       requests: Requests,
       commands: CommandOrGroup*
@@ -271,7 +271,7 @@ object CommandRegistrar {
   }
 
   def removeUnknownGlobalCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       requests: Requests,
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {

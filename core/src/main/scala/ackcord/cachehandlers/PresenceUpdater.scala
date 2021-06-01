@@ -41,12 +41,7 @@ object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
     } {
 
       val presencesToUse = if (registry.hasUpdater[Presence]) {
-        val newActivities = rawActivities.map(_.toActivity).flatMap {
-          case Right(activity) => Some(activity)
-          case Left(e) =>
-            log.warn(e)
-            None
-        }
+        val newActivities = rawActivities.map(_.toActivity)
 
         val newPresence = Presence(partialUser.id, status, newActivities, clientStatus)
         oldGuild.presences.updated(partialUser.id, newPresence)

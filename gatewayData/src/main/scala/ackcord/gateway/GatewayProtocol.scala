@@ -24,13 +24,12 @@
 package ackcord.gateway
 
 import ackcord.data._
-import ackcord.data.raw.RawMessageActivity
+import ackcord.data.raw.{PartialRawGuildMember, RawMessageActivity}
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import cats.Later
 import cats.syntax.all._
 import io.circe.syntax._
 import io.circe.{derivation, _}
-
 import java.time.OffsetDateTime
 
 //noinspection NameBooleanParameters
@@ -92,7 +91,7 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val identifyObjectCodec: Codec[IdentifyData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val statusDataCodec: Codec[StatusData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val statusDataCodec: Codec[PresenceData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val resumeDataCodec: Codec[ResumeData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -181,6 +180,7 @@ object GatewayProtocol extends DiscordProtocol {
         if (isWebhook) c.get[JsonOption[WebhookAuthor]]("author")
         else c.get[JsonOption[User]]("author")
       }
+      member          <- c.get[JsonOption[PartialRawGuildMember]]("member")
       content         <- c.get[JsonOption[String]]("content")
       timestamp       <- c.get[JsonOption[OffsetDateTime]]("timestamp")
       editedTimestamp <- c.get[JsonOption[OffsetDateTime]]("edited_timestamp")
@@ -188,6 +188,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentionEveryone <- c.get[JsonOption[Boolean]]("mention_everyone")
       mentions        <- c.get[JsonOption[Seq[User]]]("mentions")
       mentionRoles    <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
+      mentionChannels <- c.get[JsonOption[Seq[ChannelMention]]]("mention_channels")
       attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
       embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
       reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
@@ -202,15 +203,18 @@ object GatewayProtocol extends DiscordProtocol {
       webhookId         <- c.get[JsonOption[String]]("webhook_id")
       messageType       <- c.get[JsonOption[MessageType]]("message_type")
       activity          <- c.get[JsonOption[RawMessageActivity]]("activity")
-      application       <- c.get[JsonOption[MessageApplication]]("application")
+      application       <- c.get[JsonOption[PartialApplication]]("application")
+      applicationId     <- c.get[JsonOption[ApplicationId]]("application_id")
       messageReference  <- c.get[JsonOption[MessageReference]]("message_reference")
       flags             <- c.get[JsonOption[MessageFlags]]("flags")
       stickers          <- c.get[JsonOption[Seq[Sticker]]]("stickers")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
+      interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
       author,
+      member,
       content,
       timestamp,
       editedTimestamp,
@@ -218,6 +222,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentionEveryone,
       mentions,
       mentionRoles,
+      mentionChannels,
       attachment,
       embeds,
       reactions,
@@ -227,10 +232,12 @@ object GatewayProtocol extends DiscordProtocol {
       messageType,
       activity,
       application,
+      applicationId,
       messageReference,
       flags,
       stickers,
-      referencedMessage
+      referencedMessage,
+      interaction
     )
   }
 
@@ -240,7 +247,7 @@ object GatewayProtocol extends DiscordProtocol {
       val d = a match {
         case Heartbeat(d, _)              => JsonSome(d.asJson)
         case Identify(d)                  => JsonSome(d.asJson)
-        case StatusUpdate(d, _)           => JsonSome(d.asJson)
+        case PresenceUpdate(d, _)         => JsonSome(d.asJson)
         case VoiceStateUpdate(d)          => JsonSome(d.asJson)
         case VoiceServerUpdate(d, _)      => JsonSome(d.asJson)
         case Resume(d, _)                 => JsonSome(d.asJson)
@@ -275,7 +282,7 @@ object GatewayProtocol extends DiscordProtocol {
       case GatewayOpCode.Dispatch         => decodeDispatch(c, decoders, gatewayInfo.shardInfo)
       case GatewayOpCode.Heartbeat        => dCursor.as[Option[Int]].map(Heartbeat(_, gatewayInfo))
       case GatewayOpCode.Identify         => dCursor.as[IdentifyData].map(Identify)
-      case GatewayOpCode.StatusUpdate     => dCursor.as[StatusData].map(StatusUpdate(_, gatewayInfo))
+      case GatewayOpCode.StatusUpdate     => dCursor.as[PresenceData].map(PresenceUpdate(_, gatewayInfo))
       case GatewayOpCode.VoiceStateUpdate => dCursor.as[VoiceStateUpdateData].map(VoiceStateUpdate)
       case GatewayOpCode.VoiceServerPing  => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate(_, gatewayInfo))
       case GatewayOpCode.Resume           => dCursor.as[ResumeData].map(Resume(_, gatewayInfo))

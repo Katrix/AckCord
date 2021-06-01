@@ -121,9 +121,6 @@ case class Heartbeat(nowD: Option[Int], gatewayInfo: GatewayInfo)
   * @param shard The shard info, the first index is the shard id, while the
   *              second is the total amount of shards.
   * @param presence The presence data to start with.
-  * @param guildSubscriptions If member presence events and similar should be
-  *                           received. AckCord has not been tested with this
-  *                           flag. Continue with caution.
   */
 case class IdentifyData(
     token: String,
@@ -131,8 +128,7 @@ case class IdentifyData(
     compress: Boolean,
     largeThreshold: Int,
     shard: Seq[Int],
-    presence: StatusData,
-    guildSubscriptions: Boolean,
+    presence: PresenceData,
     intents: GatewayIntents
 )
 object IdentifyData {
@@ -157,19 +153,19 @@ case class Identify(nowD: IdentifyData) extends EagerGatewayMessage[IdentifyData
   * @param status The status of the user.
   * @param afk If the user is AFK.
   */
-case class StatusData(
+case class PresenceData(
     since: Option[Instant],
-    activities: Option[Seq[RawActivity]],
+    activities: Seq[RawActivity],
     status: PresenceStatus,
     afk: Boolean
 )
 
 /**
-  * Sent when a presence or status changes.
+  * Sent when a presence changes.
   */
-case class StatusUpdate(nowD: StatusData, gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[StatusData]
-    with ServerGatewayMessage[StatusData] {
+case class PresenceUpdate(nowD: PresenceData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[PresenceData]
+    with ServerGatewayMessage[PresenceData] {
   override def op: GatewayOpCode = GatewayOpCode.StatusUpdate
 }
 
@@ -354,7 +350,7 @@ sealed trait GatewayEvent[+D] {
 
 object GatewayEvent {
 
-  case class ReadyApplication(id: RawSnowflake, flags: Int)
+  case class ReadyApplication(id: ApplicationId, flags: Int)
 
   /**
     * @param v The API version used.
@@ -570,7 +566,7 @@ object GatewayEvent {
       user: User,
       nick: Option[String],
       roles: Seq[RoleId],
-      joinedAt: OffsetDateTime,
+      joinedAt: Option[OffsetDateTime],
       premiumSince: Option[OffsetDateTime],
       deaf: Boolean,
       mute: Boolean,
@@ -635,8 +631,11 @@ object GatewayEvent {
       roles: Seq[RoleId],
       user: User,
       nick: Option[String],
-      joinedAt: OffsetDateTime,
-      premiumSince: Option[OffsetDateTime]
+      joinedAt: Option[OffsetDateTime],
+      premiumSince: Option[OffsetDateTime],
+      deaf: Option[Boolean],
+      mute: Option[Boolean],
+      pending: Option[Boolean]
   )
 
   /**
@@ -725,10 +724,11 @@ object GatewayEvent {
       inviter: Option[User],
       maxAge: Int,
       maxUses: Int,
+      targetType: Option[InviteTargetType],
+      targetUser: Option[User],
+      targetApplication: Option[PartialApplication],
       temporary: Boolean,
-      uses: Int,
-      targetUser: Option[InviteTargetUser],
-      targetUserType: Option[Int]
+      uses: Int
   )
 
   /**
@@ -773,6 +773,7 @@ object GatewayEvent {
       id: MessageId,
       channelId: TextChannelId,
       author: JsonOption[Author[_]],
+      member: JsonOption[PartialRawGuildMember],
       content: JsonOption[String],
       timestamp: JsonOption[OffsetDateTime],
       editedTimestamp: JsonOption[OffsetDateTime],
@@ -780,19 +781,22 @@ object GatewayEvent {
       mentionEveryone: JsonOption[Boolean],
       mentions: JsonOption[Seq[User]],
       mentionRoles: JsonOption[Seq[RoleId]],
+      mentionChannels: JsonOption[Seq[ChannelMention]],
       attachment: JsonOption[Seq[Attachment]],
       embeds: JsonOption[Seq[ReceivedEmbed]],
       reactions: JsonOption[Seq[Reaction]],
       nonce: JsonOption[Either[Long, String]],
       pinned: JsonOption[Boolean],
       webhookId: JsonOption[String],
-      messageType: JsonOption[MessageType],
+      `type`: JsonOption[MessageType],
       activity: JsonOption[RawMessageActivity],
-      application: JsonOption[MessageApplication],
+      application: JsonOption[PartialApplication],
+      applicationId: JsonOption[ApplicationId],
       messageReference: JsonOption[MessageReference],
       flags: JsonOption[MessageFlags],
       stickers: JsonOption[Seq[Sticker]],
-      referencedMessage: JsonOption[RawPartialMessage]
+      referencedMessage: JsonOption[RawPartialMessage],
+      interaction: JsonOption[MessageInteraction]
   )
 
   /**
@@ -1032,8 +1036,8 @@ object GatewayEvent {
   ) {
 
     def reparse[A: Decoder]: Result[A] = {
-      import io.circe.syntax._
       import GatewayProtocol._
+      import io.circe.syntax._
       val self: SimpleRawInteraction = this
       self.asJson.as[A]
     }
@@ -1048,7 +1052,7 @@ object GatewayEvent {
 
   case class SimpleApplicationCommandWithGuildId(
       id: RawSnowflake,
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       name: String,
       description: String,
       options: Option[Json],
@@ -1056,8 +1060,8 @@ object GatewayEvent {
   ) {
 
     def reparse[A: Decoder]: Decoder.Result[A] = {
-      import io.circe.syntax._
       import GatewayProtocol._
+      import io.circe.syntax._
       val self: SimpleApplicationCommandWithGuildId = this
       self.asJson.as[A]
     }

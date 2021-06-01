@@ -259,6 +259,7 @@ case class NormalTextGuildChannel(
   * A voice channel in a guild
   * @param bitrate The bitrate of this channel in bits
   * @param userLimit The max amount of users that can join this channel
+  * @param rtcRegion Channel region to use. Automatic if none.
   */
 case class VoiceGuildChannel(
     id: SnowflakeType[VoiceGuildChannel],
@@ -269,7 +270,9 @@ case class VoiceGuildChannel(
     bitrate: Int,
     userLimit: Int,
     nsfw: Boolean,
-    parentId: Option[SnowflakeType[GuildCategory]]
+    parentId: Option[SnowflakeType[GuildCategory]],
+    rtcRegion: Option[String],
+    videoQualityMode: VideoQualityMode,
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
@@ -328,7 +331,7 @@ case class GroupDMChannel(
     users: Seq[UserId],
     lastMessageId: Option[MessageId],
     ownerId: UserId,
-    applicationId: Option[RawSnowflake],
+    applicationId: Option[ApplicationId],
     icon: Option[String]
 ) extends Channel
     with TextChannel {
@@ -338,4 +341,15 @@ case class GroupDMChannel(
     * Gets the owner for this group DM.
     */
   def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
+}
+
+sealed abstract class VideoQualityMode(val value: Int) extends IntEnumEntry
+object VideoQualityMode extends IntEnum[VideoQualityMode] with IntCirceEnumWithUnknown[VideoQualityMode] {
+  override def values: IndexedSeq[VideoQualityMode] = findValues
+
+  case object Auto extends VideoQualityMode(1)
+  case object Full extends VideoQualityMode(2)
+  case class Unknown(override val value: Int) extends VideoQualityMode(value)
+
+  override def createUnknown(value: Int): VideoQualityMode = Unknown(value)
 }

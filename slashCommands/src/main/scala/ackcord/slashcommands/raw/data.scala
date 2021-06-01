@@ -24,17 +24,7 @@
 package ackcord.slashcommands.raw
 
 import ackcord.data.raw.RawGuildMember
-import ackcord.data.{
-  GuildId,
-  InteractionResponseType,
-  InteractionType,
-  MessageFlags,
-  OutgoingEmbed,
-  Permission,
-  RawSnowflake,
-  TextChannelId,
-  User
-}
+import ackcord.data.{ApplicationId, GuildId, InteractionResponseType, InteractionType, MessageFlags, OutgoingEmbed, Permission, TextChannelId, User}
 import ackcord.requests.AllowedMention
 import ackcord.slashcommands.{CommandId, InteractionId}
 import ackcord.util.IntCirceEnumWithUnknown
@@ -43,7 +33,7 @@ import io.circe._
 
 case class ApplicationCommand(
     id: CommandId,
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     name: String,
     description: String,
     options: Option[Seq[ApplicationCommandOption]]
@@ -85,7 +75,7 @@ case class ApplicationCommandOptionChoice(
 
 case class Interaction(
     id: InteractionId,
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     tpe: InteractionType,
     data: Option[ApplicationCommandInteractionData],
     guildId: Option[GuildId],

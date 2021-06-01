@@ -26,18 +26,18 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data.raw.RawGuild
-import ackcord.data.{GuildId, ImageData, Permission, Template}
+import ackcord.data.{GuildId, ImageData, Permission, GuildTemplate}
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, derivation}
 
 /** Get a template by it's code. */
-case class GetTemplate(code: String) extends NoParamsRequest[Template, Template] {
+case class GetGuildTemplate(code: String) extends NoParamsRequest[GuildTemplate, GuildTemplate] {
   override def route: RequestRoute = Routes.getTemplate(code)
 
-  override def responseDecoder: Decoder[Template] = Decoder[Template]
+  override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
-  override def toNiceResponse(response: Template): Template = response
+  override def toNiceResponse(response: GuildTemplate): GuildTemplate = response
 }
 
 case class CreateGuildFromTemplateData(
@@ -57,8 +57,8 @@ case class CreateGuildFromTemplate(code: String, params: CreateGuildFromTemplate
 }
 
 /** Gets the guild templates for a guild. */
-case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Template]] {
-  override def responseDecoder: Decoder[Seq[Template]] = Decoder[Seq[Template]]
+case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[GuildTemplate]] {
+  override def responseDecoder: Decoder[Seq[GuildTemplate]] = Decoder[Seq[GuildTemplate]]
 
   override def route: RequestRoute = Routes.getGuildTemplates(guildId)
 
@@ -79,7 +79,7 @@ case class CreateGuildTemplateData(name: String, description: JsonOption[String]
 
 /** Create a guild template for the guild. */
 case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData)
-    extends NoNiceResponseRequest[CreateGuildTemplateData, Template] {
+    extends NoNiceResponseRequest[CreateGuildTemplateData, GuildTemplate] {
   override def paramsEncoder: Encoder[CreateGuildTemplateData] =
     (a: CreateGuildTemplateData) =>
       JsonOption.removeUndefinedToObj(
@@ -87,7 +87,7 @@ case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData
         "name" -> a.description.map(_.asJson)
       )
 
-  override def responseDecoder: Decoder[Template] = Decoder[Template]
+  override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.postGuildTemplate(guildId)
 
@@ -97,8 +97,8 @@ case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData
 }
 
 /** Syncs the template and the guild. */
-case class SyncGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[Template] {
-  override def responseDecoder: Decoder[Template] = Decoder[Template]
+case class SyncGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[GuildTemplate] {
+  override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.putGuildTemplate(guildId, code)
 
@@ -118,7 +118,7 @@ case class ModifyGuildTemplateData(
 
 /** Modify the info around a guild template. */
 case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGuildTemplateData)
-    extends NoNiceResponseRequest[ModifyGuildTemplateData, Template] {
+    extends NoNiceResponseRequest[ModifyGuildTemplateData, GuildTemplate] {
 
   override def paramsEncoder: Encoder[ModifyGuildTemplateData] =
     (a: ModifyGuildTemplateData) =>
@@ -127,7 +127,7 @@ case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGui
         "description" -> a.description.map(_.asJson)
       )
 
-  override def responseDecoder: Decoder[Template] = Decoder[Template]
+  override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.patchGuildTemplate(guildId, code)
 
@@ -137,8 +137,8 @@ case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGui
 }
 
 /** Deletes the given guild template. */
-case class DeleteGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[Template] {
-  override def responseDecoder: Decoder[Template] = Decoder[Template]
+case class DeleteGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[GuildTemplate] {
+  override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.deleteGuildTemplate(guildId, code)
 
