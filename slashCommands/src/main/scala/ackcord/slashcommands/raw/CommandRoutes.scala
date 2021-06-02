@@ -34,29 +34,27 @@ object CommandRoutes {
   val commandId = new MinorParameter[CommandId]("commandId", _.asString)
   val interactionId = new MinorParameter[InteractionId]("interactionId", _.asString)
 
-  val callback: (InteractionId, String) => RequestRoute = upcast(
-    base / "interactions" / interactionId / token / "callback" toRequest POST
-  )
+  val callback: (InteractionId, String) => RequestRoute = base / "interactions" / interactionId / token / "callback" toRequest POST
 
   //Commands
   val application: RouteFunction[ApplicationId]                = base / "applications" / applicationId
   val globalCommands: RouteFunction[ApplicationId]             = application / "commands"
   val globalCommand: RouteFunction[(ApplicationId, CommandId)] = globalCommands / commandId
 
-  val getCommands: ApplicationId => RequestRoute                = upcast(globalCommands.toRequest(GET))
-  val postCommand: ApplicationId => RequestRoute                = upcast(globalCommands.toRequest(POST))
-  val putCommands: ApplicationId => RequestRoute                = upcast(globalCommands.toRequest(PUT))
-  val getCommand: (ApplicationId, CommandId) => RequestRoute    = upcast(globalCommand.toRequest(GET))
-  val patchCommand: (ApplicationId, CommandId) => RequestRoute  = upcast(globalCommand.toRequest(PATCH))
-  val deleteCommand: (ApplicationId, CommandId) => RequestRoute = upcast(globalCommand.toRequest(DELETE))
+  val getCommands: ApplicationId => RequestRoute                = globalCommands.toRequest(GET)
+  val postCommand: ApplicationId => RequestRoute                = globalCommands.toRequest(POST)
+  val putCommands: ApplicationId => RequestRoute                = globalCommands.toRequest(PUT)
+  val getCommand: (ApplicationId, CommandId) => RequestRoute    = globalCommand.toRequest(GET)
+  val patchCommand: (ApplicationId, CommandId) => RequestRoute  = globalCommand.toRequest(PATCH)
+  val deleteCommand: (ApplicationId, CommandId) => RequestRoute = globalCommand.toRequest(DELETE)
 
   val guildCommands: RouteFunction[(ApplicationId, GuildId)]             = application / "guilds" / guildId / "commands"
   val guildCommand: RouteFunction[((ApplicationId, GuildId), CommandId)] = guildCommands / commandId
 
-  val getGuildCommands: (ApplicationId, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(GET))
-  val postGuildCommand: (ApplicationId, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(POST))
-  val putGuildCommands: (ApplicationId, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(PUT))
-  val getGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute    = upcast(guildCommand.toRequest(GET))
-  val patchGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute  = upcast(guildCommand.toRequest(PATCH))
-  val deleteGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute = upcast(guildCommand.toRequest(DELETE))
+  val getGuildCommands: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(GET)
+  val postGuildCommand: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(POST)
+  val putGuildCommands: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(PUT)
+  val getGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute    = guildCommand.toRequest(GET)
+  val patchGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute  = guildCommand.toRequest(PATCH)
+  val deleteGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute = guildCommand.toRequest(DELETE)
 }
