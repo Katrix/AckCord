@@ -447,7 +447,8 @@ object CacheHandlers {
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
                 referencedMessage = message.referencedMessage, //I'm lazy
-                interaction = obj.interaction.orElseIfUndefined(message.interaction)
+                interaction = obj.interaction.orElseIfUndefined(message.interaction),
+                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten
               )
             case message: GuildGatewayMessage =>
               val member = obj.member.map(_.toGuildMember(UserId(message.authorId), message.guildId))
@@ -482,7 +483,8 @@ object CacheHandlers {
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
                 referencedMessage = message.referencedMessage, //I'm lazy
-                interaction = obj.interaction.orElseIfUndefined(message.interaction)
+                interaction = obj.interaction.orElseIfUndefined(message.interaction),
+                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten
               )
           }
 

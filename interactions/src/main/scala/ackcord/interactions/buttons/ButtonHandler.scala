@@ -6,14 +6,14 @@ import ackcord.interactions._
 import ackcord.{CacheSnapshot, OptFuture}
 import cats.syntax.either._
 
-abstract class ButtonHandler[Interaction <: ButtonInteraction](
+abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
     val requests: Requests,
     interactionTransformer: DataInteractionTransformer[shapeless.Const[ButtonInteraction]#λ, shapeless.Const[
-      Interaction
+      InteractionTpe
     ]#λ] = DataInteractionTransformer.identity[shapeless.Const[ButtonInteraction]#λ]
 ) extends InteractionHandlerOps {
 
-  def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse =
+  def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
     InteractionResponse.AcknowledgeLoading(() => handle(AsyncToken.fromInteraction(interaction)))
 
   def acknowledgeLoading: InteractionResponse =
