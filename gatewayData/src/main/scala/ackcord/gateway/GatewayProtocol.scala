@@ -140,6 +140,18 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val simpleApplicationCommandWithGuildCodec: Codec[GatewayEvent.SimpleApplicationCommandWithGuildId] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val integrationWithGuildIdCodec: Codec[GatewayEvent.IntegrationWithGuildId] = Codec.from(
+    (c: HCursor) =>
+      for {
+        guildId     <- c.get[GuildId]("guild_id")
+        integration <- c.as[Integration]
+      } yield GatewayEvent.IntegrationWithGuildId(guildId, integration),
+    (a: GatewayEvent.IntegrationWithGuildId) => a.integration.asJson.deepMerge(Json.obj("guild_id" := a.guildId))
+  )
+
+  implicit val deletedIntegrationCodec: Codec[GatewayEvent.DeletedIntegration] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
@@ -364,7 +376,9 @@ object GatewayProtocol extends DiscordProtocol {
       "APPLICATION_COMMAND_CREATE" -> createDispatch(GatewayEvent.ApplicationCommandCreate),
       "APPLICATION_COMMAND_UPDATE" -> createDispatch(GatewayEvent.ApplicationCommandUpdate),
       "APPLICATION_COMMAND_DELETE" -> createDispatch(GatewayEvent.ApplicationCommandDelete),
-      ignored("INTEGRATION_UPDATE"),
+      "INTEGRATION_CREATE"         -> createDispatch(GatewayEvent.IntegrationCreate),
+      "INTEGRATION_UPDATE"         -> createDispatch(GatewayEvent.IntegrationUpdate),
+      "INTEGRATION_DELETE"         -> createDispatch(GatewayEvent.IntegrationDelete),
       ignored("GUILD_JOIN_REQUEST_DELETE")
     )
     res

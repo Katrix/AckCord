@@ -24,6 +24,7 @@
 package ackcord
 
 import java.time.{Instant, OffsetDateTime}
+
 import ackcord.data._
 import ackcord.gateway.GatewayEvent.SimpleRawInteraction
 import ackcord.gateway.GatewayInfo
@@ -523,4 +524,28 @@ object APIMessage {
 
   case class InteractionCreate(simpleRawInteraction: SimpleRawInteraction, cache: CacheState, gatewayInfo: GatewayInfo)
       extends APIMessage
+
+  /**
+    * Sent when an integration is created.
+    */
+  case class IntegrationCreate(guild: Guild, integration: Integration, cache: CacheState, gatewayInfo: GatewayInfo)
+      extends GuildMessage
+
+  /**
+    * Sent when an integration is deleted.
+    */
+  case class IntegrationUpdate(guild: Guild, integration: Integration, cache: CacheState, gatewayInfo: GatewayInfo)
+      extends GuildMessage
+
+  /**
+    * Sent when an integration is created.
+    * @param applicationId Id of the bot/OAuth2 application for the integration.
+    */
+  case class IntegrationDelete(
+      guild: Guild,
+      id: IntegrationId,
+      applicationId: Option[ApplicationId],
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
 }

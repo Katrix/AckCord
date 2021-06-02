@@ -687,6 +687,42 @@ object CacheEventCreator {
           registry,
           dispatch
         )
+
+      case gatewayEv.IntegrationCreate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.IntegrationCreate(guild, data.integration, state, dispatch.gatewayInfo)),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
+      case gatewayEv.IntegrationUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.IntegrationUpdate(guild, data.integration, state, dispatch.gatewayInfo)),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
+      case gatewayEv.IntegrationDelete(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild =>
+                api.IntegrationDelete(guild, data.id, data.applicationId, state, dispatch.gatewayInfo)
+              ),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
     }
   }
 

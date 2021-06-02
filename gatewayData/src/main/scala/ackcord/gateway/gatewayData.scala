@@ -1088,6 +1088,30 @@ object GatewayEvent {
     override def name: String = "APPLICATION_COMMAND_DELETE"
   }
 
+  case class IntegrationWithGuildId(guildId: GuildId, integration: Integration)
+
+  case class IntegrationCreate(rawData: Json, data: Later[Decoder.Result[IntegrationWithGuildId]])
+      extends GuildEvent[IntegrationWithGuildId] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "INTEGRATION_CREATE"
+  }
+
+  case class IntegrationUpdate(rawData: Json, data: Later[Decoder.Result[IntegrationWithGuildId]])
+      extends GuildEvent[IntegrationWithGuildId] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "INTEGRATION_UPDATE"
+  }
+
+  case class DeletedIntegration(id: IntegrationId, guildId: GuildId, applicationId: Option[ApplicationId])
+
+  case class IntegrationDelete(rawData: Json, data: Later[Decoder.Result[DeletedIntegration]]) extends GuildEvent[DeletedIntegration] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "INTEGRATION_DELETE"
+  }
+
   /**
     * An unknown event type which AckCord does not know about.
     *
