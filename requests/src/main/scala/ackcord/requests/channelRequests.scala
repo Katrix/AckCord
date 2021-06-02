@@ -88,17 +88,17 @@ case class ModifyChannelData(
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
     JsonOption.removeUndefinedToObj(
-      "name"                  -> a.name.map(_.asJson),
-      "type"                  -> a.tpe.map(_.asJson),
-      "position"              -> a.position.map(_.asJson),
-      "topic"                 -> a.topic.map(_.asJson),
-      "nsfw"                  -> a.nsfw.map(_.asJson),
-      "rate_limit_per_user"   -> a.rateLimitPerUser.map(_.asJson),
-      "bitrate"               -> a.bitrate.map(_.asJson),
-      "user_limit"            -> a.userLimit.map(_.asJson),
-      "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
-      "parent_id"             -> a.parentId.map(_.asJson),
-      "rtc_region"            -> a.rtcRegion.map(_.asJson)
+      "name"                  -> a.name.toJson,
+      "type"                  -> a.tpe.toJson,
+      "position"              -> a.position.toJson,
+      "topic"                 -> a.topic.toJson,
+      "nsfw"                  -> a.nsfw.toJson,
+      "rate_limit_per_user"   -> a.rateLimitPerUser.toJson,
+      "bitrate"               -> a.bitrate.toJson,
+      "user_limit"            -> a.userLimit.toJson,
+      "permission_overwrites" -> a.permissionOverwrites.toJson,
+      "parent_id"             -> a.parentId.toJson,
+      "rtc_region"            -> a.rtcRegion.toJson
     )
   }
 }
@@ -509,10 +509,10 @@ case class EditMessageData(
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
     JsonOption.removeUndefinedToObj(
-      "content"          -> a.content.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
-      "embed"            -> a.embed.map(_.asJson),
-      "attachments"      -> a.attachments.map(_.asJson)
+      "content"          -> a.content.toJson,
+      "allowed_mentions" -> a.allowedMentions.toJson,
+      "embed"            -> a.embed.toJson,
+      "attachments"      -> a.attachments.toJson
     )
 }
 
@@ -703,13 +703,13 @@ case class CreateChannelInviteData(
 object CreateChannelInviteData {
   implicit val encoder: Encoder[CreateChannelInviteData] = (a: CreateChannelInviteData) =>
     JsonOption.removeUndefinedToObj(
-      "max_age"               -> a.maxAge.map(_.asJson),
-      "max_uses"              -> a.maxUses.map(_.asJson),
-      "temporary"             -> a.temporary.map(_.asJson),
-      "unique"                -> a.unique.map(_.asJson),
-      "target_user_id"        -> a.targetUserId.map(_.asJson),
-      "target_type"           -> a.targetType.map(_.asJson),
-      "target_application_id" -> a.targetApplicationId.map(_.asJson)
+      "max_age"               -> a.maxAge.toJson,
+      "max_uses"              -> a.maxUses.toJson,
+      "temporary"             -> a.temporary.toJson,
+      "unique"                -> a.unique.toJson,
+      "target_user_id"        -> a.targetUserId.toJson,
+      "target_type"           -> a.targetType.toJson,
+      "target_application_id" -> a.targetApplicationId.toJson
     )
 }
 
@@ -866,7 +866,7 @@ object ModifyGuildEmojiData {
   implicit val encoder: Encoder[ModifyGuildEmojiData] = (a: ModifyGuildEmojiData) =>
     JsonOption.removeUndefinedToObj(
       "name"  -> JsonSome(a.name.asJson),
-      "roles" -> a.roles.map(_.asJson)
+      "roles" -> a.roles.toJson
     )
 }
 

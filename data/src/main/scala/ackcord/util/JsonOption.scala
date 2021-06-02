@@ -23,6 +23,8 @@
  */
 package ackcord.util
 
+import scala.annotation.unchecked.uncheckedVariance
+
 import io.circe._
 
 object JsonOption {
@@ -56,6 +58,8 @@ sealed trait JsonOption[+A] {
   def map[B](f: A => B): JsonOption[B]
   def flatMap[B](f: A => JsonOption[B]): JsonOption[B]
 
+  def toJson(implicit encoder: Encoder[A @uncheckedVariance]): JsonOption[Json]
+
   def contains[A1 >: A](value: A1): Boolean
   def exists[A1 >: A](f: A1 => Boolean): Boolean
   def forall[A1 >: A](f: A1 => Boolean): Boolean
@@ -80,6 +84,8 @@ case class JsonSome[+A](value: A) extends JsonOption[A] {
 
   override def map[B](f: A => B): JsonOption[B]                 = JsonSome(f(value))
   override def flatMap[B](f: A => JsonOption[B]): JsonOption[B] = f(value)
+
+  override def toJson(implicit encoder: Encoder[A @uncheckedVariance]): JsonOption[Json] = JsonSome(encoder(value))
 
   override def contains[A1 >: A](value: A1): Boolean      = this.value == value
   override def exists[A1 >: A](f: A1 => Boolean): Boolean = f(value)
@@ -107,6 +113,8 @@ case object JsonNull extends JsonOption[Nothing] {
   override def map[B](f: Nothing => B): JsonOption[B]                 = this
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
 
+  override def toJson(implicit encoder: Encoder[Nothing]): JsonOption[Json] = this
+
   override def contains[A1 >: Nothing](value: A1): Boolean      = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false
   override def forall[A1 >: Nothing](f: A1 => Boolean): Boolean = true
@@ -132,6 +140,8 @@ case object JsonUndefined extends JsonOption[Nothing] {
 
   override def map[B](f: Nothing => B): JsonOption[B]                 = this
   override def flatMap[B](f: Nothing => JsonOption[B]): JsonOption[B] = this
+
+  override def toJson(implicit encoder: Encoder[Nothing]): JsonOption[Json] = this
 
   override def contains[A1 >: Nothing](value: A1): Boolean      = false
   override def exists[A1 >: Nothing](f: A1 => Boolean): Boolean = false

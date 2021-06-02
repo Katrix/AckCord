@@ -125,9 +125,9 @@ case class ModifyWebhookData(
 object ModifyWebhookData {
   implicit val encoder: Encoder[ModifyWebhookData] = (a: ModifyWebhookData) =>
     JsonOption.removeUndefinedToObj(
-      "name"       -> a.name.map(_.asJson),
-      "avatar"     -> a.avatar.map(_.asJson),
-      "channel_id" -> a.channelId.map(_.asJson)
+      "name"       -> a.name.toJson,
+      "avatar"     -> a.avatar.toJson,
+      "channel_id" -> a.channelId.toJson
     )
 }
 
@@ -317,10 +317,10 @@ case class EditWebhookMessageData(
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
     JsonOption.removeUndefinedToObj(
-      "content"          -> a.content.map(_.asJson),
-      "embeds"           -> a.embeds.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
-      "attachments"      -> a.attachments.map(_.asJson)
+      "content"          -> a.content.toJson,
+      "embeds"           -> a.embeds.toJson,
+      "allowed_mentions" -> a.allowedMentions.toJson,
+      "attachments"      -> a.attachments.toJson
     )
 }
 

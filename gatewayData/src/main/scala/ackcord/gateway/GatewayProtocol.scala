@@ -111,7 +111,7 @@ object GatewayProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "guild_id"           -> JsonSome(a.guildId.asJson),
         "channel_id"         -> JsonSome(a.channelId.asJson),
-        "last_pin_timestamp" -> a.lastPinTimestamp.map(_.asJson)
+        "last_pin_timestamp" -> a.lastPinTimestamp.toJson
       )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
@@ -158,19 +158,19 @@ object GatewayProtocol extends DiscordProtocol {
         Seq(
           "id"               -> JsonSome(a.id.asJson),
           "channel_id"       -> JsonSome(a.channelId.asJson),
-          "content"          -> a.content.map(_.asJson),
-          "timestamp"        -> a.timestamp.map(_.asJson),
-          "edited_timestamp" -> a.editedTimestamp.map(_.asJson),
-          "tts"              -> a.tts.map(_.asJson),
-          "mention_everyone" -> a.mentionEveryone.map(_.asJson),
-          "mentions"         -> a.mentions.map(_.asJson),
-          "mention_roles"    -> a.mentionRoles.map(_.asJson),
-          "attachments"      -> a.attachment.map(_.asJson),
-          "embeds"           -> a.embeds.map(_.asJson),
-          "reactions"        -> a.reactions.map(_.asJson),
+          "content"          -> a.content.toJson,
+          "timestamp"        -> a.timestamp.toJson,
+          "edited_timestamp" -> a.editedTimestamp.toJson,
+          "tts"              -> a.tts.toJson,
+          "mention_everyone" -> a.mentionEveryone.toJson,
+          "mentions"         -> a.mentions.toJson,
+          "mention_roles"    -> a.mentionRoles.toJson,
+          "attachments"      -> a.attachment.toJson,
+          "embeds"           -> a.embeds.toJson,
+          "reactions"        -> a.reactions.toJson,
           "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)),
-          "pinned"           -> a.pinned.map(_.asJson),
-          "webhook_id"       -> a.webhookId.map(_.asJson)
+          "pinned"           -> a.pinned.toJson,
+          "webhook_id"       -> a.webhookId.toJson
         )
       )
 
@@ -275,7 +275,7 @@ object GatewayProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
         "d"  -> d,
-        "s"  -> a.s.map(_.asJson),
+        "s"  -> a.s.toJson,
         "t"  -> a.t.map(_.name.asJson)
       )
   }
@@ -312,7 +312,7 @@ object GatewayProtocol extends DiscordProtocol {
     JsonOption.removeUndefinedToObj(
       "op" -> JsonSome(dispatch.op.asJson),
       "d"  -> JsonSome(dispatch.event.rawData),
-      "s"  -> dispatch.s.map(_.asJson),
+      "s"  -> dispatch.s.toJson,
       "t"  -> dispatch.t.map(_.name.asJson)
     )
   }

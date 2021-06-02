@@ -68,9 +68,9 @@ case class PatchCommandData(
 object PatchCommandData {
   implicit val encoder: Encoder[PatchCommandData] = (a: PatchCommandData) =>
     JsonOption.removeUndefinedToObj(
-      "name"        -> a.name.map(_.asJson),
-      "description" -> a.description.map(_.asJson),
-      "options"     -> a.options.map(_.asJson)
+      "name"        -> a.name.toJson,
+      "description" -> a.description.toJson,
+      "options"     -> a.options.toJson
     )
 }
 

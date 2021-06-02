@@ -84,7 +84,7 @@ case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData
     (a: CreateGuildTemplateData) =>
       JsonOption.removeUndefinedToObj(
         "name" -> JsonSome(a.name.asJson),
-        "name" -> a.description.map(_.asJson)
+        "name" -> a.description.toJson
       )
 
   override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
@@ -123,8 +123,8 @@ case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGui
   override def paramsEncoder: Encoder[ModifyGuildTemplateData] =
     (a: ModifyGuildTemplateData) =>
       JsonOption.removeUndefinedToObj(
-        "name"        -> a.name.map(_.asJson),
-        "description" -> a.description.map(_.asJson)
+        "name"        -> a.name.toJson,
+        "description" -> a.description.toJson
       )
 
   override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
