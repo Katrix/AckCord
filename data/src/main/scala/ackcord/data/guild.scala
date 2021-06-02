@@ -326,7 +326,7 @@ case class WelcomeScreenChannel(
 
 sealed abstract class NSFWLevel(val value: Int) extends IntEnumEntry
 object NSFWLevel extends IntEnum[NSFWLevel] with IntCirceEnumWithUnknown[NSFWLevel] {
-  override def values: IndexedSeq[NSFWLevel] = findValues
+  override def values: immutable.IndexedSeq[NSFWLevel] = findValues
 
   case object Default       extends NSFWLevel(0)
   case object Explicit      extends NSFWLevel(1)
@@ -597,7 +597,7 @@ sealed trait Activity {
 
 sealed abstract class ActivityType(val value: Int) extends IntEnumEntry
 object ActivityType extends IntEnum[ActivityType] with IntCirceEnumWithUnknown[ActivityType] {
-  override def values: IndexedSeq[ActivityType] = findValues
+  override def values: immutable.IndexedSeq[ActivityType] = findValues
 
   case object Game      extends ActivityType(0)
   case object Streaming extends ActivityType(1)

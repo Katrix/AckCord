@@ -25,6 +25,7 @@ package ackcord.requests
 
 import java.time.OffsetDateTime
 
+import scala.collection.immutable
 import scala.concurrent.Future
 
 import ackcord.data.{Application, ApplicationId, User}
@@ -43,7 +44,7 @@ object OAuth {
 
   sealed abstract class Scope(val value: String) extends StringEnumEntry
   object Scope extends StringEnum[Scope] {
-    override def values: IndexedSeq[Scope] = findValues
+    override def values: immutable.IndexedSeq[Scope] = findValues
 
     case object ActivitiesRead             extends Scope("activities.read")
     case object ActivitiesWrite            extends Scope("activities.write")

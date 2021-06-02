@@ -345,7 +345,7 @@ case class GroupDMChannel(
 
 sealed abstract class VideoQualityMode(val value: Int) extends IntEnumEntry
 object VideoQualityMode extends IntEnum[VideoQualityMode] with IntCirceEnumWithUnknown[VideoQualityMode] {
-  override def values: IndexedSeq[VideoQualityMode] = findValues
+  override def values: immutable.IndexedSeq[VideoQualityMode] = findValues
 
   case object Auto extends VideoQualityMode(1)
   case object Full extends VideoQualityMode(2)
