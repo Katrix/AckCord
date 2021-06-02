@@ -348,6 +348,24 @@ object ListGuildMembers {
   ): ListGuildMembers = new ListGuildMembers(guildId, ListGuildMembersData(limit, after))
 }
 
+case class SearchGuildMembersData(query: String, limit: JsonOption[Int] = JsonUndefined)
+object SearchGuildMembersData {
+  implicit val encoder: Encoder[SearchGuildMembersData] = (a: SearchGuildMembersData) => JsonOption.removeUndefinedToObj(
+    "query" -> JsonSome(a.query.asJson),
+    "limit" -> a.limit.map(_.asJson)
+  )
+}
+
+case class SearchGuildMembers(guildId: GuildId, params: SearchGuildMembersData)
+    extends RESTRequest[SearchGuildMembersData, Seq[RawGuildMember], Seq[GuildMember]] {
+  override def route: RequestRoute = Routes.searchGuildMembers(guildId)
+
+  override def paramsEncoder: Encoder[SearchGuildMembersData] = SearchGuildMembersData.encoder
+
+  override def responseDecoder: Decoder[Seq[RawGuildMember]]                   = Decoder[Seq[RawGuildMember]]
+  override def toNiceResponse(response: Seq[RawGuildMember]): Seq[GuildMember] = response.map(_.toGuildMember(guildId))
+}
+
 /**
   * @param accessToken The OAuth2 access token.
   * @param nick The nickname to give to the user.
@@ -1110,4 +1128,32 @@ case object GetUserConnections extends NoParamsNiceResponseRequest[Seq[Connectio
   override def route: RequestRoute = Routes.getUserConnections
 
   override def responseDecoder: Decoder[Seq[Connection]] = Decoder[Seq[Connection]]
+}
+
+case class GetGuildWelcomeScreen(guildId: GuildId) extends NoParamsNiceResponseRequest[WelcomeScreen] {
+  override def route: RequestRoute = Routes.getGuildWelcomeScreen(guildId)
+
+  override def responseDecoder: Decoder[WelcomeScreen] = Decoder[WelcomeScreen]
+}
+
+case class ModifyGuildWelcomeScreenData(
+    enabled: JsonOption[Boolean] = JsonUndefined,
+    welcomeChannels: JsonOption[Seq[WelcomeScreenChannel]] = JsonUndefined,
+    description: JsonOption[String] = JsonUndefined
+)
+object ModifyGuildWelcomeScreenData {
+  implicit val encoder: Encoder[ModifyGuildWelcomeScreenData] = (a: ModifyGuildWelcomeScreenData) =>
+    JsonOption.removeUndefinedToObj(
+      "enabled"          -> a.enabled.map(_.asJson),
+      "welcome_channels" -> a.welcomeChannels.map(_.asJson),
+      "description"      -> a.description.map(_.asJson)
+    )
+}
+
+case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcomeScreenData)
+    extends NoNiceResponseRequest[ModifyGuildWelcomeScreenData, WelcomeScreen] {
+  override def route: RequestRoute = Routes.modifyGuildWelcomeScreen(guildId)
+
+  override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ???
+  override def responseDecoder: Decoder[WelcomeScreen]              = Decoder[WelcomeScreen]
 }

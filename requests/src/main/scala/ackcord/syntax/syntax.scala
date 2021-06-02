@@ -725,13 +725,21 @@ package object syntax {
 
     /**
       * Get all the guild members in this guild.
-      * @param limit The max amount of members to get
-      * @param after Get userIds after this id
+      * @param limit The max amount of members to get.
+      * @param after Get userIds after this id.
       */
     def fetchAllGuildMember(
         limit: Option[Int] = None,
         after: Option[UserId] = None
     ) = ListGuildMembers(guild.id, ListGuildMembersData(limit, after))
+
+    /**
+      * Search for guild members in the given guild, who's username or nickname starts with the query string.
+      * @param query Query to search for.
+      * @param limit How many members to return at most.
+      */
+    def fetchSearchGuildMembers(query: String, limit: Int = 1) =
+      SearchGuildMembers(guild.id, SearchGuildMembersData(query, JsonSome(limit)))
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
@@ -1006,6 +1014,14 @@ package object syntax {
       * Delete this guild. Must be the owner.
       */
     def delete = DeleteGuild(guild.id)
+
+    def fetchWelcomeScreen = GetGuildWelcomeScreen(guild.id)
+
+    def modifyWelcomeScreen(
+        enabled: JsonOption[Boolean] = JsonUndefined,
+        welcomeChannels: JsonOption[Seq[WelcomeScreenChannel]] = JsonUndefined,
+        description: JsonOption[String] = JsonUndefined
+    ) = ModifyGuildWelcomeScreen(guild.id, ModifyGuildWelcomeScreenData(enabled, welcomeChannels, description))
   }
 
   implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {

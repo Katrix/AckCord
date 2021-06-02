@@ -324,6 +324,13 @@ object EditWebhookMessageData {
     )
 }
 
+case class GetOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.getOriginalWebhookMessage(id, token)
+
+  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def toNiceResponse(response: RawMessage): Message = response.toMessage
+}
+
 case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String, params: EditWebhookMessageData)
     extends NoNiceResponseRequest[EditWebhookMessageData, Json] {
   override def route: RequestRoute                            = Routes.editOriginalWebhookMessage(id, token)
@@ -347,6 +354,13 @@ case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String,
 
 case class DeleteOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteOriginalWebhookMessage(id, token)
+}
+
+case class GetWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.getWebhookMessage(id, token, messageId)
+
+  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 
 case class EditWebhookMessage(

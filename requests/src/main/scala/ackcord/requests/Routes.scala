@@ -423,6 +423,8 @@ object Routes {
 
     upcast(queries.toRequest(GET))
   }
+  val searchGuildMembers: GuildId => RequestRoute = upcast(guildMembers / "search" toRequest GET)
+
   val addGuildMember: (GuildId, UserId) => RequestRoute    = upcast(guildMember.toRequest(PUT))
   val modifyGuildMember: (GuildId, UserId) => RequestRoute = upcast(guildMember.toRequest(PATCH))
   val removeGuildMember: (GuildId, UserId) => RequestRoute = upcast(guildMember.toRequest(DELETE))
@@ -484,6 +486,10 @@ object Routes {
   val getGuildWidgetImage: (GuildId, Option[WidgetImageStyle]) => RequestRoute = upcast(
     guild / "widget.png" +? style toRequest GET
   )
+
+  val guildWelcomeScreen: RouteFunction[GuildId] = guild / "welcome-screen"
+  val getGuildWelcomeScreen: GuildId => RequestRoute = upcast(guildWelcomeScreen.toRequest(GET))
+  val modifyGuildWelcomeScreen: GuildId => RequestRoute = upcast(guildWelcomeScreen.toRequest(PATCH))
 
   //Templates
   val template: Route                                 = guilds / "template"
@@ -574,11 +580,17 @@ object Routes {
 
   val postFollowupMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(webhookWithToken.toRequest(POST))
 
+  val getOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
+    originalWebhookMessage.toRequest(GET)
+  )
   val editOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
     originalWebhookMessage.toRequest(PATCH)
   )
   val deleteOriginalWebhookMessage: (SnowflakeType[Webhook], String) => RequestRoute = upcast(
     originalWebhookMessage.toRequest(PATCH)
+  )
+  val getWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
+    webhookMessage.toRequest(GET)
   )
   val editWebhookMessage: (SnowflakeType[Webhook], String, MessageId) => RequestRoute = upcast(
     webhookMessage.toRequest(PATCH)

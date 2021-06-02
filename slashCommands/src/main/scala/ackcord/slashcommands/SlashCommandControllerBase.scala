@@ -176,6 +176,10 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       )
     ).map(_.get)
 
+  def getOriginalMessage()(implicit async: AsyncMessageToken): OptFuture[Message] = commandRequest(
+    GetOriginalWebhookMessage(async.webhookId, async.webhookToken)
+  ).map(_.toMessage)
+
   def editOriginalMessage(
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
@@ -219,4 +223,8 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
         )
       )
     )
+
+  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] = commandRequest(
+    GetWebhookMessage(async.webhookId, async.webhookToken, messageId)
+  ).map(_.toMessage)
 }
