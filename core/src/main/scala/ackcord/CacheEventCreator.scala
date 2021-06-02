@@ -723,6 +723,39 @@ object CacheEventCreator {
           registry,
           dispatch
         )
+      case gatewayEv.StageInstanceCreate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceCreate(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.StageInstanceUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceUpdate(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.StageInstanceDelete(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceDelete(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceDeleter,
+          registry,
+          dispatch
+        )
     }
   }
 

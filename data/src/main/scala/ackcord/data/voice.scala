@@ -23,6 +23,8 @@
  */
 package ackcord.data
 
+import java.time.OffsetDateTime
+
 import ackcord.data.raw.RawGuildMember
 
 /**
@@ -53,7 +55,8 @@ case class VoiceState(
     selfMute: Boolean,
     selfStream: Option[Boolean],
     selfVideo: Boolean,
-    suppress: Boolean
+    suppress: Boolean,
+    requestToSpeakTimestamp: Option[OffsetDateTime]
 ) extends GetGuildOpt
     with GetVoiceChannelOpt
     with GetUser

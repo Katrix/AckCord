@@ -532,19 +532,49 @@ object APIMessage {
       extends GuildMessage
 
   /**
-    * Sent when an integration is deleted.
+    * Sent when an integration is updated.
     */
   case class IntegrationUpdate(guild: Guild, integration: Integration, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
-    * Sent when an integration is created.
+    * Sent when an integration is deleted.
     * @param applicationId Id of the bot/OAuth2 application for the integration.
     */
   case class IntegrationDelete(
       guild: Guild,
       id: IntegrationId,
       applicationId: Option[ApplicationId],
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is created.
+    */
+  case class StageInstanceCreate(
+      guild: Guild,
+      stageInstance: StageInstance,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is deleted.
+    */
+  case class StageInstanceUpdate(
+      guild: Guild,
+      stageInstance: StageInstance,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is created.
+    */
+  case class StageInstanceDelete(
+      guild: Guild,
+      stageInstance: StageInstance,
       cache: CacheState,
       gatewayInfo: GatewayInfo
   ) extends GuildMessage

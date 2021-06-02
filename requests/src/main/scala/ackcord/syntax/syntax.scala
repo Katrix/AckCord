@@ -79,10 +79,26 @@ package object syntax {
     }
 
     /**
-      * If this is a text voice channel, convert it to one.
+      * If this is a voice channel, convert it to one.
       */
-    def asVGuildChannel: Option[VoiceGuildChannel] = channel match {
+    def asVoiceGuildChannel: Option[VoiceGuildChannel] = channel match {
       case gChannel: VoiceGuildChannel => Some(gChannel)
+      case _                                 => None
+    }
+
+    /**
+      * If this is a normal voice channel, convert it to one.
+      */
+    def asNormalVoiceGuildChannel: Option[NormalVoiceGuildChannel] = channel match {
+      case gChannel: NormalVoiceGuildChannel => Some(gChannel)
+      case _                                 => None
+    }
+
+    /**
+      * If this is a stage channel, convert it to one.
+      */
+    def asStageGuildChannel: Option[StageGuildChannel] = channel match {
+      case gChannel: StageGuildChannel => Some(gChannel)
       case _                           => None
     }
 
@@ -309,7 +325,7 @@ package object syntax {
     def fetchWebhooks = GetChannelWebhooks(channel.id)
   }
 
-  implicit class VGuildChannelSyntax(private val channel: VoiceGuildChannel) extends AnyVal {
+  implicit class VGuildChannelSyntax(private val channel: NormalVoiceGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -415,6 +431,30 @@ package object syntax {
       channels(guild).collect { case channel: VoiceGuildChannel => channel }
 
     /**
+      * Get all the normal voice channels in this category.
+      */
+    def normalVoiceChannels(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
+      channels.collect { case channel: NormalVoiceGuildChannel => channel }
+
+    /**
+      * Get all the normal voice channels in this category using an preexisting guild.
+      */
+    def normalVoiceChannels(guild: Guild): Seq[NormalVoiceGuildChannel] =
+      channels(guild).collect { case channel: NormalVoiceGuildChannel => channel }
+
+    /**
+      * Get all the stage channels in this category.
+      */
+    def stageChannels(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
+      channels.collect { case channel: StageGuildChannel => channel }
+
+    /**
+      * Get all the stage channels in this category using an preexisting guild.
+      */
+    def stageChannels(guild: Guild): Seq[StageGuildChannel] =
+      channels(guild).collect { case channel: StageGuildChannel => channel }
+
+    /**
       * Get a channel by id in this category.
       * @param id The id of the channel.
       */
@@ -468,6 +508,46 @@ package object syntax {
       }
 
     /**
+      * Get a normal voice channel by id in this category.
+      * @param id The id of the channel.
+      */
+    def normalVoiceChannelById[F[_]](
+        id: NormalVoiceGuildChannelId
+    )(implicit snapshot: CacheSnapshot): Option[NormalVoiceGuildChannel] =
+      channelById(id).collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }
+
+    /**
+      * Get a normal voice channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
+    def normalVoiceChannelById(id: NormalVoiceGuildChannelId, guild: Guild): Option[NormalVoiceGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }
+
+    /**
+      * Get a voice channel by id in this category.
+      * @param id The id of the channel.
+      */
+    def stageChannelById[F[_]](
+        id: StageGuildChannelId
+    )(implicit snapshot: CacheSnapshot): Option[StageGuildChannel] =
+      channelById(id).collect {
+        case channel: StageGuildChannel => channel
+      }
+
+    /**
+      * Get a voice channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
+    def stageChannelById(id: StageGuildChannelId, guild: Guild): Option[StageGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: StageGuildChannel => channel
+      }
+
+    /**
       * Get all the channels with a name in this category.
       * @param name The name of the guilds.
       */
@@ -508,6 +588,34 @@ package object syntax {
       */
     def voiceChannelsByName(name: String, guild: Guild): Seq[VoiceGuildChannel] =
       voiceChannels(guild).filter(_.name == name)
+
+    /**
+      * Get all the normal voice channels with a name in this category.
+      * @param name The name of the guilds.
+      */
+    def normalVoiceChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
+      normalVoiceChannels.filter(_.name == name)
+
+    /**
+      * Get all the normal voice channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
+    def normalVoiceChannelsByName(name: String, guild: Guild): Seq[NormalVoiceGuildChannel] =
+      normalVoiceChannels(guild).filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category.
+      * @param name The name of the guilds.
+      */
+    def stageChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
+      stageChannels.filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
+    def stageChannelsByName(name: String, guild: Guild): Seq[StageGuildChannel] =
+      stageChannels(guild).filter(_.name == name)
 
     /**
       * Update the settings of this category.
@@ -563,7 +671,7 @@ package object syntax {
         verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
         defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
         explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
-        afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+        afkChannelId: JsonOption[NormalVoiceGuildChannelId] = JsonUndefined,
         afkTimeout: JsonOption[Int] = JsonUndefined,
         icon: JsonOption[ImageData] = JsonUndefined,
         ownerId: JsonOption[UserId] = JsonUndefined,
@@ -854,6 +962,22 @@ package object syntax {
       }.toSeq
 
     /**
+      * Get all the normal voice channels in the guild.
+      */
+    def normalVoiceChannels: Seq[NormalVoiceGuildChannel] =
+      guild.channels.values.collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }.toSeq
+
+    /**
+      * Get all the stage channels in the guild.
+      */
+    def stageChannels: Seq[StageGuildChannel] =
+      guild.channels.values.collect {
+        case channel: StageGuildChannel => channel
+      }.toSeq
+
+    /**
       * Get all the categories in this guild.
       * @return
       */
@@ -877,7 +1001,19 @@ package object syntax {
       * Get a voice channel by id in this guild.
       */
     def voiceChannelById(id: VoiceGuildChannelId): Option[VoiceGuildChannel] =
-      channelById(id).flatMap(_.asVGuildChannel)
+      channelById(id).flatMap(_.asVoiceGuildChannel)
+
+    /**
+      * Get a voice channel by id in this guild.
+      */
+    def normalVoiceChannelById(id: VoiceGuildChannelId): Option[NormalVoiceGuildChannel] =
+      channelById(id).flatMap(_.asNormalVoiceGuildChannel)
+
+    /**
+      * Get a stage channel by id in this guild.
+      */
+    def stageChannelById(id: StageGuildChannelId): Option[StageGuildChannel] =
+      channelById(id).flatMap(_.asStageGuildChannel)
 
     /**
       * Get a category by id in this guild.
@@ -900,6 +1036,16 @@ package object syntax {
     def voiceChannelsByName(name: String): Seq[VoiceGuildChannel] = voiceChannels.filter(_.name == name)
 
     /**
+      * Get all the voice channels with a name.
+      */
+    def normalVoiceChannelsByName(name: String): Seq[NormalVoiceGuildChannel] = normalVoiceChannels.filter(_.name == name)
+
+    /**
+      * Get all the stage channels with a name.
+      */
+    def stageChannelsByName(name: String): Seq[StageGuildChannel] = stageChannels.filter(_.name == name)
+
+    /**
       * Get all the categories with a name.
       */
     def categoriesByName(name: String): Seq[GuildCategory] = categories.filter(_.name == name)
@@ -907,7 +1053,7 @@ package object syntax {
     /**
       * Get the afk channel in this guild.
       */
-    def afkChannel: Option[VoiceGuildChannel] = guild.afkChannelId.flatMap(voiceChannelById)
+    def afkChannel: Option[NormalVoiceGuildChannel] = guild.afkChannelId.flatMap(normalVoiceChannelById)
 
     /**
       * Get a role by id.
@@ -1349,7 +1495,7 @@ package object syntax {
         explicitContentFilter: Option[FilterLevel] = None,
         roles: Option[Seq[Role]] = None,
         channels: Option[Seq[CreateGuildChannelData]] = None,
-        afkChannelId: Option[VoiceGuildChannelId] = None,
+        afkChannelId: Option[NormalVoiceGuildChannelId] = None,
         afkTimeout: Option[Int] = None,
         systemChannelId: Option[TextGuildChannelId] = None,
         systemChannelFlags: Option[SystemChannelFlags] = None

@@ -38,14 +38,15 @@ sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
 object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[ChannelType] {
   override def values: immutable.IndexedSeq[ChannelType] = findValues
 
-  case object GuildText      extends ChannelType(0)
-  case object DM             extends ChannelType(1)
-  case object GuildVoice     extends ChannelType(2)
-  case object GroupDm        extends ChannelType(3)
-  case object GuildCategory  extends ChannelType(4)
-  case object GuildNews      extends ChannelType(5)
-  case object GuildStore     extends ChannelType(6)
-  case class Unknown(i: Int) extends ChannelType(i)
+  case object GuildText       extends ChannelType(0)
+  case object DM              extends ChannelType(1)
+  case object GuildVoice      extends ChannelType(2)
+  case object GroupDm         extends ChannelType(3)
+  case object GuildCategory   extends ChannelType(4)
+  case object GuildNews       extends ChannelType(5)
+  case object GuildStore      extends ChannelType(6)
+  case object GuildStageVoice extends ChannelType(13)
+  case class Unknown(i: Int)  extends ChannelType(i)
 
   override def createUnknown(value: Int): ChannelType = Unknown(value)
 }
@@ -255,14 +256,24 @@ case class NormalTextGuildChannel(
   override def channelType: ChannelType = ChannelType.GuildText
 }
 
+sealed trait VoiceGuildChannel extends GuildChannel {
+
+  override def id: VoiceGuildChannelId
+
+  /** The bitrate of this channel in bits */
+  def bitrate: Int
+
+  /** Channel region to use. Automatic if none. */
+  def rtcRegion: Option[String]
+}
+
 /**
   * A voice channel in a guild
-  * @param bitrate The bitrate of this channel in bits
-  * @param userLimit The max amount of users that can join this channel
-  * @param rtcRegion Channel region to use. Automatic if none.
+  * @param userLimit The max amount of users that can join this channel.
+  * @param videoQualityMode The quality of video in the channel.
   */
-case class VoiceGuildChannel(
-    id: SnowflakeType[VoiceGuildChannel],
+case class NormalVoiceGuildChannel(
+    id: SnowflakeType[NormalVoiceGuildChannel],
     guildId: GuildId,
     name: String,
     position: Int,
@@ -272,9 +283,26 @@ case class VoiceGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     rtcRegion: Option[String],
-    videoQualityMode: VideoQualityMode,
-) extends GuildChannel {
+    videoQualityMode: VideoQualityMode
+) extends VoiceGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildVoice
+}
+
+/**
+  * A stage voice channel in a guild
+  */
+case class StageGuildChannel(
+    id: SnowflakeType[StageGuildChannel],
+    guildId: GuildId,
+    name: String,
+    position: Int,
+    permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
+    bitrate: Int,
+    nsfw: Boolean,
+    parentId: Option[SnowflakeType[GuildCategory]],
+    rtcRegion: Option[String]
+) extends VoiceGuildChannel {
+  override def channelType: ChannelType = ChannelType.GuildStageVoice
 }
 
 /**
@@ -347,8 +375,8 @@ sealed abstract class VideoQualityMode(val value: Int) extends IntEnumEntry
 object VideoQualityMode extends IntEnum[VideoQualityMode] with IntCirceEnumWithUnknown[VideoQualityMode] {
   override def values: immutable.IndexedSeq[VideoQualityMode] = findValues
 
-  case object Auto extends VideoQualityMode(1)
-  case object Full extends VideoQualityMode(2)
+  case object Auto                            extends VideoQualityMode(1)
+  case object Full                            extends VideoQualityMode(2)
   case class Unknown(override val value: Int) extends VideoQualityMode(value)
 
   override def createUnknown(value: Int): VideoQualityMode = Unknown(value)

@@ -97,6 +97,9 @@ trait DiscordProtocol {
   implicit val welcomeScreenCodec: Codec[WelcomeScreen] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val stageInstanceCodec: Codec[StageInstance] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawGuildCodec: Codec[RawGuild] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 

@@ -161,7 +161,7 @@ object CacheHandlers {
         val rawPresences = obj.presences.filter(_ => registry.hasUpdater[Presence]).getOrElse(Seq.empty)
 
         val presences = rawPresences.map(_.toPresence)
-        val channels = rawChannels.flatMap(_.toGuildChannel(obj.id))
+        val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id))
 
         val oldGuild = builder.getGuild(obj.id)
 
@@ -215,7 +215,11 @@ object CacheHandlers {
           approximateMemberCount = obj.approximateMemberCount,
           approximatePresenceCount = obj.approximatePresenceCount,
           welcomeScreen = obj.welcomeScreen,
-          nsfwLevel = obj.nsfwLevel
+          nsfwLevel = obj.nsfwLevel,
+          stageInstances = obj.stageInstances
+            .map(seq => SnowflakeMap.withKey(seq)(_.id))
+            .orElse(oldGuild.map(_.stageInstances))
+            .getOrElse(SnowflakeMap.empty)
         )
 
         guildUpdater.handle(builder, guild, registry)
@@ -443,10 +447,9 @@ object CacheHandlers {
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
                 referencedMessage = message.referencedMessage, //I'm lazy
-                interaction = obj.interaction.orElseIfUndefined(message.interaction),
+                interaction = obj.interaction.orElseIfUndefined(message.interaction)
               )
             case message: GuildGatewayMessage =>
-
               val member = obj.member.map(_.toGuildMember(UserId(message.authorId), message.guildId))
               memberHandler.zip(member.toOption).foreach(t => t._1.handle(builder, t._2, registry))
 
@@ -479,7 +482,7 @@ object CacheHandlers {
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
                 referencedMessage = message.referencedMessage, //I'm lazy
-                interaction = obj.interaction.orElseIfUndefined(message.interaction),
+                interaction = obj.interaction.orElseIfUndefined(message.interaction)
               )
           }
 
@@ -604,6 +607,15 @@ object CacheHandlers {
       builder.unavailableGuildMap = builder.unavailableGuildMap.updated(obj.id, obj)
   }
 
+  val stageInstanceUpdater: CacheUpdater[StageInstance] = new CacheUpdater[StageInstance] {
+    override def handle(builder: CacheSnapshotBuilder, obj: StageInstance, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit =
+      builder.getGuild(obj.guildId).foreach { guild =>
+        registry.updateData(builder)(guild.copy(stageInstances = guild.stageInstances.updated(obj.id, obj)))
+      }
+  }
+
   //Deletes
 
   val rawChannelDeleter: CacheDeleter[RawChannel] = new CacheDeleter[RawChannel] {
@@ -612,7 +624,7 @@ object CacheHandlers {
     ): Unit = {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
-        case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildCategory | ChannelType.GuildNews |
+        case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory | ChannelType.GuildNews |
             ChannelType.GuildStore =>
           registry.getUpdater[Guild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
@@ -626,12 +638,13 @@ object CacheHandlers {
             }
 
             rawChannel.`type` match {
-              case ChannelType.GuildText     => runDelete[NormalTextGuildChannel]()
-              case ChannelType.GuildVoice    => runDelete[VoiceGuildChannel]()
-              case ChannelType.GuildCategory => runDelete[GuildCategory]()
-              case ChannelType.GuildNews     => runDelete[NewsTextGuildChannel]()
-              case ChannelType.GuildStore    => runDelete[GuildStoreChannel]()
-              case _                         => sys.error("impossible")
+              case ChannelType.GuildText       => runDelete[NormalTextGuildChannel]()
+              case ChannelType.GuildVoice      => runDelete[NormalVoiceGuildChannel]()
+              case ChannelType.GuildStageVoice => runDelete[StageGuildChannel]()
+              case ChannelType.GuildCategory   => runDelete[GuildCategory]()
+              case ChannelType.GuildNews       => runDelete[NewsTextGuildChannel]()
+              case ChannelType.GuildStore      => runDelete[GuildStoreChannel]()
+              case _                           => sys.error("impossible")
             }
           }
         case ChannelType.DM =>
@@ -828,5 +841,14 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, obj: Message, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = builder.messageMap.updated(obj.channelId, builder.getChannelMessages(obj.channelId) - obj.id)
+  }
+
+  implicit val stageInstanceDeleter: CacheDeleter[StageInstance] = new CacheDeleter[StageInstance] {
+    override def handle(builder: CacheSnapshotBuilder, obj: StageInstance, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit =
+      builder.getGuild(obj.guildId).foreach { guild =>
+        registry.updateData(builder)(guild.copy(stageInstances = guild.stageInstances - obj.id))
+      }
   }
 }

@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import java.time.OffsetDateTime
+
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
@@ -58,7 +60,7 @@ case class CreateGuildData(
     channels: Option[
       Seq[CreateGuildChannelData]
     ], //Technically this should be partial channels, but I think this works too
-    afkChannelId: Option[VoiceGuildChannelId],
+    afkChannelId: Option[NormalVoiceGuildChannelId],
     afkTimeout: Option[Int],
     systemChannelId: Option[TextGuildChannelId],
     systemChannelFlags: Option[SystemChannelFlags]
@@ -126,7 +128,7 @@ case class ModifyGuildData(
     verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
     defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
     explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
-    afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+    afkChannelId: JsonOption[NormalVoiceGuildChannelId] = JsonUndefined,
     afkTimeout: JsonOption[Int] = JsonUndefined,
     icon: JsonOption[ImageData] = JsonUndefined,
     ownerId: JsonOption[UserId] = JsonUndefined,
@@ -350,10 +352,11 @@ object ListGuildMembers {
 
 case class SearchGuildMembersData(query: String, limit: JsonOption[Int] = JsonUndefined)
 object SearchGuildMembersData {
-  implicit val encoder: Encoder[SearchGuildMembersData] = (a: SearchGuildMembersData) => JsonOption.removeUndefinedToObj(
-    "query" -> JsonSome(a.query.asJson),
-    "limit" -> a.limit.toJson
-  )
+  implicit val encoder: Encoder[SearchGuildMembersData] = (a: SearchGuildMembersData) =>
+    JsonOption.removeUndefinedToObj(
+      "query" -> JsonSome(a.query.asJson),
+      "limit" -> a.limit.toJson
+    )
 }
 
 case class SearchGuildMembers(guildId: GuildId, params: SearchGuildMembersData)
@@ -1156,4 +1159,55 @@ case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcome
 
   override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ???
   override def responseDecoder: Decoder[WelcomeScreen]              = Decoder[WelcomeScreen]
+}
+
+case class UpdateCurrentUserVoiceStateData(
+    channelId: StageGuildChannelId,
+    suppress: JsonOption[Boolean],
+    requestToSpeakTimestamp: JsonOption[OffsetDateTime]
+)
+object UpdateCurrentUserVoiceStateData {
+  implicit val encoder: Encoder[UpdateCurrentUserVoiceStateData] = (a: UpdateCurrentUserVoiceStateData) =>
+    JsonOption.removeUndefinedToObj(
+      "channel_id"                 -> JsonSome(a.channelId.asJson),
+      "suppress"                   -> a.suppress.toJson,
+      "request_to_speak_timestamp" -> a.requestToSpeakTimestamp.toJson
+    )
+}
+case class UpdateCurrentUserVoiceState(guildId: GuildId, params: UpdateCurrentUserVoiceStateData)
+    extends NoResponseRequest[UpdateCurrentUserVoiceStateData] {
+  override def route: RequestRoute = Routes.updateCurrentUserVoiceState(guildId)
+
+  override def paramsEncoder: Encoder[UpdateCurrentUserVoiceStateData] =
+    UpdateCurrentUserVoiceStateData.encoder
+
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean = {
+    val suppressCheck =
+      params.suppress.forall(_ == true) || hasPermissionsChannel(params.channelId, Permission.MuteMembers)
+    val speakCheck =
+      params.requestToSpeakTimestamp.isEmpty || hasPermissionsChannel(params.channelId, Permission.RequestToSpeak)
+
+    suppressCheck && speakCheck
+  }
+}
+
+case class UpdateUserVoiceStateData(
+    channelId: StageGuildChannelId,
+    suppress: JsonOption[Boolean]
+)
+object UpdateUserVoiceStateData {
+  implicit val encoder: Encoder[UpdateUserVoiceStateData] = (a: UpdateUserVoiceStateData) =>
+    JsonOption.removeUndefinedToObj(
+      "channel_id" -> JsonSome(a.channelId.asJson),
+      "suppress"   -> a.suppress.toJson
+    )
+}
+case class UpdateUserVoiceState(guildId: GuildId, userId: UserId, params: UpdateUserVoiceStateData)
+    extends NoResponseRequest[UpdateUserVoiceStateData] {
+  override def route: RequestRoute = Routes.updateUserVoiceState(guildId, userId)
+
+  override def paramsEncoder: Encoder[UpdateUserVoiceStateData] =
+    UpdateUserVoiceStateData.encoder
+
+  override def requiredPermissions: Permission = super.requiredPermissions
 }

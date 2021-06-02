@@ -210,17 +210,17 @@ object AuditLogChange {
   /**
     * AFK channelId changed
     */
-  case class AfkChannelId(oldValue: Option[VoiceGuildChannelId], newValue: Option[VoiceGuildChannelId])
-      extends AuditLogChange[VoiceGuildChannelId] {
+  case class AfkChannelId(oldValue: Option[NormalVoiceGuildChannelId], newValue: Option[NormalVoiceGuildChannelId])
+      extends AuditLogChange[NormalVoiceGuildChannelId] {
 
-    def oldChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+    def oldChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {
-        case ch: VoiceGuildChannel => ch
+        case ch: NormalVoiceGuildChannel => ch
       }
 
-    def newChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+    def newChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
       newValue.flatMap(c.getGuildChannel).collect {
-        case ch: VoiceGuildChannel => ch
+        case ch: NormalVoiceGuildChannel => ch
       }
   }
 

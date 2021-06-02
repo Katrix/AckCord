@@ -92,6 +92,7 @@ object CacheTypeRegistry {
     classOf[UnavailableGuild]        -> CacheHandlers.unavailableGuildUpdater,
     classOf[Message]                 -> CacheHandlers.messageUpdater,
     classOf[Role]                    -> CacheHandlers.roleUpdater,
+    classOf[StageInstance]           -> CacheHandlers.stageInstanceUpdater,
     classOf[Ban]                     -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
     classOf[Emoji]                   -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
     classOf[Presence]                -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
@@ -112,6 +113,7 @@ object CacheTypeRegistry {
     classOf[GuildMember]    -> CacheHandlers.guildMemberDeleter,
     classOf[Role]           -> CacheHandlers.roleDeleter,
     classOf[Message]        -> CacheHandlers.messageDeleter,
+    classOf[StageInstance]  -> CacheHandlers.stageInstanceDeleter,
     classOf[Ban]            -> CacheDeleter.dummy[Ban](shouldBeIgnored = true)
   )
 

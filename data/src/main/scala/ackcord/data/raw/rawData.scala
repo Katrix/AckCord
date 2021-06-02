@@ -75,7 +75,7 @@ case class RawChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
     rtcRegion: Option[String],
-    videoQualityMode: Option[VideoQualityMode],
+    videoQualityMode: Option[VideoQualityMode]
 ) {
 
   /**
@@ -135,7 +135,7 @@ case class RawChannel(
           bitrate              <- bitrate
           userLimit            <- userLimit
         } yield {
-          VoiceGuildChannel(
+          NormalVoiceGuildChannel(
             SnowflakeType(id),
             guildId,
             name,
@@ -147,6 +147,27 @@ case class RawChannel(
             parentId,
             rtcRegion,
             videoQualityMode.getOrElse(VideoQualityMode.Auto)
+          )
+        }
+      case ChannelType.GuildStageVoice =>
+        for {
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+          bitrate              <- bitrate
+          userLimit            <- userLimit
+        } yield {
+          StageGuildChannel(
+            SnowflakeType(id),
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            bitrate,
+            nsfw.getOrElse(false),
+            parentId,
+            rtcRegion
           )
         }
       case ChannelType.GroupDm =>
@@ -241,7 +262,7 @@ case class RawChannel(
           bitrate              <- bitrate
           userLimit            <- userLimit
         } yield {
-          VoiceGuildChannel(
+          NormalVoiceGuildChannel(
             SnowflakeType(id),
             guildId,
             name,
@@ -253,6 +274,26 @@ case class RawChannel(
             parentId,
             rtcRegion,
             videoQualityMode.getOrElse(VideoQualityMode.Auto)
+          )
+        }
+      case ChannelType.GuildStageVoice =>
+        for {
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
+          bitrate              <- bitrate
+          userLimit            <- userLimit
+        } yield {
+          StageGuildChannel(
+            SnowflakeType(id),
+            guildId,
+            name,
+            position,
+            SnowflakeMap.withKey(permissionOverwrites)(_.id),
+            bitrate,
+            nsfw.getOrElse(false),
+            parentId,
+            rtcRegion
           )
         }
       case ChannelType.GroupDm => throw new IllegalStateException("Not a guild channel")
@@ -554,7 +595,7 @@ case class RawGuild(
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
-    afkChannelId: Option[VoiceGuildChannelId], //AfkChannelId can be null
+    afkChannelId: Option[NormalVoiceGuildChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
@@ -590,7 +631,8 @@ case class RawGuild(
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
     welcomeScreen: Option[WelcomeScreen],
-    nsfwLevel: NSFWLevel
+    nsfwLevel: NSFWLevel,
+    stageInstances: Option[Seq[StageInstance]]
 ) {
 
   /**
@@ -653,7 +695,8 @@ case class RawGuild(
         approximateMemberCount,
         approximatePresenceCount,
         welcomeScreen,
-        nsfwLevel
+        nsfwLevel,
+        SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id)
       )
     }
   }

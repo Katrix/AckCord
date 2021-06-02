@@ -379,6 +379,9 @@ object GatewayProtocol extends DiscordProtocol {
       "INTEGRATION_CREATE"         -> createDispatch(GatewayEvent.IntegrationCreate),
       "INTEGRATION_UPDATE"         -> createDispatch(GatewayEvent.IntegrationUpdate),
       "INTEGRATION_DELETE"         -> createDispatch(GatewayEvent.IntegrationDelete),
+      "STAGE_INSTANCE_CREATE"      -> createDispatch(GatewayEvent.StageInstanceCreate),
+      "STAGE_INSTANCE_UPDATE"      -> createDispatch(GatewayEvent.StageInstanceUpdate),
+      "STAGE_INSTANCE_DELETE"      -> createDispatch(GatewayEvent.StageInstanceDelete),
       ignored("GUILD_JOIN_REQUEST_DELETE")
     )
     res

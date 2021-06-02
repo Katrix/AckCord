@@ -180,6 +180,50 @@ package object data {
       }
   }
 
+  type NormalVoiceGuildChannelId = SnowflakeType[NormalVoiceGuildChannel]
+  object NormalVoiceGuildChannelId extends SnowflakeCompanion[NormalVoiceGuildChannel]
+
+  implicit class NormalVoiceGuildChannelIdSyntax(private val channelId: NormalVoiceGuildChannelId) extends AnyVal {
+
+    /**
+      * Resolve the channel represented by this id. If a guild id is know,
+      * prefer the method taking a guild id instead.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] = c.getGuildChannel(channelId).collect {
+      case ch: NormalVoiceGuildChannel => ch
+    }
+
+    /**
+      * Resolve the channel represented by this id relative to a guild id.
+      */
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect {
+        case ch: NormalVoiceGuildChannel => ch
+      }
+  }
+
+  type StageGuildChannelId = SnowflakeType[StageGuildChannel]
+  object StageGuildChannelId extends SnowflakeCompanion[StageGuildChannel]
+
+  implicit class StageGuildChannelIdSyntax(private val channelId: StageGuildChannelId) extends AnyVal {
+
+    /**
+      * Resolve the channel represented by this id. If a guild id is know,
+      * prefer the method taking a guild id instead.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[StageGuildChannel] = c.getGuildChannel(channelId).collect {
+      case ch: StageGuildChannel => ch
+    }
+
+    /**
+      * Resolve the channel represented by this id relative to a guild id.
+      */
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[StageGuildChannel] =
+      c.getGuildChannel(guildId, channelId).collect {
+        case ch: StageGuildChannel => ch
+      }
+  }
+
   type MessageId = SnowflakeType[Message]
   object MessageId extends SnowflakeCompanion[Message]
 
@@ -333,6 +377,7 @@ package object data {
     val ManageWebhooks: Permission      = Permission(0x20000000)
     val ManageEmojis: Permission        = Permission(0x40000000)
     val UseSlashCommands: Permission    = Permission(0x80000000)
+    val RequestToSpeak: Permission      = Permission(0x100000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -367,7 +412,8 @@ package object data {
       ManageRoles,
       ManageWebhooks,
       ManageEmojis,
-      UseSlashCommands
+      UseSlashCommands,
+      RequestToSpeak
     )
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {

@@ -1112,6 +1112,24 @@ object GatewayEvent {
     override def name: String = "INTEGRATION_DELETE"
   }
 
+  case class StageInstanceCreate(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "STAGE_INSTANCE_CREATE"
+  }
+
+  case class StageInstanceUpdate(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "STAGE_INSTANCE_CREATE"
+  }
+
+  case class StageInstanceDelete(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+
+    override def name: String = "STAGE_INSTANCE_CREATE"
+  }
+
   /**
     * An unknown event type which AckCord does not know about.
     *

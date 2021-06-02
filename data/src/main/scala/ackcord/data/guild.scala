@@ -227,7 +227,7 @@ case class Guild(
     ownerId: UserId,
     permissions: Option[Permission],
     region: String,
-    afkChannelId: Option[VoiceGuildChannelId],
+    afkChannelId: Option[NormalVoiceGuildChannelId],
     afkTimeout: Int,
     verificationLevel: VerificationLevel,
     defaultMessageNotifications: NotificationLevel,
@@ -262,7 +262,8 @@ case class Guild(
     approximateMemberCount: Option[Int],
     approximatePresenceCount: Option[Int],
     welcomeScreen: Option[WelcomeScreen],
-    nsfwLevel: NSFWLevel
+    nsfwLevel: NSFWLevel,
+    stageInstances: SnowflakeMap[StageInstance, StageInstance]
 ) extends UnknownStatusGuild {
   override def unavailable: Option[Boolean] = Some(false)
 
@@ -284,8 +285,8 @@ case class Guild(
   /**
     * Get the AFK channel of this guild.
     */
-  def afkChannel: Option[VoiceGuildChannel] = afkChannelId.flatMap(channels.get).collect {
-    case ch: VoiceGuildChannel => ch
+  def afkChannel: Option[NormalVoiceGuildChannel] = afkChannelId.flatMap(channels.get).collect {
+    case ch: NormalVoiceGuildChannel => ch
   }
 
   /**
