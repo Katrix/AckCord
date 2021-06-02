@@ -24,13 +24,12 @@
 package ackcord.gateway
 
 import ackcord.data._
-import ackcord.data.raw.RawMessageActivity
+import ackcord.data.raw.{PartialRawGuildMember, RawMessageActivity}
 import ackcord.util.{JsonNull, JsonOption, JsonSome, JsonUndefined}
 import cats.Later
 import cats.syntax.all._
 import io.circe.syntax._
 import io.circe.{derivation, _}
-
 import java.time.OffsetDateTime
 
 //noinspection NameBooleanParameters
@@ -92,7 +91,7 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val identifyObjectCodec: Codec[IdentifyData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val statusDataCodec: Codec[StatusData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val statusDataCodec: Codec[PresenceData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val resumeDataCodec: Codec[ResumeData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -112,7 +111,7 @@ object GatewayProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "guild_id"           -> JsonSome(a.guildId.asJson),
         "channel_id"         -> JsonSome(a.channelId.asJson),
-        "last_pin_timestamp" -> a.lastPinTimestamp.map(_.asJson)
+        "last_pin_timestamp" -> a.lastPinTimestamp.toJson
       )
   implicit val channelPinsUpdateDataDecoder: Decoder[GatewayEvent.ChannelPinsUpdateData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
@@ -145,25 +144,37 @@ object GatewayProtocol extends DiscordProtocol {
       (a: GatewayEvent.ApplicationCommandWithGuildId) => a.command.asJson.deepMerge(Json.obj("guild_id" := a.guildId))
     )
 
+  implicit val integrationWithGuildIdCodec: Codec[GatewayEvent.IntegrationWithGuildId] = Codec.from(
+    (c: HCursor) =>
+      for {
+        guildId     <- c.get[GuildId]("guild_id")
+        integration <- c.as[Integration]
+      } yield GatewayEvent.IntegrationWithGuildId(guildId, integration),
+    (a: GatewayEvent.IntegrationWithGuildId) => a.integration.asJson.deepMerge(Json.obj("guild_id" := a.guildId))
+  )
+
+  implicit val deletedIntegrationCodec: Codec[GatewayEvent.DeletedIntegration] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
         Seq(
           "id"               -> JsonSome(a.id.asJson),
           "channel_id"       -> JsonSome(a.channelId.asJson),
-          "content"          -> a.content.map(_.asJson),
-          "timestamp"        -> a.timestamp.map(_.asJson),
-          "edited_timestamp" -> a.editedTimestamp.map(_.asJson),
-          "tts"              -> a.tts.map(_.asJson),
-          "mention_everyone" -> a.mentionEveryone.map(_.asJson),
-          "mentions"         -> a.mentions.map(_.asJson),
-          "mention_roles"    -> a.mentionRoles.map(_.asJson),
-          "attachments"      -> a.attachment.map(_.asJson),
-          "embeds"           -> a.embeds.map(_.asJson),
-          "reactions"        -> a.reactions.map(_.asJson),
+          "content"          -> a.content.toJson,
+          "timestamp"        -> a.timestamp.toJson,
+          "edited_timestamp" -> a.editedTimestamp.toJson,
+          "tts"              -> a.tts.toJson,
+          "mention_everyone" -> a.mentionEveryone.toJson,
+          "mentions"         -> a.mentions.toJson,
+          "mention_roles"    -> a.mentionRoles.toJson,
+          "attachments"      -> a.attachment.toJson,
+          "embeds"           -> a.embeds.toJson,
+          "reactions"        -> a.reactions.toJson,
           "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)),
-          "pinned"           -> a.pinned.map(_.asJson),
-          "webhook_id"       -> a.webhookId.map(_.asJson)
+          "pinned"           -> a.pinned.toJson,
+          "webhook_id"       -> a.webhookId.toJson
         )
       )
 
@@ -185,6 +196,7 @@ object GatewayProtocol extends DiscordProtocol {
         if (isWebhook) c.get[JsonOption[WebhookAuthor]]("author")
         else c.get[JsonOption[User]]("author")
       }
+      member          <- c.get[JsonOption[PartialRawGuildMember]]("member")
       content         <- c.get[JsonOption[String]]("content")
       timestamp       <- c.get[JsonOption[OffsetDateTime]]("timestamp")
       editedTimestamp <- c.get[JsonOption[OffsetDateTime]]("edited_timestamp")
@@ -192,6 +204,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentionEveryone <- c.get[JsonOption[Boolean]]("mention_everyone")
       mentions        <- c.get[JsonOption[Seq[User]]]("mentions")
       mentionRoles    <- c.get[JsonOption[Seq[RoleId]]]("mention_roles")
+      mentionChannels <- c.get[JsonOption[Seq[ChannelMention]]]("mention_channels")
       attachment      <- c.get[JsonOption[Seq[Attachment]]]("attachments")
       embeds          <- c.get[JsonOption[Seq[ReceivedEmbed]]]("embeds")
       reactions       <- c.get[JsonOption[Seq[Reaction]]]("reactions")
@@ -206,15 +219,18 @@ object GatewayProtocol extends DiscordProtocol {
       webhookId         <- c.get[JsonOption[String]]("webhook_id")
       messageType       <- c.get[JsonOption[MessageType]]("message_type")
       activity          <- c.get[JsonOption[RawMessageActivity]]("activity")
-      application       <- c.get[JsonOption[MessageApplication]]("application")
+      application       <- c.get[JsonOption[PartialApplication]]("application")
+      applicationId     <- c.get[JsonOption[ApplicationId]]("application_id")
       messageReference  <- c.get[JsonOption[MessageReference]]("message_reference")
       flags             <- c.get[JsonOption[MessageFlags]]("flags")
       stickers          <- c.get[JsonOption[Seq[Sticker]]]("stickers")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
+      interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
       author,
+      member,
       content,
       timestamp,
       editedTimestamp,
@@ -222,6 +238,7 @@ object GatewayProtocol extends DiscordProtocol {
       mentionEveryone,
       mentions,
       mentionRoles,
+      mentionChannels,
       attachment,
       embeds,
       reactions,
@@ -231,10 +248,12 @@ object GatewayProtocol extends DiscordProtocol {
       messageType,
       activity,
       application,
+      applicationId,
       messageReference,
       flags,
       stickers,
-      referencedMessage
+      referencedMessage,
+      interaction
     )
   }
 
@@ -244,7 +263,7 @@ object GatewayProtocol extends DiscordProtocol {
       val d = a match {
         case Heartbeat(d, _)              => JsonSome(d.asJson)
         case Identify(d)                  => JsonSome(d.asJson)
-        case StatusUpdate(d, _)           => JsonSome(d.asJson)
+        case PresenceUpdate(d, _)         => JsonSome(d.asJson)
         case VoiceStateUpdate(d)          => JsonSome(d.asJson)
         case VoiceServerUpdate(d, _)      => JsonSome(d.asJson)
         case Resume(d, _)                 => JsonSome(d.asJson)
@@ -260,7 +279,7 @@ object GatewayProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
         "d"  -> d,
-        "s"  -> a.s.map(_.asJson),
+        "s"  -> a.s.toJson,
         "t"  -> a.t.map(_.name.asJson)
       )
   }
@@ -279,7 +298,7 @@ object GatewayProtocol extends DiscordProtocol {
       case GatewayOpCode.Dispatch         => decodeDispatch(c, decoders, gatewayInfo.shardInfo)
       case GatewayOpCode.Heartbeat        => dCursor.as[Option[Int]].map(Heartbeat(_, gatewayInfo))
       case GatewayOpCode.Identify         => dCursor.as[IdentifyData].map(Identify)
-      case GatewayOpCode.StatusUpdate     => dCursor.as[StatusData].map(StatusUpdate(_, gatewayInfo))
+      case GatewayOpCode.StatusUpdate     => dCursor.as[PresenceData].map(PresenceUpdate(_, gatewayInfo))
       case GatewayOpCode.VoiceStateUpdate => dCursor.as[VoiceStateUpdateData].map(VoiceStateUpdate)
       case GatewayOpCode.VoiceServerPing  => dCursor.as[VoiceServerUpdateData].map(VoiceServerUpdate(_, gatewayInfo))
       case GatewayOpCode.Resume           => dCursor.as[ResumeData].map(Resume(_, gatewayInfo))
@@ -297,7 +316,7 @@ object GatewayProtocol extends DiscordProtocol {
     JsonOption.removeUndefinedToObj(
       "op" -> JsonSome(dispatch.op.asJson),
       "d"  -> JsonSome(dispatch.event.rawData),
-      "s"  -> dispatch.s.map(_.asJson),
+      "s"  -> dispatch.s.toJson,
       "t"  -> dispatch.t.map(_.name.asJson)
     )
   }
@@ -361,7 +380,12 @@ object GatewayProtocol extends DiscordProtocol {
       "APPLICATION_COMMAND_CREATE" -> createDispatch(GatewayEvent.ApplicationCommandCreate),
       "APPLICATION_COMMAND_UPDATE" -> createDispatch(GatewayEvent.ApplicationCommandUpdate),
       "APPLICATION_COMMAND_DELETE" -> createDispatch(GatewayEvent.ApplicationCommandDelete),
-      ignored("INTEGRATION_UPDATE"),
+      "INTEGRATION_CREATE"         -> createDispatch(GatewayEvent.IntegrationCreate),
+      "INTEGRATION_UPDATE"         -> createDispatch(GatewayEvent.IntegrationUpdate),
+      "INTEGRATION_DELETE"         -> createDispatch(GatewayEvent.IntegrationDelete),
+      "STAGE_INSTANCE_CREATE"      -> createDispatch(GatewayEvent.StageInstanceCreate),
+      "STAGE_INSTANCE_UPDATE"      -> createDispatch(GatewayEvent.StageInstanceUpdate),
+      "STAGE_INSTANCE_DELETE"      -> createDispatch(GatewayEvent.StageInstanceDelete),
       ignored("GUILD_JOIN_REQUEST_DELETE")
     )
     res

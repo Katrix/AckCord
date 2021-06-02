@@ -79,10 +79,26 @@ package object syntax {
     }
 
     /**
-      * If this is a text voice channel, convert it to one.
+      * If this is a voice channel, convert it to one.
       */
-    def asVGuildChannel: Option[VoiceGuildChannel] = channel match {
+    def asVoiceGuildChannel: Option[VoiceGuildChannel] = channel match {
       case gChannel: VoiceGuildChannel => Some(gChannel)
+      case _                                 => None
+    }
+
+    /**
+      * If this is a normal voice channel, convert it to one.
+      */
+    def asNormalVoiceGuildChannel: Option[NormalVoiceGuildChannel] = channel match {
+      case gChannel: NormalVoiceGuildChannel => Some(gChannel)
+      case _                                 => None
+    }
+
+    /**
+      * If this is a stage channel, convert it to one.
+      */
+    def asStageGuildChannel: Option[StageGuildChannel] = channel match {
+      case gChannel: StageGuildChannel => Some(gChannel)
       case _                           => None
     }
 
@@ -245,6 +261,7 @@ package object syntax {
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
+        tpe: JsonOption[ChannelType] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
@@ -255,6 +272,7 @@ package object syntax {
       channel.id,
       ModifyChannelData(
         name = name,
+        tpe = tpe,
         position = position,
         topic = topic,
         nsfw = nsfw,
@@ -262,7 +280,8 @@ package object syntax {
         bitrate = JsonUndefined,
         userLimit = JsonUndefined,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
-        parentId = category
+        parentId = category,
+        rtcRegion = JsonUndefined
       )
     )
 
@@ -283,13 +302,14 @@ package object syntax {
         maxAge: Int = 86400,
         maxUses: Int = 0,
         temporary: Boolean = false,
-        unique: Boolean = false,
-        targetUser: Option[UserId],
-        targetUserType: Option[Int]
+        unique: Boolean = false
     ) =
-      CreateChannelInvite(
+      CreateChannelInvite.mk(
         channel.id,
-        CreateChannelInviteData(maxAge, maxUses, temporary, unique, targetUser, targetUserType)
+        maxAge,
+        maxUses,
+        temporary,
+        unique
       )
 
     /**
@@ -318,7 +338,7 @@ package object syntax {
     def fetchWebhooks = GetChannelWebhooks(channel.id)
   }
 
-  implicit class VGuildChannelSyntax(private val channel: VoiceGuildChannel) extends AnyVal {
+  implicit class VGuildChannelSyntax(private val channel: NormalVoiceGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -335,17 +355,22 @@ package object syntax {
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
         permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
-        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
+        category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
+        rtcRegion: JsonOption[String] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
       ModifyChannelData(
         name = name,
+        tpe = JsonUndefined,
         position = position,
+        topic = JsonUndefined,
         nsfw = JsonUndefined,
+        rateLimitPerUser = JsonUndefined,
         bitrate = bitrate,
         userLimit = userLimit,
         permissionOverwrites = permissionOverwrites.map(_.values.toSeq),
-        parentId = category
+        parentId = category,
+        rtcRegion = rtcRegion
       )
     )
 
@@ -419,6 +444,30 @@ package object syntax {
       channels(guild).collect { case channel: VoiceGuildChannel => channel }
 
     /**
+      * Get all the normal voice channels in this category.
+      */
+    def normalVoiceChannels(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
+      channels.collect { case channel: NormalVoiceGuildChannel => channel }
+
+    /**
+      * Get all the normal voice channels in this category using an preexisting guild.
+      */
+    def normalVoiceChannels(guild: Guild): Seq[NormalVoiceGuildChannel] =
+      channels(guild).collect { case channel: NormalVoiceGuildChannel => channel }
+
+    /**
+      * Get all the stage channels in this category.
+      */
+    def stageChannels(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
+      channels.collect { case channel: StageGuildChannel => channel }
+
+    /**
+      * Get all the stage channels in this category using an preexisting guild.
+      */
+    def stageChannels(guild: Guild): Seq[StageGuildChannel] =
+      channels(guild).collect { case channel: StageGuildChannel => channel }
+
+    /**
       * Get a channel by id in this category.
       * @param id The id of the channel.
       */
@@ -472,6 +521,46 @@ package object syntax {
       }
 
     /**
+      * Get a normal voice channel by id in this category.
+      * @param id The id of the channel.
+      */
+    def normalVoiceChannelById[F[_]](
+        id: NormalVoiceGuildChannelId
+    )(implicit snapshot: CacheSnapshot): Option[NormalVoiceGuildChannel] =
+      channelById(id).collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }
+
+    /**
+      * Get a normal voice channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
+    def normalVoiceChannelById(id: NormalVoiceGuildChannelId, guild: Guild): Option[NormalVoiceGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }
+
+    /**
+      * Get a voice channel by id in this category.
+      * @param id The id of the channel.
+      */
+    def stageChannelById[F[_]](
+        id: StageGuildChannelId
+    )(implicit snapshot: CacheSnapshot): Option[StageGuildChannel] =
+      channelById(id).collect {
+        case channel: StageGuildChannel => channel
+      }
+
+    /**
+      * Get a voice channel by id in this category using an preexisting guild.
+      * @param id The id of the channel.
+      */
+    def stageChannelById(id: StageGuildChannelId, guild: Guild): Option[StageGuildChannel] =
+      channelById(id, guild).collect {
+        case channel: StageGuildChannel => channel
+      }
+
+    /**
       * Get all the channels with a name in this category.
       * @param name The name of the guilds.
       */
@@ -514,6 +603,34 @@ package object syntax {
       voiceChannels(guild).filter(_.name == name)
 
     /**
+      * Get all the normal voice channels with a name in this category.
+      * @param name The name of the guilds.
+      */
+    def normalVoiceChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
+      normalVoiceChannels.filter(_.name == name)
+
+    /**
+      * Get all the normal voice channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
+    def normalVoiceChannelsByName(name: String, guild: Guild): Seq[NormalVoiceGuildChannel] =
+      normalVoiceChannels(guild).filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category.
+      * @param name The name of the guilds.
+      */
+    def stageChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
+      stageChannels.filter(_.name == name)
+
+    /**
+      * Get all the voice channels with a name in this category using an preexisting guild.
+      * @param name The name of the guilds.
+      */
+    def stageChannelsByName(name: String, guild: Guild): Seq[StageGuildChannel] =
+      stageChannels(guild).filter(_.name == name)
+
+    /**
       * Update the settings of this category.
       * @param name New name of the category.
       * @param position New position of the category.
@@ -546,20 +663,39 @@ package object syntax {
       *                                    for the guild.
       * @param afkChannelId The new afk channel of the guild.
       * @param afkTimeout The new afk timeout in seconds for the guild.
-      * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
+      * @param icon The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
+      *             Can be animated if the guild has the `ANIMATED_ICON` feature.
       * @param ownerId Transfer ownership of this guild. Must be the owner.
-      * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
+      * @param splash The new splash for the guild. Must be 16:9 png/jpeg.
+      *               Only available if the guild has the `INVITE_SPLASH` feature.
+      * @param discoverySplash Thew new discovery slash for the guild's discovery splash.
+      *                        Only available if the guild has the `DISCOVERABLE` feature.
+      * @param banner The new banner for the guild. Must be 16:9 png/jpeg.
+      *               Only available if the guild has the `BANNER` feature.
+      * @param systemChannelId The new channel which system messages will be sent to.
+      * @param systemChannelFlags The new flags for the system channel.
+      * @param preferredLocale The new preferred locale for the guild.
+      * @param features The new enabled features for the guild.
+      * @param description The new description for the guild if it is discoverable.
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
         region: JsonOption[String] = JsonUndefined,
         verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
         defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
-        afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+        explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
+        afkChannelId: JsonOption[NormalVoiceGuildChannelId] = JsonUndefined,
         afkTimeout: JsonOption[Int] = JsonUndefined,
         icon: JsonOption[ImageData] = JsonUndefined,
         ownerId: JsonOption[UserId] = JsonUndefined,
-        splash: JsonOption[ImageData] = JsonUndefined
+        splash: JsonOption[ImageData] = JsonUndefined,
+        discoverySplash: JsonOption[ImageData] = JsonUndefined,
+        banner: JsonOption[ImageData] = JsonUndefined,
+        systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
+        systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
+        preferredLocale: JsonOption[String] = JsonUndefined,
+        features: JsonOption[Seq[String]] = JsonUndefined,
+        description: JsonOption[String] = JsonUndefined
     ) = ModifyGuild(
       guild.id,
       ModifyGuildData(
@@ -567,11 +703,19 @@ package object syntax {
         region = region,
         verificationLevel = verificationLevel,
         defaultMessageNotifications = defaultMessageNotifications,
+        explicitContentFilter = explicitContentFilter,
         afkChannelId = afkChannelId,
         afkTimeout = afkTimeout,
         icon = icon,
         ownerId = ownerId,
-        splash = splash
+        splash = splash,
+        discoverySplash = discoverySplash,
+        banner = banner,
+        systemChannelId = systemChannelId,
+        systemChannelFlags = systemChannelFlags,
+        preferredLocale = preferredLocale,
+        features = features,
+        description = description
       )
     )
 
@@ -669,6 +813,16 @@ package object syntax {
       )
 
     /**
+      * Modify the positions of several channels.
+      * @param newPositions A sequence indicating the channels to move, and where
+      */
+    def modifyChannelPositions(newPositions: Seq[ModifyGuildChannelPositionsData]) =
+      ModifyGuildChannelPositions(
+        guild.id,
+        newPositions
+      )
+
+    /**
       * Fetch a guild member by id.
       */
     def fetchGuildMember(userId: UserId) =
@@ -692,13 +846,21 @@ package object syntax {
 
     /**
       * Get all the guild members in this guild.
-      * @param limit The max amount of members to get
-      * @param after Get userIds after this id
+      * @param limit The max amount of members to get.
+      * @param after Get userIds after this id.
       */
     def fetchAllGuildMember(
         limit: Option[Int] = None,
         after: Option[UserId] = None
     ) = ListGuildMembers(guild.id, ListGuildMembersData(limit, after))
+
+    /**
+      * Search for guild members in the given guild, who's username or nickname starts with the query string.
+      * @param query Query to search for.
+      * @param limit How many members to return at most.
+      */
+    def fetchSearchGuildMembers(query: String, limit: Int = 1) =
+      SearchGuildMembers(guild.id, SearchGuildMembersData(query, JsonSome(limit)))
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
@@ -778,46 +940,11 @@ package object syntax {
     def fetchIntegrations = GetGuildIntegrations(guild.id)
 
     /**
-      * Attach an integration to this guild.
-      * @param tpe The integration type.
-      * @param id The integration id.
-      */
-    def createIntegration(tpe: String, id: IntegrationId) =
-      CreateGuildIntegration(guild.id, CreateGuildIntegrationData(tpe, id))
-
-    /**
-      * Modify an existing integration for this guild.
-      * @param id The id of the integration
-      * @param expireBehavior The behavior of expiring subscribers.
-      * @param expireGracePeriod The grace period before expiring subscribers.
-      * @param enableEmoticons If emojis should be synced for this integration.
-      *                        (Twitch only)
-      */
-    def modifyIntegration(
-        id: IntegrationId,
-        expireBehavior: JsonOption[IntegrationExpireBehavior] = JsonUndefined,
-        expireGracePeriod: JsonOption[Int] = JsonUndefined,
-        enableEmoticons: JsonOption[Boolean] = JsonUndefined
-    ) =
-      ModifyGuildIntegration(
-        guild.id,
-        id,
-        ModifyGuildIntegrationData(expireBehavior, expireGracePeriod, enableEmoticons)
-      )
-
-    /**
       * Delete an integration.
       * @param id The integration id.
       */
     def removeIntegration(id: IntegrationId) =
       DeleteGuildIntegration(guild.id, id)
-
-    /**
-      * Sync an integration
-      * @param id The integration id.
-      */
-    def syncIntegration(id: IntegrationId) =
-      SyncGuildIntegration(guild.id, id)
 
     /**
       * Fetch the guild embed for this guild.
@@ -848,6 +975,22 @@ package object syntax {
       }.toSeq
 
     /**
+      * Get all the normal voice channels in the guild.
+      */
+    def normalVoiceChannels: Seq[NormalVoiceGuildChannel] =
+      guild.channels.values.collect {
+        case channel: NormalVoiceGuildChannel => channel
+      }.toSeq
+
+    /**
+      * Get all the stage channels in the guild.
+      */
+    def stageChannels: Seq[StageGuildChannel] =
+      guild.channels.values.collect {
+        case channel: StageGuildChannel => channel
+      }.toSeq
+
+    /**
       * Get all the categories in this guild.
       * @return
       */
@@ -871,7 +1014,19 @@ package object syntax {
       * Get a voice channel by id in this guild.
       */
     def voiceChannelById(id: VoiceGuildChannelId): Option[VoiceGuildChannel] =
-      channelById(id).flatMap(_.asVGuildChannel)
+      channelById(id).flatMap(_.asVoiceGuildChannel)
+
+    /**
+      * Get a voice channel by id in this guild.
+      */
+    def normalVoiceChannelById(id: VoiceGuildChannelId): Option[NormalVoiceGuildChannel] =
+      channelById(id).flatMap(_.asNormalVoiceGuildChannel)
+
+    /**
+      * Get a stage channel by id in this guild.
+      */
+    def stageChannelById(id: StageGuildChannelId): Option[StageGuildChannel] =
+      channelById(id).flatMap(_.asStageGuildChannel)
 
     /**
       * Get a category by id in this guild.
@@ -894,6 +1049,16 @@ package object syntax {
     def voiceChannelsByName(name: String): Seq[VoiceGuildChannel] = voiceChannels.filter(_.name == name)
 
     /**
+      * Get all the voice channels with a name.
+      */
+    def normalVoiceChannelsByName(name: String): Seq[NormalVoiceGuildChannel] = normalVoiceChannels.filter(_.name == name)
+
+    /**
+      * Get all the stage channels with a name.
+      */
+    def stageChannelsByName(name: String): Seq[StageGuildChannel] = stageChannels.filter(_.name == name)
+
+    /**
       * Get all the categories with a name.
       */
     def categoriesByName(name: String): Seq[GuildCategory] = categories.filter(_.name == name)
@@ -901,7 +1066,7 @@ package object syntax {
     /**
       * Get the afk channel in this guild.
       */
-    def afkChannel: Option[VoiceGuildChannel] = guild.afkChannelId.flatMap(voiceChannelById)
+    def afkChannel: Option[NormalVoiceGuildChannel] = guild.afkChannelId.flatMap(normalVoiceChannelById)
 
     /**
       * Get a role by id.
@@ -1008,6 +1173,14 @@ package object syntax {
       * Delete this guild. Must be the owner.
       */
     def delete = DeleteGuild(guild.id)
+
+    def fetchWelcomeScreen = GetGuildWelcomeScreen(guild.id)
+
+    def modifyWelcomeScreen(
+        enabled: JsonOption[Boolean] = JsonUndefined,
+        welcomeChannels: JsonOption[Seq[WelcomeScreenChannel]] = JsonUndefined,
+        description: JsonOption[String] = JsonUndefined
+    ) = ModifyGuildWelcomeScreen(guild.id, ModifyGuildWelcomeScreenData(enabled, welcomeChannels, description))
   }
 
   implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {
@@ -1173,10 +1346,9 @@ package object syntax {
       */
     def fetchReactions(
         guildEmoji: Emoji,
-        before: Option[UserId] = None,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(before, after, limit))
+    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(after, limit))
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
@@ -1184,10 +1356,9 @@ package object syntax {
       */
     def fetchReactionsStr(
         emoji: String,
-        before: Option[UserId] = None,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(before, after, limit))
+    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(after, limit))
 
     /**
       * Clear all the reactions on this message.
@@ -1214,11 +1385,12 @@ package object syntax {
       */
     def edit(
         content: JsonOption[String] = JsonUndefined,
+        files: Seq[CreateMessageFile] = Seq.empty,
         allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
         embed: JsonOption[OutgoingEmbed] = JsonUndefined,
         flags: JsonOption[MessageFlags] = JsonUndefined,
         components: JsonOption[Seq[ActionRow]] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, allowedMentions, embed, flags, components))
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embed, flags, components))
 
     /**
       * Delete this message.
@@ -1228,13 +1400,13 @@ package object syntax {
     /**
       * Pin this message.
       */
-    def pin = AddPinnedChannelMessages(message.channelId, message.id)
+    def pin = PinMessage(message.channelId, message.id)
 
     /**
       * Unpin this message.
       */
     def unpin =
-      DeletePinnedChannelMessages(message.channelId, message.id)
+      UnpinMessage(message.channelId, message.id)
   }
 
   implicit class UserSyntax(private val user: User) extends AnyVal {
@@ -1326,6 +1498,7 @@ package object syntax {
       * @param roles The roles for the new guild. Note, here the snowflake is
       *              just a placeholder.
       * @param channels The channels for the new guild.
+      * @param systemChannelFlags The flags for the system channel.
       */
     def createGuild(
         name: String,
@@ -1336,9 +1509,10 @@ package object syntax {
         explicitContentFilter: Option[FilterLevel] = None,
         roles: Option[Seq[Role]] = None,
         channels: Option[Seq[CreateGuildChannelData]] = None,
-        afkChannelId: Option[VoiceGuildChannelId] = None,
+        afkChannelId: Option[NormalVoiceGuildChannelId] = None,
         afkTimeout: Option[Int] = None,
-        systemChannelId: Option[TextGuildChannelId] = None
+        systemChannelId: Option[TextGuildChannelId] = None,
+        systemChannelFlags: Option[SystemChannelFlags] = None
     ) =
       CreateGuild(
         CreateGuildData(
@@ -1352,7 +1526,8 @@ package object syntax {
           channels,
           afkChannelId,
           afkTimeout,
-          systemChannelId
+          systemChannelId,
+          systemChannelFlags
         )
       )
 

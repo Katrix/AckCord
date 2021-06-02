@@ -41,6 +41,7 @@ case class Team(
     icon: Option[String],
     id: SnowflakeType[Team],
     members: Seq[TeamMember],
+    name: String,
     ownerUserId: UserId
 )
 

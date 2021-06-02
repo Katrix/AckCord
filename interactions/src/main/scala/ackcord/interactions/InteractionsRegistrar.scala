@@ -215,7 +215,7 @@ object InteractionsRegistrar {
   }
 
   def createGuildCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       guildId: GuildId,
       requests: Requests,
       replaceAll: Boolean,
@@ -238,7 +238,7 @@ object InteractionsRegistrar {
   }
 
   def createGlobalCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       requests: Requests,
       replaceAll: Boolean,
       commands: CommandOrGroup*
@@ -258,7 +258,7 @@ object InteractionsRegistrar {
   }
 
   def removeUnknownGuildCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       guildId: GuildId,
       requests: Requests,
       commands: CommandOrGroup*
@@ -279,7 +279,7 @@ object InteractionsRegistrar {
   }
 
   def removeUnknownGlobalCommands(
-      applicationId: RawSnowflake,
+      applicationId: ApplicationId,
       requests: Requests,
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {

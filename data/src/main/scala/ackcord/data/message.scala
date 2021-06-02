@@ -85,24 +85,27 @@ sealed abstract class MessageType(val value: Int) extends IntEnumEntry
 object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[MessageType] {
   override def values: immutable.IndexedSeq[MessageType] = findValues
 
-  case object Default                      extends MessageType(0)
-  case object RecipientAdd                 extends MessageType(1)
-  case object RecipientRemove              extends MessageType(2)
-  case object Call                         extends MessageType(3)
-  case object ChannelNameChange            extends MessageType(4)
-  case object ChannelIconChange            extends MessageType(5)
-  case object ChannelPinnedMessage         extends MessageType(6)
-  case object GuildMemberJoin              extends MessageType(7)
-  case object UserPremiumGuildSubscription extends MessageType(8)
-  case object UserPremiumGuildTier1        extends MessageType(9)
-  case object UserPremiumGuildTier2        extends MessageType(10)
-  case object UserPremiumGuildTier3        extends MessageType(11)
-  case object ChannelFollowAdd             extends MessageType(12)
-  case object GuildDiscoveryDisqualified   extends MessageType(14)
-  case object GuildDiscoveryRequalified    extends MessageType(15)
-  case object Reply                        extends MessageType(19)
-  case object ApplicationCommand           extends MessageType(20)
-  case class Unknown(i: Int)               extends MessageType(i)
+  case object Default                                 extends MessageType(0)
+  case object RecipientAdd                            extends MessageType(1)
+  case object RecipientRemove                         extends MessageType(2)
+  case object Call                                    extends MessageType(3)
+  case object ChannelNameChange                       extends MessageType(4)
+  case object ChannelIconChange                       extends MessageType(5)
+  case object ChannelPinnedMessage                    extends MessageType(6)
+  case object GuildMemberJoin                         extends MessageType(7)
+  case object UserPremiumGuildSubscription            extends MessageType(8)
+  case object UserPremiumGuildTier1                   extends MessageType(9)
+  case object UserPremiumGuildTier2                   extends MessageType(10)
+  case object UserPremiumGuildTier3                   extends MessageType(11)
+  case object ChannelFollowAdd                        extends MessageType(12)
+  case object GuildDiscoveryDisqualified              extends MessageType(14)
+  case object GuildDiscoveryRequalified               extends MessageType(15)
+  case object GuildDiscoveryGracePeriodInitialWarning extends MessageType(16)
+  case object GuildDiscoveryGracePeriodFinalWarning   extends MessageType(17)
+  case object Reply                                   extends MessageType(19)
+  case object ApplicationCommand                      extends MessageType(20)
+  case object GuildInviteReminder                     extends MessageType(22)
+  case class Unknown(i: Int)                          extends MessageType(i)
 
   override def createUnknown(value: Int): MessageType = Unknown(value)
 }
@@ -261,21 +264,6 @@ object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnu
   */
 case class MessageActivity(activityType: MessageActivityType, partyId: Option[String])
 
-/**
-  * @param id Id of the application
-  * @param coverImage Id of the embeds image asset
-  * @param description Description of the application
-  * @param icon Id of icon of the application
-  * @param name Name of the application
-  */
-case class MessageApplication(
-    id: RawSnowflake,
-    coverImage: Option[String],
-    description: String,
-    icon: String,
-    name: String
-)
-
 sealed trait Message {
 
   /** The id of the message. */
@@ -339,7 +327,13 @@ sealed trait Message {
   def activity: Option[MessageActivity]
 
   /** Sent with rich presence chat embeds. */
-  def application: Option[MessageApplication]
+  def application: Option[PartialApplication]
+
+  /**
+    * If an message is a response to an interaction, then this is the id of the
+    * interaction's application.
+    */
+  def applicationId: Option[ApplicationId]
 
   /** Data sent with a crossposts and replies. */
   def messageReference: Option[MessageReference]
@@ -417,7 +411,8 @@ case class SparseMessage(
     pinned: Boolean,
     messageType: MessageType,
     activity: Option[MessageActivity],
-    application: Option[MessageApplication],
+    application: Option[PartialApplication],
+    applicationId: Option[ApplicationId],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
@@ -480,7 +475,8 @@ case class GuildGatewayMessage(
     pinned: Boolean,
     messageType: MessageType,
     activity: Option[MessageActivity],
-    application: Option[MessageApplication],
+    application: Option[PartialApplication],
+    applicationId: Option[ApplicationId],
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
@@ -721,6 +717,7 @@ case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = N
   * An attachment for a message
   * @param id The id of the attachment
   * @param filename The filename of the attachment
+  * @param contentType The attachment's media type
   * @param size The file size in bytes
   * @param url The url of the attachment
   * @param proxyUrl The proxyUrl of the attachment
@@ -730,6 +727,7 @@ case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = N
 case class Attachment(
     id: SnowflakeType[Attachment],
     filename: String,
+    contentType: Option[String],
     size: Int,
     url: String,
     proxyUrl: String,
@@ -827,7 +825,6 @@ case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   * @param description description of the sticker
   * @param tags a comma-separated list of tags for the sticker
   * @param asset sticker asset hash
-  * @param previewAsset sticker preview asset hash
   * @param formatType	type of sticker format
   */
 case class Sticker(
@@ -837,7 +834,6 @@ case class Sticker(
     description: String,
     tags: Option[String],
     asset: String,
-    previewAsset: Option[String],
     formatType: FormatType
 )
 

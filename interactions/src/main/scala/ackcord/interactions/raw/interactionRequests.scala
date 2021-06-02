@@ -68,67 +68,67 @@ case class PatchCommandData(
 object PatchCommandData {
   implicit val encoder: Encoder[PatchCommandData] = (a: PatchCommandData) =>
     JsonOption.removeUndefinedToObj(
-      "name"        -> a.name.map(_.asJson),
-      "description" -> a.description.map(_.asJson),
-      "options"     -> a.options.map(_.asJson)
+      "name"        -> a.name.toJson,
+      "description" -> a.description.toJson,
+      "options"     -> a.options.toJson
     )
 }
 
-case class GetGlobalCommands(applicationId: RawSnowflake) extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
+case class GetGlobalCommands(applicationId: ApplicationId) extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
   override def route: RequestRoute                               = InteractionRoutes.getCommands(applicationId)
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
-case class GetGlobalCommand(applicationId: RawSnowflake, commandId: CommandId)
+case class GetGlobalCommand(applicationId: ApplicationId, commandId: CommandId)
     extends NoParamsNiceResponseRequest[ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.getCommand(applicationId, commandId)
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class CreateGlobalCommand(applicationId: RawSnowflake, params: CreateCommandData)
+case class CreateGlobalCommand(applicationId: ApplicationId, params: CreateCommandData)
     extends NoNiceResponseRequest[CreateCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.postCommand(applicationId)
   override def paramsEncoder: Encoder[CreateCommandData]    = CreateCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class BulkReplaceGlobalCommands(applicationId: RawSnowflake, params: Seq[CreateCommandData])
+case class BulkReplaceGlobalCommands(applicationId: ApplicationId, params: Seq[CreateCommandData])
     extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
   override def route: RequestRoute                               = InteractionRoutes.putCommands(applicationId)
   override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
-case class PatchGlobalCommand(applicationId: RawSnowflake, commandId: CommandId, params: PatchCommandData)
+case class PatchGlobalCommand(applicationId: ApplicationId, commandId: CommandId, params: PatchCommandData)
     extends NoNiceResponseRequest[PatchCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.patchCommand(applicationId, commandId)
   override def paramsEncoder: Encoder[PatchCommandData]     = PatchCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class DeleteGlobalCommand(applicationId: RawSnowflake, commandId: CommandId) extends NoParamsResponseRequest {
+case class DeleteGlobalCommand(applicationId: ApplicationId, commandId: CommandId) extends NoParamsResponseRequest {
   override def route: RequestRoute = InteractionRoutes.deleteCommand(applicationId, commandId)
 }
 
-case class GetGuildCommands(applicationId: RawSnowflake, guildId: GuildId)
+case class GetGuildCommands(applicationId: ApplicationId, guildId: GuildId)
     extends NoParamsNiceResponseRequest[Seq[ApplicationCommand]] {
   override def route: RequestRoute                               = InteractionRoutes.getGuildCommands(applicationId, guildId)
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
-case class GetGuildCommand(applicationId: RawSnowflake, guildId: GuildId, commandId: CommandId)
+case class GetGuildCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
     extends NoParamsNiceResponseRequest[ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.getGuildCommand(applicationId, guildId, commandId)
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class CreateGuildCommand(applicationId: RawSnowflake, guildId: GuildId, params: CreateCommandData)
+case class CreateGuildCommand(applicationId: ApplicationId, guildId: GuildId, params: CreateCommandData)
     extends NoNiceResponseRequest[CreateCommandData, ApplicationCommand] {
   override def route: RequestRoute                          = InteractionRoutes.postGuildCommand(applicationId, guildId)
   override def paramsEncoder: Encoder[CreateCommandData]    = CreateCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class BulkReplaceGuildCommand(applicationId: RawSnowflake, guildId: GuildId, params: Seq[CreateCommandData])
+case class BulkReplaceGuildCommand(applicationId: ApplicationId, guildId: GuildId, params: Seq[CreateCommandData])
     extends NoNiceResponseRequest[Seq[CreateCommandData], Seq[ApplicationCommand]] {
   override def route: RequestRoute                               = InteractionRoutes.putGuildCommands(applicationId, guildId)
   override def paramsEncoder: Encoder[Seq[CreateCommandData]]    = Encoder[Seq[CreateCommandData]]
   override def responseDecoder: Decoder[Seq[ApplicationCommand]] = Decoder[Seq[ApplicationCommand]]
 }
 case class PatchGuildCommand(
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     guildId: GuildId,
     commandId: CommandId,
     params: PatchCommandData
@@ -137,13 +137,13 @@ case class PatchGuildCommand(
   override def paramsEncoder: Encoder[PatchCommandData]     = PatchCommandData.encoder
   override def responseDecoder: Decoder[ApplicationCommand] = Decoder[ApplicationCommand]
 }
-case class DeleteGuildCommand(applicationId: RawSnowflake, guildId: GuildId, commandId: CommandId)
+case class DeleteGuildCommand(applicationId: ApplicationId, guildId: GuildId, commandId: CommandId)
     extends NoParamsResponseRequest {
   override def route: RequestRoute = InteractionRoutes.deleteGuildCommand(applicationId, guildId, commandId)
 }
 
 case class CreateInteractionResponse(
-    applicationId: RawSnowflake,
+    applicationId: InteractionId,
     token: String,
     params: RawInteractionResponse
 ) extends NoResponseRequest[RawInteractionResponse] {

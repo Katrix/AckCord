@@ -23,7 +23,7 @@
  */
 package ackcord.interactions.raw
 
-import ackcord.data.{CommandId, GuildId, RawSnowflake}
+import ackcord.data.{CommandId, GuildId, ApplicationId, InteractionId}
 import ackcord.requests.RequestRoute
 import ackcord.requests.Routes._
 import akka.http.scaladsl.model.HttpMethods._
@@ -31,30 +31,29 @@ import akka.http.scaladsl.model.HttpMethods._
 object InteractionRoutes {
 
   val commandId = new MinorParameter[CommandId]("commandId", _.asString)
+  val interactionId = new MinorParameter[InteractionId]("interactionId", _.asString)
 
-  val callback: (RawSnowflake, String) => RequestRoute = upcast(
-    base / "interactions" / applicationId / token / "callback" toRequest POST
-  )
+  val callback: (InteractionId, String) => RequestRoute = base / "interactions" / interactionId / token / "callback" toRequest POST
 
   //Commands
-  val application: RouteFunction[RawSnowflake]                = base / "applications" / applicationId
-  val globalCommands: RouteFunction[RawSnowflake]             = application / "commands"
-  val globalCommand: RouteFunction[(RawSnowflake, CommandId)] = globalCommands / commandId
+  val application: RouteFunction[ApplicationId]                = base / "applications" / applicationId
+  val globalCommands: RouteFunction[ApplicationId]             = application / "commands"
+  val globalCommand: RouteFunction[(ApplicationId, CommandId)] = globalCommands / commandId
 
-  val getCommands: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(GET))
-  val postCommand: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(POST))
-  val putCommands: RawSnowflake => RequestRoute                = upcast(globalCommands.toRequest(PUT))
-  val getCommand: (RawSnowflake, CommandId) => RequestRoute    = upcast(globalCommand.toRequest(GET))
-  val patchCommand: (RawSnowflake, CommandId) => RequestRoute  = upcast(globalCommand.toRequest(PATCH))
-  val deleteCommand: (RawSnowflake, CommandId) => RequestRoute = upcast(globalCommand.toRequest(DELETE))
+  val getCommands: ApplicationId => RequestRoute                = globalCommands.toRequest(GET)
+  val postCommand: ApplicationId => RequestRoute                = globalCommands.toRequest(POST)
+  val putCommands: ApplicationId => RequestRoute                = globalCommands.toRequest(PUT)
+  val getCommand: (ApplicationId, CommandId) => RequestRoute    = globalCommand.toRequest(GET)
+  val patchCommand: (ApplicationId, CommandId) => RequestRoute  = globalCommand.toRequest(PATCH)
+  val deleteCommand: (ApplicationId, CommandId) => RequestRoute = globalCommand.toRequest(DELETE)
 
-  val guildCommands: RouteFunction[(RawSnowflake, GuildId)]             = application / "guilds" / guildId / "commands"
-  val guildCommand: RouteFunction[((RawSnowflake, GuildId), CommandId)] = guildCommands / commandId
+  val guildCommands: RouteFunction[(ApplicationId, GuildId)]             = application / "guilds" / guildId / "commands"
+  val guildCommand: RouteFunction[((ApplicationId, GuildId), CommandId)] = guildCommands / commandId
 
-  val getGuildCommands: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(GET))
-  val postGuildCommand: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(POST))
-  val putGuildCommands: (RawSnowflake, GuildId) => RequestRoute              = upcast(guildCommands.toRequest(PUT))
-  val getGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute    = upcast(guildCommand.toRequest(GET))
-  val patchGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute  = upcast(guildCommand.toRequest(PATCH))
-  val deleteGuildCommand: (RawSnowflake, GuildId, CommandId) => RequestRoute = upcast(guildCommand.toRequest(DELETE))
+  val getGuildCommands: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(GET)
+  val postGuildCommand: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(POST)
+  val putGuildCommands: (ApplicationId, GuildId) => RequestRoute              = guildCommands.toRequest(PUT)
+  val getGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute    = guildCommand.toRequest(GET)
+  val patchGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute  = guildCommand.toRequest(PATCH)
+  val deleteGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute = guildCommand.toRequest(DELETE)
 }

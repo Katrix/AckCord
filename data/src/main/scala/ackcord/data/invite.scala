@@ -25,13 +25,19 @@ package ackcord.data
 
 import java.time.OffsetDateTime
 
+import scala.collection.immutable
+
+import ackcord.util.IntCirceEnumWithUnknown
+import enumeratum.values.{IntEnum, IntEnumEntry}
+
 /**
   * A simple invite.
   * @param code An invite code.
   * @param guild The guild the invite is for.
   * @param channel The channel the invite is for.
-  * @param targetUser The target user of this invite.
-  * @param targetUserType The target user type of this invite.
+  * @param targetUser The user who's stream should be displayed for this invite.
+  * @param targetType The type of target for this voice channel invite.
+  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
   * @param approximatePresenceCount Approximate amount of people online.
   * @param approximateMemberCount Approximate amount of total members.
   */
@@ -40,10 +46,12 @@ case class Invite(
     guild: Option[InviteGuild],
     channel: InviteChannel,
     inviter: Option[User],
-    targetUser: Option[InviteTargetUser],
-    targetUserType: Option[Int],
+    targetUser: Option[User],
+    targetType: Option[InviteTargetType],
+    targetApplication: Option[PartialApplication],
     approximatePresenceCount: Option[Int],
-    approximateMemberCount: Option[Int]
+    approximateMemberCount: Option[Int],
+    expiresAt: Option[OffsetDateTime]
 )
 
 /**
@@ -51,8 +59,9 @@ case class Invite(
   * @param code An invite code.
   * @param guild The guild the invite is for.
   * @param channel The channel the invite is for.
-  * @param targetUser The target user of this invite.
-  * @param targetUserType The target user type of this invite.
+  * @param targetUser The user who's stream should be displayed for this invite.
+  * @param targetType The type of target for this voice channel invite.
+  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
   * @param approximatePresenceCount Approximate amount of people online.
   * @param approximateMemberCount Approximate amount of total members.
   * @param uses How many times the invite has been used.
@@ -66,10 +75,12 @@ case class InviteWithMetadata(
     guild: Option[InviteGuild],
     channel: InviteChannel,
     inviter: Option[User],
-    targetUser: Option[InviteTargetUser],
-    targetUserType: Option[Int],
+    targetUser: Option[User],
+    targetType: Option[InviteTargetType],
+    targetApplication: Option[PartialApplication],
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int],
+    expiresAt: Option[OffsetDateTime],
     uses: Int,
     maxUses: Int,
     maxAge: Int,
@@ -79,27 +90,32 @@ case class InviteWithMetadata(
 
 /**
   * A newly created invite.
-  * @param code An invite code.
-  * @param guildId The guild the invite is for.
   * @param channelId The channel the invite is for.
-  * @param uses How many times the invite has been used.
-  * @param maxUses How many times this invite can be used.
-  * @param maxAge The duration in seconds when the invite will expire
-  * @param temporary If this invite is temporary
+  * @param code An invite code.
   * @param createdAt When this invite was created
+  * @param guildId The guild the invite is for.
+  * @param inviter The user that created the invite.
+  * @param maxAge The duration in seconds when the invite will expire
+  * @param maxUses How many times this invite can be used.
+  * @param targetType The type of target for this voice channel invite.
+  * @param targetUser The user who's stream should be displayed for this invite.
+  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
+  * @param temporary If this invite is temporary
+  * @param uses How many times the invite has been used.
   */
 case class CreatedInvite(
-    code: String,
-    guildId: Option[GuildId],
     channelId: GuildChannelId,
-    inviter: Option[User],
-    uses: Int,
-    maxUses: Int,
-    maxAge: Int,
-    temporary: Boolean,
+    code: String,
     createdAt: OffsetDateTime,
-    targetUser: Option[InviteTargetUser],
-    targetUserType: Option[Int]
+    guildId: Option[GuildId],
+    inviter: Option[User],
+    maxAge: Int,
+    maxUses: Int,
+    targetUser: Option[User],
+    targetType: Option[InviteTargetType],
+    targetApplication: Option[PartialApplication],
+    temporary: Boolean,
+    uses: Int
 )
 
 /**
@@ -134,16 +150,13 @@ case class InviteGuild(
   */
 case class InviteChannel(id: GuildChannelId, name: String, `type`: ChannelType)
 
-/**
-  * The target user of an invite.
-  * @param id The user id
-  * @param name The name of the user
-  * @param avatar The avatar hash of the user
-  * @param discriminator The discriminator of the user
-  */
-case class InviteTargetUser(
-    id: UserId,
-    name: String,
-    avatar: Option[String],
-    discriminator: String
-)
+sealed abstract class InviteTargetType(val value: Int) extends IntEnumEntry
+object InviteTargetType extends IntEnum[InviteTargetType] with IntCirceEnumWithUnknown[InviteTargetType] {
+  override def values: immutable.IndexedSeq[InviteTargetType] = findValues
+
+  case object Stream                          extends InviteTargetType(1)
+  case object EmbeddedApplication             extends InviteTargetType(2)
+  case class Unknown(override val value: Int) extends InviteTargetType(value)
+
+  override def createUnknown(value: Int): InviteTargetType = Unknown(value)
+}

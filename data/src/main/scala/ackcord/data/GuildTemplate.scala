@@ -40,7 +40,7 @@ import ackcord.data.raw.RawGuild
   * @param serializedSourceGuild A snapshot of the guild this template was created from
   * @param isDirty If the template has unsaved changes
   */
-case class Template(
+case class GuildTemplate(
     code: String,
     name: String,
     description: Option[String],

@@ -68,6 +68,16 @@ trait DiscordProtocol {
     Encoder[Int].contramap(_.toInt)
   )
 
+  implicit val applicationFlagsCodec: Codec[ApplicationFlags] = Codec.from(
+    Decoder[Int].emap(i => Right(ApplicationFlags.fromInt(i))),
+    Encoder[Int].contramap(_.toInt)
+  )
+
+  implicit val activityFlagsCodec: Codec[ActivityFlags] = Codec.from(
+    Decoder[Int].emap(i => Right(ActivityFlags.fromInt(i))),
+    Encoder[Int].contramap(_.toInt)
+  )
+
   implicit val offsetDateTimeCodec: Codec[OffsetDateTime] = Codec.from(
     Decoder[String].emapTry(s => Try(OffsetDateTime.parse(s))),
     Encoder[String].contramap[OffsetDateTime](_.toString)
@@ -85,6 +95,9 @@ trait DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val welcomeScreenCodec: Codec[WelcomeScreen] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val stageInstanceCodec: Codec[StageInstance] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val rawGuildCodec: Codec[RawGuild] =
@@ -109,6 +122,9 @@ trait DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val activityEmojiCodec: Codec[ActivityEmoji] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val activitySecretsCodec: Codec[ActivitySecrets] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val rawPresenceCodec: Codec[RawPresence] =
@@ -205,9 +221,6 @@ trait DiscordProtocol {
   implicit val rawMessageActivityCodec: Codec[RawMessageActivity] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val messageApplicationCodec: Codec[MessageApplication] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-
   implicit val partialRawGuildMemberCodec: Codec[PartialRawGuildMember] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -252,6 +265,11 @@ trait DiscordProtocol {
 
     Codec.from(base, base.mapJson(json => json.deepMerge(Json.obj("type" := 1))))
   }
+  implicit val applicationCodec: Codec[Application] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val partialApplicationCodec: Codec[PartialApplication] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val rawMessageEncoder: Encoder[RawMessage] = (a: RawMessage) => {
     val base = Seq(
@@ -309,7 +327,8 @@ trait DiscordProtocol {
       pinned             <- c.get[Boolean]("pinned")
       tpe                <- c.get[MessageType]("type")
       activity           <- c.get[Option[RawMessageActivity]]("activity")
-      application        <- c.get[Option[MessageApplication]]("application")
+      application        <- c.get[Option[PartialApplication]]("application")
+      applicationId      <- c.get[Option[ApplicationId]]("application_id")
       messageReference   <- c.get[Option[MessageReference]]("message_reference")
       flags              <- c.get[Option[MessageFlags]]("flags")
       stickers           <- c.get[Option[Seq[Sticker]]]("stickers")
@@ -338,6 +357,7 @@ trait DiscordProtocol {
       tpe,
       activity,
       application,
+      applicationId,
       messageReference,
       flags,
       stickers,
@@ -354,9 +374,6 @@ trait DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val inviteChannelCodec: Codec[InviteChannel] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-
-  implicit val inviteTargetUserCodec: Codec[InviteTargetUser] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val inviteCodec: Codec[Invite] =
@@ -407,8 +424,14 @@ trait DiscordProtocol {
   implicit val connectionCodec: Codec[Connection] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val webhookDecoder: Decoder[Webhook] =
-    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+  implicit val webhookSourceGuildDecoder: Codec[WebhookSourceGuild] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val webhookSourceChannelDecoder: Codec[WebhookSourceChannel] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val webhookCodec: Codec[Webhook] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val auditLogDecoder: Decoder[AuditLog] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
@@ -422,7 +445,7 @@ trait DiscordProtocol {
   implicit val partialRoleCodec: Codec[PartialRole] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val templateCodec: Codec[Template] =
+  implicit val templateCodec: Codec[GuildTemplate] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val guildWidgetCodec: Codec[GuildWidget] =

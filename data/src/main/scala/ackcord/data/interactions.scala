@@ -72,7 +72,7 @@ case class RawInteraction(
 
 case class ApplicationCommand(
     id: CommandId,
-    applicationId: RawSnowflake,
+    applicationId: ApplicationId,
     name: String,
     description: String,
     options: Option[Seq[ApplicationCommandOption]]

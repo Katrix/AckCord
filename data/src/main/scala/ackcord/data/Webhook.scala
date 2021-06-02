@@ -37,9 +37,12 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   * @param user The user that created the webhook. Not present when getting
   *             a webhook with a token.
   * @param name The name of the webhook
-  * @param avatar The avatar of the webhook.
+  * @param avatar The default avatar hash of the webhook.
   * @param token The token of the webhook.
   * @param applicationId The bot or OAuth2 application that created the webhook
+  * @param sourceGuild The guild of the channel this webhook is following (For channel follower webhooks)
+  * @param sourceChannel The channel this webhook is following (For channel follower webhooks)
+  * @param url Url used for executing the webhook (Returned by the webhooks OAuth2 flow)
   */
 case class Webhook(
     id: SnowflakeType[Webhook],
@@ -50,7 +53,10 @@ case class Webhook(
     name: Option[String],
     avatar: Option[String],
     token: Option[String],
-    applicationId: Option[RawSnowflake]
+    applicationId: Option[ApplicationId],
+    sourceGuild: Option[WebhookSourceGuild],
+    sourceChannel: Option[WebhookSourceChannel],
+    url: Option[String]
 ) extends GetGuildOpt {
 
   /**
@@ -65,12 +71,16 @@ case class Webhook(
       }
 }
 
+case class WebhookSourceGuild(id: GuildId, name: String, icon: Option[String])
+case class WebhookSourceChannel(id: GuildId, name: String)
+
 sealed abstract class WebhookType(val value: Int) extends IntEnumEntry
 object WebhookType extends IntEnum[WebhookType] with IntCirceEnumWithUnknown[WebhookType] {
   override def values: immutable.IndexedSeq[WebhookType] = findValues
 
   case object Incomming       extends WebhookType(1)
   case object ChannelFollower extends WebhookType(2)
+  case object Application     extends WebhookType(3)
   case class Unknown(i: Int)  extends WebhookType(i)
 
   override def createUnknown(value: Int): WebhookType = Unknown(value)

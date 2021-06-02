@@ -58,12 +58,12 @@ case class AuditLog(
 case class AuditLogEntry(
     targetId: Option[RawSnowflake],
     changes: Option[Seq[AuditLogChange[_]]],
-    userId: UserId,
+    userId: Option[UserId],
     id: RawSnowflake,
     actionType: AuditLogEvent,
     options: Option[OptionalAuditLogInfo],
     reason: Option[String]
-) extends GetUser
+)
 
 case class PartialIntegration(
     id: IntegrationId,
@@ -210,17 +210,17 @@ object AuditLogChange {
   /**
     * AFK channelId changed
     */
-  case class AfkChannelId(oldValue: Option[VoiceGuildChannelId], newValue: Option[VoiceGuildChannelId])
-      extends AuditLogChange[VoiceGuildChannelId] {
+  case class AfkChannelId(oldValue: Option[NormalVoiceGuildChannelId], newValue: Option[NormalVoiceGuildChannelId])
+      extends AuditLogChange[NormalVoiceGuildChannelId] {
 
-    def oldChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+    def oldChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
       oldValue.flatMap(c.getGuildChannel).collect {
-        case ch: VoiceGuildChannel => ch
+        case ch: NormalVoiceGuildChannel => ch
       }
 
-    def newChannel(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+    def newChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
       newValue.flatMap(c.getGuildChannel).collect {
-        case ch: VoiceGuildChannel => ch
+        case ch: NormalVoiceGuildChannel => ch
       }
   }
 
@@ -356,8 +356,8 @@ object AuditLogChange {
   /**
     * ApplicationId of webhook or bot
     */
-  case class ApplicationId(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake])
-      extends AuditLogChange[RawSnowflake]
+  case class ApplicationId(oldValue: Option[data.ApplicationId], newValue: Option[data.ApplicationId])
+      extends AuditLogChange[data.ApplicationId]
 
   /**
     * Ratelimit changed

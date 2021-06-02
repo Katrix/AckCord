@@ -23,61 +23,52 @@
  */
 package ackcord.requests
 
-import ackcord.data.raw.PartialUser
-import ackcord.data.{GuildId, RawSnowflake, Team, User}
+import java.time.OffsetDateTime
+
+import scala.collection.immutable
+import scala.concurrent.Future
+
+import ackcord.data.{Application, ApplicationId, User}
+import ackcord.data.DiscordProtocol._
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, BasicHttpCredentials}
 import akka.http.scaladsl.model.{FormData, HttpMethods, HttpRequest, Uri}
 import akka.stream.scaladsl.{Sink, Source}
+import enumeratum.values.{StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
 
-import java.time.OffsetDateTime
-import scala.concurrent.Future
-
 object OAuth {
 
-  sealed abstract class Scope(val name: String)
-  object Scope {
-    case object Bot                      extends Scope("bot")
-    case object Commands                 extends Scope("applications.commands")
-    case object CommandsUpdate           extends Scope("applications.commands.update")
-    case object Connections              extends Scope("connections")
-    case object Email                    extends Scope("email")
-    case object Identify                 extends Scope("identify")
-    case object Guilds                   extends Scope("guilds")
-    case object GuildsJoin               extends Scope("guilds.join")
-    case object GroupDMJoin              extends Scope("gdm.join")
-    case object MessagesRead             extends Scope("messages.read")
-    case object Rpc                      extends Scope("rpc")
-    case object RpcApi                   extends Scope("rpc.api")
-    case object RpcNotificationsRead     extends Scope("rpc.notifications.read")
-    case object WebhookIncoming          extends Scope("webhook.incoming")
-    case object ApplicationsBuildsUpload extends Scope("applications.builds.upload")
-    case object ApplicationsBuildsRead   extends Scope("applications.builds.read")
-    case object ApplicationsStoreUpdate  extends Scope("applications.store.update")
-    case object ApplicationsEntitlements extends Scope("applications.entitlements")
-    case object RelationshipsRead        extends Scope("relationships.read")
-    case object ActivitiesRead           extends Scope("activities.read")
-    case object ActivitiesWrite          extends Scope("activities.write")
+  sealed abstract class Scope(val value: String) extends StringEnumEntry
+  object Scope extends StringEnum[Scope] {
+    override def values: immutable.IndexedSeq[Scope] = findValues
 
-    def fromString(string: String): Option[Scope] = string match {
-      case "bot"                    => Some(Bot)
-      case "connections"            => Some(Connections)
-      case "email"                  => Some(Email)
-      case "identify"               => Some(Identify)
-      case "guilds"                 => Some(Guilds)
-      case "guilds.join"            => Some(GuildsJoin)
-      case "gdm.join"               => Some(GroupDMJoin)
-      case "messages.read"          => Some(MessagesRead)
-      case "rpc"                    => Some(Rpc)
-      case "rpc.api"                => Some(RpcApi)
-      case "rpc.notifications.read" => Some(RpcNotificationsRead)
-      case "webhook.incoming"       => Some(WebhookIncoming)
-      case _                        => None
-    }
+    case object ActivitiesRead             extends Scope("activities.read")
+    case object ActivitiesWrite            extends Scope("activities.write")
+    case object ApplicationsBuildsRead     extends Scope("applications.builds.read")
+    case object ApplicationsBuildsUpload   extends Scope("applications.builds.upload")
+    case object ApplicationsCommands       extends Scope("applications.commands")
+    case object ApplicationsCommandsUpdate extends Scope("applications.commands.update")
+    case object ApplicationsEntitlements   extends Scope("applications.entitlements")
+    case object ApplicationsStoreUpdate    extends Scope("applications.store.update")
+    case object Bot                        extends Scope("bot")
+    case object Connections                extends Scope("connections")
+    case object Email                      extends Scope("email")
+    case object GDMJoin                    extends Scope("gdm.join")
+    case object Guilds                     extends Scope("guilds")
+    case object GuildsJoin                 extends Scope("guilds.join")
+    case object Identify                   extends Scope("identify")
+    case object MessagesRead               extends Scope("messages.read")
+    case object RelationshipsRead          extends Scope("relationships.read")
+    case object Rpc                        extends Scope("rpc")
+    case object RpcActivitiesWrite         extends Scope("rpc.activities.write")
+    case object RpcNotificationsRead       extends Scope("rpc.notifications.read")
+    case object RpcVoiceRead               extends Scope("rpc.voice.read")
+    case object RpcWriteRead               extends Scope("rpc.voice.write")
+    case object WebhookIncoming            extends Scope("webhook.incoming")
   }
 
   case class AccessToken(
@@ -94,7 +85,7 @@ object OAuth {
         "token_type"    -> a.tokenType.asJson,
         "expires_in"    -> a.expiresIn.asJson,
         "refresh_token" -> a.refreshToken.asJson,
-        "scope"         -> a.scopes.map(_.name).mkString(" ").asJson
+        "scope"         -> a.scopes.map(_.value).mkString(" ").asJson
       )
 
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
@@ -103,7 +94,7 @@ object OAuth {
         tokenType    <- c.get[String]("token_type")
         expiresIn    <- c.get[Int]("expires_in")
         refreshToken <- c.get[String]("refresh_token")
-        scopes       <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
+        scopes       <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
       } yield AccessToken(accessToken, tokenType, expiresIn, refreshToken, scopes)
   }
 
@@ -114,7 +105,7 @@ object OAuth {
         "access_token" -> a.accessToken.asJson,
         "token_type"   -> a.tokenType.asJson,
         "expires_in"   -> a.expiresIn.asJson,
-        "scope"        -> a.scopes.map(_.name).mkString(" ").asJson
+        "scope"        -> a.scopes.map(_.value).mkString(" ").asJson
       )
 
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
@@ -122,7 +113,7 @@ object OAuth {
         accessToken <- c.get[String]("access_token")
         tokenType   <- c.get[String]("token_type")
         expiresIn   <- c.get[Int]("expires_in")
-        scopes      <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.fromString))
+        scopes      <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
       } yield ClientAccessToken(accessToken, tokenType, expiresIn, scopes)
   }
 
@@ -151,7 +142,7 @@ object OAuth {
       Uri.Query(
         "response_type" -> responseType,
         "client_id"     -> clientId,
-        "scope"         -> scopes.map(_.name).mkString(" "),
+        "scope"         -> scopes.map(_.value).mkString(" "),
         "state"         -> state,
         "redirect_uri"  -> redirectUri,
         "prompt"        -> prompt.name
@@ -179,7 +170,7 @@ object OAuth {
     val baseFormData = Map(
       "grant_type"   -> grantType.name,
       "redirect_uri" -> redirectUri,
-      "scope"        -> scopes.map(_.name).mkString(" ")
+      "scope"        -> scopes.map(_.value).mkString(" ")
     )
 
     val formDataWithCode = code.fold(baseFormData)(code => baseFormData + ("code" -> code))
@@ -227,7 +218,7 @@ object OAuth {
   ): Future[ClientAccessToken] = {
     import system.executionContext
     val formData =
-      FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.name).mkString(" "))
+      FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.value).mkString(" "))
 
     val request = HttpRequest(
       method = HttpMethods.POST,
@@ -242,36 +233,14 @@ object OAuth {
       .map(_.as[ClientAccessToken].fold(throw _, identity))
   }
 
-  case class ApplicationInformation(
-      id: RawSnowflake,
-      name: String,
-      icon: Option[String],
-      description: String,
-      rpcOrigins: Option[Seq[String]],
-      botPublic: Boolean,
-      botRequireCodeGrant: Boolean,
-      owner: PartialUser,
-      summary: String,
-      verifyKey: String,
-      team: Option[Team],
-      guildId: Option[GuildId],
-      primarySkuId: Option[RawSnowflake],
-      slug: Option[String],
-      coverImage: Option[String]
-  )
-
-  case object GetCurrentApplicationInformation extends NoParamsNiceResponseRequest[ApplicationInformation] {
+  case object GetCurrentBotApplicationInformation extends NoParamsNiceResponseRequest[Application] {
     //noinspection NameBooleanParameters
-    override def responseDecoder: Decoder[ApplicationInformation] = {
-      import ackcord.data.DiscordProtocol._
-      derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
-    }
+    override def responseDecoder: Decoder[Application] = Decoder[Application]
     override def route: RequestRoute = Routes.getCurrentApplication
   }
 
   case object GetCurrentAuthorizationInformation extends NoParamsNiceResponseRequest[AuthorizationInformation] {
     override def responseDecoder: Decoder[AuthorizationInformation] = {
-      import ackcord.data.DiscordProtocol._
       implicit val applicationDecoder: Decoder[AuthorizationInformationApplication] =
         derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
@@ -288,7 +257,7 @@ object OAuth {
   )
 
   case class AuthorizationInformationApplication(
-      id: RawSnowflake,
+      id: ApplicationId,
       name: String,
       icon: String,
       description: String,

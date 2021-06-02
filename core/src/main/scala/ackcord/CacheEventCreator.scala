@@ -303,6 +303,9 @@ object CacheEventCreator {
                   data.nick,
                   data.joinedAt,
                   data.premiumSince,
+                  data.deaf.getOrElse(false),
+                  data.mute.getOrElse(false),
+                  data.pending.getOrElse(false),
                   state,
                   dispatch.gatewayInfo
                 )
@@ -396,17 +399,18 @@ object CacheEventCreator {
               guild,
               channel,
               CreatedInvite(
-                data.code,
-                data.guildId,
                 data.channelId,
-                data.inviter,
-                data.uses,
-                data.maxUses,
-                data.maxAge,
-                data.temporary,
+                data.code,
                 data.createdAt,
+                data.guildId,
+                data.inviter,
+                data.maxAge,
+                data.maxUses,
                 data.targetUser,
-                data.targetUserType
+                data.targetType,
+                data.targetApplication,
+                data.temporary,
+                data.uses,
               ),
               state,
               dispatch.gatewayInfo
@@ -680,6 +684,75 @@ object CacheEventCreator {
           data,
           state => Some(api.InteractionCreate(data, state, dispatch.gatewayInfo)),
           NOOPHandler,
+          registry,
+          dispatch
+        )
+
+      case gatewayEv.IntegrationCreate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.IntegrationCreate(guild, data.integration, state, dispatch.gatewayInfo)),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
+      case gatewayEv.IntegrationUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.IntegrationUpdate(guild, data.integration, state, dispatch.gatewayInfo)),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
+      case gatewayEv.IntegrationDelete(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild =>
+                api.IntegrationDelete(guild, data.id, data.applicationId, state, dispatch.gatewayInfo)
+              ),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
+      case gatewayEv.StageInstanceCreate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceCreate(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.StageInstanceUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceUpdate(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.StageInstanceDelete(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            state.current
+              .getGuild(data.guildId)
+              .map(guild => api.StageInstanceDelete(guild, data, state, dispatch.gatewayInfo)),
+          CacheHandlers.stageInstanceDeleter,
           registry,
           dispatch
         )

@@ -30,7 +30,7 @@ import scala.util.control.NonFatal
 import ackcord._
 import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.commands._
-import ackcord.data.{GuildId, RawSnowflake}
+import ackcord.data.{ApplicationId, GuildId}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, RequestSettings, Requests}
@@ -144,7 +144,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   val registerCommands = true
   if (registerCommands) {
     requests
-      .singleFuture(GetGuildCommands(RawSnowflake("288367502130413568"), GuildId("269988507378909186")))
+      .singleFuture(GetGuildCommands(ApplicationId("288367502130413568"), GuildId("269988507378909186")))
       .onComplete(println)
 
     /*

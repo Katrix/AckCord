@@ -62,9 +62,9 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val speakingDataEncoder: Encoder[SpeakingData] = (a: SpeakingData) =>
     JsonOption.removeUndefinedToObj(
       "speaking" -> JsonSome(a.speaking.asJson),
-      "delay"    -> a.delay.map(_.asJson),
-      "ssrc"     -> a.ssrc.map(_.asJson),
-      "user_id"  -> a.userId.map(_.asJson)
+      "delay"    -> a.delay.toJson,
+      "ssrc"     -> a.ssrc.toJson,
+      "user_id"  -> a.userId.toJson
     )
   implicit val speakingDataDecoder: Decoder[SpeakingData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
@@ -93,7 +93,7 @@ object VoiceWsProtocol extends DiscordProtocol {
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
         "d"  -> JsonSome(data),
-        "s"  -> a.s.map(_.asJson)
+        "s"  -> a.s.toJson
       )
     }
 

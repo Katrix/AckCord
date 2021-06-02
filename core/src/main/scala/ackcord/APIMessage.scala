@@ -51,7 +51,7 @@ object APIMessage {
     * Sent to the client when Discord is ready to serve requests. No requests
     * should be sent before this has been received.
     */
-  case class Ready(applicationId: RawSnowflake, cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
+  case class Ready(applicationId: ApplicationId, cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
   /**
     * Sent to the client when a previously interrupted connection is resumed.
@@ -213,18 +213,26 @@ object APIMessage {
     * Sent to the client when a guild member is updated. The fields seen here
     * are all the fields that can change. Looking at the users [[ackcord.data.GuildMember]]
     * for changes is pointless.
-    * @param guild The guild of the guild member
-    * @param roles Thew new roles for the guild member
-    * @param user The user of the updated guild member
-    * @param nick Nick of the user if one was set
+    * @param guild The guild of the guild member.
+    * @param roles Thew new roles for the guild member.
+    * @param user The user of the updated guild member.
+    * @param nick Nick of the user if one was set.
+    * @param joinedAt When the user joined the guild.
+    * @param premiumSince When the user started boosting the guild.
+    * @param deaf If the user is deafened in the guild.
+    * @param mute If the user is muted in the guild.
+    * @param pending If the user has not yet passed the guild's membership screening.
     */
   case class GuildMemberUpdate(
       guild: Guild,
       roles: Seq[Role],
       user: User,
       nick: Option[String],
-      joinedAt: OffsetDateTime,
+      joinedAt: Option[OffsetDateTime],
       premiumSince: Option[OffsetDateTime],
+      deaf: Boolean,
+      mute: Boolean,
+      pending: Boolean,
       cache: CacheState,
       gatewayInfo: GatewayInfo
   ) extends GuildMessage
@@ -515,4 +523,58 @@ object APIMessage {
 
   case class InteractionCreate(rawInteraction: RawInteraction, cache: CacheState, gatewayInfo: GatewayInfo)
       extends APIMessage
+
+  /**
+    * Sent when an integration is created.
+    */
+  case class IntegrationCreate(guild: Guild, integration: Integration, cache: CacheState, gatewayInfo: GatewayInfo)
+      extends GuildMessage
+
+  /**
+    * Sent when an integration is updated.
+    */
+  case class IntegrationUpdate(guild: Guild, integration: Integration, cache: CacheState, gatewayInfo: GatewayInfo)
+      extends GuildMessage
+
+  /**
+    * Sent when an integration is deleted.
+    * @param applicationId Id of the bot/OAuth2 application for the integration.
+    */
+  case class IntegrationDelete(
+      guild: Guild,
+      id: IntegrationId,
+      applicationId: Option[ApplicationId],
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is created.
+    */
+  case class StageInstanceCreate(
+      guild: Guild,
+      stageInstance: StageInstance,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is deleted.
+    */
+  case class StageInstanceUpdate(
+      guild: Guild,
+      stageInstance: StageInstance,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
+
+  /**
+    * Sent when an stage instance is created.
+    */
+  case class StageInstanceDelete(
+      guild: Guild,
+      stageInstance: StageInstance,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
 }

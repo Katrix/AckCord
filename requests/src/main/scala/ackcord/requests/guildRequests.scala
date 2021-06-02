@@ -23,20 +23,21 @@
  */
 package ackcord.requests
 
+import java.time.OffsetDateTime
+
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import akka.NotUsed
-import akka.http.scaladsl.model.Uri
 import io.circe._
 import io.circe.syntax._
 
 /**
   * @param name The name of the guild
   * @param region The voice region for the guild
-  * @param icon The icon to use for the guild. Must be 128x128 jpeg.
+  * @param icon The icon to use for the guild. Must be 1024x1024 png/jpeg.
   * @param verificationLevel The verification level to use for the guild.
   * @param defaultMessageNotifications The notification level to use for
   *                                    the guild.
@@ -46,6 +47,7 @@ import io.circe.syntax._
   * @param afkChannelId The id for the AFK channel
   * @param afkTimeout The timeout in seconds until users are moved to the AFK channel.
   * @param systemChannelId The id of the system channel.
+  * @param systemChannelFlags The flags for the system channel.
   */
 case class CreateGuildData(
     name: String,
@@ -58,9 +60,10 @@ case class CreateGuildData(
     channels: Option[
       Seq[CreateGuildChannelData]
     ], //Technically this should be partial channels, but I think this works too
-    afkChannelId: Option[VoiceGuildChannelId],
+    afkChannelId: Option[NormalVoiceGuildChannelId],
     afkTimeout: Option[Int],
-    systemChannelId: Option[TextGuildChannelId]
+    systemChannelId: Option[TextGuildChannelId],
+    systemChannelFlags: Option[SystemChannelFlags]
 ) {
   require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
 }
@@ -104,11 +107,20 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
   *                                    for the guild.
   * @param afkChannelId The new afk channel of the guild.
   * @param afkTimeout The new afk timeout in seconds for the guild.
-  * @param icon The new icon to use for the guild. Must be 128x128 jpeg.
+  * @param icon The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
+  *             Can be animated if the guild has the `ANIMATED_ICON` feature.
   * @param ownerId Transfer ownership of this guild. Must be the owner.
-  * @param splash The new splash for the guild. Must be 128x128 jpeg. VIP only.
-  * @param banner The new banner for the guild. Must be 128x128 jpeg. VIP only.
+  * @param splash The new splash for the guild. Must be 16:9 png/jpeg.
+  *               Only available if the guild has the `INVITE_SPLASH` feature.
+  * @param discoverySplash Thew new discovery slash for the guild's discovery splash.
+  *                        Only available if the guild has the `DISCOVERABLE` feature.
+  * @param banner The new banner for the guild. Must be 16:9 png/jpeg.
+  *               Only available if the guild has the `BANNER` feature.
   * @param systemChannelId The new channel which system messages will be sent to.
+  * @param systemChannelFlags The new flags for the system channel.
+  * @param preferredLocale The new preferred locale for the guild.
+  * @param features The new enabled features for the guild.
+  * @param description The new description for the guild if it is discoverable.
   */
 case class ModifyGuildData(
     name: JsonOption[String] = JsonUndefined,
@@ -116,29 +128,39 @@ case class ModifyGuildData(
     verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
     defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
     explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
-    afkChannelId: JsonOption[VoiceGuildChannelId] = JsonUndefined,
+    afkChannelId: JsonOption[NormalVoiceGuildChannelId] = JsonUndefined,
     afkTimeout: JsonOption[Int] = JsonUndefined,
     icon: JsonOption[ImageData] = JsonUndefined,
     ownerId: JsonOption[UserId] = JsonUndefined,
     splash: JsonOption[ImageData] = JsonUndefined,
+    discoverySplash: JsonOption[ImageData] = JsonUndefined,
     banner: JsonOption[ImageData] = JsonUndefined,
-    systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined
+    systemChannelId: JsonOption[TextGuildChannelId] = JsonUndefined,
+    systemChannelFlags: JsonOption[SystemChannelFlags] = JsonUndefined,
+    preferredLocale: JsonOption[String] = JsonUndefined,
+    features: JsonOption[Seq[String]] = JsonUndefined,
+    description: JsonOption[String] = JsonUndefined
 )
 object ModifyGuildData {
   implicit val encoder: Encoder[ModifyGuildData] = (a: ModifyGuildData) =>
     JsonOption.removeUndefinedToObj(
-      "name"                          -> a.name.map(_.asJson),
-      "region"                        -> a.region.map(_.asJson),
-      "verification_level"            -> a.verificationLevel.map(_.asJson),
-      "default_message_notifications" -> a.defaultMessageNotifications.map(_.asJson),
-      "explicit_content_filter"       -> a.explicitContentFilter.map(_.asJson),
-      "afk_channel_id"                -> a.afkChannelId.map(_.asJson),
-      "afk_timeout"                   -> a.afkTimeout.map(_.asJson),
-      "icon"                          -> a.icon.map(_.asJson),
-      "owner_id"                      -> a.ownerId.map(_.asJson),
-      "splash"                        -> a.splash.map(_.asJson),
-      "banner"                        -> a.banner.map(_.asJson),
-      "system_channel_id"             -> a.systemChannelId.map(_.asJson)
+      "name"                          -> a.name.toJson,
+      "region"                        -> a.region.toJson,
+      "verification_level"            -> a.verificationLevel.toJson,
+      "default_message_notifications" -> a.defaultMessageNotifications.toJson,
+      "explicit_content_filter"       -> a.explicitContentFilter.toJson,
+      "afk_channel_id"                -> a.afkChannelId.toJson,
+      "afk_timeout"                   -> a.afkTimeout.toJson,
+      "icon"                          -> a.icon.toJson,
+      "owner_id"                      -> a.ownerId.toJson,
+      "splash"                        -> a.splash.toJson,
+      "discovery_splash"              -> a.discoverySplash.toJson,
+      "banner"                        -> a.banner.toJson,
+      "system_channel_id"             -> a.systemChannelId.toJson,
+      "system_channel_flags"          -> a.systemChannelFlags.toJson,
+      "preferred_locale"              -> a.preferredLocale.toJson,
+      "features"                      -> a.features.toJson,
+      "description"                   -> a.description.toJson
     )
 }
 
@@ -210,14 +232,14 @@ object CreateGuildChannelData {
   implicit val encoder: Encoder[CreateGuildChannelData] = (a: CreateGuildChannelData) =>
     JsonOption.removeUndefinedToObj(
       "name"                  -> JsonSome(a.name.asJson),
-      "type"                  -> a.`type`.map(_.asJson),
-      "topic"                 -> a.topic.map(_.asJson),
-      "bitrate"               -> a.bitrate.map(_.asJson),
-      "user_limit"            -> a.userLimit.map(_.asJson),
-      "rate_limit_per_user"   -> a.rateLimitPerUser.map(_.asJson),
-      "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
-      "parent_id"             -> a.parentId.map(_.asJson),
-      "nsfw"                  -> a.nsfw.map(_.asJson)
+      "type"                  -> a.`type`.toJson,
+      "topic"                 -> a.topic.toJson,
+      "bitrate"               -> a.bitrate.toJson,
+      "user_limit"            -> a.userLimit.toJson,
+      "rate_limit_per_user"   -> a.rateLimitPerUser.toJson,
+      "permission_overwrites" -> a.permissionOverwrites.toJson,
+      "parent_id"             -> a.parentId.toJson,
+      "nsfw"                  -> a.nsfw.toJson
     )
 }
 
@@ -245,10 +267,18 @@ case class CreateGuildChannel(
 }
 
 /**
-  * @param id The channel id
-  * @param position It's new position
+  * @param id The channel id.
+  * @param position It's new position.
+  * @param lockPermissions If the permissions should be synced with the category
+  *                        if the channel is moved to a new category.
+  * @param parentId Parent category id to move the channel to a new category.
   */
-case class ModifyGuildChannelPositionsData(id: GuildChannelId, position: JsonOption[Int] = JsonUndefined)
+case class ModifyGuildChannelPositionsData(
+    id: GuildChannelId,
+    position: JsonOption[Int] = JsonUndefined,
+    lockPermissions: JsonOption[Boolean] = JsonUndefined,
+    parentId: JsonOption[ChannelId] = JsonUndefined
+)
 object ModifyGuildChannelPositionsData {
   def apply(id: GuildChannelId, position: Int): ModifyGuildChannelPositionsData =
     new ModifyGuildChannelPositionsData(id, JsonSome(position))
@@ -256,7 +286,7 @@ object ModifyGuildChannelPositionsData {
   implicit val encoder: Encoder[ModifyGuildChannelPositionsData] = (a: ModifyGuildChannelPositionsData) =>
     JsonOption.removeUndefinedToObj(
       "id"       -> JsonSome(a.id.asJson),
-      "position" -> a.position.map(_.asJson)
+      "position" -> a.position.toJson
     )
 }
 
@@ -320,6 +350,25 @@ object ListGuildMembers {
   ): ListGuildMembers = new ListGuildMembers(guildId, ListGuildMembersData(limit, after))
 }
 
+case class SearchGuildMembersData(query: String, limit: JsonOption[Int] = JsonUndefined)
+object SearchGuildMembersData {
+  implicit val encoder: Encoder[SearchGuildMembersData] = (a: SearchGuildMembersData) =>
+    JsonOption.removeUndefinedToObj(
+      "query" -> JsonSome(a.query.asJson),
+      "limit" -> a.limit.toJson
+    )
+}
+
+case class SearchGuildMembers(guildId: GuildId, params: SearchGuildMembersData)
+    extends RESTRequest[SearchGuildMembersData, Seq[RawGuildMember], Seq[GuildMember]] {
+  override def route: RequestRoute = Routes.searchGuildMembers(guildId)
+
+  override def paramsEncoder: Encoder[SearchGuildMembersData] = SearchGuildMembersData.encoder
+
+  override def responseDecoder: Decoder[Seq[RawGuildMember]]                   = Decoder[Seq[RawGuildMember]]
+  override def toNiceResponse(response: Seq[RawGuildMember]): Seq[GuildMember] = response.map(_.toGuildMember(guildId))
+}
+
 /**
   * @param accessToken The OAuth2 access token.
   * @param nick The nickname to give to the user.
@@ -381,11 +430,11 @@ case class ModifyGuildMemberData(
 object ModifyGuildMemberData {
   implicit val encoder: Encoder[ModifyGuildMemberData] = (a: ModifyGuildMemberData) =>
     JsonOption.removeUndefinedToObj(
-      "nick"       -> a.nick.map(_.asJson),
-      "roles"      -> a.roles.map(_.asJson),
-      "mute"       -> a.mute.map(_.asJson),
-      "deaf"       -> a.deaf.map(_.asJson),
-      "channel_id" -> a.channelId.map(_.asJson)
+      "nick"       -> a.nick.toJson,
+      "roles"      -> a.roles.toJson,
+      "mute"       -> a.mute.toJson,
+      "deaf"       -> a.deaf.toJson,
+      "channel_id" -> a.channelId.toJson
     )
 }
 
@@ -427,7 +476,7 @@ case class ModifyBotUsersNickData(nick: JsonOption[String] = JsonUndefined)
 object ModifyBotUsersNickData {
   implicit val encoder: Encoder[ModifyBotUsersNickData] = (a: ModifyBotUsersNickData) =>
     JsonOption.removeUndefinedToObj(
-      "nick" -> a.nick.map(_.asJson)
+      "nick" -> a.nick.toJson
     )
 }
 
@@ -675,11 +724,11 @@ case class ModifyGuildRoleData(
 object ModifyGuildRoleData {
   implicit val encoder: Encoder[ModifyGuildRoleData] = (a: ModifyGuildRoleData) =>
     JsonOption.removeUndefinedToObj(
-      "name"        -> a.name.map(_.asJson),
-      "permissions" -> a.permissions.map(_.asJson),
-      "color"       -> a.color.map(_.asJson),
-      "hoist"       -> a.hoist.map(_.asJson),
-      "mentionable" -> a.mentionable.map(_.asJson)
+      "name"        -> a.name.toJson,
+      "permissions" -> a.permissions.toJson,
+      "color"       -> a.color.toJson,
+      "hoist"       -> a.hoist.toJson,
+      "mentionable" -> a.mentionable.toJson
     )
 }
 
@@ -761,7 +810,12 @@ object GetGuildPruneCount {
   * @param computePruneCount If the pruned return field should be present.
   * @param includeRoles Roles that should be ignored when checking for inactive users.
   */
-case class BeginGuildPruneData(days: Int, computePruneCount: Option[Boolean], includeRoles: Seq[RoleId]) {
+case class BeginGuildPruneData(
+    days: Int,
+    computePruneCount: Option[Boolean],
+    includeRoles: Seq[RoleId],
+    reason: Option[String] = None
+) {
   require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
 }
 
@@ -839,80 +893,10 @@ case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRe
 }
 
 /**
-  * @param `type` The integration type
-  * @param id The integration id
-  */
-case class CreateGuildIntegrationData(`type`: String /*TODO: Enum here*/, id: IntegrationId)
-
-/**
-  * Attach an integration to a guild.
-  */
-case class CreateGuildIntegration(
-    guildId: GuildId,
-    params: CreateGuildIntegrationData
-) extends NoResponseRequest[CreateGuildIntegrationData] {
-  override def route: RequestRoute = Routes.createGuildIntegrations(guildId)
-  override def paramsEncoder: Encoder[CreateGuildIntegrationData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
-
-  override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
-    hasPermissionsGuild(guildId, requiredPermissions)
-}
-
-/**
-  * @param expireBehavior The behavior of expiring subscribers.
-  * @param expireGracePeriod The grace period before expiring subscribers.
-  * @param enableEmoticons If emojis should be synced for this integration.
-  *                        (Twitch only)
-  */
-case class ModifyGuildIntegrationData(
-    expireBehavior: JsonOption[IntegrationExpireBehavior] = JsonUndefined,
-    expireGracePeriod: JsonOption[Int] = JsonUndefined,
-    enableEmoticons: JsonOption[Boolean] = JsonUndefined
-)
-object ModifyGuildIntegrationData {
-  implicit val encoder: Encoder[ModifyGuildIntegrationData] = (a: ModifyGuildIntegrationData) =>
-    JsonOption.removeUndefinedToObj(
-      "expire_behavior"     -> a.expireBehavior.map(_.asJson),
-      "expire_grace_period" -> a.expireGracePeriod.map(_.asJson),
-      "enable_emoticons"    -> a.enableEmoticons.map(_.asJson)
-    )
-}
-
-/**
-  * Modify an existing integration for a guild.
-  */
-case class ModifyGuildIntegration(
-    guildId: GuildId,
-    integrationId: IntegrationId,
-    params: ModifyGuildIntegrationData
-) extends NoResponseRequest[ModifyGuildIntegrationData] {
-  override def route: RequestRoute = Routes.modifyGuildIntegration(guildId, integrationId)
-  override def paramsEncoder: Encoder[ModifyGuildIntegrationData] =
-    ModifyGuildIntegrationData.encoder
-
-  override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
-    hasPermissionsGuild(guildId, requiredPermissions)
-}
-
-/**
   * Delete an integration.
   */
 case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteGuildIntegration(guildId, integrationId)
-
-  override def requiredPermissions: Permission = Permission.ManageGuild
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
-    hasPermissionsGuild(guildId, requiredPermissions)
-}
-
-/**
-  * Sync an integration.
-  */
-case class SyncGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
-  override def route: RequestRoute = Routes.syncGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -976,13 +960,11 @@ case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseReque
   * Get an invite for a given invite code.
   * @param withCounts If the returned invite object should return approximate
   *                   counts for members and people online.
+  * @param withExpiration If the invite should contain the expiration date.
   */
-case class GetInvite(inviteCode: String, withCounts: Boolean = false) extends NoParamsNiceResponseRequest[Invite] {
-  override def route: RequestRoute = {
-    val raw = Routes.getInvite(inviteCode)
-    raw.copy(uri = raw.uri.withQuery(Uri.Query("with_counts" -> withCounts.toString)))
-  }
-
+case class GetInvite(inviteCode: String, withCounts: Boolean = false, withExpiration: Boolean = false)
+    extends NoParamsNiceResponseRequest[Invite] {
+  override def route: RequestRoute              = Routes.getInvite(inviteCode, Some(withCounts), Some(withExpiration))
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 }
 
@@ -1020,8 +1002,8 @@ case class ModifyCurrentUserData(
 object ModifyCurrentUserData {
   implicit val encoder: Encoder[ModifyCurrentUserData] = (a: ModifyCurrentUserData) =>
     JsonOption.removeUndefinedToObj(
-      "username" -> a.username.map(_.asJson),
-      "avatar"   -> a.avatar.map(_.asJson)
+      "username" -> a.username.toJson,
+      "avatar"   -> a.avatar.toJson
     )
 }
 
@@ -1149,4 +1131,83 @@ case object GetUserConnections extends NoParamsNiceResponseRequest[Seq[Connectio
   override def route: RequestRoute = Routes.getUserConnections
 
   override def responseDecoder: Decoder[Seq[Connection]] = Decoder[Seq[Connection]]
+}
+
+case class GetGuildWelcomeScreen(guildId: GuildId) extends NoParamsNiceResponseRequest[WelcomeScreen] {
+  override def route: RequestRoute = Routes.getGuildWelcomeScreen(guildId)
+
+  override def responseDecoder: Decoder[WelcomeScreen] = Decoder[WelcomeScreen]
+}
+
+case class ModifyGuildWelcomeScreenData(
+    enabled: JsonOption[Boolean] = JsonUndefined,
+    welcomeChannels: JsonOption[Seq[WelcomeScreenChannel]] = JsonUndefined,
+    description: JsonOption[String] = JsonUndefined
+)
+object ModifyGuildWelcomeScreenData {
+  implicit val encoder: Encoder[ModifyGuildWelcomeScreenData] = (a: ModifyGuildWelcomeScreenData) =>
+    JsonOption.removeUndefinedToObj(
+      "enabled"          -> a.enabled.toJson,
+      "welcome_channels" -> a.welcomeChannels.toJson,
+      "description"      -> a.description.toJson
+    )
+}
+
+case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcomeScreenData)
+    extends NoNiceResponseRequest[ModifyGuildWelcomeScreenData, WelcomeScreen] {
+  override def route: RequestRoute = Routes.modifyGuildWelcomeScreen(guildId)
+
+  override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ???
+  override def responseDecoder: Decoder[WelcomeScreen]              = Decoder[WelcomeScreen]
+}
+
+case class UpdateCurrentUserVoiceStateData(
+    channelId: StageGuildChannelId,
+    suppress: JsonOption[Boolean],
+    requestToSpeakTimestamp: JsonOption[OffsetDateTime]
+)
+object UpdateCurrentUserVoiceStateData {
+  implicit val encoder: Encoder[UpdateCurrentUserVoiceStateData] = (a: UpdateCurrentUserVoiceStateData) =>
+    JsonOption.removeUndefinedToObj(
+      "channel_id"                 -> JsonSome(a.channelId.asJson),
+      "suppress"                   -> a.suppress.toJson,
+      "request_to_speak_timestamp" -> a.requestToSpeakTimestamp.toJson
+    )
+}
+case class UpdateCurrentUserVoiceState(guildId: GuildId, params: UpdateCurrentUserVoiceStateData)
+    extends NoResponseRequest[UpdateCurrentUserVoiceStateData] {
+  override def route: RequestRoute = Routes.updateCurrentUserVoiceState(guildId)
+
+  override def paramsEncoder: Encoder[UpdateCurrentUserVoiceStateData] =
+    UpdateCurrentUserVoiceStateData.encoder
+
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean = {
+    val suppressCheck =
+      params.suppress.forall(_ == true) || hasPermissionsChannel(params.channelId, Permission.MuteMembers)
+    val speakCheck =
+      params.requestToSpeakTimestamp.isEmpty || hasPermissionsChannel(params.channelId, Permission.RequestToSpeak)
+
+    suppressCheck && speakCheck
+  }
+}
+
+case class UpdateUserVoiceStateData(
+    channelId: StageGuildChannelId,
+    suppress: JsonOption[Boolean]
+)
+object UpdateUserVoiceStateData {
+  implicit val encoder: Encoder[UpdateUserVoiceStateData] = (a: UpdateUserVoiceStateData) =>
+    JsonOption.removeUndefinedToObj(
+      "channel_id" -> JsonSome(a.channelId.asJson),
+      "suppress"   -> a.suppress.toJson
+    )
+}
+case class UpdateUserVoiceState(guildId: GuildId, userId: UserId, params: UpdateUserVoiceStateData)
+    extends NoResponseRequest[UpdateUserVoiceStateData] {
+  override def route: RequestRoute = Routes.updateUserVoiceState(guildId, userId)
+
+  override def paramsEncoder: Encoder[UpdateUserVoiceStateData] =
+    UpdateUserVoiceStateData.encoder
+
+  override def requiredPermissions: Permission = super.requiredPermissions
 }

@@ -36,7 +36,6 @@ object FlattenUnflatten extends LowPriorityFlatten {
   implicit def two[A, AO <: HList, B, BO <: HList, ALen <: Nat, Concatted <: HList](
       implicit aFlatten: FlattenUnflatten[A, AO],
       bFlatten: FlattenUnflatten[B, BO],
-      lenA: ops.hlist.Length.Aux[AO, ALen],
       concat: ops.hlist.Prepend.Aux[AO, BO, Concatted],
       split: ops.hlist.Split.Aux[Concatted, ALen, AO, BO]
   ): FlattenUnflatten[(A, B), Concatted] = new FlattenUnflatten[(A, B), Concatted] {

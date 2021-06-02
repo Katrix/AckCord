@@ -52,7 +52,6 @@ import org.slf4j.Logger
   * @param activities Send one or more activities when connecting.
   * @param status The status to use when connecting.
   * @param afk If the bot should be afk when connecting.
-  * @param guildSubscriptions If Discord should sent events about user to your guilds.
   * @param compress What sort of compression the gateway should use.
   * @param intents Fine grained control over which events Discord should sent to your bot.
   * @param system The actor system to use.
@@ -65,10 +64,9 @@ case class ClientSettings(
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,
-    activities: Option[Seq[RawActivity]] = None,
+    activities: Seq[RawActivity] = Nil,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
-    guildSubscriptions: Boolean = true,
     compress: Compress = Compress.ZLibStreamCompress,
     eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
@@ -86,7 +84,6 @@ case class ClientSettings(
     activities,
     status,
     afk,
-    guildSubscriptions,
     intents,
     compress,
     eventDecoders

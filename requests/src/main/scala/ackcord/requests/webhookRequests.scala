@@ -125,9 +125,9 @@ case class ModifyWebhookData(
 object ModifyWebhookData {
   implicit val encoder: Encoder[ModifyWebhookData] = (a: ModifyWebhookData) =>
     JsonOption.removeUndefinedToObj(
-      "name"       -> a.name.map(_.asJson),
-      "avatar"     -> a.avatar.map(_.asJson),
-      "channel_id" -> a.channelId.map(_.asJson)
+      "name"       -> a.name.toJson,
+      "avatar"     -> a.avatar.toJson,
+      "channel_id" -> a.channelId.toJson
     )
 }
 
@@ -296,12 +296,20 @@ case class CreateFollowupMessage(
   override def toNiceResponse(response: Option[RawMessage]): Option[Message] = response.map(_.toMessage)
 }
 
+/**
+  * @param content The new content of the message.
+  * @param embeds The new embeds of the message.
+  * @param files The new files of the message.
+  * @param allowedMentions The new allowed mentions of the message.
+  * @param attachments The attachments to keep in the new message.
+  */
 case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,
     embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
-    components: JsonOption[Seq[ActionRow]] = JsonUndefined
+    components: JsonOption[Seq[ActionRow]] = JsonUndefined,
+    attachments: JsonOption[Seq[Attachment]] = JsonUndefined
 ) {
   files.foreach(_.foreach(file => require(file.isValid)))
   require(
@@ -314,11 +322,19 @@ case class EditWebhookMessageData(
 object EditWebhookMessageData {
   implicit val encoder: Encoder[EditWebhookMessageData] = (a: EditWebhookMessageData) =>
     JsonOption.removeUndefinedToObj(
-      "content"          -> a.content.map(_.asJson),
-      "embeds"           -> a.embeds.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
-      "components"       -> a.components.map(_.asJson)
+      "content"          -> a.content.toJson,
+      "embeds"           -> a.embeds.toJson,
+      "allowed_mentions" -> a.allowedMentions.toJson,
+      "components"       -> a.components.toJson,
+      "attachments"      -> a.attachments.toJson
     )
+}
+
+case class GetOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.getOriginalWebhookMessage(id, token)
+
+  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 
 case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String, params: EditWebhookMessageData)
@@ -344,6 +360,13 @@ case class EditOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String,
 
 case class DeleteOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteOriginalWebhookMessage(id, token)
+}
+
+case class GetWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId) extends NoParamsRequest[RawMessage, Message] {
+  override def route: RequestRoute = Routes.getWebhookMessage(id, token, messageId)
+
+  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 
 case class EditWebhookMessage(

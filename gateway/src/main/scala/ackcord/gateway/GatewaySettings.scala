@@ -39,9 +39,6 @@ import ackcord.data.raw.RawActivity
   * @param activities Send an activity when connecting
   * @param status The status to use when connecting
   * @param afk If the bot should be afk when connecting
-  * @param guildSubscriptions If member presence events and similar should be
-  *                           received. AckCord has not been tested with this
-  *                           flag set to false. Continue with caution.
   * @param intents Sets which events the gateway should send to the bot.
   */
 case class GatewaySettings(
@@ -50,13 +47,12 @@ case class GatewaySettings(
     shardNum: Int = 0,
     shardTotal: Int = 1,
     idleSince: Option[Instant] = None,
-    activities: Option[Seq[RawActivity]] = None,
+    activities: Seq[RawActivity] = Nil,
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
-    guildSubscriptions: Boolean = true,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     compress: Compress = Compress.ZLibStreamCompress,
     eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders
 ) {
-  activities.foreach(_.foreach(_.requireCanSend()))
+  activities.foreach(_.requireCanSend())
 }

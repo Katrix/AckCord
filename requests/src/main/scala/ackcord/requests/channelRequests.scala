@@ -61,6 +61,7 @@ case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, 
   * @param rateLimitPerUser The new user ratelimit for guild text channels.
   * @param permissionOverwrites The new channel permission overwrites.
   * @param parentId The new category id of the channel.
+  * @param rtcRegion The voice region to use. Automatic if None.
   */
 case class ModifyChannelData(
     name: JsonOption[String] = JsonUndefined,
@@ -72,7 +73,8 @@ case class ModifyChannelData(
     bitrate: JsonOption[Int] = JsonUndefined,
     userLimit: JsonOption[Int] = JsonUndefined,
     permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
-    parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
+    parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
+    rtcRegion: JsonOption[String] = JsonUndefined
 ) {
   require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
   require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
@@ -84,16 +86,17 @@ case class ModifyChannelData(
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
     JsonOption.removeUndefinedToObj(
-      "name"                  -> a.name.map(_.asJson),
-      "type"                  -> a.tpe.map(_.asJson),
-      "position"              -> a.position.map(_.asJson),
-      "topic"                 -> a.topic.map(_.asJson),
-      "nsfw"                  -> a.nsfw.map(_.asJson),
-      "rate_limit_per_user"   -> a.rateLimitPerUser.map(_.asJson),
-      "bitrate"               -> a.bitrate.map(_.asJson),
-      "user_limit"            -> a.userLimit.map(_.asJson),
-      "permission_overwrites" -> a.permissionOverwrites.map(_.asJson),
-      "parent_id"             -> a.parentId.map(_.asJson)
+      "name"                  -> a.name.toJson,
+      "type"                  -> a.tpe.toJson,
+      "position"              -> a.position.toJson,
+      "topic"                 -> a.topic.toJson,
+      "nsfw"                  -> a.nsfw.toJson,
+      "rate_limit_per_user"   -> a.rateLimitPerUser.toJson,
+      "bitrate"               -> a.bitrate.toJson,
+      "user_limit"            -> a.userLimit.toJson,
+      "permission_overwrites" -> a.permissionOverwrites.toJson,
+      "parent_id"             -> a.parentId.toJson,
+      "rtc_region"            -> a.rtcRegion.toJson
     )
   }
 }
@@ -263,7 +266,7 @@ object CreateMessageFile {
 
 /**
   * @param content The content of the message.
-  * @param nonce A nonce used for optimistic message sending.
+  * @param nonce A nonce used for optimistic message sending (up to 25 characters).
   * @param tts If this is a text-to-speech message.
   * @param files The files to send with this message. You can reference these
   *              files in the embed using `attachment://filename`.
@@ -273,7 +276,7 @@ object CreateMessageFile {
   */
 case class CreateMessageData(
     content: String = "",
-    nonce: Option[RawSnowflake] = None,
+    nonce: Option[Either[String, RawSnowflake]] = None,
     tts: Boolean = false,
     files: Seq[CreateMessageFile] = Seq.empty,
     embed: Option[OutgoingEmbed] = None,
@@ -289,6 +292,7 @@ case class CreateMessageData(
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
   require(components.length <= 5, "Can't have more than 5 action rows on a message")
+  require(nonce.forall(_.swap.forall(_.length <= 25)), "Nonce too long")
 }
 object CreateMessageData {
 
@@ -296,7 +300,7 @@ object CreateMessageData {
   implicit val encoder: Encoder[CreateMessageData] = (a: CreateMessageData) => {
     val base = Json.obj(
       "content" := a.content,
-      "nonce" := a.nonce,
+      "nonce" := a.nonce.map(_.fold(_.asJson, _.asJson)),
       "tts" := a.tts,
       "embed" := a.embed,
       "allowed_mentions" := a.allowedMentions,
@@ -393,11 +397,10 @@ case class DeleteUserReaction(
 }
 
 /**
-  * @param before Get users before this user.
   * @param after Get users after this user.
   * @param limit The max amount of users to return. Defaults to 25.
   */
-case class GetReactionsData(before: Option[UserId] = None, after: Option[UserId] = None, limit: Option[Int] = None)
+case class GetReactionsData(after: Option[UserId] = None, limit: Option[Int] = None)
 
 /**
   * Get all the users that have reacted with an emoji for a message.
@@ -409,19 +412,11 @@ case class GetReactions(
     queryParams: GetReactionsData
 ) extends NoParamsNiceResponseRequest[Seq[User]] {
   override def route: RequestRoute =
-    Routes.getReactions(channelId, messageId, emoji, queryParams.before, queryParams.after, queryParams.limit)
+    Routes.getReactions(channelId, messageId, emoji, queryParams.after, queryParams.limit)
 
   override def responseDecoder: Decoder[Seq[User]] = Decoder[Seq[User]]
 }
 object GetReactions {
-  def before(
-      channelId: TextChannelId,
-      messageId: MessageId,
-      emoji: String,
-      before: UserId,
-      limit: Option[Int] = None
-  ): GetReactions =
-    new GetReactions(channelId, messageId, emoji, GetReactionsData(before = Some(before), limit = limit))
 
   def after(
       channelId: TextChannelId,
@@ -459,13 +454,16 @@ case class DeleteAllReactionsForEmoji(channelId: TextChannelId, messageId: Messa
 /**
   * @param content The content of the new message
   * @param embed The embed of the new message
+  * @param attachments The attachments to keep in the new message.
   */
 case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
+    files: Seq[CreateMessageFile] = Seq.empty,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
     embed: JsonOption[OutgoingEmbed] = JsonUndefined,
     flags: JsonOption[MessageFlags] = JsonUndefined,
-    components: JsonOption[Seq[ActionRow]] = JsonUndefined
+    components: JsonOption[Seq[ActionRow]] = JsonUndefined,
+    attachments: JsonOption[Seq[Attachment]] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
   require(components.forall(_.length <= 5), "Can't have more than 5 action rows on a message")
@@ -473,11 +471,12 @@ case class EditMessageData(
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
     JsonOption.removeUndefinedToObj(
-      "content" -> a.content.map(_.asJson),
-      "allowed_mentions" -> a.allowedMentions.map(_.asJson),
-      "embed" -> a.embed.map(_.asJson),
-      "flags" -> a.flags.map(_.asJson),
-      "components" -> a.components.map(_.asJson)
+      "content"          -> a.content.toJson,
+      "allowed_mentions" -> a.allowedMentions.toJson,
+      "embed"            -> a.embed.toJson,
+      "flags"            -> a.flags.toJson,
+      "components"       -> a.components.toJson,
+      "attachments"      -> a.attachments.toJson
     )
 }
 
@@ -492,6 +491,18 @@ case class EditMessage(
   override def route: RequestRoute                     = Routes.editMessage(channelId, messageId)
   override def paramsEncoder: Encoder[EditMessageData] = EditMessageData.encoder
   override def jsonPrinter: Printer                    = Printer.noSpaces
+  override def requestBody: RequestEntity = {
+    if (params.files.nonEmpty) {
+      val jsonPart = FormData.BodyPart(
+        "payload_json",
+        HttpEntity(ContentTypes.`application/json`, jsonParams.printWith(jsonPrinter))
+      )
+
+      FormData(params.files.map(_.toBodyPart) :+ jsonPart: _*).toEntity()
+    } else {
+      super.requestBody
+    }
+  }
 
   override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
   override def toNiceResponse(response: RawMessage): Message = response.toMessage
@@ -641,16 +652,30 @@ case class GetChannelInvites(channelId: GuildChannelId) extends NoParamsNiceResp
   *                or 0 for unlimited.
   * @param temporary If this invite only grants temporary membership.
   * @param unique If true, guarantees to create a new invite.
-  * @param targetUser The target user for this invite.
+  * @param targetUserId The target user for this invite, who's stream will be displayed.
+  * @param targetType The type of target for this voice channel invite
   */
 case class CreateChannelInviteData(
-    maxAge: Int = 86400,
-    maxUses: Int = 0,
-    temporary: Boolean = false,
-    unique: Boolean = false,
-    targetUser: Option[UserId],
-    targetUserType: Option[Int] //TODO: What is the type here
+    maxAge: JsonOption[Int] = JsonUndefined,
+    maxUses: JsonOption[Int] = JsonUndefined,
+    temporary: JsonOption[Boolean] = JsonUndefined,
+    unique: JsonOption[Boolean] = JsonUndefined,
+    targetUserId: JsonOption[UserId] = JsonUndefined,
+    targetType: JsonOption[InviteTargetType] = JsonUndefined, //TODO: What is the type here
+    targetApplicationId: JsonOption[ApplicationId] = JsonUndefined
 )
+object CreateChannelInviteData {
+  implicit val encoder: Encoder[CreateChannelInviteData] = (a: CreateChannelInviteData) =>
+    JsonOption.removeUndefinedToObj(
+      "max_age"               -> a.maxAge.toJson,
+      "max_uses"              -> a.maxUses.toJson,
+      "temporary"             -> a.temporary.toJson,
+      "unique"                -> a.unique.toJson,
+      "target_user_id"        -> a.targetUserId.toJson,
+      "target_type"           -> a.targetType.toJson,
+      "target_application_id" -> a.targetApplicationId.toJson
+    )
+}
 
 /**
   * Create a new invite for a channel. Can only be used on guild channels.
@@ -660,9 +685,8 @@ case class CreateChannelInvite(
     params: CreateChannelInviteData,
     reason: Option[String] = None
 ) extends NoNiceResponseReasonRequest[CreateChannelInvite, CreateChannelInviteData, Invite] {
-  override def route: RequestRoute = Routes.getChannelInvites(channelId)
-  override def paramsEncoder: Encoder[CreateChannelInviteData] =
-    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def route: RequestRoute                             = Routes.getChannelInvites(channelId)
+  override def paramsEncoder: Encoder[CreateChannelInviteData] = CreateChannelInviteData.encoder
 
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 
@@ -678,13 +702,11 @@ object CreateChannelInvite {
       maxAge: Int = 86400,
       maxUses: Int = 0,
       temporary: Boolean = false,
-      unique: Boolean = false,
-      targetUser: Option[UserId] = None,
-      targetUserType: Option[Int] = None
+      unique: Boolean = false
   ): CreateChannelInvite =
     new CreateChannelInvite(
       channelId,
-      CreateChannelInviteData(maxAge, maxUses, temporary, unique, targetUser, targetUserType)
+      CreateChannelInviteData(JsonSome(maxAge), JsonSome(maxUses), JsonSome(temporary), JsonSome(unique))
     )
 }
 
@@ -706,9 +728,9 @@ case class GetPinnedMessages(channelId: TextChannelId) extends NoParamsRequest[S
 }
 
 /**
-  * Add a new pinned message to a channel.
+  * Pin a message in a channel.
   */
-case class AddPinnedChannelMessages(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
+case class PinMessage(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.addPinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -717,9 +739,9 @@ case class AddPinnedChannelMessages(channelId: TextChannelId, messageId: Message
 }
 
 /**
-  * Delete a pinned message in a channel.
+  * Unpin a message in a channel..
   */
-case class DeletePinnedChannelMessages(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
+case class UnpinMessage(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
@@ -808,7 +830,7 @@ object ModifyGuildEmojiData {
   implicit val encoder: Encoder[ModifyGuildEmojiData] = (a: ModifyGuildEmojiData) =>
     JsonOption.removeUndefinedToObj(
       "name"  -> JsonSome(a.name.asJson),
-      "roles" -> a.roles.map(_.asJson)
+      "roles" -> a.roles.toJson
     )
 }
 
