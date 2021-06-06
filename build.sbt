@@ -4,7 +4,6 @@ lazy val akkaVersion       = "2.6.6"
 lazy val akkaHttpVersion   = "10.1.11"
 lazy val circeVersion      = "0.14.1"
 lazy val ackCordVersion    = "0.18.0-SNAPSHOT"
-lazy val enumeratumVersion = "1.6.1"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
@@ -60,11 +59,11 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.13.0-M2"
+      "io.circe" %%% "circe-derivation"     % "0.13.0-M5"
     ),
     libraryDependencies ++= Seq(
-      "com.beachape" %%% "enumeratum"       % enumeratumVersion,
-      "com.beachape" %%% "enumeratum-circe" % enumeratumVersion
+      "com.beachape" %%% "enumeratum"       % "1.6.1",
+      "com.beachape" %%% "enumeratum-circe" % "1.6.1"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -163,7 +162,7 @@ lazy val core = project
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.1.1"     % Test
+      "org.scalatest"     %% "scalatest"    % "3.2.9"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
