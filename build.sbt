@@ -1,9 +1,10 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion     = "2.6.6"
-lazy val akkaHttpVersion = "10.1.11"
-lazy val circeVersion    = "0.13.0"
-lazy val ackCordVersion  = "0.18.0-SNAPSHOT"
+lazy val akkaVersion       = "2.6.6"
+lazy val akkaHttpVersion   = "10.1.11"
+lazy val circeVersion      = "0.14.1"
+lazy val ackCordVersion    = "0.18.0-SNAPSHOT"
+lazy val enumeratumVersion = "1.6.1"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
@@ -62,8 +63,8 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
       "io.circe" %%% "circe-derivation"     % "0.13.0-M2"
     ),
     libraryDependencies ++= Seq(
-      "com.beachape" %%% "enumeratum"       % "1.5.15",
-      "com.beachape" %%% "enumeratum-circe" % "1.5.23"
+      "com.beachape" %%% "enumeratum"       % enumeratumVersion,
+      "com.beachape" %%% "enumeratum-circe" % enumeratumVersion
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -139,7 +140,7 @@ lazy val commands = project
     publishSettings,
     name := "commands",
     version := ackCordVersion,
-    libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.1",
+    libraryDependencies += "org.typelevel" %% "cats-mtl" % "1.2.1",
     description := "ackCord-commands provides a Play like commands framework for AckCord"
   )
   .dependsOn(requests)

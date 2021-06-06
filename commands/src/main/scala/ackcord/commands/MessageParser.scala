@@ -36,7 +36,7 @@ import ackcord.data._
 import akka.NotUsed
 import cats.data.StateT
 import cats.mtl.syntax.all._
-import cats.mtl.{ApplicativeHandle, MonadState}
+import cats.mtl.{Handle, Stateful}
 import cats.syntax.all._
 import cats.{Monad, MonadError}
 
@@ -53,8 +53,8 @@ trait MessageParser[A] { self =>
   def parse[F[_]](
       implicit c: CacheSnapshot,
       F: Monad[F],
-      E: ApplicativeHandle[F, String],
-      S: MonadState[F, List[String]]
+      E: Handle[F, String],
+      S: Stateful[F, List[String]]
   ): F[A]
 
   /**
@@ -66,8 +66,8 @@ trait MessageParser[A] { self =>
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[A] = self.parse[F].flatMap(res => if (f(res)) res.pure else error.raise)
   }
 
@@ -82,8 +82,8 @@ trait MessageParser[A] { self =>
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[B] =
       self.parse.flatMap {
         case obj if pf.isDefinedAt(obj) => pf(obj).pure
@@ -115,8 +115,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[A] = F.pure(x)
     }
 
@@ -125,8 +125,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
         override def parse[F[_]](
             implicit c: CacheSnapshot,
             F: Monad[F],
-            E: ApplicativeHandle[F, String],
-            S: MonadState[F, List[String]]
+            E: Handle[F, String],
+            S: Stateful[F, List[String]]
         ): F[B] = fa.parse[F].flatMap(f(_).parse[F])
       }
 
@@ -134,8 +134,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[B] = F.tailRecM(a)(f(_).parse[F])
     }
 
@@ -143,8 +143,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[A] = e.raise
     }
 
@@ -153,8 +153,8 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
         override def parse[F[_]](
             implicit c: CacheSnapshot,
             F: Monad[F],
-            E: ApplicativeHandle[F, String],
-            S: MonadState[F, List[String]]
+            E: Handle[F, String],
+            S: Stateful[F, List[String]]
         ): F[A] = fa.parse[F].handleWith[String](f(_).parse[F])
       }
   }
@@ -175,28 +175,22 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
   def parseEither[A](
       args: List[String],
       parser: MessageParser[A]
-  )(implicit c: CacheSnapshot): Either[String, (List[String], A)] = {
-    import cats.instances.either._
-    import cats.mtl.instances.handle._
-    import cats.mtl.instances.state._
-    import cats.mtl.instances.statet._
-
+  )(implicit c: CacheSnapshot): Either[String, (List[String], A)] =
     parser.parse[StateT[Either[String, *], List[String], *]].run(args)
-  }
 
 }
 
 trait MessageParserInstances {
 
-  private def eitherToF[F[_], A](either: Either[String, A])(implicit E: ApplicativeHandle[F, String]): F[A] =
+  private def eitherToF[F[_], A](either: Either[String, A])(implicit E: Handle[F, String]): F[A] =
     either.fold(_.raise, E.applicative.pure)
 
   def unit: MessageParser[Unit] = new MessageParser[Unit] {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[Unit] = F.unit
   }
 
@@ -210,8 +204,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[String] = {
       def matchesLit(s: String) = if (caseSensitive) s == lit else s.equalsIgnoreCase(lit)
 
@@ -234,8 +228,8 @@ trait MessageParserInstances {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[String] = {
         val usedPrefix = if (caseSensitive) prefix else prefix.toLowerCase(Locale.ROOT)
         def startsWithPrefix(s: String) =
@@ -263,8 +257,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[A] = {
       //A poor mans traverse
       F.tailRecM[Seq[MessageParser[A]], Option[A]](seq) {
@@ -286,8 +280,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[A] = S.get.flatMap {
       case Nil          => E.raise("No more arguments left")
       case head :: tail => S.set(tail).as(f(head))
@@ -321,8 +315,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[A] = S.get.flatMap {
       case Nil => E.raise("No more arguments left")
       case head :: tail =>
@@ -341,8 +335,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[A] = E.raise(e)
   }
 
@@ -360,8 +354,8 @@ trait MessageParserInstances {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[RemainingAsString] = S.get.map(s => RemainingAsString(s.mkString(" "))) <* S.set(Nil)
     }
 
@@ -390,8 +384,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[C] = S.get.flatMap {
       case Nil => "No more arguments left".raise
       case head :: tail =>
@@ -458,8 +452,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[List[String]] = S.get <* S.set(Nil)
   }
 
@@ -470,8 +464,8 @@ trait MessageParserInstances {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[NotUsed] =
       S.inspect(_.isEmpty)
         .ifM(
@@ -485,8 +479,8 @@ trait MessageParserInstances {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[Option[A]] =
         parser.parse.map[Option[A]](Some.apply).handle[String](_ => None)
 
@@ -499,8 +493,8 @@ trait MessageParserInstances {
       override def parse[F[_]](
           implicit c: CacheSnapshot,
           F: Monad[F],
-          E: ApplicativeHandle[F, String],
-          S: MonadState[F, List[String]]
+          E: Handle[F, String],
+          S: Stateful[F, List[String]]
       ): F[C] =
         E.handleWith(parse1.parse[F].map(a => combine(Left(a))))(_ => parse2.parse[F].map(b => combine(Right(b))))
     }
@@ -517,8 +511,8 @@ trait DeriveMessageParser {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[Head :: Tail] =
       for {
         h <- headParser.value.parse
@@ -531,8 +525,8 @@ trait DeriveMessageParser {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[CNil] = throw new IllegalStateException("Tried to parse CNil")
   }
 
@@ -543,8 +537,8 @@ trait DeriveMessageParser {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
-        E: ApplicativeHandle[F, String],
-        S: MonadState[F, List[String]]
+        E: Handle[F, String],
+        S: Stateful[F, List[String]]
     ): F[Head :+: Tail] = {
       val head2 = headParser.value.parse.map[Head :+: Tail](Inl.apply)
       val tail2 = tailParser.value.parse.map[Head :+: Tail](Inr.apply)
