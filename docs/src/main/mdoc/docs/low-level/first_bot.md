@@ -14,10 +14,9 @@ First add AckCord to your project by adding these statements to your `build.sbt`
 libraryDependencies += "net.katsstuff" %% "ackcord-core" % "{{versions.ackcord}}"
 ```
 
-Most of these examples assume these two imports.
+Most of these examples assume this import.
 ```scala mdoc:silent
 import ackcord._
-import ackcord.data._
 ```
 
 Next we need a bot token. You can get one by going to 
@@ -39,6 +38,7 @@ import akka.actor.typed._
 import akka.actor.typed.scaladsl._
 import akka.stream.scaladsl.Sink
 import ackcord.requests.Ratelimiter
+import ackcord.requests.RequestSettings
 
 implicit val system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord")
 import system.executionContext
@@ -52,7 +52,7 @@ if you want to fine tune your bot.
 ```scala mdoc:silent
 val cache = Cache.create()
 val ratelimiter = system.systemActorOf(Ratelimiter(), "Ratelimiter")
-val requests = new Requests(BotAuthentication(token), ratelimiter)
+val requests =  new Requests(RequestSettings(Some(BotAuthentication(token)), ratelimiter))
 ```
 
 Now that we have all the pieces we want, we can create our event listener. 
@@ -60,7 +60,7 @@ In the low level API, events are represented as a `Source` you can materialize
 as many times as you want.
 ```scala mdoc:silent
 cache.subscribeAPI.collect {
-  case APIMessage.Ready(c) => c
+  case APIMessage.Ready(_, c, _) => c
 }.to(Sink.foreach(_ => println("Now ready"))).run()
 ```
 

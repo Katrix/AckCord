@@ -14,7 +14,6 @@ There are two main ways to listen to these events. The first is through
 the next section.
 ```scala mdoc:invisible
 import ackcord._
-import ackcord.data._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
@@ -23,7 +22,7 @@ val client = Await.result(clientSettings.createClient(), Duration.Inf)
 ```
 ```scala mdoc:silent
 client.onEventSideEffectsIgnore {
-  case APIMessage.MessageCreate(_, message, _) => println(message.content)
+  case APIMessage.MessageCreate(_, message, _, _) => println(message.content)
 }
 ```
 

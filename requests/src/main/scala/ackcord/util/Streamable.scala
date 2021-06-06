@@ -67,7 +67,7 @@ object Streamable {
     override def toSource[A](fa: OptFuture[A]): Source[A, NotUsed] = Source.future(fa.value).mapConcat(_.toList)
   }
 
-  implicit val sourceStreamable: Streamable[Source[*, NotUsed]] = new Streamable[Source[?, NotUsed]] {
+  implicit val sourceStreamable: Streamable[Source[*, NotUsed]] = new Streamable[Source[*, NotUsed]] {
     override def toSource[A](fa: Source[A, NotUsed]): Source[A, NotUsed] = fa
   }
 }

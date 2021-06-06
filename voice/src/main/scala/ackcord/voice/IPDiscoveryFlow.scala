@@ -44,7 +44,7 @@ class IPDiscoveryFlow(openValve: () => Unit)
   override def createLogicAndMaterializedValue(
       inheritedAttributes: Attributes
   ): (GraphStageLogic, Future[VoiceUDPFlow.FoundIP]) = {
-    val promise = Promise[VoiceUDPFlow.FoundIP]
+    val promise = Promise[VoiceUDPFlow.FoundIP]()
     val logic = new GraphStageLogicWithLogging(shape) with InHandler with OutHandler {
 
       override def onPush(): Unit = {

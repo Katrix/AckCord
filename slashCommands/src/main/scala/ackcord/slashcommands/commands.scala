@@ -44,7 +44,7 @@ sealed trait CommandOrGroup {
 
   def handleRaw(clientId: String, rawInteraction: Interaction, cacheSnapshot: Option[CacheSnapshot]): CommandResponse
 }
-case class Command[InteractionObj[_], A] private (
+case class Command[InteractionObj[_], A] private[slashcommands] (
     name: String,
     description: String,
     extra: Map[String, String],
@@ -130,7 +130,7 @@ case class Command[InteractionObj[_], A] private (
       .merge
   }
 }
-case class CommandGroup private (
+case class CommandGroup private[slashcommands] (
     name: String,
     description: String,
     extra: Map[String, String],

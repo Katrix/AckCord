@@ -19,7 +19,6 @@ libraryDependencies += "net.katsstuff" %% "ackcord" % "{{versions.ackcord}}"
 Most of these examples assume these imports.
 ```scala mdoc:silent
 import ackcord._
-import ackcord.data._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 ```
@@ -50,7 +49,7 @@ val client = Await.result(clientSettings.createClient(), Duration.Inf)
 //import client.executionContext 
 
 client.onEventSideEffectsIgnore {
-  case APIMessage.Ready(_) => println("Now ready")
+  case APIMessage.Ready(_, _, _) => println("Now ready")
 }
 
 //client.login()

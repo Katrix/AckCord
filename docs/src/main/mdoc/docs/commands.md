@@ -12,7 +12,6 @@ this.
 
 ```scala mdoc:invisible
 import ackcord._
-import ackcord.data._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 

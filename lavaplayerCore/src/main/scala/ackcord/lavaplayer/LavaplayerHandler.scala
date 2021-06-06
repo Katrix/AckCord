@@ -428,7 +428,7 @@ object LavaplayerHandler {
     * Otherwise it fails with [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
     */
   def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
-    val promise = Promise[AudioItem]
+    val promise = Promise[AudioItem]()
 
     playerManager.loadItem(
       identifier,

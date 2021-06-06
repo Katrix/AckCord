@@ -98,7 +98,7 @@ class DiscordClientActor(
   def logout(timeout: FiniteDuration): Future[Boolean] = {
     import akka.actor.typed.scaladsl.adapter._
 
-    val promise = Promise[Boolean]
+    val promise = Promise[Boolean]()
 
     require(shardShutdownManager != null, "Not logged in")
     promise.completeWith(gracefulStop(shardShutdownManager.toClassic, timeout, DiscordShard.StopShard))

@@ -8,7 +8,7 @@ lazy val enumeratumVersion = "1.6.1"
 
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.2",
-  crossScalaVersions := Seq("2.12.10", scalaVersion.value),
+  crossScalaVersions := Seq("2.12.14", scalaVersion.value),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -22,7 +22,7 @@ lazy val commonSettings = Seq(
       Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
     else Nil
   ),
-  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
   publishTo := sonatypePublishToBundle.value
 )
 

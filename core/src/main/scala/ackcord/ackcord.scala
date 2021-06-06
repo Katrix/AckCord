@@ -71,6 +71,6 @@ package object ackcord {
 
   implicit val sourceMonadInstance: MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
     StreamInstances.sourceInstance
-  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, ?, Mat]]     = StreamInstances.flowInstance[In, Mat]
-  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[?, Mat]] = StreamInstances.sinkInstance[Mat]
+  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, *, Mat]]     = StreamInstances.flowInstance[In, Mat]
+  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[*, Mat]] = StreamInstances.sinkInstance[Mat]
 }

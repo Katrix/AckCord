@@ -59,8 +59,8 @@ class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[Res
   override def createLogicAndMaterializedValue(
       inheritedAttributes: Attributes
   ): (GraphStageLogic, (Future[(Option[ResumeData], Boolean)], Future[Unit])) = {
-    val resumePromise          = Promise[(Option[ResumeData], Boolean)]
-    val successullStartPromise = Promise[Unit]
+    val resumePromise          = Promise[(Option[ResumeData], Boolean)]()
+    val successullStartPromise = Promise[Unit]()
 
     val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var resume: ResumeData = prevResume.orNull

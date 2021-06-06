@@ -29,7 +29,6 @@ import ackcord.slashcommands.raw.CommandsProtocol._
 import ackcord.slashcommands.{CommandId, CommandOrGroup, InteractionId}
 import ackcord.util.{JsonOption, JsonUndefined}
 import io.circe._
-import io.circe.syntax._
 
 case class CreateCommandData(
     name: String,
