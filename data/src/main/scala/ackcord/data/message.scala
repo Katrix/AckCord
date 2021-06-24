@@ -812,7 +812,7 @@ case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   */
 case class Sticker(
     id: StickerId,
-    packId: RawSnowflake,
+    packId: Option[RawSnowflake],
     name: String,
     description: String,
     tags: Option[String],
