@@ -27,6 +27,7 @@ import ackcord.data._
 import ackcord.data.raw.{PartialRawGuildMember, RawMessageActivity}
 import ackcord.util._
 import cats.Later
+import cats.syntax.all._
 import io.circe.syntax._
 import io.circe.{derivation, _}
 import java.time.OffsetDateTime
