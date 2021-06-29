@@ -446,6 +446,7 @@ object CacheHandlers {
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction)
               )
@@ -625,8 +626,8 @@ object CacheHandlers {
     ): Unit = {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
-        case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory | ChannelType.GuildNews |
-            ChannelType.GuildStore =>
+        case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory |
+            ChannelType.GuildNews | ChannelType.GuildStore =>
           registry.getUpdater[Guild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
               rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
