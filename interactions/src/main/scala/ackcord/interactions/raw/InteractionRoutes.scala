@@ -21,15 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands.raw
+package ackcord.interactions.raw
 
-import ackcord.data.{ApplicationId, GuildId}
+import ackcord.data.{CommandId, GuildId, ApplicationId, InteractionId}
 import ackcord.requests.RequestRoute
 import ackcord.requests.Routes._
-import ackcord.slashcommands.{CommandId, InteractionId}
 import akka.http.scaladsl.model.HttpMethods._
 
-object CommandRoutes {
+object InteractionRoutes {
 
   val commandId = new MinorParameter[CommandId]("commandId", _.asString)
   val interactionId = new MinorParameter[InteractionId]("interactionId", _.asString)

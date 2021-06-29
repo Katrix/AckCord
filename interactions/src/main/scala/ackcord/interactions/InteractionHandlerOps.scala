@@ -21,99 +21,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.interactions
 
 import scala.concurrent.ExecutionContext
-import scala.util.matching.Regex
 
 import ackcord.OptFuture
 import ackcord.data._
 import ackcord.data.raw.RawMessage
 import ackcord.requests._
-import ackcord.slashcommands.raw.{
-  ApplicationCommandOptionChoice,
-  ApplicationCommandOptionType,
-  InteractionApplicationCommandCallbackData
-}
 import ackcord.util.{JsonOption, JsonUndefined}
 import akka.NotUsed
-import cats.Id
-import io.circe.{DecodingFailure, Json}
+import io.circe.Json
 
-trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
+trait InteractionHandlerOps {
   def requests: Requests
 
   implicit def executionContext: ExecutionContext = requests.system.executionContext
 
-  def Command: CommandBuilder[BaseInteraction, NotUsed]
+  def async(handle: AsyncToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse =
+    InteractionResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
 
-  private val userRegex: Regex    = """<@!?(\d+)>""".r
-  private val channelRegex: Regex = """<#(\d+)>""".r
-  private val roleRegex: Regex    = """<@&(\d+)>""".r
-
-  private def parseMention[A](regex: Regex)(s: String): Either[DecodingFailure, SnowflakeType[A]] = s match {
-    case regex(id) => Right(SnowflakeType(id))
-    case _         => Left(DecodingFailure("Not a valid mention", Nil))
-  }
-
-  def string(name: String, description: String): ChoiceParam[String, String, Id] =
-    ChoiceParam.default(
-      ApplicationCommandOptionType.String,
-      name,
-      description,
-      (name, str) => ApplicationCommandOptionChoice(name, Left(str)),
-      _.hcursor.as[String]
-    )
-
-  def int(name: String, description: String): ChoiceParam[Int, Int, Id] =
-    ChoiceParam.default(
-      ApplicationCommandOptionType.Integer,
-      name,
-      description,
-      (name, i) => ApplicationCommandOptionChoice(name, Right(i)),
-      _.hcursor.as[Int]
-    )
-
-  def bool(name: String, description: String): ValueParam[Boolean, Boolean, Id] =
-    ValueParam.default(ApplicationCommandOptionType.Boolean, name, description, _.hcursor.as[Boolean])
-
-  def user(name: String, description: String): ValueParam[UserId, UserId, Id] =
-    ValueParam.default(
-      ApplicationCommandOptionType.User,
-      name,
-      description,
-      _.hcursor.as[String].flatMap(parseMention(userRegex))
-    )
-
-  def channel(name: String, description: String): ValueParam[ChannelId, ChannelId, Id] =
-    ValueParam.default(
-      ApplicationCommandOptionType.Channel,
-      name,
-      description,
-      _.hcursor.as[String].flatMap(parseMention(channelRegex))
-    )
-
-  def role(name: String, description: String): ValueParam[RoleId, RoleId, Id] =
-    ValueParam.default(
-      ApplicationCommandOptionType.Role,
-      name,
-      description,
-      _.hcursor.as[String].flatMap(parseMention(roleRegex))
-    )
-
-  def async(handle: AsyncToken => OptFuture[_])(implicit interaction: CommandInteraction[_]): CommandResponse =
-    CommandResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
-
-  def acknowledge: CommandResponse =
-    CommandResponse.Acknowledge(() => OptFuture.unit)
+  def acknowledge: InteractionResponse =
+    InteractionResponse.Acknowledge(() => OptFuture.unit)
 
   def sendMessage(
       content: String,
       tts: Option[Boolean] = None,
       embeds: Seq[OutgoingEmbed] = Nil,
-      allowedMentions: Option[AllowedMention] = None
-  ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
-    InteractionApplicationCommandCallbackData(tts, Some(content), embeds, allowedMentions),
+      allowedMentions: Option[AllowedMention] = None,
+      flags: MessageFlags = MessageFlags.None,
+      components: Seq[ActionRow] = Nil
+  ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
+    RawInteractionApplicationCommandCallbackData(
+      tts,
+      Some(content),
+      embeds,
+      allowedMentions,
+      flags,
+      if (components.isEmpty) None else Some(components)
+    ),
     () => OptFuture.unit
   )
 
@@ -121,13 +67,22 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       embeds: Seq[OutgoingEmbed],
       content: Option[String] = None,
       tts: Option[Boolean] = None,
-      allowedMentions: Option[AllowedMention] = None
-  ): CommandResponse.AsyncMessageable = CommandResponse.ChannelMessage(
-    InteractionApplicationCommandCallbackData(tts, content, embeds, allowedMentions),
+      allowedMentions: Option[AllowedMention] = None,
+      flags: MessageFlags = MessageFlags.None,
+      components: Seq[ActionRow] = Nil
+  ): InteractionResponse.AsyncMessageable = InteractionResponse.ChannelMessage(
+    RawInteractionApplicationCommandCallbackData(
+      tts,
+      content,
+      embeds,
+      allowedMentions,
+      flags,
+      if (components.isEmpty) None else Some(components)
+    ),
     () => OptFuture.unit
   )
 
-  private def commandRequest[Response](request: Request[Response]): OptFuture[Response] =
+  private def interactionRequest[Response](request: Request[Response]): OptFuture[Response] =
     OptFuture.fromFuture(requests.singleFutureSuccess(request))
 
   def sendAsyncMessage(
@@ -135,9 +90,10 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
       embeds: Seq[OutgoingEmbed] = Nil,
-      allowedMentions: Option[AllowedMention] = None
+      allowedMentions: Option[AllowedMention] = None,
+      components: Seq[ActionRow] = Nil
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
-    commandRequest(
+    interactionRequest(
       CreateFollowupMessage(
         async.webhookId,
         async.webhookToken,
@@ -148,7 +104,8 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           tts,
           files,
           embeds,
-          allowedMentions
+          allowedMentions,
+          if (components.isEmpty) None else Some(components)
         )
       )
     ).map(_.get)
@@ -158,9 +115,10 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       content: String = "",
       tts: Option[Boolean] = None,
       files: Seq[CreateMessageFile] = Seq.empty,
-      allowedMentions: Option[AllowedMention] = None
+      allowedMentions: Option[AllowedMention] = None,
+      components: Seq[ActionRow] = Nil
   )(implicit async: AsyncToken): OptFuture[RawMessage] =
-    commandRequest(
+    interactionRequest(
       CreateFollowupMessage(
         async.webhookId,
         async.webhookToken,
@@ -171,12 +129,13 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           tts,
           files,
           embeds,
-          allowedMentions
+          allowedMentions,
+          if (components.isEmpty) None else Some(components)
         )
       )
     ).map(_.get)
 
-  def getOriginalMessage()(implicit async: AsyncMessageToken): OptFuture[Message] = commandRequest(
+  def getOriginalMessage()(implicit async: AsyncMessageToken): OptFuture[Message] = interactionRequest(
     GetOriginalWebhookMessage(async.webhookId, async.webhookToken)
   ).map(_.toMessage)
 
@@ -184,9 +143,10 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-      allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+      allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+      components: JsonOption[Seq[ActionRow]] = JsonUndefined
   )(implicit async: AsyncMessageToken): OptFuture[Json] =
-    commandRequest(
+    interactionRequest(
       EditOriginalWebhookMessage(
         async.webhookId,
         async.webhookToken,
@@ -194,12 +154,13 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           content,
           embeds,
           files,
-          allowedMentions
+          allowedMentions,
+          components
         )
       )
     )
 
-  def deleteOriginalMessage(implicit async: AsyncMessageToken): OptFuture[NotUsed] = commandRequest(
+  def deleteOriginalMessage(implicit async: AsyncMessageToken): OptFuture[NotUsed] = interactionRequest(
     DeleteOriginalWebhookMessage(async.webhookId, async.webhookToken)
   )
 
@@ -208,9 +169,10 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
       content: JsonOption[String] = JsonUndefined,
       embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
       files: JsonOption[Seq[CreateMessageFile]] = JsonUndefined,
-      allowedMentions: JsonOption[AllowedMention] = JsonUndefined
+      allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
+      components: JsonOption[Seq[ActionRow]] = JsonUndefined
   )(implicit async: AsyncToken): OptFuture[Json] =
-    commandRequest(
+    interactionRequest(
       EditWebhookMessage(
         async.webhookId,
         async.webhookToken,
@@ -219,12 +181,13 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] {
           content,
           embeds,
           files,
-          allowedMentions
+          allowedMentions,
+          components
         )
       )
     )
 
-  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] = commandRequest(
+  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] = interactionRequest(
     GetWebhookMessage(async.webhookId, async.webhookToken, messageId)
   ).map(_.toMessage)
 }

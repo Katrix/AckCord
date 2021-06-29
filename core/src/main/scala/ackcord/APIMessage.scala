@@ -26,7 +26,6 @@ package ackcord
 import java.time.{Instant, OffsetDateTime}
 
 import ackcord.data._
-import ackcord.gateway.GatewayEvent.SimpleRawInteraction
 import ackcord.gateway.GatewayInfo
 
 /**
@@ -522,7 +521,7 @@ object APIMessage {
       extends GuildMessage
       with ChannelMessage
 
-  case class InteractionCreate(simpleRawInteraction: SimpleRawInteraction, cache: CacheState, gatewayInfo: GatewayInfo)
+  case class InteractionCreate(rawInteraction: RawInteraction, cache: CacheState, gatewayInfo: GatewayInfo)
       extends APIMessage
 
   /**

@@ -134,11 +134,15 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val userWithGuildIdCodec: Codec[GatewayEvent.UserWithGuildId] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val simpleRawInteractionCodec: Codec[GatewayEvent.SimpleRawInteraction] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-
-  implicit val simpleApplicationCommandWithGuildCodec: Codec[GatewayEvent.SimpleApplicationCommandWithGuildId] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val simpleApplicationCommandWithGuildCodec: Codec[GatewayEvent.ApplicationCommandWithGuildId] =
+    Codec.from(
+      (c: HCursor) =>
+        for {
+          command <- c.as[ApplicationCommand]
+          guildId <- c.get[Option[GuildId]]("guild_id")
+        } yield GatewayEvent.ApplicationCommandWithGuildId(command, guildId),
+      (a: GatewayEvent.ApplicationCommandWithGuildId) => a.command.asJson.deepMerge(Json.obj("guild_id" := a.guildId))
+    )
 
   implicit val integrationWithGuildIdCodec: Codec[GatewayEvent.IntegrationWithGuildId] = Codec.from(
     (c: HCursor) =>
@@ -223,6 +227,7 @@ object GatewayProtocol extends DiscordProtocol {
       stickerItems      <- c.get[JsonOption[Seq[StickerItem]]]("sticker_items")
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
       interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
+      components        <- c.get[JsonOption[Seq[ActionRow]]]("components")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
@@ -251,7 +256,8 @@ object GatewayProtocol extends DiscordProtocol {
       stickers,
       stickerItems,
       referencedMessage,
-      interaction
+      interaction,
+      components
     )
   }
 

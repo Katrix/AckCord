@@ -34,8 +34,8 @@ import ackcord.data.{ApplicationId, GuildId}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.requests.{BotAuthentication, Ratelimiter, RequestSettings, Requests}
-import ackcord.slashcommands.CommandRegistrar
-import ackcord.slashcommands.raw.{GetGuildCommands, Interaction}
+import ackcord.interactions.InteractionsRegistrar
+import ackcord.interactions.raw.GetGuildCommands
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.Done
 import akka.actor.CoordinatedShutdown
@@ -162,11 +162,10 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   }
 
   {
-    import ackcord.slashcommands.raw.CommandsProtocol._
     events
-      .commandInteractions[Interaction]
+      .interactions
       .to(
-        CommandRegistrar.gatewayCommands(
+        InteractionsRegistrar.gatewayInteractions(
           baseSlashCommands.ping,
           baseSlashCommands.echo,
           baseSlashCommands.nudge,

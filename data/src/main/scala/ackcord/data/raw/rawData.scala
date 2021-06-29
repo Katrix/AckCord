@@ -458,7 +458,8 @@ case class RawMessage(
     stickers: Option[Seq[Sticker]],
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[RawMessage],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Option[Seq[ActionRow]]
 ) {
 
   /**
@@ -497,7 +498,8 @@ case class RawMessage(
           stickers,
           stickerItems,
           referencedMessage.map(_.toMessage),
-          interaction
+          interaction,
+          components.getOrElse(Nil),
         )
 
       case None =>
@@ -528,7 +530,8 @@ case class RawMessage(
           stickers,
           stickerItems,
           referencedMessage.map(_.toMessage),
-          interaction
+          interaction,
+          components.getOrElse(Nil)
         )
 
     }

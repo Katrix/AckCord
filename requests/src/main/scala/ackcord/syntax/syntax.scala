@@ -126,10 +126,23 @@ package object syntax {
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
         embed: Option[OutgoingEmbed] = None,
-        allowedMentions: AllowedMention = AllowedMention.all
+        allowedMentions: AllowedMention = AllowedMention.all,
+        replyTo: Option[MessageId] = None,
+        replyFailIfNotExist: Boolean = true,
+        components: Seq[ActionRow] = Nil
     ) = CreateMessage(
       textChannel.id,
-      CreateMessageData(content, None, tts, files.map(CreateMessageFile.FromPath), embed, allowedMentions)
+      CreateMessageData(
+        content,
+        None,
+        tts,
+        files.map(CreateMessageFile.FromPath),
+        embed,
+        allowedMentions,
+        replyTo,
+        replyFailIfNotExist,
+        components
+      )
     )
 
     /**
@@ -1375,8 +1388,9 @@ package object syntax {
         files: Seq[CreateMessageFile] = Seq.empty,
         allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
         embed: JsonOption[OutgoingEmbed] = JsonUndefined,
-        flags: JsonOption[MessageFlags] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embed, flags))
+        flags: JsonOption[MessageFlags] = JsonUndefined,
+        components: JsonOption[Seq[ActionRow]] = JsonUndefined
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embed, flags, components))
 
     /**
       * Delete this message.

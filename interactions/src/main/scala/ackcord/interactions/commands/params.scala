@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.interactions.commands
 
 import scala.language.implicitConversions
 
@@ -29,11 +29,8 @@ import java.util.Locale
 
 import scala.annotation.tailrec
 
-import ackcord.slashcommands.raw.{
-  ApplicationCommandOption,
-  ApplicationCommandOptionChoice,
-  ApplicationCommandOptionType
-}
+import ackcord.data._
+import ackcord.interactions.~
 import cats.Id
 import cats.arrow.FunctionK
 import cats.syntax.either._
@@ -51,7 +48,7 @@ sealed trait Param[A, F[_]] {
 object Param {
   type DecodePayloadFunction[F[_]] = FunctionK[λ[B => Json => Either[DecodingFailure, B]], λ[B => Either[String, F[B]]]]
 
-  private[slashcommands] val decodePayloadRequired: Option[Json] => DecodePayloadFunction[Id] = {
+  private[interactions] val decodePayloadRequired: Option[Json] => DecodePayloadFunction[Id] = {
     case Some(json) =>
       new DecodePayloadFunction[Id] {
         override def apply[A](f: Json => Either[DecodingFailure, A]): Either[String, Id[A]] = f(json).leftMap(_.message)
@@ -63,7 +60,7 @@ object Param {
       }
   }
 
-  private[slashcommands] val decodePayloadNotRequired: Option[Json] => DecodePayloadFunction[Option] = {
+  private[interactions] val decodePayloadNotRequired: Option[Json] => DecodePayloadFunction[Option] = {
     case None =>
       new DecodePayloadFunction[Option] {
         override def apply[A](fa: Json => Either[DecodingFailure, A]): Either[String, Option[A]] = Right(None)
@@ -76,7 +73,7 @@ object Param {
   }
 }
 
-case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
+case class ChoiceParam[Orig, A, F[_]] private[interactions](
     tpe: ApplicationCommandOptionType,
     name: String,
     description: String,
@@ -120,7 +117,7 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
       decodePayloadInner = decodePayloadInner.andThen(_.map(map))
     )
 
-  override def toCommandOption: ApplicationCommandOption = raw.ApplicationCommandOption(
+  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
     tpe,
     name,
     description,
@@ -132,7 +129,7 @@ case class ChoiceParam[Orig, A, F[_]] private[slashcommands] (
   override def decode(payload: Option[Json]): Either[String, F[A]] = decodePayload(payload)(decodePayloadInner)
 }
 object ChoiceParam {
-  private[slashcommands] def default[A](
+  private[interactions] def default[A](
       tpe: ApplicationCommandOptionType,
       name: String,
       description: String,
@@ -153,7 +150,7 @@ object ChoiceParam {
     )
 }
 
-case class ValueParam[Orig, A, F[_]] private[slashcommands] (
+case class ValueParam[Orig, A, F[_]] private[interactions](
     tpe: ApplicationCommandOptionType,
     name: String,
     description: String,
@@ -182,7 +179,7 @@ case class ValueParam[Orig, A, F[_]] private[slashcommands] (
   override def decode(payload: Option[Json]): Either[String, F[A]] = decodePayload(payload)(decodePayloadInner)
 }
 object ValueParam {
-  private[slashcommands] def default[A](
+  private[interactions] def default[A](
       tpe: ApplicationCommandOptionType,
       name: String,
       description: String,

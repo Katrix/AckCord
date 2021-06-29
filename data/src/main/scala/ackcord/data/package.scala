@@ -320,6 +320,12 @@ package object data {
   type StickerId = SnowflakeType[Sticker]
   object StickerId extends SnowflakeCompanion[Sticker]
 
+  type InteractionId = SnowflakeType[RawInteraction]
+  object InteractionId extends SnowflakeCompanion[RawInteraction]
+
+  type CommandId = SnowflakeType[ApplicationCommand]
+  object CommandId extends SnowflakeCompanion[ApplicationCommand]
+
   type ApplicationId = SnowflakeType[Application]
   object ApplicationId extends SnowflakeCompanion[Application]
 

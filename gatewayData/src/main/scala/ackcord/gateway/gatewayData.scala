@@ -797,7 +797,8 @@ object GatewayEvent {
       stickers: JsonOption[Seq[Sticker]],
       stickerItems: JsonOption[Seq[StickerItem]],
       referencedMessage: JsonOption[RawPartialMessage],
-      interaction: JsonOption[MessageInteraction]
+      interaction: JsonOption[MessageInteraction],
+      components: JsonOption[Seq[ActionRow]]
   )
 
   /**
@@ -1026,64 +1027,34 @@ object GatewayEvent {
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
-  case class SimpleRawInteraction(
-      id: RawSnowflake,
-      `type`: Int,
-      data: Option[Json],
-      guildId: GuildId,
-      channelId: TextChannelId,
-      member: RawGuildMember,
-      token: String
-  ) {
-
-    def reparse[A: Decoder]: Result[A] = {
-      import GatewayProtocol._
-      import io.circe.syntax._
-      val self: SimpleRawInteraction = this
-      self.asJson.as[A]
-    }
-  }
-
-  case class InteractionCreate(rawData: Json, data: Later[Decoder.Result[SimpleRawInteraction]])
-      extends GuildEvent[SimpleRawInteraction] {
-    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+  case class InteractionCreate(rawData: Json, data: Later[Decoder.Result[RawInteraction]])
+      extends OptGuildEvent[RawInteraction] {
+    override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "INTERACTION_CREATE"
   }
 
-  case class SimpleApplicationCommandWithGuildId(
-      id: RawSnowflake,
-      applicationId: ApplicationId,
-      name: String,
-      description: String,
-      options: Option[Json],
+  case class ApplicationCommandWithGuildId(
+      command: ApplicationCommand,
       guildId: Option[GuildId]
-  ) {
+  )
 
-    def reparse[A: Decoder]: Decoder.Result[A] = {
-      import GatewayProtocol._
-      import io.circe.syntax._
-      val self: SimpleApplicationCommandWithGuildId = this
-      self.asJson.as[A]
-    }
-  }
-
-  case class ApplicationCommandCreate(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
-      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+  case class ApplicationCommandCreate(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_CREATE"
   }
 
-  case class ApplicationCommandUpdate(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
-      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+  case class ApplicationCommandUpdate(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_UPDATE"
   }
 
-  case class ApplicationCommandDelete(rawData: Json, data: Later[Decoder.Result[SimpleApplicationCommandWithGuildId]])
-      extends OptGuildEvent[SimpleApplicationCommandWithGuildId] {
+  case class ApplicationCommandDelete(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_DELETE"

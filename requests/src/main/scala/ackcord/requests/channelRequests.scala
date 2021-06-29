@@ -23,22 +23,20 @@
  */
 package ackcord.requests
 
+import java.nio.file.{Files, Path}
+
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{JsonOption, JsonSome, JsonUndefined, StringCirceEnumWithUnknown}
+import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import akka.NotUsed
 import akka.http.scaladsl.model.Multipart.FormData
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.util.ByteString
-import enumeratum.values.{StringEnum, StringEnumEntry}
 import io.circe._
 import io.circe.syntax._
-
-import java.nio.file.{Files, Path}
-import scala.collection.immutable
 
 /**
   * Get a channel by id.
@@ -267,47 +265,6 @@ object CreateMessageFile {
 }
 
 /**
-  * @param parse Which mention types should be allowed.
-  * @param roles The roles to allow mention.
-  * @param users The users to allow mention.
-  * @param repliedUser For replires, if the author of the message you are
-  *                    replying to should be mentioned.
-  */
-case class AllowedMention(
-    parse: Seq[AllowedMentionTypes] = Seq.empty,
-    roles: Seq[RoleId] = Seq.empty,
-    users: Seq[UserId] = Seq.empty,
-    repliedUser: Boolean = false
-) {
-  require(roles.size <= 100, "Too many allowed role mentions")
-  require(users.size <= 100, "Too many allowed user mentions")
-}
-
-object AllowedMention {
-  val none: AllowedMention = AllowedMention()
-  val all: AllowedMention = AllowedMention(
-    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
-  )
-
-  //noinspection NameBooleanParameters
-  implicit val codec: Codec[AllowedMention] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
-}
-
-sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
-object AllowedMentionTypes
-    extends StringEnum[AllowedMentionTypes]
-    with StringCirceEnumWithUnknown[AllowedMentionTypes] {
-  override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
-
-  case object Roles               extends AllowedMentionTypes("roles")
-  case object Users               extends AllowedMentionTypes("users")
-  case object Everyone            extends AllowedMentionTypes("everyone")
-  case class Unknown(str: String) extends AllowedMentionTypes(str)
-
-  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
-}
-
-/**
   * @param content The content of the message.
   * @param nonce A nonce used for optimistic message sending (up to 25 characters).
   * @param tts If this is a text-to-speech message.
@@ -325,7 +282,8 @@ case class CreateMessageData(
     embed: Option[OutgoingEmbed] = None,
     allowedMentions: AllowedMention = AllowedMention.all,
     replyTo: Option[MessageId] = None,
-    replyFailIfNotExist: Boolean = true
+    replyFailIfNotExist: Boolean = true,
+    components: Seq[ActionRow] = Nil
 ) {
   files.foreach(file => require(file.isValid))
   require(
@@ -333,6 +291,7 @@ case class CreateMessageData(
     "Please use unique filenames for all files"
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
+  require(components.length <= 5, "Can't have more than 5 action rows on a message")
   require(nonce.forall(_.swap.forall(_.length <= 25)), "Nonce too long")
 }
 object CreateMessageData {
@@ -344,7 +303,8 @@ object CreateMessageData {
       "nonce" := a.nonce.map(_.fold(_.asJson, _.asJson)),
       "tts" := a.tts,
       "embed" := a.embed,
-      "allowed_mentions" := a.allowedMentions
+      "allowed_mentions" := a.allowedMentions,
+      "components" := a.components
     )
 
     a.replyTo.fold(base) { reply =>
@@ -502,9 +462,11 @@ case class EditMessageData(
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
     embed: JsonOption[OutgoingEmbed] = JsonUndefined,
     flags: JsonOption[MessageFlags] = JsonUndefined,
+    components: JsonOption[Seq[ActionRow]] = JsonUndefined,
     attachments: JsonOption[Seq[Attachment]] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
+  require(components.forall(_.length <= 5), "Can't have more than 5 action rows on a message")
 }
 object EditMessageData {
   implicit val encoder: Encoder[EditMessageData] = (a: EditMessageData) =>
@@ -512,6 +474,8 @@ object EditMessageData {
       "content"          -> a.content.toJson,
       "allowed_mentions" -> a.allowedMentions.toJson,
       "embed"            -> a.embed.toJson,
+      "flags"            -> a.flags.toJson,
+      "components"       -> a.components.toJson,
       "attachments"      -> a.attachments.toJson
     )
 }

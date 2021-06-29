@@ -21,23 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package ackcord.slashcommands
+package ackcord.interactions.commands
 
-import ackcord.data.{SnowflakeType, Webhook}
+import ackcord.requests.Requests
+import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
+import akka.NotUsed
 
-sealed trait AsyncToken {
-  def webhookId: SnowflakeType[Webhook]
-  def webhookToken: String
-}
-sealed trait AsyncMessageToken extends AsyncToken
+class StatelessSlashCommandController(val requests: Requests)
+    extends SlashCommandControllerBase[StatelessCommandInteraction] {
 
-object AsyncToken {
-  private[slashcommands] case class Impl(webhookId: SnowflakeType[Webhook], webhookToken: String)
-      extends AsyncMessageToken
-
-  private[slashcommands] def fromInteraction(interaction: CommandInteraction[_]): AsyncToken =
-    Impl(interaction.webhookId, interaction.token)
-
-  private[slashcommands] def fromInteractionWithMessage(interaction: CommandInteraction[_]): AsyncMessageToken =
-    Impl(interaction.webhookId, interaction.token)
+  override val Command: CommandBuilder[StatelessCommandInteraction, NotUsed] = new CommandBuilder(
+    new DataInteractionTransformer[CommandInteraction, StatelessCommandInteraction] {
+      override def filter[A](from: CommandInteraction[A]): Either[Option[String], StatelessCommandInteraction[A]] =
+        Right(StatelessCommandInteraction(from.commandInvocationInfo))
+    },
+    Left(implicitly),
+    Map.empty
+  )
 }

@@ -25,8 +25,10 @@ package ackcord.data
 
 import java.time.OffsetDateTime
 import java.util.Base64
+
 import scala.collection.immutable
 import scala.util.Try
+
 import ackcord.CacheSnapshot
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry}
@@ -363,6 +365,11 @@ sealed trait Message {
   def guildMember(implicit c: CacheSnapshot): Option[GuildMember]
 
   /**
+    * The extra interaction components added to this message.
+    */
+  def components: Seq[ActionRow]
+
+  /**
     * If the author is a user, their user id.
     */
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
@@ -378,6 +385,8 @@ sealed trait Message {
   def formatMentions(implicit c: CacheSnapshot): String
 
   private[ackcord] def withReactions(reactions: Seq[Reaction]): Message
+
+  def updateButton(identifier: String, f: TextButton => Button): Message
 }
 
 /**
@@ -413,7 +422,8 @@ case class SparseMessage(
     stickers: Option[Seq[Sticker]],
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Seq[ActionRow]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -433,6 +443,9 @@ case class SparseMessage(
   }
 
   override private[ackcord] def withReactions(reactions: Seq[Reaction]): SparseMessage = copy(reactions = reactions)
+
+  override def updateButton(identifier: String, f: TextButton => Button): SparseMessage =
+    copy(components = components.map(_.updateButton(identifier, f)))
 }
 
 /**
@@ -474,7 +487,8 @@ case class GuildGatewayMessage(
     stickers: Option[Seq[Sticker]],
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
-    interaction: Option[MessageInteraction]
+    interaction: Option[MessageInteraction],
+    components: Seq[ActionRow]
 ) extends Message {
 
   override def guild(implicit c: CacheSnapshot): Option[Guild] =
@@ -516,6 +530,9 @@ case class GuildGatewayMessage(
 
   override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage =
     copy(reactions = reactions)
+
+  override def updateButton(identifier: String, f: TextButton => Button): GuildGatewayMessage =
+    copy(components = components.map(_.updateButton(identifier, f)))
 }
 
 /**
@@ -554,7 +571,7 @@ case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
   * @param id The id of the emoji. If it's absent, it's not a guild emoji.
   * @param name The name of the emoji.
   */
-case class PartialEmoji(id: Option[EmojiId], name: Option[String])
+case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None)
 
 /**
   * A received embed.
@@ -851,3 +868,41 @@ case class MessageInteraction(
     name: String,
     user: User
 )
+
+/**
+  * @param parse Which mention types should be allowed.
+  * @param roles The roles to allow mention.
+  * @param users The users to allow mention.
+  * @param repliedUser For replires, if the author of the message you are
+  *                    replying to should be mentioned.
+  */
+case class AllowedMention(
+    parse: Seq[AllowedMentionTypes] = Seq.empty,
+    roles: Seq[RoleId] = Seq.empty,
+    users: Seq[UserId] = Seq.empty,
+    repliedUser: Boolean = false
+) {
+  require(roles.size <= 100, "Too many allowed role mentions")
+  require(users.size <= 100, "Too many allowed user mentions")
+}
+
+object AllowedMention {
+  val none: AllowedMention = AllowedMention()
+  val all: AllowedMention = AllowedMention(
+    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
+  )
+}
+
+sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
+object AllowedMentionTypes
+    extends StringEnum[AllowedMentionTypes]
+    with StringCirceEnumWithUnknown[AllowedMentionTypes] {
+  override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
+
+  case object Roles               extends AllowedMentionTypes("roles")
+  case object Users               extends AllowedMentionTypes("users")
+  case object Everyone            extends AllowedMentionTypes("everyone")
+  case class Unknown(str: String) extends AllowedMentionTypes(str)
+
+  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
+}

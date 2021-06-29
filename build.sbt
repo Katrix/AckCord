@@ -144,13 +144,13 @@ lazy val commands = project
   )
   .dependsOn(requests)
 
-val slashCommands = project
+val interactions = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "slash-commands",
+    name := "interactions",
     version := ackCordVersion,
-    description := "ackCord-slash-commands provides a high level API to interact with Discord's slash commands"
+    description := "ackCord-interactions provides a high level API to interact with Discord's interactions"
   )
   .dependsOn(requests)
 
@@ -191,7 +191,7 @@ lazy val ackCord = project
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
-  .dependsOn(core, lavaplayerCore, commands, slashCommands)
+  .dependsOn(core, lavaplayerCore, commands, interactions)
 
 lazy val exampleCore = project
   .settings(
@@ -203,7 +203,7 @@ lazy val exampleCore = project
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
     libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.3"
   )
-  .dependsOn(core, lavaplayerCore, commands, slashCommands)
+  .dependsOn(core, lavaplayerCore, commands, interactions)
 
 lazy val example = project
   .settings(
@@ -241,7 +241,7 @@ lazy val docs = project
       requests,
       gateway,
       voice,
-      slashCommands,
+      interactions,
       core,
       commands,
       lavaplayerCore,
@@ -273,7 +273,7 @@ lazy val ackCordRoot = project
     requests,
     gateway,
     voice,
-    slashCommands,
+    interactions,
     core,
     commands,
     lavaplayerCore,
