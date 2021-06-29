@@ -336,7 +336,7 @@ object GatewayHandlerGraphStage {
       case msg: GatewayMessage[d] =>
         msg match {
           case PresenceUpdate(data, _) => data.activities.foreach(_.requireCanSend())
-          case _                     =>
+          case _                       =>
         }
 
         val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces

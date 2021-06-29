@@ -29,7 +29,6 @@ import cats.syntax.all._
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
-
 import java.time.{Instant, OffsetDateTime}
 import scala.util.Try
 
@@ -230,7 +229,10 @@ trait DiscordProtocol {
   implicit val messageReferenceCodec: Codec[MessageReference] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val stickersCodec: Codec[Sticker] =
+  implicit val stickerCodec: Codec[Sticker] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val stickerItemCodec: Codec[StickerItem] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val messageInteractionCodec: Codec[MessageInteraction] =
@@ -302,6 +304,7 @@ trait DiscordProtocol {
       messageReference   <- c.get[Option[MessageReference]]("message_reference")
       flags              <- c.get[Option[MessageFlags]]("flags")
       stickers           <- c.get[Option[Seq[Sticker]]]("stickers")
+      stickerItems       <- c.get[Option[Seq[StickerItem]]]("sticker_items")
       referencedMessage  <- c.get[Option[RawMessage]]("referenced_message")
       messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
     } yield RawMessage(
@@ -330,6 +333,7 @@ trait DiscordProtocol {
       messageReference,
       flags,
       stickers,
+      stickerItems,
       referencedMessage,
       messageInteraction
     )

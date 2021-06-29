@@ -795,6 +795,7 @@ object GatewayEvent {
       messageReference: JsonOption[MessageReference],
       flags: JsonOption[MessageFlags],
       stickers: JsonOption[Seq[Sticker]],
+      stickerItems: JsonOption[Seq[StickerItem]],
       referencedMessage: JsonOption[RawPartialMessage],
       interaction: JsonOption[MessageInteraction]
   )
