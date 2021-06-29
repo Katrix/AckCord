@@ -343,7 +343,7 @@ sealed trait Message {
   def flags: Option[MessageFlags]
 
   /** Stickers sent with the message. (deprecated) */
-  @deprecated
+  @deprecated("Removed in favour of stickerItems", since = "0.18.0")
   def stickers: Option[Seq[Sticker]]
 
   /** Stickers sent with the message. */
