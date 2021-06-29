@@ -833,9 +833,9 @@ case class Sticker(
   * @param formatType	type of sticker format
   */
 case class StickerItem(
-  id: StickerId,
-  name: String,
-  formatType: FormatType
+    id: StickerId,
+    name: String,
+    formatType: FormatType
 )
 
 /**
