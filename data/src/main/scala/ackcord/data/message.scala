@@ -342,8 +342,12 @@ sealed trait Message {
   /** Extra features of the message. */
   def flags: Option[MessageFlags]
 
-  /** Stickers sent with the message. */
+  /** Stickers sent with the message. (deprecated) */
+  @deprecated
   def stickers: Option[Seq[Sticker]]
+
+  /** Stickers sent with the message. */
+  def stickerItems: Option[Seq[StickerItem]]
 
   /** Message associated with the message reference. */
   def referencedMessage: Option[Message]
@@ -407,6 +411,7 @@ case class SparseMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
+    stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction]
 ) extends Message {
@@ -467,6 +472,7 @@ case class GuildGatewayMessage(
     messageReference: Option[MessageReference],
     flags: Option[MessageFlags],
     stickers: Option[Seq[Sticker]],
+    stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction]
 ) extends Message {
@@ -818,6 +824,18 @@ case class Sticker(
     tags: Option[String],
     asset: String,
     formatType: FormatType
+)
+
+/**
+  * The structure of a sticker item (the smallest amount of data required to render a sticker)
+  * @param id id of the sticker
+  * @param name name of the sticker
+  * @param formatType	type of sticker format
+  */
+case class StickerItem(
+  id: StickerId,
+  name: String,
+  formatType: FormatType
 )
 
 /**

@@ -481,6 +481,7 @@ object CacheHandlers {
                 messageReference = obj.messageReference.orElseIfUndefined(message.messageReference),
                 flags = obj.flags.orElseIfUndefined(message.flags),
                 stickers = obj.stickers.orElseIfUndefined(message.stickers),
+                stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction)
               )
