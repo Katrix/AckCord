@@ -71,22 +71,33 @@ trait CommandInteraction[A] extends Interaction {
   def args: A              = commandInvocationInfo.args
 }
 
-trait ButtonInteraction extends Interaction {
+trait ComponentInteraction extends Interaction {
   def message: Message
+}
+
+trait MenuInteraction extends ComponentInteraction {
+  def values: Seq[String]
 }
 
 trait CacheInteraction extends Interaction {
   def cache: CacheSnapshot
   override def optCache: Option[CacheSnapshot] = Some(cache)
 }
-trait CacheButtonInteraction     extends CacheInteraction with ButtonInteraction
+trait CacheComponentInteraction  extends CacheInteraction with ComponentInteraction
+trait CacheMenuInteraction       extends CacheInteraction with MenuInteraction
 trait CacheCommandInteraction[A] extends CacheInteraction with CommandInteraction[A]
 
-case class BaseCacheButtonInteraction(
+case class BaseCacheComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     cache: CacheSnapshot
-) extends CacheButtonInteraction
+) extends CacheComponentInteraction
+case class BaseCacheMenuInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    values: Seq[String],
+    cache: CacheSnapshot
+) extends CacheMenuInteraction
 case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocationInfo[A], cache: CacheSnapshot)
     extends CacheCommandInteraction[A]
 
@@ -94,16 +105,25 @@ trait ResolvedInteraction extends CacheInteraction {
   def textChannel: TextChannel
   def optGuild: Option[Guild]
 }
-trait ResolvedButtonInteraction     extends ResolvedInteraction with ButtonInteraction
+trait ResolvedComponentInteraction  extends ResolvedInteraction with ComponentInteraction
+trait ResolvedMenuInteraction       extends ResolvedInteraction with MenuInteraction
 trait ResolvedCommandInteraction[A] extends ResolvedInteraction with CommandInteraction[A]
 
-case class BaseResolvedButtonInteraction(
+case class BaseResolvedComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextChannel,
     optGuild: Option[Guild],
     cache: CacheSnapshot
-) extends ResolvedButtonInteraction
+) extends ResolvedComponentInteraction
+case class BaseResolvedMenuInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    values: Seq[String],
+    textChannel: TextChannel,
+    optGuild: Option[Guild],
+    cache: CacheSnapshot
+) extends ResolvedMenuInteraction
 case class BaseResolvedCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextChannel,
@@ -120,10 +140,11 @@ trait GuildInteraction extends ResolvedInteraction {
 
   override def optGuild: Option[Guild] = Some(guild)
 }
-trait GuildButtonInteraction     extends GuildInteraction with ButtonInteraction
+trait GuildComponentInteraction  extends GuildInteraction with ComponentInteraction
+trait GuildMenuInteraction       extends GuildInteraction with MenuInteraction
 trait GuildCommandInteraction[A] extends GuildInteraction with CommandInteraction[A]
 
-case class BaseGuildButtonInteraction(
+case class BaseGuildComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextGuildChannel,
@@ -131,7 +152,17 @@ case class BaseGuildButtonInteraction(
     member: GuildMember,
     memberPermissions: Permission,
     cache: CacheSnapshot
-) extends GuildButtonInteraction
+) extends GuildComponentInteraction
+case class BaseGuildMenuInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    values: Seq[String],
+    textChannel: TextGuildChannel,
+    guild: Guild,
+    member: GuildMember,
+    memberPermissions: Permission,
+    cache: CacheSnapshot
+) extends GuildMenuInteraction
 case class BaseGuildCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
@@ -144,10 +175,11 @@ case class BaseGuildCommandInteraction[A](
 trait VoiceChannelInteraction extends GuildInteraction {
   def voiceChannel: VoiceGuildChannel
 }
-trait VoiceChannelButtonInteraction     extends VoiceChannelInteraction with ButtonInteraction
+trait VoiceChannelComponentInteraction  extends VoiceChannelInteraction with ComponentInteraction
+trait VoiceChannelMenuInteraction       extends VoiceChannelInteraction with MenuInteraction
 trait VoiceChannelCommandInteraction[A] extends VoiceChannelInteraction with CommandInteraction[A]
 
-case class BaseVoiceChannelButtonInteraction(
+case class BaseVoiceChannelComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextGuildChannel,
@@ -156,7 +188,18 @@ case class BaseVoiceChannelButtonInteraction(
     memberPermissions: Permission,
     voiceChannel: VoiceGuildChannel,
     cache: CacheSnapshot
-) extends VoiceChannelButtonInteraction
+) extends VoiceChannelComponentInteraction
+case class BaseVoiceChannelMenuInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    values: Seq[String],
+    textChannel: TextGuildChannel,
+    guild: Guild,
+    member: GuildMember,
+    memberPermissions: Permission,
+    voiceChannel: VoiceGuildChannel,
+    cache: CacheSnapshot
+) extends VoiceChannelMenuInteraction
 case class BaseVoiceChannelCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
@@ -167,10 +210,18 @@ case class BaseVoiceChannelCommandInteraction[A](
     cache: CacheSnapshot
 ) extends VoiceChannelCommandInteraction[A]
 
-case class StatelessButtonInteraction(
+case class StatelessComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message
-) extends ButtonInteraction {
+) extends ComponentInteraction {
+  override def optCache: Option[CacheSnapshot] = None
+}
+
+case class StatelessMenuInteraction(
+    interactionInvocationInfo: InteractionInvocationInfo,
+    message: Message,
+    values: Seq[String]
+) extends MenuInteraction {
   override def optCache: Option[CacheSnapshot] = None
 }
 

@@ -1,16 +1,16 @@
-package ackcord.interactions.buttons
+package ackcord.interactions.components
 
-import ackcord.data.{RawInteraction, RawInteractionApplicationCommandCallbackData}
-import ackcord.requests.Requests
+import ackcord.data.{Message, RawInteraction, RawInteractionApplicationCommandCallbackData}
 import ackcord.interactions._
+import ackcord.requests.Requests
 import ackcord.{CacheSnapshot, OptFuture}
 import cats.syntax.either._
 
-abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
+abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, InteractionTpe <: BaseInteraction](
     val requests: Requests,
-    interactionTransformer: DataInteractionTransformer[shapeless.Const[ButtonInteraction]#λ, shapeless.Const[
+    interactionTransformer: DataInteractionTransformer[shapeless.Const[BaseInteraction]#λ, shapeless.Const[
       InteractionTpe
-    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[ButtonInteraction]#λ]
+    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[BaseInteraction]#λ]
 ) extends InteractionHandlerOps {
 
   def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
@@ -19,9 +19,15 @@ abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
   def acknowledgeLoading: InteractionResponse =
     InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
 
-  def handle(implicit interaction: ButtonInteraction): InteractionResponse
+  def handle(implicit interaction: InteractionTpe): InteractionResponse
 
-  def handleRaw(clientId: String, interaction: RawInteraction, cacheSnapshot: Option[CacheSnapshot]): InteractionResponse = {
+  protected def makeBaseInteraction(invocationInfo: InteractionInvocationInfo, message: Message, interaction: RawInteraction, cacheSnapshot: Option[CacheSnapshot]): BaseInteraction
+
+  def handleRaw(
+      clientId: String,
+      interaction: RawInteraction,
+      cacheSnapshot: Option[CacheSnapshot]
+  ): InteractionResponse = {
     val invocationInfo = InteractionInvocationInfo(
       interaction.id,
       interaction.guildId,
@@ -37,13 +43,8 @@ abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
       case Some(rawMessage) =>
         val message = rawMessage.toMessage
 
-        val base = cacheSnapshot match {
-          case Some(value) => BaseCacheButtonInteraction(invocationInfo, message, value)
-          case None        => StatelessButtonInteraction(invocationInfo, message)
-        }
-
         interactionTransformer
-          .filter(base)
+          .filter(makeBaseInteraction(invocationInfo, message, interaction, cacheSnapshot))
           .map(handle(_))
           .leftMap {
             case Some(error) =>
@@ -61,7 +62,7 @@ abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
 
       case None =>
         InteractionResponse.ChannelMessage(
-          RawInteractionApplicationCommandCallbackData(content = Some(s"Wrong data for button execution")),
+          RawInteractionApplicationCommandCallbackData(content = Some(s"Wrong data for component execution")),
           () => OptFuture.unit
         )
     }

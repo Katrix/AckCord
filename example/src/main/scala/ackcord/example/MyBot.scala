@@ -35,9 +35,8 @@ object MyBot extends App {
   val GeneralCommands = "!"
   val MusicCommands   = "&"
 
-  require(args.length < 2, "Please provide a token and client id")
+  require(args.nonEmpty, "Please provide a token")
   val token    = args.head
-  val clientId = args.tail.head
   val settings = ClientSettings(token, intents = GatewayIntents.AllNonPrivileged)
   import settings.executionContext
 
@@ -99,7 +98,7 @@ object MyBot extends App {
         myCommands.kill
       )
 
-      val buttonCommands = new MyButtonCommands(client.requests)
+      val buttonCommands = new MyComponentCommands(client.requests)
 
       client.commands.bulkRunNamedWithHelp(
         myHelpCommand,
@@ -108,9 +107,12 @@ object MyBot extends App {
 
       import client.system
 
-      client.events.interactions
-        .to(InteractionsRegistrar.gatewayInteractions()(clientId, client.requests))
-        .run()
+      client.onEventSideEffectsIgnore {
+        case APIMessage.Ready(applicationId, _, _) =>
+          client.events.interactions
+            .to(InteractionsRegistrar.gatewayInteractions()(applicationId.asString, client.requests))
+            .run()
+      }
 
       client.login()
     }

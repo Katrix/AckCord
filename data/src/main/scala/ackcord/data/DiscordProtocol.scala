@@ -250,7 +250,7 @@ trait DiscordProtocol {
       case raw: RawButton => raw
       case _              => RawButton(a.label, a.customId, a.style, a.emoji, a.url, a.disabled)
     }
-    rawButton.asJson.deepMerge(Json.obj("type" := 2))
+    rawButton.asJson.deepMerge(Json.obj("type" := a.tpe))
   }
 
   implicit val buttonDecoder: Decoder[Button] = (c: HCursor) => {
@@ -265,6 +265,30 @@ trait DiscordProtocol {
       asTextButton.orElse(asLinkButton).getOrElse(button)
     }
   }
+
+  implicit private val selectOptionCodec: Codec[SelectOption] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit private val selectMenuEncoder: Encoder[SelectMenu] = {
+    val base: Encoder[SelectMenu] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+    (a: SelectMenu) => base(a).deepMerge(Json.obj("type" := a.tpe))
+  }
+
+  implicit private val selectMenuDecoder: Decoder[SelectMenu] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+
+  implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
+    (c: HCursor) => c.get[ComponentType]("type").flatMap {
+      case ComponentType.Button => c.as[Button]
+      case ComponentType.SelectMenu => c.as[SelectMenu]
+      case ComponentType.ActionRow => Left(DecodingFailure("Invalid component type ActionRow", c.history))
+      case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
+    },
+    {
+      case button: Button => button.asJson
+      case menu: SelectMenu => menu.asJson
+    }
+  )
 
   implicit val actionRowCodec: Codec[ActionRow] = {
     val base: Codec[ActionRow] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
@@ -566,9 +590,9 @@ trait DiscordProtocol {
     Codec.from(
       (c: HCursor) =>
         c.get[Int]("component_type").flatMap {
-          case 1 => c.as[ApplicationCommandInteractionData]
-          case 2 => c.as[ApplicationComponentInteractionData]
-          case n => c.as[Json].map(ApplicationUnknownInteractionData(n, _))
+          case 1     => c.as[ApplicationCommandInteractionData]
+          case 2 | 3 => c.as[ApplicationComponentInteractionData]
+          case n     => c.as[Json].map(ApplicationUnknownInteractionData(n, _))
         },
       {
         case a: ApplicationCommandInteractionData         => a.asJson.deepMerge(Json.obj("component_type" := 1))

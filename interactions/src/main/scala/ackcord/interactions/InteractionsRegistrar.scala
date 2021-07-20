@@ -31,8 +31,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import ackcord.interactions.buttons.{GlobalRegisteredButtons, RegisteredButtons}
 import ackcord.interactions.commands.CommandOrGroup
+import ackcord.interactions.components.{GlobalRegisteredComponents, RegisteredComponents}
 import ackcord.interactions.raw._
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.{CacheSnapshot, OptFuture}
@@ -54,7 +54,7 @@ object InteractionsRegistrar {
   private def handleInteraction(
       clientId: String,
       commandsByName: Map[String, Seq[CommandOrGroup]],
-      registeredButtons: RegisteredButtons,
+      registeredButtons: RegisteredComponents,
       interaction: RawInteraction,
       optCache: Option[CacheSnapshot]
   ) =
@@ -75,7 +75,7 @@ object InteractionsRegistrar {
           case Some(data: ApplicationComponentInteractionData) =>
             registeredButtons
               .handlerForIdentifier(data.customId)
-              .orElse(GlobalRegisteredButtons.handlerForIdentifier(data.customId))
+              .orElse(GlobalRegisteredComponents.handlerForIdentifier(data.customId))
               .map(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
@@ -99,7 +99,7 @@ object InteractionsRegistrar {
   )(
       clientId: String,
       publicKey: String,
-      registeredButtons: RegisteredButtons = GlobalRegisteredButtons,
+      registeredButtons: RegisteredComponents = GlobalRegisteredComponents,
       parallelism: Int = 4
   )(
       implicit system: ActorSystem[Nothing]
@@ -186,7 +186,7 @@ object InteractionsRegistrar {
   )(
       clientId: String,
       requests: Requests,
-      registeredButtons: RegisteredButtons = GlobalRegisteredButtons,
+      registeredButtons: RegisteredComponents = GlobalRegisteredComponents,
       parallelism: Int = 4
   ): Sink[(RawInteraction, Option[CacheSnapshot]), NotUsed] = {
     import requests.system

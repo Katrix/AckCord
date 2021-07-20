@@ -11,14 +11,17 @@ sealed trait Component {
   def tpe: ComponentType
 }
 
-case class ActionRow(
-    components: Seq[Button]
+case class ActionRow private (
+    components: Seq[ActionRowContent]
 ) extends Component {
   require(components.size <= 5, "Too many components in ActionRow")
 
   override def tpe: ComponentType = ComponentType.ActionRow
 
-  def mapButtons(f: Button => Button): ActionRow = copy(components = components.map(f))
+  def mapButtons(f: Button => Button): ActionRow = copy(components = components.map {
+    case button: Button   => f(button)
+    case menu: SelectMenu => menu
+  })
 
   def updateButton(identifier: String, f: TextButton => Button): ActionRow = copy(components = components.map {
     case button: TextButton if button.identifier == identifier => f(button)
@@ -26,10 +29,14 @@ case class ActionRow(
   })
 }
 object ActionRow {
-  def of(buttons: Button*): ActionRow = new ActionRow(buttons)
+  def ofUnsafe(components: Seq[ActionRowContent]) = new ActionRow(components)
+  def of(buttons: Button*): ActionRow             = new ActionRow(buttons)
+  def of(selectMenu: SelectMenu): ActionRow       = new ActionRow(Seq(selectMenu))
 }
 
-sealed trait Button extends Component {
+sealed trait ActionRowContent extends Component
+
+sealed trait Button extends ActionRowContent {
 
   def tpe: ComponentType = ComponentType.Button
 
@@ -161,12 +168,47 @@ object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[But
   override def createUnknown(value: Int): ButtonStyle = Unknown(value)
 }
 
+case class SelectMenu(
+    options: Seq[SelectOption],
+    placeholder: Option[String] = None,
+    customId: String = UUID.randomUUID().toString,
+    minValues: Int = 1,
+    maxValues: Int = 1,
+    disabled: Boolean = false
+) extends ActionRowContent {
+  require(customId.length <= 100, "Custom id too long")
+  require(options.length <= 25, "Too many options")
+  require(placeholder.forall(_.length <= 100), "Placeholder too long")
+  require(minValues >= 0, "Min values negative")
+  require(minValues <= 25, "Too high min values")
+  require(maxValues <= 25, "Too high max values")
+
+  override def tpe: ComponentType = ComponentType.SelectMenu
+}
+
+case class SelectOption(
+    label: String,
+    value: String,
+    description: Option[String] = None,
+    emoji: Option[PartialEmoji] = None,
+    default: Boolean = false
+)
+object SelectOption {
+  def of(
+      content: String,
+      description: Option[String] = None,
+      emoji: Option[PartialEmoji] = None,
+      default: Boolean = false
+  ): SelectOption = new SelectOption(content, content, description, emoji, default)
+}
+
 sealed abstract class ComponentType(val value: Int) extends IntEnumEntry
 object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown[ComponentType] {
   override def values: immutable.IndexedSeq[ComponentType] = findValues
 
-  case object ActionRow extends ComponentType(1)
-  case object Button    extends ComponentType(2)
+  case object ActionRow  extends ComponentType(1)
+  case object Button     extends ComponentType(2)
+  case object SelectMenu extends ComponentType(3)
 
   case class Unknown(id: Int) extends ComponentType(id)
 
