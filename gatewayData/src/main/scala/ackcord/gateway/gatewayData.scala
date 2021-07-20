@@ -1093,13 +1093,13 @@ object GatewayEvent {
   case class StageInstanceUpdate(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
-    override def name: String = "STAGE_INSTANCE_CREATE"
+    override def name: String = "STAGE_INSTANCE_UPDATE"
   }
 
   case class StageInstanceDelete(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
-    override def name: String = "STAGE_INSTANCE_CREATE"
+    override def name: String = "STAGE_INSTANCE_DELETE"
   }
 
   /**

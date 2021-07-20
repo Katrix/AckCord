@@ -768,7 +768,7 @@ case class OutgoingEmbed(
     fields: Seq[EmbedField] = Seq.empty
 ) {
   require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
-  require(description.forall(_.length <= 2048), "The description of an embed can't be longer than 2048 characters")
+  require(description.forall(_.length <= 4096), "The description of an embed can't be longer than 2048 characters")
   require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
   require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
 

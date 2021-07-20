@@ -171,7 +171,6 @@ case class GuildPreview(
   * @param isOwner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
   * @param permissions The permissions of the current user without overwrites.
-  * @param region The voice region
   * @param afkChannelId The channelId of the AFK channel.
   * @param afkTimeout The amount of seconds you need to be AFK before being
   *                   moved to the AFK channel.
@@ -226,7 +225,6 @@ case class Guild(
     isOwner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
-    region: String,
     afkChannelId: Option[NormalVoiceGuildChannelId],
     afkTimeout: Int,
     verificationLevel: VerificationLevel,
@@ -249,7 +247,7 @@ case class Guild(
     members: SnowflakeMap[User, GuildMember],
     channels: SnowflakeMap[GuildChannel, GuildChannel],
     presences: SnowflakeMap[User, Presence],
-    maxPresences: Int,
+    maxPresences: Option[Int],
     maxMembers: Option[Int],
     vanityUrlCode: Option[String],
     description: Option[String],
@@ -350,20 +348,23 @@ sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
-  case object InviteSplash         extends GuildFeature("INVITE_SPLASH")
-  case object VipRegions           extends GuildFeature("VIP_REGIONS")
-  case object VanityUrl            extends GuildFeature("VANITY_URL")
-  case object Verified             extends GuildFeature("VERIFIED")
-  case object Partnered            extends GuildFeature("PARTNERED")
-  case object Community            extends GuildFeature("COMMUNITY")
-  case object Commerce             extends GuildFeature("COMMERCE")
-  case object News                 extends GuildFeature("NEWS")
-  case object Discoverable         extends GuildFeature("DISCOVERABLE")
-  case object Featureable          extends GuildFeature("FEATURABLE")
-  case object AnimatedIcon         extends GuildFeature("ANIMATED_ICON")
-  case object Banner               extends GuildFeature("BANNER")
-  case object WelcomeScreenEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
-  case class Unknown(str: String)  extends GuildFeature(str)
+  case object InviteSplash          extends GuildFeature("INVITE_SPLASH")
+  case object VipRegions            extends GuildFeature("VIP_REGIONS")
+  case object VanityUrl             extends GuildFeature("VANITY_URL")
+  case object Verified              extends GuildFeature("VERIFIED")
+  case object Partnered             extends GuildFeature("PARTNERED")
+  case object Community             extends GuildFeature("COMMUNITY")
+  case object Commerce              extends GuildFeature("COMMERCE")
+  case object News                  extends GuildFeature("NEWS")
+  case object Discoverable          extends GuildFeature("DISCOVERABLE")
+  case object Featureable           extends GuildFeature("FEATURABLE")
+  case object AnimatedIcon          extends GuildFeature("ANIMATED_ICON")
+  case object Banner                extends GuildFeature("BANNER")
+  case object WelcomeScreenEnabled  extends GuildFeature("TICKETED_EVENTS_ENABLED")
+  case object TicketedEventsEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
+  case object MonetizationEnabled   extends GuildFeature("MONETIZATION_ENABLED")
+  case object MoreStickers          extends GuildFeature("MORE_STICKERS")
+  case class Unknown(str: String)   extends GuildFeature(str)
 
   override def createUnknown(value: String): GuildFeature = Unknown(value)
 }

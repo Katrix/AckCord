@@ -36,7 +36,6 @@ import io.circe.syntax._
 
 /**
   * @param name The name of the guild
-  * @param region The voice region for the guild
   * @param icon The icon to use for the guild. Must be 1024x1024 png/jpeg.
   * @param verificationLevel The verification level to use for the guild.
   * @param defaultMessageNotifications The notification level to use for
@@ -51,7 +50,6 @@ import io.circe.syntax._
   */
 case class CreateGuildData(
     name: String,
-    region: Option[String],
     icon: Option[ImageData],
     verificationLevel: Option[VerificationLevel],
     defaultMessageNotifications: Option[NotificationLevel],
@@ -124,7 +122,6 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
   */
 case class ModifyGuildData(
     name: JsonOption[String] = JsonUndefined,
-    region: JsonOption[String] = JsonUndefined,
     verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
     defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
     explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
@@ -145,7 +142,6 @@ object ModifyGuildData {
   implicit val encoder: Encoder[ModifyGuildData] = (a: ModifyGuildData) =>
     JsonOption.removeUndefinedToObj(
       "name"                          -> a.name.toJson,
-      "region"                        -> a.region.toJson,
       "verification_level"            -> a.verificationLevel.toJson,
       "default_message_notifications" -> a.defaultMessageNotifications.toJson,
       "explicit_content_filter"       -> a.explicitContentFilter.toJson,
@@ -225,7 +221,7 @@ case class CreateGuildChannelData(
     parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
     nsfw: JsonOption[Boolean] = JsonUndefined
 ) {
-  require(name.length >= 2 && name.length <= 100, "A channel name has to be between 2 and 100 characters")
+  require(name.nonEmpty && name.length <= 100, "A channel name has to be between 2 and 100 characters")
   require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
 }
 object CreateGuildChannelData {
@@ -508,23 +504,29 @@ object ModifyBotUsersNick {
 /**
   * Add a role to a guild member.
   */
-case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
+case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[AddGuildMemberRole] {
   override def route: RequestRoute = Routes.addGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
+
+  override def withReason(reason: String): AddGuildMemberRole = copy(reason = Some(reason))
 }
 
 /**
   * Remove a role from a guild member.
   */
-case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId) extends NoParamsResponseRequest {
+case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[RemoveGuildMemberRole] {
   override def route: RequestRoute = Routes.removeGuildMemberRole(guildId, userId, roleId)
 
   override def requiredPermissions: Permission = Permission.ManageRoles
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
+
+  override def withReason(reason: String): RemoveGuildMemberRole = copy(reason = Some(reason))
 }
 
 /**
@@ -575,9 +577,8 @@ case class GetGuildBan(guildId: GuildId, userId: UserId) extends NoParamsRequest
 /**
   * @param deleteMessageDays The number of days to delete messages for
   *                          this banned user.
-  * @param reason The reason for the ban.
   */
-case class CreateGuildBanData(deleteMessageDays: Option[Int], reason: Option[String])
+case class CreateGuildBanData(deleteMessageDays: Option[Int])
 
 /**
   * Ban a user from a guild.
@@ -605,7 +606,7 @@ object CreateGuildBan {
       userId: UserId,
       deleteMessageDays: Option[Int],
       reason: Option[String]
-  ): CreateGuildBan = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays, reason))
+  ): CreateGuildBan = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays), reason)
 }
 
 /**
@@ -895,12 +896,14 @@ case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRe
 /**
   * Delete an integration.
   */
-case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId) extends NoParamsResponseRequest {
+case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId, reason: Option[String] = None) extends NoParamsResponseReasonRequest[DeleteGuildIntegration] {
   override def route: RequestRoute = Routes.deleteGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
+
+  override def withReason(reason: String): DeleteGuildIntegration = copy(reason = Some(reason))
 }
 
 /**
@@ -919,8 +922,8 @@ case class GetGuildWidgetSettings(guildId: GuildId) extends NoParamsNiceResponse
 /**
   * Modify a guild widget for a guild.
   */
-case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings)
-    extends NoNiceResponseRequest[GuildWidgetSettings, GuildWidgetSettings] {
+case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings, reason: Option[String] = None)
+    extends NoNiceResponseReasonRequest[ModifyGuildWidget, GuildWidgetSettings, GuildWidgetSettings] {
   override def route: RequestRoute                         = Routes.modifyGuildWidget(guildId)
   override def paramsEncoder: Encoder[GuildWidgetSettings] = Encoder[GuildWidgetSettings]
 
@@ -929,6 +932,8 @@ case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings)
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
+
+  override def withReason(reason: String): ModifyGuildWidget = copy(reason = Some(reason))
 }
 
 /**
@@ -1153,12 +1158,14 @@ object ModifyGuildWelcomeScreenData {
     )
 }
 
-case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcomeScreenData)
-    extends NoNiceResponseRequest[ModifyGuildWelcomeScreenData, WelcomeScreen] {
+case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcomeScreenData, reason: Option[String] = None)
+    extends NoNiceResponseReasonRequest[ModifyGuildWelcomeScreen, ModifyGuildWelcomeScreenData, WelcomeScreen] {
   override def route: RequestRoute = Routes.modifyGuildWelcomeScreen(guildId)
 
-  override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ???
+  override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ModifyGuildWelcomeScreenData.encoder
   override def responseDecoder: Decoder[WelcomeScreen]              = Decoder[WelcomeScreen]
+
+  override def withReason(reason: String): ModifyGuildWelcomeScreen = copy(reason = Some(reason))
 }
 
 case class UpdateCurrentUserVoiceStateData(

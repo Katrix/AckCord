@@ -75,7 +75,8 @@ case class RawChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
     rtcRegion: Option[String],
-    videoQualityMode: Option[VideoQualityMode]
+    videoQualityMode: Option[VideoQualityMode],
+    permissions: Option[Permission]
 ) {
 
   /**
@@ -101,7 +102,8 @@ case class RawChannel(
               lastMessageId,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp
+              lastPinTimestamp,
+              permissions
             )
           } else {
             NormalTextGuildChannel(
@@ -115,7 +117,8 @@ case class RawChannel(
               rateLimitPerUser,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp
+              lastPinTimestamp,
+              permissions
             )
           }
         }
@@ -235,7 +238,8 @@ case class RawChannel(
               lastMessageId,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp
+              lastPinTimestamp,
+              permissions
             )
           } else {
             NormalTextGuildChannel(
@@ -249,7 +253,8 @@ case class RawChannel(
               rateLimitPerUser,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp
+              lastPinTimestamp,
+              permissions
             )
           }
         }
@@ -549,7 +554,6 @@ case class RawMessage(
   * @param owner If the current user is the owner of the guild.
   * @param ownerId The userId of the owner.
   * @param permissions The permissions of the current user without overwrites.
-  * @param region The voice region
   * @param afkChannelId The channelId of the AFK channel.
   * @param afkTimeout The amount of seconds you need to be AFK before being
   *                   moved to the AFK channel.
@@ -600,7 +604,6 @@ case class RawGuild(
     owner: Option[Boolean],
     ownerId: UserId,
     permissions: Option[Permission],
-    region: String,
     afkChannelId: Option[NormalVoiceGuildChannelId], //AfkChannelId can be null
     afkTimeout: Int,
     verificationLevel: VerificationLevel,
@@ -665,7 +668,6 @@ case class RawGuild(
         owner,
         ownerId,
         permissions,
-        region,
         afkChannelId,
         afkTimeout,
         verificationLevel,
@@ -688,7 +690,7 @@ case class RawGuild(
         SnowflakeMap.from(members.getOrElse(Nil).map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
         SnowflakeMap.from(presences.getOrElse(Nil).map(p => p.user.id -> p.toPresence)),
-        maxPresences.getOrElse(25000), // The default is 25000
+        maxPresences,
         maxMembers,
         vanityUrlCode,
         description,

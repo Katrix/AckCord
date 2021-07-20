@@ -165,7 +165,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
         fields = Seq(EmbedField("FileName", "theFile.txt"))
       )
 
-      m.textChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embed = Some(embed))
+      m.textChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embeds = Seq(embed))
     }
 
   private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, NotUsed] =

@@ -1,7 +1,7 @@
 package ackcord.requests
 
-import ackcord.data._
 import ackcord.data.DiscordProtocol._
+import ackcord.data._
 import ackcord.util.{JsonOption, JsonUndefined}
 import io.circe.{Decoder, Encoder, derivation}
 
@@ -11,13 +11,15 @@ case class CreateStageInstanceData(
     privacyLevel: StageInstancePrivacyLevel = StageInstancePrivacyLevel.GuildOnly
 )
 
-case class CreateStageInstance(params: CreateStageInstanceData)
-    extends NoNiceResponseRequest[CreateStageInstanceData, StageInstance] {
+case class CreateStageInstance(params: CreateStageInstanceData, reason: Option[String] = None)
+    extends NoNiceResponseReasonRequest[CreateStageInstance, CreateStageInstanceData, StageInstance] {
   override def route: RequestRoute = Routes.createStageInstance
 
   override def paramsEncoder: Encoder[CreateStageInstanceData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase, None)
   override def responseDecoder: Decoder[StageInstance] = Decoder[StageInstance]
+
+  override def withReason(reason: String): CreateStageInstance = copy(reason = Some(reason))
 }
 
 case class GetStageInstance(channelId: StageGuildChannelId) extends NoParamsNiceResponseRequest[StageInstance] {
@@ -37,14 +39,22 @@ object UpdateStageInstanceData {
       "privacy_level" -> a.privacyLevel.toJson
     )
 }
-case class UpdateStageInstance(channelId: StageGuildChannelId, params: UpdateStageInstanceData)
-    extends NoNiceResponseRequest[UpdateStageInstanceData, StageInstance] {
+case class UpdateStageInstance(
+    channelId: StageGuildChannelId,
+    params: UpdateStageInstanceData,
+    reason: Option[String] = None
+) extends NoNiceResponseReasonRequest[UpdateStageInstance, UpdateStageInstanceData, StageInstance] {
   override def route: RequestRoute = Routes.updateStageInstance(channelId)
 
   override def paramsEncoder: Encoder[UpdateStageInstanceData] = UpdateStageInstanceData.encoder
-  override def responseDecoder: Decoder[StageInstance] = Decoder[StageInstance]
+  override def responseDecoder: Decoder[StageInstance]         = Decoder[StageInstance]
+
+  override def withReason(reason: String): UpdateStageInstance = copy(reason = Some(reason))
 }
 
-case class DeleteStageInstance(channelId: StageGuildChannelId) extends NoParamsResponseRequest {
+case class DeleteStageInstance(channelId: StageGuildChannelId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[DeleteStageInstance] {
   override def route: RequestRoute = Routes.deleteStageInstance(channelId)
+
+  override def withReason(reason: String): DeleteStageInstance = copy(reason = Some(reason))
 }

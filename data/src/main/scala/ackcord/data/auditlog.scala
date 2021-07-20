@@ -24,11 +24,11 @@
 
 package ackcord.data
 
+import scala.collection.immutable
+
 import ackcord.CacheSnapshot
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
-
-import scala.collection.immutable
 
 /**
   * Root audit log object. Received from [[ackcord.requests.GetGuildAuditLog]]
@@ -112,6 +112,9 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
   case object IntegrationCreate      extends AuditLogEvent(80)
   case object IntegrationUpdate      extends AuditLogEvent(81)
   case object IntegrationDelete      extends AuditLogEvent(82)
+  case object StageInstanceCreate    extends AuditLogEvent(83)
+  case object StageInstanceUpdate    extends AuditLogEvent(84)
+  case object StageInstanceDelete    extends AuditLogEvent(85)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 
@@ -127,7 +130,8 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
   * @param membersRemoved The amount of members removed.
   *                       Present for MemberPrune.
   * @param channelId The channelId of the deleted message.
-  *                  Present for MemberMove, MessagePing, MessageUnpin and MessageDelete.
+  *                  Present for MemberMove, MessagePing, MessageUnpin, MessageDelete,
+  *                  StageInstanceCreate, StageInstanceUpdate and StageInstanceDelete.
   * @param messageId The message that was targeted. Present for MessagePin and MessageUnpin
   * @param count The amount of deleted messages. Present for MessageDelete.
   * @param id The id of the overwritten object. Present for overwrite events.
@@ -331,7 +335,7 @@ object AuditLogChange {
   case class Position(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
 
   /**
-    * Channel topic changed
+    * Channel or stage instance topic changed
     */
   case class Topic(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
 
@@ -497,4 +501,15 @@ object AuditLogChange {
     * Integration grace period changed
     */
   case class ExpireGracePeriod(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+
+  /**
+    * New user limit in a voice channel
+    */
+  case class UserLimit(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+
+  /**
+    * Privacy level of a stage instance
+    */
+  case class PrivacyLevel(oldValue: Option[StageInstancePrivacyLevel], newValue: Option[StageInstancePrivacyLevel])
+      extends AuditLogChange[StageInstancePrivacyLevel]
 }

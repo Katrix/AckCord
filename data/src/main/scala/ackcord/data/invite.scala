@@ -40,6 +40,7 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
   * @param targetApplication The embedded application to open for this voice channel embedded application invite.
   * @param approximatePresenceCount Approximate amount of people online.
   * @param approximateMemberCount Approximate amount of total members.
+  * @param stageInstance Stage instance if there is a public stage instance in the stage channel this invite leads to.
   */
 case class Invite(
     code: String,
@@ -51,7 +52,8 @@ case class Invite(
     targetApplication: Option[PartialApplication],
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int],
-    expiresAt: Option[OffsetDateTime]
+    expiresAt: Option[OffsetDateTime],
+    stageInstance: Option[InviteStageInstance]
 )
 
 /**
@@ -64,6 +66,7 @@ case class Invite(
   * @param targetApplication The embedded application to open for this voice channel embedded application invite.
   * @param approximatePresenceCount Approximate amount of people online.
   * @param approximateMemberCount Approximate amount of total members.
+  * @param stageInstance Stage instance if there is a public stage instance in the stage channel this invite leads to.
   * @param uses How many times the invite has been used.
   * @param maxUses How many times this invite can be used.
   * @param maxAge The duration in seconds when the invite will expire
@@ -81,11 +84,29 @@ case class InviteWithMetadata(
     approximatePresenceCount: Option[Int],
     approximateMemberCount: Option[Int],
     expiresAt: Option[OffsetDateTime],
+    stageInstance: Option[InviteStageInstance],
     uses: Int,
     maxUses: Int,
     maxAge: Int,
     temporary: Boolean,
     createdAt: OffsetDateTime
+)
+
+case class InviteStageInstance(
+    members: Seq[InviteStageInstanceMember],
+    participantCount: Int,
+    speakerCount: Int,
+    topic: String
+)
+
+case class InviteStageInstanceMember(
+    roles: Seq[RoleId],
+    nick: Option[String],
+    avatar: Option[String],
+    premiumSince: Option[OffsetDateTime],
+    joinedAt: OffsetDateTime,
+    pending: Option[Boolean],
+    user: User
 )
 
 /**

@@ -176,7 +176,6 @@ object CacheHandlers {
           isOwner = obj.owner,
           ownerId = obj.ownerId,
           permissions = obj.permissions,
-          region = obj.region,
           afkChannelId = obj.afkChannelId,
           afkTimeout = obj.afkTimeout,
           verificationLevel = obj.verificationLevel,
@@ -202,7 +201,7 @@ object CacheHandlers {
           members = SnowflakeMap.withKey(members)(_.userId),
           channels = SnowflakeMap.withKey(channels)(_.id),
           presences = SnowflakeMap.withKey(presences)(_.userId),
-          maxPresences = obj.maxPresences.getOrElse(25000), //25000 is the default
+          maxPresences = obj.maxPresences,
           maxMembers = obj.maxMembers,
           vanityUrlCode = obj.vanityUrlCode,
           description = obj.description,

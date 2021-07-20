@@ -279,7 +279,7 @@ case class CreateMessageData(
     nonce: Option[Either[String, RawSnowflake]] = None,
     tts: Boolean = false,
     files: Seq[CreateMessageFile] = Seq.empty,
-    embed: Option[OutgoingEmbed] = None,
+    embeds: Seq[OutgoingEmbed] = Seq.empty,
     allowedMentions: AllowedMention = AllowedMention.all,
     replyTo: Option[MessageId] = None,
     replyFailIfNotExist: Boolean = true,
@@ -291,6 +291,7 @@ case class CreateMessageData(
     "Please use unique filenames for all files"
   )
   require(content.length <= 2000, "The content of a message can't exceed 2000 characters")
+  require(embeds.size <= 10, "Can't send more than 10 embeds with a webhook message")
   require(components.length <= 5, "Can't have more than 5 action rows on a message")
   require(nonce.forall(_.swap.forall(_.length <= 25)), "Nonce too long")
 }
@@ -302,7 +303,7 @@ object CreateMessageData {
       "content" := a.content,
       "nonce" := a.nonce.map(_.fold(_.asJson, _.asJson)),
       "tts" := a.tts,
-      "embed" := a.embed,
+      "embeds" := a.embeds,
       "allowed_mentions" := a.allowedMentions,
       "components" := a.components
     )
@@ -350,7 +351,7 @@ object CreateMessage {
     new CreateMessage(channelId, CreateMessageData(content))
 
   def mkEmbed(channelId: TextChannelId, embed: OutgoingEmbed): CreateMessage =
-    new CreateMessage(channelId, CreateMessageData(embed = Some(embed)))
+    new CreateMessage(channelId, CreateMessageData(embeds = Seq(embed)))
 }
 
 /**
@@ -460,12 +461,13 @@ case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
     files: Seq[CreateMessageFile] = Seq.empty,
     allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
-    embed: JsonOption[OutgoingEmbed] = JsonUndefined,
+    embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
     flags: JsonOption[MessageFlags] = JsonUndefined,
     components: JsonOption[Seq[ActionRow]] = JsonUndefined,
     attachments: JsonOption[Seq[Attachment]] = JsonUndefined
 ) {
   require(content.forall(_.length < 2000))
+  require(embeds.forall(_.size <= 10), "Can't send more than 10 embeds with a webhook message")
   require(components.forall(_.length <= 5), "Can't have more than 5 action rows on a message")
 }
 object EditMessageData {
@@ -473,7 +475,7 @@ object EditMessageData {
     JsonOption.removeUndefinedToObj(
       "content"          -> a.content.toJson,
       "allowed_mentions" -> a.allowedMentions.toJson,
-      "embed"            -> a.embed.toJson,
+      "embeds"           -> a.embeds.toJson,
       "flags"            -> a.flags.toJson,
       "components"       -> a.components.toJson,
       "attachments"      -> a.attachments.toJson
@@ -518,7 +520,7 @@ object EditMessage {
       channelId: TextChannelId,
       messageId: MessageId,
       embed: OutgoingEmbed
-  ): EditMessage = new EditMessage(channelId, messageId, EditMessageData(embed = JsonSome(embed)))
+  ): EditMessage = new EditMessage(channelId, messageId, EditMessageData(embeds = JsonSome(Seq(embed))))
 
   def suppressEmbeds(
       channelId: TextChannelId,
@@ -564,8 +566,9 @@ case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
   */
 case class BulkDeleteMessages(
     channelId: TextChannelId,
-    params: BulkDeleteMessagesData
-) extends NoResponseRequest[BulkDeleteMessagesData] {
+    params: BulkDeleteMessagesData,
+    reason: Option[String] = None
+) extends NoResponseReasonRequest[BulkDeleteMessages, BulkDeleteMessagesData] {
   override def route: RequestRoute = Routes.bulkDeleteMessages(channelId)
   override def paramsEncoder: Encoder[BulkDeleteMessagesData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase, None)
@@ -573,6 +576,8 @@ case class BulkDeleteMessages(
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
+
+  override def withReason(reason: String): BulkDeleteMessages = copy(reason = Some(reason))
 }
 object BulkDeleteMessages {
   def mk(
@@ -730,23 +735,29 @@ case class GetPinnedMessages(channelId: TextChannelId) extends NoParamsRequest[S
 /**
   * Pin a message in a channel.
   */
-case class PinMessage(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
+case class PinMessage(channelId: TextChannelId, messageId: MessageId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[PinMessage] {
   override def route: RequestRoute = Routes.addPinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
+
+  override def withReason(reason: String): PinMessage = copy(reason = Some(reason))
 }
 
 /**
   * Unpin a message in a channel..
   */
-case class UnpinMessage(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
+case class UnpinMessage(channelId: TextChannelId, messageId: MessageId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[UnpinMessage] {
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(channelId, messageId)
 
   override def requiredPermissions: Permission = Permission.ManageMessages
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
+
+  override def withReason(reason: String): UnpinMessage = copy(reason = Some(reason))
 }
 
 /*
@@ -796,7 +807,7 @@ case class CreateGuildEmoji(
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
   override def toNiceResponse(response: RawEmoji): Emoji = response.toEmoji
 
-  override def requiredPermissions: Permission = Permission.ManageEmojis
+  override def requiredPermissions: Permission = Permission.ManageEmojisAndStickers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
@@ -849,7 +860,7 @@ case class ModifyGuildEmoji(
   override def responseDecoder: Decoder[RawEmoji]        = Decoder[RawEmoji]
   override def toNiceResponse(response: RawEmoji): Emoji = response.toEmoji
 
-  override def requiredPermissions: Permission = Permission.ManageEmojis
+  override def requiredPermissions: Permission = Permission.ManageEmojisAndStickers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 
@@ -874,7 +885,7 @@ case class DeleteGuildEmoji(
 ) extends NoParamsResponseReasonRequest[DeleteGuildEmoji] {
   override def route: RequestRoute = Routes.deleteGuildEmoji(guildId, emojiId)
 
-  override def requiredPermissions: Permission = Permission.ManageEmojis
+  override def requiredPermissions: Permission = Permission.ManageEmojisAndStickers
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsGuild(guildId, requiredPermissions)
 

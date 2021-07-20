@@ -384,6 +384,12 @@ trait DiscordProtocol {
   implicit val inviteChannelCodec: Codec[InviteChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
+  implicit val inviteStageInstanceMemberCodec: Codec[InviteStageInstanceMember] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val inviteStageInstanceCodec: Codec[InviteStageInstance] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val inviteCodec: Codec[Invite] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -525,6 +531,8 @@ trait DiscordProtocol {
       case "enable_emoticons"              => mkChange(AuditLogChange.EnableEmoticons)
       case "expire_behavior"               => mkChange(AuditLogChange.ExpireBehavior)
       case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
+      case "user_limit"                    => mkChange(AuditLogChange.UserLimit)
+      case "privacy_level"                 => mkChange(AuditLogChange.PrivacyLevel)
     }
   }
 
@@ -588,14 +596,14 @@ trait DiscordProtocol {
     Codec.from(
       (c: HCursor) => {
 
-
-        c.get[ApplicationCommandOptionType]("type").flatMap[DecodingFailure, ApplicationCommandInteractionDataOption[_]] { tpe =>
-          for {
-            name <- c.get[String]("name")
-            rawValue <- c.get[Option[Json]](tpe.valueJsonName)
-            value <- rawValue.traverse(tpe.decodeJson)
-          } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
-        }
+        c.get[ApplicationCommandOptionType]("type")
+          .flatMap[DecodingFailure, ApplicationCommandInteractionDataOption[_]] { tpe =>
+            for {
+              name     <- c.get[String]("name")
+              rawValue <- c.get[Option[Json]](tpe.valueJsonName)
+              value    <- rawValue.traverse(tpe.decodeJson)
+            } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
+          }
 
         /*
         for {
@@ -604,11 +612,15 @@ trait DiscordProtocol {
           rawValue <- c.get[Option[Json]](tpe.valueJsonName)
           value    <- rawValue.traverse(tpe.decodeJson)
         } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
-        */
+         */
       },
       {
         case ApplicationCommandInteractionDataOption(name, tpe, value) =>
-          Json.obj("name" := name, "type" := (tpe: ApplicationCommandOptionType), tpe.valueJsonName := value.map(tpe.encodeJson))
+          Json.obj(
+            "name" := name,
+            "type" := (tpe: ApplicationCommandOptionType),
+            tpe.valueJsonName := value.map(tpe.encodeJson)
+          )
       }
     )
   }

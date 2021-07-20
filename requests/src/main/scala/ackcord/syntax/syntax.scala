@@ -125,7 +125,7 @@ package object syntax {
         content: String = "",
         tts: Boolean = false,
         files: Seq[Path] = Seq.empty,
-        embed: Option[OutgoingEmbed] = None,
+        embeds: Seq[OutgoingEmbed] = Seq.empty,
         allowedMentions: AllowedMention = AllowedMention.all,
         replyTo: Option[MessageId] = None,
         replyFailIfNotExist: Boolean = true,
@@ -137,7 +137,7 @@ package object syntax {
         None,
         tts,
         files.map(CreateMessageFile.FromPath),
-        embed,
+        embeds,
         allowedMentions,
         replyTo,
         replyFailIfNotExist,
@@ -680,7 +680,6 @@ package object syntax {
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
-        region: JsonOption[String] = JsonUndefined,
         verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
         defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
         explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
@@ -700,7 +699,6 @@ package object syntax {
       guild.id,
       ModifyGuildData(
         name = name,
-        region = region,
         verificationLevel = verificationLevel,
         defaultMessageNotifications = defaultMessageNotifications,
         explicitContentFilter = explicitContentFilter,
@@ -1243,7 +1241,7 @@ package object syntax {
       *                              this banned user.
       */
     def ban(deleteMessageDays: Option[Int], reason: Option[String]) =
-      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays, reason))
+      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays), reason)
 
     /**
       * Unban this user.
@@ -1387,10 +1385,10 @@ package object syntax {
         content: JsonOption[String] = JsonUndefined,
         files: Seq[CreateMessageFile] = Seq.empty,
         allowedMentions: JsonOption[AllowedMention] = JsonUndefined,
-        embed: JsonOption[OutgoingEmbed] = JsonUndefined,
+        embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
         flags: JsonOption[MessageFlags] = JsonUndefined,
         components: JsonOption[Seq[ActionRow]] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embed, flags, components))
+    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embeds, flags, components))
 
     /**
       * Delete this message.
@@ -1502,7 +1500,6 @@ package object syntax {
       */
     def createGuild(
         name: String,
-        region: Option[String] = None,
         icon: Option[ImageData] = None,
         verificationLevel: Option[VerificationLevel] = None,
         defaultMessageNotifications: Option[NotificationLevel] = None,
@@ -1517,7 +1514,6 @@ package object syntax {
       CreateGuild(
         CreateGuildData(
           name,
-          region,
           icon,
           verificationLevel,
           defaultMessageNotifications,

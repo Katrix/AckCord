@@ -32,7 +32,7 @@ case class Application(
     botRequireCodeGrant: Boolean,
     termsOfServiceUrl: Option[String],
     privacyPolicyUrl: Option[String],
-    owner: PartialUser,
+    owner: Option[PartialUser],
     summary: String,
     verifyKey: String,
     team: Option[Team],
@@ -40,7 +40,7 @@ case class Application(
     primarySkuId: Option[RawSnowflake],
     slug: Option[String],
     coverImage: Option[String],
-    flags: ApplicationFlags
+    flags: Option[ApplicationFlags]
 )
 
 case class PartialApplication(
