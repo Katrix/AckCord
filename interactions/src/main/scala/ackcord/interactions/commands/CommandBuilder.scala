@@ -54,17 +54,21 @@ class CommandBuilder[Interaction[_], A](
     new CommandBuilder(transformer, implParamList, extra)
 
   def group(name: String, description: String)(subcommands: CommandOrGroup*): CommandGroup = {
-    require(subcommands.length <= 25, "Too many subcommands or groups. The maximum is 25")
+    require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     CommandGroup(name, description, extra, subcommands)
   }
 
   def command(name: String, description: String)(
       handle: Interaction[A] => InteractionResponse
-  ): Command[Interaction, A] =
+  ): Command[Interaction, A] = {
+    require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     Command(name, description, extra, implParamList, transformer, handle)
+  }
 
-  def named(name: String, description: String): NamedCommandBuilder[Interaction, A] =
+  def named(name: String, description: String): NamedCommandBuilder[Interaction, A] = {
+    require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
     new NamedCommandBuilder(name, description, transformer, implParamList, extra)
+  }
 }
 
 class NamedCommandBuilder[Interaction[_], A](

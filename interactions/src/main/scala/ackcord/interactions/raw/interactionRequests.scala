@@ -37,10 +37,9 @@ case class CreateCommandData(
     options: Seq[ApplicationCommandOption]
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  require(name.length <= 32, "Command name too short. Maximum length is 32")
   require(description.nonEmpty, "Command description too short. Minimum length is 1")
   require(description.length <= 100, "Command description too short. Maximum length is 100")
-  require(name.matches("""^[\w-]{1,32}$"""), "Name is invalid")
+  require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
 
 }
 object CreateCommandData {
@@ -60,7 +59,6 @@ case class PatchCommandData(
     options: JsonOption[Seq[ApplicationCommandOption]] = JsonUndefined
 ) {
   require(name.nonEmpty, "Command name too short. Minimum length is 1")
-  require(name.forall(_.length <= 32), "Command name too short. Maximum length is 32")
   require(description.nonEmpty, "Command description too short. Minimum length is 1")
   require(description.forall(_.length <= 100), "Command description too short. Maximum length is 100")
   require(name.forall(_.matches("""^[\w-]{1,32}$""")), "Name is invalid")
