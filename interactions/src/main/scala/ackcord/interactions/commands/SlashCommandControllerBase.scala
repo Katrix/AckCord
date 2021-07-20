@@ -65,4 +65,18 @@ trait SlashCommandControllerBase[BaseInteraction[A] <: CommandInteraction[A]] ex
       description,
       _.hcursor.as[String].flatMap(parseMention(roleRegex))
     )
+
+  def mentionable(name: String, description: String): ValueParam[UserOrRoleId, UserOrRoleId, Id] =
+    ValueParam.default(
+      ApplicationCommandOptionType.Mentionable,
+      name,
+      description,
+      _.hcursor
+        .as[String]
+        .flatMap(s =>
+          parseMention(userRegex)(s)
+            .map(id => UserOrRoleId(id))
+            .orElse(parseMention(roleRegex)(s).map(id => UserOrRoleId(id)))
+        )
+    )
 }

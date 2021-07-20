@@ -101,6 +101,7 @@ object ApplicationCommandOptionType
   case object User            extends ApplicationCommandOptionType(6)
   case object Channel         extends ApplicationCommandOptionType(7)
   case object Role            extends ApplicationCommandOptionType(8)
+  case object Mentionable     extends ApplicationCommandOptionType(9)
 
   case class Unknown(i: Int) extends ApplicationCommandOptionType(i)
 
