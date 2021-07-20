@@ -23,17 +23,18 @@
  */
 package ackcord.interactions.raw
 
-import ackcord.data.{CommandId, GuildId, ApplicationId, InteractionId}
+import ackcord.data.{ApplicationId, CommandId, GuildId, InteractionId}
 import ackcord.requests.RequestRoute
 import ackcord.requests.Routes._
 import akka.http.scaladsl.model.HttpMethods._
 
 object InteractionRoutes {
 
-  val commandId = new MinorParameter[CommandId]("commandId", _.asString)
+  val commandId     = new MinorParameter[CommandId]("commandId", _.asString)
   val interactionId = new MinorParameter[InteractionId]("interactionId", _.asString)
 
-  val callback: (InteractionId, String) => RequestRoute = base / "interactions" / interactionId / token / "callback" toRequest POST
+  val callback: (InteractionId, String) => RequestRoute =
+    base / "interactions" / interactionId / token / "callback" toRequest POST
 
   //Commands
   val application: RouteFunction[ApplicationId]                = base / "applications" / applicationId
@@ -56,4 +57,16 @@ object InteractionRoutes {
   val getGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute    = guildCommand.toRequest(GET)
   val patchGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute  = guildCommand.toRequest(PATCH)
   val deleteGuildCommand: (ApplicationId, GuildId, CommandId) => RequestRoute = guildCommand.toRequest(DELETE)
+
+  val applicationGuildCommands: RouteFunction[(ApplicationId, GuildId)] = application / "guilds" / guildId / "commands"
+  val guildCommandsPermissions: RouteFunction[(ApplicationId, GuildId)] = applicationGuildCommands / "permissions"
+  val guildCommandPermissions: RouteFunction[((ApplicationId, GuildId), CommandId)] =
+    applicationGuildCommands / commandId / "permissions"
+
+  val getGuildCommandPermissions: (ApplicationId, GuildId) => RequestRoute = guildCommandsPermissions.toRequest(GET)
+  val getCommandPermissions: (ApplicationId, GuildId, CommandId) => RequestRoute =
+    guildCommandPermissions.toRequest(GET)
+  val putCommandPermissions: (ApplicationId, GuildId, CommandId) => RequestRoute =
+    guildCommandPermissions.toRequest(PUT)
+  val putCommandsPermissions: (ApplicationId, GuildId) => RequestRoute = guildCommandsPermissions.toRequest(PUT)
 }

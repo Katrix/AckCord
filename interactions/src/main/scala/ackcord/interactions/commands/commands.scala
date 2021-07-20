@@ -34,6 +34,8 @@ import cats.syntax.either._
 sealed trait CommandOrGroup {
   def name: String
   def description: String
+  def defaultPermission: Boolean
+
   def extra: Map[String, String]
 
   def toCommandOption: ApplicationCommandOption
@@ -48,6 +50,7 @@ sealed trait CommandOrGroup {
 case class Command[InteractionObj[_], A] private (
     name: String,
     description: String,
+    defaultPermission: Boolean,
     extra: Map[String, String],
     paramList: Either[NotUsed =:= A, ParamList[A]],
     filter: DataInteractionTransformer[CommandInteraction, InteractionObj],
@@ -133,6 +136,7 @@ case class Command[InteractionObj[_], A] private (
 case class CommandGroup private (
     name: String,
     description: String,
+    defaultPermission: Boolean,
     extra: Map[String, String],
     commands: Seq[CommandOrGroup]
 ) extends CommandOrGroup {

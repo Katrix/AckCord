@@ -31,6 +31,7 @@ class StatelessSlashCommandController(val requests: Requests)
     extends SlashCommandControllerBase[StatelessCommandInteraction] {
 
   override val Command: CommandBuilder[StatelessCommandInteraction, NotUsed] = new CommandBuilder(
+    true,
     new DataInteractionTransformer[CommandInteraction, StatelessCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], StatelessCommandInteraction[A]] =
         Right(StatelessCommandInteraction(from.commandInvocationInfo))

@@ -35,6 +35,7 @@ class CacheSlashCommandController(val requests: Requests)
   implicit def findCache[A](implicit message: CacheInteraction): CacheSnapshot = message.cache
 
   override val Command: CommandBuilder[ResolvedCommandInteraction, NotUsed] = new CommandBuilder(
+    true,
     new DataInteractionTransformer[CommandInteraction, CacheCommandInteraction] {
       override def filter[A](from: CommandInteraction[A]): Either[Option[String], CacheCommandInteraction[A]] =
         from.optCache match {

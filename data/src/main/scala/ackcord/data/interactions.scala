@@ -81,7 +81,8 @@ case class ApplicationCommand(
     applicationId: ApplicationId,
     name: String,
     description: String,
-    options: Option[Seq[ApplicationCommandOption]]
+    options: Option[Seq[ApplicationCommandOption]],
+    defaultPermission: Option[Boolean]
 )
 
 case class ApplicationCommandOption(
@@ -223,3 +224,30 @@ case class RawInteractionApplicationCommandCallbackData(
     flags: MessageFlags = MessageFlags.None,
     components: Option[Seq[ActionRow]] = None
 )
+
+case class GuildApplicationCommandPermissions(
+    id: CommandId,
+    applicationId: ApplicationId,
+    guildId: GuildId,
+    permissions: Seq[ApplicationCommandPermissions]
+)
+
+case class ApplicationCommandPermissions(
+    id: UserOrRoleId,
+    `type`: ApplicationCommandPermissionType,
+    permission: Boolean
+)
+
+sealed abstract class ApplicationCommandPermissionType(val value: Int) extends IntEnumEntry
+object ApplicationCommandPermissionType
+    extends IntEnum[ApplicationCommandPermissionType]
+    with IntCirceEnumWithUnknown[ApplicationCommandPermissionType] {
+  override def values: immutable.IndexedSeq[ApplicationCommandPermissionType] = findValues
+
+  case object Role extends ApplicationCommandPermissionType(1)
+  case object User extends ApplicationCommandPermissionType(2)
+
+  case class Unknown(i: Int) extends ApplicationCommandPermissionType(i)
+
+  override def createUnknown(value: Int): ApplicationCommandPermissionType = Unknown(value)
+}

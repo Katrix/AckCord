@@ -659,5 +659,11 @@ trait DiscordProtocol {
         "version" := a.version
       )
   )
+
+  implicit val applicationCommandPermissionsCodec: Codec[ApplicationCommandPermissions] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val guildApplicationCommandPermissionsCodec: Codec[GuildApplicationCommandPermissions] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 }
 object DiscordProtocol extends DiscordProtocol

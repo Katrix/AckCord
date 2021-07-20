@@ -27,6 +27,7 @@ import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, Int
 import akka.NotUsed
 
 class CommandBuilder[Interaction[_], A](
+    val defaultPermission: Boolean,
     val transformer: DataInteractionTransformer[CommandInteraction, Interaction],
     implParamList: Either[NotUsed =:= A, ParamList[A]],
     extra: Map[String, String]
@@ -35,7 +36,7 @@ class CommandBuilder[Interaction[_], A](
   def withTransformer[NewTo[_]](
       transformer: DataInteractionTransformer[CommandInteraction, NewTo]
   ): CommandBuilder[NewTo, A] =
-    new CommandBuilder(transformer, implParamList, extra)
+    new CommandBuilder(defaultPermission, transformer, implParamList, extra)
 
   def andThen[To2[_]](nextTransformer: DataInteractionTransformer[Interaction, To2]): CommandBuilder[To2, A] =
     withTransformer(this.transformer.andThen(nextTransformer))
@@ -44,45 +45,50 @@ class CommandBuilder[Interaction[_], A](
 
   def withParams[NewA](paramList: ParamList[NewA]): CommandBuilder[Interaction, NewA] = {
     require(paramList.foldRight(0)((_, acc) => acc + 1) <= 25, "Too many parameters. The maximum is 25")
-    new CommandBuilder(transformer, Right(paramList), extra)
+    new CommandBuilder(defaultPermission, transformer, Right(paramList), extra)
   }
 
   def withNoParams: CommandBuilder[Interaction, NotUsed] =
-    new CommandBuilder(transformer, Left(implicitly), extra)
+    new CommandBuilder(defaultPermission, transformer, Left(implicitly), extra)
 
   def withExtra(extra: Map[String, String]): CommandBuilder[Interaction, A] =
-    new CommandBuilder(transformer, implParamList, extra)
+    new CommandBuilder(defaultPermission, transformer, implParamList, extra)
+
+  //Only effective top level
+  def defaultPermission(permission: Boolean): CommandBuilder[Interaction, A] =
+    new CommandBuilder(permission, transformer, implParamList, extra)
 
   def group(name: String, description: String)(subcommands: CommandOrGroup*): CommandGroup = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
-    CommandGroup(name, description, extra, subcommands)
+    CommandGroup(name, description, defaultPermission, extra, subcommands)
   }
 
   def command(name: String, description: String)(
       handle: Interaction[A] => InteractionResponse
   ): Command[Interaction, A] = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
-    Command(name, description, extra, implParamList, transformer, handle)
+    Command(name, description, defaultPermission, extra, implParamList, transformer, handle)
   }
 
   def named(name: String, description: String): NamedCommandBuilder[Interaction, A] = {
     require(name.matches("""^[\w-]{1,32}$"""), "Invalid command name")
-    new NamedCommandBuilder(name, description, transformer, implParamList, extra)
+    new NamedCommandBuilder(name, description, defaultPermission, transformer, implParamList, extra)
   }
 }
 
 class NamedCommandBuilder[Interaction[_], A](
     val name: String,
     val description: String,
+    override val defaultPermission: Boolean,
     transformer: DataInteractionTransformer[CommandInteraction, Interaction],
     implParamList: Either[NotUsed =:= A, ParamList[A]],
     extra: Map[String, String]
-) extends CommandBuilder(transformer, implParamList, extra) {
+) extends CommandBuilder(defaultPermission, transformer, implParamList, extra) {
 
   override def withTransformer[NewTo[_]](
       transformer: DataInteractionTransformer[CommandInteraction, NewTo]
   ): NamedCommandBuilder[NewTo, A] =
-    new NamedCommandBuilder(name, description, transformer, implParamList, extra)
+    new NamedCommandBuilder(name, description, defaultPermission, transformer, implParamList, extra)
 
   override def andThen[To2[_]](
       nextTransformer: DataInteractionTransformer[Interaction, To2]
@@ -91,15 +97,19 @@ class NamedCommandBuilder[Interaction[_], A](
 
   override def withParams[NewA](paramList: ParamList[NewA]): NamedCommandBuilder[Interaction, NewA] = {
     require(paramList.foldRight(0)((_, acc) => acc + 1) <= 25, "Too many parameters. The maximum is 25")
-    new NamedCommandBuilder(name, description, transformer, Right(paramList), extra)
+    new NamedCommandBuilder(name, description, defaultPermission, transformer, Right(paramList), extra)
   }
 
   override def withNoParams: NamedCommandBuilder[Interaction, NotUsed] =
-    new NamedCommandBuilder(name, description, transformer, Left(implicitly), extra)
+    new NamedCommandBuilder(name, description, defaultPermission, transformer, Left(implicitly), extra)
 
   override def withExtra(extra: Map[String, String]): NamedCommandBuilder[Interaction, A] =
-    new NamedCommandBuilder(name, description, transformer, implParamList, extra)
+    new NamedCommandBuilder(name, description, defaultPermission, transformer, implParamList, extra)
+
+  //Only effective top level
+  override def defaultPermission(permission: Boolean): NamedCommandBuilder[Interaction, A] =
+    new NamedCommandBuilder(name, description, permission, transformer, implParamList, extra)
 
   def handle(handler: Interaction[A] => InteractionResponse): Command[Interaction, A] =
-    Command(name, description, extra, implParamList, transformer, handler)
+    Command(name, description, defaultPermission, extra, implParamList, transformer, handler)
 }
