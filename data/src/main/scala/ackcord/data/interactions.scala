@@ -23,10 +23,15 @@
  */
 package ackcord.data
 
+import scala.collection.immutable
+import scala.util.matching.Regex
+
 import ackcord.data.raw.{RawGuildMember, RawMessage}
 import ackcord.util.IntCirceEnumWithUnknown
+import cats.syntax.all._
 import enumeratum.values.{IntEnum, IntEnumEntry}
-import io.circe.Json
+import io.circe._
+import io.circe.syntax._
 
 sealed abstract class InteractionType(val value: Int) extends IntEnumEntry
 object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnknown[InteractionType] {
@@ -88,25 +93,99 @@ case class ApplicationCommandOption(
     options: Option[Seq[ApplicationCommandOption]]
 )
 
-sealed abstract class ApplicationCommandOptionType(val value: Int) extends IntEnumEntry
+//A dirty hack to get dependant types for params
+sealed trait ApplicationCommandOptionType extends IntEnumEntry {
+  type Res
+
+  def value: Int
+  def decodeJson: Json => Decoder.Result[Res]
+  def encodeJson: Res => Json
+  def valueJsonName: String
+}
 object ApplicationCommandOptionType
     extends IntEnum[ApplicationCommandOptionType]
     with IntCirceEnumWithUnknown[ApplicationCommandOptionType] {
-  override def values: collection.immutable.IndexedSeq[ApplicationCommandOptionType] = findValues
+  type Aux[A] = ApplicationCommandOptionType { type Res = A }
 
-  case object SubCommand      extends ApplicationCommandOptionType(1)
-  case object SubCommandGroup extends ApplicationCommandOptionType(2)
-  case object String          extends ApplicationCommandOptionType(3)
-  case object Integer         extends ApplicationCommandOptionType(4)
-  case object Boolean         extends ApplicationCommandOptionType(5)
-  case object User            extends ApplicationCommandOptionType(6)
-  case object Channel         extends ApplicationCommandOptionType(7)
-  case object Role            extends ApplicationCommandOptionType(8)
-  case object Mentionable     extends ApplicationCommandOptionType(9)
+  override def values: immutable.IndexedSeq[ApplicationCommandOptionType] =
+    ApplicationCommandOptionTypeE.findValues.asInstanceOf[immutable.IndexedSeq[ApplicationCommandOptionType]]
 
-  case class Unknown(i: Int) extends ApplicationCommandOptionType(i)
+  final val SubCommand: ApplicationCommandOptionType.Aux[Seq[ApplicationCommandInteractionDataOption[_]]] =
+    ApplicationCommandOptionTypeE.SubCommand
+  final val SubCommandGroup: ApplicationCommandOptionType.Aux[Seq[ApplicationCommandInteractionDataOption[_]]] =
+    ApplicationCommandOptionTypeE.SubCommandGroup
 
-  override def createUnknown(value: Int): ApplicationCommandOptionType = Unknown(value)
+  final val String: ApplicationCommandOptionType.Aux[String]            = ApplicationCommandOptionTypeE.String
+  final val Integer: ApplicationCommandOptionType.Aux[Int]              = ApplicationCommandOptionTypeE.Integer
+  final val Boolean: ApplicationCommandOptionType.Aux[Boolean]          = ApplicationCommandOptionTypeE.Boolean
+  final val User: ApplicationCommandOptionType.Aux[UserId]              = ApplicationCommandOptionTypeE.User
+  final val Channel: ApplicationCommandOptionType.Aux[ChannelId]        = ApplicationCommandOptionTypeE.Channel
+  final val Role: ApplicationCommandOptionType.Aux[RoleId]              = ApplicationCommandOptionTypeE.Role
+  final val Mentionable: ApplicationCommandOptionType.Aux[UserOrRoleId] = ApplicationCommandOptionTypeE.Mentionable
+
+  def Unknown(i: Int): ApplicationCommandOptionType = ApplicationCommandOptionTypeE.Unknown(i)
+
+  override def createUnknown(value: Int): ApplicationCommandOptionType = ApplicationCommandOptionTypeE.Unknown(value)
+}
+
+sealed abstract private class ApplicationCommandOptionTypeE[A](
+    val value: Int,
+    val decodeJson: Json => Decoder.Result[A],
+    val encodeJson: A => Json,
+    val valueJsonName: String = "value"
+) extends IntEnumEntry
+    with ApplicationCommandOptionType {
+  type Res = A
+}
+private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandOptionTypeE[_]] {
+  override def values: immutable.IndexedSeq[ApplicationCommandOptionTypeE[_]] = findValues
+
+  private val userRegex: Regex    = """<@!?(\d+)>""".r
+  private val channelRegex: Regex = """<#(\d+)>""".r
+  private val roleRegex: Regex    = """<@&(\d+)>""".r
+
+  import DiscordProtocol._
+
+  private def decodeMention[A](regex: Regex)(json: Json): Decoder.Result[SnowflakeType[A]] =
+    json.as[java.lang.String].flatMap {
+      case regex(id) => Right(SnowflakeType(id))
+      case _         => Left(DecodingFailure("Not a valid mention", Nil))
+    }
+
+  case object SubCommand
+      extends ApplicationCommandOptionTypeE[Seq[ApplicationCommandInteractionDataOption[_]]](
+        1,
+        _.as[Seq[ApplicationCommandInteractionDataOption[_]]],
+        _.asJson,
+        "options"
+      )
+  case object SubCommandGroup
+      extends ApplicationCommandOptionTypeE[Seq[ApplicationCommandInteractionDataOption[_]]](
+        2,
+        _.as[Seq[ApplicationCommandInteractionDataOption[_]]],
+        _.asJson,
+        "options"
+      )
+
+  case object String  extends ApplicationCommandOptionTypeE[java.lang.String](3, _.as[java.lang.String], _.asJson)
+  case object Integer extends ApplicationCommandOptionTypeE[Int](4, _.as[Int], _.asJson)
+  case object Boolean extends ApplicationCommandOptionTypeE[scala.Boolean](5, _.as[scala.Boolean], _.asJson)
+  case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention(userRegex), _.mention.asJson)
+  case object Channel extends ApplicationCommandOptionTypeE[ChannelId](7, decodeMention(channelRegex), _.mention.asJson)
+  case object Role    extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention(roleRegex), _.mention.asJson)
+  case object Mentionable
+      extends ApplicationCommandOptionTypeE[UserOrRoleId](
+        9,
+        json => decodeMention[UserOrRole](userRegex)(json).orElse(decodeMention[UserOrRole](roleRegex)(json)),
+        id => s"<@$id>".asJson
+      ) //Let's just hope it's a user here
+
+  case class Unknown(i: Int) extends ApplicationCommandOptionTypeE[Json](i, Right(_), identity)
+
+  implicit def encoder[A]: Encoder[ApplicationCommandOptionTypeE[A]] = (a: ApplicationCommandOptionTypeE[A]) =>
+    a.value.asJson
+  implicit val decoder: Decoder[ApplicationCommandOptionTypeE[_]] = (c: HCursor) =>
+    c.as[Int].map(v => withValueOpt(v).getOrElse(Unknown(v)))
 }
 
 case class ApplicationCommandOptionChoice(
@@ -118,24 +197,18 @@ sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
-    options: Option[Seq[ApplicationCommandInteractionDataOption]],
+    options: Option[Seq[ApplicationCommandInteractionDataOption[_]]],
     customId: Option[String],
     componentType: Option[ComponentType]
 )                                                                  extends ApplicationInteractionData
 case class ApplicationComponentInteractionData(customId: String)   extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
 
-sealed trait ApplicationCommandInteractionDataOption {
-  def name: String
-}
-object ApplicationCommandInteractionDataOption {
-  case class ApplicationCommandInteractionDataOptionWithValue(name: String, value: Json)
-      extends ApplicationCommandInteractionDataOption
-  case class ApplicationCommandInteractionDataOptionWithOptions(
-      name: String,
-      options: Seq[ApplicationCommandInteractionDataOption]
-  ) extends ApplicationCommandInteractionDataOption
-}
+case class ApplicationCommandInteractionDataOption[A](
+    name: String,
+    tpe: ApplicationCommandOptionType.Aux[A],
+    value: Option[A]
+)
 
 case class RawInteractionResponse(
     `type`: InteractionResponseType,

@@ -32,80 +32,59 @@ import scala.annotation.tailrec
 import ackcord.data._
 import ackcord.interactions.~
 import cats.Id
-import cats.arrow.FunctionK
-import cats.syntax.either._
-import io.circe.{DecodingFailure, Json}
 
-sealed trait Param[A, F[_]] {
+sealed trait Param[Orig, A, F[_]] {
+  def tpe: ApplicationCommandOptionType.Aux[Orig]
   def name: String
-  def isRequired: Boolean
 
-  def ~[B, G[_]](other: Param[B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
+  private[commands] def fTransformer: Param.FTransformer[F]
+  private[commands] def isRequired: Boolean = fTransformer == Param.FTransformer.Required
+  private[commands] def optionToFa(opt: Option[Orig]): Either[String, F[A]]
 
-  def decode(payload: Option[Json]): Either[String, F[A]]
+  def ~[B, G[_]](other: Param[Orig, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
+
   def toCommandOption: ApplicationCommandOption
 }
 object Param {
-  type DecodePayloadFunction[F[_]] = FunctionK[λ[B => Json => Either[DecodingFailure, B]], λ[B => Either[String, F[B]]]]
-
-  private[interactions] val decodePayloadRequired: Option[Json] => DecodePayloadFunction[Id] = {
-    case Some(json) =>
-      new DecodePayloadFunction[Id] {
-        override def apply[A](f: Json => Either[DecodingFailure, A]): Either[String, Id[A]] = f(json).leftMap(_.message)
-      }
-    case None =>
-      new DecodePayloadFunction[Id] {
-        override def apply[A](fa: Json => Either[DecodingFailure, A]): Either[String, Id[A]] =
-          Left("Missing required parameter")
-      }
+  sealed private[commands] trait FTransformer[F[_]] {
+    def apply[A](opt: Option[A]): Either[String, F[A]]
   }
-
-  private[interactions] val decodePayloadNotRequired: Option[Json] => DecodePayloadFunction[Option] = {
-    case None =>
-      new DecodePayloadFunction[Option] {
-        override def apply[A](fa: Json => Either[DecodingFailure, A]): Either[String, Option[A]] = Right(None)
+  object FTransformer {
+    case object Required extends FTransformer[Id] {
+      override def apply[A](opt: Option[A]): Either[String, A] = opt match {
+        case Some(value) => Right(value)
+        case None        => Left("Missing required parameter")
       }
-    case Some(value) =>
-      new DecodePayloadFunction[Option] {
-        override def apply[A](f: Json => Either[DecodingFailure, A]): Either[String, Option[A]] =
-          f(value).map(Some(_)).leftMap(_.message)
-      }
+    }
+    case object Optional extends FTransformer[Option] {
+      override def apply[A](opt: Option[A]): Either[String, Option[A]] = Right(opt)
+    }
   }
 }
 
-case class ChoiceParam[Orig, A, F[_]] private[interactions](
-    tpe: ApplicationCommandOptionType,
+case class ChoiceParam[Orig, A, F[_]] private[interactions] (
+    tpe: ApplicationCommandOptionType.Aux[Orig],
     name: String,
     description: String,
-    isRequired: Boolean,
+    fTransformer: Param.FTransformer[F],
     choices: Map[String, A],
     makeOptionChoice: (String, Orig) => ApplicationCommandOptionChoice,
-    decodePayloadInner: Json => Either[DecodingFailure, A],
-    decodePayload: Option[Json] => Param.DecodePayloadFunction[F],
     map: Orig => A,
     contramap: A => Orig
-) extends Param[A, F] {
+) extends Param[Orig, A, F] {
 
   def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] = copy(choices = choices)
   def withChoices(choices: Seq[String])(implicit ev: String =:= A): ChoiceParam[Orig, A, F] =
     withChoices(choices.map(s => s -> ev(s)).toMap)
 
-  def required: ChoiceParam[Orig, A, Id] = copy(
-    isRequired = true,
-    decodePayload = Param.decodePayloadRequired
-  )
-  def notRequired: ChoiceParam[Orig, A, Option] = copy(
-    isRequired = false,
-    decodePayload = Param.decodePayloadNotRequired
-  )
+  def required: ChoiceParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
+  def notRequired: ChoiceParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
 
   def map[B](f: A => B): ValueParam[Orig, B, F] = ValueParam(
     tpe,
     name,
     description,
-    isRequired,
-    decodePayloadInner.andThen(_.map(f)),
-    decodePayload,
+    fTransformer,
     this.map.andThen(f)
   )
 
@@ -113,108 +92,103 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions](
     copy(
       choices = choices.map(t => t._1 -> map(t._2)),
       map = this.map.andThen(map),
-      contramap = this.contramap.compose(contramap),
-      decodePayloadInner = decodePayloadInner.andThen(_.map(map))
+      contramap = this.contramap.compose(contramap)
     )
+
+  override private[commands] def optionToFa(opt: Option[Orig]): Either[String, F[A]] =
+    fTransformer(opt.map(map))
 
   override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
     tpe,
     name,
     description,
-    Some(isRequired),
+    Some(fTransformer == Param.FTransformer.Required),
     Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
     Some(Nil)
   )
-
-  override def decode(payload: Option[Json]): Either[String, F[A]] = decodePayload(payload)(decodePayloadInner)
 }
 object ChoiceParam {
   private[interactions] def default[A](
-      tpe: ApplicationCommandOptionType,
+      tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
       description: String,
-      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice,
-      decodePayloadInner: Json => Either[DecodingFailure, A]
+      makeOptionChoice: (String, A) => ApplicationCommandOptionChoice
   ): ChoiceParam[A, A, Id] =
     ChoiceParam(
       tpe,
       name,
       description,
-      isRequired = true,
+      fTransformer = Param.FTransformer.Required,
       Map.empty,
       makeOptionChoice,
-      decodePayloadInner,
-      Param.decodePayloadRequired,
       identity,
       identity
     )
 }
 
-case class ValueParam[Orig, A, F[_]] private[interactions](
-    tpe: ApplicationCommandOptionType,
+case class ValueParam[Orig, A, F[_]] private[interactions] (
+    tpe: ApplicationCommandOptionType.Aux[Orig],
     name: String,
     description: String,
-    isRequired: Boolean,
-    decodePayloadInner: Json => Either[DecodingFailure, A],
-    decodePayload: Option[Json] => Param.DecodePayloadFunction[F],
+    fTransformer: Param.FTransformer[F],
     map: Orig => A
-) extends Param[A, F] {
-  def required: ValueParam[Orig, A, Id] =
-    copy(isRequired = true, decodePayload = Param.decodePayloadRequired)
-  def notRequired: ValueParam[Orig, A, Option] =
-    copy(isRequired = false, decodePayload = Param.decodePayloadNotRequired)
+) extends Param[Orig, A, F] {
+  def required: ValueParam[Orig, A, Id]         = copy(fTransformer = Param.FTransformer.Required)
+  def notRequired: ValueParam[Orig, A, Option]  = copy(fTransformer = Param.FTransformer.Optional)
+  def map[B](f: A => B): ValueParam[Orig, B, F] = copy(map = this.map.andThen(f))
 
-  def map[B](f: A => B): ValueParam[Orig, B, F] =
-    copy(map = this.map.andThen(f), decodePayloadInner = decodePayloadInner.andThen(_.map(f)))
+  override private[commands] def optionToFa(opt: Option[Orig]): Either[String, F[A]] =
+    fTransformer(opt.map(map))
 
   override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
     tpe,
     name,
     description,
-    Some(isRequired),
+    Some(fTransformer == Param.FTransformer.Required),
     Some(Nil),
     Some(Nil)
   )
-
-  override def decode(payload: Option[Json]): Either[String, F[A]] = decodePayload(payload)(decodePayloadInner)
 }
 object ValueParam {
   private[interactions] def default[A](
-      tpe: ApplicationCommandOptionType,
+      tpe: ApplicationCommandOptionType.Aux[A],
       name: String,
-      description: String,
-      decodePayloadInner: Json => Either[DecodingFailure, A]
+      description: String
   ): ValueParam[A, A, Id] =
     ValueParam(
       tpe,
       name,
       description,
-      isRequired = true,
-      decodePayloadInner,
-      Param.decodePayloadRequired,
+      fTransformer = Param.FTransformer.Required,
       identity
     )
 }
 
 sealed trait ParamList[A] {
-  def ~[B, G[_]](param: Param[B, G]): ParamList[A ~ G[B]] = ParamList.ParamListBranch(this, param)
-  def map[B](f: Param[_, Any] => B): List[B]              = foldRight(Nil: List[B])(f(_) :: _)
+  def ~[B, G[_]](param: Param[_, B, G]): ParamList[A ~ G[B]] = ParamList.ParamListBranch(this, param)
+  def map[B](f: Param[_, _, Any] => B): List[B]              = foldRight(Nil: List[B])(f(_) :: _)
 
-  def constructValues(options: Map[String, Json]): Either[String, A] = this match {
-    case start: ParamList.ParamListStart[a, f] =>
-      start.leaf.decode(options.get(start.leaf.name.toLowerCase(Locale.ROOT))).map(_.asInstanceOf[A])
+  protected def constructParam[Orig, A1, F[_]](
+      param: Param[Orig, A1, F],
+      dataOption: Option[ApplicationCommandInteractionDataOption[_]]
+  ): Either[String, F[A1]] = {
+    dataOption match {
+      case Some(dataOption) if dataOption.tpe == param.tpe =>
+        val castedDataOption = dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Orig]]
+        param.optionToFa(castedDataOption.value)
 
-    case branch: ParamList.ParamListBranch[t, b, g] =>
-      for {
-        left  <- branch.left.constructValues(options)
-        right <- branch.right.decode(options.get(branch.right.name.toLowerCase(Locale.ROOT)))
-      } yield (left, right).asInstanceOf[A]
+      case Some(_) => Left("Got invalid parameter type")
+
+      case None => param.optionToFa(None)
+    }
   }
 
-  def foldRight[B](start: B)(f: (Param[_, Any], B) => B): B = {
+  def constructValues(options: Map[String, ApplicationCommandInteractionDataOption[_]]): Either[String, A]
+
+  def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
     @tailrec
     def inner(list: ParamList[_], b: B): B = list match {
-      case startParam: ParamList.ParamListStart[_, Any @unchecked] => f(startParam.leaf, b)
+      case startParam: ParamList.ParamListStart[_, _, Any @unchecked] => f(startParam.leaf, b)
       case branchParam: ParamList.ParamListBranch[_, _, Any @unchecked] =>
         inner(branchParam.left, f(branchParam.right, b))
     }
@@ -223,8 +197,22 @@ sealed trait ParamList[A] {
   }
 }
 object ParamList {
-  implicit def paramToParamList[A, F[_]](param: Param[A, F]): ParamList[F[A]] = ParamListStart(param)
+  implicit def paramToParamList[A, F[_]](param: Param[_, A, F]): ParamList[F[A]] = ParamListStart(param)
 
-  case class ParamListStart[A, F[_]](leaf: Param[A, F])                          extends ParamList[F[A]]
-  case class ParamListBranch[T, B, G[_]](left: ParamList[T], right: Param[B, G]) extends ParamList[T ~ G[B]]
+  case class ParamListStart[Orig, A, F[_]](leaf: Param[Orig, A, F]) extends ParamList[F[A]] {
+    override def constructValues(
+        options: Map[String, ApplicationCommandInteractionDataOption[_]]
+    ): Either[String, F[A]] =
+      constructParam(leaf, options.get(leaf.name.toLowerCase(Locale.ROOT)))
+  }
+
+  case class ParamListBranch[T, B, G[_]](left: ParamList[T], right: Param[_, B, G]) extends ParamList[T ~ G[B]] {
+    override def constructValues(
+        options: Map[String, ApplicationCommandInteractionDataOption[_]]
+    ): Either[String, (T, G[B])] =
+      for {
+        left  <- left.constructValues(options)
+        right <- constructParam(right, options.get(right.name.toLowerCase(Locale.ROOT)))
+      } yield (left, right)
+  }
 }

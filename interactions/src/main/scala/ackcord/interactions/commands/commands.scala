@@ -79,11 +79,8 @@ case class Command[InteractionObj[_], A] private (
     val optionsMap = data.options
       .getOrElse(Nil)
       .collect {
-        case ApplicationCommandInteractionDataOption.ApplicationCommandInteractionDataOptionWithValue(
-              name,
-              value
-            ) =>
-          name.toLowerCase(Locale.ROOT) -> value
+        case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
+          name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
       }
       .toMap
 
@@ -160,9 +157,12 @@ case class CommandGroup private (
     val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
 
     val subcommandExecution = data.options.getOrElse(Nil).collectFirst {
-      case ApplicationCommandInteractionDataOption.ApplicationCommandInteractionDataOptionWithOptions(name, options)
-          if subCommandsByName.contains(name) =>
-        subCommandsByName(name) -> options
+      case ApplicationCommandInteractionDataOption(
+            name,
+            ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
+            options
+          ) =>
+        subCommandsByName(name) -> options.asInstanceOf[Seq[ApplicationCommandInteractionDataOption[_]]]
     }
 
     subcommandExecution match {

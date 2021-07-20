@@ -23,14 +23,18 @@
  */
 package ackcord.data
 
+import java.time.{Instant, OffsetDateTime}
+
+import scala.util.Try
+
 import ackcord.data.AuditLogChange.PartialRole
 import ackcord.data.raw._
+import cats.instances.either._
+import cats.instances.option._
 import cats.syntax.all._
 import io.circe._
 import io.circe.generic.extras.Configuration
 import io.circe.syntax._
-import java.time.{Instant, OffsetDateTime}
-import scala.util.Try
 
 //noinspection NameBooleanParameters
 trait DiscordProtocol {
@@ -580,27 +584,31 @@ trait DiscordProtocol {
     (a: ApplicationCommandOptionChoice) => Json.obj("name" := a.name, "value" := a.value.fold(_.asJson, _.asJson))
   )
 
-  implicit val applicationCommandInteractionDataOptionCodec: Codec[ApplicationCommandInteractionDataOption] = {
-    import ApplicationCommandInteractionDataOption._
+  implicit val applicationCommandInteractionDataOptionCodec: Codec[ApplicationCommandInteractionDataOption[_]] = {
     Codec.from(
-      (c: HCursor) =>
+      (c: HCursor) => {
+
+
+        c.get[ApplicationCommandOptionType]("type").flatMap[DecodingFailure, ApplicationCommandInteractionDataOption[_]] { tpe =>
+          for {
+            name <- c.get[String]("name")
+            rawValue <- c.get[Option[Json]](tpe.valueJsonName)
+            value <- rawValue.traverse(tpe.decodeJson)
+          } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
+        }
+
+        /*
         for {
-          name    <- c.get[String]("name")
-          value   <- c.get[Option[Json]]("value")
-          options <- c.get[Option[Seq[ApplicationCommandInteractionDataOption]]]("options")
-          res <- (value, options) match {
-            case (Some(value), None)   => Right(ApplicationCommandInteractionDataOptionWithValue(name, value))
-            case (None, Some(options)) => Right(ApplicationCommandInteractionDataOptionWithOptions(name, options))
-            case (Some(_), Some(_)) =>
-              Left(DecodingFailure("Expected either value or options", c.history))
-            case (None, None) =>
-              Right(ApplicationCommandInteractionDataOptionWithOptions(name, Nil))
-          }
-        } yield res,
+          name     <- c.get[String]("name")
+          tpe      <- c.get[ApplicationCommandOptionType]("type")
+          rawValue <- c.get[Option[Json]](tpe.valueJsonName)
+          value    <- rawValue.traverse(tpe.decodeJson)
+        } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
+        */
+      },
       {
-        case ApplicationCommandInteractionDataOptionWithValue(name, value) => Json.obj("name" := name, "value" := value)
-        case ApplicationCommandInteractionDataOptionWithOptions(name, options) =>
-          Json.obj("name" := name, "options" := options)
+        case ApplicationCommandInteractionDataOption(name, tpe, value) =>
+          Json.obj("name" := name, "type" := (tpe: ApplicationCommandOptionType), tpe.valueJsonName := value.map(tpe.encodeJson))
       }
     )
   }
