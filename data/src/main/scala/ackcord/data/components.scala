@@ -2,8 +2,9 @@ package ackcord.data
 
 import ackcord.util.IntCirceEnumWithUnknown
 import enumeratum.values.{IntEnum, IntEnumEntry}
-
 import java.util.UUID
+
+import scala.collection.immutable
 
 case class ActionRow(
     components: Seq[Button]
@@ -138,7 +139,7 @@ case class LinkButton(
 sealed abstract class ButtonStyle(val value: Int) extends IntEnumEntry
 sealed trait TextButtonStyle                      extends ButtonStyle
 object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[ButtonStyle] {
-  override def values: IndexedSeq[ButtonStyle] = findValues
+  override def values: immutable.IndexedSeq[ButtonStyle] = findValues
 
   case object Primary   extends ButtonStyle(1) with TextButtonStyle // Blurple
   case object Secondary extends ButtonStyle(2) with TextButtonStyle // Gray

@@ -343,7 +343,7 @@ object InteractionTransformer {
   ): InteractionTransformer[I, O] =
     fromComplexCreate[I, O, TextChannel, Option[Guild]](
       create,
-      DataInteractionTransformer.resolved
+      DataInteractionTransformer.resolved[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   /**
@@ -354,7 +354,7 @@ object InteractionTransformer {
   ): InteractionTransformer[I, O] =
     fromComplexCreate[I, O, Guild, GuildMember, Permission, TextGuildChannel](
       create,
-      DataInteractionTransformer.onlyInGuild
+      DataInteractionTransformer.onlyInGuild[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   def inVoiceChannel[I <: GuildInteraction, O](
@@ -362,7 +362,7 @@ object InteractionTransformer {
   ): InteractionTransformer[I, O] =
     fromComplexCreate1[I, O, VoiceGuildChannel](
       create,
-      DataInteractionTransformer.inVoiceChannel
+      DataInteractionTransformer.inVoiceChannel[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   /**
@@ -371,7 +371,9 @@ object InteractionTransformer {
     */
   def needPermission[M <: GuildInteraction](
       neededPermission: Permission
-  ): InteractionTransformer[M, M] = fromComplex(DataInteractionTransformer.needPermission(neededPermission))
+  ): InteractionTransformer[M, M] = fromComplex(
+    DataInteractionTransformer.needPermission[shapeless.Const[M]#λ](neededPermission)
+  )
 }
 
 sealed trait InteractionResponse {
