@@ -1,15 +1,22 @@
 package ackcord.data
 
-import ackcord.util.IntCirceEnumWithUnknown
-import enumeratum.values.{IntEnum, IntEnumEntry}
 import java.util.UUID
 
 import scala.collection.immutable
 
+import ackcord.util.IntCirceEnumWithUnknown
+import enumeratum.values.{IntEnum, IntEnumEntry}
+
+sealed trait Component {
+  def tpe: ComponentType
+}
+
 case class ActionRow(
     components: Seq[Button]
-) {
+) extends Component {
   require(components.size <= 5, "Too many components in ActionRow")
+
+  override def tpe: ComponentType = ComponentType.ActionRow
 
   def mapButtons(f: Button => Button): ActionRow = copy(components = components.map(f))
 
@@ -22,7 +29,9 @@ object ActionRow {
   def of(buttons: Button*): ActionRow = new ActionRow(buttons)
 }
 
-sealed trait Button {
+sealed trait Button extends Component {
+
+  def tpe: ComponentType = ComponentType.Button
 
   def label: Option[String]
   def withLabel(label: String): Button
@@ -150,4 +159,16 @@ object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[But
   case class Unknown(id: Int) extends ButtonStyle(id)
 
   override def createUnknown(value: Int): ButtonStyle = Unknown(value)
+}
+
+sealed abstract class ComponentType(val value: Int) extends IntEnumEntry
+object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown[ComponentType] {
+  override def values: immutable.IndexedSeq[ComponentType] = findValues
+
+  case object ActionRow extends ComponentType(1)
+  case object Button    extends ComponentType(2)
+
+  case class Unknown(id: Int) extends ComponentType(id)
+
+  override def createUnknown(value: Int): ComponentType = Unknown(value)
 }

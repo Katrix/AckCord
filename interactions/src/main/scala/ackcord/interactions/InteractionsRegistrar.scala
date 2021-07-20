@@ -31,10 +31,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
-import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.interactions.buttons.{GlobalRegisteredButtons, RegisteredButtons}
 import ackcord.interactions.commands.CommandOrGroup
 import ackcord.interactions.raw._
+import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.{CacheSnapshot, OptFuture}
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
@@ -70,7 +70,7 @@ object InteractionsRegistrar {
 
           case _ => Left(Some("None or invalid data sent for command execution"))
         }
-      case InteractionType.ComponentClicked =>
+      case InteractionType.MessageComponent =>
         interaction.data match {
           case Some(data: ApplicationComponentInteractionData) =>
             registeredButtons
@@ -88,7 +88,8 @@ object InteractionsRegistrar {
   def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
       case InteractionResponse.Acknowledge(andThenDo)        => () => andThenDo().map(_ => ())
-      case InteractionResponse.AcknowledgeLoading(andThenDo) => () => andThenDo().map(_ => ())
+      case InteractionResponse.UpdateMessageLater(andThenDo) => () => andThenDo().map(_ => ())
+      case InteractionResponse.UpdateMessage(_, andThenDo)   => () => andThenDo().map(_ => ())
       case InteractionResponse.ChannelMessage(_, andThenDo)  => () => andThenDo().map(_ => ())
       case _                                                 => () => OptFuture.unit
     }

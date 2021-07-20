@@ -14,10 +14,10 @@ abstract class ButtonHandler[InteractionTpe <: ButtonInteraction](
 ) extends InteractionHandlerOps {
 
   def asyncLoading(handle: AsyncToken => OptFuture[_])(implicit interaction: InteractionTpe): InteractionResponse =
-    InteractionResponse.AcknowledgeLoading(() => handle(AsyncToken.fromInteraction(interaction)))
+    InteractionResponse.UpdateMessageLater(() => handle(AsyncToken.fromInteraction(interaction)))
 
   def acknowledgeLoading: InteractionResponse =
-    InteractionResponse.AcknowledgeLoading(() => OptFuture.unit)
+    InteractionResponse.UpdateMessageLater(() => OptFuture.unit)
 
   def handle(implicit interaction: ButtonInteraction): InteractionResponse
 

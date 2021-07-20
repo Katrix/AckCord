@@ -381,8 +381,10 @@ sealed trait InteractionResponse {
     case InteractionResponse.Pong => RawInteractionResponse(InteractionResponseType.Pong, None)
     case InteractionResponse.Acknowledge(_) =>
       RawInteractionResponse(InteractionResponseType.DeferredChannelMessageWithSource, None)
-    case InteractionResponse.AcknowledgeLoading(_) =>
-      RawInteractionResponse(InteractionResponseType.DeferredMessageUpdate, None)
+    case InteractionResponse.UpdateMessageLater(_) =>
+      RawInteractionResponse(InteractionResponseType.DeferredUpdateMessage, None)
+    case InteractionResponse.UpdateMessage(data, _) =>
+      RawInteractionResponse(InteractionResponseType.UpdateMessage, Some(data))
     case InteractionResponse.ChannelMessage(message, _) =>
       RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
   }
@@ -396,7 +398,17 @@ object InteractionResponse {
 
   case object Pong                                             extends InteractionResponse
   case class Acknowledge(andThenDo: () => OptFuture[_])        extends InteractionResponse
-  case class AcknowledgeLoading(andThenDo: () => OptFuture[_]) extends InteractionResponse
+  case class UpdateMessageLater(andThenDo: () => OptFuture[_]) extends InteractionResponse
+  case class UpdateMessage(
+      message: RawInteractionApplicationCommandCallbackData,
+      andThenDo: () => OptFuture[_]
+  ) extends InteractionResponse
+      with AsyncMessageable {
+
+    override def doAsync(action: AsyncMessageToken => OptFuture[_])(
+        implicit interaction: Interaction
+    ): InteractionResponse = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
+  }
   case class ChannelMessage(
       message: RawInteractionApplicationCommandCallbackData,
       andThenDo: () => OptFuture[_]

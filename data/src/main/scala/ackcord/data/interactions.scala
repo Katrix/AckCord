@@ -34,7 +34,7 @@ object InteractionType extends IntEnum[InteractionType] with IntCirceEnumWithUnk
 
   case object Ping               extends InteractionType(1)
   case object ApplicationCommand extends InteractionType(2)
-  case object ComponentClicked   extends InteractionType(3)
+  case object MessageComponent   extends InteractionType(3)
   case class Unknown(i: Int)     extends InteractionType(i)
 
   override def createUnknown(value: Int): InteractionType = Unknown(value)
@@ -49,7 +49,8 @@ object InteractionResponseType
   case object Pong                             extends InteractionResponseType(1)
   case object ChannelMessageWithSource         extends InteractionResponseType(4)
   case object DeferredChannelMessageWithSource extends InteractionResponseType(5)
-  case object DeferredMessageUpdate            extends InteractionResponseType(6)
+  case object DeferredUpdateMessage            extends InteractionResponseType(6)
+  case object UpdateMessage                    extends InteractionResponseType(7)
   case class Unknown(i: Int)                   extends InteractionResponseType(i)
 
   override def createUnknown(value: Int): InteractionResponseType = Unknown(value)
@@ -117,7 +118,9 @@ sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
-    options: Option[Seq[ApplicationCommandInteractionDataOption]]
+    options: Option[Seq[ApplicationCommandInteractionDataOption]],
+    customId: Option[String],
+    componentType: Option[ComponentType]
 )                                                                  extends ApplicationInteractionData
 case class ApplicationComponentInteractionData(customId: String)   extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
