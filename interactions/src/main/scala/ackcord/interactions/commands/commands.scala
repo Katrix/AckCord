@@ -88,7 +88,7 @@ case class Command[InteractionObj[_], A] private (
       .toMap
 
     val optArgs = paramList match {
-      case Right(value) => value.constructValues(optionsMap)
+      case Right(value) => value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
       case Left(ev)     => Right(ev(NotUsed))
     }
 

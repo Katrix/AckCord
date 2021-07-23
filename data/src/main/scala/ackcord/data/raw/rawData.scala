@@ -75,8 +75,7 @@ case class RawChannel(
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
     rtcRegion: Option[String],
-    videoQualityMode: Option[VideoQualityMode],
-    permissions: Option[Permission]
+    videoQualityMode: Option[VideoQualityMode]
 ) {
 
   /**
@@ -102,8 +101,7 @@ case class RawChannel(
               lastMessageId,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp,
-              permissions
+              lastPinTimestamp
             )
           } else {
             NormalTextGuildChannel(
@@ -117,8 +115,7 @@ case class RawChannel(
               rateLimitPerUser,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp,
-              permissions
+              lastPinTimestamp
             )
           }
         }
@@ -238,8 +235,7 @@ case class RawChannel(
               lastMessageId,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp,
-              permissions
+              lastPinTimestamp
             )
           } else {
             NormalTextGuildChannel(
@@ -253,8 +249,7 @@ case class RawChannel(
               rateLimitPerUser,
               nsfw.getOrElse(false),
               parentId,
-              lastPinTimestamp,
-              permissions
+              lastPinTimestamp
             )
           }
         }
@@ -375,6 +370,7 @@ case class PartialRawGuildMember(
   * @param mute IF this user is mute.
   * @param pending True if the member hasn't gotten past the guild screening yet
   */
+//Edit InteractionGuildMember when editing this
 case class RawGuildMember(
     user: User,
     nick: Option[String],
@@ -504,7 +500,7 @@ case class RawMessage(
           stickerItems,
           referencedMessage.map(_.toMessage),
           interaction,
-          components.getOrElse(Nil),
+          components.getOrElse(Nil)
         )
 
       case None =>

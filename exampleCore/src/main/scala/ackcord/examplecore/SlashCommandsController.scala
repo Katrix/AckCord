@@ -24,7 +24,7 @@
 package ackcord.examplecore
 
 import ackcord.JsonSome
-import ackcord.data.{AllowedMention, UserId}
+import ackcord.data.{AllowedMention, InteractionGuildMember, UserId}
 import ackcord.requests.Requests
 import ackcord.interactions.ResolvedCommandInteraction
 import ackcord.interactions.commands.{CacheSlashCommandController, Command, CommandGroup}
@@ -41,11 +41,11 @@ class SlashCommandsController(requests: Requests) extends CacheSlashCommandContr
       .withParams(string("message", "The message to send back"))
       .command("echo", "Echoes a message you send")(i => sendMessage(s"ECHO: ${i.args}"))
 
-  val nudge: Command[ResolvedCommandInteraction, UserId] =
+  val nudge: Command[ResolvedCommandInteraction, InteractionGuildMember] =
     Command
       .withParams(user("user", "The user to nudge"))
       .command("nudge", "Nudge someone") { i =>
-        sendMessage(s"Hey ${i.args.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args))))
+        sendMessage(s"Hey ${i.args.user.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args.user.id))))
       }
 
   val asyncTest: Command[ResolvedCommandInteraction, NotUsed] =

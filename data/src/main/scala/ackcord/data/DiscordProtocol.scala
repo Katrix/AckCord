@@ -46,6 +46,11 @@ trait DiscordProtocol {
     Encoder[String].contramap(_.asString)
   )
 
+  implicit def snowflakeTypeKeyDecoder[A]: KeyDecoder[SnowflakeType[A]] =
+    KeyDecoder.decodeKeyString.map(s => SnowflakeType[A](s))
+  implicit def snowflakeTypeKeyEncoder[A]: KeyEncoder[SnowflakeType[A]] =
+    KeyEncoder.encodeKeyString.contramap(_.asString)
+
   implicit val instantCodec: Codec[Instant] = Codec.from(
     Decoder[Long].emapTry(l => Try(Instant.ofEpochSecond(l))),
     Encoder[Long].contramap(_.getEpochSecond)
@@ -278,14 +283,15 @@ trait DiscordProtocol {
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
   implicit val actionRowContentCodec: Codec[ActionRowContent] = Codec.from(
-    (c: HCursor) => c.get[ComponentType]("type").flatMap {
-      case ComponentType.Button => c.as[Button]
-      case ComponentType.SelectMenu => c.as[SelectMenu]
-      case ComponentType.ActionRow => Left(DecodingFailure("Invalid component type ActionRow", c.history))
-      case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
-    },
+    (c: HCursor) =>
+      c.get[ComponentType]("type").flatMap {
+        case ComponentType.Button      => c.as[Button]
+        case ComponentType.SelectMenu  => c.as[SelectMenu]
+        case ComponentType.ActionRow   => Left(DecodingFailure("Invalid component type ActionRow", c.history))
+        case ComponentType.Unknown(id) => Left(DecodingFailure(s"Unknown component type $id", c.history))
+      },
     {
-      case button: Button => button.asJson
+      case button: Button   => button.asJson
       case menu: SelectMenu => menu.asJson
     }
   )
@@ -578,6 +584,15 @@ trait DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val applicationCommandOptionCodec: Codec[ApplicationCommandOption] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionRawGuildMemberCodec: Codec[InteractionRawGuildMember] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val interactionChannelCodec: Codec[InteractionChannel] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val applicationCommandInteractionDataResolvedCodec: Codec[ApplicationCommandInteractionDataResolved] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val applicationCommandInteractionDataCodec: Codec[ApplicationCommandInteractionData] =

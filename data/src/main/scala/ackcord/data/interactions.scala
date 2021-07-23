@@ -23,12 +23,14 @@
  */
 package ackcord.data
 
+import java.time.OffsetDateTime
+
 import scala.collection.immutable
 import scala.util.matching.Regex
 
 import ackcord.data.raw.{RawGuildMember, RawMessage}
 import ackcord.util.IntCirceEnumWithUnknown
-import cats.syntax.all._
+import cats.syntax.either._
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe._
 import io.circe.syntax._
@@ -116,13 +118,13 @@ object ApplicationCommandOptionType
   final val SubCommandGroup: ApplicationCommandOptionType.Aux[Seq[ApplicationCommandInteractionDataOption[_]]] =
     ApplicationCommandOptionTypeE.SubCommandGroup
 
-  final val String: ApplicationCommandOptionType.Aux[String]            = ApplicationCommandOptionTypeE.String
-  final val Integer: ApplicationCommandOptionType.Aux[Int]              = ApplicationCommandOptionTypeE.Integer
-  final val Boolean: ApplicationCommandOptionType.Aux[Boolean]          = ApplicationCommandOptionTypeE.Boolean
-  final val User: ApplicationCommandOptionType.Aux[UserId]              = ApplicationCommandOptionTypeE.User
-  final val Channel: ApplicationCommandOptionType.Aux[ChannelId]        = ApplicationCommandOptionTypeE.Channel
-  final val Role: ApplicationCommandOptionType.Aux[RoleId]              = ApplicationCommandOptionTypeE.Role
-  final val Mentionable: ApplicationCommandOptionType.Aux[UserOrRoleId] = ApplicationCommandOptionTypeE.Mentionable
+  final val String: ApplicationCommandOptionType.Aux[String]              = ApplicationCommandOptionTypeE.String
+  final val Integer: ApplicationCommandOptionType.Aux[Int]                = ApplicationCommandOptionTypeE.Integer
+  final val Boolean: ApplicationCommandOptionType.Aux[Boolean]            = ApplicationCommandOptionTypeE.Boolean
+  final val User: ApplicationCommandOptionType.Aux[UserId]                = ApplicationCommandOptionTypeE.User
+  final val Channel: ApplicationCommandOptionType.Aux[TextGuildChannelId] = ApplicationCommandOptionTypeE.Channel
+  final val Role: ApplicationCommandOptionType.Aux[RoleId]                = ApplicationCommandOptionTypeE.Role
+  final val Mentionable: ApplicationCommandOptionType.Aux[UserOrRoleId]   = ApplicationCommandOptionTypeE.Mentionable
 
   def Unknown(i: Int): ApplicationCommandOptionType = ApplicationCommandOptionTypeE.Unknown(i)
 
@@ -172,8 +174,9 @@ private object ApplicationCommandOptionTypeE extends IntEnum[ApplicationCommandO
   case object Integer extends ApplicationCommandOptionTypeE[Int](4, _.as[Int], _.asJson)
   case object Boolean extends ApplicationCommandOptionTypeE[scala.Boolean](5, _.as[scala.Boolean], _.asJson)
   case object User    extends ApplicationCommandOptionTypeE[UserId](6, decodeMention(userRegex), _.mention.asJson)
-  case object Channel extends ApplicationCommandOptionTypeE[ChannelId](7, decodeMention(channelRegex), _.mention.asJson)
-  case object Role    extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention(roleRegex), _.mention.asJson)
+  case object Channel
+      extends ApplicationCommandOptionTypeE[TextGuildChannelId](7, decodeMention(channelRegex), _.mention.asJson)
+  case object Role extends ApplicationCommandOptionTypeE[RoleId](8, decodeMention(roleRegex), _.mention.asJson)
   case object Mentionable
       extends ApplicationCommandOptionTypeE[UserOrRoleId](
         9,
@@ -198,6 +201,7 @@ sealed trait ApplicationInteractionData
 case class ApplicationCommandInteractionData(
     id: CommandId,
     name: String,
+    resolved: Option[ApplicationCommandInteractionDataResolved],
     options: Option[Seq[ApplicationCommandInteractionDataOption[_]]],
     customId: Option[String],
     componentType: Option[ComponentType]
@@ -205,6 +209,41 @@ case class ApplicationCommandInteractionData(
 case class ApplicationComponentInteractionData(customId: String, values: Option[Seq[String]])
     extends ApplicationInteractionData
 case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
+
+case class ApplicationCommandInteractionDataResolved(
+    users: Map[UserId, User],
+    members: Map[UserId, InteractionRawGuildMember],
+    roles: Map[RoleId, Role],
+    channels: Map[TextGuildChannelId, InteractionChannel]
+)
+object ApplicationCommandInteractionDataResolved {
+  val empty: ApplicationCommandInteractionDataResolved =
+    ApplicationCommandInteractionDataResolved(Map.empty, Map.empty, Map.empty, Map.empty)
+}
+
+case class InteractionGuildMember(
+    user: User,
+    nick: Option[String],
+    roles: Seq[RoleId],
+    joinedAt: Option[OffsetDateTime],
+    premiumSince: Option[OffsetDateTime],
+    pending: Option[Boolean]
+)
+
+case class InteractionRawGuildMember(
+    nick: Option[String],
+    roles: Seq[RoleId],
+    joinedAt: Option[OffsetDateTime],
+    premiumSince: Option[OffsetDateTime],
+    pending: Option[Boolean]
+)
+
+case class InteractionChannel(
+    id: TextGuildChannelId,
+    name: String,
+    `type`: ChannelType,
+    permissions: Permission
+)
 
 case class ApplicationCommandInteractionDataOption[A](
     name: String,

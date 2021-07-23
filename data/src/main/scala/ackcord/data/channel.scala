@@ -214,12 +214,6 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
     * When the last pinned message was pinned.
     */
   def lastPinTimestamp: Option[OffsetDateTime]
-
-  /**
-    * Computer permissions for the user. Only included in the resolved field
-    * of a slash command interaction.
-    */
-  def permissions: Option[Permission]
 }
 
 /**
@@ -237,7 +231,6 @@ case class NewsTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    permissions: Option[Permission]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 
@@ -259,7 +252,6 @@ case class NormalTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    permissions: Option[Permission]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
