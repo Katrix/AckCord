@@ -27,7 +27,7 @@ import java.time.{Instant, OffsetDateTime}
 
 import scala.collection.immutable
 
-import ackcord.data.raw.RawEmoji
+import ackcord.data.raw.{RawChannel, RawEmoji, RawGuildMember, RawPresence}
 import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
@@ -36,6 +36,8 @@ import enumeratum.values._
   * A guild which that status of is unknown.
   */
 sealed trait UnknownStatusGuild {
+
+  /** The id of the guild. */
   def id: GuildId
   def unavailable: Option[Boolean]
 }
@@ -159,111 +161,104 @@ case class GuildPreview(
     description: Option[String]
 )
 
-/**
-  * A guild or server in Discord.
-  *
-  * @param id The id of the guild.
-  * @param name The name of the guild.
-  * @param icon The icon hash.
-  * @param iconHash Used for template objects.
-  * @param splash The splash hash.
-  * @param discoverySplash The discovery splash hash.
-  * @param isOwner If the current user is the owner of the guild.
-  * @param ownerId The userId of the owner.
-  * @param permissions The permissions of the current user without overwrites.
-  * @param afkChannelId The channelId of the AFK channel.
-  * @param afkTimeout The amount of seconds you need to be AFK before being
-  *                   moved to the AFK channel.
-  * @param verificationLevel The verification level for the guild.
-  * @param defaultMessageNotifications The notification level for the guild.
-  * @param explicitContentFilter The explicit content filter level for the guild.
-  * @param roles The roles of the guild.
-  * @param emojis The emojis of the guild.
-  * @param features The enabled guild features.
-  * @param mfaLevel The MFA level.
-  * @param applicationId The application id if this guild is bot created.
-  * @param widgetEnabled If the widget is enabled.
-  * @param widgetChannelId The channel id for the widget.
-  * @param systemChannelId The channel which notices like welcome and boost messages are sent to.
-  * @param systemChannelFlags The flags for the system channel
-  * @param rulesChannelId The id for the channel where the rules of a guild are stored.
-  * @param joinedAt When the client joined the guild.
-  * @param large If this guild is above the large threshold.
-  * @param memberCount The amount of members in the guild.
-  * @param voiceStates The voice states of the guild.
-  * @param members The guild members in the guild.
-  * @param channels The channels in the guild.
-  * @param presences The presences in the guild.
-  * @param maxPresences The maximum amount of presences in the guild.
-  * @param maxMembers The maximum amount of members in the guild.
-  * @param vanityUrlCode The vanity url code for the guild.
-  * @param description A description for a community guild.
-  * @param banner A banner hash for the guild.
-  * @param premiumTier The premium tier of the guild.
-  * @param premiumSubscriptionCount How many users that are boosting the server.
-  * @param preferredLocale The preferred locale of a community guild.
-  * @param publicUpdatesChannelId The channel where admin and mods can see
-  *                               public updates are sent to public guilds.
-  * @param maxVideoChannelUsers The max amount of users in a video call.
-  * @param approximateMemberCount Roughly how many members there is in the guild.
-  *                               Present when gotten from the [[ackcord.requests.GetGuild]]
-  *                               endpoint with `withCounts = true`
-  * @param approximatePresenceCount Roughly how many presences there is in the guild.
-  *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
-  *                                 endpoint with `withCounts = true`
-  * @param welcomeScreen The welcome screen shown to new members. Only returned
-  *                      in an invite's guild object.
-  * @param nsfwLevel The guild NSFW level..
-  */
-case class Guild(
-    id: GuildId,
-    name: String,
-    icon: Option[String],
-    iconHash: Option[String],
-    splash: Option[String],
-    discoverySplash: Option[String],
-    isOwner: Option[Boolean],
-    ownerId: UserId,
-    permissions: Option[Permission],
-    afkChannelId: Option[NormalVoiceGuildChannelId],
-    afkTimeout: Int,
-    verificationLevel: VerificationLevel,
-    defaultMessageNotifications: NotificationLevel,
-    explicitContentFilter: FilterLevel,
-    roles: SnowflakeMap[Role, Role],
-    emojis: SnowflakeMap[Emoji, Emoji],
-    features: Seq[GuildFeature],
-    mfaLevel: MFALevel,
-    applicationId: Option[ApplicationId],
-    widgetEnabled: Option[Boolean],
-    widgetChannelId: Option[GuildChannelId],
-    systemChannelId: Option[TextGuildChannelId],
-    systemChannelFlags: SystemChannelFlags,
-    rulesChannelId: Option[TextGuildChannelId],
-    joinedAt: OffsetDateTime,
-    large: Boolean,
-    memberCount: Int,
-    voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
-    members: SnowflakeMap[User, GuildMember],
-    channels: SnowflakeMap[GuildChannel, GuildChannel],
-    presences: SnowflakeMap[User, Presence],
-    maxPresences: Option[Int],
-    maxMembers: Option[Int],
-    vanityUrlCode: Option[String],
-    description: Option[String],
-    banner: Option[String],
-    premiumTier: PremiumTier,
-    premiumSubscriptionCount: Option[Int],
-    preferredLocale: Option[String],
-    publicUpdatesChannelId: Option[TextGuildChannelId],
-    maxVideoChannelUsers: Option[Int],
-    approximateMemberCount: Option[Int],
-    approximatePresenceCount: Option[Int],
-    welcomeScreen: Option[WelcomeScreen],
-    nsfwLevel: NSFWLevel,
-    stageInstances: SnowflakeMap[StageInstance, StageInstance]
-) extends UnknownStatusGuild {
+sealed trait Guild extends UnknownStatusGuild {
   override def unavailable: Option[Boolean] = Some(false)
+
+  /** The name of the guild. */
+  def name: String
+
+  /** The icon hash. */
+  def icon: Option[String]
+
+  /** Used for template objects. */
+  def iconHash: Option[String]
+
+  /** The splash hash. */
+  def splash: Option[String]
+
+  /** The discovery splash hash. */
+  def discoverySplash: Option[String]
+
+  /** The userId of the owner. */
+  def ownerId: UserId
+
+  /** The channelId of the AFK channel. */
+  def afkChannelId: Option[NormalVoiceGuildChannelId]
+
+  /** The amount of seconds you need to be AFK before being moved to the AFK channel. */
+  def afkTimeout: Int
+
+  /** If the widget is enabled. */
+  def widgetEnabled: Option[Boolean]
+
+  /** The channel id for the widget. */
+  def widgetChannelId: Option[GuildChannelId]
+
+  /** The verification level for the guild. */
+  def verificationLevel: VerificationLevel
+
+  /** The notification level for the guild. */
+  def defaultMessageNotifications: NotificationLevel
+
+  /** The explicit content filter level for the guild. */
+  def explicitContentFilter: FilterLevel
+
+  /** The roles of the guild. */
+  def roles: SnowflakeMap[Role, Role]
+
+  /** The emojis of the guild. */
+  def emojis: SnowflakeMap[Emoji, Emoji]
+
+  /** The enabled guild features. */
+  def features: Seq[GuildFeature]
+
+  /** The MFA level. */
+  def mfaLevel: MFALevel
+
+  /** The application id if this guild is bot created. */
+  def applicationId: Option[ApplicationId]
+
+  /** The channel which notices like welcome and boost messages are sent to. */
+  def systemChannelId: Option[TextGuildChannelId]
+
+  /** The flags for the system channel. */
+  def systemChannelFlags: SystemChannelFlags
+
+  /** The id for the channel where the rules of a guild are stored. */
+  def rulesChannelId: Option[TextGuildChannelId]
+
+  /** The maximum amount of presences in the guild. */
+  def maxPresences: Option[Int]
+
+  /** The maximum amount of members in the guild. */
+  def maxMembers: Option[Int]
+
+  /** The vanity url code for the guild. */
+  def vanityUrlCode: Option[String]
+
+  /** A description for a community guild. */
+  def description: Option[String]
+
+  /** A banner hash for the guild. */
+  def banner: Option[String]
+
+  /** The premium tier of the guild. */
+  def premiumTier: PremiumTier
+
+  /** How many users that are boosting the server. */
+  def premiumSubscriptionCount: Option[Int]
+
+  /** The preferred locale of a community guild. */
+  def preferredLocale: Option[String]
+
+  /** The channel where admin and mods can see public updates are sent to public guilds. */
+  def publicUpdatesChannelId: Option[TextGuildChannelId]
+
+  /** The max amount of users in a video call. */
+  def maxVideoChannelUsers: Option[Int]
+
+  /** The guild NSFW level. */
+  def nsfwLevel: NSFWLevel
 
   /**
     * Get the everyone role in this guild.
@@ -279,6 +274,182 @@ case class Guild(
     * Get the owner this this guild.
     */
   def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
+}
+
+/**
+  * A guild or server in Discord. This object is usually gotten from a request.
+  *
+  * @param isOwner If the current user is the owner of the guild.
+  * @param permissions The permissions of the current user without overwrites.
+  * @param approximateMemberCount Roughly how many members there is in the guild.
+  *                               Present when gotten from the [[ackcord.requests.GetGuild]]
+  *                               endpoint with `withCounts = true`
+  * @param approximatePresenceCount Roughly how many presences there is in the guild.
+  *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
+  *                                 endpoint with `withCounts = true`
+  */
+case class RequestsGuild(
+    id: GuildId,
+    name: String,
+    icon: Option[String],
+    iconHash: Option[String],
+    splash: Option[String],
+    discoverySplash: Option[String],
+    isOwner: Option[Boolean],
+    ownerId: UserId,
+    permissions: Option[Permission],
+    afkChannelId: Option[NormalVoiceGuildChannelId],
+    afkTimeout: Int,
+    widgetEnabled: Option[Boolean],
+    widgetChannelId: Option[GuildChannelId],
+    verificationLevel: VerificationLevel,
+    defaultMessageNotifications: NotificationLevel,
+    explicitContentFilter: FilterLevel,
+    roles: SnowflakeMap[Role, Role],
+    emojis: SnowflakeMap[Emoji, Emoji],
+    features: Seq[GuildFeature],
+    mfaLevel: MFALevel,
+    applicationId: Option[ApplicationId],
+    systemChannelId: Option[TextGuildChannelId],
+    systemChannelFlags: SystemChannelFlags,
+    rulesChannelId: Option[TextGuildChannelId],
+    maxPresences: Option[Int],
+    maxMembers: Option[Int],
+    vanityUrlCode: Option[String],
+    description: Option[String],
+    banner: Option[String],
+    premiumTier: PremiumTier,
+    premiumSubscriptionCount: Option[Int],
+    preferredLocale: Option[String],
+    publicUpdatesChannelId: Option[TextGuildChannelId],
+    maxVideoChannelUsers: Option[Int],
+    approximateMemberCount: Option[Int],
+    approximatePresenceCount: Option[Int],
+    nsfwLevel: NSFWLevel
+) extends Guild {
+
+  def toGatewayGuild(
+      joinedAt: OffsetDateTime,
+      large: Boolean,
+      memberCount: Int,
+      voiceStates: Seq[VoiceState],
+      members: Seq[RawGuildMember],
+      rawChannels: Seq[RawChannel],
+      rawThreads: Seq[RawChannel],
+      presences: Seq[RawPresence],
+      stageInstances: Option[Seq[StageInstance]],
+      botUserId: Option[UserId]
+  ): GatewayGuild = {
+    val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
+    val threads = rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
+      case thread: ThreadGuildChannel => thread
+    }
+
+    GatewayGuild(
+      id,
+      name,
+      icon,
+      iconHash,
+      splash,
+      discoverySplash,
+      ownerId,
+      afkChannelId,
+      afkTimeout,
+      widgetEnabled,
+      widgetChannelId,
+      verificationLevel,
+      defaultMessageNotifications,
+      explicitContentFilter,
+      roles,
+      emojis,
+      features,
+      mfaLevel,
+      applicationId,
+      systemChannelId,
+      systemChannelFlags,
+      rulesChannelId,
+      joinedAt,
+      large,
+      memberCount,
+      SnowflakeMap.withKey(voiceStates)(_.userId),
+      SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+      SnowflakeMap.withKey(channels)(_.id),
+      SnowflakeMap.withKey(threads)(_.id),
+      SnowflakeMap.from(presences.map(p => p.user.id -> p.toPresence)),
+      maxPresences,
+      maxMembers,
+      vanityUrlCode,
+      description,
+      banner,
+      premiumTier,
+      premiumSubscriptionCount,
+      preferredLocale,
+      publicUpdatesChannelId,
+      maxVideoChannelUsers,
+      nsfwLevel,
+      SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id)
+    )
+  }
+}
+
+/**
+  * A guild or server in Discord received over the Gateway.
+  *
+  * @param joinedAt When the client joined the guild.
+  * @param large If this guild is above the large threshold.
+  * @param memberCount The amount of members in the guild.
+  * @param voiceStates The voice states of the guild.
+  * @param members The guild members in the guild.
+  * @param channels The channels in the guild.
+  * @param presences The presences in the guild.
+  * @param publicUpdatesChannelId The channel where admin and mods can see
+  *                               public updates are sent to public guilds.
+  * @param maxVideoChannelUsers The max amount of users in a video call.
+  */
+case class GatewayGuild(
+    id: GuildId,
+    name: String,
+    icon: Option[String],
+    iconHash: Option[String],
+    splash: Option[String],
+    discoverySplash: Option[String],
+    ownerId: UserId,
+    afkChannelId: Option[NormalVoiceGuildChannelId],
+    afkTimeout: Int,
+    widgetEnabled: Option[Boolean],
+    widgetChannelId: Option[GuildChannelId],
+    verificationLevel: VerificationLevel,
+    defaultMessageNotifications: NotificationLevel,
+    explicitContentFilter: FilterLevel,
+    roles: SnowflakeMap[Role, Role],
+    emojis: SnowflakeMap[Emoji, Emoji],
+    features: Seq[GuildFeature],
+    mfaLevel: MFALevel,
+    applicationId: Option[ApplicationId],
+    systemChannelId: Option[TextGuildChannelId],
+    systemChannelFlags: SystemChannelFlags,
+    rulesChannelId: Option[TextGuildChannelId],
+    joinedAt: OffsetDateTime,
+    large: Boolean,
+    memberCount: Int,
+    voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
+    members: SnowflakeMap[User, GuildMember],
+    channels: SnowflakeMap[GuildChannel, GuildChannel],
+    threads: SnowflakeMap[ThreadGuildChannel, ThreadGuildChannel],
+    presences: SnowflakeMap[User, Presence],
+    maxPresences: Option[Int],
+    maxMembers: Option[Int],
+    vanityUrlCode: Option[String],
+    description: Option[String],
+    banner: Option[String],
+    premiumTier: PremiumTier,
+    premiumSubscriptionCount: Option[Int],
+    preferredLocale: Option[String],
+    publicUpdatesChannelId: Option[TextGuildChannelId],
+    maxVideoChannelUsers: Option[Int],
+    nsfwLevel: NSFWLevel,
+    stageInstances: SnowflakeMap[StageInstance, StageInstance]
+) extends Guild {
 
   /**
     * Get the AFK channel of this guild.
@@ -348,23 +519,29 @@ sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
 object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
-  case object InviteSplash          extends GuildFeature("INVITE_SPLASH")
-  case object VipRegions            extends GuildFeature("VIP_REGIONS")
-  case object VanityUrl             extends GuildFeature("VANITY_URL")
-  case object Verified              extends GuildFeature("VERIFIED")
-  case object Partnered             extends GuildFeature("PARTNERED")
-  case object Community             extends GuildFeature("COMMUNITY")
-  case object Commerce              extends GuildFeature("COMMERCE")
-  case object News                  extends GuildFeature("NEWS")
-  case object Discoverable          extends GuildFeature("DISCOVERABLE")
-  case object Featureable           extends GuildFeature("FEATURABLE")
-  case object AnimatedIcon          extends GuildFeature("ANIMATED_ICON")
-  case object Banner                extends GuildFeature("BANNER")
-  case object WelcomeScreenEnabled  extends GuildFeature("TICKETED_EVENTS_ENABLED")
-  case object TicketedEventsEnabled extends GuildFeature("WELCOME_SCREEN_ENABLED")
-  case object MonetizationEnabled   extends GuildFeature("MONETIZATION_ENABLED")
-  case object MoreStickers          extends GuildFeature("MORE_STICKERS")
-  case class Unknown(str: String)   extends GuildFeature(str)
+  case object AnimatedIcon                  extends GuildFeature("ANIMATED_ICON")
+  case object Banner                        extends GuildFeature("BANNER")
+  case object Commerce                      extends GuildFeature("COMMERCE")
+  case object Community                     extends GuildFeature("COMMUNITY")
+  case object Discoverable                  extends GuildFeature("DISCOVERABLE")
+  case object Featureable                   extends GuildFeature("FEATURABLE")
+  case object InviteSplash                  extends GuildFeature("INVITE_SPLASH")
+  case object MemberVerificationGateEnabled extends GuildFeature("MEMBER_VERIFICATION_GATE_ENABLED")
+  case object News                          extends GuildFeature("NEWS")
+  case object Partnered                     extends GuildFeature("PARTNERED")
+  case object PreviewEnabled                extends GuildFeature("PREVIEW_ENABLED")
+  case object VanityUrl                     extends GuildFeature("VANITY_URL")
+  case object Verified                      extends GuildFeature("VERIFIED")
+  case object VipRegions                    extends GuildFeature("VIP_REGIONS")
+  case object WelcomeScreenEnabled          extends GuildFeature("TICKETED_EVENTS_ENABLED")
+  case object TicketedEventsEnabled         extends GuildFeature("WELCOME_SCREEN_ENABLED")
+  case object MonetizationEnabled           extends GuildFeature("MONETIZATION_ENABLED")
+  case object MoreStickers                  extends GuildFeature("MORE_STICKERS")
+  case object ThreeDayThreadArchive         extends GuildFeature("THREE_DAY_THREAD_ARCHIVE")
+  case object SevenDayThreadArchive         extends GuildFeature("SEVEN_DAY_THREAD_ARCHIVE")
+  case object PrivateThreads                extends GuildFeature("PRIVATE_THREADS")
+
+  case class Unknown(str: String) extends GuildFeature(str)
 
   override def createUnknown(value: String): GuildFeature = Unknown(value)
 }
@@ -412,7 +589,11 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel.
     */
-  def permissionsWithOverridesId(guild: Guild, guildPermissions: Permission, channelId: GuildChannelId): Permission = {
+  def permissionsWithOverridesId(
+      guild: GatewayGuild,
+      guildPermissions: Permission,
+      channelId: GuildChannelId
+  ): Permission = {
     if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
     else {
       val res = guild.channels.get(channelId).map { channel =>
@@ -458,7 +639,7 @@ case class GuildMember(
   /**
     * Calculate the permissions of this user in a channel given a guild.
     */
-  def channelPermissionsId(guild: Guild, channelId: GuildChannelId): Permission =
+  def channelPermissionsId(guild: GatewayGuild, channelId: GuildChannelId): Permission =
     permissionsWithOverridesId(guild, permissions(guild), channelId)
 
   /**

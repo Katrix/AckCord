@@ -42,7 +42,7 @@ case class MemoryCacheSnapshot(
     dmChannelMap: SnowflakeMap[DMChannel, DMChannel],
     groupDmChannelMap: SnowflakeMap[GroupDMChannel, GroupDMChannel],
     unavailableGuildMap: SnowflakeMap[Guild, UnavailableGuild],
-    guildMap: SnowflakeMap[Guild, Guild],
+    guildMap: SnowflakeMap[Guild, GatewayGuild],
     messageMap: SnowflakeMap[TextChannel, SnowflakeMap[Message, Message]],
     lastTypedMap: SnowflakeMap[TextChannel, SnowflakeMap[User, Instant]],
     userMap: SnowflakeMap[User, User],

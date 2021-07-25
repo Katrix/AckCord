@@ -24,6 +24,7 @@
 package ackcord.requests
 
 import java.net.URLEncoder
+import java.time.OffsetDateTime
 
 import ackcord.AckCord
 import ackcord.data._
@@ -383,6 +384,33 @@ object Routes {
   val groupDmAddRecipient: (ChannelId, UserId) => RequestRoute    = groupDmRecipient.toRequest(PUT)
   val groupDmRemoveRecipient: (ChannelId, UserId) => RequestRoute = groupDmRecipient.toRequest(DELETE)
 
+  //Channel Threads
+  val startThreadWithMessage: (ChannelId, MessageId) => RequestRoute = (channelMessage / "threads").toRequest(POST)
+
+  val channelThreads: RouteFunction[ChannelId]             = channel / "threads"
+  val startThreadWithoutMessage: ChannelId => RequestRoute = channelThreads.toRequest(POST)
+
+  val threadMembers: RouteFunction[ChannelId]                 = channel / "thread-members"
+  val threadMemberMe: RouteFunction[ChannelId]                = threadMembers / "@me"
+  val threadMemberUser: RouteFunction[(ChannelId, UserId)]    = threadMembers / userId
+  val joinThread: ChannelId => RequestRoute                   = threadMemberMe.toRequest(PUT)
+  val addThreadMember: (ChannelId, UserId) => RequestRoute    = threadMemberUser.toRequest(PUT)
+  val leaveThread: ChannelId => RequestRoute                  = threadMemberMe.toRequest(DELETE)
+  val removeThreadMember: (ChannelId, UserId) => RequestRoute = threadMemberUser.toRequest(DELETE)
+  val listThreadMembers: ChannelId => RequestRoute            = threadMembers.toRequest(GET)
+
+  val archivedThreads: RouteFunction[ChannelId] = channelThreads / "archived"
+  val beforeTimestampQuery: QueryParameter[OffsetDateTime] = query[OffsetDateTime]("before", _.toString)
+  val limitQuery: QueryParameter[Int] = query[Int]("limit", _.toString)
+
+  val listActiveThreads: ChannelId => RequestRoute = (channelThreads / "active").toRequest(GET)
+  val listPublicArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
+    (archivedThreads / "public" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
+  val listPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
+    (archivedThreads / "private" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
+  val listJoinedPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
+    (channel / "users" / "@me" / "threads" / "archived" / "private" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
+
   //Emoji routes
 
   val guildEmojis: RouteFunction[GuildId]       = guild / "emojis"
@@ -565,10 +593,11 @@ object Routes {
   val deleteWebhook: SnowflakeType[Webhook] => RequestRoute                    = webhook.toRequest(DELETE)
   val deleteWebhookWithToken: (SnowflakeType[Webhook], String) => RequestRoute = webhookWithToken.toRequest(DELETE)
 
-  val waitQuery: QueryParameter[Boolean] = query[Boolean]("wait", _.toString)
+  val waitQuery: QueryParameter[Boolean]                  = query[Boolean]("wait", _.toString)
+  val threadIdQuery: QueryParameter[ThreadGuildChannelId] = query[ThreadGuildChannelId]("thread_id", _.asString)
 
-  val executeWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute =
-    webhookWithToken +? waitQuery toRequest POST
+  val executeWebhook: (SnowflakeType[Webhook], String, Option[Boolean], Option[ThreadGuildChannelId]) => RequestRoute =
+    webhookWithToken +? waitQuery +? threadIdQuery toRequest POST
   val executeSlackWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute =
     webhookWithToken / "slack" +? waitQuery toRequest POST
   val executeGithubWebhook: (SnowflakeType[Webhook], String, Option[Boolean]) => RequestRoute =

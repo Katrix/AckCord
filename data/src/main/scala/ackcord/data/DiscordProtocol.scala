@@ -96,6 +96,12 @@ trait DiscordProtocol {
     Encoder[String].contramap(_.rawData)
   )
 
+  implicit val rawThreadMemberCodec: Codec[RawThreadMember] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val rawThreadMetadataCodec: Codec[RawThreadMetadata] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
   implicit val rawChannelCodec: Codec[RawChannel] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
@@ -372,6 +378,7 @@ trait DiscordProtocol {
       referencedMessage  <- c.get[Option[RawMessage]]("referenced_message")
       messageInteraction <- c.get[Option[MessageInteraction]]("interaction")
       components         <- c.get[Option[Seq[ActionRow]]]("components")
+      thread             <- c.get[Option[RawChannel]]("thread")
     } yield RawMessage(
       id,
       channelId,
@@ -401,7 +408,8 @@ trait DiscordProtocol {
       stickerItems,
       referencedMessage,
       messageInteraction,
-      components
+      components,
+      thread
     )
   }
 

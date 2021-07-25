@@ -33,7 +33,7 @@ object AckCord {
   /**
     * Current Discord API version in use
     */
-  val DiscordApiVersion = "8"
+  val DiscordApiVersion = "9"
 
   /**
     * Current Discord Voice API version in use

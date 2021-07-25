@@ -244,9 +244,10 @@ case class ExecuteWebhook(
     id: SnowflakeType[Webhook],
     token: String,
     waitQuery: Boolean = false,
+    threadId: Option[ThreadGuildChannelId],
     params: ExecuteWebhookData
 ) extends RESTRequest[ExecuteWebhookData, Option[RawMessage], Option[Message]] {
-  override def route: RequestRoute = Routes.executeWebhook(id, token, Some(waitQuery))
+  override def route: RequestRoute = Routes.executeWebhook(id, token, Some(waitQuery), threadId)
 
   override def requestBody: RequestEntity = {
     if (params.files.nonEmpty) {

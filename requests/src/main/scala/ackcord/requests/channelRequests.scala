@@ -24,6 +24,7 @@
 package ackcord.requests
 
 import java.nio.file.{Files, Path}
+import java.time.OffsetDateTime
 
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
@@ -45,7 +46,7 @@ case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, 
   override def route: RequestRoute = Routes.getChannel(channelId)
 
   override def responseDecoder: Decoder[RawChannel]                  = Decoder[RawChannel]
-  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel
+  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel(None)
 
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
     hasPermissionsChannel(channelId, requiredPermissions)
@@ -65,6 +66,7 @@ case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, 
   */
 case class ModifyChannelData(
     name: JsonOption[String] = JsonUndefined,
+    icon: JsonOption[ImageData] = JsonUndefined,
     tpe: JsonOption[ChannelType] = JsonUndefined,
     position: JsonOption[Int] = JsonUndefined,
     topic: JsonOption[String] = JsonUndefined,
@@ -74,7 +76,11 @@ case class ModifyChannelData(
     userLimit: JsonOption[Int] = JsonUndefined,
     permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
     parentId: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
-    rtcRegion: JsonOption[String] = JsonUndefined
+    rtcRegion: JsonOption[String] = JsonUndefined,
+    videoQualityMode: JsonOption[VideoQualityMode] = JsonUndefined,
+    archived: JsonOption[Boolean] = JsonUndefined,
+    locked: JsonOption[Boolean] = JsonUndefined,
+    autoArchiveDuration: JsonOption[Int] = JsonUndefined
 ) {
   require(name.forall(_.length <= 100), "Name must be between 2 and 100 characters")
   require(topic.forall(_.length <= 100), "Topic must be between 0 and 1024 characters")
@@ -82,11 +88,16 @@ case class ModifyChannelData(
   require(userLimit.forall(b => b >= 0 && b <= 99), "User limit must be between 0 and 99 users")
   require(rateLimitPerUser.forall(i => i >= 0 && i <= 21600), "Rate limit per user must be between 0 ad 21600")
   require(tpe.forall(Seq(ChannelType.GuildNews, ChannelType.GuildText).contains))
+  require(
+    autoArchiveDuration.forall(Seq(60, 1440, 4320, 10080).contains),
+    "Auto archive duration can only be 60, 1440, 4320 or 10080"
+  )
 }
 object ModifyChannelData {
   implicit val encoder: Encoder[ModifyChannelData] = (a: ModifyChannelData) => {
     JsonOption.removeUndefinedToObj(
       "name"                  -> a.name.toJson,
+      "icon"                  -> a.icon.toJson,
       "type"                  -> a.tpe.toJson,
       "position"              -> a.position.toJson,
       "topic"                 -> a.topic.toJson,
@@ -96,7 +107,11 @@ object ModifyChannelData {
       "user_limit"            -> a.userLimit.toJson,
       "permission_overwrites" -> a.permissionOverwrites.toJson,
       "parent_id"             -> a.parentId.toJson,
-      "rtc_region"            -> a.rtcRegion.toJson
+      "rtc_region"            -> a.rtcRegion.toJson,
+      "video_quality_mode"    -> a.videoQualityMode.toJson,
+      "archived"              -> a.archived.toJson,
+      "locked"                -> a.locked.toJson,
+      "auto_archive_duration" -> a.autoArchiveDuration.toJson
     )
   }
 }
@@ -115,11 +130,7 @@ case class ModifyChannel(
   override def jsonPrinter: Printer                      = Printer.noSpaces
 
   override def responseDecoder: Decoder[RawChannel]                  = Decoder[RawChannel]
-  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel
-
-  override def requiredPermissions: Permission = Permission.ManageChannels
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
-    hasPermissionsChannel(channelId, requiredPermissions)
+  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel(None)
 
   override def withReason(reason: String): ModifyChannel = copy(reason = Some(reason))
 }
@@ -132,11 +143,11 @@ case class DeleteCloseChannel(channelId: ChannelId, reason: Option[String] = Non
   override def route: RequestRoute = Routes.deleteCloseChannel(channelId)
 
   override def responseDecoder: Decoder[RawChannel]                  = Decoder[RawChannel]
-  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel
+  override def toNiceResponse(response: RawChannel): Option[Channel] = response.toChannel(None)
 
-  override def requiredPermissions: Permission = Permission.ManageChannels
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
-    hasPermissionsChannel(channelId, requiredPermissions)
+    hasPermissionsChannel(channelId, Permission.ManageChannels) ||
+      hasPermissionsChannel(channelId, Permission.ManageThreads)
 
   override def withReason(reason: String): DeleteCloseChannel = copy(reason = Some(reason))
 }
@@ -772,6 +783,175 @@ case class GroupDMRemoveRecipient(channelId: Snowflake, userId: Snowflake) exten
   override def route: RestRoute = Routes.groupDmRemoveRecipient(userId, channelId)
 }
  */
+
+case class StartThreadWithMessageData(name: String, autoArchiveDuration: Int) {
+  require(
+    Seq(60, 1440, 4320, 10080).contains(autoArchiveDuration),
+    "Auto archive duration can only be 60, 1440, 4320 or 10080"
+  )
+}
+
+/**
+  * Create a new public thread from an existing message.
+  */
+case class StartThreadWithMessage(
+    channelId: TextGuildChannelId,
+    messageId: MessageId,
+    params: StartThreadWithMessageData,
+    reason: Option[String] = None
+) extends ReasonRequest[StartThreadWithMessage, StartThreadWithMessageData, RawChannel, Option[ThreadGuildChannel]] {
+  override def route: RequestRoute = Routes.startThreadWithMessage(channelId, messageId)
+
+  override def paramsEncoder: Encoder[StartThreadWithMessageData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+
+  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] = response.toChannel(None).collect {
+    case thread: ThreadGuildChannel => thread
+  }
+
+  override def withReason(reason: String): StartThreadWithMessage = copy(reason = Some(reason))
+}
+
+case class StartThreadWithoutMessageData(
+    name: String,
+    autoArchiveDuration: Int,
+    `type`: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
+) {
+  require(
+    Seq(60, 1440, 4320, 10080).contains(autoArchiveDuration),
+    "Auto archive duration can only be 60, 1440, 4320 or 10080"
+  )
+}
+
+/**
+  * Create a new public thread from an existing message.
+  */
+case class StartThreadWithoutMessage(
+    channelId: TextGuildChannelId,
+    params: StartThreadWithoutMessageData,
+    reason: Option[String] = None
+) extends ReasonRequest[StartThreadWithoutMessage, StartThreadWithoutMessageData, RawChannel, Option[
+      ThreadGuildChannel
+    ]] {
+  override def route: RequestRoute = Routes.startThreadWithoutMessage(channelId)
+
+  override def paramsEncoder: Encoder[StartThreadWithoutMessageData] =
+    derivation.deriveEncoder(derivation.renaming.snakeCase, None)
+  override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+
+  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] = response.toChannel(None).collect {
+    case thread: ThreadGuildChannel => thread
+  }
+
+  override def withReason(reason: String): StartThreadWithoutMessage = copy(reason = Some(reason))
+}
+
+/**
+  * Adds the current user to a thread.
+  */
+case class JoinThread(channelId: ThreadGuildChannelId) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.joinThread(channelId)
+}
+
+/**
+  * Adds the specified user to a thread.
+  */
+case class AddThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.addThreadMember(channelId, userId)
+}
+
+/**
+  * Makes the current user leave a thread.
+  */
+case class LeaveThread(channelId: ThreadGuildChannelId) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.leaveThread(channelId)
+}
+
+/**
+  * Removes the specified user from a thread.
+  */
+case class RemoveThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsResponseRequest {
+  override def route: RequestRoute = Routes.removeThreadMember(channelId, userId)
+}
+
+/**
+  * Gets all the members of a thread. Requires the privileged `GUILD_MEMBERS` intent.
+  */
+case class ListThreadMembers(channelId: ThreadGuildChannelId)
+    extends NoParamsRequest[Seq[RawThreadMember], Seq[ThreadMember]] {
+  override def route: RequestRoute = Routes.listThreadMembers(channelId)
+
+  override def responseDecoder: Decoder[Seq[RawThreadMember]] = Decoder[Seq[RawThreadMember]]
+
+  override def toNiceResponse(response: Seq[RawThreadMember]): Seq[ThreadMember] =
+    //Safe
+    response.map(raw => ThreadMember(raw.id.get, raw.userId.get, raw.joinTimestamp, raw.flags))
+}
+
+case class GetThreadsResponse(
+    threads: Seq[RawChannel],
+    members: Seq[RawThreadMember],
+    hasMore: Boolean
+)
+object GetThreadsResponse {
+  implicit val decoder: Decoder[GetThreadsResponse] =
+    derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
+}
+
+/**
+  * Lists all the active threads in a channel. Threads are ordered in descending order by their id.
+  */
+case class ListActiveThreads(channelId: TextGuildChannelId) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+  override def route: RequestRoute = Routes.listActiveThreads(channelId)
+
+  override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
+}
+
+/**
+  * Lists all the public archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
+case class ListPublicArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
+    extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+  override def route: RequestRoute = Routes.listPublicArchivedThreads(channelId, before, limit)
+
+  override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
+
+  override def requiredPermissions: Permission = Permission.ReadMessageHistory
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsChannel(channelId, requiredPermissions)
+}
+
+/**
+  * Lists all the private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
+case class ListPrivateArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
+    extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+  override def route: RequestRoute = Routes.listPrivateArchivedThreads(channelId, before, limit)
+
+  override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
+
+  override def requiredPermissions: Permission = Permission.ReadMessageHistory ++ Permission.ManageThreads
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsChannel(channelId, requiredPermissions)
+}
+
+/**
+  * Lists all the joined private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
+case class ListJoinedPrivateArchivedThreads(
+    channelId: TextGuildChannelId,
+    before: Option[OffsetDateTime],
+    limit: Option[Int]
+) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
+  override def route: RequestRoute = Routes.listJoinedPrivateArchivedThreads(channelId, before, limit)
+
+  override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
+
+  override def requiredPermissions: Permission = Permission.ReadMessageHistory
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsChannel(channelId, requiredPermissions)
+}
 
 /**
   * Get all the emojis for this guild.

@@ -102,8 +102,10 @@ object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[Mes
   case object GuildDiscoveryRequalified               extends MessageType(15)
   case object GuildDiscoveryGracePeriodInitialWarning extends MessageType(16)
   case object GuildDiscoveryGracePeriodFinalWarning   extends MessageType(17)
+  case object ThreadCreated                           extends MessageType(18)
   case object Reply                                   extends MessageType(19)
   case object ApplicationCommand                      extends MessageType(20)
+  case object ThreadStarterMessage                    extends MessageType(21)
   case object GuildInviteReminder                     extends MessageType(22)
   case class Unknown(i: Int)                          extends MessageType(i)
 
@@ -354,10 +356,13 @@ sealed trait Message {
   /** Message associated with the message reference. */
   def referencedMessage: Option[Message]
 
+  /** The thread that was started from this message. */
+  def threadId: Option[ThreadGuildChannelId]
+
   /**
     * Get the guild this message was sent to.
     */
-  def guild(implicit c: CacheSnapshot): Option[Guild]
+  def guild(implicit c: CacheSnapshot): Option[GatewayGuild]
 
   /**
     * Get the guild member of the one that sent this message.
@@ -423,10 +428,11 @@ case class SparseMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction],
-    components: Seq[ActionRow]
+    components: Seq[ActionRow],
+    threadId: Option[ThreadGuildChannelId]
 ) extends Message {
 
-  override def guild(implicit c: CacheSnapshot): Option[Guild] =
+  override def guild(implicit c: CacheSnapshot): Option[GatewayGuild] =
     channelId.asChannelId[GuildChannel].resolve.flatMap(_.guild)
 
   override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] =
@@ -488,10 +494,11 @@ case class GuildGatewayMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[Message],
     interaction: Option[MessageInteraction],
-    components: Seq[ActionRow]
+    components: Seq[ActionRow],
+    threadId: Option[ThreadGuildChannelId]
 ) extends Message {
 
-  override def guild(implicit c: CacheSnapshot): Option[Guild] =
+  override def guild(implicit c: CacheSnapshot): Option[GatewayGuild] =
     c.getGuild(guildId)
 
   override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] = member

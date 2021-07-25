@@ -26,7 +26,7 @@ package ackcord
 import scala.reflect.ClassTag
 
 import ackcord.commands.{ActionBuilder, ActionFunction, ActionTransformer}
-import ackcord.data.{Channel, Guild, GuildChannel, GuildGatewayMessage, GuildMember, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
+import ackcord.data.{Channel, GatewayGuild, GuildChannel, GuildGatewayMessage, GuildMember, TextChannel, TextGuildChannel, User, VoiceGuildChannel}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Keep, Sink}
@@ -61,7 +61,7 @@ object EventListenerBuilder {
     EventListenerBuilder(requests, Some(_), ActionFunction.identity)
 
   def guildEvent[I[A] <: EventListenerMessage[A], O[_]](
-      create: Guild => I ~> O
+      create: GatewayGuild => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
 
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
@@ -119,7 +119,7 @@ object EventListenerBuilder {
   }
 
   def textGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
-      create: (TextGuildChannel, Guild) => I ~> O
+      create: (TextGuildChannel, GatewayGuild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
@@ -134,7 +134,7 @@ object EventListenerBuilder {
   }
 
   def voiceGuildChannelEvent[I[A] <: ChannelEventListenerMessage[A], O[_]](
-      create: (VoiceGuildChannel, Guild) => I ~> O
+      create: (VoiceGuildChannel, GatewayGuild) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
@@ -149,7 +149,7 @@ object EventListenerBuilder {
   }
 
   def guildUserEvent[I[A] <: GuildEventListenerMessage[A], O[_]](
-      create: (Guild, User, GuildMember) => I ~> O
+      create: (GatewayGuild, User, GuildMember) => I ~> O
   ): EventTransformer[I, O] = new EventTransformer[I, O] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
       Flow[I[A]]
@@ -202,11 +202,11 @@ class WrappedEventListenerMessage[A](m: EventListenerMessage[A]) extends EventLi
 }
 
 trait GuildEventListenerMessage[A] extends EventListenerMessage[A] {
-  def guild: Guild
+  def guild: GatewayGuild
 }
 object GuildEventListenerMessage {
 
-  case class Default[A](guild: Guild, m: EventListenerMessage[A])
+  case class Default[A](guild: GatewayGuild, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
       with GuildEventListenerMessage[A]
 }
@@ -236,7 +236,7 @@ trait TextGuildChannelEventListenerMessage[A]
   def channel: TextGuildChannel
 }
 object TextGuildChannelEventListenerMessage {
-  case class Default[A](channel: TextGuildChannel, guild: Guild, m: EventListenerMessage[A])
+  case class Default[A](channel: TextGuildChannel, guild: GatewayGuild, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
       with TextGuildChannelEventListenerMessage[A]
 }
@@ -245,7 +245,7 @@ trait VGuildChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A
   def channel: VoiceGuildChannel
 }
 object VGuildChannelEventListenerMessage {
-  case class Default[A](channel: VoiceGuildChannel, guild: Guild, m: EventListenerMessage[A])
+  case class Default[A](channel: VoiceGuildChannel, guild: GatewayGuild, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
       with VGuildChannelEventListenerMessage[A]
 }
@@ -258,7 +258,7 @@ trait GuildUserEventListenerMessage[A] extends GuildEventListenerMessage[A] with
   def guildMember: GuildMember
 }
 object GuildUserEventListenerMessage {
-  case class Default[A](guild: Guild, user: User, guildMember: GuildMember, m: EventListenerMessage[A])
+  case class Default[A](guild: GatewayGuild, user: User, guildMember: GuildMember, m: EventListenerMessage[A])
       extends WrappedEventListenerMessage(m)
       with GuildUserEventListenerMessage[A]
 }

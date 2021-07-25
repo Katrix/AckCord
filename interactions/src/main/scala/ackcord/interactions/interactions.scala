@@ -103,7 +103,7 @@ case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocati
 
 trait ResolvedInteraction extends CacheInteraction {
   def textChannel: TextChannel
-  def optGuild: Option[Guild]
+  def optGuild: Option[GatewayGuild]
 }
 trait ResolvedComponentInteraction  extends ResolvedInteraction with ComponentInteraction
 trait ResolvedMenuInteraction       extends ResolvedInteraction with MenuInteraction
@@ -113,7 +113,7 @@ case class BaseResolvedComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextChannel,
-    optGuild: Option[Guild],
+    optGuild: Option[GatewayGuild],
     cache: CacheSnapshot
 ) extends ResolvedComponentInteraction
 case class BaseResolvedMenuInteraction(
@@ -121,24 +121,24 @@ case class BaseResolvedMenuInteraction(
     message: Message,
     values: Seq[String],
     textChannel: TextChannel,
-    optGuild: Option[Guild],
+    optGuild: Option[GatewayGuild],
     cache: CacheSnapshot
 ) extends ResolvedMenuInteraction
 case class BaseResolvedCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextChannel,
-    optGuild: Option[Guild],
+    optGuild: Option[GatewayGuild],
     cache: CacheSnapshot
 ) extends ResolvedCommandInteraction[A]
 
 trait GuildInteraction extends ResolvedInteraction {
-  def guild: Guild
+  def guild: GatewayGuild
   def member: GuildMember
   def memberPermissions: Permission
 
   def textChannel: TextGuildChannel
 
-  override def optGuild: Option[Guild] = Some(guild)
+  override def optGuild: Option[GatewayGuild] = Some(guild)
 }
 trait GuildComponentInteraction  extends GuildInteraction with ComponentInteraction
 trait GuildMenuInteraction       extends GuildInteraction with MenuInteraction
@@ -148,7 +148,7 @@ case class BaseGuildComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     cache: CacheSnapshot
@@ -158,7 +158,7 @@ case class BaseGuildMenuInteraction(
     message: Message,
     values: Seq[String],
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     cache: CacheSnapshot
@@ -166,7 +166,7 @@ case class BaseGuildMenuInteraction(
 case class BaseGuildCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     cache: CacheSnapshot
@@ -183,7 +183,7 @@ case class BaseVoiceChannelComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     voiceChannel: VoiceGuildChannel,
@@ -194,7 +194,7 @@ case class BaseVoiceChannelMenuInteraction(
     message: Message,
     values: Seq[String],
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     voiceChannel: VoiceGuildChannel,
@@ -203,7 +203,7 @@ case class BaseVoiceChannelMenuInteraction(
 case class BaseVoiceChannelCommandInteraction[A](
     commandInvocationInfo: CommandInvocationInfo[A],
     textChannel: TextGuildChannel,
-    guild: Guild,
+    guild: GatewayGuild,
     member: GuildMember,
     memberPermissions: Permission,
     voiceChannel: VoiceGuildChannel,
@@ -255,7 +255,7 @@ object DataInteractionTransformer {
     * A command transformer which resolves most ids from the cache.
     */
   def resolved[I[A] <: CacheInteraction, O[_]](
-      create: (TextChannel, Option[Guild]) => I ~> O
+      create: (TextChannel, Option[GatewayGuild]) => I ~> O
   ): DataInteractionTransformer[I, O] = new DataInteractionTransformer[I, O] {
     override def filter[A](from: I[A]): Either[Option[String], O[A]] = {
       implicit val c: CacheSnapshot = from.cache
@@ -279,7 +279,7 @@ object DataInteractionTransformer {
     * A command function that only allows commands sent from a guild.
     */
   def onlyInGuild[I[A] <: ResolvedInteraction, O[_]](
-      create: (Guild, GuildMember, Permission, TextGuildChannel) => I ~> O
+      create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I ~> O
   ): DataInteractionTransformer[I, O] =
     new DataInteractionTransformer[I, O] {
 
@@ -390,9 +390,9 @@ object InteractionTransformer {
     * A command transformer which resolves most ids from the cache.
     */
   def resolved[I <: CacheInteraction, O](
-      create: (TextChannel, Option[Guild]) => I => O
+      create: (TextChannel, Option[GatewayGuild]) => I => O
   ): InteractionTransformer[I, O] =
-    fromComplexCreate[I, O, TextChannel, Option[Guild]](
+    fromComplexCreate[I, O, TextChannel, Option[GatewayGuild]](
       create,
       DataInteractionTransformer.resolved[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
@@ -401,9 +401,9 @@ object InteractionTransformer {
     * A command function that only allows commands sent from a guild.
     */
   def onlyInGuild[I <: ResolvedInteraction, O](
-      create: (Guild, GuildMember, Permission, TextGuildChannel) => I => O
+      create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I => O
   ): InteractionTransformer[I, O] =
-    fromComplexCreate[I, O, Guild, GuildMember, Permission, TextGuildChannel](
+    fromComplexCreate[I, O, GatewayGuild, GuildMember, Permission, TextGuildChannel](
       create,
       DataInteractionTransformer.onlyInGuild[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )

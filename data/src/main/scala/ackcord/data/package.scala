@@ -79,7 +79,7 @@ package object data {
     /**
       * Resolve the guild represented by this id.
       */
-    def resolve(implicit c: CacheSnapshot): Option[Guild] = c.getGuild(guildId)
+    def resolve(implicit c: CacheSnapshot): Option[GatewayGuild] = c.getGuild(guildId)
   }
 
   type ChannelId = SnowflakeType[Channel]
@@ -156,6 +156,25 @@ package object data {
       c.getGuildChannel(guildId, channelId).collect {
         case ch: TextGuildChannel => ch
       }
+  }
+
+  type ThreadGuildChannelId = SnowflakeType[ThreadGuildChannel]
+  object ThreadGuildChannelId extends SnowflakeCompanion[ThreadGuildChannel]
+
+  implicit class ThreadGuildChannelIdSyntax(private val threadId: ThreadGuildChannelId) extends AnyVal {
+
+    /**
+      * Resolve the thread represented by this id. If a guild id is know,
+      * prefer the method taking a guild id instead.
+      */
+    def resolve(implicit c: CacheSnapshot): Option[TextGuildChannel] =
+      c.getThread(threadId)
+
+    /**
+      * Resolve the thread represented by this id relative to a guild id.
+      */
+    def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TextGuildChannel] =
+      c.getThread(guildId, threadId)
   }
 
   type VoiceGuildChannelId = SnowflakeType[VoiceGuildChannel]
@@ -385,6 +404,9 @@ package object data {
     val UseSlashCommands: Permission        = Permission(0x80000000)
     val RequestToSpeak: Permission          = Permission(0x100000000L)
     val UseExternalStickers: Permission     = Permission(0x2000000000L)
+    val ManageThreads: Permission           = Permission(0x0400000000L)
+    val UsePublicThreads: Permission        = Permission(0x0800000000L)
+    val UsePrivateThreads: Permission       = Permission(0x1000000000L)
 
     val None: Permission = Permission(0x00000000)
     val All: Permission = Permission(
@@ -420,7 +442,8 @@ package object data {
       ManageWebhooks,
       ManageEmojisAndStickers,
       UseSlashCommands,
-      RequestToSpeak
+      RequestToSpeak,
+      UseExternalStickers
     )
   }
   implicit class PermissionSyntax(private val permission: Permission) extends AnyVal {
@@ -554,6 +577,7 @@ package object data {
     val SuppressEmbeds: MessageFlags       = MessageFlags(1 << 2)
     val SourceMessageDeleted: MessageFlags = MessageFlags(1 << 3)
     val Urgent: MessageFlags               = MessageFlags(1 << 4)
+    val HasThread: MessageFlags            = MessageFlags(1 << 5)
     val Ephermal: MessageFlags             = MessageFlags(1 << 6)
     val Loading: MessageFlags              = MessageFlags(1 << 7)
   }

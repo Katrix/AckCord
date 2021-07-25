@@ -29,6 +29,7 @@ import scala.reflect.ClassTag
 import ackcord.SnowflakeMap
 import ackcord.data._
 import ackcord.data.raw._
+import ackcord.gateway.GatewayEvent
 import ackcord.gateway.GatewayEvent._
 import org.slf4j.Logger
 
@@ -93,12 +94,26 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, rawChannel: RawChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      rawChannel.toChannel.foreach {
+      rawChannel.toChannel(Some(builder.botUser.id)).foreach {
         //Let's keep a match here so that we don't forget to add new types later
         case guildChannel: GuildChannel     => registry.updateData(builder)(guildChannel)
         case dmChannel: DMChannel           => registry.updateData(builder)(dmChannel)
         case groupDmChannel: GroupDMChannel => registry.updateData(builder)(groupDmChannel)
         case _: UnsupportedChannel          =>
+      }
+    }
+  }
+
+  val threadChannelUpdater: CacheUpdater[ThreadGuildChannel] = new CacheUpdater[ThreadGuildChannel] {
+    override def handle(builder: CacheSnapshotBuilder, thread: ThreadGuildChannel, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit = {
+      builder.guildMap.get(thread.guildId) match {
+        case Some(guild) =>
+          registry.updateData(builder) {
+            guild.copy(threads = guild.threads.updated(thread.id, thread))
+          }
+        case None => log.warn(s"No guild for thread update $thread")
       }
     }
   }
@@ -131,6 +146,78 @@ object CacheHandlers {
       builder.groupDmChannelMap = builder.groupDmChannelMap.updated(groupDmChannel.id, groupDmChannel)
   }
 
+  val threadListUpdater: CacheUpdater[GatewayEvent.ThreadListSyncData] = new CacheUpdater[ThreadListSyncData] {
+    override def handle(builder: CacheSnapshotBuilder, obj: ThreadListSyncData, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit = {
+      for {
+        guildUpdater <- registry.getUpdater[Guild]
+        guild        <- builder.getGuild(obj.guildId)
+      } {
+        val unalteredThreads = guild.threads.filter(t => !obj.channelIds.contains(t._1))
+        val newThreads = SnowflakeMap.withKey(
+          obj.threads
+            .flatMap(
+              _.toGuildChannel(obj.guildId, Some(builder.botUser.id))
+            )
+            .collect {
+              case thread: ThreadGuildChannel => thread
+            }
+        )(_.id)
+
+        val newThreadsWithMembers = if (registry.hasUpdater[ThreadMember]) {
+          val members = SnowflakeMap.withKey(
+            obj.members.map(member =>
+              ThreadMember(member.id.get, member.userId.get, member.joinTimestamp, member.flags)
+            )
+          )(_.id)
+
+          newThreads.map(t => t._1 -> t._2.copy(member = members.get(t._2.id).orElse(t._2.member)))
+        } else newThreads
+
+        guildUpdater.handle(
+          builder,
+          guild.copy(threads = unalteredThreads ++ newThreadsWithMembers),
+          registry
+        )
+      }
+
+    }
+  }
+
+  val rawThreadMemberUpdater: CacheUpdater[RawThreadMember] = new CacheUpdater[RawThreadMember] {
+    override def handle(builder: CacheSnapshotBuilder, obj: RawThreadMember, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit = {
+      for {
+        threadUpdater <- registry.getUpdater[ThreadGuildChannel]
+        thread        <- builder.getThread(obj.id.get)
+      } {
+        threadUpdater.handle(
+          builder,
+          thread.copy(member =
+            Some(ThreadMember(obj.id.get, obj.userId.getOrElse(builder.botUser.id), obj.joinTimestamp, obj.flags))
+          ),
+          registry
+        )
+      }
+    }
+  }
+
+  val threadMembersUpdater: CacheUpdater[GatewayEvent.ThreadMembersUpdateData] =
+    new CacheUpdater[GatewayEvent.ThreadMembersUpdateData] {
+      override def handle(builder: CacheSnapshotBuilder, obj: ThreadMembersUpdateData, registry: CacheTypeRegistry)(
+          implicit log: Logger
+      ): Unit = {
+        for {
+          threadUpdater <- registry.getUpdater[ThreadGuildChannel]
+          thread        <- builder.getThread(obj.id)
+        } {
+          threadUpdater.handle(builder, thread.copy(memberCount = obj.memberCount), registry)
+        }
+      }
+    }
+
   val rawGuildUpdater: CacheUpdater[RawGuild] = new CacheUpdater[RawGuild] {
     override def handle(builder: CacheSnapshotBuilder, obj: RawGuild, registry: CacheTypeRegistry)(
         implicit log: Logger
@@ -158,24 +245,26 @@ object CacheHandlers {
 
       guildUpdater.foreach { guildUpdater =>
         val rawChannels  = obj.channels.filter(_ => registry.hasUpdater[GuildChannel]).getOrElse(Seq.empty)
+        val rawThreads   = obj.channels.filter(_ => registry.hasUpdater[ThreadGuildChannel]).getOrElse(Seq.empty)
         val rawPresences = obj.presences.filter(_ => registry.hasUpdater[Presence]).getOrElse(Seq.empty)
 
         val presences = rawPresences.map(_.toPresence)
-        val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id))
+        val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id, Some(builder.botUser.id)))
+        val threads = rawThreads.flatMap(_.toGuildChannel(obj.id, Some(builder.botUser.id))).collect {
+          case thread: ThreadGuildChannel => thread
+        }
 
         val oldGuild = builder.getGuild(obj.id)
 
         //Get on Option here are because everything should be sent here
-        val guild = Guild(
+        val guild = GatewayGuild(
           id = obj.id,
           name = obj.name,
           icon = obj.icon,
           iconHash = obj.iconHash,
           splash = obj.splash,
           discoverySplash = obj.discoverySplash,
-          isOwner = obj.owner,
           ownerId = obj.ownerId,
-          permissions = obj.permissions,
           afkChannelId = obj.afkChannelId,
           afkTimeout = obj.afkTimeout,
           verificationLevel = obj.verificationLevel,
@@ -200,6 +289,7 @@ object CacheHandlers {
             .get,
           members = SnowflakeMap.withKey(members)(_.userId),
           channels = SnowflakeMap.withKey(channels)(_.id),
+          threads = SnowflakeMap.withKey(threads)(_.id),
           presences = SnowflakeMap.withKey(presences)(_.userId),
           maxPresences = obj.maxPresences,
           maxMembers = obj.maxMembers,
@@ -211,9 +301,6 @@ object CacheHandlers {
           preferredLocale = obj.preferredLocale,
           publicUpdatesChannelId = obj.publicUpdatesChannelId,
           maxVideoChannelUsers = obj.maxVideoChannelUsers,
-          approximateMemberCount = obj.approximateMemberCount,
-          approximatePresenceCount = obj.approximatePresenceCount,
-          welcomeScreen = obj.welcomeScreen,
           nsfwLevel = obj.nsfwLevel,
           stageInstances = obj.stageInstances
             .map(seq => SnowflakeMap.withKey(seq)(_.id))
@@ -448,7 +535,8 @@ object CacheHandlers {
                 stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction),
-                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten
+                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten,
+                threadId = obj.thread.map(_.id.asChannelId[ThreadGuildChannel]).orElseIfUndefined(message.threadId)
               )
             case message: GuildGatewayMessage =>
               val member = obj.member.map(_.toGuildMember(UserId(message.authorId), message.guildId))
@@ -485,7 +573,8 @@ object CacheHandlers {
                 stickerItems = obj.stickerItems.orElseIfUndefined(message.stickerItems),
                 referencedMessage = message.referencedMessage, //I'm lazy
                 interaction = obj.interaction.orElseIfUndefined(message.interaction),
-                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten
+                components = obj.components.orElseIfUndefined(Some(message.components)).toSeq.flatten,
+                threadId = obj.thread.map(_.id.asChannelId[ThreadGuildChannel]).orElseIfUndefined(message.threadId)
               )
           }
 
@@ -493,6 +582,7 @@ object CacheHandlers {
         }
 
         registry.getUpdater[User].foreach(updater => newUsers.foreach(user => updater.handle(builder, user, registry)))
+        obj.thread.foreach(registry.updateData(builder)(_))
       }
     }
 
@@ -559,8 +649,8 @@ object CacheHandlers {
       }
   }
 
-  val guildUpdater: CacheUpdater[Guild] = new CacheUpdater[Guild] {
-    override def handle(builder: CacheSnapshotBuilder, obj: Guild, registry: CacheTypeRegistry)(
+  val guildUpdater: CacheUpdater[GatewayGuild] = new CacheUpdater[GatewayGuild] {
+    override def handle(builder: CacheSnapshotBuilder, obj: GatewayGuild, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
       builder.guildMap = builder.guildMap.updated(obj.id, obj)
@@ -628,7 +718,8 @@ object CacheHandlers {
       //We do the update here instead of in the respective deleter so we don't need to convert to a non raw channel
       rawChannel.`type` match {
         case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory |
-            ChannelType.GuildNews | ChannelType.GuildStore =>
+            ChannelType.GuildNews | ChannelType.GuildStore | ChannelType.GuildPublicThread |
+            ChannelType.GuildNewsThread | ChannelType.GuildPrivateThread =>
           registry.getUpdater[Guild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
               rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
@@ -647,7 +738,18 @@ object CacheHandlers {
               case ChannelType.GuildCategory   => runDelete[GuildCategory]()
               case ChannelType.GuildNews       => runDelete[NewsTextGuildChannel]()
               case ChannelType.GuildStore      => runDelete[GuildStoreChannel]()
-              case _                           => sys.error("impossible")
+              case _: ChannelType.ThreadChannelType =>
+                if (registry.hasDeleter[ThreadGuildChannel]) {
+                  rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
+                    guildUpdater.handle(
+                      builder,
+                      guild.copy(threads = guild.threads - rawChannel.id.asChannelId[ThreadGuildChannel]),
+                      registry
+                    )
+                  }
+                }
+
+              case _ => sys.error("impossible")
             }
           }
         case ChannelType.DM =>
@@ -660,6 +762,19 @@ object CacheHandlers {
             builder.groupDmChannelMap = builder.groupDmChannelMap - rawChannel.id.asChannelId[GroupDMChannel]
           }
         case ChannelType.Unknown(_) =>
+      }
+    }
+  }
+
+  val threadDeleter: CacheDeleter[GatewayEvent.ThreadDeleteData] = new CacheDeleter[ThreadDeleteData] {
+    override def handle(builder: CacheSnapshotBuilder, obj: ThreadDeleteData, registry: CacheTypeRegistry)(
+        implicit log: Logger
+    ): Unit = {
+      for {
+        updater <- registry.getUpdater[Guild]
+        guild   <- builder.getGuild(obj.guildId)
+      } {
+        updater.handle(builder, guild.copy(threads = guild.threads - obj.id), registry)
       }
     }
   }

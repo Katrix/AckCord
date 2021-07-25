@@ -68,7 +68,7 @@ trait CacheSnapshot {
     *
     * $optionalMap
     */
-  def guildMap: MapType[Guild, Guild]
+  def guildMap: MapType[Guild, GatewayGuild]
 
   /**
     * All messages, organized by channelId, and then messageId.
@@ -123,7 +123,7 @@ trait CacheSnapshot {
   /**
     * Get a guild by id.
     */
-  def getGuild(id: GuildId): Option[Guild]
+  def getGuild(id: GuildId): Option[GatewayGuild]
 
   /**
     * Get guild by id, also including unavailable guilds.
@@ -158,6 +158,18 @@ trait CacheSnapshot {
     * Get a guild channel by id without knowing the guild it belongs to.
     */
   def getGuildChannel(id: GuildChannelId): Option[GuildChannel]
+
+  /**
+    * Get a thread channel.
+    * @param guildId The guild id
+    * @param id The thread id
+    */
+  def getThread(guildId: GuildId, id: ThreadGuildChannelId): Option[ThreadGuildChannel]
+
+  /**
+    * Get a thread channel by id without knowing the guild it belongs to.
+    */
+  def getThread(id: ThreadGuildChannelId): Option[ThreadGuildChannel]
 
   /**
     * Get a channel by id, ignoring if it's a dm or guild channel.

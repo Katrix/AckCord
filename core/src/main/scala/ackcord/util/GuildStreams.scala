@@ -24,9 +24,9 @@
 package ackcord.util
 
 import ackcord.APIMessage
-import ackcord.data.{GuildChannel, GuildChannelId, GuildId, GuildGatewayMessage}
+import ackcord.data.{GuildChannel, GuildChannelId, GuildGatewayMessage, GuildId}
 import ackcord.gateway.GatewayEvent
-import ackcord.gateway.GatewayEvent.IgnoredEvent
+import ackcord.gateway.GatewayEvent.{IgnoredEvent, ThreadMemberUpdate}
 import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.Flow
@@ -129,6 +129,8 @@ object GuildStreams {
         lazyOptToOption(msg.guildId)
       case msg: GatewayEvent.ChannelEvent[_] =>
         handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
+      case msg: ThreadMemberUpdate =>
+        handleLazy(msg.mapData(_.id))(optThreadId => optThreadId.flatMap(channelToGuild.get)).flatten
       case _: GatewayEvent.UnknownEvent[_] =>
         None
     }

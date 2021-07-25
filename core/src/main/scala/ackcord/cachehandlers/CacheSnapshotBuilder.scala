@@ -39,7 +39,7 @@ class CacheSnapshotBuilder(
     var dmChannelMap: SnowflakeMap[DMChannel, DMChannel],
     var groupDmChannelMap: SnowflakeMap[GroupDMChannel, GroupDMChannel],
     var unavailableGuildMap: SnowflakeMap[Guild, UnavailableGuild],
-    var guildMap: SnowflakeMap[Guild, Guild],
+    var guildMap: SnowflakeMap[Guild, GatewayGuild],
     var messageMap: SnowflakeMap[TextChannel, SnowflakeMap[Message, Message]],
     var lastTypedMap: SnowflakeMap[TextChannel, SnowflakeMap[User, Instant]],
     var userMap: SnowflakeMap[User, User],

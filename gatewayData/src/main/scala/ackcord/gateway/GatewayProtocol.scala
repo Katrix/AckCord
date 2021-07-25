@@ -23,14 +23,15 @@
  */
 package ackcord.gateway
 
+import java.time.OffsetDateTime
+
 import ackcord.data._
-import ackcord.data.raw.{PartialRawGuildMember, RawMessageActivity}
+import ackcord.data.raw.{PartialRawGuildMember, RawChannel, RawMessageActivity}
 import ackcord.util._
 import cats.Later
-import cats.syntax.all._
+import cats.syntax.either._
 import io.circe.syntax._
 import io.circe.{derivation, _}
-import java.time.OffsetDateTime
 
 //noinspection NameBooleanParameters
 object GatewayProtocol extends DiscordProtocol {
@@ -83,6 +84,15 @@ object GatewayProtocol extends DiscordProtocol {
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val typingStartDataCodec: Codec[GatewayEvent.TypingStartData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val threadDeleteDataCodec: Codec[GatewayEvent.ThreadDeleteData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val threadListSyncDataCodec: Codec[GatewayEvent.ThreadListSyncData] =
+    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+
+  implicit val threadMembersUpdateDataCodec: Codec[GatewayEvent.ThreadMembersUpdateData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit val voiceServerUpdateDataCodec: Codec[VoiceServerUpdateData] =
@@ -160,21 +170,34 @@ object GatewayProtocol extends DiscordProtocol {
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
         Seq(
-          "id"               -> JsonSome(a.id.asJson),
-          "channel_id"       -> JsonSome(a.channelId.asJson),
-          "content"          -> a.content.toJson,
-          "timestamp"        -> a.timestamp.toJson,
-          "edited_timestamp" -> a.editedTimestamp.toJson,
-          "tts"              -> a.tts.toJson,
-          "mention_everyone" -> a.mentionEveryone.toJson,
-          "mentions"         -> a.mentions.toJson,
-          "mention_roles"    -> a.mentionRoles.toJson,
-          "attachments"      -> a.attachment.toJson,
-          "embeds"           -> a.embeds.toJson,
-          "reactions"        -> a.reactions.toJson,
-          "nonce"            -> a.nonce.map(_.fold(_.asJson, _.asJson)),
-          "pinned"           -> a.pinned.toJson,
-          "webhook_id"       -> a.webhookId.toJson
+          "id"                -> JsonSome(a.id.asJson),
+          "channel_id"        -> JsonSome(a.channelId.asJson),
+          "content"           -> a.content.toJson,
+          "timestamp"         -> a.timestamp.toJson,
+          "edited_timestamp"  -> a.editedTimestamp.toJson,
+          "tts"               -> a.tts.toJson,
+          "mention_everyone"  -> a.mentionEveryone.toJson,
+          "mentions"          -> a.mentions.toJson,
+          "mention_roles"     -> a.mentionRoles.toJson,
+          "mention_channels"  -> a.mentionChannels.toJson,
+          "attachments"       -> a.attachment.toJson,
+          "embeds"            -> a.embeds.toJson,
+          "reactions"         -> a.reactions.toJson,
+          "nonce"             -> a.nonce.map(_.fold(_.asJson, _.asJson)),
+          "pinned"            -> a.pinned.toJson,
+          "webhook_id"        -> a.webhookId.toJson,
+          "type"              -> a.`type`.toJson,
+          "activity"          -> a.activity.toJson,
+          "application"       -> a.application.toJson,
+          "applicationId"     -> a.applicationId.toJson,
+          "messageReference"  -> a.messageReference.toJson,
+          "flags"             -> a.flags.toJson,
+          "stickers"          -> a.stickers.toJson,
+          "stickerItems"      -> a.stickerItems.toJson,
+          "referencedMessage" -> a.referencedMessage.toJson,
+          "interaction"       -> a.interaction.toJson,
+          "components"        -> a.components.toJson,
+          "thread"            -> a.thread.toJson
         )
       )
 
@@ -228,6 +251,7 @@ object GatewayProtocol extends DiscordProtocol {
       referencedMessage <- c.get[JsonOption[GatewayEvent.RawPartialMessage]]("referenced_message")
       interaction       <- c.get[JsonOption[MessageInteraction]]("interaction")
       components        <- c.get[JsonOption[Seq[ActionRow]]]("components")
+      thread            <- c.get[JsonOption[RawChannel]]("thread")
     } yield GatewayEvent.RawPartialMessage(
       id,
       channelId,
@@ -257,7 +281,8 @@ object GatewayProtocol extends DiscordProtocol {
       stickerItems,
       referencedMessage,
       interaction,
-      components
+      components,
+      thread
     )
   }
 
@@ -348,6 +373,12 @@ object GatewayProtocol extends DiscordProtocol {
       "CHANNEL_CREATE"                -> createDispatch(GatewayEvent.ChannelCreate),
       "CHANNEL_UPDATE"                -> createDispatch(GatewayEvent.ChannelUpdate),
       "CHANNEL_DELETE"                -> createDispatch(GatewayEvent.ChannelDelete),
+      "THREAD_CREATE"                 -> createDispatch(GatewayEvent.ThreadCreate),
+      "THREAD_UPDATE"                 -> createDispatch(GatewayEvent.ThreadUpdate),
+      "THREAD_DELETE"                 -> createDispatch(GatewayEvent.ThreadDelete),
+      "THREAD_LIST_SYNC"              -> createDispatch(GatewayEvent.ThreadListSync),
+      "THREAD_MEMBER_UPDATE"          -> createDispatch(GatewayEvent.ThreadMemberUpdate),
+      "THREAD_MEMBERS_UPDATE"         -> createDispatch(GatewayEvent.ThreadMembersUpdate),
       "CHANNEL_PINS_UPDATE"           -> createDispatch(GatewayEvent.ChannelPinsUpdate),
       "GUILD_CREATE"                  -> createDispatch(GatewayEvent.GuildCreate),
       "GUILD_UPDATE"                  -> createDispatch(GatewayEvent.GuildUpdate),

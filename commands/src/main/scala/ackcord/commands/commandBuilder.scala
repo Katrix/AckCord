@@ -182,7 +182,7 @@ object CommandBuilder {
     * lets you build the result command message.
     */
   def onlyInGuild[I[A] <: CommandMessage[A], O[_]](
-      create: (TextGuildChannel, GuildGatewayMessage, Guild) => I ~> O
+      create: (TextGuildChannel, GuildGatewayMessage, GatewayGuild) => I ~> O
   ): CommandFunction[I, O] =
     new CommandFunction[I, O] {
 
@@ -519,7 +519,7 @@ trait GuildCommandMessage[+A] extends CommandMessage[A] {
   /**
     * The guild this command was used in.
     */
-  def guild: Guild
+  def guild: GatewayGuild
 
   override def message: GuildGatewayMessage
 }
@@ -528,7 +528,7 @@ object GuildCommandMessage {
   case class Default[A](
       override val textChannel: TextGuildChannel,
       override val message: GuildGatewayMessage,
-      guild: Guild,
+      guild: GatewayGuild,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
       with GuildCommandMessage[A]
@@ -536,7 +536,7 @@ object GuildCommandMessage {
   case class WithUser[A](
       override val textChannel: TextGuildChannel,
       override val message: GuildGatewayMessage,
-      guild: Guild,
+      guild: GatewayGuild,
       user: User,
       m: CommandMessage[A]
   ) extends WrappedCommandMessage(m)
@@ -572,7 +572,7 @@ object GuildMemberCommandMessage {
   case class Default[A](
       override val textChannel: TextGuildChannel,
       override val message: GuildGatewayMessage,
-      guild: Guild,
+      guild: GatewayGuild,
       user: User,
       guildMember: GuildMember,
       m: CommandMessage[A]
@@ -592,7 +592,7 @@ object VoiceGuildCommandMessage {
   case class Default[A](
       override val textChannel: TextGuildChannel,
       override val message: GuildGatewayMessage,
-      guild: Guild,
+      guild: GatewayGuild,
       user: User,
       voiceChannel: VoiceGuildChannel,
       m: CommandMessage[A]
@@ -602,7 +602,7 @@ object VoiceGuildCommandMessage {
   case class WithGuildMember[A](
       override val textChannel: TextGuildChannel,
       override val message: GuildGatewayMessage,
-      guild: Guild,
+      guild: GatewayGuild,
       user: User,
       guildMember: GuildMember,
       voiceChannel: VoiceGuildChannel,

@@ -25,10 +25,10 @@ package ackcord.example
 
 import ackcord._
 import ackcord.commands.PrefixParser
-import ackcord.gateway.{GatewayIntents, GatewayMessage}
+import ackcord.gateway.GatewayIntents
 import ackcord.interactions.InteractionsRegistrar
+import ackcord.requests.CreateMessage
 import ackcord.syntax._
-import akka.stream.scaladsl.Flow
 
 object MyBot extends App {
 
@@ -60,6 +60,15 @@ object MyBot extends App {
               guild <- optionPure(optGuild)
               _     <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))
             } yield ()
+        }
+      }
+
+      client.onEventAsync { implicit c =>
+        {
+          case APIMessage.ThreadCreate(_, thread, _, _) => run(thread.sendMessage("First")).map(_ => ())
+          case APIMessage.ThreadUpdate(_, thread, _, _) => run(thread.sendMessage(s"Edited")).map(_ => ())
+          case APIMessage.ThreadDelete(_, thread, _, _) =>
+            run(CreateMessage.mkContent(thread.parentChannelId, s"Deleted thread ${thread.name}")).map(_ => ())
         }
       }
 

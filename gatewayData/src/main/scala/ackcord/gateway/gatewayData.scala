@@ -23,6 +23,10 @@
  */
 package ackcord.gateway
 
+import java.time.{Instant, OffsetDateTime}
+
+import scala.collection.immutable
+
 import ackcord.data._
 import ackcord.data.raw._
 import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
@@ -30,9 +34,6 @@ import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
 import io.circe.{Decoder, DecodingFailure, Json}
-
-import java.time.{Instant, OffsetDateTime}
-import scala.collection.immutable
 
 /**
   * Base trait for all gateway messages.
@@ -435,6 +436,94 @@ object GatewayEvent {
   }
 
   /**
+    * Send when a new thread is created, or the current user is added to a thread.
+    * @param data The thread created or added to.
+    */
+  case class ThreadCreate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends GuildEvent[RawChannel]
+      with ChannelEvent[RawChannel] {
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId.get)
+    override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
+    override def name: String                       = "THREAD_CREATE"
+  }
+
+  /**
+    * Send when a thread is updated.
+    * @param data The thread updated.
+    */
+  case class ThreadUpdate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends GuildEvent[RawChannel]
+      with ChannelEvent[RawChannel] {
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId.get)
+    override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
+    override def name: String                       = "THREAD_UPDATE"
+  }
+
+  case class ThreadDeleteData(
+      id: ThreadGuildChannelId,
+      guildId: GuildId,
+      parentId: TextGuildChannelId,
+      `type`: ChannelType
+  )
+
+  /**
+    * Sent when a thread is deleted.
+    * @param data The deleted thread.
+    */
+  case class ThreadDelete(rawData: Json, data: Later[Decoder.Result[ThreadDeleteData]])
+      extends GuildEvent[ThreadDeleteData]
+      with ChannelEvent[ThreadDeleteData] {
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId)
+    override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
+    override def name: String                       = "THREAD_DELETE"
+  }
+
+  case class ThreadListSyncData(
+      guildId: GuildId,
+      channelIds: Seq[TextGuildChannelId],
+      threads: Seq[RawChannel],
+      members: Seq[RawThreadMember]
+  )
+
+  /**
+    * Sent when a user gains access to a channel.
+    * @param data Data to update threads the user can now see.
+    */
+  case class ThreadListSync(rawData: Json, data: Later[Decoder.Result[ThreadListSyncData]])
+      extends GuildEvent[ThreadListSyncData] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+    override def name: String                   = "THREAD_LIST_SYNC"
+  }
+
+  /**
+    * Sent when the thread member object for the current user is updated.
+    * @param data An updated thread member for the current user.
+    */
+  case class ThreadMemberUpdate(rawData: Json, data: Later[Decoder.Result[RawThreadMember]])
+      extends GatewayEvent[RawThreadMember] {
+    override def name: String = "THREAD_MEMBER_UPDATE"
+  }
+
+  case class ThreadMembersUpdateData(
+      id: ThreadGuildChannelId,
+      guildId: GuildId,
+      memberCount: Int,
+      addedMembers: Option[Seq[RawThreadMember]],
+      removedMemberIds: Option[Seq[UserId]]
+  )
+
+  /**
+    * Send when anyone is added or removed from a thread. If the current user
+    * does not have the `GUILD_MEMBERS` intent, then this will only be sent for the current user.
+    * @param data Data indicating who was added and removed.
+    */
+  case class ThreadMembersUpdate(rawData: Json, data: Later[Decoder.Result[ThreadMembersUpdateData]])
+      extends GuildEvent[ThreadMembersUpdateData] {
+    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+    override def name: String                   = "THREAD_MEMBERS_UPDATE"
+  }
+
+  /**
     * Base trait for an event that includes a channel.
     */
   sealed trait ChannelEvent[D] extends GatewayEvent[D] {
@@ -798,7 +887,8 @@ object GatewayEvent {
       stickerItems: JsonOption[Seq[StickerItem]],
       referencedMessage: JsonOption[RawPartialMessage],
       interaction: JsonOption[MessageInteraction],
-      components: JsonOption[Seq[ActionRow]]
+      components: JsonOption[Seq[ActionRow]],
+      thread: JsonOption[RawChannel]
   )
 
   /**
@@ -1078,25 +1168,29 @@ object GatewayEvent {
 
   case class DeletedIntegration(id: IntegrationId, guildId: GuildId, applicationId: Option[ApplicationId])
 
-  case class IntegrationDelete(rawData: Json, data: Later[Decoder.Result[DeletedIntegration]]) extends GuildEvent[DeletedIntegration] {
+  case class IntegrationDelete(rawData: Json, data: Later[Decoder.Result[DeletedIntegration]])
+      extends GuildEvent[DeletedIntegration] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTEGRATION_DELETE"
   }
 
-  case class StageInstanceCreate(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+  case class StageInstanceCreate(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_CREATE"
   }
 
-  case class StageInstanceUpdate(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+  case class StageInstanceUpdate(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_UPDATE"
   }
 
-  case class StageInstanceDelete(rawData: Json, data: Later[Decoder.Result[StageInstance]]) extends GuildEvent[StageInstance] {
+  case class StageInstanceDelete(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_DELETE"

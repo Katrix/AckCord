@@ -30,6 +30,7 @@ import scala.collection.immutable
 import ackcord.util.IntCirceEnumWithUnknown
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
+import io.circe.Codec
 
 /**
   * Different type of channels
@@ -38,15 +39,30 @@ sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
 object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[ChannelType] {
   override def values: immutable.IndexedSeq[ChannelType] = findValues
 
-  case object GuildText       extends ChannelType(0)
-  case object DM              extends ChannelType(1)
-  case object GuildVoice      extends ChannelType(2)
-  case object GroupDm         extends ChannelType(3)
-  case object GuildCategory   extends ChannelType(4)
-  case object GuildNews       extends ChannelType(5)
-  case object GuildStore      extends ChannelType(6)
-  case object GuildStageVoice extends ChannelType(13)
-  case class Unknown(i: Int)  extends ChannelType(i)
+  sealed trait ThreadChannelType extends ChannelType
+  object ThreadChannelType {
+    implicit val codec: Codec[ThreadChannelType] = Codec.from(
+      ChannelType.codec.emap {
+        case channelType: ThreadChannelType => Right(channelType)
+        case _                              => Left("Not a valid thread channel type")
+      },
+      ChannelType.codec.contramap(identity)
+    )
+  }
+
+  case object GuildText          extends ChannelType(0)
+  case object DM                 extends ChannelType(1)
+  case object GuildVoice         extends ChannelType(2)
+  case object GroupDm            extends ChannelType(3)
+  case object GuildCategory      extends ChannelType(4)
+  case object GuildNews          extends ChannelType(5)
+  case object GuildStore         extends ChannelType(6)
+  case object GuildPublicThread  extends ChannelType(10) with ThreadChannelType
+  case object GuildNewsThread    extends ChannelType(11) with ThreadChannelType
+  case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
+  case object GuildStageVoice    extends ChannelType(13)
+
+  case class Unknown(i: Int) extends ChannelType(i)
 
   override def createUnknown(value: Int): ChannelType = Unknown(value)
 }
@@ -88,7 +104,7 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
     * If this overwrite applies to a user, get that user's member, otherwise returns None.
     * @param guild The guild this overwrite belongs to.
     */
-  def member(guild: Guild): Option[GuildMember] =
+  def member(guild: GatewayGuild): Option[GuildMember] =
     if (`type` == PermissionOverwriteType.Member) guild.members.get(UserId(id)) else None
 
   /**
@@ -181,7 +197,7 @@ sealed trait GuildChannel extends Channel with GetGuild {
   /**
     * The id of the category this channel is in.
     */
-  def parentId: Option[SnowflakeType[GuildCategory]]
+  def parentId: Option[GuildChannelId]
 
   /**
     * Gets the category for this channel if it has one.
@@ -214,6 +230,11 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
     * When the last pinned message was pinned.
     */
   def lastPinTimestamp: Option[OffsetDateTime]
+
+  /**
+    * The default for when a newly created thread is auto archived in minutes.
+    */
+  def defaultAutoArchiveDuration: Int
 }
 
 /**
@@ -231,6 +252,7 @@ case class NewsTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
+    defaultAutoArchiveDuration: Int
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 
@@ -252,9 +274,49 @@ case class NormalTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
+    defaultAutoArchiveDuration: Int
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
+
+case class ThreadGuildChannel(
+    id: SnowflakeType[ThreadGuildChannel],
+    guildId: GuildId,
+    name: String,
+    lastMessageId: Option[MessageId],
+    ownerId: UserId,
+    rateLimitPerUser: Option[Int],
+    parentChannelId: TextGuildChannelId,
+    channelType: ChannelType.ThreadChannelType,
+    messageCount: Int,
+    memberCount: Int,
+    archived: Boolean,
+    archiveTimestamp: OffsetDateTime,
+    autoArchiveDuration: Int,
+    locked: Boolean,
+    member: Option[ThreadMember]
+) extends TextGuildChannel {
+  def parentId: Option[TextGuildChannelId] = Some(parentChannelId)
+
+  override def topic: Option[String] = None
+
+  override def lastPinTimestamp: Option[OffsetDateTime] = None
+
+  override def defaultAutoArchiveDuration: Int = autoArchiveDuration
+
+  override def position: Int = -1
+
+  override def permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite] = SnowflakeMap.empty
+
+  override def nsfw: Boolean = false
+}
+
+case class ThreadMember(
+    id: ThreadGuildChannelId,
+    userId: UserId,
+    joinTimestamp: OffsetDateTime,
+    flags: Int
+)
 
 sealed trait VoiceGuildChannel extends GuildChannel {
 
@@ -314,10 +376,11 @@ case class GuildCategory(
     name: String,
     position: Int,
     permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite],
-    nsfw: Boolean,
-    parentId: Option[SnowflakeType[GuildCategory]]
+    nsfw: Boolean
 ) extends GuildChannel {
   override def channelType: ChannelType = ChannelType.GuildCategory
+
+  override def parentId: Option[GuildChannelId] = None
 }
 
 /**

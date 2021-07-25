@@ -29,12 +29,14 @@ import ackcord.data.{
   Channel,
   ChannelId,
   CreatedInvite,
-  Guild,
+  GatewayGuild,
   GuildChannel,
   GuildId,
   TextChannel,
   TextChannelId,
-  TextGuildChannel
+  TextGuildChannel,
+  ThreadGuildChannel,
+  ThreadMember
 }
 import ackcord.gateway.{Dispatch, GatewayEvent}
 import ackcord.util.AckCordGatewaySettings
@@ -73,8 +75,8 @@ object CacheEventCreator {
         channelId.asChannelId[TextGuildChannel].resolve(guildId)(state)
       }
 
-    def getGuildIfDefined(state: CacheSnapshotWithMaps, guildId: Option[GuildId]): Option[Option[Guild]] =
-      guildId.fold[Option[Option[Guild]]](Some(None))(state.getGuild(_).map(Some.apply))
+    def getGuildIfDefined(state: CacheSnapshotWithMaps, guildId: Option[GuildId]): Option[Option[GatewayGuild]] =
+      guildId.fold[Option[Option[GatewayGuild]]](Some(None))(state.getGuild(_).map(Some.apply))
 
     {
       case gatewayEv.Ready(_, GetLazy(data)) =>
@@ -98,7 +100,7 @@ object CacheEventCreator {
                   .collect {
                     case g: GuildChannel => g
                   }
-                  .orElse(data.toGuildChannel(data.guildId.get))
+                  .orElse(data.toGuildChannel(data.guildId.get, Some(state.current.botUser.id)))
                   .get,
                 state,
                 dispatch.gatewayInfo
@@ -115,7 +117,9 @@ object CacheEventCreator {
             Some(
               api.ChannelUpdate(
                 data.guildId.flatMap(state.current.getGuild),
-                getChannelUsingMaybeGuildId(state.current, data.guildId, data.id).orElse(data.toChannel).get,
+                getChannelUsingMaybeGuildId(state.current, data.guildId, data.id)
+                  .orElse(data.toChannel(Some(state.current.botUser.id)))
+                  .get,
                 state,
                 dispatch.gatewayInfo
               )
@@ -135,13 +139,128 @@ object CacheEventCreator {
                   .collect {
                     case c: GuildChannel => c
                   }
-                  .orElse(data.toChannel.asInstanceOf[Option[GuildChannel]])
+                  .orElse(data.toChannel(Some(state.current.botUser.id)).asInstanceOf[Option[GuildChannel]])
                   .get,
                 state,
                 dispatch.gatewayInfo
               )
             ),
           CacheHandlers.rawChannelDeleter,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadCreate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              guildId <- data.guildId
+              guild   <- state.current.getGuild(guildId)
+              thread <-
+                state.current
+                  .getThread(guildId, data.id.asChannelId[ThreadGuildChannel])
+                  .orElse(
+                    data.toGuildChannel(guildId, Some(state.current.botUser.id)).collect {
+                      case thread: ThreadGuildChannel => thread
+                    }
+                  )
+            } yield api.ThreadCreate(guild, thread, state, dispatch.gatewayInfo),
+          CacheHandlers.rawChannelUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              guildId <- data.guildId
+              guild   <- state.current.getGuild(guildId)
+              thread <-
+                state.current
+                  .getThread(guildId, data.id.asChannelId[ThreadGuildChannel])
+                  .orElse(
+                    data.toGuildChannel(guildId, Some(state.current.botUser.id)).collect {
+                      case thread: ThreadGuildChannel => thread
+                    }
+                  )
+            } yield api.ThreadUpdate(guild, thread, state, dispatch.gatewayInfo),
+          CacheHandlers.rawChannelUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadDelete(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              guild  <- state.current.getGuild(data.guildId)
+              thread <- state.previous.getThread(data.guildId, data.id.asChannelId[ThreadGuildChannel])
+            } yield api.ThreadDelete(guild, thread, state, dispatch.gatewayInfo),
+          CacheHandlers.threadDeleter,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadListSync(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              guild <- state.current.getGuild(data.guildId)
+            } yield api.ThreadListSync(
+              guild,
+              data.channelIds,
+              data.threads.flatMap { raw =>
+                state.current
+                  .getThread(data.guildId, raw.id.asChannelId[ThreadGuildChannel])
+                  .orElse(raw.toGuildChannel(data.guildId, Some(state.current.botUser.id)).collect {
+                    case thread: ThreadGuildChannel => thread
+                  })
+              },
+              state,
+              dispatch.gatewayInfo
+            ),
+          CacheHandlers.threadListUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadMemberUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              threadId <- data.id
+              thread   <- state.current.getThread(threadId.asChannelId[ThreadGuildChannel])
+              guild    <- state.current.getGuild(thread.guildId)
+            } yield api.ThreadMemberUpdate(
+              guild,
+              thread,
+              ThreadMember(threadId, data.userId.get, data.joinTimestamp, data.flags),
+              state,
+              dispatch.gatewayInfo
+            ),
+          CacheHandlers.rawThreadMemberUpdater,
+          registry,
+          dispatch
+        )
+      case gatewayEv.ThreadMembersUpdate(_, GetLazy(data)) =>
+        CacheUpdate(
+          data,
+          state =>
+            for {
+              guild  <- state.current.getGuild(data.guildId)
+              thread <- state.current.getThread(data.guildId, data.id.asChannelId[ThreadGuildChannel])
+            } yield api.ThreadMembersUpdate(
+              guild,
+              thread,
+              data.addedMembers
+                .getOrElse(Nil)
+                .map(raw => ThreadMember(raw.id.get, raw.userId.get, raw.joinTimestamp, raw.flags)),
+              data.removedMemberIds.getOrElse(Nil),
+              state,
+              dispatch.gatewayInfo
+            ),
+          CacheHandlers.threadMembersUpdater,
           registry,
           dispatch
         )
@@ -168,7 +287,7 @@ object CacheEventCreator {
           state =>
             Some(
               api.GuildCreate(
-                state.current.getGuild(data.id).orElse(data.toGuild).get,
+                state.current.getGuild(data.id).orElse(data.toGatewayGuild(Some(state.current.botUser.id))).get,
                 state,
                 dispatch.gatewayInfo
               )
@@ -181,13 +300,13 @@ object CacheEventCreator {
         CacheUpdate(
           data,
           state =>
-            Some(
+            state.current.getGuild(data.id).map { guild =>
               api.GuildUpdate(
-                state.current.getGuild(data.id).orElse(data.toGuild).get,
+                guild,
                 state,
                 dispatch.gatewayInfo
               )
-            ),
+            },
           CacheHandlers.rawGuildUpdater,
           registry,
           dispatch
@@ -410,7 +529,7 @@ object CacheEventCreator {
                 data.targetType,
                 data.targetApplication,
                 data.temporary,
-                data.uses,
+                data.uses
               ),
               state,
               dispatch.gatewayInfo
@@ -716,9 +835,7 @@ object CacheEventCreator {
           state =>
             state.current
               .getGuild(data.guildId)
-              .map(guild =>
-                api.IntegrationDelete(guild, data.id, data.applicationId, state, dispatch.gatewayInfo)
-              ),
+              .map(guild => api.IntegrationDelete(guild, data.id, data.applicationId, state, dispatch.gatewayInfo)),
           NOOPHandler,
           registry,
           dispatch

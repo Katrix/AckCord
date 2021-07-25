@@ -27,7 +27,7 @@ package ackcord.cachehandlers
 import scala.reflect.ClassTag
 
 import ackcord.data._
-import ackcord.data.raw.PartialUser
+import ackcord.data.raw.{PartialUser, RawGuild, RawThreadMember}
 import ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild
 import org.slf4j.Logger
 
@@ -85,9 +85,12 @@ object CacheTypeRegistry {
     classOf[Guild]                   -> CacheHandlers.guildUpdater,
     classOf[GuildMember]             -> CacheHandlers.guildMemberUpdater,
     classOf[RawGuildMemberWithGuild] -> CacheHandlers.rawGuildMemberWithGuildUpdater,
+    classOf[ThreadGuildChannel]      -> CacheHandlers.threadChannelUpdater,
     classOf[GuildChannel]            -> CacheHandlers.guildChannelUpdater,
     classOf[DMChannel]               -> CacheHandlers.dmChannelUpdater,
     classOf[GroupDMChannel]          -> CacheHandlers.dmGroupChannelUpdater,
+    classOf[RawGuild]                -> CacheHandlers.rawGuildUpdater,
+    classOf[RawThreadMember]            -> CacheHandlers.rawThreadMemberUpdater,
     classOf[User]                    -> CacheHandlers.userUpdater,
     classOf[UnavailableGuild]        -> CacheHandlers.unavailableGuildUpdater,
     classOf[Message]                 -> CacheHandlers.messageUpdater,

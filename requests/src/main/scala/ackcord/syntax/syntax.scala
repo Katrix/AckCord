@@ -24,6 +24,7 @@
 package ackcord
 
 import java.nio.file.Path
+import java.time.OffsetDateTime
 
 import ackcord.data._
 import ackcord.requests._
@@ -83,7 +84,7 @@ package object syntax {
       */
     def asVoiceGuildChannel: Option[VoiceGuildChannel] = channel match {
       case gChannel: VoiceGuildChannel => Some(gChannel)
-      case _                                 => None
+      case _                           => None
     }
 
     /**
@@ -192,7 +193,7 @@ package object syntax {
     /**
       * Get the category of this channel using a preexisting guild.
       */
-    def categoryFromGuild(guild: Guild): Option[GuildCategory] =
+    def categoryFromGuild(guild: GatewayGuild): Option[GuildCategory] =
       for {
         catId <- channel.parentId
         cat <- guild.channels.collectFirst {
@@ -336,6 +337,39 @@ package object syntax {
       * Fetch the webhooks for this channel.
       */
     def fetchWebhooks = GetChannelWebhooks(channel.id)
+
+    /**
+      * Start a new thread in this channel without a message.
+      */
+    def startThread(
+        name: String,
+        autoArchiveDuration: Int = 1440,
+        tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
+    ) =
+      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, autoArchiveDuration, tpe))
+
+    /**
+      * Lists all the active threads in this channel. Threads are ordered in descending order by their id.
+      */
+    def listActiveThreads = ListActiveThreads(channel.id)
+
+    /**
+      * Lists all the public archived threads in this channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+      */
+    def listPublicArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
+      ListPublicArchivedThreads(channel.id, before, limit)
+
+    /**
+      * Lists all the private archived threads in this channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+      */
+    def listPrivateArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
+      ListPublicArchivedThreads(channel.id, before, limit)
+
+    /**
+      * Lists all the joined private archived threads in this channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+      */
+    def listJoinedPrivateArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
+      ListPublicArchivedThreads(channel.id, before, limit)
   }
 
   implicit class VGuildChannelSyntax(private val channel: NormalVoiceGuildChannel) extends AnyVal {
@@ -383,7 +417,7 @@ package object syntax {
     /**
       * Get the users connected to this voice channel using an preexisting guild.
       */
-    def connectedUsers(guild: Guild): Seq[UserId] =
+    def connectedUsers(guild: GatewayGuild): Seq[UserId] =
       guild.voiceStates.filter(_._2.channelId.contains(channel.id)).keys.toSeq
 
     /**
@@ -395,7 +429,7 @@ package object syntax {
     /**
       * Get the guild members connected to this voice channel using an preexisting guild.
       */
-    def connectedMembers(guild: Guild): Seq[GuildMember] =
+    def connectedMembers(guild: GatewayGuild): Seq[GuildMember] =
       connectedUsers(guild).flatMap(guild.memberById(_))
   }
 
@@ -416,7 +450,7 @@ package object syntax {
     /**
       * Get all the channels in this category using an preexisting guild.
       */
-    def channels(guild: Guild): Seq[GuildChannel] =
+    def channels(guild: GatewayGuild): Seq[GuildChannel] =
       guild.channels.collect { case (_, ch) if ch.parentId.contains(category.id) => ch }.toSeq
 
     /**
@@ -428,7 +462,7 @@ package object syntax {
     /**
       * Get all the text channels in this category using an preexisting guild.
       */
-    def textChannels(guild: Guild): Seq[TextGuildChannel] =
+    def textChannels(guild: GatewayGuild): Seq[TextGuildChannel] =
       channels(guild).collect { case channel: TextGuildChannel => channel }
 
     /**
@@ -440,7 +474,7 @@ package object syntax {
     /**
       * Get all the voice channels in this category using an preexisting guild.
       */
-    def voiceChannels(guild: Guild): Seq[VoiceGuildChannel] =
+    def voiceChannels(guild: GatewayGuild): Seq[VoiceGuildChannel] =
       channels(guild).collect { case channel: VoiceGuildChannel => channel }
 
     /**
@@ -452,7 +486,7 @@ package object syntax {
     /**
       * Get all the normal voice channels in this category using an preexisting guild.
       */
-    def normalVoiceChannels(guild: Guild): Seq[NormalVoiceGuildChannel] =
+    def normalVoiceChannels(guild: GatewayGuild): Seq[NormalVoiceGuildChannel] =
       channels(guild).collect { case channel: NormalVoiceGuildChannel => channel }
 
     /**
@@ -464,7 +498,7 @@ package object syntax {
     /**
       * Get all the stage channels in this category using an preexisting guild.
       */
-    def stageChannels(guild: Guild): Seq[StageGuildChannel] =
+    def stageChannels(guild: GatewayGuild): Seq[StageGuildChannel] =
       channels(guild).collect { case channel: StageGuildChannel => channel }
 
     /**
@@ -478,7 +512,7 @@ package object syntax {
       * Get a channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def channelById(id: GuildChannelId, guild: Guild): Option[GuildChannel] = channels(guild).find(_.id == id)
+    def channelById(id: GuildChannelId, guild: GatewayGuild): Option[GuildChannel] = channels(guild).find(_.id == id)
 
     /**
       * Get a text channel by id in this category.
@@ -495,7 +529,7 @@ package object syntax {
       * Get a text channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def textChannelById(id: TextGuildChannelId, guild: Guild): Option[TextGuildChannel] =
+    def textChannelById(id: TextGuildChannelId, guild: GatewayGuild): Option[TextGuildChannel] =
       channelById(id, guild).collect {
         case channel: TextGuildChannel => channel
       }
@@ -515,7 +549,7 @@ package object syntax {
       * Get a voice channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def voiceChannelById(id: VoiceGuildChannelId, guild: Guild): Option[VoiceGuildChannel] =
+    def voiceChannelById(id: VoiceGuildChannelId, guild: GatewayGuild): Option[VoiceGuildChannel] =
       channelById(id, guild).collect {
         case channel: VoiceGuildChannel => channel
       }
@@ -535,7 +569,7 @@ package object syntax {
       * Get a normal voice channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def normalVoiceChannelById(id: NormalVoiceGuildChannelId, guild: Guild): Option[NormalVoiceGuildChannel] =
+    def normalVoiceChannelById(id: NormalVoiceGuildChannelId, guild: GatewayGuild): Option[NormalVoiceGuildChannel] =
       channelById(id, guild).collect {
         case channel: NormalVoiceGuildChannel => channel
       }
@@ -555,7 +589,7 @@ package object syntax {
       * Get a voice channel by id in this category using an preexisting guild.
       * @param id The id of the channel.
       */
-    def stageChannelById(id: StageGuildChannelId, guild: Guild): Option[StageGuildChannel] =
+    def stageChannelById(id: StageGuildChannelId, guild: GatewayGuild): Option[StageGuildChannel] =
       channelById(id, guild).collect {
         case channel: StageGuildChannel => channel
       }
@@ -571,7 +605,7 @@ package object syntax {
       * Get all the channels with a name in this category using an preexisting guild.
       * @param name The name of the guilds.
       */
-    def channelsByName(name: String, guild: Guild): Seq[GuildChannel] =
+    def channelsByName(name: String, guild: GatewayGuild): Seq[GuildChannel] =
       channels(guild).filter(_.name == name)
 
     /**
@@ -585,7 +619,7 @@ package object syntax {
       * Get all the text channels with a name in this category using an preexisting guild.
       * @param name The name of the guilds.
       */
-    def textChannelsByName(name: String, guild: Guild): Seq[TextGuildChannel] =
+    def textChannelsByName(name: String, guild: GatewayGuild): Seq[TextGuildChannel] =
       textChannels(guild).filter(_.name == name)
 
     /**
@@ -599,7 +633,7 @@ package object syntax {
       * Get all the voice channels with a name in this category using an preexisting guild.
       * @param name The name of the guilds.
       */
-    def voiceChannelsByName(name: String, guild: Guild): Seq[VoiceGuildChannel] =
+    def voiceChannelsByName(name: String, guild: GatewayGuild): Seq[VoiceGuildChannel] =
       voiceChannels(guild).filter(_.name == name)
 
     /**
@@ -613,7 +647,7 @@ package object syntax {
       * Get all the normal voice channels with a name in this category using an preexisting guild.
       * @param name The name of the guilds.
       */
-    def normalVoiceChannelsByName(name: String, guild: Guild): Seq[NormalVoiceGuildChannel] =
+    def normalVoiceChannelsByName(name: String, guild: GatewayGuild): Seq[NormalVoiceGuildChannel] =
       normalVoiceChannels(guild).filter(_.name == name)
 
     /**
@@ -627,7 +661,7 @@ package object syntax {
       * Get all the voice channels with a name in this category using an preexisting guild.
       * @param name The name of the guilds.
       */
-    def stageChannelsByName(name: String, guild: Guild): Seq[StageGuildChannel] =
+    def stageChannelsByName(name: String, guild: GatewayGuild): Seq[StageGuildChannel] =
       stageChannels(guild).filter(_.name == name)
 
     /**
@@ -652,31 +686,60 @@ package object syntax {
     )
   }
 
+  implicit class ThreadGuildChannelSyntax(private val thread: ThreadGuildChannel) extends AnyVal {
+
+    /**
+      * Adds the current user to this thread.
+      */
+    def join = JoinThread(thread.id)
+
+    /**
+      * Adds the specified user to this thread.
+      */
+    def addMember(userId: UserId) = AddThreadMember(thread.id, userId)
+
+    /**
+      * Makes the current user leave this thread.
+      */
+    def leave = LeaveThread(thread.id)
+
+    /**
+      * Removes the specified user from this thread.
+      */
+    def removeMember(userId: UserId) = RemoveThreadMember(thread.id, userId)
+
+    /**
+      * Gets all the members of this thread. Requires the privileged `GUILD_MEMBERS` intent.
+      */
+    def listMember = ListThreadMembers(thread.id)
+  }
+
   implicit class GuildSyntax(private val guild: Guild) extends AnyVal {
 
     /**
       * Modify this guild.
-      * @param name The new name of the guild
-      * @param region The new voice region for the guild
-      * @param verificationLevel The new verification level to use for the guild.
+      *
+      * @param name                        The new name of the guild
+      * @param region                      The new voice region for the guild
+      * @param verificationLevel           The new verification level to use for the guild.
       * @param defaultMessageNotifications The new notification level to use
       *                                    for the guild.
-      * @param afkChannelId The new afk channel of the guild.
-      * @param afkTimeout The new afk timeout in seconds for the guild.
-      * @param icon The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
-      *             Can be animated if the guild has the `ANIMATED_ICON` feature.
-      * @param ownerId Transfer ownership of this guild. Must be the owner.
-      * @param splash The new splash for the guild. Must be 16:9 png/jpeg.
-      *               Only available if the guild has the `INVITE_SPLASH` feature.
-      * @param discoverySplash Thew new discovery slash for the guild's discovery splash.
-      *                        Only available if the guild has the `DISCOVERABLE` feature.
-      * @param banner The new banner for the guild. Must be 16:9 png/jpeg.
-      *               Only available if the guild has the `BANNER` feature.
-      * @param systemChannelId The new channel which system messages will be sent to.
-      * @param systemChannelFlags The new flags for the system channel.
-      * @param preferredLocale The new preferred locale for the guild.
-      * @param features The new enabled features for the guild.
-      * @param description The new description for the guild if it is discoverable.
+      * @param afkChannelId                The new afk channel of the guild.
+      * @param afkTimeout                  The new afk timeout in seconds for the guild.
+      * @param icon                        The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
+      *                                    Can be animated if the guild has the `ANIMATED_ICON` feature.
+      * @param ownerId                     Transfer ownership of this guild. Must be the owner.
+      * @param splash                      The new splash for the guild. Must be 16:9 png/jpeg.
+      *                                    Only available if the guild has the `INVITE_SPLASH` feature.
+      * @param discoverySplash             Thew new discovery slash for the guild's discovery splash.
+      *                                    Only available if the guild has the `DISCOVERABLE` feature.
+      * @param banner                      The new banner for the guild. Must be 16:9 png/jpeg.
+      *                                    Only available if the guild has the `BANNER` feature.
+      * @param systemChannelId             The new channel which system messages will be sent to.
+      * @param systemChannelFlags          The new flags for the system channel.
+      * @param preferredLocale             The new preferred locale for the guild.
+      * @param features                    The new enabled features for the guild.
+      * @param description                 The new description for the guild if it is discoverable.
       */
     def modify(
         name: JsonOption[String] = JsonUndefined,
@@ -724,12 +787,13 @@ package object syntax {
 
     /**
       * Create a text channel in this guild.
-      * @param name The name of the channel.
-      * @param topic The topic to give this channel.
-      * @param rateLimitPerUser The user ratelimit to give this channel.
+      *
+      * @param name                 The name of the channel.
+      * @param topic                The topic to give this channel.
+      * @param rateLimitPerUser     The user ratelimit to give this channel.
       * @param permissionOverwrites The permission overwrites for the channel.
-      * @param category The category id for the channel.
-      * @param nsfw If the channel is NSFW.
+      * @param category             The category id for the channel.
+      * @param nsfw                 If the channel is NSFW.
       */
     def createTextChannel(
         name: String,
@@ -753,12 +817,13 @@ package object syntax {
 
     /**
       * Create a voice channel in this guild.
-      * @param name The name of the channel.
-      * @param bitrate The bitrate for the channel if it's a voice channel.
-      * @param userLimit The user limit for the channel if it's a voice channel.
+      *
+      * @param name                 The name of the channel.
+      * @param bitrate              The bitrate for the channel if it's a voice channel.
+      * @param userLimit            The user limit for the channel if it's a voice channel.
       * @param permissionOverwrites The permission overwrites for the channel.
-      * @param category The category id for the channel.
-      * @param nsfw If the channel is NSFW.
+      * @param category             The category id for the channel.
+      * @param nsfw                 If the channel is NSFW.
       */
     def createVoiceChannel(
         name: String,
@@ -782,9 +847,10 @@ package object syntax {
 
     /**
       * Create a category in this guild.
-      * @param name The name of the channel.
+      *
+      * @param name                 The name of the channel.
       * @param permissionOverwrites The permission overwrites for the channel.
-      * @param nsfw If the channel is NSFW.
+      * @param nsfw                 If the channel is NSFW.
       */
     def createCategory(
         name: String,
@@ -802,6 +868,7 @@ package object syntax {
 
     /**
       * Modify the positions of several channels.
+      *
       * @param newPositions A map between the channelId and the new positions.
       */
     def modifyChannelPositions(newPositions: SnowflakeMap[GuildChannel, Int]) =
@@ -812,6 +879,7 @@ package object syntax {
 
     /**
       * Modify the positions of several channels.
+      *
       * @param newPositions A sequence indicating the channels to move, and where
       */
     def modifyChannelPositions(newPositions: Seq[ModifyGuildChannelPositionsData]) =
@@ -838,12 +906,14 @@ package object syntax {
 
     /**
       * Unban a user.
+      *
       * @param userId The user to unban.
       */
     def unban(userId: UserId) = RemoveGuildBan(guild.id, userId)
 
     /**
       * Get all the guild members in this guild.
+      *
       * @param limit The max amount of members to get.
       * @param after Get userIds after this id.
       */
@@ -854,6 +924,7 @@ package object syntax {
 
     /**
       * Search for guild members in the given guild, who's username or nickname starts with the query string.
+      *
       * @param query Query to search for.
       * @param limit How many members to return at most.
       */
@@ -862,11 +933,12 @@ package object syntax {
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2 scope.
+      *
       * @param accessToken The OAuth2 access token.
-      * @param nick The nickname to give to the user.
-      * @param roles The roles to give to the user.
-      * @param mute If the user should be muted.
-      * @param deaf If the user should be deafened.
+      * @param nick        The nickname to give to the user.
+      * @param roles       The roles to give to the user.
+      * @param mute        If the user should be muted.
+      * @param deaf        If the user should be deafened.
       */
     def addGuildMember(
         userId: UserId,
@@ -884,10 +956,11 @@ package object syntax {
 
     /**
       * Create a new role.
-      * @param name The name of the role.
+      *
+      * @param name        The name of the role.
       * @param permissions The permissions this role has.
-      * @param color The color of the role.
-      * @param hoist If this role is shown in the right sidebar.
+      * @param color       The color of the role.
+      * @param hoist       If this role is shown in the right sidebar.
       * @param mentionable If this role is mentionable.
       */
     def createRole(
@@ -900,6 +973,7 @@ package object syntax {
 
     /**
       * Modify the positions of several roles
+      *
       * @param newPositions A map from the role id to their new position.
       */
     def modifyRolePositions(newPositions: SnowflakeMap[Role, Int]) =
@@ -907,6 +981,7 @@ package object syntax {
 
     /**
       * Check how many members would be removed if a prune was started now.
+      *
       * @param days The number of days to prune for.
       */
     def fetchPruneCount(days: Int, includeRoles: Seq[RoleId] = Nil) =
@@ -914,11 +989,15 @@ package object syntax {
 
     /**
       * Begin a prune.
+      *
       * @param days The number of days to prune for.
       */
     def beginPrune(
         days: Int,
-        computePruneCount: Boolean = guild.memberCount < 1000,
+        computePruneCount: Boolean = guild match {
+          case gatewayGuild: GatewayGuild => gatewayGuild.memberCount < 1000
+          case _                          => false
+        },
         includeRoles: Seq[RoleId] = Nil
     ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount), includeRoles))
 
@@ -939,6 +1018,7 @@ package object syntax {
 
     /**
       * Delete an integration.
+      *
       * @param id The integration id.
       */
     def removeIntegration(id: IntegrationId) =
@@ -955,6 +1035,9 @@ package object syntax {
       */
     def modifyWidgetSettings(embed: GuildWidgetSettings) =
       ModifyGuildWidget(guild.id, embed)
+  }
+
+  implicit class GatewayGuildSyntax(private val guild: GatewayGuild) extends AnyVal {
 
     /**
       * Get all the text channels in the guild.
@@ -1049,7 +1132,8 @@ package object syntax {
     /**
       * Get all the voice channels with a name.
       */
-    def normalVoiceChannelsByName(name: String): Seq[NormalVoiceGuildChannel] = normalVoiceChannels.filter(_.name == name)
+    def normalVoiceChannelsByName(name: String): Seq[NormalVoiceGuildChannel] =
+      normalVoiceChannels.filter(_.name == name)
 
     /**
       * Get all the stage channels with a name.
@@ -1388,7 +1472,11 @@ package object syntax {
         embeds: JsonOption[Seq[OutgoingEmbed]] = JsonUndefined,
         flags: JsonOption[MessageFlags] = JsonUndefined,
         components: JsonOption[Seq[ActionRow]] = JsonUndefined
-    ) = EditMessage(message.channelId, message.id, EditMessageData(content, files, allowedMentions, embeds, flags, components))
+    ) = EditMessage(
+      message.channelId,
+      message.id,
+      EditMessageData(content, files, allowedMentions, embeds, flags, components)
+    )
 
     /**
       * Delete this message.
@@ -1405,6 +1493,16 @@ package object syntax {
       */
     def unpin =
       UnpinMessage(message.channelId, message.id)
+
+    /**
+      * Start a new thread from this message.
+      */
+    def startThread(name: String, autoArchiveDuration: Int = 1440) =
+      StartThreadWithMessage(
+        message.channelId.asChannelId[TextGuildChannel],
+        message.id,
+        StartThreadWithMessageData(name, autoArchiveDuration)
+      )
   }
 
   implicit class UserSyntax(private val user: User) extends AnyVal {

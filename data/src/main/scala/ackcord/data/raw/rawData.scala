@@ -27,7 +27,6 @@ import java.time.{Instant, OffsetDateTime}
 
 import ackcord.SnowflakeMap
 import ackcord.data._
-import cats.Traverse
 
 /**
   * A raw channel before going through the cache.
@@ -54,6 +53,12 @@ import cats.Traverse
   *                      guild channel.
   * @param parentId The category of this channel if it's a guild channel.
   * @param rtcRegion Channel region to use. Automatic if none.
+  * @param messageCount Approximate amount of messages in a thread. Stops at 50.
+  * @param memberCount Approximate amount of members in a thread. Stops at 50.
+  * @param threadMetadata Thread specific data.
+  * @param member Info about the current member for a thread.
+  * @param defaultAutoArchiveDuration The default for when a newly created
+  *                                   thread is auto archived in minutes.
   */
 case class RawChannel(
     id: ChannelId,
@@ -72,23 +77,26 @@ case class RawChannel(
     icon: Option[String],
     ownerId: Option[UserId],
     applicationId: Option[ApplicationId],
-    parentId: Option[SnowflakeType[GuildCategory]],
+    parentId: Option[GuildChannelId],
     lastPinTimestamp: Option[OffsetDateTime],
     rtcRegion: Option[String],
-    videoQualityMode: Option[VideoQualityMode]
+    videoQualityMode: Option[VideoQualityMode],
+    messageCount: Option[Int],
+    memberCount: Option[Int],
+    threadMetadata: Option[RawThreadMetadata],
+    member: Option[RawThreadMember],
+    defaultAutoArchiveDuration: Option[Int]
 ) {
 
-  /**
-    * Try to convert this to a normal channel.
-    */
-  def toChannel: Option[Channel] = {
+  private def toChannelUsingGuildId(guildId: Option[GuildId], botUserId: Option[UserId]): Option[Channel] = {
     `type` match {
       case ChannelType.GuildText | ChannelType.GuildNews =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
+          guildId                    <- guildId
+          name                       <- name
+          position                   <- position
+          permissionOverwrites       <- permissionOverwrites
+          defaultAutoArchiveDuration <- defaultAutoArchiveDuration
         } yield {
           if (`type` == ChannelType.GuildNews) {
             NewsTextGuildChannel(
@@ -100,8 +108,9 @@ case class RawChannel(
               topic,
               lastMessageId,
               nsfw.getOrElse(false),
-              parentId,
-              lastPinTimestamp
+              parentId.map(SnowflakeType[GuildCategory]),
+              lastPinTimestamp,
+              defaultAutoArchiveDuration
             )
           } else {
             NormalTextGuildChannel(
@@ -114,8 +123,9 @@ case class RawChannel(
               lastMessageId,
               rateLimitPerUser,
               nsfw.getOrElse(false),
-              parentId,
-              lastPinTimestamp
+              parentId.map(SnowflakeType[GuildCategory]),
+              lastPinTimestamp,
+              defaultAutoArchiveDuration
             )
           }
         }
@@ -144,7 +154,7 @@ case class RawChannel(
             bitrate,
             userLimit,
             nsfw.getOrElse(false),
-            parentId,
+            parentId.map(SnowflakeType[GuildCategory]),
             rtcRegion,
             videoQualityMode.getOrElse(VideoQualityMode.Auto)
           )
@@ -156,7 +166,6 @@ case class RawChannel(
           position             <- position
           permissionOverwrites <- permissionOverwrites
           bitrate              <- bitrate
-          userLimit            <- userLimit
         } yield {
           StageGuildChannel(
             SnowflakeType(id),
@@ -166,7 +175,7 @@ case class RawChannel(
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
             bitrate,
             nsfw.getOrElse(false),
-            parentId,
+            parentId.map(SnowflakeType[GuildCategory]),
             rtcRegion
           )
         }
@@ -191,8 +200,7 @@ case class RawChannel(
             name,
             position,
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            nsfw.getOrElse(false),
-            parentId
+            nsfw.getOrElse(false)
           )
         }
       case ChannelType.GuildStore =>
@@ -209,130 +217,86 @@ case class RawChannel(
             position,
             SnowflakeMap.withKey(permissionOverwrites)(_.id),
             nsfw.getOrElse(false),
-            parentId
+            parentId.map(SnowflakeType[GuildCategory])
           )
         }
+      case tpe: ChannelType.ThreadChannelType =>
+        for {
+          guildId  <- guildId
+          name     <- name
+          ownerId  <- ownerId
+          parentId <- parentId
+          metadata <- threadMetadata
+          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked) = metadata
+        } yield {
+          ThreadGuildChannel(
+            SnowflakeType(id),
+            guildId,
+            name,
+            lastMessageId,
+            ownerId,
+            rateLimitPerUser,
+            parentId.asChannelId[TextGuildChannel],
+            tpe,
+            messageCount.getOrElse(50),
+            memberCount.getOrElse(50),
+            archived,
+            archiveTimestamp,
+            autoArchiveDuration,
+            locked.getOrElse(false),
+            member.map { raw =>
+              ThreadMember(
+                SnowflakeType[ThreadGuildChannel](id),
+                raw.userId.orElse(botUserId).get,
+                raw.joinTimestamp,
+                raw.flags
+              )
+            }
+          )
+        }
+
       case tpe @ ChannelType.Unknown(_) => Some(UnsupportedChannel(id, tpe))
     }
   }
 
-  def toGuildChannel(guildId: GuildId): Option[GuildChannel] = {
-    `type` match {
-      case ChannelType.GuildText | ChannelType.GuildNews =>
-        for {
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-        } yield {
-          if (`type` == ChannelType.GuildNews) {
-            NewsTextGuildChannel(
-              SnowflakeType(id),
-              guildId,
-              name,
-              position,
-              SnowflakeMap.withKey(permissionOverwrites)(_.id),
-              topic,
-              lastMessageId,
-              nsfw.getOrElse(false),
-              parentId,
-              lastPinTimestamp
-            )
-          } else {
-            NormalTextGuildChannel(
-              SnowflakeType(id),
-              guildId,
-              name,
-              position,
-              SnowflakeMap.withKey(permissionOverwrites)(_.id),
-              topic,
-              lastMessageId,
-              rateLimitPerUser,
-              nsfw.getOrElse(false),
-              parentId,
-              lastPinTimestamp
-            )
-          }
-        }
-      case ChannelType.DM => throw new IllegalStateException("Not a guild channel")
-      case ChannelType.GuildVoice =>
-        for {
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-          bitrate              <- bitrate
-          userLimit            <- userLimit
-        } yield {
-          NormalVoiceGuildChannel(
-            SnowflakeType(id),
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            bitrate,
-            userLimit,
-            nsfw.getOrElse(false),
-            parentId,
-            rtcRegion,
-            videoQualityMode.getOrElse(VideoQualityMode.Auto)
-          )
-        }
-      case ChannelType.GuildStageVoice =>
-        for {
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-          bitrate              <- bitrate
-          userLimit            <- userLimit
-        } yield {
-          StageGuildChannel(
-            SnowflakeType(id),
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            bitrate,
-            nsfw.getOrElse(false),
-            parentId,
-            rtcRegion
-          )
-        }
-      case ChannelType.GroupDm => throw new IllegalStateException("Not a guild channel")
-      case ChannelType.GuildCategory =>
-        for {
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-        } yield {
-          GuildCategory(
-            SnowflakeType(id),
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            nsfw.getOrElse(false),
-            parentId
-          )
-        }
-      case ChannelType.GuildStore =>
-        for {
-          name                 <- name
-          position             <- position
-          permissionOverwrites <- permissionOverwrites
-        } yield {
-          GuildStoreChannel(
-            SnowflakeType(id),
-            guildId,
-            name,
-            position,
-            SnowflakeMap.withKey(permissionOverwrites)(_.id),
-            nsfw.getOrElse(false),
-            parentId
-          )
-        }
-      case ChannelType.Unknown(_) => None
+  /**
+    * Try to convert this to a normal channel.
+    */
+  def toChannel(botUserId: Option[UserId]): Option[Channel] = toChannelUsingGuildId(guildId, botUserId)
+
+  def toGuildChannel(guildId: GuildId, botUserId: Option[UserId]): Option[GuildChannel] =
+    toChannelUsingGuildId(Some(guildId), botUserId).collect {
+      case ch: GuildChannel => ch
     }
-  }
 }
+
+/**
+  * Thread specific info.
+  * @param archived If the thread is archived.
+  * @param autoArchiveDuration How long in minutes until the thread will be auto archived.
+  * @param archiveTimestamp When the thread's archive status was last changed
+  * @param locked If the thread is locked.
+  */
+case class RawThreadMetadata(
+    archived: Boolean,
+    autoArchiveDuration: Int,
+    archiveTimestamp: OffsetDateTime,
+    locked: Option[Boolean]
+)
+
+/**
+  * Indicates if and when a user has joined a thread.
+  * @param id Id of the thread.
+  * @param userId Id of the user.
+  * @param joinTimestamp When the user joined the thread.
+  * @param flags User specific thread settings.
+  */
+case class RawThreadMember(
+    id: Option[ThreadGuildChannelId],
+    userId: Option[UserId],
+    joinTimestamp: OffsetDateTime,
+    flags: Int
+)
 
 /**
   * Represents a user in a guild, without the user field.
@@ -460,7 +424,8 @@ case class RawMessage(
     stickerItems: Option[Seq[StickerItem]],
     referencedMessage: Option[RawMessage],
     interaction: Option[MessageInteraction],
-    components: Option[Seq[ActionRow]]
+    components: Option[Seq[ActionRow]],
+    thread: Option[RawChannel]
 ) {
 
   /**
@@ -500,7 +465,8 @@ case class RawMessage(
           stickerItems,
           referencedMessage.map(_.toMessage),
           interaction,
-          components.getOrElse(Nil)
+          components.getOrElse(Nil),
+          thread.map(_.id.asChannelId[ThreadGuildChannel])
         )
 
       case None =>
@@ -532,7 +498,8 @@ case class RawMessage(
           stickerItems,
           referencedMessage.map(_.toMessage),
           interaction,
-          components.getOrElse(Nil)
+          components.getOrElse(Nil),
+          thread.map(_.id.asChannelId[ThreadGuildChannel])
         )
 
     }
@@ -622,6 +589,7 @@ case class RawGuild(
     voiceStates: Option[Seq[VoiceState]],
     members: Option[Seq[RawGuildMember]],
     channels: Option[Seq[RawChannel]],
+    threads: Option[Seq[RawChannel]],
     presences: Option[Seq[RawPresence]],
     maxPresences: Option[Int],
     maxMembers: Option[Int],
@@ -640,21 +608,151 @@ case class RawGuild(
     stageInstances: Option[Seq[StageInstance]]
 ) {
 
-  /**
-    * Try to convert this to a normal guild.
-    */
-  def toGuild: Option[Guild] = {
-    import cats.implicits._
-
+  def toGatewayGuild(botUserId: Option[UserId]): Option[GatewayGuild] =
     for {
       joinedAt    <- joinedAt
       large       <- large
       memberCount <- memberCount
+      voiceStates <- voiceStates
+      members     <- members
       rawChannels <- channels
-      channels    <- Traverse[List].sequence(rawChannels.map(_.toGuildChannel(id)).toList)
+      rawThreads  <- threads
+      presences   <- presences
     } yield {
+      val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
+      val threads = rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
+        case thread: ThreadGuildChannel => thread
+      }
 
-      Guild(
+      GatewayGuild(
+        id,
+        name,
+        icon,
+        iconHash,
+        splash,
+        discoverySplash,
+        ownerId,
+        afkChannelId,
+        afkTimeout,
+        widgetEnabled,
+        widgetChannelId,
+        verificationLevel,
+        defaultMessageNotifications,
+        explicitContentFilter,
+        SnowflakeMap.from(roles.map(r => r.id -> r.toRole(id))),
+        SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)),
+        features,
+        mfaLevel,
+        applicationId,
+        systemChannelId,
+        systemChannelFlags,
+        rulesChannelId,
+        joinedAt,
+        large,
+        memberCount,
+        SnowflakeMap.withKey(voiceStates)(_.userId),
+        SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+        SnowflakeMap.withKey(channels)(_.id),
+        SnowflakeMap.withKey(threads)(_.id),
+        SnowflakeMap.from(presences.map(p => p.user.id -> p.toPresence)),
+        maxPresences,
+        maxMembers,
+        vanityUrlCode,
+        description,
+        banner,
+        premiumTier,
+        premiumSubscriptionCount,
+        preferredLocale,
+        publicUpdatesChannelId,
+        maxVideoChannelUsers,
+        nsfwLevel,
+        SnowflakeMap.withKey(stageInstances.toSeq.flatten)(_.id)
+      )
+    }
+
+  def toRequestGuild: RequestsGuild = {
+    RequestsGuild(
+      id,
+      name,
+      icon,
+      iconHash,
+      splash,
+      discoverySplash,
+      owner,
+      ownerId,
+      permissions,
+      afkChannelId,
+      afkTimeout,
+      widgetEnabled,
+      widgetChannelId,
+      verificationLevel,
+      defaultMessageNotifications,
+      explicitContentFilter,
+      SnowflakeMap.from(roles.map(r => r.id -> r.toRole(id))),
+      SnowflakeMap.from(emojis.map(e => e.id -> e.toEmoji)),
+      features,
+      mfaLevel,
+      applicationId,
+      systemChannelId,
+      systemChannelFlags,
+      rulesChannelId,
+      maxPresences,
+      maxMembers,
+      vanityUrlCode,
+      description,
+      banner,
+      premiumTier,
+      premiumSubscriptionCount,
+      preferredLocale,
+      publicUpdatesChannelId,
+      maxVideoChannelUsers,
+      approximateMemberCount,
+      approximatePresenceCount,
+      nsfwLevel
+    )
+  }
+
+  /*
+  /**
+   * Try to convert this to a normal guild. The vector contains warnings produced
+   * during the conversion.
+   */
+  def toGuild(botUserId: UserId): Option[(Vector[String], Guild)] = {
+
+    for {
+      joinedAt    <- joinedAt
+      memberCount <- memberCount
+    } yield {
+      def warn(s: String): Vector[String] = Vector(s)
+      val noWarn: Vector[String]          = Vector.empty
+
+      val large = this.large.getOrElse(true)
+      val largeWarn = if (this.large.isEmpty) {
+        warn("Missing info about large guild. Assuming large")
+      } else noWarn
+
+      val rawChannels = this.channels.getOrElse(Nil)
+      val rawThreads  = this.threads.getOrElse(Nil)
+      val channels    = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
+      val threads = rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
+        case thread: ThreadGuildChannel => thread
+      }
+
+      val channelsWarn = if (this.channels.getOrElse(Nil).size > channels.size) {
+        val nonTransformedChannels =
+          this.channels.getOrElse(Nil).filter(raw => !channels.exists(nice => raw.id == nice.id))
+        warn(s"Could not convert channels to non-raw version: $nonTransformedChannels")
+      } else noWarn
+
+      val threadsWarn = if (this.threads.getOrElse(Nil).size > threads.size) {
+        val nonTransformedThreads =
+          this.threads.getOrElse(Nil).filter(raw => !threads.exists(nice => raw.id == nice.id))
+        warn(s"Could not convert threads to non-raw version: $nonTransformedThreads")
+      } else noWarn
+
+      val warns = largeWarn ++ channelsWarn ++ threadsWarn
+
+      warns -> Guild(
         id,
         name,
         icon,
@@ -685,6 +783,7 @@ case class RawGuild(
         SnowflakeMap.withKey(voiceStates.getOrElse(Nil))(_.userId),
         SnowflakeMap.from(members.getOrElse(Nil).map(mem => mem.user.id -> mem.toGuildMember(id))),
         SnowflakeMap.withKey(channels)(_.id),
+        SnowflakeMap.withKey(threads)(_.id),
         SnowflakeMap.from(presences.getOrElse(Nil).map(p => p.user.id -> p.toPresence)),
         maxPresences,
         maxMembers,
@@ -704,6 +803,7 @@ case class RawGuild(
       )
     }
   }
+   */
 }
 
 /**

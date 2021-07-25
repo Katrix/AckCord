@@ -40,7 +40,7 @@ trait CacheSnapshotWithMaps extends CacheSnapshot {
   override def getGroupDmChannel(id: SnowflakeType[GroupDMChannel]): Option[GroupDMChannel] =
     groupDmChannelMap.get(id)
 
-  override def getGuild(id: GuildId): Option[Guild] = guildMap.get(id)
+  override def getGuild(id: GuildId): Option[GatewayGuild] = guildMap.get(id)
 
   override def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild] =
     getGuild(id).orElse(unavailableGuildMap.get(id))
@@ -56,6 +56,13 @@ trait CacheSnapshotWithMaps extends CacheSnapshot {
 
   override def getGuildChannel(id: GuildChannelId): Option[GuildChannel] =
     guildMap.collectFirst { case (_, gMap) if gMap.channels.contains(id) => gMap.channels(id) }
+
+  override def getThread(guildId: GuildId, id: ThreadGuildChannelId): Option[ThreadGuildChannel] =
+    guildMap.get(guildId).flatMap(_.threads.get(id))
+
+  override def getThread(id: ThreadGuildChannelId): Option[ThreadGuildChannel] = guildMap.collectFirst {
+    case (_, gMap) if gMap.threads.contains(id) => gMap.threads(id)
+  }
 
   override def getChannel(id: ChannelId): Option[Channel] =
     getDmChannel(id.asChannelId[DMChannel])

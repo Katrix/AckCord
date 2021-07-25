@@ -31,7 +31,7 @@ trait GetGuild {
   /**
     * The guild for this object
     */
-  def guild(implicit snapshot: CacheSnapshot): Option[Guild] = snapshot.getGuild(guildId)
+  def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
@@ -40,7 +40,7 @@ trait GetGuildOpt {
   /**
     * The guild for this object
     */
-  def guild(implicit snapshot: CacheSnapshot): Option[Guild] =
+  def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] =
     guildId.flatMap(snapshot.getGuild)
 }
 

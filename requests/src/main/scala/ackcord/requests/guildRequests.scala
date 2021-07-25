@@ -69,23 +69,23 @@ case class CreateGuildData(
 /**
   * Create a new guild. Can only be used by bots in less than 10 guilds.
   */
-case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildData, RawGuild, Option[Guild]] {
+case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildData, RawGuild, RequestsGuild] {
   override def route: RequestRoute = Routes.createGuild
   override def paramsEncoder: Encoder[CreateGuildData] =
     derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
-  override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
+  override def toNiceResponse(response: RawGuild): RequestsGuild = response.toRequestGuild
 }
 
 /**
   * Get a guild by id.
   */
-case class GetGuild(guildId: GuildId, withCounts: Boolean = false) extends NoParamsRequest[RawGuild, Option[Guild]] {
+case class GetGuild(guildId: GuildId, withCounts: Boolean = false) extends NoParamsRequest[RawGuild, RequestsGuild] {
   override def route: RequestRoute = Routes.getGuild(guildId, Some(withCounts))
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
-  override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
+  override def toNiceResponse(response: RawGuild): RequestsGuild = response.toRequestGuild
 }
 
 /**
@@ -167,12 +167,12 @@ case class ModifyGuild(
     guildId: GuildId,
     params: ModifyGuildData,
     reason: Option[String] = None
-) extends ReasonRequest[ModifyGuild, ModifyGuildData, RawGuild, Option[Guild]] {
+) extends ReasonRequest[ModifyGuild, ModifyGuildData, RawGuild, RequestsGuild] {
   override def route: RequestRoute                     = Routes.modifyGuild(guildId)
   override def paramsEncoder: Encoder[ModifyGuildData] = ModifyGuildData.encoder
 
   override def responseDecoder: Decoder[RawGuild]                = Decoder[RawGuild]
-  override def toNiceResponse(response: RawGuild): Option[Guild] = response.toGuild
+  override def toNiceResponse(response: RawGuild): RequestsGuild = response.toRequestGuild
 
   override def requiredPermissions: Permission = Permission.ManageGuild
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -196,7 +196,7 @@ case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawCha
 
   override def responseDecoder: Decoder[Seq[RawChannel]] = Decoder[Seq[RawChannel]]
   override def toNiceResponse(response: Seq[RawChannel]): Seq[Option[GuildChannel]] =
-    response.map(_.toGuildChannel(guildId))
+    response.map(_.toGuildChannel(guildId, None)) //Safe
 }
 
 /**
@@ -253,7 +253,7 @@ case class CreateGuildChannel(
   override def jsonPrinter: Printer = Printer.noSpaces
 
   override def responseDecoder: Decoder[RawChannel]                       = Decoder[RawChannel]
-  override def toNiceResponse(response: RawChannel): Option[GuildChannel] = response.toGuildChannel(guildId)
+  override def toNiceResponse(response: RawChannel): Option[GuildChannel] = response.toGuildChannel(guildId, None) //Safe
 
   override def requiredPermissions: Permission = Permission.ManageChannels
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -1099,7 +1099,8 @@ case class CreateDm(params: CreateDMData) extends RESTRequest[CreateDMData, RawC
 
   override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[DMChannel] =
-    response.toChannel.collect { case dmChannel: DMChannel => dmChannel }
+    //Safe
+    response.toChannel(None).collect { case dmChannel: DMChannel => dmChannel }
 }
 object CreateDm {
   def mk(to: UserId): CreateDm = new CreateDm(CreateDMData(to))
@@ -1126,7 +1127,8 @@ case class CreateGroupDm(params: CreateGroupDMData)
 
   override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[GroupDMChannel] =
-    response.toChannel.collect { case dmChannel: GroupDMChannel => dmChannel }
+    //Safe
+    response.toChannel(None).collect { case dmChannel: GroupDMChannel => dmChannel }
 }
 
 /**
