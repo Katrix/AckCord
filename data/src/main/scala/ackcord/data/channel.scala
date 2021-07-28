@@ -234,7 +234,7 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   /**
     * The default for when a newly created thread is auto archived in minutes.
     */
-  def defaultAutoArchiveDuration: Int
+  def defaultAutoArchiveDuration: Option[Int]
 }
 
 /**
@@ -252,7 +252,7 @@ case class NewsTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    defaultAutoArchiveDuration: Int
+    defaultAutoArchiveDuration: Option[Int]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 
@@ -274,7 +274,7 @@ case class NormalTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    defaultAutoArchiveDuration: Int
+    defaultAutoArchiveDuration: Option[Int]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
@@ -302,7 +302,7 @@ case class ThreadGuildChannel(
 
   override def lastPinTimestamp: Option[OffsetDateTime] = None
 
-  override def defaultAutoArchiveDuration: Int = autoArchiveDuration
+  override def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
 
   override def position: Int = -1
 

@@ -96,7 +96,6 @@ case class RawChannel(
           name                       <- name
           position                   <- position
           permissionOverwrites       <- permissionOverwrites
-          defaultAutoArchiveDuration <- defaultAutoArchiveDuration
         } yield {
           if (`type` == ChannelType.GuildNews) {
             NewsTextGuildChannel(
