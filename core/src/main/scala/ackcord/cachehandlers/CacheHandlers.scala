@@ -122,12 +122,16 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, guildChannel: GuildChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      builder.guildMap.get(guildChannel.guildId) match {
-        case Some(guild) =>
-          registry.updateData(builder) {
-            guild.copy(channels = guild.channels.updated(guildChannel.id, guildChannel))
+      guildChannel match {
+        case thread: ThreadGuildChannel => registry.updateData(builder)(thread)
+        case _ =>
+          builder.guildMap.get(guildChannel.guildId) match {
+            case Some(guild) =>
+              registry.updateData(builder) {
+                guild.copy(channels = guild.channels.updated(guildChannel.id, guildChannel))
+              }
+            case None => log.warn(s"No guild for channel update $guildChannel")
           }
-        case None => log.warn(s"No guild for channel update $guildChannel")
       }
     }
   }
