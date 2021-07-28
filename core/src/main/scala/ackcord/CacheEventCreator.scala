@@ -194,9 +194,15 @@ object CacheEventCreator {
           data,
           state =>
             for {
-              guild  <- state.current.getGuild(data.guildId)
-              thread <- state.previous.getThread(data.guildId, data.id.asChannelId[ThreadGuildChannel])
-            } yield api.ThreadDelete(guild, thread, state, dispatch.gatewayInfo),
+              guild <- state.current.getGuild(data.guildId)
+            } yield api.ThreadDelete(
+              guild,
+              data.id.asChannelId[ThreadGuildChannel],
+              data.parentId,
+              data.`type`,
+              state,
+              dispatch.gatewayInfo
+            ),
           CacheHandlers.threadDeleter,
           registry,
           dispatch
