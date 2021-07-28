@@ -57,8 +57,8 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   case object GuildCategory      extends ChannelType(4)
   case object GuildNews          extends ChannelType(5)
   case object GuildStore         extends ChannelType(6)
-  case object GuildPublicThread  extends ChannelType(10) with ThreadChannelType
-  case object GuildNewsThread    extends ChannelType(11) with ThreadChannelType
+  case object GuildNewsThread    extends ChannelType(10) with ThreadChannelType
+  case object GuildPublicThread  extends ChannelType(11) with ThreadChannelType
   case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
   case object GuildStageVoice    extends ChannelType(13)
 
