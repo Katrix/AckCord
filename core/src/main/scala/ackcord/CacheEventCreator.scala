@@ -44,9 +44,11 @@ import akka.NotUsed
 import cats.Later
 import cats.syntax.all._
 import io.circe.{ACursor, CursorOp, Decoder, Json}
-import org.slf4j.Logger
+import org.slf4j.{Logger, LoggerFactory}
 
 object CacheEventCreator {
+
+  private val log: Logger = LoggerFactory.getLogger(getClass)
 
   private object GetLazy {
     def unapply[A](later: Later[Decoder.Result[A]]): Option[A] = later.value.toOption
@@ -80,7 +82,7 @@ object CacheEventCreator {
 
     {
       case gatewayEv.Ready(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => Some(api.Ready(data.application.id, state, dispatch.gatewayInfo)),
           ReadyUpdater,
@@ -88,9 +90,9 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.Resumed(_) =>
-        CacheUpdate(NotUsed, state => Some(api.Resumed(state, dispatch.gatewayInfo)), NOOPHandler, registry, dispatch)
+        CacheUpdate.one(NotUsed, state => Some(api.Resumed(state, dispatch.gatewayInfo)), NOOPHandler, registry, dispatch)
       case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -111,7 +113,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ChannelUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -129,7 +131,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ChannelDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -150,7 +152,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ThreadCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.many(
           data,
           state =>
             for {
@@ -164,13 +166,25 @@ object CacheEventCreator {
                       case thread: ThreadGuildChannel => thread
                     }
                   )
-            } yield api.ThreadCreate(guild, thread, state, dispatch.gatewayInfo),
+            } yield {
+              if (thread.ownerId == state.current.botUser.id) {
+                List(
+                  api.ThreadCreate(guild, thread, state, dispatch.gatewayInfo),
+                  api.ClientAddedToThread(guild, thread, state, dispatch.gatewayInfo)
+                )
+              } else if (thread.member.isEmpty)
+                List(api.ThreadCreate(guild, thread, state, dispatch.gatewayInfo))
+              else {
+                List(api.ClientAddedToThread(guild, thread, state, dispatch.gatewayInfo))
+              }
+
+            },
           CacheHandlers.rawChannelUpdater,
           registry,
           dispatch
         )
       case gatewayEv.ThreadUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -190,7 +204,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ThreadDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -208,7 +222,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ThreadListSync(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -231,7 +245,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ThreadMemberUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -250,7 +264,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ThreadMembersUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -271,7 +285,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.ChannelPinsUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -288,7 +302,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -303,7 +317,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current.getGuild(data.id).map { guild =>
@@ -318,7 +332,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.previous
@@ -329,7 +343,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildBanAdd(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           (data.guildId, RawBan(None, data.user)),
           state =>
             state.current
@@ -347,7 +361,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildBanRemove(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -365,7 +379,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildEmojisUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -376,7 +390,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildIntegrationsUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current.getGuild(data.guildId).map(g => api.GuildIntegrationsUpdate(g, state, dispatch.gatewayInfo)),
@@ -385,7 +399,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildMemberAdd(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -397,7 +411,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildMemberRemove(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -415,7 +429,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildMemberUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -440,7 +454,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildMemberChunk(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -462,7 +476,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildRoleCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -480,7 +494,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildRoleUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -498,7 +512,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.GuildRoleDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -510,7 +524,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.InviteCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -545,7 +559,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.InviteDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -561,7 +575,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -577,7 +591,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -599,7 +613,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -616,7 +630,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageDeleteBulk(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -633,7 +647,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageReactionAdd(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => {
             val guild = data.guildId.flatMap(state.current.getGuild)
@@ -658,7 +672,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageReactionRemove(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => {
             val guild = data.guildId.flatMap(state.current.getGuild)
@@ -683,7 +697,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageReactionRemoveAll(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -700,7 +714,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.MessageReactionRemoveEmoji(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -718,7 +732,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.PresenceUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -731,7 +745,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.TypingStart(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => {
             val guild = data.guildId.flatMap(state.current.getGuild)
@@ -755,7 +769,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.UserUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => Some(api.UserUpdate(state.current.getUser(data.id).getOrElse(data), state, dispatch.gatewayInfo)),
           CacheHandlers.userUpdater,
@@ -763,7 +777,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.VoiceStateUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             Some(
@@ -781,7 +795,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.VoiceServerUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -792,7 +806,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.WebhookUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             for {
@@ -805,7 +819,7 @@ object CacheEventCreator {
         )
 
       case gatewayEv.InteractionCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state => Some(api.InteractionCreate(data, state, dispatch.gatewayInfo)),
           NOOPHandler,
@@ -814,7 +828,7 @@ object CacheEventCreator {
         )
 
       case gatewayEv.IntegrationCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -825,7 +839,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.IntegrationUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -836,7 +850,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.IntegrationDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -847,7 +861,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.StageInstanceCreate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -858,7 +872,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.StageInstanceUpdate(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -869,7 +883,7 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.StageInstanceDelete(_, GetLazy(data)) =>
-        CacheUpdate(
+        CacheUpdate.one(
           data,
           state =>
             state.current
@@ -882,10 +896,7 @@ object CacheEventCreator {
     }
   }
 
-  def ackcordGatewayToCacheUpdateOnly(
-      registry: CacheTypeRegistry,
-      log: Logger
-  ): Dispatch[_] => Option[APIMessageCacheUpdate[_]] =
+  def ackcordGatewayToCacheUpdateOnly(registry: CacheTypeRegistry): Dispatch[_] => Option[APIMessageCacheUpdate[_]] =
     dispatch =>
       ackcordGatewayToCacheUpdatePartial(registry, dispatch)
         .andThen(Some(_))
@@ -903,7 +914,6 @@ object CacheEventCreator {
   def eventToCacheUpdate(
       dispatch: Dispatch[_],
       converter: Dispatch[_] => Option[APIMessageCacheUpdate[_]],
-      log: Logger,
       settings: AckCordGatewaySettings
   ): Option[APIMessageCacheUpdate[_]] = {
     val event = dispatch.event

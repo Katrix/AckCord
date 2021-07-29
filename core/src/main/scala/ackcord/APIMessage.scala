@@ -128,6 +128,14 @@ object APIMessage {
       with ChannelMessage
 
   /**
+    * Sent to the client is added to a thread.
+    * @param channel The thread that the client was added to.
+    */
+  case class ClientAddedToThread(guild: GatewayGuild, channel: ThreadGuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
+    extends GuildMessage
+      with ChannelMessage
+
+  /**
     * Sent to the client when a thread is edited or updated.
     * @param channel The thread that was edited.
     */

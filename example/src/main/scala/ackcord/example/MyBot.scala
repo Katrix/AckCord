@@ -25,9 +25,8 @@ package ackcord.example
 
 import ackcord._
 import ackcord.commands.PrefixParser
-import ackcord.gateway.GatewayIntents
+import ackcord.gateway.{Dispatch, GatewayIntents}
 import ackcord.interactions.InteractionsRegistrar
-import ackcord.requests.CreateMessage
 import ackcord.syntax._
 
 object MyBot extends App {
@@ -45,6 +44,18 @@ object MyBot extends App {
     .foreach { client =>
       client.onEventSideEffectsIgnore {
         case APIMessage.Ready(_, _, _) => println("Now ready")
+      }
+
+      client.onEventSideEffectsIgnore {
+        case msg => println(msg.getClass.getName)
+      }
+
+      {
+        import client.system
+        client.events.receiveGatewaySubscribe.runForeach {
+          case Dispatch(_, msg, _) => println(msg.getClass.getName)
+          case _                   =>
+        }
       }
 
       import client.requestsHelper._
@@ -65,12 +76,27 @@ object MyBot extends App {
 
       client.onEventAsync { implicit c =>
         {
-          case APIMessage.ThreadCreate(_, thread, _, _) => run(thread.sendMessage("First")).map(_ => ())
-          case APIMessage.ThreadUpdate(_, thread, _, _) => run(thread.sendMessage(s"Edited")).map(_ => ())
-          case APIMessage.ThreadDelete(_, thread, _, _) =>
-            run(CreateMessage.mkContent(thread.parentChannelId, s"Deleted thread ${thread.name}")).map(_ => ())
+          case APIMessage.ThreadCreate(_, thread, _, _) =>
+            run(thread.sendMessage("First")).map(_ => ())
         }
       }
+
+      /*
+      client.onEventAsync { implicit c =>
+        {
+          case APIMessage.ThreadCreate(_, thread, _, _) =>
+            println(thread)
+            //run(thread.sendMessage("First")).map(_ => ())
+            run(CreateMessage.mkContent(thread.parentChannelId, s"First in ${thread.name}")).map(_ => ())
+          case APIMessage.ThreadUpdate(_, thread, _, _) => run(thread.sendMessage(s"Edited")).map(_ => ())
+          case msg @ APIMessage.ThreadDelete(_, threadId, parentId, _, _, _) =>
+            run(
+              CreateMessage
+                .mkContent(parentId, s"Deleted thread ${msg.thread.fold(threadId.asString)(_.name)}")
+            ).map(_ => ())
+        }
+      }
+      */
 
       val myEvents      = new MyEvents(client.requests)
       val myListeners   = new Listeners(client)

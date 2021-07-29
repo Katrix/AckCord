@@ -23,20 +23,21 @@
  */
 package ackcord.cachehandlers
 
-import org.slf4j.Logger
+import org.slf4j.{Logger, LoggerFactory}
 
 /**
   * A class that handles creating a new cache snapshot with an object
   */
 sealed trait CacheHandler[-Obj] {
 
+  val log: Logger = LoggerFactory.getLogger(classOf[CacheHandler[_]])
+
   /**
     * Updates the builder with the object
     * @param builder The builder to update
     * @param obj The logger to update with
-    * @param log A logging adapter
     */
-  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(implicit log: Logger): Unit
+  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit
 
   /**
     * If true, the Cache registry won't return this if asked for a type of
@@ -51,9 +52,7 @@ sealed trait CacheHandler[-Obj] {
 trait CacheDeleter[-Obj] extends CacheHandler[Obj]
 object CacheDeleter {
   def dummy[Obj](shouldBeIgnored: Boolean): CacheDeleter[Obj] = new CacheDeleter[Obj] {
-    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
-        implicit log: Logger
-    ): Unit = ()
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit = ()
 
     override def ignore: Boolean = shouldBeIgnored
   }
@@ -65,9 +64,7 @@ object CacheDeleter {
 trait CacheUpdater[-Obj] extends CacheHandler[Obj]
 object CacheUpdater {
   def dummy[Obj](shouldBeIgnored: Boolean): CacheUpdater[Obj] = new CacheUpdater[Obj] {
-    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry)(
-        implicit log: Logger
-    ): Unit = ()
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit = ()
 
     override def ignore: Boolean = shouldBeIgnored
   }
@@ -77,7 +74,5 @@ object CacheUpdater {
   * A handler that takes no action
   */
 object NOOPHandler extends CacheHandler[Any] {
-  override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry)(
-      implicit log: Logger
-  ): Unit = ()
+  override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry): Unit = ()
 }

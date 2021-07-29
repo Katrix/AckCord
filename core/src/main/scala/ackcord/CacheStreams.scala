@@ -37,7 +37,7 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.stream.scaladsl.{BroadcastHub, Flow, Keep, MergeHub, Sink, Source}
 import akka.stream.typed.scaladsl.ActorFlow
 import akka.util.Timeout
-import org.slf4j.{Logger, LoggerFactory}
+import org.slf4j.LoggerFactory
 
 object CacheStreams {
 
@@ -113,8 +113,8 @@ object CacheStreams {
             }
           }
 
-          event.toList
-        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state).toList).toList
+          event
+        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state)).toList
       }
       .mapConcat(identity)
   }
@@ -164,7 +164,7 @@ object CacheStreams {
 
         Behaviors.receiveMessage {
           case GuildCacheEvent(event, respondTo) =>
-            event.process(guildCacheBuilder)(context.log)
+            event.process(guildCacheBuilder)
             guildCacheBuilder.executeProcessor()
 
             state = state.update(guildCacheBuilder.toImmutable)
@@ -181,7 +181,7 @@ object CacheStreams {
         collection.mutable.Map.empty[GuildId, ActorRef[GuildCacheEvent]]
 
       def sendToAll(event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)]): Unit = {
-        event.process(cacheBuilder)(context.log)
+        event.process(cacheBuilder)
         cacheBuilder.executeProcessor()
 
         state = state.update(cacheBuilder.toImmutable)
@@ -245,13 +245,9 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it
     * from cache update events.
     */
-  def cacheUpdater(
-      cacheBuilder: CacheSnapshotBuilder
-  )(implicit system: ActorSystem[Nothing]): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+  def cacheUpdater(cacheBuilder: CacheSnapshotBuilder): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
       var state: CacheState = CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
-
-      implicit val log: Logger = system.log
 
       { handlerEvent: CacheEvent =>
         handlerEvent.process(cacheBuilder)

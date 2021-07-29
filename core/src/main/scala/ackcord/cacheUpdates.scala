@@ -30,7 +30,6 @@ import ackcord.gateway.Dispatch
 import ackcord.requests.{BaseRESTRequest, Request, RequestAnswer, RequestResponse}
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
-import org.slf4j.Logger
 
 /**
   * Represents some sort of event handled by the cache
@@ -40,7 +39,7 @@ trait CacheEvent {
   /**
     * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event.
     */
-  def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit
+  def process(builder: CacheSnapshotBuilder): Unit
 }
 
 /**
@@ -55,18 +54,38 @@ trait CacheEvent {
   */
 case class APIMessageCacheUpdate[Data](
     data: Data,
-    sendEvent: CacheState => Option[APIMessage],
+    sendEvent: CacheState => List[APIMessage],
     handler: CacheHandler[Data],
     registry: CacheTypeRegistry,
     dispatch: Dispatch[_]
 ) extends CacheEvent {
 
-  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =
+  override def process(builder: CacheSnapshotBuilder): Unit =
     handler.handle(builder, data, registry)
+}
+object APIMessageCacheUpdate {
+
+  def one[Data](
+      data: Data,
+      sendEvent: CacheState => Option[APIMessage],
+      handler: CacheHandler[Data],
+      registry: CacheTypeRegistry,
+      dispatch: Dispatch[_]
+  ): APIMessageCacheUpdate[Data] =
+    new APIMessageCacheUpdate[Data](data, sendEvent(_).toList, handler, registry, dispatch)
+
+  def many[Data](
+      data: Data,
+      sendEvent: CacheState => Option[List[APIMessage]],
+      handler: CacheHandler[Data],
+      registry: CacheTypeRegistry,
+      dispatch: Dispatch[_]
+  ): APIMessageCacheUpdate[Data] =
+    new APIMessageCacheUpdate[Data](data, sendEvent(_).toList.flatten, handler, registry, dispatch)
 }
 
 case class BatchedAPIMessageCacheUpdate(updates: Seq[APIMessageCacheUpdate[_]]) extends CacheEvent {
-  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit =
+  override def process(builder: CacheSnapshotBuilder): Unit =
     updates.foreach(_.process(builder))
 }
 
@@ -83,7 +102,7 @@ case class RequestCacheUpdate[Data](
     registry: CacheTypeRegistry
 ) extends CacheEvent {
 
-  override def process(builder: CacheSnapshotBuilder)(implicit log: Logger): Unit = {
+  override def process(builder: CacheSnapshotBuilder): Unit = {
     registry.getUpdater(ClassTag[Data](requestResponse.data.getClass)) match {
       case Some(updater) => updater.handle(builder, requestResponse.data, registry)
       case None =>

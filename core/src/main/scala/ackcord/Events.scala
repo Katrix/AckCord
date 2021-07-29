@@ -23,10 +23,9 @@
  */
 package ackcord
 
-import scala.collection.immutable
 import scala.concurrent.Future
 
-import ackcord.cachehandlers.{CacheHandler, CacheTypeRegistry}
+import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.RawInteraction
 import ackcord.gateway.{Dispatch, GatewayEvent, GatewayMessage}
 import ackcord.requests.SupervisionStreams
@@ -34,7 +33,6 @@ import ackcord.util.AckCordGatewaySettings
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor => classic}
-import org.slf4j.{Logger, LoggerFactory}
 
 /**
   * Houses streams to interact with events and messages sent to and from Discord.
@@ -60,22 +58,10 @@ case class Events(
   def gatewayClientConnection: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
     Flow.fromSinkAndSourceCoupled(receiveGatewayPublish, sendGatewaySubscribe)
 
-  @deprecated("Prefer publishToCache", since = "0.17")
-  def publish(elem: CacheEvent): Unit = publishCacheEvent(elem)
-
   /**
     * Publish a single cache event.
     */
   def publishCacheEvent(elem: CacheEvent): Unit = publish.runWith(Source.single(elem))
-
-  @deprecated("Prefer publishCacheEvents", since = "0.17")
-  def publishMany(it: immutable.Iterable[CacheEvent]): Unit = publish.runWith(Source(it))
-
-  /**
-    * Publish many cache events.
-    */
-  @deprecated("Prefer publishToCache", since = "0.17")
-  def publishCacheEvents(it: immutable.Iterable[CacheEvent]): Unit = publish.runWith(Source(it))
 
   /**
     * A source used to subscribe to [[APIMessage]]s sent to this cache.
@@ -116,44 +102,28 @@ case class Events(
 }
 object Events {
 
-  def createWithPubSub(
-      publish: Sink[CacheEvent, NotUsed],
-      subscribe: Source[(CacheEvent, CacheState), NotUsed],
-      parallelism: Int = 4,
+  def connectGatewayToApiMessages(
+      events: Events,
+      gatewayToApiMessageConverter: Option[CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]],
+      parallelism: Int,
       ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
-      cacheTypeRegistry: Logger => CacheTypeRegistry,
+      cacheTypeRegistry: CacheTypeRegistry,
       maxBatch: Long = 1,
-      batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
-      gatewayToApiMessageConverter: Option[
-        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
-      sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
-      receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
-  )(implicit system: ActorSystem[Nothing]): Events = {
-    val (sendGatewayPublish, sendGatewaySubscribe) = CacheStreams.gatewayEvents[Any](sendGatewayEventsBufferSize)
-    val (receiveGatewayPublish, receiveGatewaySubscribe) =
-      CacheStreams.gatewayEvents[Any](receiveGatewayEventsBufferSize)
-
-    //Keep it drained if nothing else is using it
-    subscribe.runWith(Sink.ignore)
-
+      batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1
+  )(implicit system: ActorSystem[Nothing]): Unit = {
     import system.executionContext
 
     //Pipe events gotten into the main pubsub
     gatewayToApiMessageConverter.foreach { apiMessageCreatorFun =>
-      val cacheHandlerLog = LoggerFactory.getLogger(classOf[CacheHandler[_]])
-      val settings        = AckCordGatewaySettings()(system)
-      val apiMessageConverter =
-        apiMessageCreatorFun(cacheTypeRegistry(cacheHandlerLog), cacheHandlerLog)
+      val settings            = AckCordGatewaySettings()(system)
+      val apiMessageConverter = apiMessageCreatorFun(cacheTypeRegistry)
 
       val baseSource: Source[APIMessageCacheUpdate[Any], NotUsed] =
-        receiveGatewaySubscribe
+        events.receiveGatewaySubscribe
           .collectType[Dispatch[_]]
           .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
           .mapAsync(parallelism)(dispatch =>
-            Future(
-              CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, cacheHandlerLog, settings).toList
-            )
+            Future(CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, settings).toList)
           )
           .mapConcat(identity)
           .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
@@ -166,14 +136,34 @@ object Events {
         else
           baseSource
 
-      SupervisionStreams
-        .addLogAndContinueFunction(
-          sourceWithBatching.to(publish).addAttributes
-        )
-        .run()
-    }
+      val completeGraph = sourceWithBatching.to(events.publish)
 
-    Events(
+      SupervisionStreams.addLogAndContinueFunction(completeGraph.addAttributes).run()
+    }
+  }
+
+  def createWithPubSub(
+      publish: Sink[CacheEvent, NotUsed],
+      subscribe: Source[(CacheEvent, CacheState), NotUsed],
+      parallelism: Int = 4,
+      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
+      cacheTypeRegistry: CacheTypeRegistry,
+      maxBatch: Long = 1,
+      batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
+      gatewayToApiMessageConverter: Option[CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]] = Some(
+        CacheEventCreator.ackcordGatewayToCacheUpdateOnly
+      ),
+      sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
+      receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
+  )(implicit system: ActorSystem[Nothing]): Events = {
+    val (sendGatewayPublish, sendGatewaySubscribe) = CacheStreams.gatewayEvents[Any](sendGatewayEventsBufferSize)
+    val (receiveGatewayPublish, receiveGatewaySubscribe) =
+      CacheStreams.gatewayEvents[Any](receiveGatewayEventsBufferSize)
+
+    //Keep it drained if nothing else is using it
+    subscribe.runWith(Sink.ignore)
+
+    val events = Events(
       publish,
       subscribe,
       sendGatewayPublish,
@@ -182,6 +172,17 @@ object Events {
       receiveGatewaySubscribe,
       parallelism
     )
+
+    connectGatewayToApiMessages(
+      events,
+      gatewayToApiMessageConverter,
+      parallelism,
+      ignoredEvents,
+      cacheTypeRegistry,
+      maxBatch,
+      batchCostFun
+    )
+    events
   }
 
   /**
@@ -193,12 +194,12 @@ object Events {
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
       parallelism: Int = 4,
       ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
-      cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default,
+      cacheTypeRegistry: CacheTypeRegistry = CacheTypeRegistry.default,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
       gatewayToApiMessageConverter: Option[
-        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
+        CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
+      ] = Some(registry => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
@@ -233,13 +234,13 @@ object Events {
   def createGuildCache(
       guildCacheActor: ActorRef[CacheStreams.GuildCacheEvent],
       parallelism: Int = 4,
-      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
-      cacheTypeRegistry: Logger => CacheTypeRegistry,
+      ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
+      cacheTypeRegistry: CacheTypeRegistry = CacheTypeRegistry.default,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
       gatewayToApiMessageConverter: Option[
-        (CacheTypeRegistry, Logger) => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some((registry, logger) => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry, logger)),
+        CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
+      ] = Some(registry => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()

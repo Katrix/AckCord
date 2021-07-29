@@ -25,12 +25,9 @@ package ackcord.cachehandlers
 
 import ackcord.data.{Guild, Presence}
 import ackcord.gateway.GatewayEvent.PresenceUpdateData
-import org.slf4j.Logger
 
 object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
-  override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry)(
-      implicit log: Logger
-  ): Unit = {
+  override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry): Unit = {
     val PresenceUpdateData(partialUser, guildId, status, rawActivities, clientStatus) = obj
 
     registry.updateData(builder)(partialUser)

@@ -29,20 +29,21 @@ import scala.reflect.ClassTag
 import ackcord.data._
 import ackcord.data.raw.{PartialUser, RawGuild, RawThreadMember}
 import ackcord.gateway.GatewayEvent.RawGuildMemberWithGuild
-import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class CacheTypeRegistry(
     val updateHandlers: Map[Class[_], CacheUpdater[_]],
     val deleteHandlers: Map[Class[_], CacheDeleter[_]],
-    log: Logger
 ) {
+
+  private val log = LoggerFactory.getLogger(getClass)
 
   private def handleWithData[D: ClassTag, HandlerTpe[-A] <: CacheHandler[A]](
       handlers: Map[Class[_], HandlerTpe[_]],
       tpe: String,
       data: => D,
       builder: CacheSnapshotBuilder
-  ): Unit = getWithData[D, HandlerTpe](tpe, handlers).foreach(handler => handler.handle(builder, data, this)(log))
+  ): Unit = getWithData[D, HandlerTpe](tpe, handlers).foreach(_.handle(builder, data, this))
 
   def updateData[D: ClassTag](builder: CacheSnapshotBuilder)(data: => D): Unit =
     handleWithData(updateHandlers, "updater", data, builder)
@@ -123,10 +124,10 @@ object CacheTypeRegistry {
   private val allDeleters: Map[Class[_], CacheDeleter[_]] =
     noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban](shouldBeIgnored = false))
 
-  def default(log: Logger) = new CacheTypeRegistry(allUpdaters, allDeleters, log)
+  def default = new CacheTypeRegistry(allUpdaters, allDeleters)
 
-  def noPresences(log: Logger) = new CacheTypeRegistry(noPresencesUpdaters, allDeleters, log)
+  def noPresences = new CacheTypeRegistry(noPresencesUpdaters, allDeleters)
 
-  def noPresencesBansEmoji(log: Logger) =
-    new CacheTypeRegistry(noPresencesBansEmojiUpdaters, noBanDeleters, log)
+  def noPresencesBansEmoji =
+    new CacheTypeRegistry(noPresencesBansEmojiUpdaters, noBanDeleters)
 }

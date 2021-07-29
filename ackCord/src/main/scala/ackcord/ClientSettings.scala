@@ -40,7 +40,6 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import akka.stream.OverflowStrategy
 import akka.util.Timeout
-import org.slf4j.Logger
 
 /**
   * Settings used when connecting to Discord.
@@ -201,6 +200,6 @@ case class CacheSettings(
     sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
     receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
     ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
-    cacheTypeRegistry: Logger => CacheTypeRegistry = CacheTypeRegistry.default,
+    cacheTypeRegistry: CacheTypeRegistry = CacheTypeRegistry.default,
     partitionCacheByGuild: Boolean = false
 )
