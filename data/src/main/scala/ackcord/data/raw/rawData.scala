@@ -92,10 +92,10 @@ case class RawChannel(
     `type` match {
       case ChannelType.GuildText | ChannelType.GuildNews =>
         for {
-          guildId                    <- guildId
-          name                       <- name
-          position                   <- position
-          permissionOverwrites       <- permissionOverwrites
+          guildId              <- guildId
+          name                 <- name
+          position             <- position
+          permissionOverwrites <- permissionOverwrites
         } yield {
           if (`type` == ChannelType.GuildNews) {
             NewsTextGuildChannel(
@@ -258,15 +258,11 @@ case class RawChannel(
     }
   }
 
-  /**
-    * Try to convert this to a normal channel.
-    */
+  /** Try to convert this to a normal channel. */
   def toChannel(botUserId: Option[UserId]): Option[Channel] = toChannelUsingGuildId(guildId, botUserId)
 
   def toGuildChannel(guildId: GuildId, botUserId: Option[UserId]): Option[GuildChannel] =
-    toChannelUsingGuildId(Some(guildId), botUserId).collect {
-      case ch: GuildChannel => ch
-    }
+    toChannelUsingGuildId(Some(guildId), botUserId).collect { case ch: GuildChannel => ch }
 }
 
 /**
@@ -345,9 +341,7 @@ case class RawGuildMember(
     pending: Option[Boolean]
 ) {
 
-  /**
-    * Convert this to a normal guild member.
-    */
+  /** Convert this to a normal guild member. */
   def toGuildMember(guildId: GuildId): GuildMember =
     GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
 }
@@ -427,9 +421,7 @@ case class RawMessage(
     thread: Option[RawChannel]
 ) {
 
-  /**
-    * Convert this to a normal message.
-    */
+  /** Convert this to a normal message. */
   def toMessage: Message = {
     guildId match {
       case Some(guildId) =>
@@ -619,9 +611,8 @@ case class RawGuild(
       presences   <- presences
     } yield {
       val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
-      val threads = rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
-        case thread: ThreadGuildChannel => thread
-      }
+      val threads =
+        rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect { case thread: ThreadGuildChannel => thread }
 
       GatewayGuild(
         id,

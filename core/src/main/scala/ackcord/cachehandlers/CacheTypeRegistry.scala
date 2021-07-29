@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory
 
 class CacheTypeRegistry(
     val updateHandlers: Map[Class[_], CacheUpdater[_]],
-    val deleteHandlers: Map[Class[_], CacheDeleter[_]],
+    val deleteHandlers: Map[Class[_], CacheDeleter[_]]
 ) {
 
   private val log = LoggerFactory.getLogger(getClass)
@@ -91,7 +91,7 @@ object CacheTypeRegistry {
     classOf[DMChannel]               -> CacheHandlers.dmChannelUpdater,
     classOf[GroupDMChannel]          -> CacheHandlers.dmGroupChannelUpdater,
     classOf[RawGuild]                -> CacheHandlers.rawGuildUpdater,
-    classOf[RawThreadMember]            -> CacheHandlers.rawThreadMemberUpdater,
+    classOf[RawThreadMember]         -> CacheHandlers.rawThreadMemberUpdater,
     classOf[User]                    -> CacheHandlers.userUpdater,
     classOf[UnavailableGuild]        -> CacheHandlers.unavailableGuildUpdater,
     classOf[Message]                 -> CacheHandlers.messageUpdater,

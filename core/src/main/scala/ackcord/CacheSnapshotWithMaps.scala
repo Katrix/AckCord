@@ -27,9 +27,7 @@ import java.time.Instant
 
 import ackcord.data._
 
-/**
-  * A cache snapshot where the getters can use the maps to get their data.
-  */
+/** A cache snapshot where the getters can use the maps to get their data. */
 trait CacheSnapshotWithMaps extends CacheSnapshot {
 
   override def getDmChannel(id: SnowflakeType[DMChannel]): Option[DMChannel] = dmChannelMap.get(id)

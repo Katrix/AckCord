@@ -37,9 +37,7 @@ import shapeless.tag._
   */
 trait CacheSnapshot {
 
-  /**
-    * The map type to use. Mutable for builder, immutable otherwise.
-    */
+  /** The map type to use. Mutable for builder, immutable otherwise. */
   type MapType[K, V] <: collection.Map[SnowflakeType[K], V]
 
   /**
@@ -100,34 +98,22 @@ trait CacheSnapshot {
     */
   def banMap: MapType[Guild, MapType[User, Ban]]
 
-  /**
-    * Our bot user. Tagged to allow special syntax.
-    */
+  /** Our bot user. Tagged to allow special syntax. */
   def botUser: User @@ BotUser
 
-  /**
-    * Get a dm channel by id.
-    */
+  /** Get a dm channel by id. */
   def getDmChannel(id: SnowflakeType[DMChannel]): Option[DMChannel]
 
-  /**
-    * Get the dm channel for a specific user.
-    */
+  /** Get the dm channel for a specific user. */
   def getUserDmChannel(id: UserId): Option[DMChannel]
 
-  /**
-    * Get a group dm channel by id.
-    */
+  /** Get a group dm channel by id. */
   def getGroupDmChannel(id: SnowflakeType[GroupDMChannel]): Option[GroupDMChannel]
 
-  /**
-    * Get a guild by id.
-    */
+  /** Get a guild by id. */
   def getGuild(id: GuildId): Option[GatewayGuild]
 
-  /**
-    * Get guild by id, also including unavailable guilds.
-    */
+  /** Get guild by id, also including unavailable guilds. */
   def getGuildWithUnavailable(id: GuildId): Option[UnknownStatusGuild]
 
   /**
@@ -137,14 +123,10 @@ trait CacheSnapshot {
     */
   def getChannelMessages(channelId: TextChannelId): MapType[Message, Message]
 
-  /**
-    * Get a message, specifying both the channel, and message id.
-    */
+  /** Get a message, specifying both the channel, and message id. */
   def getMessage(channelId: TextChannelId, messageId: MessageId): Option[Message]
 
-  /**
-    * Get a message by id without knowing the channel it belongs to.
-    */
+  /** Get a message by id without knowing the channel it belongs to. */
   def getMessage(messageId: MessageId): Option[Message]
 
   /**
@@ -154,9 +136,7 @@ trait CacheSnapshot {
     */
   def getGuildChannel(guildId: GuildId, id: GuildChannelId): Option[GuildChannel]
 
-  /**
-    * Get a guild channel by id without knowing the guild it belongs to.
-    */
+  /** Get a guild channel by id without knowing the guild it belongs to. */
   def getGuildChannel(id: GuildChannelId): Option[GuildChannel]
 
   /**
@@ -166,72 +146,46 @@ trait CacheSnapshot {
     */
   def getThread(guildId: GuildId, id: ThreadGuildChannelId): Option[ThreadGuildChannel]
 
-  /**
-    * Get a thread channel by id without knowing the guild it belongs to.
-    */
+  /** Get a thread channel by id without knowing the guild it belongs to. */
   def getThread(id: ThreadGuildChannelId): Option[ThreadGuildChannel]
 
-  /**
-    * Get a channel by id, ignoring if it's a dm or guild channel.
-    */
+  /** Get a channel by id, ignoring if it's a dm or guild channel. */
   def getChannel(id: ChannelId): Option[Channel]
 
-  /**
-    * Get a text channel by id, ignoring if it's a dm or guild channel.
-    */
+  /** Get a text channel by id, ignoring if it's a dm or guild channel. */
   def getTextChannel(id: TextChannelId): Option[TextChannel]
 
-  /**
-    * Get a role by id without knowing the guild it belongs to.
-    */
+  /** Get a role by id without knowing the guild it belongs to. */
   def getRole(id: RoleId): Option[Role]
 
-  /**
-    * Get a role by a guildId and a roleID.
-    */
+  /** Get a role by a guildId and a roleID. */
   def getRole(guildId: GuildId, roleId: RoleId): Option[Role]
 
-  /**
-    * Get an emoji by id without knowing the guild it belongs to.
-    */
+  /** Get an emoji by id without knowing the guild it belongs to. */
   def getEmoji(id: EmojiId): Option[Emoji]
 
-  /**
-    * Get a map of when users last typed in a channel.
-    */
+  /** Get a map of when users last typed in a channel. */
   def getChannelLastTyped(channelId: TextChannelId): MapType[User, Instant]
 
-  /**
-    * Get the instant a user last typed in a channel.
-    */
+  /** Get the instant a user last typed in a channel. */
   def getLastTyped(channelId: TextChannelId, userId: UserId): Option[Instant]
 
   //For implementers, remember to check if the user to return is the bot user
-  /**
-    * Get a user by id.
-    */
+  /** Get a user by id. */
   def getUser(id: UserId): Option[User]
 
-  /**
-    * Gets all the bans for a specific guild.
-    */
+  /** Gets all the bans for a specific guild. */
   def getGuildBans(id: GuildId): MapType[User, Ban]
 
-  /**
-    * Gets the ban for a specific user.
-    */
+  /** Gets the ban for a specific user. */
   def getBan(guildId: GuildId, userId: UserId): Option[Ban]
 
-  /**
-    * Get the presence of a user for a specific guild
-    */
+  /** Get the presence of a user for a specific guild */
   def getPresence(guildId: GuildId, userId: UserId): Option[Presence]
 }
 
 object CacheSnapshot {
 
-  /**
-    * Phantom type for the bot (client) user. Used for syntax.
-    */
+  /** Phantom type for the bot (client) user. Used for syntax. */
   sealed trait BotUser
 }

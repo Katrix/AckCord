@@ -40,18 +40,12 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 
   override def empty: SnowflakeMap[K, V] = new SnowflakeMap(inner.empty)
 
-  override def toList: List[(Key, V)] = inner.toList.map {
-    case (k, v) => (keyToSnowflake(k), v)
-  }
+  override def toList: List[(Key, V)] = inner.toList.map { case (k, v) => (keyToSnowflake(k), v) }
 
-  override def iterator: Iterator[(Key, V)] = inner.iterator.map {
-    case (k, v) => (keyToSnowflake(k), v)
-  }
+  override def iterator: Iterator[(Key, V)] = inner.iterator.map { case (k, v) => (keyToSnowflake(k), v) }
 
   final override def foreach[U](f: ((Key, V)) => U): Unit =
-    inner.foreach {
-      case (k, v) => f((keyToSnowflake(k), v))
-    }
+    inner.foreach { case (k, v) => f((keyToSnowflake(k), v)) }
 
   override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
 
@@ -78,14 +72,10 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   override def isEmpty: Boolean = inner.isEmpty
 
   override def filter(p: ((Key, V)) => Boolean): SnowflakeMap[K, V] =
-    new SnowflakeMap(inner.filter {
-      case (k, v) => p((keyToSnowflake(k), v))
-    })
+    new SnowflakeMap(inner.filter { case (k, v) => p((keyToSnowflake(k), v)) })
 
   def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.transform[S] {
-      case (k, v) => f(keyToSnowflake(k), v)
-    })
+    new SnowflakeMap(inner.transform[S] { case (k, v) => f(keyToSnowflake(k), v) })
 
   final override def size: Int = inner.size
 
@@ -133,9 +123,7 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @return      The modified map.
     */
   def modifyOrRemove[S](f: (Key, V) => Option[S]): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.modifyOrRemove {
-      case (k, v) => f(keyToSnowflake(k), v)
-    })
+    new SnowflakeMap(inner.modifyOrRemove { case (k, v) => f(keyToSnowflake(k), v) })
 
   /**
     * Forms a union map with that map, using the combining function to resolve conflicts.
@@ -180,29 +168,21 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
 }
 object SnowflakeMap {
 
-  /**
-    * Create an empty snowflake map.
-    */
+  /** Create an empty snowflake map. */
   def empty[K, V]: SnowflakeMap[K, V] = new SnowflakeMap(LongMap.empty)
 
-  /**
-    * Create a snowflake map with a single value.
-    */
+  /** Create a snowflake map with a single value. */
   def singleton[K, V](key: SnowflakeType[K], value: V): SnowflakeMap[K, V] =
     new SnowflakeMap(LongMap.singleton(key.toUnsignedLong, value))
 
-  /**
-    * Create a snowflake map from multiple values.
-    */
+  /** Create a snowflake map from multiple values. */
   def apply[K, V](elems: (SnowflakeType[K], V)*): SnowflakeMap[K, V] =
     new SnowflakeMap(LongMap.apply(elems.map(t => t._1.toUnsignedLong -> t._2): _*))
 
   //alias for apply to make it easier to cross compile
   def from[K, V](iterable: Iterable[(SnowflakeType[K], V)]): SnowflakeMap[K, V] = apply(iterable.toSeq: _*)
 
-  /**
-    * Create a snowflake map from an iterable of snowflakes and values.
-    */
+  /** Create a snowflake map from an iterable of snowflakes and values. */
   def apply[K, V](iterable: Iterable[(SnowflakeType[K], V)]): SnowflakeMap[K, V] = apply(iterable.toSeq: _*)
 
   /**

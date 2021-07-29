@@ -271,10 +271,9 @@ object GatewayHandler {
           log.warn("Logged out before connection could be established. This is likely a bug")
           Behaviors.stopped
       }
-      .receiveSignal {
-        case (_, PostStop) =>
-          shutdownStream(state, log)
-          Behaviors.stopped
+      .receiveSignal { case (_, PostStop) =>
+        shutdownStream(state, log)
+        Behaviors.stopped
       }
   }
 
@@ -322,23 +321,18 @@ object GatewayHandler {
         case UpgradeResponse(_) =>
           Behaviors.same
       }
-      .receiveSignal {
-        case (_, PostStop) =>
-          shutdownStream(state, log)
-          Behaviors.stopped
+      .receiveSignal { case (_, PostStop) =>
+        shutdownStream(state, log)
+        Behaviors.stopped
       }
   }
 
   sealed trait Command
 
-  /**
-    * Send this to a [[GatewayHandler]] to make it go from inactive to active
-    */
+  /** Send this to a [[GatewayHandler]] to make it go from inactive to active */
   case object Login extends Command
 
-  /**
-    * Send this to a [[GatewayHandler]] to stop it gracefully.
-    */
+  /** Send this to a [[GatewayHandler]] to stop it gracefully. */
   case object Logout extends Command
 
   private case object ResetRetryCount                                                       extends Command

@@ -251,9 +251,7 @@ object DataInteractionTransformer {
     override def filter[A](from: F[A]): Either[Option[String], F[A]] = Right(from)
   }
 
-  /**
-    * A command transformer which resolves most ids from the cache.
-    */
+  /** A command transformer which resolves most ids from the cache. */
   def resolved[I[A] <: CacheInteraction, O[_]](
       create: (TextChannel, Option[GatewayGuild]) => I ~> O
   ): DataInteractionTransformer[I, O] = new DataInteractionTransformer[I, O] {
@@ -275,9 +273,7 @@ object DataInteractionTransformer {
     }
   }
 
-  /**
-    * A command function that only allows commands sent from a guild.
-    */
+  /** A command function that only allows commands sent from a guild. */
   def onlyInGuild[I[A] <: ResolvedInteraction, O[_]](
       create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I ~> O
   ): DataInteractionTransformer[I, O] =
@@ -386,9 +382,7 @@ object InteractionTransformer {
 
   def identity[A]: InteractionTransformer[A, A] = (from: A) => Right(from)
 
-  /**
-    * A command transformer which resolves most ids from the cache.
-    */
+  /** A command transformer which resolves most ids from the cache. */
   def resolved[I <: CacheInteraction, O](
       create: (TextChannel, Option[GatewayGuild]) => I => O
   ): InteractionTransformer[I, O] =
@@ -397,9 +391,7 @@ object InteractionTransformer {
       DataInteractionTransformer.resolved[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
-  /**
-    * A command function that only allows commands sent from a guild.
-    */
+  /** A command function that only allows commands sent from a guild. */
   def onlyInGuild[I <: ResolvedInteraction, O](
       create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I => O
   ): InteractionTransformer[I, O] =

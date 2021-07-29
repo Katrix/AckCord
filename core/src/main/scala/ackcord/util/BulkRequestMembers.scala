@@ -146,19 +146,17 @@ object BulkRequestMembers {
 
     val getMembers: Source[(Seq[RawGuildMemberWithGuild], Seq[(GuildId, UserId)]), NotUsed] =
       events.fromGatewaySubscribe
-        .collect {
-          case Dispatch(_, GuildMemberChunk(_, data), _) =>
-            data.value match {
-              case Left(e)          => Source.failed(e)
-              case Right(chunkData) => Source.single(chunkData)
-            }
+        .collect { case Dispatch(_, GuildMemberChunk(_, data), _) =>
+          data.value match {
+            case Left(e)          => Source.failed(e)
+            case Right(chunkData) => Source.single(chunkData)
+          }
         }
         .flatMapConcat(identity)
         .via(KillSwitches.single)
         .takeWhile(chunk => chunk.chunkIndex < (chunk.chunkCount - 1), inclusive = true)
-        .collect {
-          case GuildMemberChunkData(guildId, members, _, _, notFound, _, Some(`nonce`)) =>
-            (members.map(RawGuildMemberWithGuild(guildId, _)), notFound.toSeq.flatten.map(guildId -> _))
+        .collect { case GuildMemberChunkData(guildId, members, _, _, notFound, _, Some(`nonce`)) =>
+          (members.map(RawGuildMemberWithGuild(guildId, _)), notFound.toSeq.flatten.map(guildId -> _))
         }
 
     //We do this to only send the request when there is demand for it

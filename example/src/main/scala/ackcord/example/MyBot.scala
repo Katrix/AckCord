@@ -42,13 +42,9 @@ object MyBot extends App {
   settings
     .createClient()
     .foreach { client =>
-      client.onEventSideEffectsIgnore {
-        case APIMessage.Ready(_, _, _) => println("Now ready")
-      }
+      client.onEventSideEffectsIgnore { case APIMessage.Ready(_, _, _) => println("Now ready") }
 
-      client.onEventSideEffectsIgnore {
-        case msg => println(msg.getClass.getName)
-      }
+      client.onEventSideEffectsIgnore { case msg => println(msg.getClass.getName) }
 
       {
         import client.system
@@ -75,9 +71,8 @@ object MyBot extends App {
       }
 
       client.onEventAsync { implicit c =>
-        {
-          case APIMessage.ThreadCreate(_, thread, _, _) =>
-            run(thread.sendMessage("First")).map(_ => ())
+        { case APIMessage.ThreadCreate(_, thread, _, _) =>
+          run(thread.sendMessage("First")).map(_ => ())
         }
       }
 
@@ -96,7 +91,7 @@ object MyBot extends App {
             ).map(_ => ())
         }
       }
-      */
+       */
 
       val myEvents      = new MyEvents(client.requests)
       val myListeners   = new Listeners(client)
@@ -142,11 +137,10 @@ object MyBot extends App {
 
       import client.system
 
-      client.onEventSideEffectsIgnore {
-        case APIMessage.Ready(applicationId, _, _) =>
-          client.events.interactions
-            .to(InteractionsRegistrar.gatewayInteractions()(applicationId.asString, client.requests))
-            .run()
+      client.onEventSideEffectsIgnore { case APIMessage.Ready(applicationId, _, _) =>
+        client.events.interactions
+          .to(InteractionsRegistrar.gatewayInteractions()(applicationId.asString, client.requests))
+          .run()
       }
 
       client.login()

@@ -81,8 +81,8 @@ class CommandConnector(
       command: ComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] = {
 
-    val messageSource = messages.mapAsyncUnordered(parallelism) {
-      case t @ (message, cache) => prefix(message)(cache, requests.system.executionContext).tupleLeft(t)
+    val messageSource = messages.mapAsyncUnordered(parallelism) { case t @ (message, cache) =>
+      prefix(message)(cache, requests.system.executionContext).tupleLeft(t)
     }
 
     val getCommandMessages = Flow[((Message, CacheSnapshot), MessageParser[Unit])].mapConcat {
@@ -165,9 +165,8 @@ class CommandConnector(
   ): RunnableGraph[CommandRegistration[Mat]] = {
     SupervisionStreams.addLogAndContinueFunction(
       newCommandWithErrors(prefix, command)
-        .map {
-          case CommandError(error, channel, _) =>
-            channel.sendMessage(error)
+        .map { case CommandError(error, channel, _) =>
+          channel.sendMessage(error)
         }
         .to(requests.sinkIgnore)
         .addAttributes

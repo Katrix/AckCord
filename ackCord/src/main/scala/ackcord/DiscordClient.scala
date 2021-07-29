@@ -37,37 +37,25 @@ import akka.util.Timeout
 import com.sedmelluq.discord.lavaplayer.player.{AudioPlayer, AudioPlayerManager}
 import com.sedmelluq.discord.lavaplayer.track.AudioItem
 
-/**
-  * Trait used to interface with Discord stuff from high level.
-  */
+/** Trait used to interface with Discord stuff from high level. */
 trait DiscordClient {
 
-  /**
-    * The shards of this client
-    */
+  /** The shards of this client */
   def shards: Future[Seq[ActorRef[DiscordShard.Command]]]
 
-  /**
-    * Streams housing events and messages sent to and from Discord.
-    */
+  /** Streams housing events and messages sent to and from Discord. */
   def events: Events
 
   @deprecated("Prefer events", since = "0.17")
   def cache: Events = events
 
-  /**
-    * The global commands object used by the client
-    */
+  /** The global commands object used by the client */
   def commands: CommandConnector
 
-  /**
-    * The low level requests object used by the client
-    */
+  /** The low level requests object used by the client */
   def requests: Requests
 
-  /**
-    * The high level requests helper for use in user code.
-    */
+  /** The high level requests helper for use in user code. */
   val requestsHelper: RequestsHelper
 
   def musicManager: Future[ActorRef[MusicManager.Command]]
@@ -219,9 +207,7 @@ trait DiscordClient {
   def setPlaying(guildId: GuildId, playing: Boolean): Unit =
     musicManager.foreach(_ ! SetChannelPlaying(guildId, playing))
 
-  /**
-    * Load a track using LavaPlayer.
-    */
+  /** Load a track using LavaPlayer. */
   def loadTrack(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] =
     LavaplayerHandler.loadItem(playerManager, identifier)
 }

@@ -30,9 +30,7 @@ import ackcord.data._
 import ackcord.{CacheSnapshotWithMaps, MemoryCacheSnapshot, SnowflakeMap}
 import shapeless.tag._
 
-/**
-  * A mutable builder for creating a new snapshot
-  */
+/** A mutable builder for creating a new snapshot */
 class CacheSnapshotBuilder(
     seq: Long,
     var botUser: User @@ BotUser,

@@ -47,9 +47,7 @@ import cats.{Monad, MonadError}
   */
 trait MessageParser[A] { self =>
 
-  /**
-    * A program to parse a message into the needed types.
-    */
+  /** A program to parse a message into the needed types. */
   def parse[F[_]](
       implicit c: CacheSnapshot,
       F: Monad[F],
@@ -320,9 +318,7 @@ trait MessageParserInstances {
     */
   def fromEither[A](f: String => Either[String, A]): MessageParser[A] = new MessageParser[A] {
 
-    /**
-      * A program to parse a message into the needed types.
-      */
+    /** A program to parse a message into the needed types. */
     override def parse[F[_]](
         implicit c: CacheSnapshot,
         F: Monad[F],
@@ -442,23 +438,17 @@ trait MessageParserInstances {
     )
 
   implicit val textChannelParser: MessageParser[TextChannel] =
-    channelParser.collectWithError("Passed in channel is not a text channel") {
-      case channel: TextChannel => channel
-    }
+    channelParser.collectWithError("Passed in channel is not a text channel") { case channel: TextChannel => channel }
 
   implicit val guildChannelParser: MessageParser[GuildChannel] =
-    channelParser.collectWithError("Passed in channel is not a guild channel") {
-      case channel: GuildChannel => channel
-    }
+    channelParser.collectWithError("Passed in channel is not a guild channel") { case channel: GuildChannel => channel }
 
   implicit val textGuildChannelParser: MessageParser[TextGuildChannel] =
-    channelParser.collectWithError("Passed in channel is not a guild text channel") {
-      case channel: TextGuildChannel => channel
+    channelParser.collectWithError("Passed in channel is not a guild text channel") { case channel: TextGuildChannel =>
+      channel
     }
 
-  /**
-    * A parser that will return all the strings passed to it.
-    */
+  /** A parser that will return all the strings passed to it. */
   val allStringsParser: MessageParser[List[String]] = new MessageParser[List[String]] {
     override def parse[F[_]](
         implicit c: CacheSnapshot,
@@ -468,9 +458,7 @@ trait MessageParserInstances {
     ): F[List[String]] = S.get <* S.set(Nil)
   }
 
-  /**
-    * A parser that will only succeed if there are no strings left.
-    */
+  /** A parser that will only succeed if there are no strings left. */
   implicit val notUsedParser: MessageParser[NotUsed] = new MessageParser[NotUsed] {
     override def parse[F[_]](
         implicit c: CacheSnapshot,

@@ -204,5 +204,6 @@ case class BatchEditCommandPermissions(
       derivation.deriveEncoder(derivation.renaming.snakeCase, None)
     implicitly
   }
-  override def responseDecoder: Decoder[Seq[GuildApplicationCommandPermissions]] = Decoder[Seq[GuildApplicationCommandPermissions]]
+  override def responseDecoder: Decoder[Seq[GuildApplicationCommandPermissions]] =
+    Decoder[Seq[GuildApplicationCommandPermissions]]
 }

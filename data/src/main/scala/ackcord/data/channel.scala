@@ -32,9 +32,7 @@ import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 import io.circe.Codec
 
-/**
-  * Different type of channels
-  */
+/** Different type of channels */
 sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
 object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[ChannelType] {
   override def values: immutable.IndexedSeq[ChannelType] = findValues
@@ -94,9 +92,7 @@ object PermissionOverwriteType
   */
 case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission) {
 
-  /**
-    * If this overwrite applies to a user, get's that user, otherwise returns None.
-    */
+  /** If this overwrite applies to a user, get's that user, otherwise returns None. */
   def user(implicit c: CacheSnapshot): Option[User] =
     if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else None
 
@@ -115,24 +111,16 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
     if (`type` == PermissionOverwriteType.Role) guild.roles.get(RoleId(id)) else None
 }
 
-/**
-  * Base channel type
-  */
+/** Base channel type */
 sealed trait Channel {
 
-  /**
-    * The id of the channel
-    */
+  /** The id of the channel */
   def id: ChannelId
 
-  /**
-    * The channel type of this channel
-    */
+  /** The channel type of this channel */
   def channelType: ChannelType
 
-  /**
-    * Get a representation of this channel that can refer to it in messages.
-    */
+  /** Get a representation of this channel that can refer to it in messages. */
   def mention: String = id.mention
 }
 
@@ -142,9 +130,7 @@ sealed trait Channel {
   */
 case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends Channel
 
-/**
-  * A text channel that has text messages
-  */
+/** A text channel that has text messages */
 sealed trait TextChannel extends Channel {
 
   override def id: TextChannelId
@@ -155,69 +141,45 @@ sealed trait TextChannel extends Channel {
     */
   def lastMessageId: Option[MessageId]
 
-  /**
-    * Gets the last message for this channel if it exists.
-    */
+  /** Gets the last message for this channel if it exists. */
   def lastMessage(implicit c: CacheSnapshot): Option[Message] =
     lastMessageId.fold(None: Option[Message])(c.getMessage(id, _))
 }
 
-/**
-  * A channel within a guild
-  */
+/** A channel within a guild */
 sealed trait GuildChannel extends Channel with GetGuild {
 
   override def id: GuildChannelId
 
-  /**
-    * The id of the containing guild
-    */
+  /** The id of the containing guild */
   def guildId: GuildId
 
-  /**
-    * The position of this channel
-    */
+  /** The position of this channel */
   def position: Int
 
-  /**
-    * The name of this channel
-    */
+  /** The name of this channel */
   def name: String
 
-  /**
-    * The permission overwrites for this channel
-    */
+  /** The permission overwrites for this channel */
   def permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite]
 
-  /**
-    * If this channel is marked as NSFW.
-    */
+  /** If this channel is marked as NSFW. */
   def nsfw: Boolean
 
-  /**
-    * The id of the category this channel is in.
-    */
+  /** The id of the category this channel is in. */
   def parentId: Option[GuildChannelId]
 
-  /**
-    * Gets the category for this channel if it has one.
-    */
+  /** Gets the category for this channel if it has one. */
   def category(implicit c: CacheSnapshot): Option[GuildCategory] =
-    parentId.flatMap(c.getGuildChannel(guildId, _)).collect {
-      case cat: GuildCategory => cat
-    }
+    parentId.flatMap(c.getGuildChannel(guildId, _)).collect { case cat: GuildCategory => cat }
 }
 
-/**
-  * A texual channel in a guild
-  */
+/** A texual channel in a guild */
 sealed trait TextGuildChannel extends GuildChannel with TextChannel {
 
   override def id: TextGuildChannelId
 
-  /**
-    * The topic for this channel.
-    */
+  /** The topic for this channel. */
   def topic: Option[String]
 
   /**
@@ -226,14 +188,10 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
     */
   def rateLimitPerUser: Option[Int]
 
-  /**
-    * When the last pinned message was pinned.
-    */
+  /** When the last pinned message was pinned. */
   def lastPinTimestamp: Option[OffsetDateTime]
 
-  /**
-    * The default for when a newly created thread is auto archived in minutes.
-    */
+  /** The default for when a newly created thread is auto archived in minutes. */
   def defaultAutoArchiveDuration: Option[Int]
 }
 
@@ -259,9 +217,7 @@ case class NewsTextGuildChannel(
   def rateLimitPerUser: Option[Int] = None
 }
 
-/**
-  * A normal text channel in a guild
-  */
+/** A normal text channel in a guild */
 case class NormalTextGuildChannel(
     id: SnowflakeType[NormalTextGuildChannel],
     guildId: GuildId,
@@ -350,9 +306,7 @@ case class NormalVoiceGuildChannel(
   override def channelType: ChannelType = ChannelType.GuildVoice
 }
 
-/**
-  * A stage voice channel in a guild
-  */
+/** A stage voice channel in a guild */
 case class StageGuildChannel(
     id: SnowflakeType[StageGuildChannel],
     guildId: GuildId,
@@ -367,9 +321,7 @@ case class StageGuildChannel(
   override def channelType: ChannelType = ChannelType.GuildStageVoice
 }
 
-/**
-  * A category in a guild
-  */
+/** A category in a guild */
 case class GuildCategory(
     id: SnowflakeType[GuildCategory],
     guildId: GuildId,
@@ -383,9 +335,7 @@ case class GuildCategory(
   override def parentId: Option[GuildChannelId] = None
 }
 
-/**
-  * A store channel in a guild
-  */
+/** A store channel in a guild */
 case class GuildStoreChannel(
     id: SnowflakeType[GuildStoreChannel],
     guildId: GuildId,
@@ -398,9 +348,7 @@ case class GuildStoreChannel(
   override def channelType: ChannelType = ChannelType.GuildStore
 }
 
-/**
-  * A DM text channel
-  */
+/** A DM text channel */
 case class DMChannel(id: SnowflakeType[DMChannel], lastMessageId: Option[MessageId], userId: UserId)
     extends Channel
     with TextChannel
@@ -428,9 +376,7 @@ case class GroupDMChannel(
     with TextChannel {
   override def channelType: ChannelType = ChannelType.GroupDm
 
-  /**
-    * Gets the owner for this group DM.
-    */
+  /** Gets the owner for this group DM. */
   def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
 }
 

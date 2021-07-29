@@ -25,9 +25,7 @@ package ackcord.util
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.Config
 
-/**
-  * Settings that AckCord uses for voice stuff. See the reference config for more info.
-  */
+/** Settings that AckCord uses for voice stuff. See the reference config for more info. */
 class AckCordVoiceSettings(config: Config) {
   import config._
 

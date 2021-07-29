@@ -198,10 +198,9 @@ object MusicHandler {
 
         case AudioEventWrapper(_) => Behaviors.same //Ignore
       }
-      .receiveSignal {
-        case (_, PostStop) =>
-          player.destroy()
-          Behaviors.stopped
+      .receiveSignal { case (_, PostStop) =>
+        player.destroy()
+        Behaviors.stopped
       }
   }
 
@@ -322,10 +321,9 @@ object MusicHandler {
         case ReceivedAudioItem(e) => throw new Exception(s"Unknown audio item $e")
         case GotoActive           => Behaviors.same
       }
-      .receiveSignal {
-        case (_, PostStop) =>
-          player.destroy()
-          Behaviors.stopped
+      .receiveSignal { case (_, PostStop) =>
+        player.destroy()
+        Behaviors.stopped
       }
   }
 

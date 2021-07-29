@@ -33,9 +33,7 @@ import ackcord.cachehandlers.CacheSnapshotBuilder
 import ackcord.data._
 import shapeless.tag.@@
 
-/**
-  * Represents the cache at some point in time
-  */
+/** Represents the cache at some point in time */
 case class MemoryCacheSnapshot(
     seq: Long,
     botUser: User @@ BotUser,
@@ -63,9 +61,7 @@ case class MemoryCacheSnapshot(
 }
 object MemoryCacheSnapshot {
 
-  /**
-    * An action taken every time a cache is built.
-    */
+  /** An action taken every time a cache is built. */
   trait CacheProcessor {
 
     /**

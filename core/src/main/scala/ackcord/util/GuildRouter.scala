@@ -154,9 +154,7 @@ object GuildRouter {
     */
   case class GetGuildActorReply[Inner](guildActor: ActorRef[Inner])
 
-  /**
-    * Send a command to all guild actors that currently exists.
-    */
+  /** Send a command to all guild actors that currently exists. */
   case class Broadcast[Inner](msg: Inner) extends Command[Nothing, Inner]
 
   case class GuildActorCreated[Inner](actor: ActorRef[Inner], guildId: GuildId)

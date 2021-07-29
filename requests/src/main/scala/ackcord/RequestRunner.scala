@@ -125,9 +125,7 @@ object RequestRunner {
     ): Future[F[A]] = {
       val requestVec = requestSeq.toVector
       val source = if (requestVec.forall(_.hasPermissions)) {
-        requests.many(requestSeq).collect {
-          case RequestResponse(data, _, _, _) => data
-        }
+        requests.many(requestSeq).collect { case RequestResponse(data, _, _, _) => data }
       } else {
         Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
       }

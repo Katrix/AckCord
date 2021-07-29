@@ -32,9 +32,7 @@ import ackcord.util.{IntCirceEnumWithUnknown, StringCirceEnumWithUnknown}
 import ackcord.{CacheSnapshot, SnowflakeMap}
 import enumeratum.values._
 
-/**
-  * A guild which that status of is unknown.
-  */
+/** A guild which that status of is unknown. */
 sealed trait UnknownStatusGuild {
 
   /** The id of the guild. */
@@ -42,9 +40,7 @@ sealed trait UnknownStatusGuild {
   def unavailable: Option[Boolean]
 }
 
-/**
-  * The different verification levels that can be used for a guild.
-  */
+/** The different verification levels that can be used for a guild. */
 sealed abstract class VerificationLevel(val value: Int) extends IntEnumEntry
 object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnumWithUnknown[VerificationLevel] {
 
@@ -70,9 +66,7 @@ object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnumWit
   override def createUnknown(value: Int): VerificationLevel = Unknown(value)
 }
 
-/**
-  * The different notification levels that can be used for a guild
-  */
+/** The different notification levels that can be used for a guild */
 sealed abstract class NotificationLevel(val value: Int) extends IntEnumEntry
 object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnumWithUnknown[NotificationLevel] {
 
@@ -89,9 +83,7 @@ object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnumWit
   override def createUnknown(value: Int): NotificationLevel = Unknown(value)
 }
 
-/**
-  * The different explicit content filter levels to use for a guild.
-  */
+/** The different explicit content filter levels to use for a guild. */
 sealed abstract class FilterLevel(val value: Int) extends IntEnumEntry
 object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnumWithUnknown[FilterLevel] {
 
@@ -260,19 +252,13 @@ sealed trait Guild extends UnknownStatusGuild {
   /** The guild NSFW level. */
   def nsfwLevel: NSFWLevel
 
-  /**
-    * Get the everyone role in this guild.
-    */
+  /** Get the everyone role in this guild. */
   def everyoneRole: Role = roles(RoleId(id)) //The everyone role should always be present
 
-  /**
-    * Get the everyone mention for this guild.
-    */
+  /** Get the everyone mention for this guild. */
   def mentionEveryone: String = "@everyone"
 
-  /**
-    * Get the owner this this guild.
-    */
+  /** Get the owner this this guild. */
   def owner(implicit c: CacheSnapshot): Option[User] = c.getUser(ownerId)
 }
 
@@ -341,9 +327,8 @@ case class RequestsGuild(
       botUserId: Option[UserId]
   ): GatewayGuild = {
     val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
-    val threads = rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
-      case thread: ThreadGuildChannel => thread
-    }
+    val threads =
+      rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect { case thread: ThreadGuildChannel => thread }
 
     GatewayGuild(
       id,
@@ -451,25 +436,19 @@ case class GatewayGuild(
     stageInstances: SnowflakeMap[StageInstance, StageInstance]
 ) extends Guild {
 
-  /**
-    * Get the AFK channel of this guild.
-    */
-  def afkChannel: Option[NormalVoiceGuildChannel] = afkChannelId.flatMap(channels.get).collect {
-    case ch: NormalVoiceGuildChannel => ch
-  }
+  /** Get the AFK channel of this guild. */
+  def afkChannel: Option[NormalVoiceGuildChannel] =
+    afkChannelId.flatMap(channels.get).collect { case ch: NormalVoiceGuildChannel => ch }
 
-  /**
-    * Get the widget channel of this guild.
-    */
+  /** Get the widget channel of this guild. */
   def widgetChannel: Option[GuildChannel] = widgetChannelId.flatMap(channels.get)
 
   /**
     * Get the system channel of this guild. This is the first channel new users
     * see when they join the guild.
     */
-  def systemChannel: Option[TextGuildChannel] = systemChannelId.flatMap(channels.get).collect {
-    case ch: TextGuildChannel => ch
-  }
+  def systemChannel: Option[TextGuildChannel] =
+    systemChannelId.flatMap(channels.get).collect { case ch: TextGuildChannel => ch }
 }
 
 /**
@@ -571,9 +550,7 @@ case class GuildMember(
 ) extends GetUser
     with GetGuild {
 
-  /**
-    * Calculate the permissions of this user
-    */
+  /** Calculate the permissions of this user */
   def permissions(guild: Guild): Permission = {
     if (guild.ownerId == userId) Permission.All
     else {
@@ -586,9 +563,7 @@ case class GuildMember(
     }
   }
 
-  /**
-    * Calculate the permissions of this user in a channel.
-    */
+  /** Calculate the permissions of this user in a channel. */
   def permissionsWithOverridesId(
       guild: GatewayGuild,
       guildPermissions: Permission,
@@ -636,15 +611,11 @@ case class GuildMember(
     }
   }
 
-  /**
-    * Calculate the permissions of this user in a channel given a guild.
-    */
+  /** Calculate the permissions of this user in a channel given a guild. */
   def channelPermissionsId(guild: GatewayGuild, channelId: GuildChannelId): Permission =
     permissionsWithOverridesId(guild, permissions(guild), channelId)
 
-  /**
-    * Check if this user has any roles above the passed in roles.
-    */
+  /** Check if this user has any roles above the passed in roles. */
   def hasRoleAboveId(guild: Guild, others: Seq[RoleId]): Boolean = {
     val ownerId = guild.ownerId
     if (this.userId == ownerId) true
@@ -659,9 +630,7 @@ case class GuildMember(
     }
   }
 
-  /**
-    * Check if this user has any roles above the passed in roles.
-    */
+  /** Check if this user has any roles above the passed in roles. */
   def hasRoleAboveId(guild: Guild, other: GuildMember): Boolean =
     if (other.userId == guild.ownerId) false else hasRoleAboveId(guild, other.roleIds)
 }
@@ -688,22 +657,16 @@ case class Emoji(
     available: Option[Boolean]
 ) {
 
-  /**
-    * Mention this emoji so it can be formatted correctly in messages.
-    */
+  /** Mention this emoji so it can be formatted correctly in messages. */
   def mention: String =
     if (requireColons.getOrElse(false)) s"<:$name:$id>"
     else if (animated.getOrElse(false)) s"<a:$name:$id>"
     else s"$name"
 
-  /**
-    * Returns a string representation of this emoji used in requests.
-    */
+  /** Returns a string representation of this emoji used in requests. */
   def asString: String = if (!managed.getOrElse(false)) s"$name:$id" else s"$name"
 
-  /**
-    * Get the creator of this emoji if it has one.
-    */
+  /** Get the creator of this emoji if it has one. */
   def creator(implicit c: CacheSnapshot): Option[User] =
     userId.fold(None: Option[User])(c.getUser)
 }
@@ -745,36 +708,24 @@ case class ActivitySecrets(
   */
 case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: Option[Int])
 
-/**
-  * The text in a presence
-  */
+/** The text in a presence */
 sealed trait Activity {
 
   def tpe: ActivityType
 
-  /**
-    * When this activity was created.
-    */
+  /** When this activity was created. */
   def createdAt: Instant
 
-  /**
-    * The text shown
-    */
+  /** The text shown */
   def name: String
 
-  /**
-    * Timestamps for start and end of activity.
-    */
+  /** Timestamps for start and end of activity. */
   def timestamps: Option[ActivityTimestamps]
 
-  /**
-    * What the player is doing.
-    */
+  /** What the player is doing. */
   def details: Option[String]
 
-  /**
-    * Images for the presence and hover texts.
-    */
+  /** Images for the presence and hover texts. */
   def assets: Option[ActivityAsset]
 }
 
@@ -838,9 +789,7 @@ case class PresenceStreaming(
   override def tpe: ActivityType = ActivityType.Streaming
 }
 
-/**
-  * The presence of someone listening to music
-  */
+/** The presence of someone listening to music */
 case class PresenceOther(
     tpe: ActivityType,
     name: String,
@@ -871,18 +820,14 @@ case class PresenceCustom(
   override def tpe: ActivityType = ActivityType.Custom
 }
 
-/**
-  * The emoji of a custom status.
-  */
+/** The emoji of a custom status. */
 case class ActivityEmoji(
     name: String,
     id: Option[EmojiId],
     animated: Option[Boolean]
 )
 
-/**
-  * The different statuses a user can have
-  */
+/** The different statuses a user can have */
 sealed abstract class PresenceStatus(val value: String) extends StringEnumEntry
 object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnumWithUnknown[PresenceStatus] {
   override def values: immutable.IndexedSeq[PresenceStatus] = findValues
@@ -1069,8 +1014,6 @@ case class GuildWidgetMember(
   */
 case class Ban(reason: Option[String], userId: UserId) {
 
-  /**
-    * Get the user this ban applies to.
-    */
+  /** Get the user this ban applies to. */
   def user(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
 }

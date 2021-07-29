@@ -54,9 +54,7 @@ case class CommandBuilder[+M[_], A](
 
   override type Action[B, Mat] = ComplexCommand[B, Mat]
 
-  /**
-    * A flow that represents this mapping.
-    */
+  /** A flow that represents this mapping. */
   override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
@@ -207,9 +205,7 @@ object CommandBuilder {
         }
     }
 
-  /**
-    * A command function that lets you add the guild member to a command message.
-    */
+  /** A command function that lets you add the guild member to a command message. */
   def withGuildMember[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[
       _
   ]](create: GuildMember => I ~> O): CommandTransformer[I, O] = new CommandTransformer[I, O] {
@@ -235,9 +231,7 @@ object CommandBuilder {
     }
   }
 
-  /**
-    * A command function that only allow commands sent from one specific guild.
-    */
+  /** A command function that only allow commands sent from one specific guild. */
   def inOneGuild[M[A] <: GuildCommandMessage[A]](
       guildId: GuildId
   ): CommandFunction[M, M] =
@@ -266,9 +260,7 @@ object CommandBuilder {
       }
   }
 
-  /**
-    * A command function that disallows bots from using it.
-    */
+  /** A command function that disallows bots from using it. */
   def nonBot[I[A] <: CommandMessage[A], O[_]](
       create: User => I ~> O
   ): CommandFunction[I, O] =
@@ -283,9 +275,7 @@ object CommandBuilder {
         }
     }
 
-  /**
-    * Creates a raw command builder without any extra processing.
-    */
+  /** Creates a raw command builder without any extra processing. */
   def rawBuilder(
       requests: Requests,
       defaultMustMention: Boolean,
@@ -364,20 +354,14 @@ case class NamedCommandBuilder[+M[_], A](
 
   override type Action[B, Mat] = NamedComplexCommand[B, Mat]
 
-  /**
-    * A flow that represents this mapping.
-    */
+  /** A flow that represents this mapping. */
   override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
-  /**
-    * Adds a description to this builder
-    */
+  /** Adds a description to this builder */
   def described(description: CommandDescription): NamedDescribedCommandBuilder[M, A] =
     new NamedDescribedCommandBuilder[M, A](this, description)
 
-  /**
-    * Adds a description to this builder
-    */
+  /** Adds a description to this builder */
   def described(
       name: String,
       description: String,
@@ -438,9 +422,7 @@ case class NamedDescribedCommandBuilder[+M[_], A](
 
   override type Action[B, Mat] = NamedDescribedComplexCommand[B, Mat]
 
-  /**
-    * A flow that represents this mapping.
-    */
+  /** A flow that represents this mapping. */
   override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
@@ -466,24 +448,16 @@ case class NamedDescribedCommandBuilder[+M[_], A](
   */
 trait CommandMessage[+A] {
 
-  /**
-    * A cache snapshot taken when the command was used.
-    */
+  /** A cache snapshot taken when the command was used. */
   def cache: CacheSnapshot
 
-  /**
-    * The channel the command was used from.
-    */
+  /** The channel the command was used from. */
   def textChannel: TextChannel
 
-  /**
-    * The message that invoked the command.
-    */
+  /** The message that invoked the command. */
   def message: Message
 
-  /**
-    * The parsed arguments of this command.
-    */
+  /** The parsed arguments of this command. */
   def parsed: A
 }
 object CommandMessage {
@@ -516,9 +490,7 @@ class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
 trait GuildCommandMessage[+A] extends CommandMessage[A] {
   override def textChannel: TextGuildChannel
 
-  /**
-    * The guild this command was used in.
-    */
+  /** The guild this command was used in. */
   def guild: GatewayGuild
 
   override def message: GuildGatewayMessage
@@ -550,9 +522,7 @@ object GuildCommandMessage {
   */
 trait UserCommandMessage[+A] extends CommandMessage[A] {
 
-  /**
-    * The user that used this command.
-    */
+  /** The user that used this command. */
   def user: User
 }
 object UserCommandMessage {
@@ -562,9 +532,7 @@ object UserCommandMessage {
 
 trait GuildMemberCommandMessage[+A] extends GuildCommandMessage[A] with UserCommandMessage[A] {
 
-  /**
-    * The guild member that used this command.
-    */
+  /** The guild member that used this command. */
   def guildMember: GuildMember
 }
 object GuildMemberCommandMessage {
@@ -582,9 +550,7 @@ object GuildMemberCommandMessage {
 
 trait VoiceGuildCommandMessage[+A] extends GuildCommandMessage[A] with UserCommandMessage[A] {
 
-  /**
-    * The voice channel the user that used this command is in.
-    */
+  /** The voice channel the user that used this command is in. */
   def voiceChannel: VoiceGuildChannel
 }
 object VoiceGuildCommandMessage {

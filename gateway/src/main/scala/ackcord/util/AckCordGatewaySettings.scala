@@ -26,9 +26,7 @@ package ackcord.util
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.Config
 
-/**
-  * Settings that AckCord used. See the reference config for more info.
-  */
+/** Settings that AckCord used. See the reference config for more info. */
 class AckCordGatewaySettings(config: Config) {
   import config._
 

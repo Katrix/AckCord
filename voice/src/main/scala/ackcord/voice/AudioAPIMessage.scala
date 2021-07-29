@@ -33,14 +33,10 @@ import akka.util.ByteString
   */
 sealed trait AudioAPIMessage {
 
-  /**
-    * The server id for the voice channel. For guilds this is the guild id.
-    */
+  /** The server id for the voice channel. For guilds this is the guild id. */
   def serverId: RawSnowflake
 
-  /**
-    * The client user id
-    */
+  /** The client user id */
   def userId: UserId
 }
 object AudioAPIMessage {
@@ -60,9 +56,7 @@ object AudioAPIMessage {
       userId: UserId
   ) extends AudioAPIMessage
 
-  /**
-    * Sent to the listener when everything is ready to send voice data.
-    */
+  /** Sent to the listener when everything is ready to send voice data. */
   case class Ready(serverId: RawSnowflake, userId: UserId) extends AudioAPIMessage
 
   /**

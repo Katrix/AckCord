@@ -42,14 +42,10 @@ import cats.~>
   */
 trait ActionFunction[-I[_], +O[_], E] { self =>
 
-  /**
-    * A flow that represents this mapping.
-    */
+  /** A flow that represents this mapping. */
   def flow[A]: Flow[I[A], Either[Option[E], O[A]], NotUsed]
 
-  /**
-    * Chains first this function, and then another one.
-    */
+  /** Chains first this function, and then another one. */
   def andThen[O2[_]](that: ActionFunction[O, O2, E]): ActionFunction[I, O2, E] =
     new ActionFunction[I, O2, E] {
       override def flow[A]: Flow[I[A], Either[Option[E], O2[A]], NotUsed] =
@@ -62,9 +58,7 @@ object ActionFunction {
     override def flow[A]: Flow[M[A], Either[Option[E], M[A]], NotUsed] = Flow[M[A]].map(Right.apply)
   }
 
-  /**
-    * Flow for short circuiting eithers.
-    */
+  /** Flow for short circuiting eithers. */
   def flowViaEither[I, M, O, E, Mat1, Mat2, Mat3](
       flow1: Flow[I, Either[E, M], Mat1],
       flow2: Flow[M, Either[E, O], Mat2]
@@ -122,9 +116,7 @@ object ActionFunction {
   */
 trait ActionTransformer[-I[_], +O[_], E] extends ActionFunction[I, O, E] { self =>
 
-  /**
-    * The flow representing this mapping without the eithers.
-    */
+  /** The flow representing this mapping without the eithers. */
   def flowMapper[A]: Flow[I[A], O[A], NotUsed]
 
   override def flow[A]: Flow[I[A], Either[Option[E], O[A]], NotUsed] = flowMapper.map(Right.apply)
@@ -145,9 +137,7 @@ trait ActionTransformer[-I[_], +O[_], E] extends ActionFunction[I, O, E] { self 
 }
 object ActionTransformer {
 
-  /**
-    * Converts a [[cats.arrow.FunctionK]] to an [[ActionTransformer]].
-    */
+  /** Converts a [[cats.arrow.FunctionK]] to an [[ActionTransformer]]. */
   def fromFuncK[I[_], O[_], E](f: I ~> O): ActionTransformer[I, O, E] = new ActionTransformer[I, O, E] {
     override def flowMapper[A]: Flow[I[A], O[A], NotUsed] = Flow[I[A]].map(f(_))
   }
@@ -163,9 +153,7 @@ object ActionTransformer {
 trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =>
   type Action[B, Mat]
 
-  /**
-    * A request helper that belongs to this builder.
-    */
+  /** A request helper that belongs to this builder. */
   def requests: Requests
 
   /**

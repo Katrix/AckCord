@@ -43,9 +43,7 @@ object CacheStreams {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  /**
-    * Creates a set of publish subscribe streams that go through the cache updated.
-    */
+  /** Creates a set of publish subscribe streams that go through the cache updated. */
   def cacheStreams(
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor,
       bufferSize: PubSubBufferSize = PubSubBufferSize()
@@ -73,9 +71,7 @@ object CacheStreams {
       .run()
   }
 
-  /**
-    * Creates a set of publish subscribe streams for gateway events.
-    */
+  /** Creates a set of publish subscribe streams for gateway events. */
   def gatewayEvents[D](bufferSize: PubSubBufferSize = PubSubBufferSize())(
       implicit system: ActorSystem[Nothing]
   ): (Sink[GatewayMessage[D], NotUsed], Source[GatewayMessage[D], NotUsed]) =
@@ -97,9 +93,7 @@ object CacheStreams {
     classOf[GatewayEvent.MessageDeleteBulk]
   )
 
-  /**
-    * A flow that creates [[APIMessage]]s from update events.
-    */
+  /** A flow that creates [[APIMessage]]s from update events. */
   def createApiMessages: Flow[(CacheEvent, CacheState), APIMessage, NotUsed] = {
     Flow[(CacheEvent, CacheState)]
       .collect {
@@ -162,14 +156,13 @@ object CacheStreams {
       context =>
         var state: CacheState = CacheState(guildCacheBuilder.toImmutable, guildCacheBuilder.toImmutable)
 
-        Behaviors.receiveMessage {
-          case GuildCacheEvent(event, respondTo) =>
-            event.process(guildCacheBuilder)
-            guildCacheBuilder.executeProcessor()
+        Behaviors.receiveMessage { case GuildCacheEvent(event, respondTo) =>
+          event.process(guildCacheBuilder)
+          guildCacheBuilder.executeProcessor()
 
-            state = state.update(guildCacheBuilder.toImmutable)
-            respondTo ! ((event, state))
-            Behaviors.same
+          state = state.update(guildCacheBuilder.toImmutable)
+          respondTo ! ((event, state))
+          Behaviors.same
         }
     }
 

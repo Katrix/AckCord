@@ -44,9 +44,7 @@ package object data {
       */
     def epoch[A]: SnowflakeType[A] = apply("0")
 
-    /**
-      * Creates a snowflake for a specific moment. Use this for pagination.
-      */
+    /** Creates a snowflake for a specific moment. Use this for pagination. */
     def fromInstant[A](instant: Instant): SnowflakeType[A] = apply(instant.toEpochMilli - DiscordEpoch << 22)
 
     implicit def snowflakeOrdering[A]: Ordering[SnowflakeType[A]] = (x: SnowflakeType[A], y: SnowflakeType[A]) =>
@@ -76,9 +74,7 @@ package object data {
 
   implicit class GuildIdSyntax(private val guildId: GuildId) extends AnyVal {
 
-    /**
-      * Resolve the guild represented by this id.
-      */
+    /** Resolve the guild represented by this id. */
     def resolve(implicit c: CacheSnapshot): Option[GatewayGuild] = c.getGuild(guildId)
   }
 
@@ -97,9 +93,7 @@ package object data {
     /** Downcast this id to a kind of channel id */
     def asChannelId[A <: Channel]: SnowflakeType[A] = channelId.asInstanceOf[SnowflakeType[A]]
 
-    /**
-      * Get a mention representation of this channel id.
-      */
+    /** Get a mention representation of this channel id. */
     def mention: String = s"<#$channelId>"
   }
 
@@ -128,9 +122,7 @@ package object data {
     def resolve(implicit c: CacheSnapshot): Option[GuildChannel] =
       c.getGuildChannel(channelId)
 
-    /**
-      * Resolve the channel represented by this id relative to a guild id.
-      */
+    /** Resolve the channel represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildChannel] =
       c.getGuildChannel(guildId, channelId)
   }
@@ -145,17 +137,11 @@ package object data {
       * prefer the method taking a guild id instead.
       */
     def resolve(implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      c.getGuildChannel(channelId).collect {
-        case ch: TextGuildChannel => ch
-      }
+      c.getGuildChannel(channelId).collect { case ch: TextGuildChannel => ch }
 
-    /**
-      * Resolve the channel represented by this id relative to a guild id.
-      */
+    /** Resolve the channel represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect {
-        case ch: TextGuildChannel => ch
-      }
+      c.getGuildChannel(guildId, channelId).collect { case ch: TextGuildChannel => ch }
   }
 
   type ThreadGuildChannelId = SnowflakeType[ThreadGuildChannel]
@@ -170,9 +156,7 @@ package object data {
     def resolve(implicit c: CacheSnapshot): Option[TextGuildChannel] =
       c.getThread(threadId)
 
-    /**
-      * Resolve the thread represented by this id relative to a guild id.
-      */
+    /** Resolve the thread represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[TextGuildChannel] =
       c.getThread(guildId, threadId)
   }
@@ -186,17 +170,12 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer the method taking a guild id instead.
       */
-    def resolve(implicit c: CacheSnapshot): Option[VoiceGuildChannel] = c.getGuildChannel(channelId).collect {
-      case ch: VoiceGuildChannel => ch
-    }
+    def resolve(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
+      c.getGuildChannel(channelId).collect { case ch: VoiceGuildChannel => ch }
 
-    /**
-      * Resolve the channel represented by this id relative to a guild id.
-      */
+    /** Resolve the channel represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[VoiceGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect {
-        case ch: VoiceGuildChannel => ch
-      }
+      c.getGuildChannel(guildId, channelId).collect { case ch: VoiceGuildChannel => ch }
   }
 
   type NormalVoiceGuildChannelId = SnowflakeType[NormalVoiceGuildChannel]
@@ -208,17 +187,12 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer the method taking a guild id instead.
       */
-    def resolve(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] = c.getGuildChannel(channelId).collect {
-      case ch: NormalVoiceGuildChannel => ch
-    }
+    def resolve(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
+      c.getGuildChannel(channelId).collect { case ch: NormalVoiceGuildChannel => ch }
 
-    /**
-      * Resolve the channel represented by this id relative to a guild id.
-      */
+    /** Resolve the channel represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect {
-        case ch: NormalVoiceGuildChannel => ch
-      }
+      c.getGuildChannel(guildId, channelId).collect { case ch: NormalVoiceGuildChannel => ch }
   }
 
   type StageGuildChannelId = SnowflakeType[StageGuildChannel]
@@ -230,17 +204,12 @@ package object data {
       * Resolve the channel represented by this id. If a guild id is know,
       * prefer the method taking a guild id instead.
       */
-    def resolve(implicit c: CacheSnapshot): Option[StageGuildChannel] = c.getGuildChannel(channelId).collect {
-      case ch: StageGuildChannel => ch
-    }
+    def resolve(implicit c: CacheSnapshot): Option[StageGuildChannel] =
+      c.getGuildChannel(channelId).collect { case ch: StageGuildChannel => ch }
 
-    /**
-      * Resolve the channel represented by this id relative to a guild id.
-      */
+    /** Resolve the channel represented by this id relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[StageGuildChannel] =
-      c.getGuildChannel(guildId, channelId).collect {
-        case ch: StageGuildChannel => ch
-      }
+      c.getGuildChannel(guildId, channelId).collect { case ch: StageGuildChannel => ch }
   }
 
   type MessageId = SnowflakeType[Message]
@@ -254,9 +223,7 @@ package object data {
       */
     def resolve(implicit c: CacheSnapshot): Option[Message] = c.getMessage(messageId)
 
-    /**
-      * Resolves the message represented by this id relative to a channel id.
-      */
+    /** Resolves the message represented by this id relative to a channel id. */
     def resolve(channelId: TextChannelId)(implicit c: CacheSnapshot): Option[Message] =
       c.getMessage(channelId, messageId)
   }
@@ -266,9 +233,7 @@ package object data {
 
   implicit class UserIdSyntax(private val userId: UserId) extends AnyVal {
 
-    /**
-      * Resolve the user represented by this id.
-      */
+    /** Resolve the user represented by this id. */
     def resolve(implicit c: CacheSnapshot): Option[User] = c.getUser(userId)
 
     /**
@@ -278,14 +243,10 @@ package object data {
     def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
       c.getGuild(guildId).flatMap(_.members.get(userId))
 
-    /**
-      * Mention this user.
-      */
+    /** Mention this user. */
     def mention: String = s"<@$userId>"
 
-    /**
-      * Mention this user with their nickname.
-      */
+    /** Mention this user with their nickname. */
     def mentionNick: String = s"<@!$userId>"
   }
 
@@ -300,15 +261,11 @@ package object data {
       */
     def resolve(implicit c: CacheSnapshot): Option[Role] = c.getRole(roleId)
 
-    /**
-      * Resolve the role this id represents relative to a guild id.
-      */
+    /** Resolve the role this id represents relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Role] =
       c.getRole(guildId, roleId)
 
-    /**
-      * Mention this role.
-      */
+    /** Mention this role. */
     def mention: String = s"<@&$roleId>"
   }
 
@@ -326,9 +283,7 @@ package object data {
       */
     def resolve(implicit c: CacheSnapshot): Option[Emoji] = c.getEmoji(emojiId)
 
-    /**
-      * Resolve the emoji this id represents relative to a guild id.
-      */
+    /** Resolve the emoji this id represents relative to a guild id. */
     def resolve(guildId: GuildId)(implicit c: CacheSnapshot): Option[Emoji] =
       c.getGuild(guildId).flatMap(_.emojis.get(emojiId))
   }
@@ -360,14 +315,10 @@ package object data {
 
     private[data] def apply(bigInt: BigInt): Permission = bigInt.asInstanceOf[Permission]
 
-    /**
-      * Create a permission that has all the permissions passed in.
-      */
+    /** Create a permission that has all the permissions passed in. */
     def apply(permissions: Permission*): Permission = permissions.fold(None)(_ ++ _)
 
-    /**
-      * Create a permission from an int.
-      */
+    /** Create a permission from an int. */
     def fromBigInt(bigInt: BigInt): Permission = apply(bigInt)
 
     val CreateInstantInvite: Permission     = Permission(0x00000001)
@@ -486,9 +437,7 @@ package object data {
       */
     def hasPermissions(other: Permission): Boolean = (toBigInt & other.toBigInt) == other.toBigInt
 
-    /**
-      * Check if this permission grants any permissions.
-      */
+    /** Check if this permission grants any permissions. */
     def isNone: Boolean = toBigInt == 0
   }
 
@@ -500,14 +449,10 @@ package object data {
 
     private[data] def apply(int: Int): UserFlags = int.asInstanceOf[UserFlags]
 
-    /**
-      * Create a UserFlag that has all the flags passed in.
-      */
+    /** Create a UserFlag that has all the flags passed in. */
     def apply(flags: UserFlags*): UserFlags = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a UserFlag from an int.
-      */
+    /** Create a UserFlag from an int. */
     def fromInt(int: Int): UserFlags = apply(int)
 
     val None: UserFlags                      = UserFlags(0)
@@ -547,9 +492,7 @@ package object data {
       */
     def hasFlag(other: UserFlags): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these flags is not empty.
-      */
+    /** Check if these flags is not empty. */
     def isNone: Boolean = toInt == 0
   }
 
@@ -561,14 +504,10 @@ package object data {
 
     private[data] def apply(int: Int): MessageFlags = int.asInstanceOf[MessageFlags]
 
-    /**
-      * Create a MessageFlags that has all the flags passed in.
-      */
+    /** Create a MessageFlags that has all the flags passed in. */
     def apply(flags: MessageFlags*): MessageFlags = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a MessageFlags from an int.
-      */
+    /** Create a MessageFlags from an int. */
     def fromInt(int: Int): MessageFlags = apply(int)
 
     val None: MessageFlags                 = MessageFlags(0)
@@ -603,9 +542,7 @@ package object data {
       */
     def hasFlag(other: MessageFlags): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these flags is not empty.
-      */
+    /** Check if these flags is not empty. */
     def isNone: Boolean = toInt == 0
   }
 
@@ -617,14 +554,10 @@ package object data {
 
     private[data] def apply(int: Int): SystemChannelFlags = int.asInstanceOf[SystemChannelFlags]
 
-    /**
-      * Create a SystemChannelFlags that has all the flags passed in.
-      */
+    /** Create a SystemChannelFlags that has all the flags passed in. */
     def apply(flags: SystemChannelFlags*): SystemChannelFlags = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a SystemChannelFlags from an int.
-      */
+    /** Create a SystemChannelFlags from an int. */
     def fromInt(int: Int): SystemChannelFlags = apply(int)
 
     val None: SystemChannelFlags                              = SystemChannelFlags(0)
@@ -654,9 +587,7 @@ package object data {
       */
     def hasFlag(other: SystemChannelFlags): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these flags is not empty.
-      */
+    /** Check if these flags is not empty. */
     def isNone: Boolean = toInt == 0
   }
 
@@ -668,14 +599,10 @@ package object data {
 
     private[data] def apply(int: Int): ActivityFlags = int.asInstanceOf[ActivityFlags]
 
-    /**
-      * Create a SystemChannelFlags that has all the flags passed in.
-      */
+    /** Create a SystemChannelFlags that has all the flags passed in. */
     def apply(flags: ActivityFlags*): ActivityFlags = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a ActivityFlags from an int.
-      */
+    /** Create a ActivityFlags from an int. */
     def fromInt(int: Int): ActivityFlags = apply(int)
 
     val None: ActivityFlags        = ActivityFlags(0)
@@ -708,9 +635,7 @@ package object data {
       */
     def hasFlag(other: ActivityFlags): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these flags is not empty.
-      */
+    /** Check if these flags is not empty. */
     def isNone: Boolean = toInt == 0
   }
 
@@ -722,14 +647,10 @@ package object data {
 
     private[data] def apply(int: Int): ApplicationFlags = int.asInstanceOf[ApplicationFlags]
 
-    /**
-      * Create a ApplicationFlags that has all the flags passed in.
-      */
+    /** Create a ApplicationFlags that has all the flags passed in. */
     def apply(flags: ApplicationFlags*): ApplicationFlags = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a ApplicationFlags from an int.
-      */
+    /** Create a ApplicationFlags from an int. */
     def fromInt(int: Int): ApplicationFlags = apply(int)
 
     val None: ApplicationFlags                          = ApplicationFlags(0)
@@ -762,9 +683,7 @@ package object data {
       */
     def hasFlag(other: ApplicationFlags): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these flags is not empty.
-      */
+    /** Check if these flags is not empty. */
     def isNone: Boolean = toInt == 0
   }
 }

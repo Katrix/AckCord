@@ -138,28 +138,27 @@ object InteractionsRegistrar {
 
           body.map((_, timestamp, signature))
         }
-        .map {
-          case (body, optTimestamp, optSignature) =>
-            for {
-              timestamp <-
-                optTimestamp.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No timestamp in request"))
-              signature <-
-                optSignature.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No signature in request"))
-              _ <- {
-                val isValid =
-                  signatureObj.detached_verify((timestamp + body).getBytes("UTF-8"), hexStringToByteArray(signature))
-                Either.cond(isValid, (), HttpResponse(StatusCodes.Unauthorized, entity = "Invalid signature"))
-              }
-              res <- {
-                io.circe.parser
-                  .parse(body)
-                  .flatMap(_.as[RawInteraction])
-                  .leftMap { e =>
-                    logger.error(s"Error when decoding command interaction: ${e.show}")
-                    HttpResponse(StatusCodes.BadRequest, entity = e.show)
-                  }
-              }
-            } yield res
+        .map { case (body, optTimestamp, optSignature) =>
+          for {
+            timestamp <-
+              optTimestamp.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No timestamp in request"))
+            signature <-
+              optSignature.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No signature in request"))
+            _ <- {
+              val isValid =
+                signatureObj.detached_verify((timestamp + body).getBytes("UTF-8"), hexStringToByteArray(signature))
+              Either.cond(isValid, (), HttpResponse(StatusCodes.Unauthorized, entity = "Invalid signature"))
+            }
+            res <- {
+              io.circe.parser
+                .parse(body)
+                .flatMap(_.as[RawInteraction])
+                .leftMap { e =>
+                  logger.error(s"Error when decoding command interaction: ${e.show}")
+                  HttpResponse(StatusCodes.BadRequest, entity = e.show)
+                }
+            }
+          } yield res
         }
         .map(_.map(handleInteraction(clientId, commandsByName, registeredButtons, _, None)))
         .mapConcat {
@@ -195,19 +194,17 @@ object InteractionsRegistrar {
 
     SupervisionStreams.logAndContinue(
       Flow[(RawInteraction, Option[CacheSnapshot])]
-        .mapConcat {
-          case (interaction, optCache) =>
-            handleInteraction(clientId, commandsByName, registeredButtons, interaction, optCache)
-              .map(_ -> interaction)
-              .toList
+        .mapConcat { case (interaction, optCache) =>
+          handleInteraction(clientId, commandsByName, registeredButtons, interaction, optCache)
+            .map(_ -> interaction)
+            .toList
         }
-        .map {
-          case (response, interaction) =>
-            CreateInteractionResponse(
-              interaction.id,
-              interaction.token,
-              response.toRawInteractionResponse
-            ) -> extractAsyncPart(response)
+        .map { case (response, interaction) =>
+          CreateInteractionResponse(
+            interaction.id,
+            interaction.token,
+            response.toRawInteractionResponse
+          ) -> extractAsyncPart(response)
         }
         .via(requests.flowSuccess(ignoreFailures = false))
         .map(_._2)

@@ -31,24 +31,16 @@ import akka.NotUsed
 import akka.util.ByteString
 import enumeratum.values.{IntEnum, IntEnumEntry}
 
-/**
-  * Messages sent to the voice websocket.
-  */
+/** Messages sent to the voice websocket. */
 sealed trait VoiceMessage[D] {
 
-  /**
-    * The op code for the message.
-    */
+  /** The op code for the message. */
   def op: VoiceOpCode
 
-  /**
-    * A sequence number for the message if there is one.
-    */
+  /** A sequence number for the message if there is one. */
   def s: JsonOption[Int] = JsonUndefined
 
-  /**
-    * The data for the message.
-    */
+  /** The data for the message. */
   def d: D
 }
 
@@ -109,9 +101,7 @@ object SelectProtocol {
   */
 case class ReadyData(ssrc: Int, port: Int, ip: String, modes: Seq[String])
 
-/**
-  * Sent by Discord following [[Identify]]
-  */
+/** Sent by Discord following [[Identify]] */
 case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
   override def op: VoiceOpCode = VoiceOpCode.Ready
 }
@@ -131,9 +121,7 @@ case class Heartbeat(d: Int) extends VoiceMessage[Int] {
   */
 case class SessionDescriptionData(mode: String, secretKey: ByteString)
 
-/**
-  * Sent by Discord in response to [[SelectProtocol]]
-  */
+/** Sent by Discord in response to [[SelectProtocol]] */
 case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
   override def op: VoiceOpCode = VoiceOpCode.SessionDescription
 }
@@ -199,32 +187,24 @@ case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
   */
 case class HelloData(heartbeatInterval: Double)
 
-/**
-  * Sent by Discord to tell us what heartbeat interval we should use.
-  */
+/** Sent by Discord to tell us what heartbeat interval we should use. */
 case class Hello(d: HelloData) extends VoiceMessage[HelloData] {
   override def op: VoiceOpCode = VoiceOpCode.Hello
 }
 
-/**
-  * Send by Discord when we successfully resume a connection
-  */
+/** Send by Discord when we successfully resume a connection */
 case object Resumed extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.Resumed
   override def d: NotUsed      = NotUsed
 }
 
-/**
-  * Message for OpCode 13, should be ignored
-  */
+/** Message for OpCode 13, should be ignored */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.ClientDisconnect
   override def d: NotUsed      = NotUsed
 }
 
-/**
-  * Message for unknown voice opcode
-  */
+/** Message for unknown voice opcode */
 case class UnknownVoiceMessage(op: VoiceOpCode) extends VoiceMessage[NotUsed] {
   override def d: NotUsed = NotUsed
 }

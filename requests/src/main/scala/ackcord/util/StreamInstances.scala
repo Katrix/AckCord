@@ -52,9 +52,7 @@ object StreamInstances {
       override def handleErrorWith[A](fa: SourceRequest[A])(f: Throwable => SourceRequest[A]): SourceRequest[A] =
         fa.recoverWithRetries[A](
           5,
-          {
-            case e: Throwable => f(e).mapMaterializedValue(_ => NotUsed)
-          }
+          { case e: Throwable => f(e).mapMaterializedValue(_ => NotUsed) }
         )
     }
 

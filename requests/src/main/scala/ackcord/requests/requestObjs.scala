@@ -76,39 +76,25 @@ sealed trait MaybeRequest[+Data]
   */
 trait Request[+Data] extends MaybeRequest[Data] { self =>
 
-  /**
-    * An unique identifier to track this request from creation to answer.
-    */
+  /** An unique identifier to track this request from creation to answer. */
   val identifier: UUID = UUID.randomUUID()
 
-  /**
-    * Returns the body of this Request for use in logging.
-    */
+  /** Returns the body of this Request for use in logging. */
   def bodyForLogging: Option[String]
 
-  /**
-    * The router for this request.
-    */
+  /** The router for this request. */
   def route: RequestRoute
 
-  /**
-    * The body of the request to send.
-    */
+  /** The body of the request to send. */
   def requestBody: RequestEntity
 
-  /**
-    * All the extra headers to send with this request.
-    */
+  /** All the extra headers to send with this request. */
   def extraHeaders: Seq[HttpHeader] = Nil
 
-  /**
-    * A flow that can be used to parse the responses from this request.
-    */
+  /** A flow that can be used to parse the responses from this request. */
   def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[Data]
 
-  /**
-    * Transform the response of this request as a flow.
-    */
+  /** Transform the response of this request as a flow. */
   def transformResponse[B](
       f: ExecutionContext => Future[Data] => Future[B]
   ): Request[B] = new Request[B] {
@@ -129,24 +115,16 @@ trait Request[+Data] extends MaybeRequest[Data] { self =>
     override def hasPermissions(implicit c: CacheSnapshot): Boolean = self.hasPermissions
   }
 
-  /**
-    * Map the result of sending this request.
-    */
+  /** Map the result of sending this request. */
   def map[B](f: Data => B): Request[B] = transformResponse(implicit ec => _.map(f))
 
-  /**
-    * Filter the response of sending this request.
-    */
+  /** Filter the response of sending this request. */
   def filter(f: Data => Boolean): Request[Data] = transformResponse(implicit ec => _.filter(f))
 
-  /**
-    * Map the result if the function is defined for the response data.
-    */
+  /** Map the result if the function is defined for the response data. */
   def collect[B](f: PartialFunction[Data, B]): Request[B] = transformResponse(implicit ec => _.collect(f))
 
-  /**
-    * Check if a client has the needed permissions to execute this request.
-    */
+  /** Check if a client has the needed permissions to execute this request. */
   def hasPermissions(implicit c: CacheSnapshot): Boolean
 }
 
@@ -170,40 +148,26 @@ case class RatelimitInfo(
     bucket: String
 ) {
 
-  /**
-    * Returns if this ratelimit info does not contain any unknown placeholders.
-    */
+  /** Returns if this ratelimit info does not contain any unknown placeholders. */
   def isValid: Boolean = tilReset > 0.millis && tilRatelimit != -1 && bucketLimit != -1
 }
 
-/**
-  * Sent as a response to a request.
-  */
+/** Sent as a response to a request. */
 sealed trait RequestAnswer[+Data] {
 
-  /**
-    * An unique identifier to track this request from creation to answer.
-    */
+  /** An unique identifier to track this request from creation to answer. */
   def identifier: UUID
 
-  /**
-    * Information about ratelimits gotten from this request.
-    */
+  /** Information about ratelimits gotten from this request. */
   def ratelimitInfo: RatelimitInfo
 
-  /**
-    * The route for this request
-    */
+  /** The route for this request */
   def route: RequestRoute
 
-  /**
-    * An either that either contains the data, or the exception if this is a failure.
-    */
+  /** An either that either contains the data, or the exception if this is a failure. */
   def eitherData: Either[Throwable, Data]
 
-  /**
-    * Apply a function to this answer, if it's a successful response.
-    */
+  /** Apply a function to this answer, if it's a successful response. */
   def map[B](f: Data => B): RequestAnswer[B]
 
   /**
@@ -212,15 +176,11 @@ sealed trait RequestAnswer[+Data] {
     */
   def filter(f: Data => Boolean): RequestAnswer[Data]
 
-  /**
-    * Apply f and returns the result if this is a successful response.
-    */
+  /** Apply f and returns the result if this is a successful response. */
   def flatMap[B](f: Data => RequestAnswer[B]): RequestAnswer[B]
 }
 
-/**
-  * A successful request response.
-  */
+/** A successful request response. */
 case class RequestResponse[+Data](
     data: Data,
     ratelimitInfo: RatelimitInfo,
@@ -238,9 +198,7 @@ case class RequestResponse[+Data](
   override def flatMap[B](f: Data => RequestAnswer[B]): RequestAnswer[B] = f(data)
 }
 
-/**
-  * A failed request.
-  */
+/** A failed request. */
 sealed trait FailedRequest extends RequestAnswer[Nothing] {
 
   /**
@@ -252,9 +210,7 @@ sealed trait FailedRequest extends RequestAnswer[Nothing] {
   override def eitherData: Either[Throwable, Nothing] = Left(asException)
 }
 
-/**
-  * A request that did not succeed because of a ratelimit.
-  */
+/** A request that did not succeed because of a ratelimit. */
 case class RequestRatelimited(
     global: Boolean,
     ratelimitInfo: RatelimitInfo,
@@ -270,9 +226,7 @@ case class RequestRatelimited(
   override def flatMap[B](f: Nothing => RequestAnswer[B]): RequestRatelimited = this
 }
 
-/**
-  * A request that failed for some other reason.
-  */
+/** A request that failed for some other reason. */
 case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) extends FailedRequest {
   override def asException: Throwable = e
 

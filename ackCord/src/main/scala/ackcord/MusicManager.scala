@@ -76,9 +76,8 @@ object MusicManager {
       }
 
     case (_, SetChannelPlaying(guildId, playing)) =>
-      players.get(guildId).foreach {
-        case (_, actor) =>
-          actor ! LavaplayerHandler.SetPlaying(playing)
+      players.get(guildId).foreach { case (_, actor) =>
+        actor ! LavaplayerHandler.SetPlaying(playing)
       }
       Behaviors.same
   }

@@ -661,13 +661,12 @@ trait DiscordProtocol {
         } yield ApplicationCommandInteractionDataOption[tpe.Res](name, tpe, value)
          */
       },
-      {
-        case ApplicationCommandInteractionDataOption(name, tpe, value) =>
-          Json.obj(
-            "name" := name,
-            "type" := (tpe: ApplicationCommandOptionType),
-            tpe.valueJsonName := value.map(tpe.encodeJson)
-          )
+      { case ApplicationCommandInteractionDataOption(name, tpe, value) =>
+        Json.obj(
+          "name" := name,
+          "type" := (tpe: ApplicationCommandOptionType),
+          tpe.valueJsonName := value.map(tpe.encodeJson)
+        )
       }
     )
   }

@@ -78,9 +78,7 @@ object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[Forma
   override def createUnknown(value: Int): FormatType = Unknown(value)
 }
 
-/**
-  * An enum of all the different message types.
-  */
+/** An enum of all the different message types. */
 sealed abstract class MessageType(val value: Int) extends IntEnumEntry
 object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[MessageType] {
   override def values: immutable.IndexedSeq[MessageType] = findValues
@@ -130,24 +128,16 @@ object PremiumType extends IntEnum[PremiumType] with IntCirceEnumWithUnknown[Pre
   */
 sealed trait Author[A] {
 
-  /**
-    * The id for this author.
-    */
+  /** The id for this author. */
   def id: SnowflakeType[A]
 
-  /**
-    * If this author is not a webhook.
-    */
+  /** If this author is not a webhook. */
   def isUser: Boolean
 
-  /**
-    * The name of the author.
-    */
+  /** The name of the author. */
   def username: String
 
-  /**
-    * The discriminator of the author.
-    */
+  /** The discriminator of the author. */
   def discriminator: String
 }
 
@@ -197,14 +187,10 @@ case class User(
 ) extends Author[User]
     with UserOrRole {
 
-  /**
-    * Mention this user.
-    */
+  /** Mention this user. */
   def mention: String = id.mention
 
-  /**
-    * Mention this user with their nickname.
-    */
+  /** Mention this user with their nickname. */
   def mentionNick: String = id.mentionNick
 
   override def isUser: Boolean = true
@@ -359,34 +345,22 @@ sealed trait Message {
   /** The thread that was started from this message. */
   def threadId: Option[ThreadGuildChannelId]
 
-  /**
-    * Get the guild this message was sent to.
-    */
+  /** Get the guild this message was sent to. */
   def guild(implicit c: CacheSnapshot): Option[GatewayGuild]
 
-  /**
-    * Get the guild member of the one that sent this message.
-    */
+  /** Get the guild member of the one that sent this message. */
   def guildMember(implicit c: CacheSnapshot): Option[GuildMember]
 
-  /**
-    * The extra interaction components added to this message.
-    */
+  /** The extra interaction components added to this message. */
   def components: Seq[ActionRow]
 
-  /**
-    * If the author is a user, their user id.
-    */
+  /** If the author is a user, their user id. */
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
-  /**
-    * Gets the author of this message, ignoring the case where the author might be a webhook.
-    */
+  /** Gets the author of this message, ignoring the case where the author might be a webhook. */
   def authorUser(implicit c: CacheSnapshot): Option[User] = authorUserId.fold(None: Option[User])(c.getUser)
 
-  /**
-    * Expands all mentions in the message.
-    */
+  /** Expands all mentions in the message. */
   def formatMentions(implicit c: CacheSnapshot): String
 
   private[ackcord] def withReactions(reactions: Seq[Reaction]): Message
@@ -517,11 +491,9 @@ case class GuildGatewayMessage(
   }
 
   override def formatMentions(implicit c: CacheSnapshot): String = {
-    val userList = mentions.toList.flatMap(_.resolve)
-    val roleList = mentionRoles.toList.flatMap(_.resolve)
-    val optGuildId = channelId.resolve.collect {
-      case channel: GuildChannel => channel.guildId
-    }
+    val userList   = mentions.toList.flatMap(_.resolve)
+    val roleList   = mentionRoles.toList.flatMap(_.resolve)
+    val optGuildId = channelId.resolve.collect { case channel: GuildChannel => channel.guildId }
     val channelList =
       optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId => channelMentions.toList.map(_.resolve(guildId)))
 
@@ -556,9 +528,7 @@ case class ChannelMention(
     name: String
 )
 
-/**
-  * A reference to another message.
-  */
+/** A reference to another message. */
 case class MessageReference(
     messageId: Option[MessageId],
     channelId: TextChannelId,
@@ -779,9 +749,7 @@ case class OutgoingEmbed(
   require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
   require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
 
-  /**
-    * The total amount of characters in this embed so far.
-    */
+  /** The total amount of characters in this embed so far. */
   def totalCharAmount: Int = {
     val fromTitle       = title.fold(0)(_.length)
     val fromDescription = description.fold(0)(_.length)

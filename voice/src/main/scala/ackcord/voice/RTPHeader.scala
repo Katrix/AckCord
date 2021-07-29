@@ -60,9 +60,7 @@ case class RTPHeader(tpe: Byte, version: Byte, sequence: Short, timestamp: Int, 
 }
 object RTPHeader {
 
-  /**
-    * Deserialize an [[RTPHeader]]
-    */
+  /** Deserialize an [[RTPHeader]] */
   def fromBytes(bytes: ByteString): (RTPHeader, ByteString) = {
     val (header, extra) = bytes.splitAt(12)
 

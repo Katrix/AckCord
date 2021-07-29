@@ -58,19 +58,13 @@ case class Events(
   def gatewayClientConnection: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
     Flow.fromSinkAndSourceCoupled(fromGatewayPublish, toGatewaySubscribe)
 
-  /**
-    * Publish a single cache event.
-    */
+  /** Publish a single cache event. */
   def publishCacheEvent(elem: CacheEvent): Unit = publish.runWith(Source.single(elem))
 
-  /**
-    * A source used to subscribe to [[APIMessage]]s sent to this cache.
-    */
+  /** A source used to subscribe to [[APIMessage]]s sent to this cache. */
   def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages)
 
-  /**
-    * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
-    */
+  /** Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]]. */
   def subscribeAPIActor(actor: classic.ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
       specificEvent: Class[_ <: APIMessage]*
   ): Unit =
@@ -78,9 +72,7 @@ case class Events(
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
       .runWith(Sink.actorRef(actor, completeMessage, onFailureMessage))
 
-  /**
-    * Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]].
-    */
+  /** Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]]. */
   def subscribeAPIActorWithAck(
       actor: classic.ActorRef,
       initMessage: Any,
@@ -92,9 +84,7 @@ case class Events(
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
       .runWith(Sink.actorRefWithBackpressure(actor, initMessage, ackMessage, completeMessage, failureMessage))
 
-  /**
-    * Exposes the command interactions sent to this bot.
-    */
+  /** Exposes the command interactions sent to this bot. */
   def interactions: Source[(RawInteraction, Option[CacheSnapshot]), NotUsed] =
     subscribeAPI
       .collectType[APIMessage.InteractionCreate]

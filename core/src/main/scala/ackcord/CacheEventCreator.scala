@@ -90,7 +90,13 @@ object CacheEventCreator {
           dispatch
         )
       case gatewayEv.Resumed(_) =>
-        CacheUpdate.one(NotUsed, state => Some(api.Resumed(state, dispatch.gatewayInfo)), NOOPHandler, registry, dispatch)
+        CacheUpdate.one(
+          NotUsed,
+          state => Some(api.Resumed(state, dispatch.gatewayInfo)),
+          NOOPHandler,
+          registry,
+          dispatch
+        )
       case gatewayEv.ChannelCreate(_, GetLazy(data)) =>
         CacheUpdate.one(
           data,
@@ -99,9 +105,7 @@ object CacheEventCreator {
               api.ChannelCreate(
                 data.guildId.flatMap(state.current.getGuild),
                 getChannelUsingMaybeGuildId(state.current, data.guildId, data.id)
-                  .collect {
-                    case g: GuildChannel => g
-                  }
+                  .collect { case g: GuildChannel => g }
                   .orElse(data.toGuildChannel(data.guildId.get, Some(state.current.botUser.id)))
                   .get,
                 state,
@@ -138,9 +142,7 @@ object CacheEventCreator {
               api.ChannelDelete(
                 data.guildId.flatMap(state.current.getGuild),
                 getChannelUsingMaybeGuildId(state.previous, data.guildId, data.id)
-                  .collect {
-                    case c: GuildChannel => c
-                  }
+                  .collect { case c: GuildChannel => c }
                   .orElse(data.toChannel(Some(state.current.botUser.id)).asInstanceOf[Option[GuildChannel]])
                   .get,
                 state,
@@ -598,9 +600,7 @@ object CacheEventCreator {
               api.MessageUpdate(
                 data.channelId
                   .resolve(state.current)
-                  .collect {
-                    case tc: TextGuildChannel => tc.guild(state.current)
-                  }
+                  .collect { case tc: TextGuildChannel => tc.guild(state.current) }
                   .flatten,
                 data.id,
                 data.channelId,
@@ -923,27 +923,26 @@ object CacheEventCreator {
       case Left(e) =>
         if (settings.LogJsonTraces) {
           val traces = e.history
-            .foldRight((Nil: List[(String, Json)], event.rawData.hcursor: ACursor)) {
-              case (op, (acc, cursor)) =>
-                val currentJson          = cursor.as[Json].getOrElse(Json.obj())
-                val currentHistoryString = CursorOp.opsToPath(cursor.history)
+            .foldRight((Nil: List[(String, Json)], event.rawData.hcursor: ACursor)) { case (op, (acc, cursor)) =>
+              val currentJson          = cursor.as[Json].getOrElse(Json.obj())
+              val currentHistoryString = CursorOp.opsToPath(cursor.history)
 
-                val nextCursor = cursor.replayOne(op)
-                val message = if (nextCursor.succeeded) {
-                  s"Succeeded: $currentHistoryString"
-                } else {
-                  s"Failed: $currentHistoryString"
-                }
+              val nextCursor = cursor.replayOne(op)
+              val message = if (nextCursor.succeeded) {
+                s"Succeeded: $currentHistoryString"
+              } else {
+                s"Failed: $currentHistoryString"
+              }
 
-                ((message, currentJson) :: acc, nextCursor)
+              ((message, currentJson) :: acc, nextCursor)
             }
             ._1
             .toVector
 
           val maybeUniqueTraces = if (settings.OnlyUniqueTraces) {
             traces
-              .foldLeft((Nil: List[(String, Json)], Set.empty[Json])) {
-                case ((acc, seen), t @ (_, json)) => if (seen.contains(json)) (acc, seen) else (t :: acc, seen + json)
+              .foldLeft((Nil: List[(String, Json)], Set.empty[Json])) { case ((acc, seen), t @ (_, json)) =>
+                if (seen.contains(json)) (acc, seen) else (t :: acc, seen + json)
               }
               ._1
               .toVector

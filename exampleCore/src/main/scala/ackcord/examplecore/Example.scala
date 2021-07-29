@@ -162,8 +162,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
   }
 
   {
-    events
-      .interactions
+    events.interactions
       .to(
         InteractionsRegistrar.gatewayInteractions(
           baseSlashCommands.ping,

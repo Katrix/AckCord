@@ -96,15 +96,11 @@ object OptFuture {
       override def raiseError[A](e: Throwable): OptFuture[A] = OptFuture.fromFuture(Future.failed(e))
 
       override def handleErrorWith[A](fa: OptFuture[A])(f: Throwable => OptFuture[A]): OptFuture[A] = OptFuture(
-        fa.value.recoverWith {
-          case e => f(e).value
-        }
+        fa.value.recoverWith { case e => f(e).value }
       )
 
       override def handleError[A](fa: OptFuture[A])(f: Throwable => A): OptFuture[A] = OptFuture(
-        fa.value.recover {
-          case e => Some(f(e))
-        }
+        fa.value.recover { case e => Some(f(e)) }
       )
 
       override def attempt[A](fa: OptFuture[A]): OptFuture[Either[Throwable, A]] = OptFuture(

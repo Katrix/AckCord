@@ -23,9 +23,7 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         invocationInfo,
         message,
         interaction.data
-          .collect {
-            case ApplicationComponentInteractionData(_, values) => values
-          }
+          .collect { case ApplicationComponentInteractionData(_, values) => values }
           .flatten
           .getOrElse(Nil),
         c
@@ -35,9 +33,7 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         invocationInfo,
         message,
         interaction.data
-          .collect {
-            case ApplicationComponentInteractionData(_, values) => values
-          }
+          .collect { case ApplicationComponentInteractionData(_, values) => values }
           .flatten
           .getOrElse(Nil)
       )

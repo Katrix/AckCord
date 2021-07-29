@@ -235,16 +235,15 @@ class Ratelimiter(
       Behaviors.same
 
     case GlobalTimedOut(actorRef) =>
-      globalLimited.dequeueFirst(_.replyTo == actorRef).foreach {
-        case WantToPass(route, identifier, _, _) =>
-          if (settings.LogRatelimitEvents) {
-            log.debug(
-              s"""|
-                  |Ratelimit timed out globally: ${route.method.value} ${route.uriWithMajor} $identifier
-                  |Current time: ${System.currentTimeMillis()}
-                  |""".stripMargin
-            )
-          }
+      globalLimited.dequeueFirst(_.replyTo == actorRef).foreach { case WantToPass(route, identifier, _, _) =>
+        if (settings.LogRatelimitEvents) {
+          log.debug(
+            s"""|
+                |Ratelimit timed out globally: ${route.method.value} ${route.uriWithMajor} $identifier
+                |Current time: ${System.currentTimeMillis()}
+                |""".stripMargin
+          )
+        }
       }
       Behaviors.same
   }
@@ -288,12 +287,11 @@ class Ratelimiter(
     }
   }
 
-  override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
-    case PostStop =>
-      rateLimits.values.flatten.foreach { requests =>
-        requests.replyTo ! FailedRequest(new IllegalStateException("Ratelimiter stopped"))
-      }
-      Behaviors.stopped
+  override def onSignal: PartialFunction[Signal, Behavior[Command]] = { case PostStop =>
+    rateLimits.values.flatten.foreach { requests =>
+      requests.replyTo ! FailedRequest(new IllegalStateException("Ratelimiter stopped"))
+    }
+    Behaviors.stopped
   }
 }
 

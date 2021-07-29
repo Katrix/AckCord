@@ -81,15 +81,15 @@ case class Command[InteractionObj[_], A] private (
 
     val optionsMap = data.options
       .getOrElse(Nil)
-      .collect {
-        case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
-          name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
+      .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
+        name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
       }
       .toMap
 
     val optArgs = paramList match {
-      case Right(value) => value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
-      case Left(ev)     => Right(ev(NotUsed))
+      case Right(value) =>
+        value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
+      case Left(ev) => Right(ev(NotUsed))
     }
 
     optArgs

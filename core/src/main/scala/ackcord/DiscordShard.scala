@@ -153,22 +153,16 @@ object DiscordShard {
       .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
       .runForeach(shard => shard ! StartShard)
 
-  /**
-    * Send this to the client to log out and stop gracefully.
-    */
+  /** Send this to the client to log out and stop gracefully. */
   case object StopShard extends Command
 
-  /**
-    * Send this to the client to log in.
-    */
+  /** Send this to the client to log in. */
   case object StartShard extends Command
 
   private case object CreateGateway            extends Command
   private case object GatewayHandlerTerminated extends Command
 
-  /**
-    * Send this to log out and log in again this shard.
-    */
+  /** Send this to log out and log in again this shard. */
   case object RestartShard extends Command
 
   /**

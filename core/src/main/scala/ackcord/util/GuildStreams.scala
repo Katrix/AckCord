@@ -200,26 +200,17 @@ object GuildStreams {
       case (msg, Some(`guildId`))                                                                    => msg
     }
 
-  /**
-    * Creates a subflow grouped by what GuildId a message belongs to.
-    */
-  def apiMessageGroupByGuildId[Msg <: APIMessage] = {
+  /** Creates a subflow grouped by what GuildId a message belongs to. */
+  def apiMessageGroupByGuildId[Msg <: APIMessage] =
     withGuildInfoApiMessage[Msg]
-      .collect {
-        case (msg, Some(guildId)) => msg -> guildId
-      }
+      .collect { case (msg, Some(guildId)) => msg -> guildId }
       .groupBy(Int.MaxValue, _._2)
       .map(_._1)
-  }
 
-  /**
-    * Creates a subflow grouped by what GuildId an event belongs to.
-    */
+  /** Creates a subflow grouped by what GuildId an event belongs to. */
   def gatewayEventGroupByGuildId[Msg <: GatewayEvent[_]](log: Logger) =
     withGuildInfoGatewayEvent[Msg](log)
-      .collect {
-        case (msg, Some(guildId)) => msg -> guildId
-      }
+      .collect { case (msg, Some(guildId)) => msg -> guildId }
       .groupBy(Int.MaxValue, _._2)
       .map(_._1)
 }

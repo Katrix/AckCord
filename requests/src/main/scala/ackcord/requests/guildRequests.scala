@@ -66,9 +66,7 @@ case class CreateGuildData(
   require(name.length >= 2 && name.length <= 100, "The guild name has to be between 2 and 100 characters")
 }
 
-/**
-  * Create a new guild. Can only be used by bots in less than 10 guilds.
-  */
+/** Create a new guild. Can only be used by bots in less than 10 guilds. */
 case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildData, RawGuild, RequestsGuild] {
   override def route: RequestRoute = Routes.createGuild
   override def paramsEncoder: Encoder[CreateGuildData] =
@@ -78,9 +76,7 @@ case class CreateGuild(params: CreateGuildData) extends RESTRequest[CreateGuildD
   override def toNiceResponse(response: RawGuild): RequestsGuild = response.toRequestGuild
 }
 
-/**
-  * Get a guild by id.
-  */
+/** Get a guild by id. */
 case class GetGuild(guildId: GuildId, withCounts: Boolean = false) extends NoParamsRequest[RawGuild, RequestsGuild] {
   override def route: RequestRoute = Routes.getGuild(guildId, Some(withCounts))
 
@@ -88,9 +84,7 @@ case class GetGuild(guildId: GuildId, withCounts: Boolean = false) extends NoPar
   override def toNiceResponse(response: RawGuild): RequestsGuild = response.toRequestGuild
 }
 
-/**
-  * Get a guild preview by it's id. Only usable for public guilds.
-  */
+/** Get a guild preview by it's id. Only usable for public guilds. */
 case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildPreview] {
   override def route: RequestRoute = Routes.getGuildPreview(guildId)
 
@@ -160,9 +154,7 @@ object ModifyGuildData {
     )
 }
 
-/**
-  * Modify an existing guild.
-  */
+/** Modify an existing guild. */
 case class ModifyGuild(
     guildId: GuildId,
     params: ModifyGuildData,
@@ -181,16 +173,12 @@ case class ModifyGuild(
   override def withReason(reason: String): ModifyGuild = copy(reason = Some(reason))
 }
 
-/**
-  * Delete a guild. Must be the owner.
-  */
+/** Delete a guild. Must be the owner. */
 case class DeleteGuild(guildId: GuildId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteGuild(guildId)
 }
 
-/**
-  * Get all the channels for a guild.
-  */
+/** Get all the channels for a guild. */
 case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawChannel], Seq[Option[GuildChannel]]] {
   override def route: RequestRoute = Routes.getGuildChannels(guildId)
 
@@ -239,9 +227,7 @@ object CreateGuildChannelData {
     )
 }
 
-/**
-  * Create a channel in a guild.
-  */
+/** Create a channel in a guild. */
 case class CreateGuildChannel(
     guildId: GuildId,
     params: CreateGuildChannelData,
@@ -252,8 +238,9 @@ case class CreateGuildChannel(
 
   override def jsonPrinter: Printer = Printer.noSpaces
 
-  override def responseDecoder: Decoder[RawChannel]                       = Decoder[RawChannel]
-  override def toNiceResponse(response: RawChannel): Option[GuildChannel] = response.toGuildChannel(guildId, None) //Safe
+  override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+  override def toNiceResponse(response: RawChannel): Option[GuildChannel] =
+    response.toGuildChannel(guildId, None) //Safe
 
   override def requiredPermissions: Permission = Permission.ManageChannels
   override def hasPermissions(implicit c: CacheSnapshot): Boolean =
@@ -286,9 +273,7 @@ object ModifyGuildChannelPositionsData {
     )
 }
 
-/**
-  * Modify the positions of several channels.
-  */
+/** Modify the positions of several channels. */
 case class ModifyGuildChannelPositions(
     guildId: GuildId,
     params: Seq[ModifyGuildChannelPositionsData],
@@ -312,9 +297,7 @@ trait GuildMemberRequest[Params] extends RESTRequest[Params, RawGuildMember, Gui
   override def toNiceResponse(response: RawGuildMember): GuildMember = response.toGuildMember(guildId)
 }
 
-/**
-  * Get a guild member by id.
-  */
+/** Get a guild member by id. */
 case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberRequest[NotUsed] {
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
   override def params: NotUsed                 = NotUsed
@@ -327,9 +310,7 @@ case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberR
   */
 case class ListGuildMembersData(limit: Option[Int] = None, after: Option[UserId] = None)
 
-/**
-  * Get all the guild members in this guild.
-  */
+/** Get all the guild members in this guild. */
 case class ListGuildMembers(guildId: GuildId, queryParams: ListGuildMembersData)
     extends NoParamsRequest[Seq[RawGuildMember], Seq[GuildMember]] {
   override def route: RequestRoute = Routes.listGuildMembers(guildId, queryParams.limit, queryParams.after)
@@ -381,9 +362,7 @@ case class AddGuildMemberData(
     deaf: Option[Boolean] = None
 )
 
-/**
-  * Adds a user to a guild. Requires the `guilds.join` OAuth2 scope.
-  */
+/** Adds a user to a guild. Requires the `guilds.join` OAuth2 scope. */
 case class AddGuildMember(
     guildId: GuildId,
     userId: UserId,
@@ -434,9 +413,7 @@ object ModifyGuildMemberData {
     )
 }
 
-/**
-  * Modify a guild member.
-  */
+/** Modify a guild member. */
 case class ModifyGuildMember(
     guildId: GuildId,
     userId: UserId,
@@ -476,9 +453,7 @@ object ModifyBotUsersNickData {
     )
 }
 
-/**
-  * Modify the clients nickname.
-  */
+/** Modify the clients nickname. */
 case class ModifyBotUsersNick(
     guildId: GuildId,
     params: ModifyBotUsersNickData,
@@ -501,9 +476,7 @@ object ModifyBotUsersNick {
     new ModifyBotUsersNick(guildId, ModifyBotUsersNickData(JsonSome(nick)))
 }
 
-/**
-  * Add a role to a guild member.
-  */
+/** Add a role to a guild member. */
 case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId, reason: Option[String] = None)
     extends NoParamsResponseReasonRequest[AddGuildMemberRole] {
   override def route: RequestRoute = Routes.addGuildMemberRole(guildId, userId, roleId)
@@ -515,9 +488,7 @@ case class AddGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId, 
   override def withReason(reason: String): AddGuildMemberRole = copy(reason = Some(reason))
 }
 
-/**
-  * Remove a role from a guild member.
-  */
+/** Remove a role from a guild member. */
 case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleId, reason: Option[String] = None)
     extends NoParamsResponseReasonRequest[RemoveGuildMemberRole] {
   override def route: RequestRoute = Routes.removeGuildMemberRole(guildId, userId, roleId)
@@ -529,9 +500,7 @@ case class RemoveGuildMemberRole(guildId: GuildId, userId: UserId, roleId: RoleI
   override def withReason(reason: String): RemoveGuildMemberRole = copy(reason = Some(reason))
 }
 
-/**
-  * Kicks a guild member.
-  */
+/** Kicks a guild member. */
 case class RemoveGuildMember(
     guildId: GuildId,
     userId: UserId,
@@ -546,9 +515,7 @@ case class RemoveGuildMember(
   override def withReason(reason: String): RemoveGuildMember = copy(reason = Some(reason))
 }
 
-/**
-  * Get all the bans for this guild.
-  */
+/** Get all the bans for this guild. */
 case class GetGuildBans(guildId: GuildId) extends NoParamsRequest[Seq[RawBan], Seq[Ban]] {
   override def route: RequestRoute = Routes.getGuildBans(guildId)
 
@@ -560,9 +527,7 @@ case class GetGuildBans(guildId: GuildId) extends NoParamsRequest[Seq[RawBan], S
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
-/**
-  * Get the ban object for a specific member in a guild.
-  */
+/** Get the ban object for a specific member in a guild. */
 case class GetGuildBan(guildId: GuildId, userId: UserId) extends NoParamsRequest[RawBan, Ban] {
   override def route: RequestRoute = Routes.getGuildBan(guildId, userId)
 
@@ -580,9 +545,7 @@ case class GetGuildBan(guildId: GuildId, userId: UserId) extends NoParamsRequest
   */
 case class CreateGuildBanData(deleteMessageDays: Option[Int])
 
-/**
-  * Ban a user from a guild.
-  */
+/** Ban a user from a guild. */
 case class CreateGuildBan(
     guildId: GuildId,
     userId: UserId,
@@ -609,9 +572,7 @@ object CreateGuildBan {
   ): CreateGuildBan = new CreateGuildBan(guildId, userId, CreateGuildBanData(deleteMessageDays), reason)
 }
 
-/**
-  * Unban a user from a guild.
-  */
+/** Unban a user from a guild. */
 case class RemoveGuildBan(
     guildId: GuildId,
     userId: UserId,
@@ -626,9 +587,7 @@ case class RemoveGuildBan(
   override def withReason(reason: String): RemoveGuildBan = copy(reason = Some(reason))
 }
 
-/**
-  * Get all the roles in a guild.
-  */
+/** Get all the roles in a guild. */
 case class GetGuildRoles(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawRole], Seq[Role]] {
   override def route: RequestRoute             = Routes.getGuildRole(guildId)
   override def params: NotUsed                 = NotUsed
@@ -654,9 +613,7 @@ case class CreateGuildRoleData(
     mentionable: Option[Boolean] = None
 )
 
-/**
-  * Create a new role in a guild.
-  */
+/** Create a new role in a guild. */
 case class CreateGuildRole(
     guildId: GuildId,
     params: CreateGuildRoleData,
@@ -683,9 +640,7 @@ case class CreateGuildRole(
   */
 case class ModifyGuildRolePositionsData(id: RoleId, position: Int)
 
-/**
-  * Modify the positions of several roles.
-  */
+/** Modify the positions of several roles. */
 case class ModifyGuildRolePositions(
     guildId: GuildId,
     params: Seq[ModifyGuildRolePositionsData],
@@ -733,9 +688,7 @@ object ModifyGuildRoleData {
     )
 }
 
-/**
-  * Modify a role.
-  */
+/** Modify a role. */
 case class ModifyGuildRole(
     guildId: GuildId,
     roleId: RoleId,
@@ -756,9 +709,7 @@ case class ModifyGuildRole(
   override def withReason(reason: String): ModifyGuildRole = copy(reason = Some(reason))
 }
 
-/**
-  * Delete a role in a guild.
-  */
+/** Delete a role in a guild. */
 case class DeleteGuildRole(
     guildId: GuildId,
     roleId: RoleId,
@@ -781,14 +732,10 @@ case class GuildPruneCountData(days: Int, includeRoles: Seq[RoleId]) {
   require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
 }
 
-/**
-  * @param pruned The number of members that would be removed.
-  */
+/** @param pruned The number of members that would be removed. */
 case class GuildPruneCountResponse(pruned: Int)
 
-/**
-  * Check how many members would be removed if a prune was started now.
-  */
+/** Check how many members would be removed if a prune was started now. */
 case class GetGuildPruneCount(guildId: GuildId, queryParams: GuildPruneCountData)
     extends NoParamsNiceResponseRequest[GuildPruneCountResponse] {
   override def route: RequestRoute =
@@ -820,14 +767,10 @@ case class BeginGuildPruneData(
   require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
 }
 
-/**
-  * @param pruned The number of members that were removed.
-  */
+/** @param pruned The number of members that were removed. */
 case class BeginGuildPruneResponse(pruned: Option[Int])
 
-/**
-  * Begin a guild prune.
-  */
+/** Begin a guild prune. */
 case class BeginGuildPrune(
     guildId: GuildId,
     params: BeginGuildPruneData,
@@ -858,18 +801,14 @@ object BeginGuildPrune {
     new BeginGuildPrune(guildId, BeginGuildPruneData(days, Some(computePruneCount), includeRoles))
 }
 
-/**
-  * Get the voice regions for this guild.
-  */
+/** Get the voice regions for this guild. */
 case class GetGuildVoiceRegions(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
   override def route: RequestRoute = Routes.getGuildVoiceRegions(guildId)
 
   override def responseDecoder: Decoder[Seq[VoiceRegion]] = Decoder[Seq[VoiceRegion]]
 }
 
-/**
-  * Get the invites for this guild.
-  */
+/** Get the invites for this guild. */
 case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
   override def route: RequestRoute = Routes.getGuildInvites(guildId)
 
@@ -880,9 +819,7 @@ case class GetGuildInvites(guildId: GuildId) extends NoParamsNiceResponseRequest
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
-/**
-  * Get the integrations for this guild.
-  */
+/** Get the integrations for this guild. */
 case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Integration]] {
   override def route: RequestRoute = Routes.getGuildIntegrations(guildId)
 
@@ -893,10 +830,9 @@ case class GetGuildIntegrations(guildId: GuildId) extends NoParamsNiceResponseRe
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
-/**
-  * Delete an integration.
-  */
-case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId, reason: Option[String] = None) extends NoParamsResponseReasonRequest[DeleteGuildIntegration] {
+/** Delete an integration. */
+case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId, reason: Option[String] = None)
+    extends NoParamsResponseReasonRequest[DeleteGuildIntegration] {
   override def route: RequestRoute = Routes.deleteGuildIntegration(guildId, integrationId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
@@ -906,9 +842,7 @@ case class DeleteGuildIntegration(guildId: GuildId, integrationId: IntegrationId
   override def withReason(reason: String): DeleteGuildIntegration = copy(reason = Some(reason))
 }
 
-/**
-  * Get the guild widget settings for a guild.
-  */
+/** Get the guild widget settings for a guild. */
 case class GetGuildWidgetSettings(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidgetSettings] {
   override def route: RequestRoute = Routes.getGuildWidget(guildId)
 
@@ -919,9 +853,7 @@ case class GetGuildWidgetSettings(guildId: GuildId) extends NoParamsNiceResponse
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
-/**
-  * Modify a guild widget for a guild.
-  */
+/** Modify a guild widget for a guild. */
 case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings, reason: Option[String] = None)
     extends NoNiceResponseReasonRequest[ModifyGuildWidget, GuildWidgetSettings, GuildWidgetSettings] {
   override def route: RequestRoute                         = Routes.modifyGuildWidget(guildId)
@@ -936,9 +868,7 @@ case class ModifyGuildWidget(guildId: GuildId, params: GuildWidgetSettings, reas
   override def withReason(reason: String): ModifyGuildWidget = copy(reason = Some(reason))
 }
 
-/**
-  * Get the guild widget for a guild.
-  */
+/** Get the guild widget for a guild. */
 case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[GuildWidget] {
   override def route: RequestRoute = Routes.getGuildWidgetJson(guildId)
 
@@ -947,9 +877,7 @@ case class GetGuildWidget(guildId: GuildId) extends NoParamsNiceResponseRequest[
 
 case class VanityUrlResponse(code: String)
 
-/**
-  * Get a partial invite object for guilds with that feature enabled.
-  */
+/** Get a partial invite object for guilds with that feature enabled. */
 case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseRequest[VanityUrlResponse] {
   override def route: RequestRoute = Routes.getGuildVanityUrl(guildId)
 
@@ -973,9 +901,7 @@ case class GetInvite(inviteCode: String, withCounts: Boolean = false, withExpira
   override def responseDecoder: Decoder[Invite] = Decoder[Invite]
 }
 
-/**
-  * Delete an invite.
-  */
+/** Delete an invite. */
 case class DeleteInvite(inviteCode: String, reason: Option[String] = None)
     extends NoParamsNiceResponseReasonRequest[DeleteInvite, Invite] {
   override def route: RequestRoute = Routes.deleteInvite(inviteCode)
@@ -991,9 +917,7 @@ case class DeleteInvite(inviteCode: String, reason: Option[String] = None)
   override def withReason(reason: String): DeleteInvite = copy(reason = Some(reason))
 }
 
-/**
-  * Fetch the client user.
-  */
+/** Fetch the client user. */
 case object GetCurrentUser extends NoParamsNiceResponseRequest[User] {
   override def route: RequestRoute = Routes.getCurrentUser
 
@@ -1012,9 +936,7 @@ object ModifyCurrentUserData {
     )
 }
 
-/**
-  * Modify the current user.
-  */
+/** Modify the current user. */
 case class ModifyCurrentUser(params: ModifyCurrentUserData) extends NoNiceResponseRequest[ModifyCurrentUserData, User] {
   override def route: RequestRoute = Routes.modifyCurrentUser
   override def paramsEncoder: Encoder[ModifyCurrentUserData] =
@@ -1022,9 +944,7 @@ case class ModifyCurrentUser(params: ModifyCurrentUserData) extends NoNiceRespon
   override def responseDecoder: Decoder[User] = Decoder[User]
 }
 
-/**
-  * Get a user by id.
-  */
+/** Get a user by id. */
 case class GetUser(userId: UserId) extends NoParamsNiceResponseRequest[User] {
   override def route: RequestRoute = Routes.getUser(userId)
 
@@ -1051,9 +971,7 @@ case class GetCurrentUserGuildsData(
     limit: Option[Int] = None
 )
 
-/**
-  * Get the guilds the client user is in.
-  */
+/** Get the guilds the client user is in. */
 case class GetCurrentUserGuilds(queryParams: GetCurrentUserGuildsData)
     extends NoParamsNiceResponseRequest[Seq[GetUserGuildsGuild]] {
   override def route: RequestRoute =
@@ -1078,26 +996,20 @@ object GetCurrentUserGuilds {
     new GetCurrentUserGuilds(GetCurrentUserGuildsData(after = Some(after), limit = limit))
 }
 
-/**
-  * Leave a guild.
-  */
+/** Leave a guild. */
 case class LeaveGuild(guildId: GuildId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.leaveGuild(guildId)
 }
 
-/**
-  * @param recipientId User to send a DM to.
-  */
+/** @param recipientId User to send a DM to. */
 case class CreateDMData(recipientId: UserId)
 
-/**
-  * Create a new DM channel.
-  */
+/** Create a new DM channel. */
 case class CreateDm(params: CreateDMData) extends RESTRequest[CreateDMData, RawChannel, Option[DMChannel]] {
   override def route: RequestRoute                  = Routes.createDM
   override def paramsEncoder: Encoder[CreateDMData] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
 
-  override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+  override def responseDecoder: Decoder[RawChannel]                    = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[DMChannel] =
     //Safe
     response.toChannel(None).collect { case dmChannel: DMChannel => dmChannel }
@@ -1113,9 +1025,7 @@ object CreateDm {
   */
 case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User, String])
 
-/**
-  * Create a group DM. By default the client is limited to 10 active group DMs.
-  */
+/** Create a group DM. By default the client is limited to 10 active group DMs. */
 @deprecated("Deprecated by Discord", since = "0.13")
 case class CreateGroupDm(params: CreateGroupDMData)
     extends RESTRequest[CreateGroupDMData, RawChannel, Option[GroupDMChannel]] {
@@ -1125,15 +1035,13 @@ case class CreateGroupDm(params: CreateGroupDMData)
       .obj("access_tokens" -> data.accessTokens.asJson, "nicks" -> data.nicks.map(t => t._1.asString -> t._2).asJson)
   }
 
-  override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
+  override def responseDecoder: Decoder[RawChannel]                         = Decoder[RawChannel]
   override def toNiceResponse(response: RawChannel): Option[GroupDMChannel] =
     //Safe
     response.toChannel(None).collect { case dmChannel: GroupDMChannel => dmChannel }
 }
 
-/**
-  * Get a list of connection objects. Requires the `connection` OAuth2 scope.
-  */
+/** Get a list of connection objects. Requires the `connection` OAuth2 scope. */
 case object GetUserConnections extends NoParamsNiceResponseRequest[Seq[Connection]] {
   override def route: RequestRoute = Routes.getUserConnections
 
@@ -1160,8 +1068,11 @@ object ModifyGuildWelcomeScreenData {
     )
 }
 
-case class ModifyGuildWelcomeScreen(guildId: GuildId, params: ModifyGuildWelcomeScreenData, reason: Option[String] = None)
-    extends NoNiceResponseReasonRequest[ModifyGuildWelcomeScreen, ModifyGuildWelcomeScreenData, WelcomeScreen] {
+case class ModifyGuildWelcomeScreen(
+    guildId: GuildId,
+    params: ModifyGuildWelcomeScreenData,
+    reason: Option[String] = None
+) extends NoNiceResponseReasonRequest[ModifyGuildWelcomeScreen, ModifyGuildWelcomeScreenData, WelcomeScreen] {
   override def route: RequestRoute = Routes.modifyGuildWelcomeScreen(guildId)
 
   override def paramsEncoder: Encoder[ModifyGuildWelcomeScreenData] = ModifyGuildWelcomeScreenData.encoder

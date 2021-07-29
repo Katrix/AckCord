@@ -31,14 +31,10 @@ package object gateway {
 
     private[gateway] def apply(int: Int): GatewayIntents = int.asInstanceOf[GatewayIntents]
 
-    /**
-      * Create a UserFlag that has all the flags passed in.
-      */
+    /** Create a UserFlag that has all the flags passed in. */
     def apply(flags: GatewayIntents*): GatewayIntents = flags.fold(None)(_ ++ _)
 
-    /**
-      * Create a UserFlag from an int.
-      */
+    /** Create a UserFlag from an int. */
     def fromInt(int: Int): GatewayIntents = apply(int)
 
     val None: GatewayIntents = GatewayIntents(0)
@@ -196,9 +192,7 @@ package object gateway {
       */
     def hasFlag(other: GatewayIntents): Boolean = (toInt & other.toInt) == other.toInt
 
-    /**
-      * Check if these intents is empty.
-      */
+    /** Check if these intents is empty. */
     def isNone: Boolean = toInt == 0
   }
 }

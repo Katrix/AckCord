@@ -29,9 +29,7 @@ import scala.concurrent.duration._
 import akka.actor.typed.ActorSystem
 import com.typesafe.config.Config
 
-/**
-  * Settings that AckCord uses for requests. See the reference config for more info.
-  */
+/** Settings that AckCord uses for requests. See the reference config for more info. */
 class AckCordRequestSettings(config: Config) {
   import config._
 

@@ -146,31 +146,26 @@ object RequestStreams {
     FlowWithContext.fromTuples(Flow.fromGraph(graph))
   }
 
-  /**
-    * A request flow which obeys route specific rate limits, but not global ones.
-    */
+  /** A request flow which obeys route specific rate limits, but not global ones. */
   def ratelimitFlow[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[Request[Data], Ctx, MaybeRequest[Data], Ctx, NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(requestSettings.maxAllowedWait)
     FlowWithContext.fromTuples(
       Flow[(Request[Data], Ctx)]
-        .mapAsyncUnordered(requestSettings.parallelism) {
-          case (request, ctx) =>
-            //We don't use ask here to get be able to create a RequestDropped instance
-            import system.executionContext
-            val future = requestSettings.ratelimitActor.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
-              Ratelimiter.WantToPass(request.route, request.identifier, _, (request, ctx))
-            )
+        .mapAsyncUnordered(requestSettings.parallelism) { case (request, ctx) =>
+          //We don't use ask here to get be able to create a RequestDropped instance
+          import system.executionContext
+          val future = requestSettings.ratelimitActor.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
+            Ratelimiter.WantToPass(request.route, request.identifier, _, (request, ctx))
+          )
 
-            future
-              .flatMap {
-                case Ratelimiter.CanPass(a)       => Future.successful(a)
-                case Ratelimiter.FailedRequest(e) => Future.failed(e)
-              }
-              .recover {
-                case _: TimeoutException => RequestDropped(request.route, request.identifier) -> ctx
-              }
+          future
+            .flatMap {
+              case Ratelimiter.CanPass(a)       => Future.successful(a)
+              case Ratelimiter.FailedRequest(e) => Future.failed(e)
+            }
+            .recover { case _: TimeoutException => RequestDropped(request.route, request.identifier) -> ctx }
         }
         .named("Ratelimiter")
     )
@@ -194,18 +189,17 @@ object RequestStreams {
         )
       else baseFlow
 
-    withLogging.via(Flow[(Request[Data], Ctx)].map {
-      case (request, ctx) =>
-        val route = request.route
-        val auth  = requestSettings.credentials.map(Authorization(_))
-        val httpRequest = HttpRequest(
-          route.method,
-          route.uri,
-          requestSettings.userAgent +: (auth.toList ++ request.extraHeaders),
-          request.requestBody
-        )
+    withLogging.via(Flow[(Request[Data], Ctx)].map { case (request, ctx) =>
+      val route = request.route
+      val auth  = requestSettings.credentials.map(Authorization(_))
+      val httpRequest = HttpRequest(
+        route.method,
+        route.uri,
+        requestSettings.userAgent +: (auth.toList ++ request.extraHeaders),
+        request.requestBody
+      )
 
-        (httpRequest, (request, ctx))
+      (httpRequest, (request, ctx))
     })
   }.withAttributes(Attributes.name("CreateRequest"))
 
@@ -221,61 +215,60 @@ object RequestStreams {
   ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx]
       .mapAsync(requestSettings.parallelism) {
-        {
-          case (response, request) =>
-            import system.executionContext
+        { case (response, request) =>
+          import system.executionContext
 
-            val route = request.route
-            response match {
-              case Success(httpResponse) =>
-                val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
-                val tilRatelimit = remainingRequests(httpResponse)
-                val bucketLimit  = requestsForUri(httpResponse)
-                val bucket       = requestBucket(route, httpResponse)
+          val route = request.route
+          response match {
+            case Success(httpResponse) =>
+              val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
+              val tilRatelimit = remainingRequests(httpResponse)
+              val bucketLimit  = requestsForUri(httpResponse)
+              val bucket       = requestBucket(route, httpResponse)
 
-                val ratelimitInfo = RatelimitInfo(
-                  tilReset,
-                  tilRatelimit,
-                  bucketLimit,
-                  bucket
-                )
+              val ratelimitInfo = RatelimitInfo(
+                tilReset,
+                tilRatelimit,
+                bucketLimit,
+                bucket
+              )
 
-                httpResponse.status match {
-                  case StatusCodes.TooManyRequests =>
-                    httpResponse.discardEntityBytes()
-                    Future.successful(
-                      RequestRatelimited(
-                        isGlobalRatelimit(httpResponse),
-                        ratelimitInfo,
+              httpResponse.status match {
+                case StatusCodes.TooManyRequests =>
+                  httpResponse.discardEntityBytes()
+                  Future.successful(
+                    RequestRatelimited(
+                      isGlobalRatelimit(httpResponse),
+                      ratelimitInfo,
+                      route,
+                      request.identifier
+                    )
+                  )
+                case e if e.isFailure() =>
+                  httpResponse.entity.dataBytes
+                    .runFold(ByteString.empty)(_ ++ _)
+                    .map { eBytes =>
+                      RequestError(
+                        HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
                         route,
                         request.identifier
                       )
-                    )
-                  case e if e.isFailure() =>
-                    httpResponse.entity.dataBytes
-                      .runFold(ByteString.empty)(_ ++ _)
-                      .map { eBytes =>
-                        RequestError(
-                          HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
-                          route,
-                          request.identifier
-                        )
-                      }
-                  case StatusCodes.NoContent =>
-                    httpResponse.discardEntityBytes()
+                    }
+                case StatusCodes.NoContent =>
+                  httpResponse.discardEntityBytes()
 
-                    request
-                      .parseResponse(HttpEntity.Empty)
-                      .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
-                  case _ => //Should be success
-                    request
-                      .parseResponse(httpResponse.entity)
-                      .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
-                }
+                  request
+                    .parseResponse(HttpEntity.Empty)
+                    .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
+                case _ => //Should be success
+                  request
+                    .parseResponse(httpResponse.entity)
+                    .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
+              }
 
-              case Failure(e) =>
-                Future.successful(RequestError(e, route, request.identifier))
-            }
+            case Failure(e) =>
+              Future.successful(RequestError(e, route, request.identifier))
+          }
         }
       }
   }.withAttributes(Attributes.name("RequestParser"))
@@ -298,17 +291,11 @@ object RequestStreams {
       .async
       .named("SendAnswersToRatelimiter")
 
-  /**
-    * A flow that only returns successful responses.
-    */
+  /** A flow that only returns successful responses. */
   def dataResponses[Data, Ctx]: FlowWithContext[RequestAnswer[Data], Ctx, Data, Ctx, NotUsed] =
-    FlowWithContext[RequestAnswer[Data], Ctx].collect {
-      case response: RequestResponse[Data] => response.data
-    }
+    FlowWithContext[RequestAnswer[Data], Ctx].collect { case response: RequestResponse[Data] => response.data }
 
-  /**
-    * A request flow that will retry failed requests.
-    */
+  /** A request flow that will retry failed requests. */
   def retryRequestFlow[Data, Ctx](
       requestSettings: RequestSettings
   )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
@@ -327,13 +314,9 @@ object RequestStreams {
           singleFlow
             .recoverWithRetries(
               requestSettings.maxRetryCount,
-              {
-                case RetryFailedRequestException(_, _) => singleFlow
-              }
+              { case RetryFailedRequestException(_, _) => singleFlow }
             )
-            .recover {
-              case RetryFailedRequestException(err, ctx) => err -> ctx.asInstanceOf[Ctx]
-            }
+            .recover { case RetryFailedRequestException(err, ctx) => err -> ctx.asInstanceOf[Ctx] }
         }
       )
     )

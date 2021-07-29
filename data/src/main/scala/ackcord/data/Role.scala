@@ -49,19 +49,13 @@ case class Role(
 ) extends GetGuild
     with UserOrRole {
 
-  /**
-    * Mention this role.
-    */
+  /** Mention this role. */
   def mention: String = id.mention
 
-  /**
-    * Check if this role is above another role.
-    */
+  /** Check if this role is above another role. */
   def isAbove(other: Role): Boolean = this.position > other.position
 
-  /**
-    * Check if this role is below another role.
-    */
+  /** Check if this role is below another role. */
   def isBelow(other: Role): Boolean = this.position < other.position
 }
 

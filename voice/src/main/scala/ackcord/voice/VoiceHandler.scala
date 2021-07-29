@@ -167,9 +167,8 @@ object VoiceHandler {
 
           shutdownPhase(parameters, state)
       }
-      .receiveSignal {
-        case (_, Terminated(actor)) =>
-          throw new IllegalStateException(s"Voice Handler actor $actor stopped unexpectedly")
+      .receiveSignal { case (_, Terminated(actor)) =>
+        throw new IllegalStateException(s"Voice Handler actor $actor stopped unexpectedly")
       }
   }
 
@@ -200,9 +199,7 @@ object VoiceHandler {
 
   case class SetSpeaking(speaking: Boolean, soundshare: Boolean = false, priority: Boolean = false) extends Command
 
-  /**
-    * Send this to a [[VoiceWsHandler]] to stop it gracefully.
-    */
+  /** Send this to a [[VoiceWsHandler]] to stop it gracefully. */
   case object Logout extends Command
 
 }

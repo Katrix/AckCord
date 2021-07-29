@@ -111,9 +111,7 @@ case class ClientSettings(
     }
   }
 
-  /**
-    * Create a [[DiscordClient]] from these settings.
-    */
+  /** Create a [[DiscordClient]] from these settings. */
   def createClient(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem[Nothing] = system
 
@@ -129,11 +127,10 @@ case class ClientSettings(
   def createClientAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem[Nothing] = system
 
-    DiscordShard.fetchWsGatewayWithShards(token).flatMap {
-      case FetchWSGatewayBotInfo(uri, shards, _) =>
-        createClientWithShards(
-          DiscordShard.many(uri, shards, gatewaySettings, _)
-        )
+    DiscordShard.fetchWsGatewayWithShards(token).flatMap { case FetchWSGatewayBotInfo(uri, shards, _) =>
+      createClientWithShards(
+        DiscordShard.many(uri, shards, gatewaySettings, _)
+      )
     }
   }
 }

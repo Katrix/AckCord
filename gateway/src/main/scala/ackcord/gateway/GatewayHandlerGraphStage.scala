@@ -251,9 +251,7 @@ object GatewayHandlerGraphStage {
     Flow.fromGraph(graph).mapMaterializedValue(t => (t._1, t._2._1, t._2._2))
   }
 
-  /**
-    * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]].
-    */
+  /** Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]]. */
   def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders, shardInfo: ShardInfo)(
       implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
@@ -327,22 +325,19 @@ object GatewayHandlerGraphStage {
     }
   }
 
-  /**
-    * Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]].
-    */
+  /** Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]]. */
   def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
     implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.SentWSMessage")
 
-    val flow = Flow[GatewayMessage[_]].map {
-      case msg: GatewayMessage[d] =>
-        msg match {
-          case PresenceUpdate(data, _) => data.activities.foreach(_.requireCanSend())
-          case _                       =>
-        }
+    val flow = Flow[GatewayMessage[_]].map { case msg: GatewayMessage[d] =>
+      msg match {
+        case PresenceUpdate(data, _) => data.activities.foreach(_.requireCanSend())
+        case _                       =>
+      }
 
-        val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces
-        require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
-        TextMessage(json)
+      val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces
+      require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
+      TextMessage(json)
     }
 
     if (AckCordGatewaySettings().LogSentWs) flow.log("Sending payload", _.text) else flow

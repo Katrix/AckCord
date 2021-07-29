@@ -79,24 +79,21 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
       }
       .flatMap { withSymbols =>
         val entriesWithSymbolMatch = withSymbols.filter(_._2.exists(query.startsWith))
-        Future.traverse(entriesWithSymbolMatch) {
-          case (entry, symbols) =>
-            entry.prefixParser.aliases(m.cache, m.message).map(aliases => (entry, symbols, aliases))
+        Future.traverse(entriesWithSymbolMatch) { case (entry, symbols) =>
+          entry.prefixParser.aliases(m.cache, m.message).map(aliases => (entry, symbols, aliases))
         }
       }
       .flatMap { withAliases =>
-        val entriesWithAliasMatch = withAliases.filter {
-          case (_, symbols, aliases) =>
-            val symbolsWithLength = symbols.map(_.length)
-            aliases.exists(alias => symbolsWithLength.exists(query.startsWith(alias, _)))
+        val entriesWithAliasMatch = withAliases.filter { case (_, symbols, aliases) =>
+          val symbolsWithLength = symbols.map(_.length)
+          aliases.exists(alias => symbolsWithLength.exists(query.startsWith(alias, _)))
         }
-        Future.traverse(entriesWithAliasMatch) {
-          case (entry, symbols, aliases) =>
-            entry.prefixParser
-              .needsMention(m.cache, m.message)
-              .zipWith(entry.prefixParser.caseSensitive(m.cache, m.message)) { (needsMention, caseSensitive) =>
-                HelpCommand.HelpCommandProcessedEntry(needsMention, symbols, aliases, caseSensitive, entry.description)
-              }
+        Future.traverse(entriesWithAliasMatch) { case (entry, symbols, aliases) =>
+          entry.prefixParser
+            .needsMention(m.cache, m.message)
+            .zipWith(entry.prefixParser.caseSensitive(m.cache, m.message)) { (needsMention, caseSensitive) =>
+              HelpCommand.HelpCommandProcessedEntry(needsMention, symbols, aliases, caseSensitive, entry.description)
+            }
 
         }
       }

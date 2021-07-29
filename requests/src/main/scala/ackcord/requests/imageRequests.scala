@@ -32,27 +32,19 @@ import akka.http.scaladsl.model.{HttpEntity, RequestEntity, ResponseEntity}
 import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 
-/**
-  * Base traits for all traits to get images
-  */
+/** Base traits for all traits to get images */
 trait ImageRequest extends Request[ByteString] {
   require(desiredSize >= 16 && desiredSize <= 4096, "Can't request an image smaller than 16 or bigger than 4096")
   require(ImageRequest.isPowerOf2(desiredSize), "Can only request an image sizes that are powers of 2")
   require(allowedFormats.contains(format), "That format is not allowed for this image")
 
-  /**
-    * The desired size of the image. Must be between 16 and 2048, and must be a power of 2.
-    */
+  /** The desired size of the image. Must be between 16 and 2048, and must be a power of 2. */
   def desiredSize: Int
 
-  /**
-    * The format to get the image in.
-    */
+  /** The format to get the image in. */
   def format: ImageFormat
 
-  /**
-    * The allowed formats for this image.
-    */
+  /** The allowed formats for this image. */
   def allowedFormats: Seq[ImageFormat]
 
   override def requestBody: RequestEntity = HttpEntity.Empty
@@ -69,9 +61,7 @@ object ImageRequest {
   private def isPowerOf2(num: Int): Boolean = (num & (num - 1)) == 0
 }
 
-/**
-  * Get the image of a custom emoji. Always returns a PNG.
-  */
+/** Get the image of a custom emoji. Always returns a PNG. */
 case class GetCustomEmojiImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -82,9 +72,7 @@ case class GetCustomEmojiImage(
     Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
 }
 
-/**
-  * Get a guild icon image. Allowed formats are PNG, JPEG and WebP.
-  */
+/** Get a guild icon image. Allowed formats are PNG, JPEG and WebP. */
 case class GetGuildIconImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -96,9 +84,7 @@ case class GetGuildIconImage(
   override def route: RequestRoute = Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
 }
 
-/**
-  * Get a guild splash image. Allowed formats are PNG, JPEG and WebP.
-  */
+/** Get a guild splash image. Allowed formats are PNG, JPEG and WebP. */
 case class GetGuildSplashImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -129,18 +115,14 @@ case class GetGuildBannerImage(
   override def route: RequestRoute              = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
 }
 
-/**
-  * Get the default avatar of a user. Always returns a PNG.
-  */
+/** Get the default avatar of a user. Always returns a PNG. */
 case class GetDefaultUserAvatarImage(desiredSize: Int, discriminator: Int) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
   override def format: ImageFormat              = ImageFormat.PNG
   override def route: RequestRoute              = Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
 }
 
-/**
-  * Get the image of a user avatar. Allowed formats are PNG, JPEG, WebP and GIF.
-  */
+/** Get the image of a user avatar. Allowed formats are PNG, JPEG, WebP and GIF. */
 case class GetUserAvatarImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -152,9 +134,7 @@ case class GetUserAvatarImage(
   override def route: RequestRoute = Routes.userAvatarImage(userId, avatarHash, format, Some(desiredSize))
 }
 
-/**
-  * Get the icon of an application. Allowed formats are PNG, JPEG and WebP.
-  */
+/** Get the icon of an application. Allowed formats are PNG, JPEG and WebP. */
 case class GetApplicationIconImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -165,9 +145,7 @@ case class GetApplicationIconImage(
   override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
 }
 
-/**
-  * Get the asset of an application. Allowed formats are PNG, JPEG and WebP.
-  */
+/** Get the asset of an application. Allowed formats are PNG, JPEG and WebP. */
 case class GetApplicationAssetImage(
     desiredSize: Int,
     format: ImageFormat,

@@ -21,7 +21,12 @@ abstract class ComponentHandler[BaseInteraction <: ComponentInteraction, Interac
 
   def handle(implicit interaction: InteractionTpe): InteractionResponse
 
-  protected def makeBaseInteraction(invocationInfo: InteractionInvocationInfo, message: Message, interaction: RawInteraction, cacheSnapshot: Option[CacheSnapshot]): BaseInteraction
+  protected def makeBaseInteraction(
+      invocationInfo: InteractionInvocationInfo,
+      message: Message,
+      interaction: RawInteraction,
+      cacheSnapshot: Option[CacheSnapshot]
+  ): BaseInteraction
 
   def handleRaw(
       clientId: String,

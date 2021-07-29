@@ -42,14 +42,10 @@ abstract class CommandController(val requests: Requests) {
 
   implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 
-  /**
-    * Determines the default value for if a mention should required.
-    */
+  /** Determines the default value for if a mention should required. */
   def defaultMustMention: Boolean = false
 
-  /**
-    * Determines the default value for mention or prefix when creating a named command.
-    */
+  /** Determines the default value for mention or prefix when creating a named command. */
   def defaultMentionOrPrefix: Boolean = false
 
   /**
@@ -83,9 +79,7 @@ abstract class CommandController(val requests: Requests) {
         )
       })
 
-  /**
-    * A command builder that only accepts users that are in a voice channel.
-    */
+  /** A command builder that only accepts users that are in a voice channel. */
   val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildCommand.andThen(CommandBuilder.inVoiceChannel { vCh =>
       λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](m =>

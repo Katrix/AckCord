@@ -160,7 +160,9 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
   def notRequired: ValueParam[Orig, A, Option]  = copy(fTransformer = Param.FTransformer.Optional)
   def map[B](f: A => B): ValueParam[Orig, B, F] = copy(map = (orig, resolve) => this.map(orig, resolve).map(f))
 
-  override def mapWithResolve[B](f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]): ValueParam[Orig, B, F] =
+  override def mapWithResolve[B](
+      f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]
+  ): ValueParam[Orig, B, F] =
     copy(map = f)
 
   override private[commands] def optionToFa(

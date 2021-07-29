@@ -31,14 +31,10 @@ import ackcord.requests.{BaseRESTRequest, Request, RequestAnswer, RequestRespons
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 
-/**
-  * Represents some sort of event handled by the cache
-  */
+/** Represents some sort of event handled by the cache */
 trait CacheEvent {
 
-  /**
-    * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event.
-    */
+  /** Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event. */
   def process(builder: CacheSnapshotBuilder): Unit
 }
 
@@ -131,8 +127,6 @@ object RequestCacheUpdate {
       registry: CacheTypeRegistry
   ): Sink[(Request[Data], RequestAnswer[Data]), NotUsed] =
     Flow[(Request[Data], RequestAnswer[Data])]
-      .collect {
-        case (request, response: RequestResponse[Data]) => RequestCacheUpdate(response, request, registry)
-      }
+      .collect { case (request, response: RequestResponse[Data]) => RequestCacheUpdate(response, request, registry) }
       .to(events.publish)
 }

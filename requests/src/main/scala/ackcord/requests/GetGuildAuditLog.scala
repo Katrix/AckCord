@@ -37,9 +37,7 @@ case class GetGuildAuditLogData(
     limit: Option[Int] = None
 )
 
-/**
-  * Get an audit log for a given guild.
-  */
+/** Get an audit log for a given guild. */
 case class GetGuildAuditLog(
     guildId: GuildId,
     queryParams: GetGuildAuditLogData

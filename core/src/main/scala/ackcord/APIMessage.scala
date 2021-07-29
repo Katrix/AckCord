@@ -28,9 +28,7 @@ import java.time.{Instant, OffsetDateTime}
 import ackcord.data._
 import ackcord.gateway.GatewayInfo
 
-/**
-  * Base trait normal messages.
-  */
+/** Base trait normal messages. */
 sealed trait APIMessage {
 
   /**
@@ -40,9 +38,7 @@ sealed trait APIMessage {
     */
   def cache: CacheState
 
-  /**
-    * Info about the state of the gateway that received this gateway.
-    */
+  /** Info about the state of the gateway that received this gateway. */
   def gatewayInfo: GatewayInfo
 }
 object APIMessage {
@@ -53,9 +49,7 @@ object APIMessage {
     */
   case class Ready(applicationId: ApplicationId, cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
-  /**
-    * Sent to the client when a previously interrupted connection is resumed.
-    */
+  /** Sent to the client when a previously interrupted connection is resumed. */
   case class Resumed(cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
   /** A trait that covers all messages that might have an guild associated with them */
@@ -67,9 +61,7 @@ object APIMessage {
   /** Trait that covers all channel messages */
   sealed trait ChannelMessage extends APIMessage {
 
-    /**
-      * The channel that was acted upon.
-      */
+    /** The channel that was acted upon. */
     def channel: Channel
   }
 
@@ -113,9 +105,7 @@ object APIMessage {
 
     def channel: Option[TextChannel] =
       guild.fold(cache.current.getTextChannel(channelId))(
-        _.channels.get(channelId.asChannelId[TextGuildChannel]).collect {
-          case ch: TextGuildChannel => ch
-        }
+        _.channels.get(channelId.asChannelId[TextGuildChannel]).collect { case ch: TextGuildChannel => ch }
       )
   }
 
@@ -225,14 +215,10 @@ object APIMessage {
       gatewayInfo: GatewayInfo
   ) extends TextChannelIdMessage
 
-  /**
-    * Trait that covers all guild messages.
-    */
+  /** Trait that covers all guild messages. */
   sealed trait GuildMessage extends APIMessage {
 
-    /**
-      * The guild that was acted upon.
-      */
+    /** The guild that was acted upon. */
     def guild: GatewayGuild
   }
 
@@ -407,14 +393,10 @@ object APIMessage {
   ) extends OptGuildMessage
       with ChannelMessage
 
-  /**
-    * Trait that covers all message messages.
-    */
+  /** Trait that covers all message messages. */
   sealed trait MessageMessage extends APIMessage {
 
-    /**
-      * The message that was acted upon.
-      */
+    /** The message that was acted upon. */
     def message: Message
   }
 
@@ -630,9 +612,7 @@ object APIMessage {
     override def guild: Option[GatewayGuild] = rawInteraction.guildId.flatMap(_.resolve(cache.current))
   }
 
-  /**
-    * Sent when an integration is created.
-    */
+  /** Sent when an integration is created. */
   case class IntegrationCreate(
       guild: GatewayGuild,
       integration: Integration,
@@ -640,9 +620,7 @@ object APIMessage {
       gatewayInfo: GatewayInfo
   ) extends GuildMessage
 
-  /**
-    * Sent when an integration is updated.
-    */
+  /** Sent when an integration is updated. */
   case class IntegrationUpdate(
       guild: GatewayGuild,
       integration: Integration,
@@ -662,9 +640,7 @@ object APIMessage {
       gatewayInfo: GatewayInfo
   ) extends GuildMessage
 
-  /**
-    * Sent when an stage instance is created.
-    */
+  /** Sent when an stage instance is created. */
   case class StageInstanceCreate(
       guild: GatewayGuild,
       stageInstance: StageInstance,
@@ -672,9 +648,7 @@ object APIMessage {
       gatewayInfo: GatewayInfo
   ) extends GuildMessage
 
-  /**
-    * Sent when an stage instance is deleted.
-    */
+  /** Sent when an stage instance is deleted. */
   case class StageInstanceUpdate(
       guild: GatewayGuild,
       stageInstance: StageInstance,
@@ -682,9 +656,7 @@ object APIMessage {
       gatewayInfo: GatewayInfo
   ) extends GuildMessage
 
-  /**
-    * Sent when an stage instance is created.
-    */
+  /** Sent when an stage instance is created. */
   case class StageInstanceDelete(
       guild: GatewayGuild,
       stageInstance: StageInstance,

@@ -39,9 +39,7 @@ import akka.util.ByteString
 import io.circe._
 import io.circe.syntax._
 
-/**
-  * Get a channel by id.
-  */
+/** Get a channel by id. */
 case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, Option[Channel]] {
   override def route: RequestRoute = Routes.getChannel(channelId)
 
@@ -135,9 +133,7 @@ case class ModifyChannel(
   override def withReason(reason: String): ModifyChannel = copy(reason = Some(reason))
 }
 
-/**
-  * Delete a guild channel, or close a DM channel.
-  */
+/** Delete a guild channel, or close a DM channel. */
 case class DeleteCloseChannel(channelId: ChannelId, reason: Option[String] = None)
     extends NoParamsReasonRequest[DeleteCloseChannel, RawChannel, Option[Channel]] {
   override def route: RequestRoute = Routes.deleteCloseChannel(channelId)
@@ -179,9 +175,7 @@ case class GetChannelMessagesData(
     }
 }
 
-/**
-  * Get the messages in a channel.
-  */
+/** Get the messages in a channel. */
 case class GetChannelMessages(channelId: TextChannelId, query: GetChannelMessagesData)
     extends NoParamsRequest[Seq[RawMessage], Seq[Message]] {
   override def route: RequestRoute = {
@@ -207,9 +201,7 @@ object GetChannelMessages {
     new GetChannelMessages(channelId, GetChannelMessagesData(after = Some(after), limit = limit))
 }
 
-/**
-  * Get a specific message in a channel.
-  */
+/** Get a specific message in a channel. */
 case class GetChannelMessage(channelId: TextChannelId, messageId: MessageId)
     extends NoParamsRequest[RawMessage, Message] {
   override def route: RequestRoute = Routes.getChannelMessage(channelId, messageId)
@@ -329,9 +321,7 @@ object CreateMessageData {
   }
 }
 
-/**
-  * Create a message in a channel.
-  */
+/** Create a message in a channel. */
 case class CreateMessage(channelId: TextChannelId, params: CreateMessageData)
     extends RESTRequest[CreateMessageData, RawMessage, Message] {
   override def route: RequestRoute                       = Routes.createMessage(channelId)
@@ -381,9 +371,7 @@ case class CreateReaction(
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Delete the clients reaction to a message.
-  */
+/** Delete the clients reaction to a message. */
 case class DeleteOwnReaction(
     channelId: TextChannelId,
     messageId: MessageId,
@@ -392,9 +380,7 @@ case class DeleteOwnReaction(
   override def route: RequestRoute = Routes.deleteOwnReaction(channelId, messageId, emoji)
 }
 
-/**
-  * Delete the reaction of another user to a message.
-  */
+/** Delete the reaction of another user to a message. */
 case class DeleteUserReaction(
     channelId: TextChannelId,
     messageId: MessageId,
@@ -414,9 +400,7 @@ case class DeleteUserReaction(
   */
 case class GetReactionsData(after: Option[UserId] = None, limit: Option[Int] = None)
 
-/**
-  * Get all the users that have reacted with an emoji for a message.
-  */
+/** Get all the users that have reacted with an emoji for a message. */
 case class GetReactions(
     channelId: TextChannelId,
     messageId: MessageId,
@@ -440,9 +424,7 @@ object GetReactions {
     new GetReactions(channelId, messageId, emoji, GetReactionsData(after = Some(after), limit = limit))
 }
 
-/**
-  * Clear all reactions from a message.
-  */
+/** Clear all reactions from a message. */
 case class DeleteAllReactions(channelId: TextChannelId, messageId: MessageId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteAllReactions(channelId, messageId)
 
@@ -451,9 +433,7 @@ case class DeleteAllReactions(channelId: TextChannelId, messageId: MessageId) ex
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Clear all reactions for a single emoji from a message.
-  */
+/** Clear all reactions for a single emoji from a message. */
 case class DeleteAllReactionsForEmoji(channelId: TextChannelId, messageId: MessageId, emoji: String)
     extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.deleteAllReactionsForEmoji(channelId, messageId, emoji)
@@ -493,9 +473,7 @@ object EditMessageData {
     )
 }
 
-/**
-  * Edit an existing message
-  */
+/** Edit an existing message */
 case class EditMessage(
     channelId: TextChannelId,
     messageId: MessageId,
@@ -545,9 +523,7 @@ object EditMessage {
     )
 }
 
-/**
-  * Delete a message
-  */
+/** Delete a message */
 case class DeleteMessage(
     channelId: TextChannelId,
     messageId: MessageId,
@@ -562,9 +538,7 @@ case class DeleteMessage(
   override def withReason(reason: String): DeleteMessage = copy(reason = Some(reason))
 }
 
-/**
-  * @param messages All the messages to delete.
-  */
+/** @param messages All the messages to delete. */
 case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
   require(
     messages.lengthCompare(2) >= 0 && messages.lengthCompare(100) <= 0,
@@ -572,9 +546,7 @@ case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
   )
 }
 
-/**
-  * Delete multiple messages in a single request. Can only be used on guild channels.
-  */
+/** Delete multiple messages in a single request. Can only be used on guild channels. */
 case class BulkDeleteMessages(
     channelId: TextChannelId,
     params: BulkDeleteMessagesData,
@@ -604,9 +576,7 @@ object BulkDeleteMessages {
   */
 case class EditChannelPermissionsData(allow: Permission, deny: Permission, `type`: PermissionOverwriteType)
 
-/**
-  * Edit a permission overwrite for a channel.
-  */
+/** Edit a permission overwrite for a channel. */
 case class EditChannelPermissions(
     channelId: GuildChannelId,
     overwriteId: UserOrRoleId,
@@ -634,9 +604,7 @@ object EditChannelPermissions {
     new EditChannelPermissions(channelId, overwriteId, EditChannelPermissionsData(allow, deny, tpe))
 }
 
-/**
-  * Delete a permission overwrite for a channel.
-  */
+/** Delete a permission overwrite for a channel. */
 case class DeleteChannelPermission(
     channelId: GuildChannelId,
     overwriteId: UserOrRoleId,
@@ -649,9 +617,7 @@ case class DeleteChannelPermission(
   override def withReason(reason: String): DeleteChannelPermission = copy(reason = Some(reason))
 }
 
-/**
-  * Get all invites for this channel. Can only be used on guild channels.
-  */
+/** Get all invites for this channel. Can only be used on guild channels. */
 case class GetChannelInvites(channelId: GuildChannelId) extends NoParamsNiceResponseRequest[Seq[InviteWithMetadata]] {
   override def route: RequestRoute = Routes.getChannelInvites(channelId)
 
@@ -693,9 +659,7 @@ object CreateChannelInviteData {
     )
 }
 
-/**
-  * Create a new invite for a channel. Can only be used on guild channels.
-  */
+/** Create a new invite for a channel. Can only be used on guild channels. */
 case class CreateChannelInvite(
     channelId: GuildChannelId,
     params: CreateChannelInviteData,
@@ -726,16 +690,12 @@ object CreateChannelInvite {
     )
 }
 
-/**
-  * Triggers a typing indicator in a channel.
-  */
+/** Triggers a typing indicator in a channel. */
 case class TriggerTypingIndicator(channelId: TextChannelId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.triggerTyping(channelId)
 }
 
-/**
-  * Get all the pinned messages in a channel.
-  */
+/** Get all the pinned messages in a channel. */
 case class GetPinnedMessages(channelId: TextChannelId) extends NoParamsRequest[Seq[RawMessage], Seq[Message]] {
   override def route: RequestRoute = Routes.getPinnedMessage(channelId)
 
@@ -743,9 +703,7 @@ case class GetPinnedMessages(channelId: TextChannelId) extends NoParamsRequest[S
   override def toNiceResponse(response: Seq[RawMessage]): Seq[Message] = response.map(_.toMessage)
 }
 
-/**
-  * Pin a message in a channel.
-  */
+/** Pin a message in a channel. */
 case class PinMessage(channelId: TextChannelId, messageId: MessageId, reason: Option[String] = None)
     extends NoParamsResponseReasonRequest[PinMessage] {
   override def route: RequestRoute = Routes.addPinnedChannelMessage(channelId, messageId)
@@ -757,9 +715,7 @@ case class PinMessage(channelId: TextChannelId, messageId: MessageId, reason: Op
   override def withReason(reason: String): PinMessage = copy(reason = Some(reason))
 }
 
-/**
-  * Unpin a message in a channel..
-  */
+/** Unpin a message in a channel.. */
 case class UnpinMessage(channelId: TextChannelId, messageId: MessageId, reason: Option[String] = None)
     extends NoParamsResponseReasonRequest[UnpinMessage] {
   override def route: RequestRoute = Routes.deletePinnedChannelMessage(channelId, messageId)
@@ -791,9 +747,7 @@ case class StartThreadWithMessageData(name: String, autoArchiveDuration: Int) {
   )
 }
 
-/**
-  * Create a new public thread from an existing message.
-  */
+/** Create a new public thread from an existing message. */
 case class StartThreadWithMessage(
     channelId: TextGuildChannelId,
     messageId: MessageId,
@@ -806,9 +760,8 @@ case class StartThreadWithMessage(
     derivation.deriveEncoder(derivation.renaming.snakeCase, None)
   override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
 
-  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] = response.toChannel(None).collect {
-    case thread: ThreadGuildChannel => thread
-  }
+  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] =
+    response.toChannel(None).collect { case thread: ThreadGuildChannel => thread }
 
   override def withReason(reason: String): StartThreadWithMessage = copy(reason = Some(reason))
 }
@@ -824,9 +777,7 @@ case class StartThreadWithoutMessageData(
   )
 }
 
-/**
-  * Create a new public thread from an existing message.
-  */
+/** Create a new public thread from an existing message. */
 case class StartThreadWithoutMessage(
     channelId: TextGuildChannelId,
     params: StartThreadWithoutMessageData,
@@ -840,44 +791,33 @@ case class StartThreadWithoutMessage(
     derivation.deriveEncoder(derivation.renaming.snakeCase, None)
   override def responseDecoder: Decoder[RawChannel] = Decoder[RawChannel]
 
-  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] = response.toChannel(None).collect {
-    case thread: ThreadGuildChannel => thread
-  }
+  override def toNiceResponse(response: RawChannel): Option[ThreadGuildChannel] =
+    response.toChannel(None).collect { case thread: ThreadGuildChannel => thread }
 
   override def withReason(reason: String): StartThreadWithoutMessage = copy(reason = Some(reason))
 }
 
-/**
-  * Adds the current user to a thread.
-  */
+/** Adds the current user to a thread. */
 case class JoinThread(channelId: ThreadGuildChannelId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.joinThread(channelId)
 }
 
-/**
-  * Adds the specified user to a thread.
-  */
+/** Adds the specified user to a thread. */
 case class AddThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.addThreadMember(channelId, userId)
 }
 
-/**
-  * Makes the current user leave a thread.
-  */
+/** Makes the current user leave a thread. */
 case class LeaveThread(channelId: ThreadGuildChannelId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.leaveThread(channelId)
 }
 
-/**
-  * Removes the specified user from a thread.
-  */
+/** Removes the specified user from a thread. */
 case class RemoveThreadMember(channelId: ThreadGuildChannelId, userId: UserId) extends NoParamsResponseRequest {
   override def route: RequestRoute = Routes.removeThreadMember(channelId, userId)
 }
 
-/**
-  * Gets all the members of a thread. Requires the privileged `GUILD_MEMBERS` intent.
-  */
+/** Gets all the members of a thread. Requires the privileged `GUILD_MEMBERS` intent. */
 case class ListThreadMembers(channelId: ThreadGuildChannelId)
     extends NoParamsRequest[Seq[RawThreadMember], Seq[ThreadMember]] {
   override def route: RequestRoute = Routes.listThreadMembers(channelId)
@@ -899,18 +839,14 @@ object GetThreadsResponse {
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 }
 
-/**
-  * Lists all the active threads in a channel. Threads are ordered in descending order by their id.
-  */
+/** Lists all the active threads in a channel. Threads are ordered in descending order by their id. */
 case class ListActiveThreads(channelId: TextGuildChannelId) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listActiveThreads(channelId)
 
   override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
 }
 
-/**
-  * Lists all the public archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
-  */
+/** Lists all the public archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
 case class ListPublicArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
     extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listPublicArchivedThreads(channelId, before, limit)
@@ -922,9 +858,7 @@ case class ListPublicArchivedThreads(channelId: TextGuildChannelId, before: Opti
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Lists all the private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
-  */
+/** Lists all the private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
 case class ListPrivateArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
     extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listPrivateArchivedThreads(channelId, before, limit)
@@ -936,9 +870,7 @@ case class ListPrivateArchivedThreads(channelId: TextGuildChannelId, before: Opt
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Lists all the joined private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
-  */
+/** Lists all the joined private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
 case class ListJoinedPrivateArchivedThreads(
     channelId: TextGuildChannelId,
     before: Option[OffsetDateTime],
@@ -953,9 +885,7 @@ case class ListJoinedPrivateArchivedThreads(
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Get all the emojis for this guild.
-  */
+/** Get all the emojis for this guild. */
 case class ListGuildEmojis(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawEmoji], Seq[Emoji]] {
   override def route: RequestRoute             = Routes.listGuildEmojis(guildId)
   override def paramsEncoder: Encoder[NotUsed] = (_: NotUsed) => Json.obj()
@@ -972,9 +902,7 @@ case class ListGuildEmojis(guildId: GuildId) extends RESTRequest[NotUsed, Seq[Ra
   */
 case class CreateGuildEmojiData(name: String, image: ImageData, roles: Seq[RoleId])
 
-/**
-  * Create a new emoji for a guild.
-  */
+/** Create a new emoji for a guild. */
 case class CreateGuildEmoji(
     guildId: GuildId,
     params: CreateGuildEmojiData,
@@ -1002,9 +930,7 @@ object CreateGuildEmoji {
   ): CreateGuildEmoji = new CreateGuildEmoji(guildId, CreateGuildEmojiData(name, image, roles))
 }
 
-/**
-  * Get an emoji in a guild by id.
-  */
+/** Get an emoji in a guild by id. */
 case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsRequest[RawEmoji, Emoji] {
   override def route: RequestRoute = Routes.getGuildEmoji(guildId, emojiId)
 
@@ -1025,9 +951,7 @@ object ModifyGuildEmojiData {
     )
 }
 
-/**
-  * Modify an existing emoji.
-  */
+/** Modify an existing emoji. */
 case class ModifyGuildEmoji(
     emojiId: EmojiId,
     guildId: GuildId,
@@ -1055,9 +979,7 @@ object ModifyGuildEmoji {
   ): ModifyGuildEmoji = new ModifyGuildEmoji(emojiId, guildId, ModifyGuildEmojiData(name, JsonSome(roles)))
 }
 
-/**
-  * Delete an emoji from a guild.
-  */
+/** Delete an emoji from a guild. */
 case class DeleteGuildEmoji(
     emojiId: EmojiId,
     guildId: GuildId,
@@ -1094,9 +1016,7 @@ case class FollowedChannel(
 
 case class FollowNewsChannelData(webhookChannelId: ChannelId)
 
-/**
-  * @param channelId Where to send messages to
-  */
+/** @param channelId Where to send messages to */
 case class FollowNewsChannel(channelId: ChannelId, params: FollowNewsChannelData)
     extends RESTRequest[FollowNewsChannelData, FollowedChannel, FollowedChannel] {
   override def route: RequestRoute = Routes.followNewsChannel(channelId)

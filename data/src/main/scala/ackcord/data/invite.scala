@@ -161,7 +161,7 @@ case class InviteGuild(
     features: Seq[GuildFeature],
     verificationLevel: VerificationLevel,
     vanityUrlCode: Option[String],
-    welcomeScreen: Option[WelcomeScreen],
+    welcomeScreen: Option[WelcomeScreen]
 )
 
 /**

@@ -44,9 +44,7 @@ case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
   require(name.length >= 2 && name.length <= 32, "Webhook name must be between 2 and 32 characters")
 }
 
-/**
-  * Create a new webhook in a channel.
-  */
+/** Create a new webhook in a channel. */
 case class CreateWebhook(
     channelId: TextChannelId,
     params: CreateWebhookData,
@@ -64,9 +62,7 @@ case class CreateWebhook(
   override def withReason(reason: String): CreateWebhook = copy(reason = Some(reason))
 }
 
-/**
-  * Get the webhooks in a channel.
-  */
+/** Get the webhooks in a channel. */
 case class GetChannelWebhooks(channelId: TextChannelId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getChannelWebhooks(channelId)
 
@@ -77,9 +73,7 @@ case class GetChannelWebhooks(channelId: TextChannelId) extends NoParamsNiceResp
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/**
-  * Get the webhooks in a guild.
-  */
+/** Get the webhooks in a guild. */
 case class GetGuildWebhooks(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[Webhook]] {
   override def route: RequestRoute = Routes.getGuildWebhooks(guildId)
 
@@ -90,9 +84,7 @@ case class GetGuildWebhooks(guildId: GuildId) extends NoParamsNiceResponseReques
     hasPermissionsGuild(guildId, requiredPermissions)
 }
 
-/**
-  * Get a webhook by id.
-  */
+/** Get a webhook by id. */
 case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhook(id)
 
@@ -101,9 +93,7 @@ case class GetWebhook(id: SnowflakeType[Webhook]) extends NoParamsNiceResponseRe
   override def requiredPermissions: Permission = Permission.ManageWebhooks
 }
 
-/**
-  * Get a webhook by id with a token. Doesn't require authentication.
-  */
+/** Get a webhook by id with a token. Doesn't require authentication. */
 case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extends NoParamsNiceResponseRequest[Webhook] {
   override def route: RequestRoute = Routes.getWebhookWithToken(id, token)
 
@@ -131,9 +121,7 @@ object ModifyWebhookData {
     )
 }
 
-/**
-  * Modify a webhook.
-  */
+/** Modify a webhook. */
 case class ModifyWebhook(
     id: SnowflakeType[Webhook],
     params: ModifyWebhookData,
@@ -148,9 +136,7 @@ case class ModifyWebhook(
   override def withReason(reason: String): ModifyWebhook = copy(reason = Some(reason))
 }
 
-/**
-  * Modify a webhook with a token. Doesn't require authentication
-  */
+/** Modify a webhook with a token. Doesn't require authentication */
 case class ModifyWebhookWithToken(
     id: SnowflakeType[Webhook],
     token: String,
@@ -168,9 +154,7 @@ case class ModifyWebhookWithToken(
   override def withReason(reason: String): ModifyWebhookWithToken = copy(reason = Some(reason))
 }
 
-/**
-  * Delete a webhook.
-  */
+/** Delete a webhook. */
 case class DeleteWebhook(
     id: SnowflakeType[Webhook],
     reason: Option[String] = None
@@ -182,9 +166,7 @@ case class DeleteWebhook(
   override def withReason(reason: String): DeleteWebhook = copy(reason = Some(reason))
 }
 
-/**
-  * Delete a webhook with a token. Doesn't require authentication
-  */
+/** Delete a webhook with a token. Doesn't require authentication */
 case class DeleteWebhookWithToken(
     id: SnowflakeType[Webhook],
     token: String,
@@ -332,10 +314,11 @@ object EditWebhookMessageData {
     )
 }
 
-case class GetOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String) extends NoParamsRequest[RawMessage, Message] {
+case class GetOriginalWebhookMessage(id: SnowflakeType[Webhook], token: String)
+    extends NoParamsRequest[RawMessage, Message] {
   override def route: RequestRoute = Routes.getOriginalWebhookMessage(id, token)
 
-  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
   override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 
@@ -364,10 +347,11 @@ case class DeleteOriginalWebhookMessage(id: SnowflakeType[Webhook], token: Strin
   override def route: RequestRoute = Routes.deleteOriginalWebhookMessage(id, token)
 }
 
-case class GetWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId) extends NoParamsRequest[RawMessage, Message] {
+case class GetWebhookMessage(id: SnowflakeType[Webhook], token: String, messageId: MessageId)
+    extends NoParamsRequest[RawMessage, Message] {
   override def route: RequestRoute = Routes.getWebhookMessage(id, token, messageId)
 
-  override def responseDecoder: Decoder[RawMessage] = Decoder[RawMessage]
+  override def responseDecoder: Decoder[RawMessage]          = Decoder[RawMessage]
   override def toNiceResponse(response: RawMessage): Message = response.toMessage
 }
 

@@ -299,10 +299,9 @@ object VoiceWsHandler {
           queue.complete()
           Behaviors.same
       }
-      .receiveSignal {
-        case (_, PostStop) =>
-          queue.complete()
-          Behaviors.stopped
+      .receiveSignal { case (_, PostStop) =>
+        queue.complete()
+        Behaviors.stopped
       }
   }
 

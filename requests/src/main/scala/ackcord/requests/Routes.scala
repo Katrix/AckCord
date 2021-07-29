@@ -32,9 +32,7 @@ import akka.http.scaladsl.model.HttpMethods._
 import akka.http.scaladsl.model.{HttpMethod, Uri}
 import shapeless._
 
-/**
-  * All the routes used by AckCord
-  */
+/** All the routes used by AckCord */
 object Routes {
 
   val discord    = "discord.com"
@@ -399,9 +397,9 @@ object Routes {
   val removeThreadMember: (ChannelId, UserId) => RequestRoute = threadMemberUser.toRequest(DELETE)
   val listThreadMembers: ChannelId => RequestRoute            = threadMembers.toRequest(GET)
 
-  val archivedThreads: RouteFunction[ChannelId] = channelThreads / "archived"
+  val archivedThreads: RouteFunction[ChannelId]            = channelThreads / "archived"
   val beforeTimestampQuery: QueryParameter[OffsetDateTime] = query[OffsetDateTime]("before", _.toString)
-  val limitQuery: QueryParameter[Int] = query[Int]("limit", _.toString)
+  val limitQuery: QueryParameter[Int]                      = query[Int]("limit", _.toString)
 
   val listActiveThreads: ChannelId => RequestRoute = (channelThreads / "active").toRequest(GET)
   val listPublicArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
@@ -409,7 +407,8 @@ object Routes {
   val listPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
     (archivedThreads / "private" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
   val listJoinedPrivateArchivedThreads: (ChannelId, Option[OffsetDateTime], Option[Int]) => RequestRoute =
-    (channel / "users" / "@me" / "threads" / "archived" / "private" +? beforeTimestampQuery +? limitQuery).toRequest(GET)
+    (channel / "users" / "@me" / "threads" / "archived" / "private" +? beforeTimestampQuery +? limitQuery)
+      .toRequest(GET)
 
   //Emoji routes
 

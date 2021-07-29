@@ -28,18 +28,14 @@ import ackcord.CacheSnapshot
 trait GetGuild {
   def guildId: GuildId
 
-  /**
-    * The guild for this object
-    */
+  /** The guild for this object */
   def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
   def guildId: Option[GuildId]
 
-  /**
-    * The guild for this object
-    */
+  /** The guild for this object */
   def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] =
     guildId.flatMap(snapshot.getGuild)
 }
@@ -47,20 +43,14 @@ trait GetGuildOpt {
 trait GetUser {
   def userId: UserId
 
-  /**
-    * The user for this object
-    */
+  /** The user for this object */
   def user(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(userId)
 }
 
 trait GetVoiceChannelOpt {
   def channelId: Option[VoiceGuildChannelId]
 
-  /**
-    * Resolve the channelId of this object as a voice channel.
-    */
+  /** Resolve the channelId of this object as a voice channel. */
   def voiceChannel(implicit snapshot: CacheSnapshot): Option[VoiceGuildChannel] =
-    channelId.flatMap(snapshot.getGuildChannel).collect {
-      case voiceChannel: VoiceGuildChannel => voiceChannel
-    }
+    channelId.flatMap(snapshot.getGuildChannel).collect { case voiceChannel: VoiceGuildChannel => voiceChannel }
 }

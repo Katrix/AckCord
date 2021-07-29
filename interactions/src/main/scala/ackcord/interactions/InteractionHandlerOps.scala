@@ -187,7 +187,8 @@ trait InteractionHandlerOps {
       )
     )
 
-  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] = interactionRequest(
-    GetWebhookMessage(async.webhookId, async.webhookToken, messageId)
-  ).map(_.toMessage)
+  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] =
+    interactionRequest(
+      GetWebhookMessage(async.webhookId, async.webhookToken, messageId)
+    ).map(_.toMessage)
 }

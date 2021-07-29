@@ -31,9 +31,7 @@ import akka.stream.scaladsl.Source
 import cats.{Foldable, Id}
 import cats.data.OptionT
 
-/**
-  * Typeclass for converting some type F[A] to a Source[A, NotUsed]
-  */
+/** Typeclass for converting some type F[A] to a Source[A, NotUsed] */
 trait Streamable[F[_]] {
   def toSource[A](fa: F[A]): Source[A, NotUsed]
 

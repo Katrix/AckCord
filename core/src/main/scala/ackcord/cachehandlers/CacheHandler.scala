@@ -25,9 +25,7 @@ package ackcord.cachehandlers
 
 import org.slf4j.{Logger, LoggerFactory}
 
-/**
-  * A class that handles creating a new cache snapshot with an object
-  */
+/** A class that handles creating a new cache snapshot with an object */
 sealed trait CacheHandler[-Obj] {
 
   val log: Logger = LoggerFactory.getLogger(classOf[CacheHandler[_]])
@@ -46,9 +44,7 @@ sealed trait CacheHandler[-Obj] {
   def ignore: Boolean = false
 }
 
-/**
-  * A [[CacheHandler]] for deletions.
-  */
+/** A [[CacheHandler]] for deletions. */
 trait CacheDeleter[-Obj] extends CacheHandler[Obj]
 object CacheDeleter {
   def dummy[Obj](shouldBeIgnored: Boolean): CacheDeleter[Obj] = new CacheDeleter[Obj] {
@@ -58,9 +54,7 @@ object CacheDeleter {
   }
 }
 
-/**
-  * A [[CacheHandler]] for updates.
-  */
+/** A [[CacheHandler]] for updates. */
 trait CacheUpdater[-Obj] extends CacheHandler[Obj]
 object CacheUpdater {
   def dummy[Obj](shouldBeIgnored: Boolean): CacheUpdater[Obj] = new CacheUpdater[Obj] {
@@ -70,9 +64,7 @@ object CacheUpdater {
   }
 }
 
-/**
-  * A handler that takes no action
-  */
+/** A handler that takes no action */
 object NOOPHandler extends CacheHandler[Any] {
   override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry): Unit = ()
 }

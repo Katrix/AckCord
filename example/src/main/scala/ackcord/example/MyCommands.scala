@@ -54,7 +54,7 @@ class MyCommands(client: DiscordClient, requests: Requests) extends CommandContr
 
   val copy: NamedDescribedCommand[Int] =
     GuildCommand
-    //You can use functions to give different names depending on the context the command is executed in
+      //You can use functions to give different names depending on the context the command is executed in
       .namedFunction(
         (c, m) => if (m.guild(c).map(_.id).exists(mentionGuilds.contains)) Seq("!") else Seq("m!"),
         (_, _) => Seq("copy"),

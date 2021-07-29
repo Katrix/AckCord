@@ -39,12 +39,12 @@ case class CommandRegistration[Mat](
 }
 object CommandRegistration {
   def toSink[A, M](source: Source[A, M]): RunnableGraph[CommandRegistration[M]] =
-    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) {
-      case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
+    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) { case ((m, killSwitch), done) =>
+      CommandRegistration(m, done, killSwitch)
     }
 
   def withRegistration[A, M](source: Source[A, M]): Source[A, CommandRegistration[M]] =
-    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
-      case ((m, killSwitch), done) => CommandRegistration(m, done, killSwitch)
+    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() { case ((m, killSwitch), done) =>
+      CommandRegistration(m, done, killSwitch)
     }
 }

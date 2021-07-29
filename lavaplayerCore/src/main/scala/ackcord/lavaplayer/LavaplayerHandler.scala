@@ -375,14 +375,10 @@ object LavaplayerHandler {
   case class ConnectVoiceChannel(channelId: VoiceGuildChannelId, force: Boolean = false, replyTo: ActorRef[Reply])
       extends Command
 
-  /**
-    * Disconnect from a voice channel
-    */
+  /** Disconnect from a voice channel */
   case object DisconnectVoiceChannel extends Command
 
-  /**
-    * Sent as a response to [[ConnectVoiceChannel]] when everything is ready.
-    */
+  /** Sent as a response to [[ConnectVoiceChannel]] when everything is ready. */
   case class MusicReady(serverId: RawSnowflake, userId: UserId) extends Reply
 
   /**
@@ -406,14 +402,10 @@ object LavaplayerHandler {
   case class ForcedConnectionFailure(oldVoiceChannelId: VoiceGuildChannelId, newVoiceChannelId: VoiceGuildChannelId)
       extends Reply
 
-  /**
-    * Set if the bot should be playing(speaking) or not. This is required to send sound.
-    */
+  /** Set if the bot should be playing(speaking) or not. This is required to send sound. */
   case class SetPlaying(speaking: Boolean) extends Command
 
-  /**
-    * Stops this lavaplyer handler gracefully, and logs out of the voice gateway if connected.
-    */
+  /** Stops this lavaplyer handler gracefully, and logs out of the voice gateway if connected. */
   case object Shutdown extends Command
 
   private case object StopNow                                        extends Command
@@ -454,9 +446,7 @@ object LavaplayerHandler {
     override def onEvent(event: AudioEvent): Unit = sendTo ! wrap(event)
   }
 
-  /**
-    * An exception signaling that a [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a track.
-    */
+  /** An exception signaling that a [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a track. */
   class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
 
   class ForcedConnectedException(inChannel: VoiceGuildChannelId)

@@ -48,7 +48,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
         ).onSelect(new AutoMenuHandler(_, requests) {
           override def handle(implicit interaction: MenuInteraction): InteractionResponse =
             sendMessage(s"Selected: ${interaction.values.mkString(", ")}")
-        }),
+        })
       )
     )
   }
@@ -67,7 +67,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
         ).onSelect(new AutoMenuHandler(_, requests) {
           override def handle(implicit interaction: MenuInteraction): InteractionResponse =
             sendMessage(s"Selected: ${interaction.values.mkString(", ")}")
-        }),
+        })
       )
     )
   }

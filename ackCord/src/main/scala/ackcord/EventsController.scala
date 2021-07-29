@@ -43,9 +43,7 @@ abstract class EventsController(val requests: Requests) {
   val baseEventBuilder: EventListenerBuilder[EventListenerMessage, APIMessage] =
     EventListenerBuilder.rawBuilder(requests)
 
-  /**
-    * An alias for the base builder.
-    */
+  /** An alias for the base builder. */
   val Event: EventListenerBuilder[EventListenerMessage, APIMessage] = baseEventBuilder
 
   val GuildEvent: EventListenerBuilder[GuildEventListenerMessage, APIMessage] =
