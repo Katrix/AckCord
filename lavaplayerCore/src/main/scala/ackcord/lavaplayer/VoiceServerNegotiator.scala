@@ -48,7 +48,7 @@ object VoiceServerNegotiator {
         VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(voiceChannelId), selfMute = false, selfDeaf = false))
           .asInstanceOf[GatewayMessage[Any]]
       )
-      .runWith(events.sendGatewayPublish)
+      .runWith(events.toGatewayPublish)
 
     val killSwitch = events.subscribeAPI
       .collect {

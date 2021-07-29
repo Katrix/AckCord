@@ -142,10 +142,10 @@ object BulkRequestMembers {
   private def source(request: RequestGuildMembers, events: Events, nonce: String)(
       implicit system: ActorSystem[Nothing]
   ): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
-    val sendRequest = Source.single(request).to(events.sendGatewayPublish)
+    val sendRequest = Source.single(request).to(events.toGatewayPublish)
 
     val getMembers: Source[(Seq[RawGuildMemberWithGuild], Seq[(GuildId, UserId)]), NotUsed] =
-      events.receiveGatewaySubscribe
+      events.fromGatewaySubscribe
         .collect {
           case Dispatch(_, GuildMemberChunk(_, data), _) =>
             data.value match {

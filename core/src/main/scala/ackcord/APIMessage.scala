@@ -131,8 +131,12 @@ object APIMessage {
     * Sent to the client is added to a thread.
     * @param channel The thread that the client was added to.
     */
-  case class ClientAddedToThread(guild: GatewayGuild, channel: ThreadGuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
-    extends GuildMessage
+  case class ClientAddedToThread(
+      guild: GatewayGuild,
+      channel: ThreadGuildChannel,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage
       with ChannelMessage
 
   /**
@@ -622,6 +626,9 @@ object APIMessage {
 
   case class InteractionCreate(rawInteraction: RawInteraction, cache: CacheState, gatewayInfo: GatewayInfo)
       extends APIMessage
+      with OptGuildMessage {
+    override def guild: Option[GatewayGuild] = rawInteraction.guildId.flatMap(_.resolve(cache.current))
+  }
 
   /**
     * Sent when an integration is created.

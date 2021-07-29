@@ -44,10 +44,10 @@ import akka.{NotUsed, actor => classic}
 case class Events(
     publish: Sink[CacheEvent, NotUsed],
     subscribe: Source[(CacheEvent, CacheState), NotUsed],
-    sendGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    sendGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
-    receiveGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    receiveGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    @deprecatedName("sendGatewayPublish") toGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
+    @deprecatedName("sendGatewaySubscribe") toGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    @deprecatedName("receiveGatewayPublish") fromGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
+    @deprecatedName("receiveGatewaySubscribe") fromGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
     parallelism: Int
 )(implicit system: ActorSystem[Nothing]) {
 
@@ -56,7 +56,7 @@ case class Events(
     * Messages coming out of this flow are received from the gateway.
     */
   def gatewayClientConnection: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
-    Flow.fromSinkAndSourceCoupled(receiveGatewayPublish, sendGatewaySubscribe)
+    Flow.fromSinkAndSourceCoupled(fromGatewayPublish, toGatewaySubscribe)
 
   /**
     * Publish a single cache event.
@@ -99,6 +99,18 @@ case class Events(
     subscribeAPI
       .collectType[APIMessage.InteractionCreate]
       .map(e => e.rawInteraction -> Some(e.cache.current))
+
+  @deprecated("Use toGatewayPublish instead", since = "0.18.0")
+  def sendGatewayPublish: Sink[GatewayMessage[Any], NotUsed] = toGatewayPublish
+
+  @deprecated("Use toGatewaySubscribe instead", since = "0.18.0")
+  def sendGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] = toGatewaySubscribe
+
+  @deprecated("Use fromGatewayPublish instead", since = "0.18.0")
+  def receiveGatewayPublish: Sink[GatewayMessage[Any], NotUsed] = fromGatewayPublish
+
+  @deprecated("Use fromGatewaySubscribe instead", since = "0.18.0")
+  def receiveGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] = fromGatewaySubscribe
 }
 object Events {
 
@@ -119,7 +131,7 @@ object Events {
       val apiMessageConverter = apiMessageCreatorFun(cacheTypeRegistry)
 
       val baseSource: Source[APIMessageCacheUpdate[Any], NotUsed] =
-        events.receiveGatewaySubscribe
+        events.fromGatewaySubscribe
           .collectType[Dispatch[_]]
           .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
           .mapAsync(parallelism)(dispatch =>

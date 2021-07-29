@@ -233,7 +233,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(events.sendGatewayPublish)
+          .runWith(events.toGatewayPublish)
 
         inactive(parameters, Idle)
 
@@ -245,7 +245,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(events.sendGatewayPublish)
+          .runWith(events.toGatewayPublish)
 
         inactive(parameters, Idle)
 
@@ -328,7 +328,7 @@ object LavaplayerHandler {
             VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
               .asInstanceOf[GatewayMessage[Any]]
           )
-          .runWith(events.sendGatewayPublish)
+          .runWith(events.toGatewayPublish)
 
         log.debug("Left voice channel")
         inactive(parameters, Idle)
@@ -428,7 +428,7 @@ object LavaplayerHandler {
     * Otherwise it fails with [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
     */
   def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
-    val promise = Promise[AudioItem]
+    val promise = Promise[AudioItem]()
 
     playerManager.loadItem(
       identifier,

@@ -70,7 +70,7 @@ object VoiceUDPFlow {
       byteBuilder.result()
     }
 
-    val valvePromise = Promise[Unit]
+    val valvePromise = Promise[Unit]()
     val valve        = Source.future(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]
 
     val ipDiscoveryFlow = Flow[ByteString]

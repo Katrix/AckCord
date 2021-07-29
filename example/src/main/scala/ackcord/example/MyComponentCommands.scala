@@ -22,7 +22,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
       )
   }
 
-  val hiButton: NamedDescribedCommand[NotUsed] = componentCommand("makeEditLinkGenerator") { implicit cmdExecution =>
+  val hiButton: NamedDescribedCommand[NotUsed] = componentCommand("makeEditLinkGenerator") { _ =>
     Seq(
       ActionRow.of(
         Button
@@ -35,7 +35,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
     )
   }
 
-  val singleSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeSingleSelect") { implicit cmdExecution =>
+  val singleSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeSingleSelect") { _ =>
     Seq(
       ActionRow.of(
         SelectMenu(
@@ -53,7 +53,7 @@ class MyComponentCommands(requests: Requests) extends CommandController(requests
     )
   }
 
-  val multiSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeMultiSelect") { implicit cmdExecution =>
+  val multiSelect: NamedDescribedCommand[NotUsed] = componentCommand("makeMultiSelect") { _ =>
     Seq(
       ActionRow.of(
         SelectMenu(

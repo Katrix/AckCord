@@ -182,6 +182,20 @@ object MusicHandler {
           } else queueTracks(false, parameters, queue, Compat.convertJavaList(playlist.getTracks): _*)
           inactive(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
+        case ReceivedAudioItem(item) =>
+          log.warn(s"Unknown audio item type ${item.getClass}")
+          Behaviors.same
+
+        case SentFriendlyException(e) => handleFriendlyException(e, None, msgQueue, lastTextChannel)
+
+        case StopMusicInside =>
+          log.info("Stopped and left")
+
+          player.stopTrack()
+          lavaplayerHandler ! LavaplayerHandler.DisconnectVoiceChannel
+
+          inactive(parameters, None, None, Queue.empty)
+
         case AudioEventWrapper(_) => Behaviors.same //Ignore
       }
       .receiveSignal {

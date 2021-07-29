@@ -45,6 +45,7 @@ class LavaplayerSource(player: AudioPlayer) extends GraphStage[SourceShape[ByteS
 
       override protected def onTimer(timerKey: Any): Unit = timerKey match {
         case "RetryProvide" => tryPushFrame()
+        case _              => //NO-OP
       }
 
       def tryPushFrame(): Unit = {

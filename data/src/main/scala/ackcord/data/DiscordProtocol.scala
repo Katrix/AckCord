@@ -277,10 +277,10 @@ trait DiscordProtocol {
     }
   }
 
-  implicit private val selectOptionCodec: Codec[SelectOption] =
+  implicit val selectOptionCodec: Codec[SelectOption] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit private val selectMenuEncoder: Encoder[SelectMenu] = {
+  implicit val selectMenuEncoder: Encoder[SelectMenu] = {
     val base: Encoder[SelectMenu] = derivation.deriveEncoder(derivation.renaming.snakeCase, None)
     (a: SelectMenu) => base(a).deepMerge(Json.obj("type" := a.tpe))
   }

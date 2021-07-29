@@ -27,6 +27,7 @@ run
 target
 project/target
 /.jvmopts
+.bsp
 
 #mac
 .DS_Store

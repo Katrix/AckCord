@@ -267,9 +267,14 @@ trait MessageParserInstances {
         S: MonadState[F, List[String]]
     ): F[A] = {
       //A poor mans traverse
-      F.tailRecM[Seq[MessageParser[A]], Option[A]](seq) {
-        case Seq()           => F.pure(Right(None))
-        case Seq(x, xs @ _*) => E.handle(x.parse.map(a => a.some.asRight[Seq[MessageParser[A]]]))(_ => Left(xs))
+      F.tailRecM[Seq[MessageParser[A]], Option[A]](seq) { s =>
+        if (s.isEmpty) {
+          F.pure(Right(None))
+        } else {
+          val x  = s.head
+          val xs = s.tail
+          E.handle(x.parse.map(a => a.some.asRight[Seq[MessageParser[A]]]))(_ => Left(xs))
+        }
       }.flatMap {
         case Some(a) => F.pure(a)
         case None    => seq.head.parse

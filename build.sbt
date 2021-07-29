@@ -1,13 +1,13 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion     = "2.6.6"
-lazy val akkaHttpVersion = "10.1.11"
+lazy val akkaVersion     = "2.6.15"
+lazy val akkaHttpVersion = "10.2.5"
 lazy val circeVersion    = "0.13.0"
 lazy val ackCordVersion  = "0.18.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.2",
-  crossScalaVersions := Seq("2.12.10", scalaVersion.value),
+  scalaVersion := "2.13.6",
+  crossScalaVersions := Seq("2.12.12", scalaVersion.value),
   organization := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
@@ -21,13 +21,13 @@ lazy val commonSettings = Seq(
       Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
     else Nil
   ),
-  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full),
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
   publishTo := sonatypePublishToBundle.value
 )
 
 lazy val publishSettings = Seq(
   publishMavenStyle := true,
-  publishArtifact in Test := false,
+  Test / publishArtifact := false,
   licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
   scmInfo := Some(
     ScmInfo(
@@ -54,16 +54,16 @@ lazy val data = crossProject(JSPlatform, JVMPlatform)
     publishSettings,
     name := "data",
     version := ackCordVersion,
-    libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.3",
+    libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.7",
     libraryDependencies ++= Seq(
       "io.circe" %%% "circe-core"           % circeVersion,
       "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation"     % "0.13.0-M2"
+      "io.circe" %%% "circe-derivation"     % "0.13.0-M5"
     ),
     libraryDependencies ++= Seq(
-      "com.beachape" %%% "enumeratum"       % "1.5.15",
-      "com.beachape" %%% "enumeratum-circe" % "1.5.23"
+      "com.beachape" %%% "enumeratum"       % "1.7.0",
+      "com.beachape" %%% "enumeratum-circe" % "1.7.0"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -162,7 +162,7 @@ lazy val core = project
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest"     %% "scalatest"    % "3.1.1"     % Test
+      "org.scalatest"     %% "scalatest"    % "3.2.9"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -175,7 +175,8 @@ lazy val lavaplayerCore = project
     name := "lavaplayer-core",
     version := ackCordVersion,
     resolvers += Resolver.JCenterRepository,
-    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.47",
+    resolvers += "dv8tion" at "https://m2.dv8tion.net/releases",
+    libraryDependencies += "com.sedmelluq" % "lavaplayer" % "1.3.78",
     description := "ackCord-lavaplayer-core provides the glue code between ackcord-core and ackcord-lavaplayer"
   )
   .dependsOn(core, voice)
@@ -199,9 +200,9 @@ lazy val exampleCore = project
     noPublishSettings,
     name := "exampleCore",
     version := "1.0",
-    mainClass := Some("ackcord.examplecore.Example"),
+    Compile / mainClass := Some("ackcord.examplecore.Example"),
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
-    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.3"
+    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.5"
   )
   .dependsOn(core, lavaplayerCore, commands, interactions)
 
@@ -211,7 +212,7 @@ lazy val example = project
     noPublishSettings,
     name := "example",
     version := "1.0",
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
+    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.5"
   )
   .dependsOn(ackCord)
 
@@ -226,16 +227,16 @@ lazy val docs = project
     micrositeDescription := "A Discord library built for flexibility and speed",
     micrositeDocumentationUrl := "/api/ackcord",
     micrositeDocumentationLabelDescription := "ScalaDoc",
-    micrositeHomepage := "http://ackcord.katsstuff.net",
+    micrositeHomepage := "https://ackcord.katsstuff.net",
     micrositeGithubOwner := "Katrix",
     micrositeGithubRepo := "AckCord",
     micrositeGitterChannel := false,
     micrositeShareOnSocial := false,
     micrositeTheme := "pattern",
-    excludeFilter in ghpagesCleanSite := "CNAME",
-    scalacOptions in Compile ++= Seq("-language:higherKinds"),
+    ghpagesCleanSite / excludeFilter := "CNAME",
+    Compile / scalacOptions ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inProjects(
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
       dataJVM,
       gatewayDataJVM,
       requests,
@@ -249,16 +250,15 @@ lazy val docs = project
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern"),
     docsMappingsAPIDir := "api",
-    addMappingsToSiteDir(mappings in (ScalaUnidoc, packageDoc), docsMappingsAPIDir),
-    micrositeCompilingDocsTool := WithMdoc,
-    fork in mdoc := true,
+    addMappingsToSiteDir(ScalaUnidoc / packageDoc / mappings, docsMappingsAPIDir),
+    //mdoc / fork := true,
     mdocIn := sourceDirectory.value / "main" / "mdoc",
-    fork in (ScalaUnidoc, unidoc) := true,
-    scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
+    //ScalaUnidoc / unidoc / fork := true,
+    ScalaUnidoc / unidoc / scalacOptions ++= Seq(
       "-doc-source-url",
       "https://github.com/Katrix/Ackcord/tree/master€{FILE_PATH}.scala",
       "-sourcepath",
-      baseDirectory.in(LocalRootProject).value.getAbsolutePath
+      (LocalRootProject / baseDirectory).value.getAbsolutePath
     )
   )
   .dependsOn(ackCord)

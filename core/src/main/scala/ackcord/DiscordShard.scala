@@ -186,11 +186,14 @@ object DiscordShard {
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
           Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
-        case HttpResponse(code, headers, entity, _) =>
-          entity.discardBytes()
+        case response =>
+          response.entity.discardBytes()
           Future.failed(
             new IllegalStateException(
-              s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"
+              s"""|Could not get WS gateway.
+                  |StatusCode: ${response.status.value}
+                  |Headers:
+                  |  ${response.headers.mkString("\n  ")}""".stripMargin
             )
           )
       }
@@ -233,11 +236,14 @@ object DiscordShard {
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
           Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
-        case HttpResponse(code, headers, entity, _) =>
-          entity.discardBytes()
+        case response =>
+          response.entity.discardBytes()
           Future.failed(
             new IllegalStateException(
-              s"Could not get WS gateway.\nStatusCode: ${code.value}\nHeaders:\n${headers.mkString("\n")}"
+              s"""Could not get WS gateway.
+                 |StatusCode: ${response.status.value}
+                 |Headers:
+                 |  ${response.headers.mkString("\n  ")}""".stripMargin
             )
           )
       }

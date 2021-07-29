@@ -31,7 +31,7 @@ import ackcord.util._
 import cats.Later
 import cats.syntax.either._
 import io.circe.syntax._
-import io.circe.{derivation, _}
+import io.circe._
 
 //noinspection NameBooleanParameters
 object GatewayProtocol extends DiscordProtocol {
@@ -166,7 +166,7 @@ object GatewayProtocol extends DiscordProtocol {
   implicit val deletedIntegrationCodec: Codec[GatewayEvent.DeletedIntegration] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
+  implicit lazy val rawPartialMessageEncoder: Encoder[GatewayEvent.RawPartialMessage] =
     (a: GatewayEvent.RawPartialMessage) => {
       val base = JsonOption.removeUndefined(
         Seq(

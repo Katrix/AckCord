@@ -52,7 +52,7 @@ object MyBot extends App {
 
       {
         import client.system
-        client.events.receiveGatewaySubscribe.runForeach {
+        client.events.fromGatewaySubscribe.runForeach {
           case Dispatch(_, msg, _) => println(msg.getClass.getName)
           case _                   =>
         }

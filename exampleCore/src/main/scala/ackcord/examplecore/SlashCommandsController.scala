@@ -24,7 +24,7 @@
 package ackcord.examplecore
 
 import ackcord.JsonSome
-import ackcord.data.{AllowedMention, InteractionGuildMember, UserId}
+import ackcord.data.{AllowedMention, InteractionGuildMember}
 import ackcord.requests.Requests
 import ackcord.interactions.ResolvedCommandInteraction
 import ackcord.interactions.commands.{CacheSlashCommandController, Command, CommandGroup}
