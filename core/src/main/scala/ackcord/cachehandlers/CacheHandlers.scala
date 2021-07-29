@@ -122,12 +122,16 @@ object CacheHandlers {
     override def handle(builder: CacheSnapshotBuilder, guildChannel: GuildChannel, registry: CacheTypeRegistry)(
         implicit log: Logger
     ): Unit = {
-      builder.guildMap.get(guildChannel.guildId) match {
-        case Some(guild) =>
-          registry.updateData(builder) {
-            guild.copy(channels = guild.channels.updated(guildChannel.id, guildChannel))
+      guildChannel match {
+        case thread: ThreadGuildChannel => registry.updateData(builder)(thread)
+        case _ =>
+          builder.guildMap.get(guildChannel.guildId) match {
+            case Some(guild) =>
+              registry.updateData(builder) {
+                guild.copy(channels = guild.channels.updated(guildChannel.id, guildChannel))
+              }
+            case None => log.warn(s"No guild for channel update $guildChannel")
           }
-        case None => log.warn(s"No guild for channel update $guildChannel")
       }
     }
   }
@@ -151,7 +155,7 @@ object CacheHandlers {
         implicit log: Logger
     ): Unit = {
       for {
-        guildUpdater <- registry.getUpdater[Guild]
+        guildUpdater <- registry.getUpdater[GatewayGuild]
         guild        <- builder.getGuild(obj.guildId)
       } {
         val unalteredThreads = guild.threads.filter(t => !obj.channelIds.contains(t._1))
@@ -223,7 +227,7 @@ object CacheHandlers {
         implicit log: Logger
     ): Unit = {
       val userUpdater  = registry.getUpdater[User]
-      val guildUpdater = registry.getUpdater[Guild]
+      val guildUpdater = registry.getUpdater[GatewayGuild]
       val guildMemberUpdater =
         guildUpdater.flatMap(_ => registry.getUpdater[GuildMember]) //We only want the member updater if we have a guild
 
@@ -252,6 +256,11 @@ object CacheHandlers {
         val channels  = rawChannels.flatMap(_.toGuildChannel(obj.id, Some(builder.botUser.id)))
         val threads = rawThreads.flatMap(_.toGuildChannel(obj.id, Some(builder.botUser.id))).collect {
           case thread: ThreadGuildChannel => thread
+        }
+
+        if(rawChannels.size > channels.size) {
+          val failedChannels = rawChannels.filter(raw => !channels.exists(_.id == raw.id))
+          log.warn(s"Could not add all channels to the cache. Failed channels: ${failedChannels}")
         }
 
         val oldGuild = builder.getGuild(obj.id)
@@ -420,7 +429,7 @@ object CacheHandlers {
 
         for {
           _            <- registry.getUpdater[Presence]
-          _            <- registry.getUpdater[Guild]
+          _            <- registry.getUpdater[GatewayGuild]
           guild        <- builder.getGuild(guildId)
           rawPresences <- rawPresencesOpt
         } {
@@ -720,7 +729,7 @@ object CacheHandlers {
         case ChannelType.GuildText | ChannelType.GuildVoice | ChannelType.GuildStageVoice | ChannelType.GuildCategory |
             ChannelType.GuildNews | ChannelType.GuildStore | ChannelType.GuildPublicThread |
             ChannelType.GuildNewsThread | ChannelType.GuildPrivateThread =>
-          registry.getUpdater[Guild].foreach { guildUpdater =>
+          registry.getUpdater[GatewayGuild].foreach { guildUpdater =>
             def runDelete[Tpe: ClassTag](): Unit = if (registry.hasDeleter[Tpe]) {
               rawChannel.guildId.flatMap(builder.getGuild).foreach { guild =>
                 guildUpdater.handle(
@@ -771,7 +780,7 @@ object CacheHandlers {
         implicit log: Logger
     ): Unit = {
       for {
-        updater <- registry.getUpdater[Guild]
+        updater <- registry.getUpdater[GatewayGuild]
         guild   <- builder.getGuild(obj.guildId)
       } {
         updater.handle(builder, guild.copy(threads = guild.threads - obj.id), registry)

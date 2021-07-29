@@ -138,11 +138,20 @@ object APIMessage {
   /**
     * Sent to the client when a thread is deleted. The current snapshot will
     * not contain the channel.
-    * @param channel The thread that was deleted.
+    * @param threadId The id of the thread that was deleted.
     */
-  case class ThreadDelete(guild: GatewayGuild, channel: ThreadGuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
-      extends GuildMessage
-      with ChannelMessage
+  case class ThreadDelete(
+      guild: GatewayGuild,
+      threadId: ThreadGuildChannelId,
+      parentId: TextGuildChannelId,
+      tpe: ChannelType,
+      cache: CacheState,
+      gatewayInfo: GatewayInfo
+  ) extends GuildMessage {
+
+    def thread: Option[ThreadGuildChannel] =
+      guild.threads.get(threadId)
+  }
 
   /**
     * Sent when the client gains access to a channel.

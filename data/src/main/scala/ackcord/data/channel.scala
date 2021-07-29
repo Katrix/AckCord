@@ -57,8 +57,8 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   case object GuildCategory      extends ChannelType(4)
   case object GuildNews          extends ChannelType(5)
   case object GuildStore         extends ChannelType(6)
-  case object GuildPublicThread  extends ChannelType(10) with ThreadChannelType
-  case object GuildNewsThread    extends ChannelType(11) with ThreadChannelType
+  case object GuildNewsThread    extends ChannelType(10) with ThreadChannelType
+  case object GuildPublicThread  extends ChannelType(11) with ThreadChannelType
   case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
   case object GuildStageVoice    extends ChannelType(13)
 
@@ -234,7 +234,7 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   /**
     * The default for when a newly created thread is auto archived in minutes.
     */
-  def defaultAutoArchiveDuration: Int
+  def defaultAutoArchiveDuration: Option[Int]
 }
 
 /**
@@ -252,7 +252,7 @@ case class NewsTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    defaultAutoArchiveDuration: Int
+    defaultAutoArchiveDuration: Option[Int]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 
@@ -274,7 +274,7 @@ case class NormalTextGuildChannel(
     nsfw: Boolean,
     parentId: Option[SnowflakeType[GuildCategory]],
     lastPinTimestamp: Option[OffsetDateTime],
-    defaultAutoArchiveDuration: Int
+    defaultAutoArchiveDuration: Option[Int]
 ) extends TextGuildChannel {
   override def channelType: ChannelType = ChannelType.GuildText
 }
@@ -302,7 +302,7 @@ case class ThreadGuildChannel(
 
   override def lastPinTimestamp: Option[OffsetDateTime] = None
 
-  override def defaultAutoArchiveDuration: Int = autoArchiveDuration
+  override def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
 
   override def position: Int = -1
 
