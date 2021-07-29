@@ -120,16 +120,16 @@ object RequestStreams {
       val ratelimits = builder.add(ratelimitFlow[Data, Ctx](requestSettings))
 
       val partition = builder.add(
-        Partition[(MaybeRequest[Data], Ctx)](
+        Partition[(Either[RequestDropped, Request[Data]], Ctx)](
           2,
           {
-            case (_: RequestDropped, _) => 1
-            case (_: Request[_], _)     => 0
+            case (Right(_), _) => 0
+            case (Left(_), _)  => 1
           }
         )
       )
-      val requests = partition.out(0).collect { case (request: Request[Data], ctx) => request -> ctx }
-      val dropped  = partition.out(1).collect { case (dropped: RequestDropped, ctx) => dropped -> ctx }
+      val requests = partition.out(0).collect { case (Right(request), ctx) => request -> ctx }
+      val dropped  = partition.out(1).collect { case (Left(dropped), ctx) => dropped -> ctx }
 
       val network = builder.add(requestFlowWithoutRatelimit[Data, Ctx](requestSettings))
       val out     = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
@@ -149,7 +149,7 @@ object RequestStreams {
   /** A request flow which obeys route specific rate limits, but not global ones. */
   def ratelimitFlow[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[Data], Ctx, MaybeRequest[Data], Ctx, NotUsed] = {
+  ): FlowWithContext[Request[Data], Ctx, Either[RequestDropped, Request[Data]], Ctx, NotUsed] = {
     implicit val triggerTimeout: Timeout = Timeout(requestSettings.maxAllowedWait)
     FlowWithContext.fromTuples(
       Flow[(Request[Data], Ctx)]
@@ -162,10 +162,10 @@ object RequestStreams {
 
           future
             .flatMap {
-              case Ratelimiter.CanPass(a)       => Future.successful(a)
+              case Ratelimiter.CanPass(a)       => Future.successful((Right(a._1), a._2))
               case Ratelimiter.FailedRequest(e) => Future.failed(e)
             }
-            .recover { case _: TimeoutException => RequestDropped(request.route, request.identifier) -> ctx }
+            .recover { case _: TimeoutException => Left(RequestDropped(request.route, request.identifier)) -> ctx }
         }
         .named("Ratelimiter")
     )

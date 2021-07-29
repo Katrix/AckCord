@@ -65,16 +65,10 @@ object RequestRoute {
 }
 
 /**
-  * Base trait for all requests before they enter the network flow.
-  * @tparam Data The response type for the request.
-  */
-sealed trait MaybeRequest[+Data]
-
-/**
   * Base super simple trait for all HTTP requests in AckCord.
   * @tparam Data The parsed response type.
   */
-trait Request[+Data] extends MaybeRequest[Data] { self =>
+trait Request[+Data] { self =>
 
   /** An unique identifier to track this request from creation to answer. */
   val identifier: UUID = UUID.randomUUID()
@@ -241,7 +235,7 @@ case class RequestError(e: Throwable, route: RequestRoute, identifier: UUID) ext
   * A request that was dropped before it entered the network, most likely
   * because of timing out while waiting for ratelimits.
   */
-case class RequestDropped(route: RequestRoute, identifier: UUID) extends MaybeRequest[Nothing] with FailedRequest {
+case class RequestDropped(route: RequestRoute, identifier: UUID) extends FailedRequest {
   override def asException: DroppedRequestException = DroppedRequestException(route.uri)
 
   override def ratelimitInfo: RatelimitInfo = RatelimitInfo(-1.millis, -1, -1, "")
