@@ -30,8 +30,8 @@ import ackcord.data.raw.{PartialRawGuildMember, RawChannel, RawMessageActivity}
 import ackcord.util._
 import cats.Later
 import cats.syntax.either._
-import io.circe.syntax._
 import io.circe._
+import io.circe.syntax._
 
 //noinspection NameBooleanParameters
 object GatewayProtocol extends DiscordProtocol {
@@ -421,7 +421,8 @@ object GatewayProtocol extends DiscordProtocol {
       "STAGE_INSTANCE_CREATE"      -> createDispatch(GatewayEvent.StageInstanceCreate),
       "STAGE_INSTANCE_UPDATE"      -> createDispatch(GatewayEvent.StageInstanceUpdate),
       "STAGE_INSTANCE_DELETE"      -> createDispatch(GatewayEvent.StageInstanceDelete),
-      ignored("GUILD_JOIN_REQUEST_DELETE")
+      ignored("GUILD_JOIN_REQUEST_DELETE"),
+      ignored("GUILD_APPLICATION_COMMAND_COUNTS_UPDATE")
     )
     res
   }
