@@ -44,10 +44,10 @@ import akka.{NotUsed, actor => classic}
 case class Events(
     publish: Sink[CacheEvent, NotUsed],
     subscribe: Source[(CacheEvent, CacheState), NotUsed],
-    @deprecatedName("sendGatewayPublish") toGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    @deprecatedName("sendGatewaySubscribe") toGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
-    @deprecatedName("receiveGatewayPublish") fromGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
-    @deprecatedName("receiveGatewaySubscribe") fromGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    toGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
+    toGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
+    fromGatewayPublish: Sink[GatewayMessage[Any], NotUsed],
+    fromGatewaySubscribe: Source[GatewayMessage[Any], NotUsed],
     parallelism: Int
 )(implicit system: ActorSystem[Nothing]) {
 
