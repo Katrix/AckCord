@@ -6,12 +6,12 @@ import ackcord.gateway.GatewayEvent.{GuildMemberChunk, GuildMemberChunkData, Raw
 import ackcord.gateway.{Dispatch, RequestGuildMembers, RequestGuildMembersData}
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
-import akka.stream.KillSwitches
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import cats.data.Ior
-
 import java.util.UUID
+
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 object BulkRequestMembers {
 
@@ -28,7 +28,8 @@ object BulkRequestMembers {
   def sourceUserIds(
       guild: GuildId,
       userIds: Seq[UserId],
-      events: Events
+      events: Events,
+      timeout: FiniteDuration = 30.seconds
   )(implicit system: ActorSystem[Nothing]): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
     require(userIds.nonEmpty, "Must request at least one member")
     val nonce = UUID.randomUUID().toString.replace("-", "")
@@ -45,7 +46,8 @@ object BulkRequestMembers {
         )
       ),
       events,
-      nonce
+      nonce,
+      timeout
     )
   }
 
@@ -65,10 +67,11 @@ object BulkRequestMembers {
   def seqUserIds(
       guild: GuildId,
       userIds: Seq[UserId],
-      events: Events
+      events: Events,
+      timeout: FiniteDuration = 30.seconds
   )(implicit system: ActorSystem[Nothing]): Future[Ior[Seq[(GuildId, UserId)], Seq[RawGuildMemberWithGuild]]] = {
     import system.executionContext
-    val (futureNotFound, futureMembers) = sourceUserIds(guild, userIds, events).toMat(Sink.seq)(Keep.both).run()
+    val (futureNotFound, futureMembers) = sourceUserIds(guild, userIds, events, timeout).toMat(Sink.seq)(Keep.both).run()
 
     for {
       notFound <- futureNotFound
@@ -95,7 +98,8 @@ object BulkRequestMembers {
       guild: GuildId,
       query: String,
       events: Events,
-      limit: Int = 100
+      limit: Int = 100,
+      timeout: FiniteDuration = 30.seconds
   )(implicit system: ActorSystem[Nothing]): Source[RawGuildMemberWithGuild, NotUsed] = {
     require(
       query.nonEmpty,
@@ -117,7 +121,8 @@ object BulkRequestMembers {
         )
       ),
       events,
-      nonce
+      nonce,
+      timeout
     ).mapMaterializedValue(_ => NotUsed)
   }
 
@@ -135,11 +140,12 @@ object BulkRequestMembers {
       guild: GuildId,
       query: String,
       events: Events,
-      limit: Int = 100
+      limit: Int = 100,
+      timeout: FiniteDuration = 30.seconds
   )(implicit system: ActorSystem[Nothing]): Future[Seq[RawGuildMemberWithGuild]] =
-    sourceUsernameQuery(guild, query, events, limit).runWith(Sink.seq)
+    sourceUsernameQuery(guild, query, events, limit, timeout).runWith(Sink.seq)
 
-  private def source(request: RequestGuildMembers, events: Events, nonce: String)(
+  private def source(request: RequestGuildMembers, events: Events, nonce: String, timeout: FiniteDuration)(
       implicit system: ActorSystem[Nothing]
   ): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
     val sendRequest = Source.single(request).to(events.toGatewayPublish)
@@ -153,7 +159,6 @@ object BulkRequestMembers {
           }
         }
         .flatMapConcat(identity)
-        .via(KillSwitches.single)
         .takeWhile(chunk => chunk.chunkIndex < (chunk.chunkCount - 1), inclusive = true)
         .collect { case GuildMemberChunkData(guildId, members, _, _, notFound, _, Some(`nonce`)) =>
           (members.map(RawGuildMemberWithGuild(guildId, _)), notFound.toSeq.flatten.map(guildId -> _))
@@ -181,5 +186,6 @@ object BulkRequestMembers {
       )
       .map(_._1)
       .mapConcat(_.toVector)
+      .idleTimeout(timeout)
   }
 }
