@@ -266,14 +266,21 @@ trait DiscordProtocol {
 
   implicit val buttonDecoder: Decoder[Button] = (c: HCursor) => {
     c.as[RawButton].map { button =>
-      val asTextButton = button.customId
-        .map(TextButton(button.label, _, button.style.asInstanceOf[TextButtonStyle], button.emoji, button.disabled))
+      val buttonValid = (button.label.isDefined || button.emoji.isDefined) && button.label
+        .forall(_.length <= 80) && button.customId.forall(_.length <= 100)
 
-      val asLinkButton = button.url
-        .filter(_ => button.style == ButtonStyle.Link)
-        .map(LinkButton(button.label, button.emoji, _, button.disabled))
+      if (buttonValid) {
+        val asTextButton = button.customId
+          .map(TextButton(button.label, _, button.style.asInstanceOf[TextButtonStyle], button.emoji, button.disabled))
 
-      asTextButton.orElse(asLinkButton).getOrElse(button)
+        val asLinkButton = button.url
+          .filter(_ => button.style == ButtonStyle.Link)
+          .map(LinkButton(button.label, button.emoji, _, button.disabled))
+
+        asTextButton.orElse(asLinkButton).getOrElse(button)
+      } else {
+        button
+      }
     }
   }
 
