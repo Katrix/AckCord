@@ -548,7 +548,15 @@ case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
   * @param id The id of the emoji. If it's absent, it's not a guild emoji.
   * @param name The name of the emoji.
   */
-case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None)
+case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None) {
+
+  /** Returns a string representation of this emoji for use in requests. */
+  def asString: String = (id, name) match {
+    case (Some(id), Some(name)) => s"$name:$id"
+    case (_, Some(name))        => name
+    case _                      => sys.error("Unexpected PartialEmoji form")
+  }
+}
 
 /**
   * A received embed.

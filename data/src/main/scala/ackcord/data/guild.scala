@@ -663,7 +663,7 @@ case class Emoji(
     else if (animated.getOrElse(false)) s"<a:$name:$id>"
     else s"$name"
 
-  /** Returns a string representation of this emoji used in requests. */
+  /** Returns a string representation of this emoji for use in requests. */
   def asString: String = if (!managed.getOrElse(false)) s"$name:$id" else s"$name"
 
   /** Get the creator of this emoji if it has one. */
