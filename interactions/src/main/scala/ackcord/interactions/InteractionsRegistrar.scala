@@ -54,7 +54,7 @@ object InteractionsRegistrar {
   private def handleInteraction(
       clientId: String,
       commandsByName: Map[String, Seq[CommandOrGroup]],
-      registeredButtons: RegisteredComponents,
+      registeredComponents: RegisteredComponents,
       interaction: RawInteraction,
       optCache: Option[CacheSnapshot]
   ) =
@@ -73,10 +73,10 @@ object InteractionsRegistrar {
       case InteractionType.MessageComponent =>
         interaction.data match {
           case Some(data: ApplicationComponentInteractionData) =>
-            registeredButtons
+            registeredComponents
               .handlerForIdentifier(data.customId)
               .orElse(GlobalRegisteredComponents.handlerForIdentifier(data.customId))
-              .map(_.handleRaw(clientId, interaction, optCache))
+              .flatMap(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
           case _ => Left(Some("None or invalid data sent for component execution"))
@@ -99,7 +99,7 @@ object InteractionsRegistrar {
   )(
       clientId: String,
       publicKey: String,
-      registeredButtons: RegisteredComponents = GlobalRegisteredComponents,
+      registeredComponents: RegisteredComponents = GlobalRegisteredComponents,
       parallelism: Int = 4
   )(
       implicit system: ActorSystem[Nothing]
@@ -160,7 +160,7 @@ object InteractionsRegistrar {
             }
           } yield res
         }
-        .map(_.map(handleInteraction(clientId, commandsByName, registeredButtons, _, None)))
+        .map(_.map(handleInteraction(clientId, commandsByName, registeredComponents, _, None)))
         .mapConcat {
           case Left(value)  => List(Left(value))
           case Right(value) => value.toList.map(Right.apply)

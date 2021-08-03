@@ -203,12 +203,10 @@ case class ApplicationCommandInteractionData(
     name: String,
     resolved: Option[ApplicationCommandInteractionDataResolved],
     options: Option[Seq[ApplicationCommandInteractionDataOption[_]]],
-    customId: Option[String],
-    componentType: Option[ComponentType]
 ) extends ApplicationInteractionData
-case class ApplicationComponentInteractionData(customId: String, values: Option[Seq[String]])
+case class ApplicationComponentInteractionData(componentType: ComponentType, customId: String, values: Option[Seq[String]])
     extends ApplicationInteractionData
-case class ApplicationUnknownInteractionData(tpe: Int, data: Json) extends ApplicationInteractionData
+case class ApplicationUnknownInteractionData(data: Json) extends ApplicationInteractionData
 
 case class ApplicationCommandInteractionDataResolved(
     users: Map[UserId, User],

@@ -1,7 +1,7 @@
 package ackcord.interactions.components
 
 import ackcord.CacheSnapshot
-import ackcord.data.{Message, RawInteraction}
+import ackcord.data.{ComponentType, Message, RawInteraction}
 import ackcord.interactions._
 import ackcord.requests.Requests
 
@@ -10,7 +10,7 @@ abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
     interactionTransformer: DataInteractionTransformer[shapeless.Const[ComponentInteraction]#λ, shapeless.Const[
       InteractionTpe
     ]#λ] = DataInteractionTransformer.identity[shapeless.Const[ComponentInteraction]#λ]
-) extends ComponentHandler[ComponentInteraction, InteractionTpe](requests, interactionTransformer) {
+) extends ComponentHandler[ComponentInteraction, InteractionTpe](requests, interactionTransformer, ComponentType.Button) {
 
   override protected def makeBaseInteraction(
       invocationInfo: InteractionInvocationInfo,

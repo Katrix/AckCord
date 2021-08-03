@@ -619,15 +619,13 @@ trait DiscordProtocol {
   implicit val applicationInteractionDataCodec: Codec[ApplicationInteractionData] =
     Codec.from(
       (c: HCursor) =>
-        c.get[Int]("component_type").flatMap {
-          case 1     => c.as[ApplicationCommandInteractionData]
-          case 2 | 3 => c.as[ApplicationComponentInteractionData]
-          case n     => c.as[Json].map(ApplicationUnknownInteractionData(n, _))
-        },
+        c.as[ApplicationComponentInteractionData]
+          .orElse(c.as[ApplicationCommandInteractionData])
+          .orElse(c.as[Json].map(ApplicationUnknownInteractionData)),
       {
-        case a: ApplicationCommandInteractionData         => a.asJson.deepMerge(Json.obj("component_type" := 1))
-        case a: ApplicationComponentInteractionData       => a.asJson.deepMerge(Json.obj("component_type" := 2))
-        case ApplicationUnknownInteractionData(tpe, data) => data.deepMerge(Json.obj("component_type" := tpe))
+        case a: ApplicationCommandInteractionData    => a.asJson
+        case a: ApplicationComponentInteractionData  => a.asJson
+        case ApplicationUnknownInteractionData(data) => data
       }
     )
 
