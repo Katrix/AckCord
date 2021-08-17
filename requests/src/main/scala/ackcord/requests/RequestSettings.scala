@@ -24,8 +24,7 @@
 package ackcord.requests
 
 import scala.concurrent.duration._
-
-import akka.actor.typed.ActorRef
+import akka.actor.typed.RecipientRef
 import akka.http.scaladsl.model.headers.{HttpCredentials, `User-Agent`}
 import akka.stream.OverflowStrategy
 
@@ -47,7 +46,7 @@ import akka.stream.OverflowStrategy
   */
 case class RequestSettings(
     credentials: Option[HttpCredentials],
-    ratelimitActor: ActorRef[Ratelimiter.Command],
+    ratelimitActor: RecipientRef[Ratelimiter.Command],
     relativeTime: Boolean = false,
     parallelism: Int = 4,
     maxRetryCount: Int = 3,
