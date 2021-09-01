@@ -23,14 +23,12 @@
  */
 package ackcord.requests
 
-import scala.concurrent.duration._
-import akka.actor.typed.RecipientRef
 import akka.http.scaladsl.model.headers.{HttpCredentials, `User-Agent`}
 import akka.stream.OverflowStrategy
 
 /**
   * @param credentials The credentials to use when sending the requests.
-  * @param ratelimitActor The actor to use to track ratelimits and such
+  * @param ratelimiter The object to use to track ratelimits and such
   * @param relativeTime Sets if the ratelimit reset should be calculated
   *                     using relative time instead of absolute time. Might
   *                     help with out of sync time on your device, but can
@@ -41,17 +39,14 @@ import akka.stream.OverflowStrategy
   * @param bufferSize The size of the internal buffer used before messages
   *                   are sent.
   * @param overflowStrategy The strategy to use if the buffer overflows.
-  * @param maxAllowedWait The maximum allowed wait time for ratelimits before
-  *                       a request is timed out.
   */
 case class RequestSettings(
     credentials: Option[HttpCredentials],
-    ratelimitActor: RecipientRef[Ratelimiter.Command],
+    ratelimiter: Ratelimiter,
     relativeTime: Boolean = false,
     parallelism: Int = 4,
     maxRetryCount: Int = 3,
     bufferSize: Int = 32,
     overflowStrategy: OverflowStrategy = OverflowStrategy.backpressure,
-    maxAllowedWait: FiniteDuration = 2.minutes,
     userAgent: `User-Agent` = RequestStreams.defaultUserAgent
 )

@@ -34,7 +34,7 @@ import ackcord.cachehandlers.CacheTypeRegistry
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
 import ackcord.gateway.{Compress, GatewayEvent, GatewayIntents, GatewayProtocol}
-import ackcord.requests.Ratelimiter
+import ackcord.requests.{Ratelimiter, RatelimiterActor}
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
@@ -101,7 +101,7 @@ case class ClientSettings(
     implicit val timeout: Timeout = Timeout(1.second)
     clientActor.ask[DiscordClientActor.GetRatelimiterAndEventsReply](DiscordClientActor.GetRatelimiterAndEvents).map {
       case DiscordClientActor.GetRatelimiterAndEventsReply(ratelimiter, cache) =>
-        val requests = requestSettings.toRequests(token, ratelimiter)
+        val requests = requestSettings.toRequestsActor(token, ratelimiter)
 
         new DiscordClientCore(
           cache,
@@ -152,19 +152,18 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 ) {
 
-  def toRequests(token: String, ratelimitActor: ActorRef[Ratelimiter.Command])(
+  def toRequestsActor(token: String, ratelimitActor: ActorRef[RatelimiterActor.Command])(
       implicit system: ActorSystem[Nothing]
   ): Requests =
     new Requests(
       ackcord.requests.RequestSettings(
         Some(BotAuthentication(token)),
-        ratelimitActor,
+        Ratelimiter.ofActor(ratelimitActor, parallelism)(system, maxAllowedWait),
         relativeTime,
         parallelism,
         maxRetryCount,
         bufferSize,
-        overflowStrategy,
-        maxAllowedWait
+        overflowStrategy
       )
     )
 }

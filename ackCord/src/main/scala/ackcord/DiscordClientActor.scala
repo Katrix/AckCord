@@ -27,7 +27,7 @@ package ackcord
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
 
-import ackcord.requests.Ratelimiter
+import ackcord.requests.RatelimiterActor
 import akka.Done
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
@@ -75,7 +75,7 @@ class DiscordClientActor(
 
   val musicManager: ActorRef[MusicManager.Command] = context.spawn(MusicManager(events), "MusicManager")
 
-  val rateLimiter: ActorRef[Ratelimiter.Command] = context.spawn(Ratelimiter(), "Ratelimiter")
+  val rateLimiter: ActorRef[RatelimiterActor.Command] = context.spawn(RatelimiterActor(), "Ratelimiter")
 
   private val shutdown = CoordinatedShutdown(system.toClassic)
 
@@ -142,5 +142,5 @@ object DiscordClientActor {
   case class LogoutReply(done: Future[Boolean])
   case class GetShardsReply(shards: Seq[ActorRef[DiscordShard.Command]])
   case class GetMusicManagerReply(musicManager: ActorRef[MusicManager.Command])
-  case class GetRatelimiterAndEventsReply(ratelimiter: ActorRef[Ratelimiter.Command], events: Events)
+  case class GetRatelimiterAndEventsReply(ratelimiter: ActorRef[RatelimiterActor.Command], events: Events)
 }

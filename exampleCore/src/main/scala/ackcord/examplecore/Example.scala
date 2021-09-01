@@ -33,7 +33,7 @@ import ackcord.commands._
 import ackcord.data.{ApplicationId, GuildId}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
-import ackcord.requests.{BotAuthentication, Ratelimiter, RequestSettings, Requests}
+import ackcord.requests.{BotAuthentication, Ratelimiter, RatelimiterActor, RequestSettings, Requests}
 import ackcord.interactions.InteractionsRegistrar
 import ackcord.interactions.raw.GetGuildCommands
 import ackcord.util.{APIGuildRouter, GuildRouter}
@@ -96,16 +96,18 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
     }
 
   private val shard       = context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
-  private val ratelimiter = context.spawn(Ratelimiter(), "Ratelimiter")
+  private val ratelimitActor = context.spawn(RatelimiterActor(), "Ratelimiter")
 
-  private val requests: Requests =
+  private val requests: Requests = {
+    implicit val timeout: Timeout = 2.minutes
     new Requests(
       RequestSettings(
         Some(BotAuthentication(settings.token)),
-        ratelimiter,
+        Ratelimiter.ofActor(ratelimitActor),
         relativeTime = true
       )
     )
+  }
 
   val controllerCommands: Seq[NamedDescribedCommand[_]] = {
     val controller = new CommandsController(requests)

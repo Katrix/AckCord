@@ -23,24 +23,21 @@
  */
 package ackcord.requests
 
-import java.util.concurrent.TimeoutException
-
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 import ackcord.AckCord
 import ackcord.util.AckCordRequestSettings
+import akka.NotUsed
 import akka.actor.typed.ActorSystem
-import akka.actor.typed.scaladsl.AskPattern._
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Keep, Merge, Partition, Sink, Source}
+import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Keep, Merge, Partition, Source}
 import akka.stream.{Attributes, FlowShape}
-import akka.util.{ByteString, Timeout}
-import akka.{Done, NotUsed}
+import akka.util.ByteString
 import io.circe.Json
 
 object RequestStreams {
@@ -100,7 +97,12 @@ object RequestStreams {
         .via(Flow.apply[(Try[HttpResponse], (Request[Data], Ctx))].map(t => ((t._1, t._2._1), t._2._2)))
         .via(requestParser[Data, Ctx](requestSettings))
         .asFlow
-        .alsoTo(sendRatelimitUpdates[Data](requestSettings).contramap[(RequestAnswer[Data], Ctx)](_._1))
+        .alsoTo(
+          requestSettings.ratelimiter
+            .reportRatelimits[Data]
+            .contramap[(RequestAnswer[Data], Ctx)](_._1)
+            .named("SendAnswersToRatelimiter")
+        )
     )
 
   /**
@@ -117,7 +119,7 @@ object RequestStreams {
       val in = builder.add(Flow[(Request[Data], Ctx)])
       val buffer =
         builder.add(Flow[(Request[Data], Ctx)].buffer(requestSettings.bufferSize, requestSettings.overflowStrategy))
-      val ratelimits = builder.add(ratelimitFlow[Data, Ctx](requestSettings))
+      val ratelimits = builder.add(requestSettings.ratelimiter.ratelimitRequests[Data, Ctx].named("Ratelimiter"))
 
       val partition = builder.add(
         Partition[(Either[RequestDropped, Request[Data]], Ctx)](
@@ -144,31 +146,6 @@ object RequestStreams {
     }
 
     FlowWithContext.fromTuples(Flow.fromGraph(graph))
-  }
-
-  /** A request flow which obeys route specific rate limits, but not global ones. */
-  def ratelimitFlow[Data, Ctx](requestSettings: RequestSettings)(
-      implicit system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[Data], Ctx, Either[RequestDropped, Request[Data]], Ctx, NotUsed] = {
-    implicit val triggerTimeout: Timeout = Timeout(requestSettings.maxAllowedWait)
-    FlowWithContext.fromTuples(
-      Flow[(Request[Data], Ctx)]
-        .mapAsyncUnordered(requestSettings.parallelism) { case (request, ctx) =>
-          //We don't use ask here to get be able to create a RequestDropped instance
-          import system.executionContext
-          val future = requestSettings.ratelimitActor.ask[Ratelimiter.Response[(Request[Data], Ctx)]](
-            Ratelimiter.WantToPass(request.route, request.identifier, _, (request, ctx))
-          )
-
-          future
-            .flatMap {
-              case Ratelimiter.CanPass(a)       => Future.successful((Right(a._1), a._2))
-              case Ratelimiter.FailedRequest(e) => Future.failed(e)
-            }
-            .recover { case _: TimeoutException => Left(RequestDropped(request.route, request.identifier)) -> ctx }
-        }
-        .named("Ratelimiter")
-    )
   }
 
   private def createHttpRequestFlow[Data, Ctx](requestSettings: RequestSettings)(
@@ -272,24 +249,6 @@ object RequestStreams {
         }
       }
   }.withAttributes(Attributes.name("RequestParser"))
-
-  private def sendRatelimitUpdates[Data](requestSettings: RequestSettings): Sink[RequestAnswer[Data], Future[Done]] =
-    Sink
-      .foreach[RequestAnswer[Data]] { answer =>
-        val isGlobal = answer match {
-          case ratelimited: RequestRatelimited => ratelimited.global
-          case _                               => false
-        }
-
-        requestSettings.ratelimitActor ! Ratelimiter.UpdateRatelimits(
-          answer.route,
-          answer.ratelimitInfo,
-          isGlobal,
-          answer.identifier
-        )
-      }
-      .async
-      .named("SendAnswersToRatelimiter")
 
   /** A flow that only returns successful responses. */
   def dataResponses[Data, Ctx]: FlowWithContext[RequestAnswer[Data], Ctx, Data, Ctx, NotUsed] =
