@@ -39,11 +39,13 @@ import io.circe._
 /**
   * Base trait for all REST requests in AckCord. If you feel an endpoint is
   * missing, and AckCord hasn't added it yet, you can extend this and create
-  * your own request. I'd recommend you to extend
-  * [[RESTRequest]] tough for simplicity.
+  * your own request. I'd recommend you to extend [[RESTRequest]] tough for
+  * simplicity.
   *
-  * @tparam RawResponse The response type of the request
-  * @tparam NiceResponse A nicer and less raw type of response created from the response.
+  * @tparam RawResponse
+  *   The response type of the request
+  * @tparam NiceResponse
+  *   A nicer and less raw type of response created from the response.
   */
 trait BaseRESTRequest[RawResponse, NiceResponse] extends Request[RawResponse] { self =>
 
@@ -79,8 +81,10 @@ trait BaseRESTRequest[RawResponse, NiceResponse] extends Request[RawResponse] { 
 }
 
 /**
-  * A simpler, request trait where the params are defined explicitly and converted to json.
-  * @tparam Params The json parameters of the request.
+  * A simpler, request trait where the params are defined explicitly and
+  * converted to json.
+  * @tparam Params
+  *   The json parameters of the request.
   */
 trait RESTRequest[Params, RawResponse, NiceResponse] extends BaseRESTRequest[RawResponse, NiceResponse] {
 
@@ -128,30 +132,32 @@ trait NoParamsReasonRequest[Self <: NoParamsReasonRequest[Self, RawResponse, Nic
     extends ReasonRequest[Self, NotUsed, RawResponse, NiceResponse]
     with NoParamsRequest[RawResponse, NiceResponse]
 
-/** A request where the response type and the nice response type are the same. */
+/**
+  * A request where the response type and the nice response type are the same.
+  */
 trait NoNiceResponseRequest[Params, Response] extends RESTRequest[Params, Response, Response] {
   override def toNiceResponse(response: Response): Response = response
 }
 
 /**
-  * A request, with an audit log reason, where the response type and
-  * the nice response type are the same.
+  * A request, with an audit log reason, where the response type and the nice
+  * response type are the same.
   */
 trait NoNiceResponseReasonRequest[Self <: NoNiceResponseReasonRequest[Self, Params, Response], Params, Response]
     extends ReasonRequest[Self, Params, Response, Response]
     with NoNiceResponseRequest[Params, Response]
 
 /**
-  * A request that takes no params, and where the response type and the
-  * nice response type are the same.
+  * A request that takes no params, and where the response type and the nice
+  * response type are the same.
   */
 trait NoParamsNiceResponseRequest[Response]
     extends NoParamsRequest[Response, Response]
     with NoNiceResponseRequest[NotUsed, Response]
 
 /**
-  * A request, with an audit log reason, that takes no params, and where the response type and the
-  * nice response type are the same.
+  * A request, with an audit log reason, that takes no params, and where the
+  * response type and the nice response type are the same.
   */
 trait NoParamsNiceResponseReasonRequest[Self <: NoParamsNiceResponseReasonRequest[Self, Response], Response]
     extends NoParamsReasonRequest[Self, Response, Response]

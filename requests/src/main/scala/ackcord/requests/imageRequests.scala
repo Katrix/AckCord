@@ -38,7 +38,10 @@ trait ImageRequest extends Request[ByteString] {
   require(ImageRequest.isPowerOf2(desiredSize), "Can only request an image sizes that are powers of 2")
   require(allowedFormats.contains(format), "That format is not allowed for this image")
 
-  /** The desired size of the image. Must be between 16 and 2048, and must be a power of 2. */
+  /**
+    * The desired size of the image. Must be between 16 and 2048, and must be a
+    * power of 2.
+    */
   def desiredSize: Int
 
   /** The format to get the image in. */
@@ -92,7 +95,7 @@ case class GetGuildSplashImage(
     splashHash: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
 case class GetDiscoverySplashImage(
@@ -102,7 +105,7 @@ case class GetDiscoverySplashImage(
     splashHash: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.discoverySplashImage(guildId, splashHash, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.discoverySplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
 case class GetGuildBannerImage(
@@ -112,17 +115,19 @@ case class GetGuildBannerImage(
     bannerHash: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
 }
 
 /** Get the default avatar of a user. Always returns a PNG. */
 case class GetDefaultUserAvatarImage(desiredSize: Int, discriminator: Int) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
   override def format: ImageFormat              = ImageFormat.PNG
-  override def route: RequestRoute              = Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
 }
 
-/** Get the image of a user avatar. Allowed formats are PNG, JPEG, WebP and GIF. */
+/**
+  * Get the image of a user avatar. Allowed formats are PNG, JPEG, WebP and GIF.
+  */
 case class GetUserAvatarImage(
     desiredSize: Int,
     format: ImageFormat,
@@ -142,7 +147,7 @@ case class GetApplicationIconImage(
     iconHash: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
 }
 
 /** Get the asset of an application. Allowed formats are PNG, JPEG and WebP. */
@@ -153,13 +158,15 @@ case class GetApplicationAssetImage(
     assetId: String
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute              = Routes.applicationAssetImage(applicationId, assetId, format, Some(desiredSize))
+  override def route: RequestRoute = Routes.applicationAssetImage(applicationId, assetId, format, Some(desiredSize))
 }
 
 /**
   * Get the widget image for a specific guild.
-  * @param guildId The guild to get the widget for.
-  * @param style Which style should be gotten.
+  * @param guildId
+  *   The guild to get the widget for.
+  * @param style
+  *   Which style should be gotten.
   */
 case class GetGuildWidgetImage(
     guildId: GuildId,
@@ -175,8 +182,10 @@ case class GetGuildWidgetImage(
 
 /**
   * Get the icon for a team
-  * @param teamId The id of the team to get the icon for
-  * @param teamIcon The icon identifier
+  * @param teamId
+  *   The id of the team to get the icon for
+  * @param teamIcon
+  *   The icon identifier
   */
 case class GetTeamIconImage(
     desiredSize: Int,

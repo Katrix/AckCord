@@ -66,9 +66,12 @@ object MemoryCacheSnapshot {
 
     /**
       * Process the current cache snapshot builder
-      * @param current The current processor being ran
-      * @param builder The builder being worked on
-      * @return The processor to be used for the next update
+      * @param current
+      *   The current processor being ran
+      * @param builder
+      *   The builder being worked on
+      * @return
+      *   The processor to be used for the next update
       */
     def apply(current: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor
 
@@ -90,10 +93,13 @@ object MemoryCacheSnapshot {
   )
 
   /**
-    * A cache processor that will execute another processor every N cache updates.
+    * A cache processor that will execute another processor every N cache
+    * updates.
     *
-    * @param every How often the processor will run
-    * @param remaining How many updates until the processor is run
+    * @param every
+    *   How often the processor will run
+    * @param remaining
+    *   How many updates until the processor is run
     */
   //noinspection ConvertExpressionToSAM
   def everyN(every: Int, remaining: Int, doAction: CacheProcessor): CacheProcessor = new CacheProcessor {
@@ -105,13 +111,18 @@ object MemoryCacheSnapshot {
   }
 
   /**
-    * A cache processor that will clean out typical garbage older that a
-    * given time.
-    * @param keepMessagesFor How long messages should be kept for
-    * @param keepTypedFor How long typed notifications should be kept for
-    * @param minMessagesPerChannel Amount of messages to always keep in the cache for each channel
-    * @param minMessages Amount of messages to always keep in the cache
-    * @param alwaysKeep A set of messages that should never be removed from the cache
+    * A cache processor that will clean out typical garbage older that a given
+    * time.
+    * @param keepMessagesFor
+    *   How long messages should be kept for
+    * @param keepTypedFor
+    *   How long typed notifications should be kept for
+    * @param minMessagesPerChannel
+    *   Amount of messages to always keep in the cache for each channel
+    * @param minMessages
+    *   Amount of messages to always keep in the cache
+    * @param alwaysKeep
+    *   A set of messages that should never be removed from the cache
     */
   def cleanGarbage(
       keepMessagesFor: FiniteDuration,

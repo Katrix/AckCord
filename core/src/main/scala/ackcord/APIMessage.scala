@@ -32,9 +32,9 @@ import ackcord.gateway.GatewayInfo
 sealed trait APIMessage {
 
   /**
-    * The current state of the cache. Contains both a snapshot of how the
-    * cache looks like after this message (the current one), and a snapshot for
-    * how the cache looked like before this message.
+    * The current state of the cache. Contains both a snapshot of how the cache
+    * looks like after this message (the current one), and a snapshot for how
+    * the cache looked like before this message.
     */
   def cache: CacheState
 
@@ -52,7 +52,10 @@ object APIMessage {
   /** Sent to the client when a previously interrupted connection is resumed. */
   case class Resumed(cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
-  /** A trait that covers all messages that might have an guild associated with them */
+  /**
+    * A trait that covers all messages that might have an guild associated with
+    * them
+    */
   sealed trait OptGuildMessage extends APIMessage {
 
     def guild: Option[GatewayGuild]
@@ -67,7 +70,8 @@ object APIMessage {
 
   /**
     * Sent to the client when a new channel is created.
-    * @param channel The channel that was created.
+    * @param channel
+    *   The channel that was created.
     */
   case class ChannelCreate(
       guild: Option[GatewayGuild],
@@ -79,7 +83,8 @@ object APIMessage {
 
   /**
     * Sent to the client when a channel is edited or updated.
-    * @param channel The channel that was edited.
+    * @param channel
+    *   The channel that was edited.
     */
   case class ChannelUpdate(guild: Option[GatewayGuild], channel: Channel, cache: CacheState, gatewayInfo: GatewayInfo)
       extends OptGuildMessage
@@ -88,7 +93,8 @@ object APIMessage {
   /**
     * Sent to the client when a channel is deleted. The current snapshot will
     * not contain the channel.
-    * @param channel The channel that was deleted.
+    * @param channel
+    *   The channel that was deleted.
     */
   case class ChannelDelete(
       guild: Option[GatewayGuild],
@@ -111,7 +117,8 @@ object APIMessage {
 
   /**
     * Sent to the client when a new thread is created.
-    * @param channel The thread that was created.
+    * @param channel
+    *   The thread that was created.
     */
   case class ThreadCreate(guild: GatewayGuild, channel: ThreadGuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
@@ -119,7 +126,8 @@ object APIMessage {
 
   /**
     * Sent to the client is added to a thread.
-    * @param channel The thread that the client was added to.
+    * @param channel
+    *   The thread that the client was added to.
     */
   case class ClientAddedToThread(
       guild: GatewayGuild,
@@ -131,16 +139,18 @@ object APIMessage {
 
   /**
     * Sent to the client when a thread is edited or updated.
-    * @param channel The thread that was edited.
+    * @param channel
+    *   The thread that was edited.
     */
   case class ThreadUpdate(guild: GatewayGuild, channel: ThreadGuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
       with ChannelMessage
 
   /**
-    * Sent to the client when a thread is deleted. The current snapshot will
-    * not contain the channel.
-    * @param threadId The id of the thread that was deleted.
+    * Sent to the client when a thread is deleted. The current snapshot will not
+    * contain the channel.
+    * @param threadId
+    *   The id of the thread that was deleted.
     */
   case class ThreadDelete(
       guild: GatewayGuild,
@@ -157,8 +167,10 @@ object APIMessage {
 
   /**
     * Sent when the client gains access to a channel.
-    * @param updatedChannelsIds The ids of the channels where threads were updated.
-    * @param threads The new updated threads.
+    * @param updatedChannelsIds
+    *   The ids of the channels where threads were updated.
+    * @param threads
+    *   The new updated threads.
     */
   case class ThreadListSync(
       guild: GatewayGuild,
@@ -170,8 +182,10 @@ object APIMessage {
 
   /**
     * Sent when the thread member object for the current user is updated.
-    * @param channel The channel where the update took place.
-    * @param member An updated thread member for the current user.
+    * @param channel
+    *   The channel where the update took place.
+    * @param member
+    *   An updated thread member for the current user.
     */
   case class ThreadMemberUpdate(
       guild: GatewayGuild,
@@ -184,10 +198,14 @@ object APIMessage {
 
   /**
     * Send when anyone is added or removed from a thread. If the current user
-    * does not have the `GUILD_MEMBERS` intent, then this will only be sent for the current user.
-    * @param channel The channel that had users added or removed.
-    * @param addedMembers The members that were added to the channel.
-    * @param removedMembers The members that were removed from the channel.
+    * does not have the `GUILD_MEMBERS` intent, then this will only be sent for
+    * the current user.
+    * @param channel
+    *   The channel that had users added or removed.
+    * @param addedMembers
+    *   The members that were added to the channel.
+    * @param removedMembers
+    *   The members that were removed from the channel.
     */
   case class ThreadMembersUpdate(
       guild: GatewayGuild,
@@ -200,12 +218,15 @@ object APIMessage {
       with ChannelMessage
 
   /**
-    * Sent to the client when a message is pinned or unpinned in a text
-    * channel where guild information is not available. This is not sent when
-    * a pinned message is deleted.
-    * @param guild The guild where the change happened
-    * @param channelId The channel where the change happened
-    * @param mostRecent The time the most recent pinned message was pinned
+    * Sent to the client when a message is pinned or unpinned in a text channel
+    * where guild information is not available. This is not sent when a pinned
+    * message is deleted.
+    * @param guild
+    *   The guild where the change happened
+    * @param channelId
+    *   The channel where the change happened
+    * @param mostRecent
+    *   The time the most recent pinned message was pinned
     */
   case class ChannelPinsUpdate(
       guild: Option[GatewayGuild],
@@ -224,40 +245,49 @@ object APIMessage {
 
   /**
     * Sent to the client after the client connects to the gateway, when a
-    * previously unavailable guild becomes available, and when the client
-    * joins a new guild.
-    * @param guild The created guild object
+    * previously unavailable guild becomes available, and when the client joins
+    * a new guild.
+    * @param guild
+    *   The created guild object
     */
   case class GuildCreate(guild: GatewayGuild, cache: CacheState, gatewayInfo: GatewayInfo) extends GuildMessage
 
   /**
     * Sent to the client when the guild object is updated.
-    * @param guild The updated guild.
+    * @param guild
+    *   The updated guild.
     */
   case class GuildUpdate(guild: GatewayGuild, cache: CacheState, gatewayInfo: GatewayInfo) extends GuildMessage
 
   /**
     * Sent to the client either if a guild becomes unavailable due to and
     * outage, or if the client leaves or is kicked from a guild.
-    * @param guild The deleted guild
-    * @param unavailable If an outage caused this event
+    * @param guild
+    *   The deleted guild
+    * @param unavailable
+    *   If an outage caused this event
     */
   case class GuildDelete(guild: GatewayGuild, unavailable: Option[Boolean], cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when an user is banned from a guild. If you need the
-    * [[ackcord.data.GuildMember]] object of the user, you can find it in [[cache.previous]].
-    * @param guild The guild the user was banned from.
-    * @param user The banned user.
+    * [[ackcord.data.GuildMember]] object of the user, you can find it in
+    * [[cache.previous]].
+    * @param guild
+    *   The guild the user was banned from.
+    * @param user
+    *   The banned user.
     */
   case class GuildBanAdd(guild: GatewayGuild, user: User, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when an user is unbanned from a guild.
-    * @param guild The guild where the user was previously banned.
-    * @param user The previously banned user.
+    * @param guild
+    *   The guild where the user was previously banned.
+    * @param user
+    *   The previously banned user.
     */
   case class GuildBanRemove(guild: GatewayGuild, user: User, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
@@ -265,50 +295,67 @@ object APIMessage {
   /**
     * Sent to the client when the emojis of a guild have been updated. If you
     * need the old emojis, you can find them in [[cache.previous]].
-    * @param guild The guild where the update occurred.
-    * @param emojis The new emojis.
+    * @param guild
+    *   The guild where the update occurred.
+    * @param emojis
+    *   The new emojis.
     */
   case class GuildEmojiUpdate(guild: GatewayGuild, emojis: Seq[Emoji], cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
-    * Sent to the client when the integrations of a guild were updated. You
-    * have to fetch the integrations yourself.
-    * @param guild The guild where the update occurred.
+    * Sent to the client when the integrations of a guild were updated. You have
+    * to fetch the integrations yourself.
+    * @param guild
+    *   The guild where the update occurred.
     */
   case class GuildIntegrationsUpdate(guild: GatewayGuild, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when a user joins the guild.
-    * @param member The new member
-    * @param guild The joined guild
+    * @param member
+    *   The new member
+    * @param guild
+    *   The joined guild
     */
   case class GuildMemberAdd(member: GuildMember, guild: GatewayGuild, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when a user leaves the guild (or is kicked or banned).
-    * If you need the [[ackcord.data.GuildMember]], you can find it in [[cache.previous]].
-    * @param user The user that left
-    * @param guild The guild the user left
+    * If you need the [[ackcord.data.GuildMember]], you can find it in
+    * [[cache.previous]].
+    * @param user
+    *   The user that left
+    * @param guild
+    *   The guild the user left
     */
   case class GuildMemberRemove(user: User, guild: GatewayGuild, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when a guild member is updated. The fields seen here
-    * are all the fields that can change. Looking at the users [[ackcord.data.GuildMember]]
-    * for changes is pointless.
-    * @param guild The guild of the guild member.
-    * @param roles Thew new roles for the guild member.
-    * @param user The user of the updated guild member.
-    * @param nick Nick of the user if one was set.
-    * @param joinedAt When the user joined the guild.
-    * @param premiumSince When the user started boosting the guild.
-    * @param deaf If the user is deafened in the guild.
-    * @param mute If the user is muted in the guild.
-    * @param pending If the user has not yet passed the guild's membership screening.
+    * are all the fields that can change. Looking at the users
+    * [[ackcord.data.GuildMember]] for changes is pointless.
+    * @param guild
+    *   The guild of the guild member.
+    * @param roles
+    *   Thew new roles for the guild member.
+    * @param user
+    *   The user of the updated guild member.
+    * @param nick
+    *   Nick of the user if one was set.
+    * @param joinedAt
+    *   When the user joined the guild.
+    * @param premiumSince
+    *   When the user started boosting the guild.
+    * @param deaf
+    *   If the user is deafened in the guild.
+    * @param mute
+    *   If the user is muted in the guild.
+    * @param pending
+    *   If the user has not yet passed the guild's membership screening.
     */
   case class GuildMemberUpdate(
       guild: GatewayGuild,
@@ -325,10 +372,12 @@ object APIMessage {
   ) extends GuildMessage
 
   /**
-    * Sent to the client if the client requests to get all members
-    * (even offline ones) for large guilds using [[ackcord.gateway.RequestGuildMembers]].
-    * @param guild The guild requested for.
-    * @param members The guild members in this chunk.
+    * Sent to the client if the client requests to get all members (even offline
+    * ones) for large guilds using [[ackcord.gateway.RequestGuildMembers]].
+    * @param guild
+    *   The guild requested for.
+    * @param members
+    *   The guild members in this chunk.
     */
   case class GuildMembersChunk(
       guild: GatewayGuild,
@@ -343,32 +392,40 @@ object APIMessage {
 
   /**
     * Sent to the client when a new role is created.
-    * @param guild The guild of the new role
-    * @param role The new role
+    * @param guild
+    *   The guild of the new role
+    * @param role
+    *   The new role
     */
   case class GuildRoleCreate(guild: GatewayGuild, role: Role, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when a role is updated.
-    * @param guild The guild of the updated role
-    * @param role The updated role
+    * @param guild
+    *   The guild of the updated role
+    * @param role
+    *   The updated role
     */
   case class GuildRoleUpdate(guild: GatewayGuild, role: Role, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent to the client when a role is deleted
-    * @param guild The guild of the deleted role
-    * @param roleId The deleted role.
+    * @param guild
+    *   The guild of the deleted role
+    * @param roleId
+    *   The deleted role.
     */
   case class GuildRoleDelete(guild: GatewayGuild, roleId: Role, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
 
   /**
     * Sent when an invite is created.
-    * @param guild The guild the invite is for.
-    * @param channel The channel the invite directs to.
+    * @param guild
+    *   The guild the invite is for.
+    * @param channel
+    *   The channel the invite directs to.
     */
   case class InviteCreate(
       guild: Option[GatewayGuild],
@@ -381,8 +438,10 @@ object APIMessage {
 
   /**
     * Sent when an invite is deleted.
-    * @param guild The guild the invite was for.
-    * @param channel The channel the invite directed to.
+    * @param guild
+    *   The guild the invite was for.
+    * @param channel
+    *   The channel the invite directed to.
     */
   case class InviteDelete(
       guild: Option[GatewayGuild],
@@ -402,7 +461,8 @@ object APIMessage {
 
   /**
     * Sent to the client when a message is created (posted).
-    * @param message The sent message
+    * @param message
+    *   The sent message
     */
   case class MessageCreate(guild: Option[GatewayGuild], message: Message, cache: CacheState, gatewayInfo: GatewayInfo)
       extends OptGuildMessage
@@ -410,7 +470,8 @@ object APIMessage {
 
   /**
     * Sent to the client when a message is updated.
-    * @param messageId The id of the message that changed.
+    * @param messageId
+    *   The id of the message that changed.
     */
   case class MessageUpdate(
       guild: Option[GatewayGuild],
@@ -431,8 +492,10 @@ object APIMessage {
 
   /**
     * Sent to the client when a message is deleted.
-    * @param messageId The deleted message.
-    * @param channelId The channel of the message.
+    * @param messageId
+    *   The deleted message.
+    * @param channelId
+    *   The channel of the message.
     */
   case class MessageDelete(
       messageId: MessageId,
@@ -446,8 +509,10 @@ object APIMessage {
   /**
     * Sent to the client when multiple messages are deleted at the same time.
     * Often this is performed by a bot.
-    * @param messageIds The deleted messages
-    * @param channelId The channel of the deleted messages
+    * @param messageIds
+    *   The deleted messages
+    * @param channelId
+    *   The channel of the deleted messages
     */
   case class MessageDeleteBulk(
       messageIds: Seq[MessageId],
@@ -459,13 +524,20 @@ object APIMessage {
 
   /**
     * Sent to the client when a user adds a reaction to a message.
-    * @param userId The id of the user that added the reaction.
-    * @param guild The guild the message was sent in.
-    * @param channelId The channel the message was sent in.
-    * @param messageId The id of the message the user added an reaction to.
-    * @param emoji The emoji the user reacted with.
-    * @param user The user that added the reaction.
-    * @param member The guild member that added the reaction.
+    * @param userId
+    *   The id of the user that added the reaction.
+    * @param guild
+    *   The guild the message was sent in.
+    * @param channelId
+    *   The channel the message was sent in.
+    * @param messageId
+    *   The id of the message the user added an reaction to.
+    * @param emoji
+    *   The emoji the user reacted with.
+    * @param user
+    *   The user that added the reaction.
+    * @param member
+    *   The guild member that added the reaction.
     */
   case class MessageReactionAdd(
       userId: UserId,
@@ -482,13 +554,20 @@ object APIMessage {
 
   /**
     * Sent to the client when a user removes a reaction from a message.
-    * @param userId The id of the user that added the reaction.
-    * @param guild The guild the message was sent in.
-    * @param channelId The channel the message was sent in.
-    * @param messageId The id of the message the user added an reaction to.
-    * @param emoji The emoji the user removed.
-    * @param user The user that added the reaction.
-    * @param member The guild member that added the reaction.
+    * @param userId
+    *   The id of the user that added the reaction.
+    * @param guild
+    *   The guild the message was sent in.
+    * @param channelId
+    *   The channel the message was sent in.
+    * @param messageId
+    *   The id of the message the user added an reaction to.
+    * @param emoji
+    *   The emoji the user removed.
+    * @param user
+    *   The user that added the reaction.
+    * @param member
+    *   The guild member that added the reaction.
     */
   case class MessageReactionRemove(
       userId: UserId,
@@ -504,11 +583,14 @@ object APIMessage {
       with TextChannelIdMessage
 
   /**
-    * Sent to the client when a user removes all reactions from a message.
-    * The emojis of the message can be found in [[cache.previous]].
-    * @param guild The guild of the message.
-    * @param channelId The id of the channel the message was sent it.
-    * @param messageId The id of the message the user removed the reactions from.
+    * Sent to the client when a user removes all reactions from a message. The
+    * emojis of the message can be found in [[cache.previous]].
+    * @param guild
+    *   The guild of the message.
+    * @param channelId
+    *   The id of the channel the message was sent it.
+    * @param messageId
+    *   The id of the message the user removed the reactions from.
     */
   case class MessageReactionRemoveAll(
       guild: Option[GatewayGuild],
@@ -522,10 +604,14 @@ object APIMessage {
   /**
     * Sent to the client when a user removes all reactions of a specific emoji
     * from a message.
-    * @param guild The guild of the message.
-    * @param channelId The id of the channel the message was sent it.
-    * @param messageId The id of the message the user removed the reactions from.
-    * @param emoji The removed emoji.
+    * @param guild
+    *   The guild of the message.
+    * @param channelId
+    *   The id of the channel the message was sent it.
+    * @param messageId
+    *   The id of the message the user removed the reactions from.
+    * @param emoji
+    *   The removed emoji.
     */
   case class MessageReactionRemoveEmoji(
       guild: Option[GatewayGuild],
@@ -539,9 +625,12 @@ object APIMessage {
 
   /**
     * Sent to the client when the presence of a user updates.
-    * @param guild The guild where the update took place
-    * @param user The user of the presence
-    * @param presence The new presence
+    * @param guild
+    *   The guild where the update took place
+    * @param user
+    *   The user of the presence
+    * @param presence
+    *   The new presence
     */
   case class PresenceUpdate(
       guild: GatewayGuild,
@@ -553,12 +642,18 @@ object APIMessage {
 
   /**
     * Sent to the client when a user starts typing in a channel
-    * @param guild The guild where the typing happened
-    * @param channelId The id of the channel where the typing happened
-    * @param userId The id of the user that began typing
-    * @param timestamp When user started typing
-    * @param user The user that began typing
-    * @param member The member that began typing
+    * @param guild
+    *   The guild where the typing happened
+    * @param channelId
+    *   The id of the channel where the typing happened
+    * @param userId
+    *   The id of the user that began typing
+    * @param timestamp
+    *   When user started typing
+    * @param user
+    *   The user that began typing
+    * @param member
+    *   The member that began typing
     */
   case class TypingStart(
       guild: Option[GatewayGuild],
@@ -573,21 +668,27 @@ object APIMessage {
 
   /**
     * Sent to the client when a user object is updated.
-    * @param user The new user.
+    * @param user
+    *   The new user.
     */
   case class UserUpdate(user: User, cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
   /**
     * Sent to the client when a user joins/leaves/moves voice channels
-    * @param voiceState New voice states
+    * @param voiceState
+    *   New voice states
     */
   case class VoiceStateUpdate(voiceState: VoiceState, cache: CacheState, gatewayInfo: GatewayInfo) extends APIMessage
 
   /**
-    * Sent a guilds voice server is updated. Also used when connecting to a voice channel.
-    * @param token The voice connection token
-    * @param guild The guild of the update
-    * @param endpoint The voice server
+    * Sent a guilds voice server is updated. Also used when connecting to a
+    * voice channel.
+    * @param token
+    *   The voice connection token
+    * @param guild
+    *   The guild of the update
+    * @param endpoint
+    *   The voice server
     */
   case class VoiceServerUpdate(
       token: String,
@@ -599,8 +700,10 @@ object APIMessage {
 
   /**
     * Sent to the client when guilds webhooks are updated.
-    * @param guild The guild of the updated webhook
-    * @param channel The channel for the webhook
+    * @param guild
+    *   The guild of the updated webhook
+    * @param channel
+    *   The channel for the webhook
     */
   case class WebhookUpdate(guild: GatewayGuild, channel: GuildChannel, cache: CacheState, gatewayInfo: GatewayInfo)
       extends GuildMessage
@@ -630,7 +733,8 @@ object APIMessage {
 
   /**
     * Sent when an integration is deleted.
-    * @param applicationId Id of the bot/OAuth2 application for the integration.
+    * @param applicationId
+    *   Id of the bot/OAuth2 application for the integration.
     */
   case class IntegrationDelete(
       guild: GatewayGuild,

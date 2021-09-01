@@ -23,6 +23,8 @@
  */
 package ackcord.requests
 
+import scala.concurrent.Future
+
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
@@ -34,11 +36,11 @@ import akka.http.scaladsl.model.{ContentTypes, HttpEntity, RequestEntity, Respon
 import io.circe._
 import io.circe.syntax._
 
-import scala.concurrent.Future
-
 /**
-  * @param name Name of the webhook
-  * @param avatar The avatar data of the webhook
+  * @param name
+  *   Name of the webhook
+  * @param avatar
+  *   The avatar data of the webhook
   */
 case class CreateWebhookData(name: String, avatar: Option[ImageData]) {
   require(name.length >= 2 && name.length <= 32, "Webhook name must be between 2 and 32 characters")
@@ -103,9 +105,12 @@ case class GetWebhookWithToken(id: SnowflakeType[Webhook], token: String) extend
 }
 
 /**
-  * @param name Name of the webhook.
-  * @param avatar The avatar data of the webhook.
-  * @param channelId The channel this webhook should be moved to.
+  * @param name
+  *   Name of the webhook.
+  * @param avatar
+  *   The avatar data of the webhook.
+  * @param channelId
+  *   The channel this webhook should be moved to.
   */
 case class ModifyWebhookData(
     name: JsonOption[String] = JsonUndefined,
@@ -180,13 +185,19 @@ case class DeleteWebhookWithToken(
 }
 
 /**
-  * @param content The content of the message.
-  * @param username The username to use with the message.
-  * @param avatarUrl The avatar url to use with the message.
-  * @param tts If this is a text-to-speech message.
-  * @param files The files to send with this message. You can reference these
-  *              files in the embed using `attachment://filename`.
-  * @param embeds Embeds to send with this message.
+  * @param content
+  *   The content of the message.
+  * @param username
+  *   The username to use with the message.
+  * @param avatarUrl
+  *   The avatar url to use with the message.
+  * @param tts
+  *   If this is a text-to-speech message.
+  * @param files
+  *   The files to send with this message. You can reference these files in the
+  *   embed using `attachment://filename`.
+  * @param embeds
+  *   Embeds to send with this message.
   */
 case class ExecuteWebhookData(
     content: String = "",
@@ -212,13 +223,13 @@ object ExecuteWebhookData {
   //We handle this here as the file argument needs special treatment
   implicit val encoder: Encoder[ExecuteWebhookData] = (a: ExecuteWebhookData) =>
     Json.obj(
-      "content" := a.content,
-      "username" := a.username,
-      "avatar_url" := a.avatarUrl,
-      "tts" := a.tts,
-      "embeds" := a.embeds,
+      "content"          := a.content,
+      "username"         := a.username,
+      "avatar_url"       := a.avatarUrl,
+      "tts"              := a.tts,
+      "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
-      "components" := a.components
+      "components"       := a.components
     )
 }
 
@@ -280,11 +291,16 @@ case class CreateFollowupMessage(
 }
 
 /**
-  * @param content The new content of the message.
-  * @param embeds The new embeds of the message.
-  * @param files The new files of the message.
-  * @param allowedMentions The new allowed mentions of the message.
-  * @param attachments The attachments to keep in the new message.
+  * @param content
+  *   The new content of the message.
+  * @param embeds
+  *   The new embeds of the message.
+  * @param files
+  *   The new files of the message.
+  * @param allowedMentions
+  *   The new allowed mentions of the message.
+  * @param attachments
+  *   The attachments to keep in the new message.
   */
 case class EditWebhookMessageData(
     content: JsonOption[String] = JsonUndefined,

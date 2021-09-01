@@ -28,8 +28,8 @@ import java.time.OffsetDateTime
 import scala.collection.immutable
 import scala.concurrent.Future
 
-import ackcord.data.{Application, ApplicationId, User}
 import ackcord.data.DiscordProtocol._
+import ackcord.data.{Application, ApplicationId, User}
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter._
 import akka.http.scaladsl.Http

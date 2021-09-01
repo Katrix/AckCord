@@ -28,13 +28,13 @@ import scala.concurrent.duration._
 
 import ackcord.commands._
 import ackcord.requests.SupervisionStreams
+import akka.NotUsed
 import akka.actor.CoordinatedShutdown
 import akka.actor.typed._
-import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.scaladsl.AskPattern._
+import akka.actor.typed.scaladsl.adapter._
 import akka.stream.scaladsl.Keep
 import akka.util.Timeout
-import akka.NotUsed
 
 class DiscordClientCore(
     val events: Events,

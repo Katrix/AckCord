@@ -33,9 +33,9 @@ import ackcord.commands._
 import ackcord.data.{ApplicationId, GuildId}
 import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
-import ackcord.requests.{BotAuthentication, Ratelimiter, RatelimiterActor, RequestSettings, Requests}
 import ackcord.interactions.InteractionsRegistrar
 import ackcord.interactions.raw.GetGuildCommands
+import ackcord.requests.{BotAuthentication, Ratelimiter, RatelimiterActor, RequestSettings, Requests}
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.Done
 import akka.actor.CoordinatedShutdown
@@ -95,7 +95,7 @@ class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings:
         throw e
     }
 
-  private val shard       = context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
+  private val shard          = context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
   private val ratelimitActor = context.spawn(RatelimiterActor(), "Ratelimiter")
 
   private val requests: Requests = {

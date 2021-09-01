@@ -1,5 +1,7 @@
 package ackcord.util
 
+import scala.concurrent.Future
+
 import ackcord.data.raw.RawMessage
 import ackcord.data.{MessageId, TextChannelId}
 import ackcord.requests.{GetChannelMessages, GetChannelMessagesData, Requests}
@@ -8,22 +10,24 @@ import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{Broadcast, Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.{KillSwitches, SourceShape}
 
-import scala.concurrent.Future
-
 object BulkRequestMessages {
 
   /**
     * Requests messages from Discord within the given message id range.
-    * @param channel The channel to get the messages from.
-    * @param from The exclusive start point getting the messages from.
-    *             Note, if this is larger than `to`, then the messages are
-    *             fetched in reverse.
-    * @param to The inclusive end point to get messages to.
-    *           Note, if this is smaller than `from`, then the messages are
-    *           fetched in reverse.
-    * @param requests The requests instance to use.
-    * @param batchSize The amount of messages to request at once.
-    * @return A source to consume the messages as they are fetched.
+    * @param channel
+    *   The channel to get the messages from.
+    * @param from
+    *   The exclusive start point getting the messages from. Note, if this is
+    *   larger than `to`, then the messages are fetched in reverse.
+    * @param to
+    *   The inclusive end point to get messages to. Note, if this is smaller
+    *   than `from`, then the messages are fetched in reverse.
+    * @param requests
+    *   The requests instance to use.
+    * @param batchSize
+    *   The amount of messages to request at once.
+    * @return
+    *   A source to consume the messages as they are fetched.
     */
   def source(
       channel: TextChannelId,
@@ -104,16 +108,20 @@ object BulkRequestMessages {
     * Beware that this method uses more memory than consuming the elements as
     * they are gotten using [[source]].
     *
-    * @param channel The channel to get the messages from.
-    * @param from The exclusive start point getting the messages from.
-    *             Note, if this is larger than `to`, then the messages are
-    *             fetched in reverse.
-    * @param to The inclusive end point to get messages to.
-    *           Note, if this is smaller than `from`, then the messages are
-    *           fetched in reverse.
-    * @param requests The requests instance to use.
-    * @param batchSize The amount of messages to request at once.
-    * @return A future seq containing all the messages in the range.
+    * @param channel
+    *   The channel to get the messages from.
+    * @param from
+    *   The exclusive start point getting the messages from. Note, if this is
+    *   larger than `to`, then the messages are fetched in reverse.
+    * @param to
+    *   The inclusive end point to get messages to. Note, if this is smaller
+    *   than `from`, then the messages are fetched in reverse.
+    * @param requests
+    *   The requests instance to use.
+    * @param batchSize
+    *   The amount of messages to request at once.
+    * @return
+    *   A future seq containing all the messages in the range.
     */
   def futureSeq(
       channel: TextChannelId,

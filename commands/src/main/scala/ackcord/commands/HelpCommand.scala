@@ -25,13 +25,13 @@ package ackcord.commands
 
 import java.util.concurrent.ConcurrentHashMap
 
-import scala.concurrent.Future
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.concurrent.Future
 
-import ackcord.{CacheSnapshot, OptFuture}
 import ackcord.data.Message
 import ackcord.requests.{CreateMessage, CreateMessageData, Requests}
+import ackcord.{CacheSnapshot, OptFuture}
 import akka.{Done, NotUsed}
 import cats.syntax.all._
 
@@ -105,8 +105,10 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
 
   /**
     * Create a reply for a search result
-    * @param matches All the commands that matched the arguments
-    * @return Data to create a message describing the search
+    * @param matches
+    *   All the commands that matched the arguments
+    * @return
+    *   Data to create a message describing the search
     */
   def createSearchReply(message: Message, query: String, matches: Seq[HelpCommand.HelpCommandProcessedEntry])(
       implicit c: CacheSnapshot
@@ -114,9 +116,11 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
 
   /**
     * Create a reply for all the commands tracked by this help command.
-    * @param page The page to use. Starts at 0.
-    * @return Data to create a message describing the commands tracked
-    *         by this help command.
+    * @param page
+    *   The page to use. Starts at 0.
+    * @return
+    *   Data to create a message describing the commands tracked by this help
+    *   command.
     */
   def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): Future[CreateMessageData]
 

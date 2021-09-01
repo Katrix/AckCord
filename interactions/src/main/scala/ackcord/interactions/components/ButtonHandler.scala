@@ -10,7 +10,11 @@ abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
     interactionTransformer: DataInteractionTransformer[shapeless.Const[ComponentInteraction]#λ, shapeless.Const[
       InteractionTpe
     ]#λ] = DataInteractionTransformer.identity[shapeless.Const[ComponentInteraction]#λ]
-) extends ComponentHandler[ComponentInteraction, InteractionTpe](requests, interactionTransformer, ComponentType.Button) {
+) extends ComponentHandler[ComponentInteraction, InteractionTpe](
+      requests,
+      interactionTransformer,
+      ComponentType.Button
+    ) {
 
   override protected def makeBaseInteraction(
       invocationInfo: InteractionInvocationInfo,

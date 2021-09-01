@@ -34,15 +34,18 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Partition, Sink}
 import cats.~>
 
 /**
-  * A [[CommandFunction]] from a command message to an output. Used for
-  * creating commands.
-  * @param defaultMustMention Set the default value for must mention when
-  *                           creating a named command.
-  * @param defaultMentionOrPrefix Set the default value for mention or prefix
-  *                               when creating a named command.
-  * @param parser The parser used for parsing the arguments this command takes.
-  * @tparam M The command message type used by the command.
-  * @tparam A The argument type of this command builder.
+  * A [[CommandFunction]] from a command message to an output. Used for creating
+  * commands.
+  * @param defaultMustMention
+  *   Set the default value for must mention when creating a named command.
+  * @param defaultMentionOrPrefix
+  *   Set the default value for mention or prefix when creating a named command.
+  * @param parser
+  *   The parser used for parsing the arguments this command takes.
+  * @tparam M
+  *   The command message type used by the command.
+  * @tparam A
+  *   The argument type of this command builder.
   */
 case class CommandBuilder[+M[_], A](
     requests: Requests,
@@ -58,25 +61,33 @@ case class CommandBuilder[+M[_], A](
   override def flow[C]: Flow[CommandMessage[C], Either[Option[CommandError], M[C]], NotUsed] = actionFunction.flow[C]
 
   /**
-    * Converts this builder into a builder that will create [[NamedComplexCommand]].
-    * These don't need to be provided a name when registering them.
+    * Converts this builder into a builder that will create
+    * [[NamedComplexCommand]]. These don't need to be provided a name when
+    * registering them.
     *
-    * @param structuredPrefixParser The structured prefix parser to use as a name for
-    *                               commands created by this builder.
+    * @param structuredPrefixParser
+    *   The structured prefix parser to use as a name for commands created by
+    *   this builder.
     */
   def namedParser(structuredPrefixParser: StructuredPrefixParser): NamedCommandBuilder[M, A] =
     new NamedCommandBuilder(this, structuredPrefixParser)
 
   /**
-    * Converts this builder into a builder that will create [[NamedComplexCommand]].
-    * These don't need to be provided a name when registering them.
+    * Converts this builder into a builder that will create
+    * [[NamedComplexCommand]]. These don't need to be provided a name when
+    * registering them.
     *
-    * @param namedSymbols The symbols to use when invoking the command
-    * @param namedAliases The valid aliases to use when invoking the command
-    * @param mustMention If the command requires a mention
-    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
-    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
-    *                        If needsMention is also true, skips the symbol check.
+    * @param namedSymbols
+    *   The symbols to use when invoking the command
+    * @param namedAliases
+    *   The valid aliases to use when invoking the command
+    * @param mustMention
+    *   If the command requires a mention
+    * @param aliasesCaseSensitive
+    *   If the command aliases should be matched with case sensitivity
+    * @param mentionOrPrefix
+    *   If true allows one to use a mention in place of a prefix. If
+    *   needsMention is also true, skips the symbol check.
     */
   def named(
       namedSymbols: Seq[String],
@@ -96,16 +107,23 @@ case class CommandBuilder[+M[_], A](
     )
 
   /**
-    * Converts this builder into a builder that will create [[NamedComplexCommand]].
-    * These don't need to be provided a name when registering them.
+    * Converts this builder into a builder that will create
+    * [[NamedComplexCommand]]. These don't need to be provided a name when
+    * registering them.
     *
-    * @param namedSymbols The symbols to use when invoking the command
-    * @param namedAliases The valid aliases to use when invoking the command
-    * @param mustMention If the command requires a mention
-    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
-    * @param canExecute A early precheck if the command can execute at all
-    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
-    *                        If needsMention is also true, skips the symbol check.
+    * @param namedSymbols
+    *   The symbols to use when invoking the command
+    * @param namedAliases
+    *   The valid aliases to use when invoking the command
+    * @param mustMention
+    *   If the command requires a mention
+    * @param aliasesCaseSensitive
+    *   If the command aliases should be matched with case sensitivity
+    * @param canExecute
+    *   A early precheck if the command can execute at all
+    * @param mentionOrPrefix
+    *   If true allows one to use a mention in place of a prefix. If
+    *   needsMention is also true, skips the symbol check.
     */
   def namedFunction(
       namedSymbols: (CacheSnapshot, Message) => Seq[String],
@@ -126,16 +144,23 @@ case class CommandBuilder[+M[_], A](
   )
 
   /**
-    * Converts this builder into a builder that will create [[NamedComplexCommand]].
-    * These don't need to be provided a name when registering them.
+    * Converts this builder into a builder that will create
+    * [[NamedComplexCommand]]. These don't need to be provided a name when
+    * registering them.
     *
-    * @param namedSymbols The symbols to use when invoking the command
-    * @param namedAliases The valid aliases to use when invoking the command
-    * @param mustMention If the command requires a mention
-    * @param aliasesCaseSensitive If the command aliases should be matched with case sensitivity
-    * @param canExecute A early precheck if the command can execute at all
-    * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
-    *                        If needsMention is also true, skips the symbol check.
+    * @param namedSymbols
+    *   The symbols to use when invoking the command
+    * @param namedAliases
+    *   The valid aliases to use when invoking the command
+    * @param mustMention
+    *   If the command requires a mention
+    * @param aliasesCaseSensitive
+    *   If the command aliases should be matched with case sensitivity
+    * @param canExecute
+    *   A early precheck if the command can execute at all
+    * @param mentionOrPrefix
+    *   If true allows one to use a mention in place of a prefix. If
+    *   needsMention is also true, skips the symbol check.
     */
   def namedAsync(
       namedSymbols: (CacheSnapshot, Message) => Future[Seq[String]],
@@ -157,15 +182,18 @@ case class CommandBuilder[+M[_], A](
 
   /**
     * Creates a new command builder parsing a specific type.
-    * @tparam B The type to parse
+    * @tparam B
+    *   The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): CommandBuilder[M, B] =
     copy(parser = newParser)
 
   /**
     * Creates a command from a sink.
-    * @param sinkBlock The sink that will process this command.
-    * @tparam Mat The materialized result of running this command.
+    * @param sinkBlock
+    *   The sink that will process this command.
+    * @tparam Mat
+    *   The materialized result of running this command.
     */
   def toSink[Mat](sinkBlock: Sink[M[A], Mat]): ComplexCommand[A, Mat] =
     new ComplexCommand[A, Mat](self.parser, CommandBuilder.streamedFlow(sinkBlock, self.flow[A]))
@@ -205,7 +233,10 @@ object CommandBuilder {
         }
     }
 
-  /** A command function that lets you add the guild member to a command message. */
+  /**
+    * A command function that lets you add the guild member to a command
+    * message.
+    */
   def withGuildMember[I[A] <: GuildCommandMessage[A] with UserCommandMessage[A], O[
       _
   ]](create: GuildMember => I ~> O): CommandTransformer[I, O] = new CommandTransformer[I, O] {
@@ -231,7 +262,9 @@ object CommandBuilder {
     }
   }
 
-  /** A command function that only allow commands sent from one specific guild. */
+  /**
+    * A command function that only allow commands sent from one specific guild.
+    */
   def inOneGuild[M[A] <: GuildCommandMessage[A]](
       guildId: GuildId
   ): CommandFunction[M, M] =
@@ -241,8 +274,8 @@ object CommandBuilder {
     }
 
   /**
-    * A command function that requires that those who use this command need
-    * some set of permissions.
+    * A command function that requires that those who use this command need some
+    * set of permissions.
     */
   def needPermission[M[A] <: GuildCommandMessage[A]](
       neededPermission: Permission
@@ -322,16 +355,20 @@ object CommandBuilder {
 }
 
 /**
-  * A [[CommandFunction]] from a command message to an output. Used for
-  * creating commands.
-  * @param defaultMustMention Set the default value for must mention when
-  *                           creating a named command.
-  * @param defaultMentionOrPrefix Set the default value for mention or prefix
-  *                               when creating a named command.
-  * @param prefixParser The prefix parser to use for commands created from this builder.
-  * @param parser The parser used for parsing the arguments this command takes.
-  * @tparam M The command message type used by the command.
-  * @tparam A The argument type of this command builder.
+  * A [[CommandFunction]] from a command message to an output. Used for creating
+  * commands.
+  * @param defaultMustMention
+  *   Set the default value for must mention when creating a named command.
+  * @param defaultMentionOrPrefix
+  *   Set the default value for mention or prefix when creating a named command.
+  * @param prefixParser
+  *   The prefix parser to use for commands created from this builder.
+  * @param parser
+  *   The parser used for parsing the arguments this command takes.
+  * @tparam M
+  *   The command message type used by the command.
+  * @tparam A
+  *   The argument type of this command builder.
   */
 case class NamedCommandBuilder[+M[_], A](
     requests: Requests,
@@ -372,7 +409,8 @@ case class NamedCommandBuilder[+M[_], A](
 
   /**
     * Creates a new command builder parsing a specific type.
-    * @tparam B The type to parse
+    * @tparam B
+    *   The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): NamedCommandBuilder[M, B] =
     copy(parser = newParser)
@@ -387,17 +425,22 @@ case class NamedCommandBuilder[+M[_], A](
 }
 
 /**
-  * A [[CommandFunction]] from a command message to an output. Used for
-  * creating commands.
-  * @param defaultMustMention Set the default value for must mention when
-  *                           creating a named command.
-  * @param defaultMentionOrPrefix Set the default value for mention or prefix
-  *                               when creating a named command.
-  * @param prefixParser The prefix parser to use for commands created from this builder.
-  * @param description The description to use for commands created from this builder.
-  * @param parser The parser used for parsing the arguments this command takes.
-  * @tparam M The command message type used by the command.
-  * @tparam A The argument type of this command builder.
+  * A [[CommandFunction]] from a command message to an output. Used for creating
+  * commands.
+  * @param defaultMustMention
+  *   Set the default value for must mention when creating a named command.
+  * @param defaultMentionOrPrefix
+  *   Set the default value for mention or prefix when creating a named command.
+  * @param prefixParser
+  *   The prefix parser to use for commands created from this builder.
+  * @param description
+  *   The description to use for commands created from this builder.
+  * @param parser
+  *   The parser used for parsing the arguments this command takes.
+  * @tparam M
+  *   The command message type used by the command.
+  * @tparam A
+  *   The argument type of this command builder.
   */
 case class NamedDescribedCommandBuilder[+M[_], A](
     requests: Requests,
@@ -427,7 +470,8 @@ case class NamedDescribedCommandBuilder[+M[_], A](
 
   /**
     * Creates a new command builder parsing a specific type.
-    * @tparam B The type to parse
+    * @tparam B
+    *   The type to parse
     */
   def parsing[B](implicit newParser: MessageParser[B]): NamedDescribedCommandBuilder[M, B] =
     copy(parser = newParser)
@@ -444,7 +488,8 @@ case class NamedDescribedCommandBuilder[+M[_], A](
 
 /**
   * A message sent with an invocation of a command.
-  * @tparam A The parsed argument type
+  * @tparam A
+  *   The parsed argument type
   */
 trait CommandMessage[+A] {
 
@@ -485,7 +530,8 @@ class WrappedCommandMessage[A](m: CommandMessage[A]) extends CommandMessage[A] {
 
 /**
   * A message sent with the invocation of a guild command
-  * @tparam A The parsed argument type
+  * @tparam A
+  *   The parsed argument type
   */
 trait GuildCommandMessage[+A] extends CommandMessage[A] {
   override def textChannel: TextGuildChannel
@@ -518,7 +564,8 @@ object GuildCommandMessage {
 
 /**
   * A message sent with the invocation of command used by a user
-  * @tparam A The parsed argument type
+  * @tparam A
+  *   The parsed argument type
   */
 trait UserCommandMessage[+A] extends CommandMessage[A] {
 
@@ -580,9 +627,12 @@ object VoiceGuildCommandMessage {
 
 /**
   * Represents an error encountered when executing an command.
-  * @param error The errror message
-  * @param channel The channel the error occoured in
-  * @param cache A cache snapshot tied to the execution of the command
+  * @param error
+  *   The errror message
+  * @param channel
+  *   The channel the error occoured in
+  * @param cache
+  *   A cache snapshot tied to the execution of the command
   */
 case class CommandError(error: String, channel: TextChannel, cache: CacheSnapshot)
 object CommandError {

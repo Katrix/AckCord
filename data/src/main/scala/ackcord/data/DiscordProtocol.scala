@@ -163,7 +163,7 @@ trait DiscordProtocol {
       } yield RoleTags(botId, integrationId, c.downField("premium_subscriber").succeeded),
     (a: RoleTags) => {
       val base = Json.obj(
-        "bot_id" := a.botId,
+        "bot_id"         := a.botId,
         "integration_id" := a.integrationId
       )
 
@@ -572,12 +572,12 @@ trait DiscordProtocol {
       case "nick"                          => mkChange(AuditLogChange.Nick)
       case "avatar_hash"                   => mkChange(AuditLogChange.AvatarHash)
       case "id"                            => mkChange(AuditLogChange.Id)
-      case "type"                          => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
-      case "enable_emoticons"              => mkChange(AuditLogChange.EnableEmoticons)
-      case "expire_behavior"               => mkChange(AuditLogChange.ExpireBehavior)
-      case "expire_grace_period"           => mkChange(AuditLogChange.ExpireGracePeriod)
-      case "user_limit"                    => mkChange(AuditLogChange.UserLimit)
-      case "privacy_level"                 => mkChange(AuditLogChange.PrivacyLevel)
+      case "type"             => mkChange(AuditLogChange.TypeInt).left.flatMap(_ => mkChange(AuditLogChange.TypeString))
+      case "enable_emoticons" => mkChange(AuditLogChange.EnableEmoticons)
+      case "expire_behavior"  => mkChange(AuditLogChange.ExpireBehavior)
+      case "expire_grace_period" => mkChange(AuditLogChange.ExpireGracePeriod)
+      case "user_limit"          => mkChange(AuditLogChange.UserLimit)
+      case "privacy_level"       => mkChange(AuditLogChange.PrivacyLevel)
     }
   }
 
@@ -668,8 +668,8 @@ trait DiscordProtocol {
       },
       { case ApplicationCommandInteractionDataOption(name, tpe, value) =>
         Json.obj(
-          "name" := name,
-          "type" := (tpe: ApplicationCommandOptionType),
+          "name"            := name,
+          "type"            := (tpe: ApplicationCommandOptionType),
           tpe.valueJsonName := value.map(tpe.encodeJson)
         )
       }
@@ -707,17 +707,17 @@ trait DiscordProtocol {
       ),
     (a: RawInteraction) =>
       Json.obj(
-        "id" := a.id,
+        "id"             := a.id,
         "application_id" := a.applicationId,
-        "type" := a.tpe,
-        "data" := a.data,
-        "guild_id" := a.guildId,
-        "channel_id" := a.channelId,
+        "type"           := a.tpe,
+        "data"           := a.data,
+        "guild_id"       := a.guildId,
+        "channel_id"     := a.channelId,
         "member" := a.member.map(
           _.asJson.withObject(o => Json.fromJsonObject(o.add("permissions", a.memberPermission.get.asJson)))
         ),
-        "user" := a.user,
-        "token" := a.token,
+        "user"    := a.user,
+        "token"   := a.token,
         "message" := a.message,
         "version" := a.version
       )

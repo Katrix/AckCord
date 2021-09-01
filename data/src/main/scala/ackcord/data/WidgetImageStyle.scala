@@ -28,8 +28,8 @@ import scala.collection.immutable
 import enumeratum.values.{StringEnum, StringEnumEntry}
 
 /**
-  * A style the widget image might be shown as.
-  * See examples here. https://discord.com/developers/docs/resources/guild#get-guild-widget-image
+  * A style the widget image might be shown as. See examples here.
+  * https://discord.com/developers/docs/resources/guild#get-guild-widget-image
   */
 sealed abstract class WidgetImageStyle(val value: String) extends StringEnumEntry
 object WidgetImageStyle extends StringEnum[WidgetImageStyle] {

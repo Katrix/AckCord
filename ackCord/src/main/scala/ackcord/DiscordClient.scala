@@ -72,13 +72,16 @@ trait DiscordClient {
 
   /**
     * Logout the shards of this client
-    * @param timeout The amount of time to wait before forcing logout.
+    * @param timeout
+    *   The amount of time to wait before forcing logout.
     */
   def logout(timeout: FiniteDuration = 1.minute): Future[Boolean]
 
   /**
     * Logs out the shards of this client, and then shuts down the actor system.
-    * @param timeout The amount of time to wait for logout to succeed before forcing shutdown.
+    * @param timeout
+    *   The amount of time to wait for logout to succeed before forcing
+    *   shutdown.
     */
   def shutdownAckCord(timeout: FiniteDuration = 1.minute): Future[Unit] =
     logout(timeout)
@@ -91,49 +94,61 @@ trait DiscordClient {
 
   /**
     * Logs out the shards of this client, and then shuts down the JVM.
-    * @param timeout The amount of time to wait for logout to succeed before forcing shutdown.
+    * @param timeout
+    *   The amount of time to wait for logout to succeed before forcing
+    *   shutdown.
     * @return
     */
   def shutdownJVM(timeout: FiniteDuration = 1.minute): Future[Unit]
 
   /**
-    * Runs a function whenever [[APIMessage]]s are received.
+    * Runs a function whenever [[APIMessage]] s are received.
     *
     * If you use IntelliJ you might have to specify the execution type.
     * (Normally Id, SourceRequest or Future)
-    * @param handler The handler function
-    * @param streamable A way to convert your execution type to a stream.
-    * @tparam G The execution type
-    * @return An event registration to handle the listener's lifecycle.
+    * @param handler
+    *   The handler function
+    * @param streamable
+    *   A way to convert your execution type to a stream.
+    * @tparam G
+    *   The execution type
+    * @return
+    *   An event registration to handle the listener's lifecycle.
     */
   def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
       implicit streamable: Streamable[G]
   ): EventRegistration[NotUsed]
 
   /**
-    * Runs a function whenever [[APIMessage]]s are received.
+    * Runs a function whenever [[APIMessage]] s are received.
     *
-    * @param handler The handler function
-    * @return An event registration to handle the listener's lifecycle.
+    * @param handler
+    *   The handler function
+    * @return
+    *   An event registration to handle the listener's lifecycle.
     */
   def onEventSideEffects(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
     onEventStreamable[cats.Id](handler)
 
   /**
-    * Runs a function whenever [[APIMessage]]s are received without the cache
+    * Runs a function whenever [[APIMessage]] s are received without the cache
     * snapshot.
     *
-    * @param handler The handler function
-    * @return An event registration to handle the listener's lifecycle.
+    * @param handler
+    *   The handler function
+    * @return
+    *   An event registration to handle the listener's lifecycle.
     */
   def onEventSideEffectsIgnore(handler: PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
     onEventStreamable[cats.Id](_ => handler)
 
   /**
-    * Runs an async function whenever [[APIMessage]]s are received.
+    * Runs an async function whenever [[APIMessage]] s are received.
     *
-    * @param handler The handler function
-    * @return An event registration to handle the listener's lifecycle.
+    * @param handler
+    *   The handler function
+    * @return
+    *   An event registration to handle the listener's lifecycle.
     */
   def onEventAsync(
       handler: CacheSnapshot => PartialFunction[APIMessage, OptFuture[Unit]]
@@ -142,18 +157,24 @@ trait DiscordClient {
 
   /**
     * Registers an [[EventListener]], created inside an [[EventsController]].
-    * @param listener The listener to run
-    * @tparam A The type events this listener takes.
-    * @tparam Mat The materialized result of running the listener graph.
-    * @return An event registration to handle the listener's lifecycle.
+    * @param listener
+    *   The listener to run
+    * @tparam A
+    *   The type events this listener takes.
+    * @tparam Mat
+    *   The materialized result of running the listener graph.
+    * @return
+    *   An event registration to handle the listener's lifecycle.
     */
   def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): EventRegistration[Mat]
 
   /**
-    * Starts many listeners at the same time. They must all have a
-    * materialized value of NotUsed.
-    * @param listeners The listeners to run.
-    * @return The listeners together with their registrations.
+    * Starts many listeners at the same time. They must all have a materialized
+    * value of NotUsed.
+    * @param listeners
+    *   The listeners to run.
+    * @return
+    *   The listeners together with their registrations.
     */
   def bulkRegisterListeners(
       listeners: EventListener[_ <: APIMessage, NotUsed]*
@@ -162,14 +183,19 @@ trait DiscordClient {
 
   /**
     * Join a voice channel.
-    * @param guildId The guildId of the voice channel.
-    * @param channelId The channelId of the voice channel.
-    * @param createPlayer A named argument to create a player if one doesn't
-    *                     already exist.
-    * @param force The the join should be force even if already connected to
-    *              somewhere else (move channel).
-    * @param timeoutDur The timeout duration before giving up,
-    * @return A future containing the used player.
+    * @param guildId
+    *   The guildId of the voice channel.
+    * @param channelId
+    *   The channelId of the voice channel.
+    * @param createPlayer
+    *   A named argument to create a player if one doesn't already exist.
+    * @param force
+    *   The the join should be force even if already connected to somewhere else
+    *   (move channel).
+    * @param timeoutDur
+    *   The timeout duration before giving up,
+    * @return
+    *   A future containing the used player.
     */
   def joinChannel(
       guildId: GuildId,
@@ -194,8 +220,10 @@ trait DiscordClient {
 
   /**
     * Leave a voice channel.
-    * @param guildId The guildId to leave the voice channel in.
-    * @param destroyPlayer If the player used for this guild should be destroyed.
+    * @param guildId
+    *   The guildId to leave the voice channel in.
+    * @param destroyPlayer
+    *   If the player used for this guild should be destroyed.
     */
   def leaveChannel(guildId: GuildId, destroyPlayer: Boolean = false): Unit =
     musicManager.foreach(_ ! DisconnectFromChannel(guildId, destroyPlayer))

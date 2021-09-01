@@ -31,11 +31,16 @@ import akka.util.ByteString
 /**
   * Represents the RTP header used for sending and receiving voice data
   *
-  * @param tpe The type to use. Should be `0x80`
-  * @param version The version to use. Should be `0x78`
-  * @param sequence The sequence
-  * @param timestamp Timestamp
-  * @param ssrc SSRC of sender
+  * @param tpe
+  *   The type to use. Should be `0x80`
+  * @param version
+  *   The version to use. Should be `0x78`
+  * @param sequence
+  *   The sequence
+  * @param timestamp
+  *   Timestamp
+  * @param ssrc
+  *   SSRC of sender
   */
 case class RTPHeader(tpe: Byte, version: Byte, sequence: Short, timestamp: Int, ssrc: Int) {
   lazy val byteString: ByteString = {

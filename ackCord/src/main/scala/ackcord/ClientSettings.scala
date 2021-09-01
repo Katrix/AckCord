@@ -43,19 +43,32 @@ import akka.util.Timeout
 
 /**
   * Settings used when connecting to Discord.
-  * @param token The token for the bot.
-  * @param largeThreshold The large threshold.
-  * @param shardNum The shard index of this shard.
-  * @param shardTotal The amount of shards.
-  * @param idleSince If the bot has been idle, set the time since.
-  * @param activities Send one or more activities when connecting.
-  * @param status The status to use when connecting.
-  * @param afk If the bot should be afk when connecting.
-  * @param compress What sort of compression the gateway should use.
-  * @param intents Fine grained control over which events Discord should sent to your bot.
-  * @param system The actor system to use.
-  * @param requestSettings The request settings to use.
-  * @param cacheSettings Settings the cache will use.
+  * @param token
+  *   The token for the bot.
+  * @param largeThreshold
+  *   The large threshold.
+  * @param shardNum
+  *   The shard index of this shard.
+  * @param shardTotal
+  *   The amount of shards.
+  * @param idleSince
+  *   If the bot has been idle, set the time since.
+  * @param activities
+  *   Send one or more activities when connecting.
+  * @param status
+  *   The status to use when connecting.
+  * @param afk
+  *   If the bot should be afk when connecting.
+  * @param compress
+  *   What sort of compression the gateway should use.
+  * @param intents
+  *   Fine grained control over which events Discord should sent to your bot.
+  * @param system
+  *   The actor system to use.
+  * @param requestSettings
+  *   The request settings to use.
+  * @param cacheSettings
+  *   Settings the cache will use.
   */
 case class ClientSettings(
     token: String,
@@ -121,8 +134,8 @@ case class ClientSettings(
   }
 
   /**
-    * Create a [[DiscordClient]] from these settings while letting Discord
-    * set the shard amount.
+    * Create a [[DiscordClient]] from these settings while letting Discord set
+    * the shard amount.
     */
   def createClientAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem[Nothing] = system
@@ -136,12 +149,17 @@ case class ClientSettings(
 }
 
 /**
-  * @param parallelism Parallelism to use for requests.
-  * @param bufferSize The buffer size to use for waiting requests.
-  * @param maxRetryCount The maximum amount of times a request will be retried.
-  *                      Only affects requests that uses retries.
-  * @param overflowStrategy The overflow strategy to use when the buffer is full.
-  * @param maxAllowedWait The max allowed wait time before giving up on a request.
+  * @param parallelism
+  *   Parallelism to use for requests.
+  * @param bufferSize
+  *   The buffer size to use for waiting requests.
+  * @param maxRetryCount
+  *   The maximum amount of times a request will be retried. Only affects
+  *   requests that uses retries.
+  * @param overflowStrategy
+  *   The overflow strategy to use when the buffer is full.
+  * @param maxAllowedWait
+  *   The max allowed wait time before giving up on a request.
   */
 case class RequestSettings(
     relativeTime: Boolean = false,
@@ -169,25 +187,31 @@ case class RequestSettings(
 }
 
 /**
-  * @param processor A function that runs on the cache right before a cache
-  *                  snapshot is produced.
-  * @param parallelism How many cache updates are constructed in parallel
-  * @param cacheBufferSize Size of the buffer for the cache
-  * @param sendGatewayEventsBufferSize Size of the buffer for sending gateway events
-  * @param receiveGatewayEventsBufferSize Size of the buffer for receiving gateway events
-  * @param ignoredEvents Events the cache will ignore. [[APIMessage]]s aren't
-  *                      sent for these either.
-  * @param cacheTypeRegistry     Gives you control over how entities in the cache
-  *                              are updated, and what values are retained in the cache.
-  * @param partitionCacheByGuild Instead of sharing a single cache for the
-  *                              entire application, this partitions the cache by guild.
-  *                              Each guild will in effect receive it's own cache.
-  *                              Cache events not specific to one guild will be
-  *                              sent to all caches.
+  * @param processor
+  *   A function that runs on the cache right before a cache snapshot is
+  *   produced.
+  * @param parallelism
+  *   How many cache updates are constructed in parallel
+  * @param cacheBufferSize
+  *   Size of the buffer for the cache
+  * @param sendGatewayEventsBufferSize
+  *   Size of the buffer for sending gateway events
+  * @param receiveGatewayEventsBufferSize
+  *   Size of the buffer for receiving gateway events
+  * @param ignoredEvents
+  *   Events the cache will ignore. [[APIMessage]] s aren't sent for these
+  *   either.
+  * @param cacheTypeRegistry
+  *   Gives you control over how entities in the cache are updated, and what
+  *   values are retained in the cache.
+  * @param partitionCacheByGuild
+  *   Instead of sharing a single cache for the entire application, this
+  *   partitions the cache by guild. Each guild will in effect receive it's own
+  *   cache. Cache events not specific to one guild will be sent to all caches.
   *
-  *                              Unlike then default cache, this one is faster, as cache updates can
-  *                              be done in parallel, but might use more memory, and you need to handle
-  *                              cross guild cache actions yourself.
+  * Unlike then default cache, this one is faster, as cache updates can be done
+  * in parallel, but might use more memory, and you need to handle cross guild
+  * cache actions yourself.
   */
 case class CacheSettings(
     processor: CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,

@@ -26,8 +26,8 @@ package ackcord
 import scala.concurrent.Future
 
 import akka.Done
-import akka.stream.{KillSwitches, UniqueKillSwitch}
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
+import akka.stream.{KillSwitches, UniqueKillSwitch}
 
 case class EventRegistration[Mat](materialized: Mat, onDone: Future[Done], killSwitch: UniqueKillSwitch) {
 

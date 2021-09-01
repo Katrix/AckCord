@@ -35,11 +35,13 @@ import cats.instances.future._
 import cats.syntax.all._
 
 /**
-  * @param messages A source of messages and their cache. All the messages
-  *                 that will be considered for commands.
-  * @param requests A request helper to send errors and pass to command
-  *                 messages
-  * @param parallelism How many command messages are constructed at once.
+  * @param messages
+  *   A source of messages and their cache. All the messages that will be
+  *   considered for commands.
+  * @param requests
+  *   A request helper to send errors and pass to command messages
+  * @param parallelism
+  *   How many command messages are constructed at once.
   */
 class CommandConnector(
     messages: Source[(Message, CacheSnapshot), NotUsed],
@@ -67,14 +69,19 @@ class CommandConnector(
   }
 
   /**
-    * Composes a command's flow and the source of messages to consider
-    * for commands.
-    * @param prefix A prefix parser to use for this command. In most cases
-    *               create it by calling [[prefix]].
-    * @param command A command the compose with.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return A source of command errors that can be used however you want.
+    * Composes a command's flow and the source of messages to consider for
+    * commands.
+    * @param prefix
+    *   A prefix parser to use for this command. In most cases create it by
+    *   calling [[prefix]].
+    * @param command
+    *   A command the compose with.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   A source of command errors that can be used however you want.
     */
   def newCommandWithErrors[A, Mat](
       prefix: PrefixParser,
@@ -136,12 +143,16 @@ class CommandConnector(
   }
 
   /**
-    * Composes a named command's flow and the source of messages to consider
-    * for commands.
-    * @param command A named command the compose with.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return A source of command errors that can be used however you want.
+    * Composes a named command's flow and the source of messages to consider for
+    * commands.
+    * @param command
+    *   A named command the compose with.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   A source of command errors that can be used however you want.
     */
   def newNamedCommandWithErrors[A, Mat](
       command: NamedComplexCommand[A, Mat]
@@ -150,14 +161,19 @@ class CommandConnector(
 
   /**
     * Creates a [[RunnableGraph]] for a command.
-    * @param prefix The prefix to parse before the command.
-    * @param command The command to use when creating the graph.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return A runnable graph representing the execution of this command.
-    *         Errors are sent as messages to the channel the command was used
-    *         from.
-    * @see [[newCommandWithErrors]]
+    * @param prefix
+    *   The prefix to parse before the command.
+    * @param command
+    *   The command to use when creating the graph.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   A runnable graph representing the execution of this command. Errors are
+    *   sent as messages to the channel the command was used from.
+    * @see
+    *   [[newCommandWithErrors]]
     */
   def newCommand[A, Mat](
       prefix: PrefixParser,
@@ -175,48 +191,66 @@ class CommandConnector(
 
   /**
     * Creates a [[RunnableGraph]] for a named command.
-    * @param command The named command to use when creating the graph.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return A runnable graph representing the execution of this command.
-    *         Errors are sent as messages to the channel the command was used
-    *         from.
-    * @see [[newCommandWithErrors]]
+    * @param command
+    *   The named command to use when creating the graph.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   A runnable graph representing the execution of this command. Errors are
+    *   sent as messages to the channel the command was used from.
+    * @see
+    *   [[newCommandWithErrors]]
     */
   def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] =
     newCommand(command.prefixParser, command.command)
 
   /**
     * Starts a command execution.
-    * @param prefix The prefix to use for the command.
-    * @param command The command to run.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return The materialized result of running the command, in addition to
-    *         a future signaling when the command is done running.
+    * @param prefix
+    *   The prefix to use for the command.
+    * @param command
+    *   The command to run.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   The materialized result of running the command, in addition to a future
+    *   signaling when the command is done running.
     */
   def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): CommandRegistration[Mat] =
     newCommand(prefix, command).run()
 
   /**
     * Starts a named command execution.
-    * @param command The named command to run.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return The materialized result of running the command, in addition to
-    *         a future signaling when the command is done running.
+    * @param command
+    *   The named command to run.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   The materialized result of running the command, in addition to a future
+    *   signaling when the command is done running.
     */
   def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): CommandRegistration[Mat] =
     runNewCommand(command.prefixParser, command.command)
 
   /**
     * Starts a named command execution and registers it with the help command.
-    * @param command The named command to run.
-    * @param helpCommand The help command to register the commandf with.
-    * @tparam A The type of arguments this command uses.
-    * @tparam Mat The materialized result of running the command graph.
-    * @return The materialized result of running the command, in addition to
-    *         a future signaling when the command is done running.
+    * @param command
+    *   The named command to run.
+    * @param helpCommand
+    *   The help command to register the commandf with.
+    * @tparam A
+    *   The type of arguments this command uses.
+    * @tparam Mat
+    *   The materialized result of running the command graph.
+    * @return
+    *   The materialized result of running the command, in addition to a future
+    *   signaling when the command is done running.
     */
   def runNewNamedCommandWithHelp[A, Mat](
       command: NamedDescribedComplexCommand[A, Mat],
@@ -230,8 +264,10 @@ class CommandConnector(
   /**
     * Starts many named commands at the same time. They must all have a
     * materialized value of NotUsed.
-    * @param commands The commands to run.
-    * @return The commands together with their completions.
+    * @param commands
+    *   The commands to run.
+    * @return
+    *   The commands together with their completions.
     */
   def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], CommandRegistration[_])] =
     commands.map(c => c -> runNewNamedCommand(c))
@@ -239,8 +275,10 @@ class CommandConnector(
   /**
     * Starts many named commands at the same time and registers them with the
     * help command. They must all have a materialized value of NotUsed.
-    * @param commands The commands to run.
-    * @return The commands together with their completions.
+    * @param commands
+    *   The commands to run.
+    * @return
+    *   The commands together with their completions.
     */
   def bulkRunNamedWithHelp(
       helpCommand: HelpCommand,

@@ -27,18 +27,22 @@ import akka.http.scaladsl.model.headers.{HttpCredentials, `User-Agent`}
 import akka.stream.OverflowStrategy
 
 /**
-  * @param credentials The credentials to use when sending the requests.
-  * @param ratelimiter The object to use to track ratelimits and such
-  * @param relativeTime Sets if the ratelimit reset should be calculated
-  *                     using relative time instead of absolute time. Might
-  *                     help with out of sync time on your device, but can
-  *                     also lead to slightly slower processing of requests.
-  * @param parallelism How many requests to try to process at once.
-  * @param maxRetryCount How many times to retry requests if an error occurs
-  *                      on retry flows
-  * @param bufferSize The size of the internal buffer used before messages
-  *                   are sent.
-  * @param overflowStrategy The strategy to use if the buffer overflows.
+  * @param credentials
+  *   The credentials to use when sending the requests.
+  * @param ratelimiter
+  *   The object to use to track ratelimits and such
+  * @param relativeTime
+  *   Sets if the ratelimit reset should be calculated using relative time
+  *   instead of absolute time. Might help with out of sync time on your device,
+  *   but can also lead to slightly slower processing of requests.
+  * @param parallelism
+  *   How many requests to try to process at once.
+  * @param maxRetryCount
+  *   How many times to retry requests if an error occurs on retry flows
+  * @param bufferSize
+  *   The size of the internal buffer used before messages are sent.
+  * @param overflowStrategy
+  *   The strategy to use if the buffer overflows.
   */
 case class RequestSettings(
     credentials: Option[HttpCredentials],

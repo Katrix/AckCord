@@ -35,18 +35,27 @@ import io.circe._
 import io.circe.syntax._
 
 /**
-  * @param name The name of the guild
-  * @param icon The icon to use for the guild. Must be 1024x1024 png/jpeg.
-  * @param verificationLevel The verification level to use for the guild.
-  * @param defaultMessageNotifications The notification level to use for
-  *                                    the guild.
-  * @param roles The roles for the new guild. Note, here the snowflake is
-  *              just a placeholder.
-  * @param channels The channels for the new guild.
-  * @param afkChannelId The id for the AFK channel
-  * @param afkTimeout The timeout in seconds until users are moved to the AFK channel.
-  * @param systemChannelId The id of the system channel.
-  * @param systemChannelFlags The flags for the system channel.
+  * @param name
+  *   The name of the guild
+  * @param icon
+  *   The icon to use for the guild. Must be 1024x1024 png/jpeg.
+  * @param verificationLevel
+  *   The verification level to use for the guild.
+  * @param defaultMessageNotifications
+  *   The notification level to use for the guild.
+  * @param roles
+  *   The roles for the new guild. Note, here the snowflake is just a
+  *   placeholder.
+  * @param channels
+  *   The channels for the new guild.
+  * @param afkChannelId
+  *   The id for the AFK channel
+  * @param afkTimeout
+  *   The timeout in seconds until users are moved to the AFK channel.
+  * @param systemChannelId
+  *   The id of the system channel.
+  * @param systemChannelFlags
+  *   The flags for the system channel.
   */
 case class CreateGuildData(
     name: String,
@@ -92,27 +101,42 @@ case class GetGuildPreview(guildId: GuildId) extends NoParamsNiceResponseRequest
 }
 
 /**
-  * @param name The new name of the guild
-  * @param region The new voice region for the guild
-  * @param verificationLevel The new verification level to use for the guild.
-  * @param defaultMessageNotifications The new notification level to use
-  *                                    for the guild.
-  * @param afkChannelId The new afk channel of the guild.
-  * @param afkTimeout The new afk timeout in seconds for the guild.
-  * @param icon The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif.
-  *             Can be animated if the guild has the `ANIMATED_ICON` feature.
-  * @param ownerId Transfer ownership of this guild. Must be the owner.
-  * @param splash The new splash for the guild. Must be 16:9 png/jpeg.
-  *               Only available if the guild has the `INVITE_SPLASH` feature.
-  * @param discoverySplash Thew new discovery slash for the guild's discovery splash.
-  *                        Only available if the guild has the `DISCOVERABLE` feature.
-  * @param banner The new banner for the guild. Must be 16:9 png/jpeg.
-  *               Only available if the guild has the `BANNER` feature.
-  * @param systemChannelId The new channel which system messages will be sent to.
-  * @param systemChannelFlags The new flags for the system channel.
-  * @param preferredLocale The new preferred locale for the guild.
-  * @param features The new enabled features for the guild.
-  * @param description The new description for the guild if it is discoverable.
+  * @param name
+  *   The new name of the guild
+  * @param region
+  *   The new voice region for the guild
+  * @param verificationLevel
+  *   The new verification level to use for the guild.
+  * @param defaultMessageNotifications
+  *   The new notification level to use for the guild.
+  * @param afkChannelId
+  *   The new afk channel of the guild.
+  * @param afkTimeout
+  *   The new afk timeout in seconds for the guild.
+  * @param icon
+  *   The new icon to use for the guild. Must be 1024x1024 png/jpeg/gif. Can be
+  *   animated if the guild has the `ANIMATED_ICON` feature.
+  * @param ownerId
+  *   Transfer ownership of this guild. Must be the owner.
+  * @param splash
+  *   The new splash for the guild. Must be 16:9 png/jpeg. Only available if the
+  *   guild has the `INVITE_SPLASH` feature.
+  * @param discoverySplash
+  *   Thew new discovery slash for the guild's discovery splash. Only available
+  *   if the guild has the `DISCOVERABLE` feature.
+  * @param banner
+  *   The new banner for the guild. Must be 16:9 png/jpeg. Only available if the
+  *   guild has the `BANNER` feature.
+  * @param systemChannelId
+  *   The new channel which system messages will be sent to.
+  * @param systemChannelFlags
+  *   The new flags for the system channel.
+  * @param preferredLocale
+  *   The new preferred locale for the guild.
+  * @param features
+  *   The new enabled features for the guild.
+  * @param description
+  *   The new description for the guild if it is discoverable.
   */
 case class ModifyGuildData(
     name: JsonOption[String] = JsonUndefined,
@@ -188,15 +212,24 @@ case class GetGuildChannels(guildId: GuildId) extends NoParamsRequest[Seq[RawCha
 }
 
 /**
-  * @param name The name of the channel.
-  * @param `type` The channel type.
-  * @param topic The topic to give this channel.
-  * @param bitrate The bitrate for the channel if it's a voice channel.
-  * @param userLimit The user limit for the channel if it's a voice channel.
-  * @param rateLimitPerUser The user ratelimit to give this channel.
-  * @param permissionOverwrites The permission overwrites for the channel.
-  * @param parentId The category id for the channel.
-  * @param nsfw If the channel is NSFW.
+  * @param name
+  *   The name of the channel.
+  * @param `type`
+  *   The channel type.
+  * @param topic
+  *   The topic to give this channel.
+  * @param bitrate
+  *   The bitrate for the channel if it's a voice channel.
+  * @param userLimit
+  *   The user limit for the channel if it's a voice channel.
+  * @param rateLimitPerUser
+  *   The user ratelimit to give this channel.
+  * @param permissionOverwrites
+  *   The permission overwrites for the channel.
+  * @param parentId
+  *   The category id for the channel.
+  * @param nsfw
+  *   If the channel is NSFW.
   */
 case class CreateGuildChannelData(
     name: String,
@@ -250,11 +283,15 @@ case class CreateGuildChannel(
 }
 
 /**
-  * @param id The channel id.
-  * @param position It's new position.
-  * @param lockPermissions If the permissions should be synced with the category
-  *                        if the channel is moved to a new category.
-  * @param parentId Parent category id to move the channel to a new category.
+  * @param id
+  *   The channel id.
+  * @param position
+  *   It's new position.
+  * @param lockPermissions
+  *   If the permissions should be synced with the category if the channel is
+  *   moved to a new category.
+  * @param parentId
+  *   Parent category id to move the channel to a new category.
   */
 case class ModifyGuildChannelPositionsData(
     id: GuildChannelId,
@@ -305,8 +342,10 @@ case class GetGuildMember(guildId: GuildId, userId: UserId) extends GuildMemberR
 }
 
 /**
-  * @param limit The max amount of members to get
-  * @param after Get userIds after this id
+  * @param limit
+  *   The max amount of members to get
+  * @param after
+  *   Get userIds after this id
   */
 case class ListGuildMembersData(limit: Option[Int] = None, after: Option[UserId] = None)
 
@@ -347,12 +386,17 @@ case class SearchGuildMembers(guildId: GuildId, params: SearchGuildMembersData)
 }
 
 /**
-  * @param accessToken The OAuth2 access token.
-  * @param nick The nickname to give to the user.
-  * @param roles The roles to give to the user. If the guild has membership
-  *              screening enabled, this setting this will bypass that.
-  * @param mute If the user should be muted.
-  * @param deaf If the user should be deafened.
+  * @param accessToken
+  *   The OAuth2 access token.
+  * @param nick
+  *   The nickname to give to the user.
+  * @param roles
+  *   The roles to give to the user. If the guild has membership screening
+  *   enabled, this setting this will bypass that.
+  * @param mute
+  *   If the user should be muted.
+  * @param deaf
+  *   If the user should be deafened.
   */
 case class AddGuildMemberData(
     accessToken: String,
@@ -387,13 +431,18 @@ case class AddGuildMember(
 }
 
 /**
-  * @param nick The nickname to give to the user.
-  * @param roles The roles to give to the user.
-  * @param mute If the user should be muted. Will return an error if the user
-  *             is not in a voice channel.
-  * @param deaf If the user should be deafened. Will return an error if the user
-  *             is not in a voice channel.
-  * @param channelId The id of the channel to move the user to.
+  * @param nick
+  *   The nickname to give to the user.
+  * @param roles
+  *   The roles to give to the user.
+  * @param mute
+  *   If the user should be muted. Will return an error if the user is not in a
+  *   voice channel.
+  * @param deaf
+  *   If the user should be deafened. Will return an error if the user is not in
+  *   a voice channel.
+  * @param channelId
+  *   The id of the channel to move the user to.
   */
 case class ModifyGuildMemberData(
     nick: JsonOption[String] = JsonUndefined,
@@ -540,8 +589,8 @@ case class GetGuildBan(guildId: GuildId, userId: UserId) extends NoParamsRequest
 }
 
 /**
-  * @param deleteMessageDays The number of days to delete messages for
-  *                          this banned user.
+  * @param deleteMessageDays
+  *   The number of days to delete messages for this banned user.
   */
 case class CreateGuildBanData(deleteMessageDays: Option[Int])
 
@@ -599,11 +648,16 @@ case class GetGuildRoles(guildId: GuildId) extends RESTRequest[NotUsed, Seq[RawR
 }
 
 /**
-  * @param name The name of the role.
-  * @param permissions The permissions this role has.
-  * @param color The color of the role.
-  * @param hoist If this role is shown in the right sidebar.
-  * @param mentionable If this role is mentionable.
+  * @param name
+  *   The name of the role.
+  * @param permissions
+  *   The permissions this role has.
+  * @param color
+  *   The color of the role.
+  * @param hoist
+  *   If this role is shown in the right sidebar.
+  * @param mentionable
+  *   If this role is mentionable.
   */
 case class CreateGuildRoleData(
     name: Option[String] = None,
@@ -635,8 +689,10 @@ case class CreateGuildRole(
 }
 
 /**
-  * @param id The role id.
-  * @param position The new position of the role.
+  * @param id
+  *   The role id.
+  * @param position
+  *   The new position of the role.
   */
 case class ModifyGuildRolePositionsData(id: RoleId, position: Int)
 
@@ -664,11 +720,16 @@ case class ModifyGuildRolePositions(
 }
 
 /**
-  * @param name The new name of the role.
-  * @param permissions The new permissions this role has.
-  * @param color The new color of the role.
-  * @param hoist If this role is shown in the right sidebar.
-  * @param mentionable If this role is mentionable.
+  * @param name
+  *   The new name of the role.
+  * @param permissions
+  *   The new permissions this role has.
+  * @param color
+  *   The new color of the role.
+  * @param hoist
+  *   If this role is shown in the right sidebar.
+  * @param mentionable
+  *   If this role is mentionable.
   */
 case class ModifyGuildRoleData(
     name: JsonOption[String] = JsonUndefined,
@@ -725,8 +786,10 @@ case class DeleteGuildRole(
 }
 
 /**
-  * @param days The amount of days to prune for.
-  * @param includeRoles Roles that should be ignored when checking for inactive users.
+  * @param days
+  *   The amount of days to prune for.
+  * @param includeRoles
+  *   Roles that should be ignored when checking for inactive users.
   */
 case class GuildPruneCountData(days: Int, includeRoles: Seq[RoleId]) {
   require(days > 0 && days <= 30, "Days must be inbetween 1 and 30")
@@ -754,9 +817,12 @@ object GetGuildPruneCount {
 }
 
 /**
-  * @param days The amount of days to prune for.
-  * @param computePruneCount If the pruned return field should be present.
-  * @param includeRoles Roles that should be ignored when checking for inactive users.
+  * @param days
+  *   The amount of days to prune for.
+  * @param computePruneCount
+  *   If the pruned return field should be present.
+  * @param includeRoles
+  *   Roles that should be ignored when checking for inactive users.
   */
 case class BeginGuildPruneData(
     days: Int,
@@ -891,9 +957,11 @@ case class GetGuildVanityUrl(guildId: GuildId) extends NoParamsNiceResponseReque
 
 /**
   * Get an invite for a given invite code.
-  * @param withCounts If the returned invite object should return approximate
-  *                   counts for members and people online.
-  * @param withExpiration If the invite should contain the expiration date.
+  * @param withCounts
+  *   If the returned invite object should return approximate counts for members
+  *   and people online.
+  * @param withExpiration
+  *   If the invite should contain the expiration date.
   */
 case class GetInvite(inviteCode: String, withCounts: Boolean = false, withExpiration: Boolean = false)
     extends NoParamsNiceResponseRequest[Invite] {
@@ -961,9 +1029,12 @@ case class GetUserGuildsGuild(
 )
 
 /**
-  * @param before Get guilds before this id.
-  * @param after Get guilds after this id.
-  * @param limit The max amount of guilds to return.
+  * @param before
+  *   Get guilds before this id.
+  * @param after
+  *   Get guilds after this id.
+  * @param limit
+  *   The max amount of guilds to return.
   */
 case class GetCurrentUserGuildsData(
     before: Option[GuildId] = None,
@@ -1019,13 +1090,16 @@ object CreateDm {
 }
 
 /**
-  * @param accessTokens The access tokens of users that have granted the bot
-  *                     the `gdm.join` scope.
-  * @param nicks A map specifying the nicknames for the users in this group DM.
+  * @param accessTokens
+  *   The access tokens of users that have granted the bot the `gdm.join` scope.
+  * @param nicks
+  *   A map specifying the nicknames for the users in this group DM.
   */
 case class CreateGroupDMData(accessTokens: Seq[String], nicks: SnowflakeMap[User, String])
 
-/** Create a group DM. By default the client is limited to 10 active group DMs. */
+/**
+  * Create a group DM. By default the client is limited to 10 active group DMs.
+  */
 @deprecated("Deprecated by Discord", since = "0.13")
 case class CreateGroupDm(params: CreateGroupDMData)
     extends RESTRequest[CreateGroupDMData, RawChannel, Option[GroupDMChannel]] {

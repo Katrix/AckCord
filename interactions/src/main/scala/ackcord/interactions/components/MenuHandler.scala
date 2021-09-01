@@ -10,7 +10,11 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
     interactionTransformer: DataInteractionTransformer[shapeless.Const[MenuInteraction]#λ, shapeless.Const[
       InteractionTpe
     ]#λ] = DataInteractionTransformer.identity[shapeless.Const[MenuInteraction]#λ]
-) extends ComponentHandler[MenuInteraction, InteractionTpe](requests, interactionTransformer, ComponentType.SelectMenu) {
+) extends ComponentHandler[MenuInteraction, InteractionTpe](
+      requests,
+      interactionTransformer,
+      ComponentType.SelectMenu
+    ) {
 
   override protected def makeBaseInteraction(
       invocationInfo: InteractionInvocationInfo,

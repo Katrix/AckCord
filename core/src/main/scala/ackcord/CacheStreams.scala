@@ -43,7 +43,10 @@ object CacheStreams {
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
-  /** Creates a set of publish subscribe streams that go through the cache updated. */
+  /**
+    * Creates a set of publish subscribe streams that go through the cache
+    * updated.
+    */
   def cacheStreams(
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor,
       bufferSize: PubSubBufferSize = PubSubBufferSize()
@@ -235,8 +238,8 @@ object CacheStreams {
   }
 
   /**
-    * A flow that keeps track of the current cache state, and updates it
-    * from cache update events.
+    * A flow that keeps track of the current cache state, and updates it from
+    * cache update events.
     */
   def cacheUpdater(cacheBuilder: CacheSnapshotBuilder): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>

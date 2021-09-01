@@ -31,10 +31,10 @@ import scala.concurrent.Future
 import scala.util.Random
 
 import ackcord._
-import ackcord.syntax._
 import ackcord.commands._
 import ackcord.data.{EmbedField, GuildId, OutgoingEmbed, Permission}
 import ackcord.requests.{CreateMessage, Request}
+import ackcord.syntax._
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 import cats.syntax.all._

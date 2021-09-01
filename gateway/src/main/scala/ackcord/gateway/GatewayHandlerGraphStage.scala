@@ -42,8 +42,8 @@ import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
 import io.circe
-import io.circe.{Encoder, parser}
 import io.circe.syntax._
+import io.circe.{Encoder, parser}
 
 class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
     extends GraphStageWithMaterializedValue[
@@ -251,7 +251,10 @@ object GatewayHandlerGraphStage {
     Flow.fromGraph(graph).mapMaterializedValue(t => (t._1, t._2._1, t._2._2))
   }
 
-  /** Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a [[GatewayMessage]]. */
+  /**
+    * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a
+    * [[GatewayMessage]].
+    */
   def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders, shardInfo: ShardInfo)(
       implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
@@ -325,7 +328,10 @@ object GatewayHandlerGraphStage {
     }
   }
 
-  /** Turn a [[GatewayMessage]] into a websocket [[akka.http.scaladsl.model.ws.Message]]. */
+  /**
+    * Turn a [[GatewayMessage]] into a websocket
+    * [[akka.http.scaladsl.model.ws.Message]].
+    */
   def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
     implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.SentWSMessage")
 

@@ -60,9 +60,12 @@ object DiscordShard {
 
   /**
     * The core actor that controls all the other used actors of AckCord
-    * @param wsUri The gateway websocket uri
-    * @param settings The settings to use
-    * @param events The events instance to use for this shard
+    * @param wsUri
+    *   The gateway websocket uri
+    * @param settings
+    *   The settings to use
+    * @param events
+    *   The events instance to use for this shard
     */
   def apply(
       wsUri: Uri,
@@ -127,9 +130,12 @@ object DiscordShard {
 
   /**
     * Create many shard actors, given the needed arguments.
-    * @param wsUri The websocket gateway uri.
-    * @param shardTotal The amount of shards to create.
-    * @param settings The settings to use.
+    * @param wsUri
+    *   The websocket gateway uri.
+    * @param shardTotal
+    *   The amount of shards to create.
+    * @param settings
+    *   The settings to use.
     */
   def many(
       wsUri: Uri,
@@ -167,8 +173,10 @@ object DiscordShard {
 
   /**
     * Fetch the websocket gateway.
-    * @param system The actor system to use.
-    * @return An URI with the websocket gateway uri.
+    * @param system
+    *   The actor system to use.
+    * @return
+    *   An URI with the websocket gateway uri.
     */
   def fetchWsGateway(implicit system: ActorSystem[Nothing]): Future[Uri] = {
     import akka.actor.typed.scaladsl.adapter._
@@ -215,9 +223,12 @@ object DiscordShard {
   )
 
   /**
-    * Fetch the websocket gateway with information about how many shards should be used.
-    * @param system The actor system to use.
-    * @return An URI with the websocket gateway uri.
+    * Fetch the websocket gateway with information about how many shards should
+    * be used.
+    * @param system
+    *   The actor system to use.
+    * @return
+    *   An URI with the websocket gateway uri.
     */
   def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
     import akka.actor.typed.scaladsl.adapter._

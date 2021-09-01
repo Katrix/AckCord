@@ -1,5 +1,10 @@
 package ackcord.util
 
+import java.util.UUID
+
+import scala.concurrent.Future
+import scala.concurrent.duration._
+
 import ackcord.Events
 import ackcord.data.{GuildId, UserId}
 import ackcord.gateway.GatewayEvent.{GuildMemberChunk, GuildMemberChunkData, RawGuildMemberWithGuild}
@@ -8,22 +13,23 @@ import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import cats.data.Ior
-import java.util.UUID
-
-import scala.concurrent.Future
-import scala.concurrent.duration._
 
 object BulkRequestMembers {
 
   /**
     * Request members for all the users passed in.
-    * @param guild The guild to get the members for the users in.
-    * @param userIds The users to get the members for.
-    * @param events An events instance to send the requests with.
-    * @return A source containing the members for the user ids passed in.
-    *         The materialized value of the source is all the members not found.
-    *         The returned members are represented with [[RawGuildMemberWithGuild]]
-    *         which is like a [[ackcord.data.GuildMember]] together with a [[ackcord.data.User]].
+    * @param guild
+    *   The guild to get the members for the users in.
+    * @param userIds
+    *   The users to get the members for.
+    * @param events
+    *   An events instance to send the requests with.
+    * @return
+    *   A source containing the members for the user ids passed in. The
+    *   materialized value of the source is all the members not found. The
+    *   returned members are represented with [[RawGuildMemberWithGuild]] which
+    *   is like a [[ackcord.data.GuildMember]] together with a
+    *   [[ackcord.data.User]].
     */
   def sourceUserIds(
       guild: GuildId,
@@ -57,12 +63,17 @@ object BulkRequestMembers {
     * Beware that this method uses more memory than consuming the elements as
     * they are gotten using [[sourceUserIds]].
     *
-    * @param guild The guild to get the members for the users in.
-    * @param userIds The users to get the members for.
-    * @param events An events instance to send the requests with.
-    * @return A future Ior containing on the left members not found, and on the right members found.
-    *         The returned members are represented with [[RawGuildMemberWithGuild]]
-    *         which is like a [[ackcord.data.GuildMember]] together with a [[ackcord.data.User]].
+    * @param guild
+    *   The guild to get the members for the users in.
+    * @param userIds
+    *   The users to get the members for.
+    * @param events
+    *   An events instance to send the requests with.
+    * @return
+    *   A future Ior containing on the left members not found, and on the right
+    *   members found. The returned members are represented with
+    *   [[RawGuildMemberWithGuild]] which is like a [[ackcord.data.GuildMember]]
+    *   together with a [[ackcord.data.User]].
     */
   def seqUserIds(
       guild: GuildId,
@@ -71,7 +82,8 @@ object BulkRequestMembers {
       timeout: FiniteDuration = 30.seconds
   )(implicit system: ActorSystem[Nothing]): Future[Ior[Seq[(GuildId, UserId)], Seq[RawGuildMemberWithGuild]]] = {
     import system.executionContext
-    val (futureNotFound, futureMembers) = sourceUserIds(guild, userIds, events, timeout).toMat(Sink.seq)(Keep.both).run()
+    val (futureNotFound, futureMembers) =
+      sourceUserIds(guild, userIds, events, timeout).toMat(Sink.seq)(Keep.both).run()
 
     for {
       notFound <- futureNotFound
@@ -86,13 +98,19 @@ object BulkRequestMembers {
 
   /**
     * Request members for a given username query.
-    * @param guild The guild to get the members in.
-    * @param query The username query to search for. Must not be empty.
-    * @param events An events instance to send the requests with.
-    * @param limit Max amount of members to get.
-    * @return A source containing members who's username starts with the query.
-    *         The returned members are represented with [[RawGuildMemberWithGuild]]
-    *         which is like a [[ackcord.data.GuildMember]] together with a [[ackcord.data.User]].
+    * @param guild
+    *   The guild to get the members in.
+    * @param query
+    *   The username query to search for. Must not be empty.
+    * @param events
+    *   An events instance to send the requests with.
+    * @param limit
+    *   Max amount of members to get.
+    * @return
+    *   A source containing members who's username starts with the query. The
+    *   returned members are represented with [[RawGuildMemberWithGuild]] which
+    *   is like a [[ackcord.data.GuildMember]] together with a
+    *   [[ackcord.data.User]].
     */
   def sourceUsernameQuery(
       guild: GuildId,
@@ -128,13 +146,19 @@ object BulkRequestMembers {
 
   /**
     * Request members for a given username query.
-    * @param guild The guild to get the members in.
-    * @param query The username query to search for. Must not be empty.
-    * @param events An events instance to send the requests with.
-    * @param limit Max amount of members to get.
-    * @return A future seq containing members who's username starts with the query.
-    *         The returned members are represented with [[RawGuildMemberWithGuild]]
-    *         which is like a [[ackcord.data.GuildMember]] together with a [[ackcord.data.User]].
+    * @param guild
+    *   The guild to get the members in.
+    * @param query
+    *   The username query to search for. Must not be empty.
+    * @param events
+    *   An events instance to send the requests with.
+    * @param limit
+    *   Max amount of members to get.
+    * @return
+    *   A future seq containing members who's username starts with the query.
+    *   The returned members are represented with [[RawGuildMemberWithGuild]]
+    *   which is like a [[ackcord.data.GuildMember]] together with a
+    *   [[ackcord.data.User]].
     */
   def seqUsernameQuery(
       guild: GuildId,

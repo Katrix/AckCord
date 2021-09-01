@@ -8,12 +8,18 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 /**
   * Holds info about a live stage.
   *
-  * @param id Id of the stage.
-  * @param guildId Id of the belonging guild.
-  * @param channelId Id of the stage channel tied to this stage.
-  * @param topic Topic of the stage instance.
-  * @param privacyLevel Who the stage instance is visible to.
-  * @param discoverableDisabled If stage discovery is disabled or not.
+  * @param id
+  *   Id of the stage.
+  * @param guildId
+  *   Id of the belonging guild.
+  * @param channelId
+  *   Id of the stage channel tied to this stage.
+  * @param topic
+  *   Topic of the stage instance.
+  * @param privacyLevel
+  *   Who the stage instance is visible to.
+  * @param discoverableDisabled
+  *   If stage discovery is disabled or not.
   */
 case class StageInstance(
     id: SnowflakeType[StageInstance],

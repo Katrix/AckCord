@@ -39,8 +39,8 @@ package object data {
       other.asInstanceOf[ackcord.data.SnowflakeType[A]]
 
     /**
-      * Creates a snowflake tag for the earliest moment in time. Use this
-      * for pagination.
+      * Creates a snowflake tag for the earliest moment in time. Use this for
+      * pagination.
       */
     def epoch[A]: SnowflakeType[A] = apply("0")
 
@@ -84,9 +84,9 @@ package object data {
   implicit class ChannelIdSyntax(private val channelId: ChannelId) extends AnyVal {
 
     /**
-      * Resolve the channel represented by this id. If you'd rather get
-      * anything more concrete, convert this id to a type closer to what
-      * you're looking for.
+      * Resolve the channel represented by this id. If you'd rather get anything
+      * more concrete, convert this id to a type closer to what you're looking
+      * for.
       */
     def resolve(implicit c: CacheSnapshot): Option[Channel] = c.getChannel(channelId)
 
@@ -103,9 +103,9 @@ package object data {
   implicit class TextChannelIdSyntax(private val channelId: TextChannelId) extends AnyVal {
 
     /**
-      * Resolve the channel represented by this id. If you'd rather get
-      * anything more concrete, convert this id to a type closer to what
-      * you're looking for.
+      * Resolve the channel represented by this id. If you'd rather get anything
+      * more concrete, convert this id to a type closer to what you're looking
+      * for.
       */
     def resolve(implicit c: CacheSnapshot): Option[TextChannel] = c.getTextChannel(channelId)
   }
@@ -150,8 +150,8 @@ package object data {
   implicit class ThreadGuildChannelIdSyntax(private val threadId: ThreadGuildChannelId) extends AnyVal {
 
     /**
-      * Resolve the thread represented by this id. If a guild id is know,
-      * prefer the method taking a guild id instead.
+      * Resolve the thread represented by this id. If a guild id is know, prefer
+      * the method taking a guild id instead.
       */
     def resolve(implicit c: CacheSnapshot): Option[TextGuildChannel] =
       c.getThread(threadId)
@@ -238,7 +238,8 @@ package object data {
 
     /**
       * Resolve the guild member represented by this id.
-      * @param guildId The guild to find the guild member in
+      * @param guildId
+      *   The guild to find the guild member in
       */
     def resolveMember(guildId: GuildId)(implicit c: CacheSnapshot): Option[GuildMember] =
       c.getGuild(guildId).flatMap(_.members.get(userId))
@@ -256,8 +257,8 @@ package object data {
   implicit class RoleIdSyntax(private val roleId: RoleId) extends AnyVal {
 
     /**
-      * Resolve the role this id represents. If a guild id is known, prefer
-      * the method that takes a guild id.
+      * Resolve the role this id represents. If a guild id is known, prefer the
+      * method that takes a guild id.
       */
     def resolve(implicit c: CacheSnapshot): Option[Role] = c.getRole(roleId)
 
@@ -278,8 +279,8 @@ package object data {
   implicit class EmojiIdSyntax(private val emojiId: EmojiId) extends AnyVal {
 
     /**
-      * Resolve the emoji this id represents. If a guild id is known, prefer
-      * the method that takes a guild id.
+      * Resolve the emoji this id represents. If a guild id is known, prefer the
+      * method that takes a guild id.
       */
     def resolve(implicit c: CacheSnapshot): Option[Emoji] = c.getEmoji(emojiId)
 
@@ -304,8 +305,8 @@ package object data {
   object ApplicationId extends SnowflakeCompanion[Application]
 
   /**
-    * A permission to do some action. In AckCord this is represented as a
-    * value class around int.
+    * A permission to do some action. In AckCord this is represented as a value
+    * class around int.
     */
   type Permission = Permission.Permission
   object Permission {
@@ -403,37 +404,43 @@ package object data {
 
     /**
       * Add a permission to this permission.
-      * @param other The other permission.
+      * @param other
+      *   The other permission.
       */
     def addPermissions(other: Permission): Permission = Permission(toBigInt | other.toBigInt)
 
     /**
       * Add a permission to this permission.
-      * @param other The other permission.
+      * @param other
+      *   The other permission.
       */
     def ++(other: Permission): Permission = addPermissions(other)
 
     /**
       * Remove a permission from this permission.
-      * @param other The permission to remove.
+      * @param other
+      *   The permission to remove.
       */
     def removePermissions(other: Permission): Permission = Permission(toBigInt & ~other.toBigInt)
 
     /**
       * Remove a permission from this permission.
-      * @param other The permission to remove.
+      * @param other
+      *   The permission to remove.
       */
     def --(other: Permission): Permission = removePermissions(other)
 
     /**
       * Toggle a permission in this permission.
-      * @param other The permission to toggle.
+      * @param other
+      *   The permission to toggle.
       */
     def togglePermissions(other: Permission): Permission = Permission(toBigInt ^ other.toBigInt)
 
     /**
       * Check if this permission has a permission.
-      * @param other The permission to check against.
+      * @param other
+      *   The permission to check against.
       */
     def hasPermissions(other: Permission): Boolean = (toBigInt & other.toBigInt) == other.toBigInt
 
@@ -476,19 +483,22 @@ package object data {
 
     /**
       * Add a flag to this flag.
-      * @param other The other flag.
+      * @param other
+      *   The other flag.
       */
     def ++(other: UserFlags): UserFlags = UserFlags(toInt | other.toInt)
 
     /**
       * Remove a flag from this flag.
-      * @param other The flag to remove.
+      * @param other
+      *   The flag to remove.
       */
     def --(other: UserFlags): UserFlags = UserFlags(toInt & ~other.toInt)
 
     /**
       * Check if these flags has a flag.
-      * @param other The flag to check against.
+      * @param other
+      *   The flag to check against.
       */
     def hasFlag(other: UserFlags): Boolean = (toInt & other.toInt) == other.toInt
 
@@ -526,19 +536,22 @@ package object data {
 
     /**
       * Add a flag to this flag.
-      * @param other The other flag.
+      * @param other
+      *   The other flag.
       */
     def ++(other: MessageFlags): MessageFlags = MessageFlags(toInt | other.toInt)
 
     /**
       * Remove a flag from this flag.
-      * @param other The flag to remove.
+      * @param other
+      *   The flag to remove.
       */
     def --(other: MessageFlags): MessageFlags = MessageFlags(toInt & ~other.toInt)
 
     /**
       * Check if these flags has a flag.
-      * @param other The flag to check against.
+      * @param other
+      *   The flag to check against.
       */
     def hasFlag(other: MessageFlags): Boolean = (toInt & other.toInt) == other.toInt
 
@@ -571,19 +584,22 @@ package object data {
 
     /**
       * Add a flag to this flag.
-      * @param other The other flag.
+      * @param other
+      *   The other flag.
       */
     def ++(other: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(toInt | other.toInt)
 
     /**
       * Remove a flag from this flag.
-      * @param other The flag to remove.
+      * @param other
+      *   The flag to remove.
       */
     def --(other: SystemChannelFlags): SystemChannelFlags = SystemChannelFlags(toInt & ~other.toInt)
 
     /**
       * Check if these flags has a flag.
-      * @param other The flag to check against.
+      * @param other
+      *   The flag to check against.
       */
     def hasFlag(other: SystemChannelFlags): Boolean = (toInt & other.toInt) == other.toInt
 
@@ -619,19 +635,22 @@ package object data {
 
     /**
       * Add a flag to this flag.
-      * @param other The other flag.
+      * @param other
+      *   The other flag.
       */
     def ++(other: ActivityFlags): ActivityFlags = ActivityFlags(toInt | other.toInt)
 
     /**
       * Remove a flag from this flag.
-      * @param other The flag to remove.
+      * @param other
+      *   The flag to remove.
       */
     def --(other: ActivityFlags): ActivityFlags = ActivityFlags(toInt & ~other.toInt)
 
     /**
       * Check if these flags has a flag.
-      * @param other The flag to check against.
+      * @param other
+      *   The flag to check against.
       */
     def hasFlag(other: ActivityFlags): Boolean = (toInt & other.toInt) == other.toInt
 
@@ -667,19 +686,22 @@ package object data {
 
     /**
       * Add a flag to this flag.
-      * @param other The other flag.
+      * @param other
+      *   The other flag.
       */
     def ++(other: ApplicationFlags): ApplicationFlags = ApplicationFlags(toInt | other.toInt)
 
     /**
       * Remove a flag from this flag.
-      * @param other The flag to remove.
+      * @param other
+      *   The flag to remove.
       */
     def --(other: ApplicationFlags): ApplicationFlags = ApplicationFlags(toInt & ~other.toInt)
 
     /**
       * Check if these flags has a flag.
-      * @param other The flag to check against.
+      * @param other
+      *   The flag to check against.
       */
     def hasFlag(other: ApplicationFlags): Boolean = (toInt & other.toInt) == other.toInt
 

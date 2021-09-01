@@ -90,7 +90,7 @@ object LavaplayerHandler {
 
       val switch  = b.add(new Switch[ByteString](toggle, List.fill(5)(VoiceUDPFlow.silence), Nil))
       val silence = b.add(Source.maybe[ByteString])
-      val music   = b.add(LavaplayerSource.source(player).throttle(1, 20.millis, maximumBurst = 10, ThrottleMode.Shaping))
+      val music = b.add(LavaplayerSource.source(player).throttle(1, 20.millis, maximumBurst = 10, ThrottleMode.Shaping))
 
       music ~> switch.in0
       silence ~> switch.in1
@@ -369,8 +369,11 @@ object LavaplayerHandler {
 
   /**
     * Connect to a voice channel.
-    * @param channelId The channel to connect to
-    * @param force If it should connect even if it's already connecting, or is connected to another channel(move)
+    * @param channelId
+    *   The channel to connect to
+    * @param force
+    *   If it should connect even if it's already connecting, or is connected to
+    *   another channel(move)
     */
   case class ConnectVoiceChannel(channelId: VoiceGuildChannelId, force: Boolean = false, replyTo: ActorRef[Reply])
       extends Command
@@ -385,8 +388,10 @@ object LavaplayerHandler {
     * Sent as a response to [[ConnectVoiceChannel]] if the client is already
     * connected to a different voice channel in this guild.
     *
-    * @param connectedVoiceChannelId The currently connected voice channel
-    * @param triedVoiceChannelId The channel that was tried and failed
+    * @param connectedVoiceChannelId
+    *   The currently connected voice channel
+    * @param triedVoiceChannelId
+    *   The channel that was tried and failed
     */
   case class AlreadyConnectedFailure(
       connectedVoiceChannelId: VoiceGuildChannelId,
@@ -394,18 +399,26 @@ object LavaplayerHandler {
   ) extends Reply
 
   /**
-    * Sent if a connection initially succeeded, but is forced away by
-    * something else.
-    * @param oldVoiceChannelId The old voice channel id before the switch
-    * @param newVoiceChannelId The new voice channel id after the switch
+    * Sent if a connection initially succeeded, but is forced away by something
+    * else.
+    * @param oldVoiceChannelId
+    *   The old voice channel id before the switch
+    * @param newVoiceChannelId
+    *   The new voice channel id after the switch
     */
   case class ForcedConnectionFailure(oldVoiceChannelId: VoiceGuildChannelId, newVoiceChannelId: VoiceGuildChannelId)
       extends Reply
 
-  /** Set if the bot should be playing(speaking) or not. This is required to send sound. */
+  /**
+    * Set if the bot should be playing(speaking) or not. This is required to
+    * send sound.
+    */
   case class SetPlaying(speaking: Boolean) extends Command
 
-  /** Stops this lavaplyer handler gracefully, and logs out of the voice gateway if connected. */
+  /**
+    * Stops this lavaplyer handler gracefully, and logs out of the voice gateway
+    * if connected.
+    */
   case object Shutdown extends Command
 
   private case object StopNow                                        extends Command
@@ -415,9 +428,10 @@ object LavaplayerHandler {
   private[lavaplayer] case class VoiceChannelMoved(newVoiceChannel: Option[VoiceGuildChannelId])      extends Command
 
   /**
-    * Tries to load an item given an identifier and returns it as a future.
-    * If there were no matches, the future fails with [[NoMatchException]].
-    * Otherwise it fails with [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
+    * Tries to load an item given an identifier and returns it as a future. If
+    * there were no matches, the future fails with [[NoMatchException]].
+    * Otherwise it fails with
+    * [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
     */
   def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
     val promise = Promise[AudioItem]()
@@ -439,14 +453,21 @@ object LavaplayerHandler {
   }
 
   /**
-    * An adapter between [[com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener]] and actors.
-    * @param sendTo The actor to send the events to.
+    * An adapter between
+    * [[com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener]] and
+    * actors.
+    * @param sendTo
+    *   The actor to send the events to.
     */
   class AudioEventSender[A](sendTo: ActorRef[A], wrap: AudioEvent => A) extends AudioEventListener {
     override def onEvent(event: AudioEvent): Unit = sendTo ! wrap(event)
   }
 
-  /** An exception signaling that a [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a track. */
+  /**
+    * An exception signaling that a
+    * [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a
+    * track.
+    */
   class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
 
   class ForcedConnectedException(inChannel: VoiceGuildChannelId)

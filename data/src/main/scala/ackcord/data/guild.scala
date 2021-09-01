@@ -129,16 +129,26 @@ object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnumWithUnknown[Pre
 
 /**
   * A preview of a public guild
-  * @param id The id of the guild.
-  * @param name The name of the guild.
-  * @param icon The icon hash.
-  * @param splash The splash hash.
-  * @param discoverySplash The discovery splash hash.
-  * @param emojis The emojis of the guild.
-  * @param features The enabled guild features.
-  * @param approximateMemberCount An approximate count of the members in the guild.
-  * @param approximatePresenceCount An approximate count of the presences in the guild.
-  * @param description A description for the guild
+  * @param id
+  *   The id of the guild.
+  * @param name
+  *   The name of the guild.
+  * @param icon
+  *   The icon hash.
+  * @param splash
+  *   The splash hash.
+  * @param discoverySplash
+  *   The discovery splash hash.
+  * @param emojis
+  *   The emojis of the guild.
+  * @param features
+  *   The enabled guild features.
+  * @param approximateMemberCount
+  *   An approximate count of the members in the guild.
+  * @param approximatePresenceCount
+  *   An approximate count of the presences in the guild.
+  * @param description
+  *   A description for the guild
   */
 case class GuildPreview(
     id: GuildId,
@@ -177,7 +187,10 @@ sealed trait Guild extends UnknownStatusGuild {
   /** The channelId of the AFK channel. */
   def afkChannelId: Option[NormalVoiceGuildChannelId]
 
-  /** The amount of seconds you need to be AFK before being moved to the AFK channel. */
+  /**
+    * The amount of seconds you need to be AFK before being moved to the AFK
+    * channel.
+    */
   def afkTimeout: Int
 
   /** If the widget is enabled. */
@@ -243,7 +256,10 @@ sealed trait Guild extends UnknownStatusGuild {
   /** The preferred locale of a community guild. */
   def preferredLocale: Option[String]
 
-  /** The channel where admin and mods can see public updates are sent to public guilds. */
+  /**
+    * The channel where admin and mods can see public updates are sent to public
+    * guilds.
+    */
   def publicUpdatesChannelId: Option[TextGuildChannelId]
 
   /** The max amount of users in a video call. */
@@ -265,14 +281,16 @@ sealed trait Guild extends UnknownStatusGuild {
 /**
   * A guild or server in Discord. This object is usually gotten from a request.
   *
-  * @param isOwner If the current user is the owner of the guild.
-  * @param permissions The permissions of the current user without overwrites.
-  * @param approximateMemberCount Roughly how many members there is in the guild.
-  *                               Present when gotten from the [[ackcord.requests.GetGuild]]
-  *                               endpoint with `withCounts = true`
-  * @param approximatePresenceCount Roughly how many presences there is in the guild.
-  *                                 Present when gotten from the [[ackcord.requests.GetGuild]]
-  *                                 endpoint with `withCounts = true`
+  * @param isOwner
+  *   If the current user is the owner of the guild.
+  * @param permissions
+  *   The permissions of the current user without overwrites.
+  * @param approximateMemberCount
+  *   Roughly how many members there is in the guild. Present when gotten from
+  *   the [[ackcord.requests.GetGuild]] endpoint with `withCounts = true`
+  * @param approximatePresenceCount
+  *   Roughly how many presences there is in the guild. Present when gotten from
+  *   the [[ackcord.requests.GetGuild]] endpoint with `withCounts = true`
   */
 case class RequestsGuild(
     id: GuildId,
@@ -380,16 +398,25 @@ case class RequestsGuild(
 /**
   * A guild or server in Discord received over the Gateway.
   *
-  * @param joinedAt When the client joined the guild.
-  * @param large If this guild is above the large threshold.
-  * @param memberCount The amount of members in the guild.
-  * @param voiceStates The voice states of the guild.
-  * @param members The guild members in the guild.
-  * @param channels The channels in the guild.
-  * @param presences The presences in the guild.
-  * @param publicUpdatesChannelId The channel where admin and mods can see
-  *                               public updates are sent to public guilds.
-  * @param maxVideoChannelUsers The max amount of users in a video call.
+  * @param joinedAt
+  *   When the client joined the guild.
+  * @param large
+  *   If this guild is above the large threshold.
+  * @param memberCount
+  *   The amount of members in the guild.
+  * @param voiceStates
+  *   The voice states of the guild.
+  * @param members
+  *   The guild members in the guild.
+  * @param channels
+  *   The channels in the guild.
+  * @param presences
+  *   The presences in the guild.
+  * @param publicUpdatesChannelId
+  *   The channel where admin and mods can see public updates are sent to public
+  *   guilds.
+  * @param maxVideoChannelUsers
+  *   The max amount of users in a video call.
   */
 case class GatewayGuild(
     id: GuildId,
@@ -452,8 +479,10 @@ case class GatewayGuild(
 }
 
 /**
-  * @param description A description of the server
-  * @param welcomeChannels Channels shown on the welcome screen
+  * @param description
+  *   A description of the server
+  * @param welcomeChannels
+  *   Channels shown on the welcome screen
   */
 case class WelcomeScreen(
     description: Option[String],
@@ -461,10 +490,14 @@ case class WelcomeScreen(
 )
 
 /**
-  * @param channelId The id the channel is referencing.
-  * @param description The description for the channel
-  * @param emojiId The emoji id if it is a custom one
-  * @param emojiName The emoji name if it is not a custom one
+  * @param channelId
+  *   The id the channel is referencing.
+  * @param description
+  *   The description for the channel
+  * @param emojiId
+  *   The emoji id if it is a custom one
+  * @param emojiName
+  *   The emoji name if it is not a custom one
   */
 case class WelcomeScreenChannel(
     channelId: GuildChannelId,
@@ -489,8 +522,10 @@ object NSFWLevel extends IntEnum[NSFWLevel] with IntCirceEnumWithUnknown[NSFWLev
 
 /**
   * A guild which is not available.
-  * @param id The id of the guild.
-  * @param unavailable If the guild is unavailable because of an outage.
+  * @param id
+  *   The id of the guild.
+  * @param unavailable
+  *   If the guild is unavailable because of an outage.
   */
 case class UnavailableGuild(id: GuildId, unavailable: Option[Boolean]) extends UnknownStatusGuild
 
@@ -527,15 +562,24 @@ object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnk
 
 /**
   * Represents a user in a guild.
-  * @param userId The user of this member.
-  * @param guildId The guild this member belongs to.
-  * @param nick The nickname of this user in this guild.
-  * @param roleIds The roles of this user.
-  * @param joinedAt When this user joined the guild.
-  * @param premiumSince When this user boosted the server.
-  * @param deaf If this user is deaf.
-  * @param mute IF this user is mute.
-  * @param pending True if the member hasn't gotten past the guild screening yet
+  * @param userId
+  *   The user of this member.
+  * @param guildId
+  *   The guild this member belongs to.
+  * @param nick
+  *   The nickname of this user in this guild.
+  * @param roleIds
+  *   The roles of this user.
+  * @param joinedAt
+  *   When this user joined the guild.
+  * @param premiumSince
+  *   When this user boosted the server.
+  * @param deaf
+  *   If this user is deaf.
+  * @param mute
+  *   IF this user is mute.
+  * @param pending
+  *   True if the member hasn't gotten past the guild screening yet
   */
 case class GuildMember(
     userId: UserId,
@@ -637,14 +681,22 @@ case class GuildMember(
 
 /**
   * An emoji in a guild.
-  * @param id The id of the emoji.
-  * @param name The emoji name.
-  * @param roles The roles that can use this emoji.
-  * @param userId The id of the user that created this emoji.
-  * @param requireColons If the emoji requires colons.
-  * @param managed If the emoji is managed.
-  * @param animated If the emoji is animated.
-  * @param available If the emoji can be used.
+  * @param id
+  *   The id of the emoji.
+  * @param name
+  *   The emoji name.
+  * @param roles
+  *   The roles that can use this emoji.
+  * @param userId
+  *   The id of the user that created this emoji.
+  * @param requireColons
+  *   If the emoji requires colons.
+  * @param managed
+  *   If the emoji is managed.
+  * @param animated
+  *   If the emoji is animated.
+  * @param available
+  *   If the emoji can be used.
   */
 case class Emoji(
     id: EmojiId,
@@ -672,16 +724,22 @@ case class Emoji(
 }
 
 /**
-  * @param start When the activity started.
-  * @param end When the activity will end.
+  * @param start
+  *   When the activity started.
+  * @param end
+  *   When the activity will end.
   */
 case class ActivityTimestamps(start: Option[Instant], end: Option[Instant])
 
 /**
-  * @param largeImage Id for the large asset. Usually a snowflake.
-  * @param largeText Text displayed when hovering over the large image.
-  * @param smallImage Id for the small asset. Usually a snowflake.
-  * @param smallText Text displayed when hovering over the small image.
+  * @param largeImage
+  *   Id for the large asset. Usually a snowflake.
+  * @param largeText
+  *   Text displayed when hovering over the large image.
+  * @param smallImage
+  *   Id for the small asset. Usually a snowflake.
+  * @param smallText
+  *   Text displayed when hovering over the small image.
   */
 case class ActivityAsset(
     largeImage: Option[String],
@@ -691,9 +749,12 @@ case class ActivityAsset(
 )
 
 /**
-  * @param join Secret for joining a party.
-  * @param spectate Secret for spectating a game.
-  * @param `match` Secret for a specific instanced match.
+  * @param join
+  *   Secret for joining a party.
+  * @param spectate
+  *   Secret for spectating a game.
+  * @param `match`
+  *   Secret for a specific instanced match.
   */
 case class ActivitySecrets(
     join: Option[String],
@@ -702,9 +763,12 @@ case class ActivitySecrets(
 )
 
 /**
-  * @param id The id of the party
-  * @param currentSize The current size of the party.
-  * @param maxSize The max size of the party.
+  * @param id
+  *   The id of the party
+  * @param currentSize
+  *   The current size of the party.
+  * @param maxSize
+  *   The max size of the party.
   */
 case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: Option[Int])
 
@@ -747,9 +811,12 @@ object ActivityType extends IntEnum[ActivityType] with IntCirceEnumWithUnknown[A
 
 /**
   * The presence of someone playing a game
-  * @param applicationId Application id of the game.
-  * @param state The user's party status.
-  * @param party Info about the user's party.
+  * @param applicationId
+  *   Application id of the game.
+  * @param state
+  *   The user's party status.
+  * @param party
+  *   Info about the user's party.
   */
 case class PresenceGame(
     name: String,
@@ -770,10 +837,14 @@ case class PresenceGame(
 
 /**
   * The presence of someone streaming
-  * @param uri The uri of the stream
-  * @param applicationId Application id of the game.
-  * @param state The user's party status.
-  * @param party Info about the user's party.
+  * @param uri
+  *   The uri of the stream
+  * @param applicationId
+  *   Application id of the game.
+  * @param state
+  *   The user's party status.
+  * @param party
+  *   Info about the user's party.
   */
 case class PresenceStreaming(
     name: String,
@@ -843,8 +914,8 @@ object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnumWit
 }
 
 /**
-  * The status of a user per platform. Not present if the user is offline,
-  * or invisible.
+  * The status of a user per platform. Not present if the user is offline, or
+  * invisible.
   */
 case class ClientStatus(
     desktop: Option[PresenceStatus],
@@ -854,9 +925,12 @@ case class ClientStatus(
 
 /**
   * The presence for a user
-  * @param userId The user id
-  * @param status The status of the user
-  * @param clientStatus The status of the user over several platforms
+  * @param userId
+  *   The user id
+  * @param status
+  *   The status of the user
+  * @param clientStatus
+  *   The status of the user over several platforms
   */
 case class Presence(userId: UserId, status: PresenceStatus, activities: Seq[Activity], clientStatus: ClientStatus)
     extends GetUser
@@ -881,11 +955,16 @@ sealed trait Integration {
 
 /**
   * A discord bot/OAuth2 integration.
-  * @param id The id of the integration
-  * @param name The integration name
-  * @param enabled If the integration is enabled
-  * @param account Account information
-  * @param application The bot/OAuth2 application
+  * @param id
+  *   The id of the integration
+  * @param name
+  *   The integration name
+  * @param enabled
+  *   If the integration is enabled
+  * @param account
+  *   Account information
+  * @param application
+  *   The bot/OAuth2 application
   */
 case class DiscordIntegration(
     id: IntegrationId,
@@ -900,19 +979,33 @@ case class DiscordIntegration(
 
 /**
   * A server integration
-  * @param id The id of the integration
-  * @param name The integration name
-  * @param `type` The type of the integration
-  * @param enabled If the integration is enabled
-  * @param syncing If the integration is synced
-  * @param roleId Role that this integration uses for subscribers, or guild id for Discord integrations
-  * @param expireBehavior The behavior of expiring subscribers.
-  * @param expireGracePeriod The grace period before expiring subscribers.
-  * @param user The user for this integration
-  * @param account Account information
-  * @param syncedAt When the integration last synced'
-  * @param subscriberCount How many subscribers this integration has. 0 for Discord
-  * @param revoked If this integration has been revoked
+  * @param id
+  *   The id of the integration
+  * @param name
+  *   The integration name
+  * @param `type`
+  *   The type of the integration
+  * @param enabled
+  *   If the integration is enabled
+  * @param syncing
+  *   If the integration is synced
+  * @param roleId
+  *   Role that this integration uses for subscribers, or guild id for Discord
+  *   integrations
+  * @param expireBehavior
+  *   The behavior of expiring subscribers.
+  * @param expireGracePeriod
+  *   The grace period before expiring subscribers.
+  * @param user
+  *   The user for this integration
+  * @param account
+  *   Account information
+  * @param syncedAt
+  *   When the integration last synced'
+  * @param subscriberCount
+  *   How many subscribers this integration has. 0 for Discord
+  * @param revoked
+  *   If this integration has been revoked
   */
 case class ExternalIntegration(
     id: IntegrationId,
@@ -958,12 +1051,18 @@ object IntegrationExpireBehavior
 }
 
 /**
-  * @param id The id of the application
-  * @param name The name of the application
-  * @param icon The icon hash of the application
-  * @param description The description of the application
-  * @param summary The summary of the application
-  * @param bot The bot user of the application
+  * @param id
+  *   The id of the application
+  * @param name
+  *   The name of the application
+  * @param icon
+  *   The icon hash of the application
+  * @param description
+  *   The description of the application
+  * @param summary
+  *   The summary of the application
+  * @param bot
+  *   The bot user of the application
   */
 case class IntegrationApplication(
     id: ApplicationId,
@@ -975,8 +1074,10 @@ case class IntegrationApplication(
 )
 
 /**
-  * @param id The id of the account
-  * @param name The name of the account
+  * @param id
+  *   The id of the account
+  * @param name
+  *   The name of the account
   */
 case class IntegrationAccount(id: String, name: String)
 
@@ -1009,8 +1110,10 @@ case class GuildWidgetMember(
 
 /**
   * Represents a banned user.
-  * @param reason Why the user was banned.
-  * @param userId The user that was baned.
+  * @param reason
+  *   Why the user was banned.
+  * @param userId
+  *   The user that was baned.
   */
 case class Ban(reason: Option[String], userId: UserId) {
 

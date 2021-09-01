@@ -75,11 +75,15 @@ object GatewayHandler {
   ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])]
 
   /**
-    * Responsible for normal websocket communication with Discord.
-    * Some REST messages can't be sent until this has authenticated.
-    * @param rawWsUri The raw uri to connect to without params
-    * @param settings The settings to use.
-    * @param handlerFlow A flow that sends messages to the gateway, and handles received messages.
+    * Responsible for normal websocket communication with Discord. Some REST
+    * messages can't be sent until this has authenticated.
+    * @param rawWsUri
+    *   The raw uri to connect to without params
+    * @param settings
+    *   The settings to use.
+    * @param handlerFlow
+    *   A flow that sends messages to the gateway, and handles received
+    *   messages.
     */
   def apply(
       rawWsUri: Uri,

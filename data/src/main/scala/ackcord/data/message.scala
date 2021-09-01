@@ -49,7 +49,7 @@ object ImageFormat {
   }
   case object WebP extends ImageFormat {
     override def extensions: Seq[String] = Seq("webp")
-    override def base64Name: String      = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
+    override def base64Name: String = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
   }
   case object GIF extends ImageFormat {
     override def extensions: Seq[String] = Seq("gif")
@@ -123,8 +123,8 @@ object PremiumType extends IntEnum[PremiumType] with IntCirceEnumWithUnknown[Pre
 }
 
 /**
-  * A author of a message. While a message is normally sent by a [[User]],
-  * it can also be sent by a [[WebhookAuthor]].
+  * A author of a message. While a message is normally sent by a [[User]], it
+  * can also be sent by a [[WebhookAuthor]].
   */
 sealed trait Author[A] {
 
@@ -143,9 +143,12 @@ sealed trait Author[A] {
 
 /**
   * An webhook author
-  * @param id The webhook id
-  * @param username The name of the webhook
-  * @param avatar The webhook's avatar hash
+  * @param id
+  *   The webhook id
+  * @param username
+  *   The name of the webhook
+  * @param avatar
+  *   The webhook's avatar hash
   */
 case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, discriminator: String, avatar: Option[String])
     extends Author[Webhook] {
@@ -154,20 +157,33 @@ case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, discrimin
 
 /**
   * A Discord user.
-  * @param id The id of the user.
-  * @param username The name of the user.
-  * @param discriminator The discriminator for the user. Those four last
-  *                      digits when clicking in a users name.
-  * @param avatar The users avatar hash.
-  * @param bot If this user belongs to a OAuth2 application.
-  * @param system If the user is part of Discord's urgent messaging system.
-  * @param mfaEnabled If this user has two factor authentication enabled.
-  * @param locale The user's chosen language.
-  * @param verified If this user email is verified. Requires the email OAuth scope.
-  * @param email The users email. Requires the email OAuth scope.
-  * @param flags The flags on a user's account.
-  * @param premiumType The type of nitro the account has.
-  * @param publicFlags The public flags on a user's account.
+  * @param id
+  *   The id of the user.
+  * @param username
+  *   The name of the user.
+  * @param discriminator
+  *   The discriminator for the user. Those four last digits when clicking in a
+  *   users name.
+  * @param avatar
+  *   The users avatar hash.
+  * @param bot
+  *   If this user belongs to a OAuth2 application.
+  * @param system
+  *   If the user is part of Discord's urgent messaging system.
+  * @param mfaEnabled
+  *   If this user has two factor authentication enabled.
+  * @param locale
+  *   The user's chosen language.
+  * @param verified
+  *   If this user email is verified. Requires the email OAuth scope.
+  * @param email
+  *   The users email. Requires the email OAuth scope.
+  * @param flags
+  *   The flags on a user's account.
+  * @param premiumType
+  *   The type of nitro the account has.
+  * @param publicFlags
+  *   The public flags on a user's account.
   */
 //Remember to edit PartialUser when editing this
 case class User(
@@ -198,15 +214,25 @@ case class User(
 
 /**
   * A connection that a user has attached.
-  * @param id The id of the connection.
-  * @param name The name of the connection.
-  * @param `type` The connection type (twitch, youtube).
-  * @param revoked If the connection has been revoked.
-  * @param integrations Integrations of the connection.
-  * @param verified If the connection is verified.
-  * @param friendSync If friend sync is enabled for the connection.
-  * @param showActivity If things related this this connection will be included in presence updates.
-  * @param visibility The visibility of the connection
+  * @param id
+  *   The id of the connection.
+  * @param name
+  *   The name of the connection.
+  * @param `type`
+  *   The connection type (twitch, youtube).
+  * @param revoked
+  *   If the connection has been revoked.
+  * @param integrations
+  *   Integrations of the connection.
+  * @param verified
+  *   If the connection is verified.
+  * @param friendSync
+  *   If friend sync is enabled for the connection.
+  * @param showActivity
+  *   If things related this this connection will be included in presence
+  *   updates.
+  * @param visibility
+  *   The visibility of the connection
   */
 case class Connection(
     id: String,
@@ -247,8 +273,10 @@ object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnu
 }
 
 /**
-  * @param activityType Activity type.
-  * @param partyId Party id from rich presence.
+  * @param activityType
+  *   Activity type.
+  * @param partyId
+  *   Party id from rich presence.
   */
 case class MessageActivity(activityType: MessageActivityType, partyId: Option[String])
 
@@ -288,8 +316,8 @@ sealed trait Message {
   def mentions: Seq[UserId]
 
   /**
-    * Potentially channels mentioned in the message.
-    * Only used for cross posted public channels so far.
+    * Potentially channels mentioned in the message. Only used for cross posted
+    * public channels so far.
     */
   def mentionChannels: Seq[ChannelMention]
 
@@ -357,7 +385,10 @@ sealed trait Message {
   /** If the author is a user, their user id. */
   def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
 
-  /** Gets the author of this message, ignoring the case where the author might be a webhook. */
+  /**
+    * Gets the author of this message, ignoring the case where the author might
+    * be a webhook.
+    */
   def authorUser(implicit c: CacheSnapshot): Option[User] = authorUserId.fold(None: Option[User])(c.getUser)
 
   /** Expands all mentions in the message. */
@@ -369,10 +400,10 @@ sealed trait Message {
 }
 
 /**
-  * A message missing the guild info. This can be because it was sent to a DM channel,
-  * or because it was retrieved later through a REST call. Note that a message
-  * can still be sent to a guild, but be missing the guild info.
-  * For example if it's gotten from a REST request.
+  * A message missing the guild info. This can be because it was sent to a DM
+  * channel, or because it was retrieved later through a REST call. Note that a
+  * message can still be sent to a guild, but be missing the guild info. For
+  * example if it's gotten from a REST request.
   */
 case class SparseMessage(
     id: MessageId,
@@ -429,13 +460,17 @@ case class SparseMessage(
 }
 
 /**
-  * A message sent with additional guild info. Note that a message can still
-  * be sent to a guild, but be missing the guild info.
-  * For example if it's gotten from a REST request.
-  * @param guildId The guild this message was sent to.
-  * @param isAuthorUser If the author of this message was a user.
-  * @param member The guild member user that sent this message.
-  * @param mentionRoles All the roles this message mentions.
+  * A message sent with additional guild info. Note that a message can still be
+  * sent to a guild, but be missing the guild info. For example if it's gotten
+  * from a REST request.
+  * @param guildId
+  *   The guild this message was sent to.
+  * @param isAuthorUser
+  *   If the author of this message was a user.
+  * @param member
+  *   The guild member user that sent this message.
+  * @param mentionRoles
+  *   All the roles this message mentions.
   */
 case class GuildGatewayMessage(
     id: MessageId,
@@ -516,10 +551,14 @@ case class GuildGatewayMessage(
 
 /**
   * Basic info of a channel in a cross posted message.
-  * @param id The id of the channel
-  * @param guildId The guild the channel is in
-  * @param `type` The channel type
-  * @param name The name of the channel
+  * @param id
+  *   The id of the channel
+  * @param guildId
+  *   The guild the channel is in
+  * @param `type`
+  *   The channel type
+  * @param name
+  *   The name of the channel
   */
 case class ChannelMention(
     id: TextChannelId,
@@ -537,16 +576,21 @@ case class MessageReference(
 
 /**
   * A reaction to a message
-  * @param count The amount of people that have reacted with this emoji.
-  * @param me If the client has reacted with this emoji.
-  * @param emoji The emoji of the reaction.
+  * @param count
+  *   The amount of people that have reacted with this emoji.
+  * @param me
+  *   If the client has reacted with this emoji.
+  * @param emoji
+  *   The emoji of the reaction.
   */
 case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
 
 /**
   * A partial emoji found in reactions
-  * @param id The id of the emoji. If it's absent, it's not a guild emoji.
-  * @param name The name of the emoji.
+  * @param id
+  *   The id of the emoji. If it's absent, it's not a guild emoji.
+  * @param name
+  *   The name of the emoji.
   */
 case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None) {
 
@@ -560,19 +604,32 @@ case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None,
 
 /**
   * A received embed.
-  * @param title The title of the embed.
-  * @param `type` The embed type. Probably rich.
-  * @param description The embed description or main text.
-  * @param url The url of the embed.
-  * @param timestamp The timestamp of the embed.
-  * @param color The color of the embed
-  * @param footer The footer part of the embed.
-  * @param image The image part of the embed.
-  * @param thumbnail The thumbnail part of the embed.
-  * @param video The video part of the embed.
-  * @param provider The provider part of the embed.
-  * @param author The author part of the embed.
-  * @param fields The fields of the embed.
+  * @param title
+  *   The title of the embed.
+  * @param `type`
+  *   The embed type. Probably rich.
+  * @param description
+  *   The embed description or main text.
+  * @param url
+  *   The url of the embed.
+  * @param timestamp
+  *   The timestamp of the embed.
+  * @param color
+  *   The color of the embed
+  * @param footer
+  *   The footer part of the embed.
+  * @param image
+  *   The image part of the embed.
+  * @param thumbnail
+  *   The thumbnail part of the embed.
+  * @param video
+  *   The video part of the embed.
+  * @param provider
+  *   The provider part of the embed.
+  * @param author
+  *   The author part of the embed.
+  * @param fields
+  *   The fields of the embed.
   */
 case class ReceivedEmbed(
     title: Option[String],
@@ -622,10 +679,14 @@ object EmbedType extends StringEnum[EmbedType] with StringCirceEnumWithUnknown[E
 
 /**
   * The thumbnail part of a received embed.
-  * @param url The url to the thumbnail.
-  * @param proxyUrl The proxy url of the thumbnail.
-  * @param height The height of the thumbnail.
-  * @param width The width of the thumbnail.
+  * @param url
+  *   The url to the thumbnail.
+  * @param proxyUrl
+  *   The proxy url of the thumbnail.
+  * @param height
+  *   The height of the thumbnail.
+  * @param width
+  *   The width of the thumbnail.
   */
 case class ReceivedEmbedThumbnail(
     url: Option[String],
@@ -639,10 +700,14 @@ case class ReceivedEmbedThumbnail(
 
 /**
   * The video part of a received embed.
-  * @param url The url of the video.
-  * @param proxyUrl The proxy url of the video.
-  * @param height The height of the video.
-  * @param width The width of the video.
+  * @param url
+  *   The url of the video.
+  * @param proxyUrl
+  *   The proxy url of the video.
+  * @param height
+  *   The height of the video.
+  * @param width
+  *   The width of the video.
   */
 case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
   def toOutgoing: Option[OutgoingEmbedVideo] = url.map(OutgoingEmbedVideo)
@@ -650,10 +715,14 @@ case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], hei
 
 /**
   * The image part of a received embed.
-  * @param url The url of the image.
-  * @param proxyUrl The proxy url of the image.
-  * @param height The height of the image.
-  * @param width The width of the image.
+  * @param url
+  *   The url of the image.
+  * @param proxyUrl
+  *   The proxy url of the image.
+  * @param height
+  *   The height of the image.
+  * @param width
+  *   The width of the image.
   */
 case class ReceivedEmbedImage(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
   def toOutgoing: Option[OutgoingEmbedImage] = url.map(OutgoingEmbedImage)
@@ -661,17 +730,23 @@ case class ReceivedEmbedImage(url: Option[String], proxyUrl: Option[String], hei
 
 /**
   * The provider part of a received embed.
-  * @param name The name of the provider.
-  * @param url The url of a provider.
+  * @param name
+  *   The name of the provider.
+  * @param url
+  *   The url of a provider.
   */
 case class ReceivedEmbedProvider(name: Option[String], url: Option[String])
 
 /**
   * The author part of a received embed.
-  * @param name The author name
-  * @param url An url for the author text.
-  * @param iconUrl An icon url for the author.
-  * @param proxyIconUrl A proxy url for the icon.
+  * @param name
+  *   The author name
+  * @param url
+  *   An url for the author text.
+  * @param iconUrl
+  *   An icon url for the author.
+  * @param proxyIconUrl
+  *   A proxy url for the icon.
   */
 case class ReceivedEmbedAuthor(
     name: Option[String],
@@ -685,9 +760,12 @@ case class ReceivedEmbedAuthor(
 
 /**
   * The footer part of a received embed.
-  * @param text The footer text.
-  * @param iconUrl An icon url for the footer.
-  * @param proxyIconUrl A proxy url for the footer.
+  * @param text
+  *   The footer text.
+  * @param iconUrl
+  *   An icon url for the footer.
+  * @param proxyIconUrl
+  *   A proxy url for the footer.
   */
 case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String]) {
   def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
@@ -695,9 +773,12 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
 
 /**
   * A field for an embed
-  * @param name The name or title of the field.
-  * @param value The value or text of the field
-  * @param inline If the field is rendered inline.
+  * @param name
+  *   The name or title of the field.
+  * @param value
+  *   The value or text of the field
+  * @param inline
+  *   If the field is rendered inline.
   */
 case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = None) {
   require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
@@ -706,14 +787,22 @@ case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = N
 
 /**
   * An attachment for a message
-  * @param id The id of the attachment
-  * @param filename The filename of the attachment
-  * @param contentType The attachment's media type
-  * @param size The file size in bytes
-  * @param url The url of the attachment
-  * @param proxyUrl The proxyUrl of the attachment
-  * @param height The height of the attachment if it's an image
-  * @param width The width of the attachment if it's an image
+  * @param id
+  *   The id of the attachment
+  * @param filename
+  *   The filename of the attachment
+  * @param contentType
+  *   The attachment's media type
+  * @param size
+  *   The file size in bytes
+  * @param url
+  *   The url of the attachment
+  * @param proxyUrl
+  *   The proxyUrl of the attachment
+  * @param height
+  *   The height of the attachment if it's an image
+  * @param width
+  *   The width of the attachment if it's an image
   */
 case class Attachment(
     id: SnowflakeType[Attachment],
@@ -728,16 +817,26 @@ case class Attachment(
 
 /**
   * An outgoing embed.
-  * @param title The title of the embed.
-  * @param description The embed description or main text.
-  * @param url The url of the embed.
-  * @param timestamp The timestamp of the embed.
-  * @param color The color of the embed
-  * @param footer The footer part of the embed.
-  * @param image The image part of the embed.
-  * @param thumbnail The thumbnail part of the embed.
-  * @param author The author part of the embed.
-  * @param fields The fields of the embed.
+  * @param title
+  *   The title of the embed.
+  * @param description
+  *   The embed description or main text.
+  * @param url
+  *   The url of the embed.
+  * @param timestamp
+  *   The timestamp of the embed.
+  * @param color
+  *   The color of the embed
+  * @param footer
+  *   The footer part of the embed.
+  * @param image
+  *   The image part of the embed.
+  * @param thumbnail
+  *   The thumbnail part of the embed.
+  * @param author
+  *   The author part of the embed.
+  * @param fields
+  *   The fields of the embed.
   */
 case class OutgoingEmbed(
     title: Option[String] = None,
@@ -771,27 +870,33 @@ case class OutgoingEmbed(
 
 /**
   * The thumbnail part of an outgoing embed.
-  * @param url The url to the thumbnail.
+  * @param url
+  *   The url to the thumbnail.
   */
 case class OutgoingEmbedThumbnail(url: String)
 
 /**
   * The image part of an outgoing embed.
-  * @param url The url to the image.
+  * @param url
+  *   The url to the image.
   */
 case class OutgoingEmbedImage(url: String)
 
 /**
   * The video part of an outgoing embed.
-  * @param url The url to the video.
+  * @param url
+  *   The url to the video.
   */
 case class OutgoingEmbedVideo(url: String)
 
 /**
   * The author part of an outgoing embed
-  * @param name The name of the author
-  * @param url The url to link when clicking on the author
-  * @param iconUrl The icon to show besides the author.
+  * @param name
+  *   The name of the author
+  * @param url
+  *   The url to link when clicking on the author
+  * @param iconUrl
+  *   The icon to show besides the author.
   */
 case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None) {
   require(name.length <= 256, "The author name of an embed can't have more than 256 characters")
@@ -799,8 +904,10 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
 
 /**
   * The footer part of an outgoing embed.
-  * @param text The text of the footer
-  * @param iconUrl The icon url of the footer.
+  * @param text
+  *   The text of the footer
+  * @param iconUrl
+  *   The icon url of the footer.
   */
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
   require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
@@ -808,13 +915,20 @@ case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
 
 /**
   * The structure of a sticker sent in a message.
-  * @param id id of the sticker
-  * @param packId id of the pack the sticker is from
-  * @param name name of the sticker
-  * @param description description of the sticker
-  * @param tags a comma-separated list of tags for the sticker
-  * @param asset sticker asset hash
-  * @param formatType	type of sticker format
+  * @param id
+  *   id of the sticker
+  * @param packId
+  *   id of the pack the sticker is from
+  * @param name
+  *   name of the sticker
+  * @param description
+  *   description of the sticker
+  * @param tags
+  *   a comma-separated list of tags for the sticker
+  * @param asset
+  *   sticker asset hash
+  * @param formatType
+  *   type of sticker format
   */
 case class Sticker(
     id: StickerId,
@@ -827,10 +941,14 @@ case class Sticker(
 )
 
 /**
-  * The structure of a sticker item (the smallest amount of data required to render a sticker)
-  * @param id id of the sticker
-  * @param name name of the sticker
-  * @param formatType	type of sticker format
+  * The structure of a sticker item (the smallest amount of data required to
+  * render a sticker)
+  * @param id
+  *   id of the sticker
+  * @param name
+  *   name of the sticker
+  * @param formatType
+  *   type of sticker format
   */
 case class StickerItem(
     id: StickerId,
@@ -839,11 +957,16 @@ case class StickerItem(
 )
 
 /**
-  * This is sent on the message object when the message is a response to an Interaction.
-  * @param id id of the interaction
-  * @param type the type of interaction
-  * @param name the name of the ApplicationCommand
-  * @param user	the user who invoked the interaction
+  * This is sent on the message object when the message is a response to an
+  * Interaction.
+  * @param id
+  *   id of the interaction
+  * @param type
+  *   the type of interaction
+  * @param name
+  *   the name of the ApplicationCommand
+  * @param user
+  *   the user who invoked the interaction
   */
 case class MessageInteraction(
     id: String,
@@ -853,11 +976,15 @@ case class MessageInteraction(
 )
 
 /**
-  * @param parse Which mention types should be allowed.
-  * @param roles The roles to allow mention.
-  * @param users The users to allow mention.
-  * @param repliedUser For replires, if the author of the message you are
-  *                    replying to should be mentioned.
+  * @param parse
+  *   Which mention types should be allowed.
+  * @param roles
+  *   The roles to allow mention.
+  * @param users
+  *   The users to allow mention.
+  * @param repliedUser
+  *   For replires, if the author of the message you are replying to should be
+  *   mentioned.
   */
 case class AllowedMention(
     parse: Seq[AllowedMentionTypes] = Seq.empty,

@@ -54,9 +54,10 @@ object Routes {
   type InviteCode = String
 
   /**
-    * Emoji is a bit more complicated than the others.
-    * If it's a custom emoji, the format is `name:id` for example `rust:232722868583006209`.
-    * If it's a normal emoji, it's encoded using percent encoding, for example `%F0%9F%92%A9`.
+    * Emoji is a bit more complicated than the others. If it's a custom emoji,
+    * the format is `name:id` for example `rust:232722868583006209`. If it's a
+    * normal emoji, it's encoded using percent encoding, for example
+    * `%F0%9F%92%A9`.
     */
   type Emoji = String
 

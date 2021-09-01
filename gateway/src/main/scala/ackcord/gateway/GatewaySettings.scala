@@ -31,15 +31,24 @@ import ackcord.data.raw.RawActivity
 /**
   * All the settings used by AckCord when connecting and similar
   *
-  * @param token The token for the bot
-  * @param largeThreshold The large threshold
-  * @param shardNum The shard index of this
-  * @param shardTotal The amount of shards
-  * @param idleSince If the bot has been idle, set the time since
-  * @param activities Send an activity when connecting
-  * @param status The status to use when connecting
-  * @param afk If the bot should be afk when connecting
-  * @param intents Sets which events the gateway should send to the bot.
+  * @param token
+  *   The token for the bot
+  * @param largeThreshold
+  *   The large threshold
+  * @param shardNum
+  *   The shard index of this
+  * @param shardTotal
+  *   The amount of shards
+  * @param idleSince
+  *   If the bot has been idle, set the time since
+  * @param activities
+  *   Send an activity when connecting
+  * @param status
+  *   The status to use when connecting
+  * @param afk
+  *   If the bot should be afk when connecting
+  * @param intents
+  *   Sets which events the gateway should send to the bot.
   */
 case class GatewaySettings(
     token: String,

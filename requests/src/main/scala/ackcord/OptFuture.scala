@@ -26,15 +26,17 @@ package ackcord
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
-import cats.{Eval, MonadError, StackSafeMonad}
 import cats.data.OptionT
-import cats.syntax.all._
 import cats.instances.future._
 import cats.instances.option._
+import cats.syntax.all._
+import cats.{Eval, MonadError, StackSafeMonad}
 
 /**
-  * A future that might be missing a value. A nice wrapper around `Future[Option[A]]`
-  * @param value The wrapped future
+  * A future that might be missing a value. A nice wrapper around
+  * `Future[Option[A]]`
+  * @param value
+  *   The wrapped future
   */
 class OptFuture[+A](val value: Future[Option[A]]) {
 

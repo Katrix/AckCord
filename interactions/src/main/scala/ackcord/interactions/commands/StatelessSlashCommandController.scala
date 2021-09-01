@@ -23,8 +23,8 @@
  */
 package ackcord.interactions.commands
 
-import ackcord.requests.Requests
 import ackcord.interactions.{CommandInteraction, DataInteractionTransformer, StatelessCommandInteraction}
+import ackcord.requests.Requests
 import akka.NotUsed
 
 class StatelessSlashCommandController(val requests: Requests)

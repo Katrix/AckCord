@@ -31,18 +31,30 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * A webhook
-  * @param id The webhook id
-  * @param guildId The guild it belongs to
-  * @param channelId The channel it belongs to
-  * @param user The user that created the webhook. Not present when getting
-  *             a webhook with a token.
-  * @param name The name of the webhook
-  * @param avatar The default avatar hash of the webhook.
-  * @param token The token of the webhook.
-  * @param applicationId The bot or OAuth2 application that created the webhook
-  * @param sourceGuild The guild of the channel this webhook is following (For channel follower webhooks)
-  * @param sourceChannel The channel this webhook is following (For channel follower webhooks)
-  * @param url Url used for executing the webhook (Returned by the webhooks OAuth2 flow)
+  * @param id
+  *   The webhook id
+  * @param guildId
+  *   The guild it belongs to
+  * @param channelId
+  *   The channel it belongs to
+  * @param user
+  *   The user that created the webhook. Not present when getting a webhook with
+  *   a token.
+  * @param name
+  *   The name of the webhook
+  * @param avatar
+  *   The default avatar hash of the webhook.
+  * @param token
+  *   The token of the webhook.
+  * @param applicationId
+  *   The bot or OAuth2 application that created the webhook
+  * @param sourceGuild
+  *   The guild of the channel this webhook is following (For channel follower
+  *   webhooks)
+  * @param sourceChannel
+  *   The channel this webhook is following (For channel follower webhooks)
+  * @param url
+  *   Url used for executing the webhook (Returned by the webhooks OAuth2 flow)
   */
 case class Webhook(
     id: SnowflakeType[Webhook],

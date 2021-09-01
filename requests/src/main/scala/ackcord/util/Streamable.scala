@@ -28,8 +28,8 @@ import scala.concurrent.Future
 import ackcord.OptFuture
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import cats.{Foldable, Id}
 import cats.data.OptionT
+import cats.{Foldable, Id}
 
 /** Typeclass for converting some type F[A] to a Source[A, NotUsed] */
 trait Streamable[F[_]] {

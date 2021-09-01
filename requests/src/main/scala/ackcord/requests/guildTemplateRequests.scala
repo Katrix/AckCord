@@ -26,7 +26,7 @@ package ackcord.requests
 import ackcord.CacheSnapshot
 import ackcord.data.DiscordProtocol._
 import ackcord.data.raw.RawGuild
-import ackcord.data.{GuildId, ImageData, Permission, GuildTemplate}
+import ackcord.data.{GuildId, GuildTemplate, ImageData, Permission}
 import ackcord.util.{JsonOption, JsonSome, JsonUndefined}
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, derivation}
@@ -68,8 +68,10 @@ case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseReque
 }
 
 /**
-  * @param name Name of the template
-  * @param description Description of the template
+  * @param name
+  *   Name of the template
+  * @param description
+  *   Description of the template
   */
 case class CreateGuildTemplateData(name: String, description: JsonOption[String] = JsonUndefined) {
   require(name.nonEmpty, "Name must not be empty")

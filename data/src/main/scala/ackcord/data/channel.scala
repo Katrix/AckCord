@@ -66,8 +66,8 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
 }
 
 /**
-  * Permission overwrites can apply to both users and role. This tells you what's
-  * being overwritten for a specific overwrite.
+  * Permission overwrites can apply to both users and role. This tells you
+  * what's being overwritten for a specific overwrite.
   */
 sealed abstract class PermissionOverwriteType(val value: Int) extends IntEnumEntry
 object PermissionOverwriteType
@@ -84,28 +84,39 @@ object PermissionOverwriteType
 
 /**
   * Represents a permission overwrite in a channel for a user or a guild.
-  * @param id The id that this overwrite applies to. Can be both a user or a
-  *           role. Check [[`type`]] to see what is valid for this overwrite.
-  * @param `type` The type of object this applies to.
-  * @param allow The permissions granted by this overwrite.
-  * @param deny The permissions denied by this overwrite.
+  * @param id
+  *   The id that this overwrite applies to. Can be both a user or a role. Check
+  *   [[`type`]] to see what is valid for this overwrite.
+  * @param `type`
+  *   The type of object this applies to.
+  * @param allow
+  *   The permissions granted by this overwrite.
+  * @param deny
+  *   The permissions denied by this overwrite.
   */
 case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission) {
 
-  /** If this overwrite applies to a user, get's that user, otherwise returns None. */
+  /**
+    * If this overwrite applies to a user, get's that user, otherwise returns
+    * None.
+    */
   def user(implicit c: CacheSnapshot): Option[User] =
     if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else None
 
   /**
-    * If this overwrite applies to a user, get that user's member, otherwise returns None.
-    * @param guild The guild this overwrite belongs to.
+    * If this overwrite applies to a user, get that user's member, otherwise
+    * returns None.
+    * @param guild
+    *   The guild this overwrite belongs to.
     */
   def member(guild: GatewayGuild): Option[GuildMember] =
     if (`type` == PermissionOverwriteType.Member) guild.members.get(UserId(id)) else None
 
   /**
-    * If this overwrite applies to a role, get that role, otherwise returns None.
-    * @param guild The guild this overwrite belongs to.
+    * If this overwrite applies to a role, get that role, otherwise returns
+    * None.
+    * @param guild
+    *   The guild this overwrite belongs to.
     */
   def role(guild: Guild): Option[Role] =
     if (`type` == PermissionOverwriteType.Role) guild.roles.get(RoleId(id)) else None
@@ -136,8 +147,8 @@ sealed trait TextChannel extends Channel {
   override def id: TextChannelId
 
   /**
-    * Points to the last message id in the channel.
-    * The id might not point to a valid or existing message.
+    * Points to the last message id in the channel. The id might not point to a
+    * valid or existing message.
     */
   def lastMessageId: Option[MessageId]
 
@@ -191,7 +202,9 @@ sealed trait TextGuildChannel extends GuildChannel with TextChannel {
   /** When the last pinned message was pinned. */
   def lastPinTimestamp: Option[OffsetDateTime]
 
-  /** The default for when a newly created thread is auto archived in minutes. */
+  /**
+    * The default for when a newly created thread is auto archived in minutes.
+    */
   def defaultAutoArchiveDuration: Option[Int]
 }
 
@@ -287,8 +300,10 @@ sealed trait VoiceGuildChannel extends GuildChannel {
 
 /**
   * A voice channel in a guild
-  * @param userLimit The max amount of users that can join this channel.
-  * @param videoQualityMode The quality of video in the channel.
+  * @param userLimit
+  *   The max amount of users that can join this channel.
+  * @param videoQualityMode
+  *   The quality of video in the channel.
   */
 case class NormalVoiceGuildChannel(
     id: SnowflakeType[NormalVoiceGuildChannel],
@@ -358,11 +373,15 @@ case class DMChannel(id: SnowflakeType[DMChannel], lastMessageId: Option[Message
 
 /**
   * A group DM text channel
-  * @param users The users in this group DM
-  * @param ownerId The creator of this channel
-  * @param applicationId The applicationId of the application that created
-  *                      this channel, if the channel wasn't created by a user
-  * @param icon The icon hash for this group dm
+  * @param users
+  *   The users in this group DM
+  * @param ownerId
+  *   The creator of this channel
+  * @param applicationId
+  *   The applicationId of the application that created this channel, if the
+  *   channel wasn't created by a user
+  * @param icon
+  *   The icon hash for this group dm
   */
 case class GroupDMChannel(
     id: SnowflakeType[GroupDMChannel],

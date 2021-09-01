@@ -33,9 +33,12 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 /**
   * Root audit log object. Received from [[ackcord.requests.GetGuildAuditLog]]
   *
-  * @param webhooks The webhooks found in the log
-  * @param users The users found in the log
-  * @param auditLogEntries The entries of the log
+  * @param webhooks
+  *   The webhooks found in the log
+  * @param users
+  *   The users found in the log
+  * @param auditLogEntries
+  *   The entries of the log
   */
 case class AuditLog(
     webhooks: Seq[Webhook],
@@ -46,14 +49,21 @@ case class AuditLog(
 
 /**
   * An individual audit log event
-  * @param targetId The id of the affected object
-  * @param changes The changes made to the object
-  * @param userId The user responsible for the changes
-  * @param id The id of this entry
-  * @param actionType Type of change that happened
-  * @param options Optional extra data for some changes,
-  *                see comments on [[OptionalAuditLogInfo]] for more info
-  * @param reason The reason for the change
+  * @param targetId
+  *   The id of the affected object
+  * @param changes
+  *   The changes made to the object
+  * @param userId
+  *   The user responsible for the changes
+  * @param id
+  *   The id of this entry
+  * @param actionType
+  *   Type of change that happened
+  * @param options
+  *   Optional extra data for some changes, see comments on
+  *   [[OptionalAuditLogInfo]] for more info
+  * @param reason
+  *   The reason for the change
   */
 case class AuditLogEntry(
     targetId: Option[RawSnowflake],
@@ -123,19 +133,25 @@ object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown
 
 /**
   * Extra data for an entry
-  * @param deleteMemberDays The amount of days before a user was considered
-  *                         inactive and kicked. Present for MemberPrune.
-  * @param membersRemoved The amount of members removed.
-  *                       Present for MemberPrune.
-  * @param channelId The channelId of the deleted message.
-  *                  Present for MemberMove, MessagePing, MessageUnpin, MessageDelete,
-  *                  StageInstanceCreate, StageInstanceUpdate and StageInstanceDelete.
-  * @param messageId The message that was targeted. Present for MessagePin and MessageUnpin
-  * @param count The amount of deleted messages. Present for MessageDelete.
-  * @param id The id of the overwritten object. Present for overwrite events.
-  * @param `type` The type of the overwritten object.
-  *               Present for overwrite events.
-  * @param roleName The name of the role. Present for overwrite events if type == Role.
+  * @param deleteMemberDays
+  *   The amount of days before a user was considered inactive and kicked.
+  *   Present for MemberPrune.
+  * @param membersRemoved
+  *   The amount of members removed. Present for MemberPrune.
+  * @param channelId
+  *   The channelId of the deleted message. Present for MemberMove, MessagePing,
+  *   MessageUnpin, MessageDelete, StageInstanceCreate, StageInstanceUpdate and
+  *   StageInstanceDelete.
+  * @param messageId
+  *   The message that was targeted. Present for MessagePin and MessageUnpin
+  * @param count
+  *   The amount of deleted messages. Present for MessageDelete.
+  * @param id
+  *   The id of the overwritten object. Present for overwrite events.
+  * @param `type`
+  *   The type of the overwritten object. Present for overwrite events.
+  * @param roleName
+  *   The name of the role. Present for overwrite events if type == Role.
   */
 case class OptionalAuditLogInfo(
     deleteMemberDays: Option[String],
@@ -150,7 +166,8 @@ case class OptionalAuditLogInfo(
 
 /**
   * Some sort of change
-  * @tparam A The data type that changed
+  * @tparam A
+  *   The data type that changed
   */
 sealed trait AuditLogChange[A] {
 

@@ -25,14 +25,14 @@ package ackcord.commands
 
 import scala.concurrent.ExecutionContext
 
-import ackcord.requests.{Requests, RequestsHelper}
 import ackcord.CacheSnapshot
+import ackcord.requests.{Requests, RequestsHelper}
 import akka.NotUsed
 import cats.~>
 
 /**
-  * The base command controller that you will place your commands in.
-  * Contains partially applied types, and the Command builder object.
+  * The base command controller that you will place your commands in. Contains
+  * partially applied types, and the Command builder object.
   */
 abstract class CommandController(val requests: Requests) {
 
@@ -45,7 +45,10 @@ abstract class CommandController(val requests: Requests) {
   /** Determines the default value for if a mention should required. */
   def defaultMustMention: Boolean = false
 
-  /** Determines the default value for mention or prefix when creating a named command. */
+  /**
+    * Determines the default value for mention or prefix when creating a named
+    * command.
+    */
   def defaultMentionOrPrefix: Boolean = false
 
   /**

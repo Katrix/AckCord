@@ -28,8 +28,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 import ackcord.CacheSnapshot
 import ackcord.data.{Message, User}
-import cats.{Monad, MonadError}
 import cats.syntax.all._
+import cats.{Monad, MonadError}
 
 trait PrefixParser {
 
@@ -97,14 +97,21 @@ object PrefixParser {
 }
 
 /**
-  * Represents information about how a command can be invoked in a structural way.
-  * @param needsMention If the command needs a mention
-  * @param symbols The valid prefix symbols for the command
-  * @param aliases The aliases for the command
-  * @param caseSensitive If the aliases should be case sensitive
-  * @param canExecute A early precheck if the command can execute at all
-  * @param mentionOrPrefix If true allows one to use a mention in place of a prefix.
-  *                        If needsMention is also true, skips the symbol check.
+  * Represents information about how a command can be invoked in a structural
+  * way.
+  * @param needsMention
+  *   If the command needs a mention
+  * @param symbols
+  *   The valid prefix symbols for the command
+  * @param aliases
+  *   The aliases for the command
+  * @param caseSensitive
+  *   If the aliases should be case sensitive
+  * @param canExecute
+  *   A early precheck if the command can execute at all
+  * @param mentionOrPrefix
+  *   If true allows one to use a mention in place of a prefix. If needsMention
+  *   is also true, skips the symbol check.
   */
 case class StructuredPrefixParser(
     needsMention: (CacheSnapshot, Message) => Future[Boolean],

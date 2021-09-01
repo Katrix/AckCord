@@ -28,7 +28,7 @@ import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-import ackcord.requests.{Request, Requests, RequestResponse}
+import ackcord.requests.{Request, RequestResponse, Requests}
 import ackcord.util.StreamInstances.SourceRequest
 import ackcord.util.Streamable
 import akka.NotUsed

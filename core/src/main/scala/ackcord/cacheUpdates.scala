@@ -34,19 +34,27 @@ import akka.stream.scaladsl.{Flow, Sink}
 /** Represents some sort of event handled by the cache */
 trait CacheEvent {
 
-  /** Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this event. */
+  /**
+    * Updates a [[ackcord.cachehandlers.CacheSnapshotBuilder]] according to this
+    * event.
+    */
   def process(builder: CacheSnapshotBuilder): Unit
 }
 
 /**
   * An event that should publish an [[APIMessage]].
-  * @param data The data.
-  * @param sendEvent A function to gather the needed variables to send the
-  *                  event.
-  * @param handler The handler to process the data of this event with.
-  * @param registry The handler registry that the event will use to update the snapshot.
-  * @param dispatch The low level message that created this update.
-  * @tparam Data The data it contains.
+  * @param data
+  *   The data.
+  * @param sendEvent
+  *   A function to gather the needed variables to send the event.
+  * @param handler
+  *   The handler to process the data of this event with.
+  * @param registry
+  *   The handler registry that the event will use to update the snapshot.
+  * @param dispatch
+  *   The low level message that created this update.
+  * @tparam Data
+  *   The data it contains.
   */
 case class APIMessageCacheUpdate[Data](
     data: Data,
@@ -87,10 +95,14 @@ case class BatchedAPIMessageCacheUpdate(updates: Seq[APIMessageCacheUpdate[_]]) 
 
 /**
   * A cache event that will try to put the data of the response into the cache.
-  * @param requestResponse The response to the request.
-  * @param request The request used to get the response.
-  * @param registry The handler registry that the event will use to update the snapshot.
-  * @tparam Data The type of the request response.
+  * @param requestResponse
+  *   The response to the request.
+  * @param request
+  *   The request used to get the response.
+  * @param registry
+  *   The handler registry that the event will use to update the snapshot.
+  * @tparam Data
+  *   The type of the request response.
   */
 case class RequestCacheUpdate[Data](
     requestResponse: RequestResponse[Data],
@@ -119,8 +131,10 @@ object RequestCacheUpdate {
     * objects in the cache. Note: This might fail to place the type in the
     * registry if there is no handler for it in the cache registry passed in.
     *
-    * @param events The events container to cache the objects in.
-    * @param registry The cache registry to use for finding cache handlers.
+    * @param events
+    *   The events container to cache the objects in.
+    * @param registry
+    *   The cache registry to use for finding cache handlers.
     */
   def requestsProcessor[Data](
       events: Events,

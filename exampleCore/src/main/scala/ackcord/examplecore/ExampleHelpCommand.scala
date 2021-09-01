@@ -25,10 +25,10 @@ package ackcord.examplecore
 
 import scala.concurrent.Future
 
-import ackcord.{CacheSnapshot, Requests}
 import ackcord.commands.HelpCommand
 import ackcord.data.{EmbedField, Message, OutgoingEmbed, OutgoingEmbedFooter}
 import ackcord.requests.CreateMessageData
+import ackcord.{CacheSnapshot, Requests}
 
 class ExampleHelpCommand(requests: Requests) extends HelpCommand(requests) {
   override def createSearchReply(message: Message, query: String, matches: Seq[HelpCommand.HelpCommandProcessedEntry])(

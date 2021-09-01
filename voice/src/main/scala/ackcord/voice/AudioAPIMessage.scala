@@ -27,9 +27,9 @@ import ackcord.data.{RawSnowflake, UserId}
 import akka.util.ByteString
 
 /**
-  * The base trait for all audio events. Note that the audio API does not
-  * have any connections to any [[ackcord.CacheSnapshot]]s.
-  * As such you have to find the objects for the IDs yourself.
+  * The base trait for all audio events. Note that the audio API does not have
+  * any connections to any [[ackcord.CacheSnapshot]] s. As such you have to find
+  * the objects for the IDs yourself.
   */
 sealed trait AudioAPIMessage {
 
@@ -43,9 +43,12 @@ object AudioAPIMessage {
 
   /**
     * Sent to the receiver when a user is speaking
-    * @param speakingUserId The userId of the speaker
-    * @param ssrc The ssrc of the speaker
-    * @param speakingFlags If the speaking flags sent for the user
+    * @param speakingUserId
+    *   The userId of the speaker
+    * @param ssrc
+    *   The ssrc of the speaker
+    * @param speakingFlags
+    *   If the speaking flags sent for the user
     */
   case class UserSpeaking(
       speakingUserId: UserId,
@@ -61,9 +64,11 @@ object AudioAPIMessage {
 
   /**
     * Sent to the data receiver when a user speaks.
-    * @param data The raw data
-    * @param header The RTP header. This contains the ssrc of the speaker.
-    *               To get the userId of the speaker, use [[UserSpeaking]].
+    * @param data
+    *   The raw data
+    * @param header
+    *   The RTP header. This contains the ssrc of the speaker. To get the userId
+    *   of the speaker, use [[UserSpeaking]].
     */
   case class ReceivedData(data: ByteString, header: RTPHeader, serverId: RawSnowflake, userId: UserId)
       extends AudioAPIMessage

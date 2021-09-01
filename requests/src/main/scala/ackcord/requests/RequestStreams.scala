@@ -84,9 +84,9 @@ object RequestStreams {
   )
 
   /**
-    * A basic request flow which will send requests to Discord, and
-    * receive responses. This flow does not account for ratelimits. Only
-    * use it if you know what you're doing.
+    * A basic request flow which will send requests to Discord, and receive
+    * responses. This flow does not account for ratelimits. Only use it if you
+    * know what you're doing.
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
       requestSettings: RequestSettings
@@ -191,61 +191,59 @@ object RequestStreams {
       implicit system: ActorSystem[Nothing]
   ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx]
-      .mapAsync(requestSettings.parallelism) {
-        { case (response, request) =>
-          import system.executionContext
+      .mapAsync(requestSettings.parallelism) { case (response, request) =>
+        import system.executionContext
 
-          val route = request.route
-          response match {
-            case Success(httpResponse) =>
-              val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
-              val tilRatelimit = remainingRequests(httpResponse)
-              val bucketLimit  = requestsForUri(httpResponse)
-              val bucket       = requestBucket(route, httpResponse)
+        val route = request.route
+        response match {
+          case Success(httpResponse) =>
+            val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
+            val tilRatelimit = remainingRequests(httpResponse)
+            val bucketLimit  = requestsForUri(httpResponse)
+            val bucket       = requestBucket(route, httpResponse)
 
-              val ratelimitInfo = RatelimitInfo(
-                tilReset,
-                tilRatelimit,
-                bucketLimit,
-                bucket
-              )
+            val ratelimitInfo = RatelimitInfo(
+              tilReset,
+              tilRatelimit,
+              bucketLimit,
+              bucket
+            )
 
-              httpResponse.status match {
-                case StatusCodes.TooManyRequests =>
-                  httpResponse.discardEntityBytes()
-                  Future.successful(
-                    RequestRatelimited(
-                      isGlobalRatelimit(httpResponse),
-                      ratelimitInfo,
+            httpResponse.status match {
+              case StatusCodes.TooManyRequests =>
+                httpResponse.discardEntityBytes()
+                Future.successful(
+                  RequestRatelimited(
+                    isGlobalRatelimit(httpResponse),
+                    ratelimitInfo,
+                    route,
+                    request.identifier
+                  )
+                )
+              case e if e.isFailure() =>
+                httpResponse.entity.dataBytes
+                  .runFold(ByteString.empty)(_ ++ _)
+                  .map { eBytes =>
+                    RequestError(
+                      HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
                       route,
                       request.identifier
                     )
-                  )
-                case e if e.isFailure() =>
-                  httpResponse.entity.dataBytes
-                    .runFold(ByteString.empty)(_ ++ _)
-                    .map { eBytes =>
-                      RequestError(
-                        HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
-                        route,
-                        request.identifier
-                      )
-                    }
-                case StatusCodes.NoContent =>
-                  httpResponse.discardEntityBytes()
+                  }
+              case StatusCodes.NoContent =>
+                httpResponse.discardEntityBytes()
 
-                  request
-                    .parseResponse(HttpEntity.Empty)
-                    .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
-                case _ => //Should be success
-                  request
-                    .parseResponse(httpResponse.entity)
-                    .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
-              }
+                request
+                  .parseResponse(HttpEntity.Empty)
+                  .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
+              case _ => //Should be success
+                request
+                  .parseResponse(httpResponse.entity)
+                  .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
+            }
 
-            case Failure(e) =>
-              Future.successful(RequestError(e, route, request.identifier))
-          }
+          case Failure(e) =>
+            Future.successful(RequestError(e, route, request.identifier))
         }
       }
   }.withAttributes(Attributes.name("RequestParser"))

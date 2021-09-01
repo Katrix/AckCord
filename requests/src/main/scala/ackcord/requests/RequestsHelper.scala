@@ -31,7 +31,8 @@ import ackcord.{CacheSnapshot, OptFuture, RequestPermissionException}
 
 /**
   * A small layer on top of [[Requests]] for use in high level code.
-  * @param requests The requests instance to use
+  * @param requests
+  *   The requests instance to use
   */
 class RequestsHelper(requests: Requests) {
   import requests.system.executionContext
@@ -43,15 +44,17 @@ class RequestsHelper(requests: Requests) {
 
   /**
     * Runs a single requests and returns the result.
-    * @param request The request to run
+    * @param request
+    *   The request to run
     */
   def run[A](request: Request[A])(implicit c: CacheSnapshot): OptFuture[A] =
     checkPerms(Seq(request)).semiflatMap(_ => requests.singleFutureSuccess(request))
 
   /**
-    * Runs many requests in order, and returns the result. The result is only
-    * a success if all the requests succeed.
-    * @param requests The requests to run
+    * Runs many requests in order, and returns the result. The result is only a
+    * success if all the requests succeed.
+    * @param requests
+    *   The requests to run
     */
   def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): OptFuture[immutable.Seq[A]] =
     checkPerms(requests).semiflatMap(_ => this.requests.manyFutureSuccess(immutable.Seq(requests: _*)))

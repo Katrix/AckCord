@@ -28,14 +28,17 @@ import akka.stream.scaladsl.Flow
 /**
   * A constructed command execution.
   *
-  * @tparam A The argument type of the command
-  * @tparam Mat The materialized result of creating this command
+  * @tparam A
+  *   The argument type of the command
+  * @tparam Mat
+  *   The materialized result of creating this command
   */
 case class ComplexCommand[A, Mat](parser: MessageParser[A], flow: Flow[CommandMessage[A], CommandError, Mat]) {
 
   /**
     * Converts this command into a named command.
-    * @param Parser The prefix parser to use
+    * @param Parser
+    *   The prefix parser to use
     */
   def toNamed(Parser: StructuredPrefixParser): NamedComplexCommand[A, Mat] = NamedComplexCommand(this, Parser)
 }
@@ -43,8 +46,10 @@ case class ComplexCommand[A, Mat](parser: MessageParser[A], flow: Flow[CommandMe
 /**
   * A constructed command execution with a name.
   *
-  * @tparam A The argument type of the command
-  * @tparam Mat The materialized result of creating this command
+  * @tparam A
+  *   The argument type of the command
+  * @tparam Mat
+  *   The materialized result of creating this command
   */
 case class NamedComplexCommand[A, Mat](
     command: ComplexCommand[A, Mat],
@@ -58,8 +63,10 @@ case class NamedComplexCommand[A, Mat](
 /**
   * A constructed command execution with a name and a description.
   *
-  * @tparam A The argument type of the command
-  * @tparam Mat The materialized result of creating this command
+  * @tparam A
+  *   The argument type of the command
+  * @tparam Mat
+  *   The materialized result of creating this command
   */
 case class NamedDescribedComplexCommand[A, Mat](
     command: ComplexCommand[A, Mat],
@@ -71,10 +78,14 @@ case class NamedDescribedComplexCommand[A, Mat](
   * Represents non essential information about a command intended to be
   * displayed to an end user.
   *
-  * @param name The display name of a command.
-  * @param description The description of what a command does.
-  * @param usage How to use the command. Does not include the name or prefix.
-  * @param extra Extra stuff about the command that you yourself decide on.
+  * @param name
+  *   The display name of a command.
+  * @param description
+  *   The description of what a command does.
+  * @param usage
+  *   How to use the command. Does not include the name or prefix.
+  * @param extra
+  *   Extra stuff about the command that you yourself decide on.
   */
 case class CommandDescription(
     name: String,

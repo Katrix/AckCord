@@ -25,8 +25,10 @@ package ackcord
 
 /**
   * Represents the state of the cache for a single point.
-  * @param current The current values in the cache.
-  * @param previous The previous values in the cache.
+  * @param current
+  *   The current values in the cache.
+  * @param previous
+  *   The previous values in the cache.
   */
 case class CacheState(current: MemoryCacheSnapshot, previous: MemoryCacheSnapshot) {
   def update(newSnapshot: MemoryCacheSnapshot): CacheState =

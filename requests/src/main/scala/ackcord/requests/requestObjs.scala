@@ -34,26 +34,31 @@ import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.model._
 
 /**
-  * Used by requests for specifying an uri to send to,
-  * together with a method to use.
-  * @param uriWithMajor A string containing the route without any minor parameters filled in
-  * @param uriWithoutMajor A string containing the route without any major or minor parameters filled in
-  * @param uri The uri to send to
-  * @param method The method to use
+  * Used by requests for specifying an uri to send to, together with a method to
+  * use.
+  * @param uriWithMajor
+  *   A string containing the route without any minor parameters filled in
+  * @param uriWithoutMajor
+  *   A string containing the route without any major or minor parameters filled
+  *   in
+  * @param uri
+  *   The uri to send to
+  * @param method
+  *   The method to use
   */
 case class RequestRoute(uriWithMajor: String, uriWithoutMajor: String, uri: Uri, method: HttpMethod)
 object RequestRoute {
 
   /**
-    * Create a [[RequestRoute]] from a [[Routes.Route]] using the raw and applied
-    * values for the this route.
+    * Create a [[RequestRoute]] from a [[Routes.Route]] using the raw and
+    * applied values for the this route.
     */
   def apply(route: Route, method: HttpMethod): RequestRoute =
     RequestRoute(route.uriWithMajor, route.uriWithoutMajor, route.applied, method)
 
   /**
-    * Create a [[RequestRoute]] from a [[Routes.QueryRoute]] using the raw and applied
-    * values for the this route, and adding the query at the end.
+    * Create a [[RequestRoute]] from a [[Routes.QueryRoute]] using the raw and
+    * applied values for the this route, and adding the query at the end.
     */
   def apply(queryRoute: QueryRoute, method: HttpMethod): RequestRoute =
     RequestRoute(
@@ -66,7 +71,8 @@ object RequestRoute {
 
 /**
   * Base super simple trait for all HTTP requests in AckCord.
-  * @tparam Data The parsed response type.
+  * @tparam Data
+  *   The parsed response type.
   */
 trait Request[+Data] { self =>
 
@@ -125,15 +131,18 @@ trait Request[+Data] { self =>
 /**
   * Misc info needed to handle ratelimits correctly.
   *
-  * @param tilReset The amount of time until this endpoint ratelimit is reset.
-  *                 Minus if unknown.
-  * @param tilRatelimit The amount of requests that can be made until this
-  *                     endpoint is ratelimited. -1 if unknown.
-  * @param bucketLimit The total amount of requests that can be sent to this
-  *                    to this endpoint until a ratelimit kicks in.
-  *                    -1 if unknown.
-  * @param bucket The ratelimit bucket for this request. Does not
-  *               include any parameters.
+  * @param tilReset
+  *   The amount of time until this endpoint ratelimit is reset. Minus if
+  *   unknown.
+  * @param tilRatelimit
+  *   The amount of requests that can be made until this endpoint is
+  *   ratelimited. -1 if unknown.
+  * @param bucketLimit
+  *   The total amount of requests that can be sent to this to this endpoint
+  *   until a ratelimit kicks in.
+  * -1 if unknown.
+  * @param bucket
+  *   The ratelimit bucket for this request. Does not include any parameters.
   */
 case class RatelimitInfo(
     tilReset: FiniteDuration,
@@ -142,7 +151,9 @@ case class RatelimitInfo(
     bucket: String
 ) {
 
-  /** Returns if this ratelimit info does not contain any unknown placeholders. */
+  /**
+    * Returns if this ratelimit info does not contain any unknown placeholders.
+    */
   def isValid: Boolean = tilReset > 0.millis && tilRatelimit != -1 && bucketLimit != -1
 }
 
@@ -158,15 +169,18 @@ sealed trait RequestAnswer[+Data] {
   /** The route for this request */
   def route: RequestRoute
 
-  /** An either that either contains the data, or the exception if this is a failure. */
+  /**
+    * An either that either contains the data, or the exception if this is a
+    * failure.
+    */
   def eitherData: Either[Throwable, Data]
 
   /** Apply a function to this answer, if it's a successful response. */
   def map[B](f: Data => B): RequestAnswer[B]
 
   /**
-    * Apply f if this is a successful response, and return this if the result
-    * is true, else returns a failed answer.
+    * Apply f if this is a successful response, and return this if the result is
+    * true, else returns a failed answer.
     */
   def filter(f: Data => Boolean): RequestAnswer[Data]
 
@@ -196,8 +210,8 @@ case class RequestResponse[+Data](
 sealed trait FailedRequest extends RequestAnswer[Nothing] {
 
   /**
-    * Get the exception associated with this failed request, or makes one
-    * if one does not exist.
+    * Get the exception associated with this failed request, or makes one if one
+    * does not exist.
     */
   def asException: Throwable
 

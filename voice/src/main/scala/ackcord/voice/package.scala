@@ -45,7 +45,8 @@ package object voice {
 
     /**
       * Add a spealing flag to this speaking flag.
-      * @param other The other speaking flag.
+      * @param other
+      *   The other speaking flag.
       */
     def ++(other: SpeakingFlag): SpeakingFlag = SpeakingFlag(flags | other)
   }

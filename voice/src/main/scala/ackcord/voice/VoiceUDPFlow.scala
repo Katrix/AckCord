@@ -99,8 +99,10 @@ object VoiceUDPFlow {
 
   /**
     * Materialized result after the handshake of a Voice UDP connection
-    * @param address Our address or ip address
-    * @param port Our port
+    * @param address
+    *   Our address or ip address
+    * @param port
+    *   Our port
     */
   case class FoundIP(address: String, port: Int)
 }

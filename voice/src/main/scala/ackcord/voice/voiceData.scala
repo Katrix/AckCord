@@ -46,10 +46,14 @@ sealed trait VoiceMessage[D] {
 
 /**
   * Data used by [[Identify]]
-  * @param serverId The server id we want to connect to
-  * @param userId Our user id
-  * @param sessionId The session id received in [[ackcord.APIMessage.VoiceStateUpdate]]
-  * @param token The token received in [[ackcord.APIMessage.VoiceServerUpdate]]
+  * @param serverId
+  *   The server id we want to connect to
+  * @param userId
+  *   Our user id
+  * @param sessionId
+  *   The session id received in [[ackcord.APIMessage.VoiceStateUpdate]]
+  * @param token
+  *   The token received in [[ackcord.APIMessage.VoiceServerUpdate]]
   */
 case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: String, token: String)
 
@@ -63,22 +67,27 @@ case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
 
 /**
   * Connection data used by [[SelectProtocol]]
-  * @param address Our IP address discovered using ip discovery
-  * @param port Our port discovered using ip discovery
-  * @param mode The encryption mode, currently supports only xsalsa20_poly1305
+  * @param address
+  *   Our IP address discovered using ip discovery
+  * @param port
+  *   Our port discovered using ip discovery
+  * @param mode
+  *   The encryption mode, currently supports only xsalsa20_poly1305
   */
 case class SelectProtocolConnectionData(address: String, port: Int, mode: String)
 
 /**
   * Data used by [[SelectProtocol]]
-  * @param protocol The protocol to use, currently only supports udp
-  * @param data  The connection data
+  * @param protocol
+  *   The protocol to use, currently only supports udp
+  * @param data
+  *   The connection data
   */
 case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionData)
 
 /**
-  * Sent by the client when everything else is done.
-  * Discord responds with [[SessionDescription]]
+  * Sent by the client when everything else is done. Discord responds with
+  * [[SessionDescription]]
   */
 case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
   override def op: VoiceOpCode = VoiceOpCode.SelectProtocol
@@ -94,10 +103,14 @@ object SelectProtocol {
 
 /**
   * Data of [[Ready]]
-  * @param ssrc Our ssrc
-  * @param port The port to connect to
-  * @param ip The address to send voice data to
-  * @param modes The supported modes
+  * @param ssrc
+  *   Our ssrc
+  * @param port
+  *   The port to connect to
+  * @param ip
+  *   The address to send voice data to
+  * @param modes
+  *   The supported modes
   */
 case class ReadyData(ssrc: Int, port: Int, ip: String, modes: Seq[String])
 
@@ -108,7 +121,8 @@ case class Ready(d: ReadyData) extends VoiceMessage[ReadyData] {
 
 /**
   * Sent by the client at some interval specified by [[Hello]]
-  * @param d Nonce
+  * @param d
+  *   Nonce
   */
 case class Heartbeat(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode = VoiceOpCode.Heartbeat
@@ -116,8 +130,10 @@ case class Heartbeat(d: Int) extends VoiceMessage[Int] {
 
 /**
   * Data of [[SessionDescription]]
-  * @param mode The mode used
-  * @param secretKey The secret key used for encryption
+  * @param mode
+  *   The mode used
+  * @param secretKey
+  *   The secret key used for encryption
   */
 case class SessionDescriptionData(mode: String, secretKey: ByteString)
 
@@ -128,10 +144,14 @@ case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[Se
 
 /**
   * Data of [[Speaking]]
-  * @param speaking If the user is speaking
-  * @param delay Delay
-  * @param ssrc The ssrc of the speaking user
-  * @param userId Optional user id
+  * @param speaking
+  *   If the user is speaking
+  * @param delay
+  *   Delay
+  * @param ssrc
+  *   The ssrc of the speaking user
+  * @param userId
+  *   Optional user id
   */
 case class SpeakingData(
     speaking: SpeakingFlag,
@@ -141,8 +161,8 @@ case class SpeakingData(
 )
 
 /**
-  * Sent by Discord when a user is speaking, anc client when we want to
-  * set the bot as speaking. This is required before sending voice data.
+  * Sent by Discord when a user is speaking, anc client when we want to set the
+  * bot as speaking. This is required before sending voice data.
   */
 case class Speaking(d: SpeakingData) extends VoiceMessage[SpeakingData] {
   override def op: VoiceOpCode = VoiceOpCode.Speaking
@@ -159,7 +179,8 @@ object Speaking {
 
 /**
   * Sent by Discord as acknowledgement of our heartbeat
-  * @param d The nonce we sent
+  * @param d
+  *   The nonce we sent
   */
 case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
   override def op: VoiceOpCode = VoiceOpCode.HeartbeatACK
@@ -167,9 +188,12 @@ case class HeartbeatACK(d: Int) extends VoiceMessage[Int] {
 
 /**
   * Data of [[Resume]]
-  * @param serverId The server id to resume for
-  * @param sessionId The session id
-  * @param token The token
+  * @param serverId
+  *   The server id to resume for
+  * @param sessionId
+  *   The session id
+  * @param token
+  *   The token
   */
 case class ResumeData(serverId: RawSnowflake, sessionId: String, token: String)
 
@@ -183,7 +207,8 @@ case class Resume(d: ResumeData) extends VoiceMessage[ResumeData] {
 
 /**
   * Data of [[Hello]]
-  * @param heartbeatInterval How often to heartbeat
+  * @param heartbeatInterval
+  *   How often to heartbeat
   */
 case class HelloData(heartbeatInterval: Double)
 
@@ -211,7 +236,8 @@ case class UnknownVoiceMessage(op: VoiceOpCode) extends VoiceMessage[NotUsed] {
 
 /**
   * Voice opcode used by voice websocket
-  * @param value The int value of the code
+  * @param value
+  *   The int value of the code
   */
 sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry
 object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnumWithUnknown[VoiceOpCode] {

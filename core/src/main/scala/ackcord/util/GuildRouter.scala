@@ -136,21 +136,25 @@ object GuildRouter {
 
   /**
     * Send to the guild dispatcher to get the actor for that guild
-    * @param guildId The guildId to get the actor for
+    * @param guildId
+    *   The guildId to get the actor for
     */
   case class GetGuildActor[Inner](guildId: GuildId, replyTo: ActorRef[GetGuildActorReply[Inner]])
       extends Command[Nothing, Inner]
 
   /**
     * Send a message to a guild actor that this router manages.
-    * @param guildId The guildId of the actor to send to.
-    * @param msg The message to send.
+    * @param guildId
+    *   The guildId of the actor to send to.
+    * @param msg
+    *   The message to send.
     */
   case class SendToGuildActor[Inner](guildId: GuildId, msg: Inner) extends Command[Nothing, Inner]
 
   /**
     * Sent as a response to [[GetGuildActor]]
-    * @param guildActor The actor for the specified guild
+    * @param guildActor
+    *   The actor for the specified guild
     */
   case class GetGuildActorReply[Inner](guildActor: ActorRef[Inner])
 

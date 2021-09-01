@@ -39,7 +39,8 @@ import akka.{Done, NotUsed}
   *
   * This should be instantiated once per bot, and shared between shards.
   *
-  * @define backpressures Backpressures before it hits a ratelimit.
+  * @define backpressures
+  *   Backpressures before it hits a ratelimit.
   */
 case class Requests(
     settings: RequestSettings,
@@ -67,8 +68,8 @@ case class Requests(
     addExtraProcessing(RequestStreams.requestFlowWithoutRatelimit[Any, (Request[Any], Any)](settings))
 
   /**
-    * A basic request flow which will send requests to Discord, and
-    * receive responses. Don't use this if you don't know what you're doing.
+    * A basic request flow which will send requests to Discord, and receive
+    * responses. Don't use this if you don't know what you're doing.
     */
   def flowWithoutRateLimits[Data, Ctx]: FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
     rawFlowWithoutRateLimits.asInstanceOf[FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed]]
@@ -91,14 +92,13 @@ case class Requests(
     )
 
   /**
-    * A generic flow for making requests. You should use this one most of
-    * the time. $backpressures
+    * A generic flow for making requests. You should use this one most of the
+    * time. $backpressures
     *
-    * Some info on ordered requests.
-    * Once a response for one request has been received, the next one is sent.
-    * The next one is sent regardless of if the previous request failed.
-    * Ordered requests still have a few kinks that need to be removed before
-    * they always work.
+    * Some info on ordered requests. Once a response for one request has been
+    * received, the next one is sent. The next one is sent regardless of if the
+    * previous request failed. Ordered requests still have a few kinks that need
+    * to be removed before they always work.
     */
   def flow[Data, Ctx](
       implicit properties: RequestProperties = RequestProperties.default
@@ -129,8 +129,9 @@ case class Requests(
     * A generic flow for making requests. Only returns successful requests.
     * $backpressures
     *
-    * @param ignoreFailures If true, failures will be logged and then ignored.
-    *                       If false, throws the failures
+    * @param ignoreFailures
+    *   If true, failures will be logged and then ignored. If false, throws the
+    *   failures
     */
   def flowSuccess[Data, Ctx](ignoreFailures: Boolean = true)(
       implicit properties: RequestProperties = RequestProperties.default
@@ -151,8 +152,10 @@ case class Requests(
 
   /**
     * Sends a single request.
-    * @param request The request to send.
-    * @return A source of the single request answer.
+    * @param request
+    *   The request to send.
+    * @return
+    *   A source of the single request answer.
     */
   def single[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -160,8 +163,10 @@ case class Requests(
 
   /**
     * Sends a single request, and grabs the data if it's available.
-    * @param request The request to send.
-    * @return A source of the successful request answer.
+    * @param request
+    *   The request to send.
+    * @return
+    *   A source of the successful request answer.
     */
   def singleSuccess[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -170,7 +175,8 @@ case class Requests(
 
   /**
     * Sends a single request and gets the response as a future.
-    * @param request The request to send.
+    * @param request
+    *   The request to send.
     */
   def singleFuture[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -180,7 +186,8 @@ case class Requests(
   /**
     * Sends a single request and gets the success response as a future if it's
     * available. If the request fails, the future fails.
-    * @param request The request to send.
+    * @param request
+    *   The request to send.
     */
   def singleFutureSuccess[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -189,7 +196,8 @@ case class Requests(
 
   /**
     * Sends a single request and ignores the result.
-    * @param request The request to send.
+    * @param request
+    *   The request to send.
     */
   def singleIgnore[Data](request: Request[Data])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -198,8 +206,10 @@ case class Requests(
 
   /**
     * Sends many requests
-    * @param requests The requests to send.
-    * @return A source of the request answers.
+    * @param requests
+    *   The requests to send.
+    * @return
+    *   A source of the request answers.
     */
   def many[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -208,10 +218,13 @@ case class Requests(
 
   /**
     * Sends many requests, and grabs the data if it's available.
-    * @param requests The requests to send.
-    * @param ignoreFailures If true, failures will be logged and then ignored.
-    *                       If false, throws the failures
-    * @return A source of the successful request answers.
+    * @param requests
+    *   The requests to send.
+    * @param ignoreFailures
+    *   If true, failures will be logged and then ignored. If false, throws the
+    *   failures
+    * @return
+    *   A source of the successful request answers.
     */
   def manySuccess[Data](requests: immutable.Seq[Request[Data]], ignoreFailures: Boolean = true)(
       implicit properties: RequestProperties = RequestProperties.default
@@ -220,7 +233,8 @@ case class Requests(
 
   /**
     * Sends many requests and gets the responses as a future.
-    * @param requests The requests to send.
+    * @param requests
+    *   The requests to send.
     */
   def manyFuture[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -229,9 +243,10 @@ case class Requests(
 
   /**
     * Sends many requests and gets the success response as a future if it's
-    * available. All the requests must succeed for this function to return a
-    * a value.
-    * @param requests The requests to send.
+    * available. All the requests must succeed for this function to return a a
+    * value.
+    * @param requests
+    *   The requests to send.
     */
   def manyFutureSuccess[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default
@@ -240,7 +255,8 @@ case class Requests(
 
   /**
     * Sends many requests and ignores the result.
-    * @param requests The requests to send.
+    * @param requests
+    *   The requests to send.
     */
   def manyIgnore[Data](requests: immutable.Seq[Request[Data]])(
       implicit properties: RequestProperties = RequestProperties.default

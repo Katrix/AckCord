@@ -32,15 +32,26 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * A simple invite.
-  * @param code An invite code.
-  * @param guild The guild the invite is for.
-  * @param channel The channel the invite is for.
-  * @param targetUser The user who's stream should be displayed for this invite.
-  * @param targetType The type of target for this voice channel invite.
-  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
-  * @param approximatePresenceCount Approximate amount of people online.
-  * @param approximateMemberCount Approximate amount of total members.
-  * @param stageInstance Stage instance if there is a public stage instance in the stage channel this invite leads to.
+  * @param code
+  *   An invite code.
+  * @param guild
+  *   The guild the invite is for.
+  * @param channel
+  *   The channel the invite is for.
+  * @param targetUser
+  *   The user who's stream should be displayed for this invite.
+  * @param targetType
+  *   The type of target for this voice channel invite.
+  * @param targetApplication
+  *   The embedded application to open for this voice channel embedded
+  *   application invite.
+  * @param approximatePresenceCount
+  *   Approximate amount of people online.
+  * @param approximateMemberCount
+  *   Approximate amount of total members.
+  * @param stageInstance
+  *   Stage instance if there is a public stage instance in the stage channel
+  *   this invite leads to.
   */
 case class Invite(
     code: String,
@@ -58,20 +69,36 @@ case class Invite(
 
 /**
   * An invite with extra information.
-  * @param code An invite code.
-  * @param guild The guild the invite is for.
-  * @param channel The channel the invite is for.
-  * @param targetUser The user who's stream should be displayed for this invite.
-  * @param targetType The type of target for this voice channel invite.
-  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
-  * @param approximatePresenceCount Approximate amount of people online.
-  * @param approximateMemberCount Approximate amount of total members.
-  * @param stageInstance Stage instance if there is a public stage instance in the stage channel this invite leads to.
-  * @param uses How many times the invite has been used.
-  * @param maxUses How many times this invite can be used.
-  * @param maxAge The duration in seconds when the invite will expire
-  * @param temporary If this invite is temporary
-  * @param createdAt When this invite was created
+  * @param code
+  *   An invite code.
+  * @param guild
+  *   The guild the invite is for.
+  * @param channel
+  *   The channel the invite is for.
+  * @param targetUser
+  *   The user who's stream should be displayed for this invite.
+  * @param targetType
+  *   The type of target for this voice channel invite.
+  * @param targetApplication
+  *   The embedded application to open for this voice channel embedded
+  *   application invite.
+  * @param approximatePresenceCount
+  *   Approximate amount of people online.
+  * @param approximateMemberCount
+  *   Approximate amount of total members.
+  * @param stageInstance
+  *   Stage instance if there is a public stage instance in the stage channel
+  *   this invite leads to.
+  * @param uses
+  *   How many times the invite has been used.
+  * @param maxUses
+  *   How many times this invite can be used.
+  * @param maxAge
+  *   The duration in seconds when the invite will expire
+  * @param temporary
+  *   If this invite is temporary
+  * @param createdAt
+  *   When this invite was created
   */
 case class InviteWithMetadata(
     code: String,
@@ -111,18 +138,31 @@ case class InviteStageInstanceMember(
 
 /**
   * A newly created invite.
-  * @param channelId The channel the invite is for.
-  * @param code An invite code.
-  * @param createdAt When this invite was created
-  * @param guildId The guild the invite is for.
-  * @param inviter The user that created the invite.
-  * @param maxAge The duration in seconds when the invite will expire
-  * @param maxUses How many times this invite can be used.
-  * @param targetType The type of target for this voice channel invite.
-  * @param targetUser The user who's stream should be displayed for this invite.
-  * @param targetApplication The embedded application to open for this voice channel embedded application invite.
-  * @param temporary If this invite is temporary
-  * @param uses How many times the invite has been used.
+  * @param channelId
+  *   The channel the invite is for.
+  * @param code
+  *   An invite code.
+  * @param createdAt
+  *   When this invite was created
+  * @param guildId
+  *   The guild the invite is for.
+  * @param inviter
+  *   The user that created the invite.
+  * @param maxAge
+  *   The duration in seconds when the invite will expire
+  * @param maxUses
+  *   How many times this invite can be used.
+  * @param targetType
+  *   The type of target for this voice channel invite.
+  * @param targetUser
+  *   The user who's stream should be displayed for this invite.
+  * @param targetApplication
+  *   The embedded application to open for this voice channel embedded
+  *   application invite.
+  * @param temporary
+  *   If this invite is temporary
+  * @param uses
+  *   How many times the invite has been used.
   */
 case class CreatedInvite(
     channelId: GuildChannelId,
@@ -141,15 +181,24 @@ case class CreatedInvite(
 
 /**
   * A partial guild with the information used by an invite
-  * @param id The guild id
-  * @param name The guild name
-  * @param splash The guild splash hash
-  * @param banner The banner of the guild
-  * @param description The description for the guild
-  * @param icon The guild icon hash
-  * @param features The guild features for the guild
-  * @param verificationLevel The verification level of the guild
-  * @param vanityUrlCode The vanity URL code for the guild
+  * @param id
+  *   The guild id
+  * @param name
+  *   The guild name
+  * @param splash
+  *   The guild splash hash
+  * @param banner
+  *   The banner of the guild
+  * @param description
+  *   The description for the guild
+  * @param icon
+  *   The guild icon hash
+  * @param features
+  *   The guild features for the guild
+  * @param verificationLevel
+  *   The verification level of the guild
+  * @param vanityUrlCode
+  *   The vanity URL code for the guild
   */
 case class InviteGuild(
     id: GuildId,
@@ -166,9 +215,12 @@ case class InviteGuild(
 
 /**
   * A partial channel with the information used by an invite
-  * @param id The channel id
-  * @param name The channel name
-  * @param `type` The type of channel
+  * @param id
+  *   The channel id
+  * @param name
+  *   The channel name
+  * @param `type`
+  *   The type of channel
   */
 case class InviteChannel(id: GuildChannelId, name: String, `type`: ChannelType)
 

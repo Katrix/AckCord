@@ -24,8 +24,8 @@
 package ackcord.interactions.commands
 
 import ackcord.CacheSnapshot
-import ackcord.requests.Requests
 import ackcord.interactions._
+import ackcord.requests.Requests
 import akka.NotUsed
 import cats.~>
 

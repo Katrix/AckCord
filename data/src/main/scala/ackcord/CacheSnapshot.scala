@@ -31,9 +31,10 @@ import shapeless.tag._
 
 /**
   * A representation of the cache.
-  * @define optionalMap This method returns a map that might be empty depending
-  *                     on the implementation. Make sure you know if this will
-  *                     be the case before you use this method.
+  * @define optionalMap
+  *   This method returns a map that might be empty depending on the
+  *   implementation. Make sure you know if this will be the case before you use
+  *   this method.
   */
 trait CacheSnapshot {
 
@@ -90,9 +91,9 @@ trait CacheSnapshot {
   def userMap: MapType[User, User]
 
   /**
-    * The bans received this session. NOTE: This is not all the bans that exists,
-    * only the ones received during this session. If you want all the bans,
-    * use [[ackcord.requests.GetGuildBans]].
+    * The bans received this session. NOTE: This is not all the bans that
+    * exists, only the ones received during this session. If you want all the
+    * bans, use [[ackcord.requests.GetGuildBans]].
     *
     * $optionalMap
     */
@@ -131,8 +132,10 @@ trait CacheSnapshot {
 
   /**
     * Get a guild channel.
-    * @param guildId The guild id
-    * @param id The channel id
+    * @param guildId
+    *   The guild id
+    * @param id
+    *   The channel id
     */
   def getGuildChannel(guildId: GuildId, id: GuildChannelId): Option[GuildChannel]
 
@@ -141,8 +144,10 @@ trait CacheSnapshot {
 
   /**
     * Get a thread channel.
-    * @param guildId The guild id
-    * @param id The thread id
+    * @param guildId
+    *   The guild id
+    * @param id
+    *   The thread id
     */
   def getThread(guildId: GuildId, id: ThreadGuildChannelId): Option[ThreadGuildChannel]
 

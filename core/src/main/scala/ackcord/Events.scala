@@ -35,11 +35,15 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.{NotUsed, actor => classic}
 
 /**
-  * Houses streams to interact with events and messages sent to and from Discord.
-  * @param publish A sink used for publishing. Any elements connected to this
-  *                sink is published to the cache.
-  * @param subscribe A source to subscribe to. All updates are pushed here.
-  * @param parallelism How many cache updates to construct at the same time.
+  * Houses streams to interact with events and messages sent to and from
+  * Discord.
+  * @param publish
+  *   A sink used for publishing. Any elements connected to this sink is
+  *   published to the cache.
+  * @param subscribe
+  *   A source to subscribe to. All updates are pushed here.
+  * @param parallelism
+  *   How many cache updates to construct at the same time.
   */
 case class Events(
     publish: Sink[CacheEvent, NotUsed],
@@ -52,8 +56,8 @@ case class Events(
 )(implicit system: ActorSystem[Nothing]) {
 
   /**
-    * Messages sent to this flow will be sent to the gateway.
-    * Messages coming out of this flow are received from the gateway.
+    * Messages sent to this flow will be sent to the gateway. Messages coming
+    * out of this flow are received from the gateway.
     */
   def gatewayClientConnection: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
     Flow.fromSinkAndSourceCoupled(fromGatewayPublish, toGatewaySubscribe)
@@ -64,7 +68,10 @@ case class Events(
   /** A source used to subscribe to [[APIMessage]]s sent to this cache. */
   def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages)
 
-  /** Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]]. */
+  /**
+    * Subscribe an actor to this cache using
+    * [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
+    */
   def subscribeAPIActor(actor: classic.ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
       specificEvent: Class[_ <: APIMessage]*
   ): Unit =
@@ -72,7 +79,10 @@ case class Events(
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
       .runWith(Sink.actorRef(actor, completeMessage, onFailureMessage))
 
-  /** Subscribe an actor to this cache using [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]]. */
+  /**
+    * Subscribe an actor to this cache using
+    * [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRefWithAck[T](ref:akka.actor.ActorRef,onInitMessage:Any,ackMessage:Any,onCompleteMessage:Any,onFailureMessage:Throwable=%3EAny):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRefWithAck]].
+    */
   def subscribeAPIActorWithAck(
       actor: classic.ActorRef,
       initMessage: Any,
@@ -189,8 +199,10 @@ object Events {
 
   /**
     * Creates a cache for a bot.
-    * @param cacheProcessor A function to run on each cache update.
-    * @param parallelism How many cache updates to construct at the same time.
+    * @param cacheProcessor
+    *   A function to run on each cache update.
+    * @param parallelism
+    *   How many cache updates to construct at the same time.
     */
   def create(
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
@@ -223,15 +235,16 @@ object Events {
   }
 
   /**
-    * Creates a guild partitioned cache for a bot. Each guild will in effect receive
-    * it's own cache. Cache events not specific to one guild will be sent to
-    * all caches.
+    * Creates a guild partitioned cache for a bot. Each guild will in effect
+    * receive it's own cache. Cache events not specific to one guild will be
+    * sent to all caches.
     *
-    * Unlike then default cache, this one is faster, as cache updates can
-    * be done in parallel, but might use more memory, and you need to handle
-    * cross guild cache actions yourself.
+    * Unlike then default cache, this one is faster, as cache updates can be
+    * done in parallel, but might use more memory, and you need to handle cross
+    * guild cache actions yourself.
     *
-    * @param parallelism How many cache updates to construct at the same time.
+    * @param parallelism
+    *   How many cache updates to construct at the same time.
     */
   def createGuildCache(
       guildCacheActor: ActorRef[CacheStreams.GuildCacheEvent],

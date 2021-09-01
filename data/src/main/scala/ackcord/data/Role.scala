@@ -25,15 +25,24 @@ package ackcord.data
 
 /**
   * A role in a guild.
-  * @param id The id of this role.
-  * @param guildId The guildId this role belongs to.
-  * @param name The name of this role.
-  * @param color The color of this role.
-  * @param hoist If this role is listed in the sidebar.
-  * @param position The position of this role.
-  * @param permissions The permissions this role grant.
-  * @param managed If this is a bot role.
-  * @param mentionable If you can mention this role.
+  * @param id
+  *   The id of this role.
+  * @param guildId
+  *   The guildId this role belongs to.
+  * @param name
+  *   The name of this role.
+  * @param color
+  *   The color of this role.
+  * @param hoist
+  *   If this role is listed in the sidebar.
+  * @param position
+  *   The position of this role.
+  * @param permissions
+  *   The permissions this role grant.
+  * @param managed
+  *   If this is a bot role.
+  * @param mentionable
+  *   If you can mention this role.
   */
 case class Role(
     id: RoleId,
@@ -60,10 +69,12 @@ case class Role(
 }
 
 /**
-  * @param botId If this role is for a bot, the bot the role belongs to.
-  * @param integrationId If this role is for an integration, the integration the
-  *                      role belongs to.
-  * @param premiumSubscriber If this role is the premium subscriber role.
+  * @param botId
+  *   If this role is for a bot, the bot the role belongs to.
+  * @param integrationId
+  *   If this role is for an integration, the integration the role belongs to.
+  * @param premiumSubscriber
+  *   If this role is the premium subscriber role.
   */
 case class RoleTags(
     botId: Option[UserId],

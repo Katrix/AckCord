@@ -32,10 +32,14 @@ import enumeratum.values.{IntEnum, IntEnumEntry}
 
 /**
   * A discord team.
-  * @param icon Icon identifier for the team.
-  * @param id Id of the team.
-  * @param members Members of the team.
-  * @param ownerUserId The id of the current owner of the team
+  * @param icon
+  *   Icon identifier for the team.
+  * @param id
+  *   Id of the team.
+  * @param members
+  *   Members of the team.
+  * @param ownerUserId
+  *   The id of the current owner of the team
   */
 case class Team(
     icon: Option[String],
@@ -47,10 +51,15 @@ case class Team(
 
 /**
   * A member of a team.
-  * @param membershipState The membership state of the member
-  * @param permissions The permissions of team member
-  * @param teamId The id of the team this member belongs to
-  * @param user A partial user containing the avatar, discriminator, id and username of the user
+  * @param membershipState
+  *   The membership state of the member
+  * @param permissions
+  *   The permissions of team member
+  * @param teamId
+  *   The id of the team this member belongs to
+  * @param user
+  *   A partial user containing the avatar, discriminator, id and username of
+  *   the user
   */
 case class TeamMember(
     membershipState: TeamMembershipState,

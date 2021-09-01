@@ -29,9 +29,12 @@ package object requests {
 
   /**
     * Check if a client has the needed permissions in a guild
-    * @param guildId The guild to check for
-    * @param permissions The needed permissions
-    * @param c The cache
+    * @param guildId
+    *   The guild to check for
+    * @param permissions
+    *   The needed permissions
+    * @param c
+    *   The cache
     */
   def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val res = for {
@@ -45,9 +48,12 @@ package object requests {
 
   /**
     * Check if a client has the needed permissions in a channel
-    * @param channelId The channel to check for
-    * @param permissions The needed permissions
-    * @param c The cache
+    * @param channelId
+    *   The channel to check for
+    * @param permissions
+    *   The needed permissions
+    * @param c
+    *   The cache
     */
   def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val opt = for {

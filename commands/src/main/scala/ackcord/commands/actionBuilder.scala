@@ -37,8 +37,10 @@ import cats.~>
 
 /**
   * A mapping over action builders.
-  * @tparam I The input message type
-  * @tparam O The output message type
+  * @tparam I
+  *   The input message type
+  * @tparam O
+  *   The output message type
   */
 trait ActionFunction[-I[_], +O[_], E] { self =>
 
@@ -109,10 +111,12 @@ object ActionFunction {
 }
 
 /**
-  * An [[ActionFunction]] that can't fail, but might return a different
-  * message type.
-  * @tparam I The input message type
-  * @tparam O The output message type
+  * An [[ActionFunction]] that can't fail, but might return a different message
+  * type.
+  * @tparam I
+  *   The input message type
+  * @tparam O
+  *   The output message type
   */
 trait ActionTransformer[-I[_], +O[_], E] extends ActionFunction[I, O, E] { self =>
 
@@ -144,11 +148,13 @@ object ActionTransformer {
 }
 
 /**
-  * An [[ActionFunction]] from an input to an output. Used for
-  * creating actions.
-  * @tparam I The input type of this builder.
-  * @tparam O The action message type used by the command.
-  * @tparam A The argument type of this command builder.
+  * An [[ActionFunction]] from an input to an output. Used for creating actions.
+  * @tparam I
+  *   The input type of this builder.
+  * @tparam O
+  *   The action message type used by the command.
+  * @tparam A
+  *   The argument type of this command builder.
   */
 trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =>
   type Action[B, Mat]
@@ -158,23 +164,30 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
 
   /**
     * Creates an action from a sink.
-    * @param sinkBlock The sink that will process this action.
-    * @tparam Mat The materialized result of running this action.
+    * @param sinkBlock
+    *   The sink that will process this action.
+    * @tparam Mat
+    *   The materialized result of running this action.
     */
   def toSink[Mat](sinkBlock: Sink[O[A], Mat]): Action[A, Mat]
 
   /**
     * Creates an action that results in some streamable type G
-    * @param block The execution of the action.
-    * @tparam G The streamable result type.
+    * @param block
+    *   The execution of the action.
+    * @tparam G
+    *   The streamable result type.
     */
   def streamed[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
     toSink(Flow[O[A]].flatMapMerge(requests.settings.parallelism, m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
-    * Creates an action that might do a single request, wrapped in an effect type G
-    * @param block The execution of the action.
-    * @tparam G The streamable result type.
+    * Creates an action that might do a single request, wrapped in an effect
+    * type G
+    * @param block
+    *   The execution of the action.
+    * @tparam G
+    *   The streamable result type.
     */
   def streamedOptRequest[G[_]](
       block: O[A] => OptionT[G, Request[Any]]
@@ -187,22 +200,26 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
 
   /**
     * Creates an action that results in an async result
-    * @param block The execution of the action.
+    * @param block
+    *   The execution of the action.
     */
   def async(block: O[A] => Future[Unit]): Action[A, NotUsed] =
     toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block).to(Sink.ignore))
 
   /**
     * Creates an action that results in an partial async result
-    * @param block The execution of the action.
+    * @param block
+    *   The execution of the action.
     */
   def asyncOpt(block: O[A] => OptFuture[Unit]): Action[A, NotUsed] =
     toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block(_).value).to(Sink.ignore))
 
   /**
     * Creates an async action that might do a single request
-    * @param block The execution of the action.
-    * @tparam G The streamable result type.
+    * @param block
+    *   The execution of the action.
+    * @tparam G
+    *   The streamable result type.
     */
   def asyncOptRequest[G[_]](
       block: O[A] => OptFuture[Request[Any]]
@@ -216,7 +233,8 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
 
   /**
     * Creates an action that will do a single request
-    * @param block The execution of the action.
+    * @param block
+    *   The execution of the action.
     */
   def withRequest(block: O[A] => Request[Any]): Action[A, NotUsed] =
     toSink(
@@ -227,7 +245,8 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
 
   /**
     * Creates an action that might do a single request
-    * @param block The execution of the action.
+    * @param block
+    *   The execution of the action.
     */
   def withRequestOpt(block: O[A] => Option[Request[Any]]): Action[A, NotUsed] =
     toSink(
@@ -239,7 +258,8 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =
 
   /**
     * Creates an action that might execute unknown side effects.
-    * @param block The execution of the action.
+    * @param block
+    *   The execution of the action.
     */
   def withSideEffects(block: O[A] => Unit): Action[A, NotUsed] =
     toSink(

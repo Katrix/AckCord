@@ -51,16 +51,26 @@ case class GetChannel(channelId: ChannelId) extends NoParamsRequest[RawChannel, 
 }
 
 /**
-  * @param name New name of the channel.
-  * @param position New position of the channel.
-  * @param topic The new channel topic for text channels.
-  * @param nsfw If the channel is NSFW for text channels.
-  * @param bitrate The new channel bitrate for voice channels.
-  * @param userLimit The new user limit for voice channel.
-  * @param rateLimitPerUser The new user ratelimit for guild text channels.
-  * @param permissionOverwrites The new channel permission overwrites.
-  * @param parentId The new category id of the channel.
-  * @param rtcRegion The voice region to use. Automatic if None.
+  * @param name
+  *   New name of the channel.
+  * @param position
+  *   New position of the channel.
+  * @param topic
+  *   The new channel topic for text channels.
+  * @param nsfw
+  *   If the channel is NSFW for text channels.
+  * @param bitrate
+  *   The new channel bitrate for voice channels.
+  * @param userLimit
+  *   The new user limit for voice channel.
+  * @param rateLimitPerUser
+  *   The new user ratelimit for guild text channels.
+  * @param permissionOverwrites
+  *   The new channel permission overwrites.
+  * @param parentId
+  *   The new category id of the channel.
+  * @param rtcRegion
+  *   The voice region to use. Automatic if None.
   */
 case class ModifyChannelData(
     name: JsonOption[String] = JsonUndefined,
@@ -116,7 +126,8 @@ object ModifyChannelData {
 
 /**
   * Update the settings of a channel.
-  * @param channelId The channel to update.
+  * @param channelId
+  *   The channel to update.
   */
 case class ModifyChannel(
     channelId: ChannelId,
@@ -149,10 +160,14 @@ case class DeleteCloseChannel(channelId: ChannelId, reason: Option[String] = Non
 }
 
 /**
-  * @param around Get messages around this message id.
-  * @param before Get messages before this message id.
-  * @param after Get messages after this message id.
-  * @param limit The max amount of messages to return. The default is 50.
+  * @param around
+  *   Get messages around this message id.
+  * @param before
+  *   Get messages before this message id.
+  * @param after
+  *   Get messages after this message id.
+  * @param limit
+  *   The max amount of messages to return. The default is 50.
   */
 case class GetChannelMessagesData(
     around: Option[MessageId] = None,
@@ -268,14 +283,21 @@ object CreateMessageFile {
 }
 
 /**
-  * @param content The content of the message.
-  * @param nonce A nonce used for optimistic message sending (up to 25 characters).
-  * @param tts If this is a text-to-speech message.
-  * @param files The files to send with this message. You can reference these
-  *              files in the embed using `attachment://filename`.
-  * @param embed An embed to send with this message.
-  * @param replyTo The message to reply to
-  * @param replyFailIfNotExist Fail the reply if the message to reply to does not exist.
+  * @param content
+  *   The content of the message.
+  * @param nonce
+  *   A nonce used for optimistic message sending (up to 25 characters).
+  * @param tts
+  *   If this is a text-to-speech message.
+  * @param files
+  *   The files to send with this message. You can reference these files in the
+  *   embed using `attachment://filename`.
+  * @param embed
+  *   An embed to send with this message.
+  * @param replyTo
+  *   The message to reply to
+  * @param replyFailIfNotExist
+  *   Fail the reply if the message to reply to does not exist.
   */
 case class CreateMessageData(
     content: String = "",
@@ -303,12 +325,12 @@ object CreateMessageData {
   //We handle this here as the file argument needs special treatment
   implicit val encoder: Encoder[CreateMessageData] = (a: CreateMessageData) => {
     val base = Json.obj(
-      "content" := a.content,
-      "nonce" := a.nonce.map(_.fold(_.asJson, _.asJson)),
-      "tts" := a.tts,
-      "embeds" := a.embeds,
+      "content"          := a.content,
+      "nonce"            := a.nonce.map(_.fold(_.asJson, _.asJson)),
+      "tts"              := a.tts,
+      "embeds"           := a.embeds,
       "allowed_mentions" := a.allowedMentions,
-      "components" := a.components
+      "components"       := a.components
     )
 
     a.replyTo.fold(base) { reply =>
@@ -357,7 +379,8 @@ object CreateMessage {
 
 /**
   * Create a reaction for a message.
-  * @param emoji The emoji to send.
+  * @param emoji
+  *   The emoji to send.
   */
 case class CreateReaction(
     channelId: TextChannelId,
@@ -395,8 +418,10 @@ case class DeleteUserReaction(
 }
 
 /**
-  * @param after Get users after this user.
-  * @param limit The max amount of users to return. Defaults to 25.
+  * @param after
+  *   Get users after this user.
+  * @param limit
+  *   The max amount of users to return. Defaults to 25.
   */
 case class GetReactionsData(after: Option[UserId] = None, limit: Option[Int] = None)
 
@@ -444,9 +469,12 @@ case class DeleteAllReactionsForEmoji(channelId: TextChannelId, messageId: Messa
 }
 
 /**
-  * @param content The content of the new message
-  * @param embed The embed of the new message
-  * @param attachments The attachments to keep in the new message.
+  * @param content
+  *   The content of the new message
+  * @param embed
+  *   The embed of the new message
+  * @param attachments
+  *   The attachments to keep in the new message.
   */
 case class EditMessageData(
     content: JsonOption[String] = JsonUndefined,
@@ -546,7 +574,10 @@ case class BulkDeleteMessagesData(messages: Seq[MessageId]) {
   )
 }
 
-/** Delete multiple messages in a single request. Can only be used on guild channels. */
+/**
+  * Delete multiple messages in a single request. Can only be used on guild
+  * channels.
+  */
 case class BulkDeleteMessages(
     channelId: TextChannelId,
     params: BulkDeleteMessagesData,
@@ -570,9 +601,12 @@ object BulkDeleteMessages {
 }
 
 /**
-  * @param allow The permissions to allow.
-  * @param deny The permissions to deny.
-  * @param `type` If this is a user or role overwrite.
+  * @param allow
+  *   The permissions to allow.
+  * @param deny
+  *   The permissions to deny.
+  * @param `type`
+  *   If this is a user or role overwrite.
   */
 case class EditChannelPermissionsData(allow: Permission, deny: Permission, `type`: PermissionOverwriteType)
 
@@ -629,13 +663,19 @@ case class GetChannelInvites(channelId: GuildChannelId) extends NoParamsNiceResp
 }
 
 /**
-  * @param maxAge Duration in seconds before this invite expires.
-  * @param maxUses Amount of times this invite can be used before expiring,
-  *                or 0 for unlimited.
-  * @param temporary If this invite only grants temporary membership.
-  * @param unique If true, guarantees to create a new invite.
-  * @param targetUserId The target user for this invite, who's stream will be displayed.
-  * @param targetType The type of target for this voice channel invite
+  * @param maxAge
+  *   Duration in seconds before this invite expires.
+  * @param maxUses
+  *   Amount of times this invite can be used before expiring, or 0 for
+  *   unlimited.
+  * @param temporary
+  *   If this invite only grants temporary membership.
+  * @param unique
+  *   If true, guarantees to create a new invite.
+  * @param targetUserId
+  *   The target user for this invite, who's stream will be displayed.
+  * @param targetType
+  *   The type of target for this voice channel invite
   */
 case class CreateChannelInviteData(
     maxAge: JsonOption[Int] = JsonUndefined,
@@ -817,7 +857,10 @@ case class RemoveThreadMember(channelId: ThreadGuildChannelId, userId: UserId) e
   override def route: RequestRoute = Routes.removeThreadMember(channelId, userId)
 }
 
-/** Gets all the members of a thread. Requires the privileged `GUILD_MEMBERS` intent. */
+/**
+  * Gets all the members of a thread. Requires the privileged `GUILD_MEMBERS`
+  * intent.
+  */
 case class ListThreadMembers(channelId: ThreadGuildChannelId)
     extends NoParamsRequest[Seq[RawThreadMember], Seq[ThreadMember]] {
   override def route: RequestRoute = Routes.listThreadMembers(channelId)
@@ -839,14 +882,20 @@ object GetThreadsResponse {
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 }
 
-/** Lists all the active threads in a channel. Threads are ordered in descending order by their id. */
+/**
+  * Lists all the active threads in a channel. Threads are ordered in descending
+  * order by their id.
+  */
 case class ListActiveThreads(channelId: TextGuildChannelId) extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listActiveThreads(channelId)
 
   override def responseDecoder: Decoder[GetThreadsResponse] = GetThreadsResponse.decoder
 }
 
-/** Lists all the public archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
+/**
+  * Lists all the public archived threads in a channel. Threads are ordered in
+  * descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
 case class ListPublicArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
     extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listPublicArchivedThreads(channelId, before, limit)
@@ -858,7 +907,10 @@ case class ListPublicArchivedThreads(channelId: TextGuildChannelId, before: Opti
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/** Lists all the private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
+/**
+  * Lists all the private archived threads in a channel. Threads are ordered in
+  * descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
 case class ListPrivateArchivedThreads(channelId: TextGuildChannelId, before: Option[OffsetDateTime], limit: Option[Int])
     extends NoParamsNiceResponseRequest[GetThreadsResponse] {
   override def route: RequestRoute = Routes.listPrivateArchivedThreads(channelId, before, limit)
@@ -870,7 +922,10 @@ case class ListPrivateArchivedThreads(channelId: TextGuildChannelId, before: Opt
     hasPermissionsChannel(channelId, requiredPermissions)
 }
 
-/** Lists all the joined private archived threads in a channel. Threads are ordered in descending order by [[RawThreadMetadata.archiveTimestamp]]. */
+/**
+  * Lists all the joined private archived threads in a channel. Threads are
+  * ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
+  */
 case class ListJoinedPrivateArchivedThreads(
     channelId: TextGuildChannelId,
     before: Option[OffsetDateTime],
@@ -896,9 +951,12 @@ case class ListGuildEmojis(guildId: GuildId) extends RESTRequest[NotUsed, Seq[Ra
 }
 
 /**
-  * @param name The name of the emoji.
-  * @param image The image data for the emoji.
-  * @param roles Whitelist of roles that can use this emoji.
+  * @param name
+  *   The name of the emoji.
+  * @param image
+  *   The image data for the emoji.
+  * @param roles
+  *   Whitelist of roles that can use this emoji.
   */
 case class CreateGuildEmojiData(name: String, image: ImageData, roles: Seq[RoleId])
 
@@ -939,8 +997,10 @@ case class GetGuildEmoji(emojiId: EmojiId, guildId: GuildId) extends NoParamsReq
 }
 
 /**
-  * @param name The new emoji name.
-  * @param roles Whitelist of roles that can use this emoji.
+  * @param name
+  *   The new emoji name.
+  * @param roles
+  *   Whitelist of roles that can use this emoji.
   */
 case class ModifyGuildEmojiData(name: String, roles: JsonOption[Seq[RoleId]] = JsonUndefined)
 object ModifyGuildEmojiData {
@@ -1006,8 +1066,10 @@ case class CrosspostMessage(channelId: ChannelId, messageId: MessageId) extends 
 }
 
 /**
-  * @param channelId Source channel id
-  * @param webhookId Id of the created webhook
+  * @param channelId
+  *   Source channel id
+  * @param webhookId
+  *   Id of the created webhook
   */
 case class FollowedChannel(
     channelId: ChannelId,

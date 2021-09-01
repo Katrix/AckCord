@@ -37,13 +37,14 @@ import org.slf4j.Logger
 object GuildStreams {
 
   /**
-    * A flow which tries to find out which guild a given APIMessage event belongs to.
+    * A flow which tries to find out which guild a given APIMessage event
+    * belongs to.
     *
     * Handles
-    * - [[APIMessage.ChannelMessage]]
-    * - [[APIMessage.GuildMessage]]
-    * - [[APIMessage.MessageMessage]]
-    * - [[APIMessage.VoiceStateUpdate]]
+    *   - [[APIMessage.ChannelMessage]]
+    *   - [[APIMessage.GuildMessage]]
+    *   - [[APIMessage.MessageMessage]]
+    *   - [[APIMessage.VoiceStateUpdate]]
     */
   def withGuildInfoApiMessage[Msg <: APIMessage]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
     Flow[Msg].map { msg =>
@@ -68,16 +69,16 @@ object GuildStreams {
     }
 
   /**
-    * A function which tries to find out which guild a given GatewayEvent
-    * event belongs to.
+    * A function which tries to find out which guild a given GatewayEvent event
+    * belongs to.
     *
     * Handles
-    * - [[ackcord.gateway.GatewayEvent.GuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.GuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
     *
-    * The function returned by this contains multiple state, and is not
-    * safe to share.
+    * The function returned by this contains multiple state, and is not safe to
+    * share.
     */
   def createGatewayGuildInfoExtractor(log: Logger): GatewayEvent[_] => Option[GuildId] = {
     val channelToGuild = collection.mutable.Map.empty[GuildChannelId, GuildId]
@@ -137,12 +138,13 @@ object GuildStreams {
   }
 
   /**
-    * A flow which tries to find out which guild a given GatewayEvent event belongs to.
+    * A flow which tries to find out which guild a given GatewayEvent event
+    * belongs to.
     *
     * Handles
-    * - [[ackcord.gateway.GatewayEvent.GuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.GuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
     */
   def withGuildInfoGatewayEvent[Msg <: GatewayEvent[_]](
       log: Logger
@@ -154,20 +156,20 @@ object GuildStreams {
     }
 
   /**
-    * Serves the opposite function of [[GuildRouter]]. The job of
-    * the guild filter is to only allow messages that belong to a
-    * specific guild.
+    * Serves the opposite function of [[GuildRouter]]. The job of the guild
+    * filter is to only allow messages that belong to a specific guild.
     *
     * Handles
-    * - [[APIMessage.ChannelMessage]]
-    * - [[APIMessage.GuildMessage]]
-    * - [[APIMessage.MessageMessage]]
-    * - [[APIMessage.VoiceStateUpdate]]
+    *   - [[APIMessage.ChannelMessage]]
+    *   - [[APIMessage.GuildMessage]]
+    *   - [[APIMessage.MessageMessage]]
+    *   - [[APIMessage.VoiceStateUpdate]]
     *
     * Global events like [[APIMessage.Ready]], [[APIMessage.Resumed]] and
     * [[APIMessage.UserUpdate]] are sent no matter what.
     *
-    * @param guildId The only guildID to allow through.
+    * @param guildId
+    *   The only guildID to allow through.
     */
   def guildFilterApiMessage[Msg <: APIMessage](guildId: GuildId): Flow[Msg, Msg, NotUsed] =
     withGuildInfoApiMessage[Msg].collect {
@@ -181,15 +183,16 @@ object GuildStreams {
     * specific guild.
     *
     * Handles
-    * - [[ackcord.gateway.GatewayEvent.GuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
-    * - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.GuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.OptGuildEvent]]
+    *   - [[ackcord.gateway.GatewayEvent.ChannelEvent]]
     *
     * Global events like [[ackcord.gateway.GatewayEvent.Ready]],
     * [[ackcord.gateway.GatewayEvent.Resumed]] and
     * [[ackcord.gateway.GatewayEvent.UserUpdate]] are sent no matter what.
     *
-    * @param guildId The only guildID to allow through.
+    * @param guildId
+    *   The only guildID to allow through.
     */
   def guildFilterGatewayEvent[Msg <: GatewayEvent[_]](
       guildId: GuildId,

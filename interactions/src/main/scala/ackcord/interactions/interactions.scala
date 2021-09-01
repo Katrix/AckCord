@@ -310,8 +310,8 @@ object DataInteractionTransformer {
   }
 
   /**
-    * A command function that requires that those who use this command need
-    * some set of permissions.
+    * A command function that requires that those who use this command need some
+    * set of permissions.
     */
   def needPermission[M[A] <: GuildInteraction](
       neededPermission: Permission
@@ -409,8 +409,8 @@ object InteractionTransformer {
     )
 
   /**
-    * A command function that requires that those who use this command need
-    * some set of permissions.
+    * A command function that requires that those who use this command need some
+    * set of permissions.
     */
   def needPermission[M <: GuildInteraction](
       neededPermission: Permission

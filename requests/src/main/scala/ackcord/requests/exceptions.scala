@@ -38,10 +38,12 @@ case class HttpException(uri: Uri, method: HttpMethod, statusCode: StatusCode, e
 /**
   * An exception that signals than an endpoint is ratelimited.
   *
-  * @param global If the rate limit is global.
-  * @param tilRetry The amount of time in milliseconds until the ratelimit
-  *                 goes away.
-  * @param uri The Uri for the request.
+  * @param global
+  *   If the rate limit is global.
+  * @param tilRetry
+  *   The amount of time in milliseconds until the ratelimit goes away.
+  * @param uri
+  *   The Uri for the request.
   */
 case class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
     extends Exception(
@@ -51,7 +53,8 @@ case class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Ur
 
 /**
   * An exception that signals that a request was dropped.
-  * @param uri The Uri for the request.
+  * @param uri
+  *   The Uri for the request.
   */
 case class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
 

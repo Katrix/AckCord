@@ -32,14 +32,16 @@ sealed trait CacheHandler[-Obj] {
 
   /**
     * Updates the builder with the object
-    * @param builder The builder to update
-    * @param obj The logger to update with
+    * @param builder
+    *   The builder to update
+    * @param obj
+    *   The logger to update with
     */
   def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit
 
   /**
-    * If true, the Cache registry won't return this if asked for a type of
-    * this handler, but it won't report an error
+    * If true, the Cache registry won't return this if asked for a type of this
+    * handler, but it won't report an error
     */
   def ignore: Boolean = false
 }

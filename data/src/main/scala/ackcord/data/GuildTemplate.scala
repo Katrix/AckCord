@@ -28,17 +28,28 @@ import java.time.OffsetDateTime
 import ackcord.data.raw.RawGuild
 
 /**
-  * @param code The code of the template
-  * @param name Name of the template
-  * @param description Description of the template
-  * @param usageCount How many times the template has been used
-  * @param creatorId Id of the user who created the template
-  * @param creator Creator of the template
-  * @param createdAt When the template was created
-  * @param updatedAt When the template was updated
-  * @param sourceGuildId What was the source of the template
-  * @param serializedSourceGuild A snapshot of the guild this template was created from
-  * @param isDirty If the template has unsaved changes
+  * @param code
+  *   The code of the template
+  * @param name
+  *   Name of the template
+  * @param description
+  *   Description of the template
+  * @param usageCount
+  *   How many times the template has been used
+  * @param creatorId
+  *   Id of the user who created the template
+  * @param creator
+  *   Creator of the template
+  * @param createdAt
+  *   When the template was created
+  * @param updatedAt
+  *   When the template was updated
+  * @param sourceGuildId
+  *   What was the source of the template
+  * @param serializedSourceGuild
+  *   A snapshot of the guild this template was created from
+  * @param isDirty
+  *   If the template has unsaved changes
   */
 case class GuildTemplate(
     code: String,

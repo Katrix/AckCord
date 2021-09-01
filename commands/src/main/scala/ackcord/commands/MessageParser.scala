@@ -43,7 +43,8 @@ import cats.{Monad, MonadError}
 /**
   * MessageParser is a typeclass to simplify parsing messages. It can derive
   * instances for any ADT, and makes it much easier to work with messages.
-  * @tparam A The type to parse.
+  * @tparam A
+  *   The type to parse.
   */
 trait MessageParser[A] { self =>
 
@@ -57,8 +58,10 @@ trait MessageParser[A] { self =>
 
   /**
     * Create a new parser by filtering the values created by this parser.
-    * @param f The predicate.
-    * @param error The error message if the value does not match the predicate.
+    * @param f
+    *   The predicate.
+    * @param error
+    *   The error message if the value does not match the predicate.
     */
   def filterWithError(f: A => Boolean, error: String): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
@@ -72,9 +75,12 @@ trait MessageParser[A] { self =>
   /**
     * Apply a partial function of this parser, returning the error if the
     * function isn't defined.
-    * @param error The error to return if the partial function isn't defined.
-    * @param pf The partial function to apply.
-    * @tparam B The new parser type.
+    * @param error
+    *   The error to return if the partial function isn't defined.
+    * @param pf
+    *   The partial function to apply.
+    * @tparam B
+    *   The new parser type.
     */
   def collectWithError[B](error: String)(pf: PartialFunction[A, B]): MessageParser[B] = new MessageParser[B] {
     override def parse[F[_]](
@@ -159,11 +165,17 @@ object MessageParser extends MessageParserInstances with DeriveMessageParser {
 
   /**
     * Parse a message as an type
-    * @param args The message to parse
-    * @param parser The parser to use
-    * @param c The cache to use
-    * @tparam A The type to parse the message as
-    * @return Left with an error message if it failed to parse, or Right with the parsed type
+    * @param args
+    *   The message to parse
+    * @param parser
+    *   The parser to use
+    * @param c
+    *   The cache to use
+    * @tparam A
+    *   The type to parse the message as
+    * @return
+    *   Left with an error message if it failed to parse, or Right with the
+    *   parsed type
     */
   def parseResultEither[A](
       args: List[String],
@@ -200,8 +212,10 @@ trait MessageParserInstances {
 
   /**
     * Matches a literal string
-    * @param lit The string to match
-    * @param caseSensitive If the match should be case insensitive
+    * @param lit
+    *   The string to match
+    * @param caseSensitive
+    *   If the match should be case insensitive
     */
   def literal(lit: String, caseSensitive: Boolean = true): MessageParser[String] = new MessageParser[String] {
 
@@ -223,9 +237,12 @@ trait MessageParserInstances {
 
   /**
     * Matches a string that starts with a prefix
-    * @param prefix The prefix to look for
-    * @param caseSensitive If the matching should be case sensitive
-    * @param consumeAll If the whole string should be consumed if only part of it was matched
+    * @param prefix
+    *   The prefix to look for
+    * @param caseSensitive
+    *   If the matching should be case sensitive
+    * @param consumeAll
+    *   If the whole string should be consumed if only part of it was matched
     */
   def startsWith(prefix: String, caseSensitive: Boolean = true, consumeAll: Boolean = false): MessageParser[String] =
     new MessageParser[String] {
@@ -254,7 +271,8 @@ trait MessageParserInstances {
 
   /**
     * Matches one of the parsers passed in
-    * @param seq The parsers to try
+    * @param seq
+    *   The parsers to try
     */
   def oneOf[A](seq: Seq[MessageParser[A]]): MessageParser[A] = new MessageParser[A] {
 
@@ -282,8 +300,10 @@ trait MessageParserInstances {
 
   /**
     * Create a parser from a string
-    * @param f The function to transform the string with
-    * @tparam A The type to parse
+    * @param f
+    *   The function to transform the string with
+    * @tparam A
+    *   The type to parse
     */
   def fromString[A](f: String => A): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
@@ -299,22 +319,28 @@ trait MessageParserInstances {
 
   /**
     * Parse a string with a function that can throw
-    * @param f The function to transform the string with. This can throw an exception
-    * @tparam A The type to parse
+    * @param f
+    *   The function to transform the string with. This can throw an exception
+    * @tparam A
+    *   The type to parse
     */
   def withTry[A](f: String => A): MessageParser[A] = fromTry(s => Try(f(s)))
 
   /**
     * Parse a string with a try
-    * @param f The function to transform the string with.
-    * @tparam A The type to parse
+    * @param f
+    *   The function to transform the string with.
+    * @tparam A
+    *   The type to parse
     */
   def fromTry[A](f: String => Try[A]): MessageParser[A] = fromEither(f(_).toEither.leftMap(_.getMessage))
 
   /**
     * Parse a string into a try, where the left contains the error message
-    * @param f The function to transform the string with.
-    * @tparam A The type to parse
+    * @param f
+    *   The function to transform the string with.
+    * @tparam A
+    *   The type to parse
     */
   def fromEither[A](f: String => Either[String, A]): MessageParser[A] = new MessageParser[A] {
 
@@ -336,7 +362,8 @@ trait MessageParserInstances {
 
   /**
     * A message parser that always fails.
-    * @param e The error to return
+    * @param e
+    *   The error to return
     */
   def fail[A](e: String): MessageParser[A] = new MessageParser[A] {
     override def parse[F[_]](
@@ -349,9 +376,12 @@ trait MessageParserInstances {
 
   /**
     * Same as [[withTry]] but with a custom error.
-    * @param errorMessage The error message to use
-    * @param f The function to transform the string with.
-    * @tparam A The type to parse
+    * @param errorMessage
+    *   The error message to use
+    * @param f
+    *   The function to transform the string with.
+    * @tparam A
+    *   The type to parse
     */
   def withTryCustomError[A](errorMessage: String => String)(f: String => A): MessageParser[A] =
     fromEither(s => Try(f(s)).toEither.leftMap(_ => errorMessage(s)))

@@ -32,8 +32,8 @@ import scala.concurrent.Future
 import scala.util.Random
 
 import ackcord._
-import ackcord.data._
 import ackcord.commands._
+import ackcord.data._
 import ackcord.requests.{CreateMessage, Request}
 import ackcord.syntax._
 import akka.NotUsed

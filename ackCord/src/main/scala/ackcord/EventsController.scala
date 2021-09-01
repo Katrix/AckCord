@@ -37,8 +37,8 @@ abstract class EventsController(val requests: Requests) {
   implicit def findCache[A](implicit message: EventListenerMessage[A]): CacheSnapshot = message.cacheSnapshot
 
   /**
-    * The base event handler builder that you can build off if you don't like the
-    * default provided builder.
+    * The base event handler builder that you can build off if you don't like
+    * the default provided builder.
     */
   val baseEventBuilder: EventListenerBuilder[EventListenerMessage, APIMessage] =
     EventListenerBuilder.rawBuilder(requests)

@@ -50,20 +50,22 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
 
   /**
-    * Loop over the keys of the map. The same as keys.foreach(f), but may
-    * be more efficient.
+    * Loop over the keys of the map. The same as keys.foreach(f), but may be
+    * more efficient.
     *
-    * @param f The loop body
+    * @param f
+    *   The loop body
     */
   final def foreachKey(f: Key => Unit): Unit = inner.foreachKey(k => f(keyToSnowflake(k)))
 
   override def valuesIterator: Iterator[V] = inner.valuesIterator
 
   /**
-    * Loop over the values of the map. The same as values.foreach(f), but may
-    * be more efficient.
+    * Loop over the values of the map. The same as values.foreach(f), but may be
+    * more efficient.
     *
-    * @param f The loop body
+    * @param f
+    *   The loop body
     */
   final def foreachValue(f: V => Unit): Unit = inner.foreachValue(f)
 
@@ -92,7 +94,8 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     new SnowflakeMap(inner.updated(key.toUnsignedLong, value))
 
   /**
-    * Updates the map, using the provided function to resolve conflicts if the key is already present.
+    * Updates the map, using the provided function to resolve conflicts if the
+    * key is already present.
     *
     * Equivalent to
     * {{{
@@ -102,11 +105,16 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *   }
     * }}}
     *
-    * @tparam S     The supertype of values in this `SnowflakeMap`.
-    * @param key    The key to update.
-    * @param value  The value to use if there is no conflict.
-    * @param f      The function used to resolve conflicts.
-    * @return       The updated map.
+    * @tparam S
+    *   The supertype of values in this `SnowflakeMap`.
+    * @param key
+    *   The key to update.
+    * @param value
+    *   The value to use if there is no conflict.
+    * @param f
+    *   The function used to resolve conflicts.
+    * @return
+    *   The updated map.
     */
   def updateWith[S >: V](key: Key, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.updateWith(key.toUnsignedLong, value, f))
@@ -114,24 +122,33 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   override def -(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner - key.toUnsignedLong)
 
   /**
-    * A combined transform and filter function. Returns an `SnowflakeMap` such that
-    * for each `(key, value)` mapping in this map, if `f(key, value) == None`
-    * the map contains no mapping for key, and if `f(key, value)`.
+    * A combined transform and filter function. Returns an `SnowflakeMap` such
+    * that for each `(key, value)` mapping in this map, if `f(key, value) ==
+    * None` the map contains no mapping for key, and if `f(key, value)`.
     *
-    * @tparam S    The type of the values in the resulting `SnowflakeMap`.
-    * @param f     The transforming function.
-    * @return      The modified map.
+    * @tparam S
+    *   The type of the values in the resulting `SnowflakeMap`.
+    * @param f
+    *   The transforming function.
+    * @return
+    *   The modified map.
     */
   def modifyOrRemove[S](f: (Key, V) => Option[S]): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.modifyOrRemove { case (k, v) => f(keyToSnowflake(k), v) })
 
   /**
-    * Forms a union map with that map, using the combining function to resolve conflicts.
+    * Forms a union map with that map, using the combining function to resolve
+    * conflicts.
     *
-    * @tparam S      The type of values in `that`, a supertype of values in `this`.
-    * @param that    The map to form a union with.
-    * @param f       The function used to resolve conflicts between two mappings.
-    * @return        Union of `this` and `that`, with identical key conflicts resolved using the function `f`.
+    * @tparam S
+    *   The type of values in `that`, a supertype of values in `this`.
+    * @param that
+    *   The map to form a union with.
+    * @param f
+    *   The function used to resolve conflicts between two mappings.
+    * @return
+    *   Union of `this` and `that`, with identical key conflicts resolved using
+    *   the function `f`.
     */
   def unionWith[S >: V](that: SnowflakeMap[Key, S], f: (Key, S, S) => S): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.unionWith[S](that.inner, (l, s1, s2) => f(keyToSnowflake(l), s1, s2)))
@@ -141,22 +158,32 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * resulting map is a map that has only keys present in both maps and has
     * values produced from the original mappings by combining them with `f`.
     *
-    * @tparam S      The type of values in `that`.
-    * @tparam R      The type of values in the resulting `SnowflakeMap`.
-    * @param that    The map to intersect with.
-    * @param f       The combining function.
-    * @return        Intersection of `this` and `that`, with values for identical keys produced by function `f`.
+    * @tparam S
+    *   The type of values in `that`.
+    * @tparam R
+    *   The type of values in the resulting `SnowflakeMap`.
+    * @param that
+    *   The map to intersect with.
+    * @param f
+    *   The combining function.
+    * @return
+    *   Intersection of `this` and `that`, with values for identical keys
+    *   produced by function `f`.
     */
   def intersectionWith[S, R](that: SnowflakeMap[Key, S], f: (Key, V, S) => R): SnowflakeMap[K, R] =
     new SnowflakeMap(inner.intersectionWith[S, R](that.inner, (l, v, s) => f(keyToSnowflake(l), v, s)))
 
   /**
-    * Left biased intersection. Returns the map that has all the same mappings as this but only for keys
-    * which are present in the other map.
+    * Left biased intersection. Returns the map that has all the same mappings
+    * as this but only for keys which are present in the other map.
     *
-    * @tparam R      The type of values in `that`.
-    * @param that    The map to intersect with.
-    * @return        A map with all the keys both in `this` and `that`, mapped to corresponding values from `this`.
+    * @tparam R
+    *   The type of values in `that`.
+    * @param that
+    *   The map to intersect with.
+    * @return
+    *   A map with all the keys both in `this` and `that`, mapped to
+    *   corresponding values from `this`.
     */
   def intersection[R](that: SnowflakeMap[K, R]): SnowflakeMap[K, V] = new SnowflakeMap(inner.intersection(that.inner))
 

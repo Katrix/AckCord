@@ -1,14 +1,14 @@
 package ackcord.requests
 
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Future, TimeoutException}
+
 import akka.NotUsed
 import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.adapter._
 import akka.actor.typed.{ActorRef, ActorSystem, RecipientRef}
 import akka.stream.scaladsl.{Flow, FlowWithContext, Sink}
 import akka.util.Timeout
-
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Future, TimeoutException}
 
 trait Ratelimiter {
 
