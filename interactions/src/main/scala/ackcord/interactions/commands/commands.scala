@@ -164,16 +164,16 @@ case class CommandGroup private (
       case ApplicationCommandInteractionDataOption(
             name,
             ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
-            options
+            option
           ) =>
-        subCommandsByName(name) -> options.asInstanceOf[Seq[ApplicationCommandInteractionDataOption[_]]]
+        subCommandsByName(name) -> option.asInstanceOf[Option[Seq[ApplicationCommandInteractionDataOption[_]]]]
     }
 
     subcommandExecution match {
-      case Some((subcommand, options)) =>
+      case Some((subcommand, option)) =>
         subcommand.handleRaw(
           clientId,
-          rawInteraction.copy(data = Some(data.copy(options = Some(options)))),
+          rawInteraction.copy(data = Some(data.copy(options = option))),
           cacheSnapshot
         )
       case None =>

@@ -295,7 +295,7 @@ object DataInteractionTransformer {
           case Some(guild) =>
             val member            = from.optMember.get
             val memberPermissions = from.optMemberPermissions.get
-            val textGuildChannel  = from.asInstanceOf[TextGuildChannel]
+            val textGuildChannel  = from.textChannel.asInstanceOf[TextGuildChannel]
 
             Right(create(guild, member, memberPermissions, textGuildChannel)(from))
           case None =>
