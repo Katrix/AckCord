@@ -72,6 +72,7 @@ trait CommandInteraction[A] extends Interaction {
 }
 
 trait ComponentInteraction extends Interaction {
+  def customId: String
   def message: Message
 }
 
@@ -90,11 +91,13 @@ trait CacheCommandInteraction[A] extends CacheInteraction with CommandInteractio
 case class BaseCacheComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     cache: CacheSnapshot
 ) extends CacheComponentInteraction
 case class BaseCacheMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     values: Seq[String],
     cache: CacheSnapshot
 ) extends CacheMenuInteraction
@@ -105,13 +108,14 @@ trait ResolvedInteraction extends CacheInteraction {
   def textChannel: TextChannel
   def optGuild: Option[GatewayGuild]
 }
-trait ResolvedComponentInteraction  extends ResolvedInteraction with ComponentInteraction
-trait ResolvedMenuInteraction       extends ResolvedInteraction with MenuInteraction
-trait ResolvedCommandInteraction[A] extends ResolvedInteraction with CommandInteraction[A]
+trait ResolvedComponentInteraction  extends CacheComponentInteraction with ResolvedInteraction
+trait ResolvedMenuInteraction       extends CacheMenuInteraction with ResolvedInteraction
+trait ResolvedCommandInteraction[A] extends CacheCommandInteraction[A] with ResolvedInteraction
 
 case class BaseResolvedComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     textChannel: TextChannel,
     optGuild: Option[GatewayGuild],
     cache: CacheSnapshot
@@ -119,6 +123,7 @@ case class BaseResolvedComponentInteraction(
 case class BaseResolvedMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     values: Seq[String],
     textChannel: TextChannel,
     optGuild: Option[GatewayGuild],
@@ -140,13 +145,14 @@ trait GuildInteraction extends ResolvedInteraction {
 
   override def optGuild: Option[GatewayGuild] = Some(guild)
 }
-trait GuildComponentInteraction  extends GuildInteraction with ComponentInteraction
-trait GuildMenuInteraction       extends GuildInteraction with MenuInteraction
-trait GuildCommandInteraction[A] extends GuildInteraction with CommandInteraction[A]
+trait GuildComponentInteraction  extends ResolvedComponentInteraction with GuildInteraction
+trait GuildMenuInteraction       extends ResolvedMenuInteraction with GuildInteraction
+trait GuildCommandInteraction[A] extends ResolvedCommandInteraction[A] with GuildInteraction
 
 case class BaseGuildComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
     member: GuildMember,
@@ -156,6 +162,7 @@ case class BaseGuildComponentInteraction(
 case class BaseGuildMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     values: Seq[String],
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
@@ -175,13 +182,14 @@ case class BaseGuildCommandInteraction[A](
 trait VoiceChannelInteraction extends GuildInteraction {
   def voiceChannel: VoiceGuildChannel
 }
-trait VoiceChannelComponentInteraction  extends VoiceChannelInteraction with ComponentInteraction
-trait VoiceChannelMenuInteraction       extends VoiceChannelInteraction with MenuInteraction
-trait VoiceChannelCommandInteraction[A] extends VoiceChannelInteraction with CommandInteraction[A]
+trait VoiceChannelComponentInteraction  extends GuildComponentInteraction with VoiceChannelInteraction
+trait VoiceChannelMenuInteraction       extends GuildMenuInteraction with VoiceChannelInteraction
+trait VoiceChannelCommandInteraction[A] extends GuildCommandInteraction[A] with VoiceChannelInteraction
 
 case class BaseVoiceChannelComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
     member: GuildMember,
@@ -192,6 +200,7 @@ case class BaseVoiceChannelComponentInteraction(
 case class BaseVoiceChannelMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     values: Seq[String],
     textChannel: TextGuildChannel,
     guild: GatewayGuild,
@@ -212,7 +221,8 @@ case class BaseVoiceChannelCommandInteraction[A](
 
 case class StatelessComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
-    message: Message
+    message: Message,
+    customId: String
 ) extends ComponentInteraction {
   override def optCache: Option[CacheSnapshot] = None
 }
@@ -220,6 +230,7 @@ case class StatelessComponentInteraction(
 case class StatelessMenuInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
     message: Message,
+    customId: String,
     values: Seq[String]
 ) extends MenuInteraction {
   override def optCache: Option[CacheSnapshot] = None
@@ -331,10 +342,18 @@ class DataInteractionFunction[From[_], To[_]](f: FunctionK[From, To]) extends Da
 }
 
 trait InteractionTransformer[From, To]
-    extends DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ] {
+    extends DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ] { outer =>
   override def filter[A](from: From): Either[Option[String], To] = filterSimple(from)
 
   def filterSimple(from: From): Either[Option[String], To]
+
+  def andThen[To2](transformer: InteractionTransformer[To, To2]): InteractionTransformer[From, To2] =
+    (from: From) => outer.filter(from).flatMap(transformer.filter)
+
+  @inline final def compose[From2](
+      transformer: InteractionTransformer[From2, From]
+  ): InteractionTransformer[From2, To] =
+    transformer.andThen(this)
 }
 object InteractionTransformer {
 
@@ -381,6 +400,16 @@ object InteractionTransformer {
     )
 
   def identity[A]: InteractionTransformer[A, A] = (from: A) => Right(from)
+
+  /** An interaction transformer which gurantees that a cache is present. */
+  def cache[I <: Interaction, O](create: CacheSnapshot => I => O): InteractionTransformer[I, O] = new InteractionTransformer[I, O] {
+    override def filterSimple(from: I): Either[Option[String], O] = {
+      from match {
+        case cacheInteraction: CacheInteraction => Right(create(cacheInteraction.cache)(from))
+        case _ => Left(Some("This action can only be used when the bot has access to a cache"))
+      }
+    }
+  }
 
   /** A command transformer which resolves most ids from the cache. */
   def resolved[I <: CacheInteraction, O](
@@ -434,8 +463,8 @@ sealed trait InteractionResponse {
 }
 object InteractionResponse {
   sealed trait AsyncMessageable extends InteractionResponse {
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(
-        implicit interaction: Interaction
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
+        interaction: Interaction
     ): InteractionResponse
   }
 
@@ -448,8 +477,8 @@ object InteractionResponse {
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    override def doAsync(action: AsyncMessageToken => OptFuture[_])(
-        implicit interaction: Interaction
+    override def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
+        interaction: Interaction
     ): InteractionResponse = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
   case class ChannelMessage(
@@ -458,8 +487,8 @@ object InteractionResponse {
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(
-        implicit interaction: Interaction
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
+        interaction: Interaction
     ): ChannelMessage = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
 }
