@@ -108,11 +108,8 @@ object DiscordShard {
 
       case GatewayHandlerTerminated =>
         val calculatedRestart = parameters.settings.restartBackoff()
-        val restartTime = if (isRestarting) 1.second else calculatedRestart
-        log.info(
-          s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second"
-          else calculatedRestart}"
-        )
+        val restartTime       = if (isRestarting) 1.second else calculatedRestart
+        log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else calculatedRestart}")
         timers.startSingleTimer("RestartGateway", CreateGateway, restartTime)
 
         shard(parameters, state.copy(isRestarting = false))
@@ -171,7 +168,7 @@ object DiscordShard {
   /** Send this to the client to log in. */
   case object StartShard extends Command
 
-  private case object CreateGateway extends Command
+  private case object CreateGateway            extends Command
   private case object GatewayHandlerTerminated extends Command
 
   /** Send this to log out and log in again this shard. */
@@ -269,15 +266,15 @@ object DiscordShard {
           )
       }
       .flatMap { json =>
-        val c = json.hcursor
+        val c          = json.hcursor
         val startLimit = c.downField("session_start_limit")
         val res = for {
           gateway <- c.get[String]("url")
-          shards <- c.get[Int]("shards")
+          shards  <- c.get[Int]("shards")
           // TODO: Use these better
-          total <- startLimit.get[Int]("total")
-          remaining <- startLimit.get[Int]("remaining")
-          resetAfter <- startLimit.get[Int]("reset_after")
+          total          <- startLimit.get[Int]("total")
+          remaining      <- startLimit.get[Int]("remaining")
+          resetAfter     <- startLimit.get[Int]("reset_after")
           maxConcurrency <- startLimit.get[Int]("max_concurrency")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
