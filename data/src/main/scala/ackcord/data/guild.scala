@@ -585,6 +585,7 @@ case class GuildMember(
     userId: UserId,
     guildId: GuildId,
     nick: Option[String],
+    avatar: Option[String],
     roleIds: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],

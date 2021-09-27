@@ -338,6 +338,7 @@ case class RawThreadMember(
   */
 case class PartialRawGuildMember(
     nick: Option[String],
+    avatar: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
     premiumSince: Option[OffsetDateTime],
@@ -347,7 +348,7 @@ case class PartialRawGuildMember(
 ) {
 
   def toGuildMember(userId: UserId, guildId: GuildId): GuildMember =
-    GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(userId, guildId, nick, avatar, roles, joinedAt, premiumSince, deaf, mute, pending)
 }
 
 //Remember to edit RawGuildMemberWithGuild when editing this
@@ -373,6 +374,7 @@ case class PartialRawGuildMember(
 //Edit InteractionGuildMember when editing this
 case class RawGuildMember(
     user: User,
+    avatar: Option[String],
     nick: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
@@ -384,7 +386,7 @@ case class RawGuildMember(
 
   /** Convert this to a normal guild member. */
   def toGuildMember(guildId: GuildId): GuildMember =
-    GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(user.id, guildId, nick, avatar, roles, joinedAt, premiumSince, deaf, mute, pending)
 }
 
 /**

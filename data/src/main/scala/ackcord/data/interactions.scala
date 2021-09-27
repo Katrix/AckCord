@@ -224,6 +224,7 @@ object ApplicationCommandInteractionDataResolved {
 
 case class InteractionGuildMember(
     user: User,
+    avatar: Option[String],
     nick: Option[String],
     roles: Seq[RoleId],
     joinedAt: Option[OffsetDateTime],
