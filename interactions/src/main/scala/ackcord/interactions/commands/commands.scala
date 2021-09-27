@@ -58,37 +58,46 @@ case class Command[InteractionObj[_], A] private (
 ) extends CommandOrGroup {
 
   override def makeCommandOptions: Seq[ApplicationCommandOption] = {
-    val normalList                          = paramList.map(_.map(identity)).getOrElse(Nil)
+    val normalList = paramList.map(_.map(identity)).getOrElse(Nil)
     val (requiredParams, notRequiredParams) = normalList.partition(_.isRequired)
     (requiredParams ++ notRequiredParams).map(_.toCommandOption)
   }
 
-  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    ApplicationCommandOptionType.SubCommand,
-    name,
-    description,
-    required = Some(false),
-    Some(Nil),
-    Some(makeCommandOptions)
-  )
+  override def toCommandOption: ApplicationCommandOption =
+    ApplicationCommandOption(
+      ApplicationCommandOptionType.SubCommand,
+      name,
+      description,
+      required = Some(false),
+      Some(Nil),
+      Some(makeCommandOptions)
+    )
 
   override def handleRaw(
       clientId: String,
       interaction: RawInteraction,
       cacheSnapshot: Option[CacheSnapshot]
   ): InteractionResponse = {
-    val data = interaction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    val data =
+      interaction.data.get.asInstanceOf[ApplicationCommandInteractionData]
 
     val optionsMap = data.options
       .getOrElse(Nil)
-      .collect { case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
-        name.toLowerCase(Locale.ROOT) -> (dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
+      .collect {
+        case dataOption @ ApplicationCommandInteractionDataOption(name, _, _) =>
+          name.toLowerCase(Locale.ROOT) -> (dataOption
+            .asInstanceOf[ApplicationCommandInteractionDataOption[Any]])
       }
       .toMap
 
     val optArgs = paramList match {
       case Right(value) =>
-        value.constructValues(optionsMap, data.resolved.getOrElse(ApplicationCommandInteractionDataResolved.empty))
+        value.constructValues(
+          optionsMap,
+          data.resolved.getOrElse(
+            ApplicationCommandInteractionDataResolved.empty
+          )
+        )
       case Left(ev) => Right(ev(NotUsed))
     }
 
@@ -121,12 +130,16 @@ case class Command[InteractionObj[_], A] private (
       .leftMap {
         case Some(error) =>
           InteractionResponse.ChannelMessage(
-            RawInteractionApplicationCommandCallbackData(content = Some(s"An error occurred: $error")),
+            RawInteractionApplicationCommandCallbackData(content =
+              Some(s"An error occurred: $error")
+            ),
             () => OptFuture.unit
           )
         case None =>
           InteractionResponse.ChannelMessage(
-            RawInteractionApplicationCommandCallbackData(content = Some("An error occurred")),
+            RawInteractionApplicationCommandCallbackData(content =
+              Some("An error occurred")
+            ),
             () => OptFuture.unit
           )
       }
@@ -140,33 +153,39 @@ case class CommandGroup private (
     extra: Map[String, String],
     commands: Seq[CommandOrGroup]
 ) extends CommandOrGroup {
-  override def makeCommandOptions: Seq[ApplicationCommandOption] = commands.map(_.toCommandOption)
+  override def makeCommandOptions: Seq[ApplicationCommandOption] =
+    commands.map(_.toCommandOption)
 
-  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    ApplicationCommandOptionType.SubCommandGroup,
-    name,
-    description,
-    required = Some(false),
-    Some(Nil),
-    Some(makeCommandOptions)
-  )
+  override def toCommandOption: ApplicationCommandOption =
+    ApplicationCommandOption(
+      ApplicationCommandOptionType.SubCommandGroup,
+      name,
+      description,
+      required = Some(false),
+      Some(Nil),
+      Some(makeCommandOptions)
+    )
 
-  private lazy val subCommandsByName: Map[String, CommandOrGroup] = commands.map(c => c.name -> c).toMap
+  private lazy val subCommandsByName: Map[String, CommandOrGroup] =
+    commands.map(c => c.name -> c).toMap
 
   override def handleRaw(
       clientId: String,
       rawInteraction: RawInteraction,
       cacheSnapshot: Option[CacheSnapshot]
   ): InteractionResponse = {
-    val data = rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
+    val data =
+      rawInteraction.data.get.asInstanceOf[ApplicationCommandInteractionData]
 
     val subcommandExecution = data.options.getOrElse(Nil).collectFirst {
       case ApplicationCommandInteractionDataOption(
             name,
-            ApplicationCommandOptionType.SubCommand | ApplicationCommandOptionType.SubCommandGroup,
+            ApplicationCommandOptionType.SubCommand |
+            ApplicationCommandOptionType.SubCommandGroup,
             options
           ) =>
-        subCommandsByName(name) -> options.asInstanceOf[Seq[ApplicationCommandInteractionDataOption[_]]]
+        subCommandsByName(name) -> options
+          .asInstanceOf[Seq[ApplicationCommandInteractionDataOption[_]]]
     }
 
     subcommandExecution match {
@@ -178,7 +197,9 @@ case class CommandGroup private (
         )
       case None =>
         InteractionResponse.ChannelMessage(
-          RawInteractionApplicationCommandCallbackData(content = Some("Encountered dead end for subcommands")),
+          RawInteractionApplicationCommandCallbackData(content =
+            Some("Encountered dead end for subcommands")
+          ),
           () => OptFuture.unit
         )
     }

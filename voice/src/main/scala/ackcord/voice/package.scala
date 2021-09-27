@@ -31,7 +31,8 @@ package object voice {
 
   type SpeakingFlag = Long @@ SpeakingFlag.type
   object SpeakingFlag {
-    private[voice] def apply(long: Long): Long @@ SpeakingFlag.type = tag[SpeakingFlag.type](long)
+    private[voice] def apply(long: Long): Long @@ SpeakingFlag.type =
+      tag[SpeakingFlag.type](long)
 
     def fromLong(long: Long): SpeakingFlag = SpeakingFlag(long)
 
@@ -39,9 +40,10 @@ package object voice {
 
     val Microphone: SpeakingFlag = SpeakingFlag(1 << 0)
     val Soundshare: SpeakingFlag = SpeakingFlag(1 << 1)
-    val Priority: SpeakingFlag   = SpeakingFlag(1 << 2)
+    val Priority: SpeakingFlag = SpeakingFlag(1 << 2)
   }
-  implicit class SpeakingFlagSyntax(private val flags: SpeakingFlag) extends AnyVal {
+  implicit class SpeakingFlagSyntax(private val flags: SpeakingFlag)
+      extends AnyVal {
 
     /**
       * Add a spealing flag to this speaking flag.

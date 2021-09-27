@@ -26,26 +26,37 @@ package ackcord.examplecore
 import ackcord.JsonSome
 import ackcord.data.{AllowedMention, InteractionGuildMember}
 import ackcord.interactions.ResolvedCommandInteraction
-import ackcord.interactions.commands.{CacheSlashCommandController, Command, CommandGroup}
+import ackcord.interactions.commands.{
+  CacheSlashCommandController,
+  Command,
+  CommandGroup
+}
 import ackcord.requests.Requests
 import akka.NotUsed
 
-class SlashCommandsController(requests: Requests) extends CacheSlashCommandController(requests) {
+class SlashCommandsController(requests: Requests)
+    extends CacheSlashCommandController(requests) {
 
-  val ping: Command[ResolvedCommandInteraction, NotUsed] = Command.command("ping", "Check if the bot is alive") { _ =>
-    sendMessage("Pong")
-  }
+  val ping: Command[ResolvedCommandInteraction, NotUsed] =
+    Command.command("ping", "Check if the bot is alive") { _ =>
+      sendMessage("Pong")
+    }
 
   val echo: Command[ResolvedCommandInteraction, String] =
     Command
       .withParams(string("message", "The message to send back"))
-      .command("echo", "Echoes a message you send")(i => sendMessage(s"ECHO: ${i.args}"))
+      .command("echo", "Echoes a message you send")(i =>
+        sendMessage(s"ECHO: ${i.args}")
+      )
 
   val nudge: Command[ResolvedCommandInteraction, InteractionGuildMember] =
     Command
       .withParams(user("user", "The user to nudge"))
       .command("nudge", "Nudge someone") { i =>
-        sendMessage(s"Hey ${i.args.user.mention}", allowedMentions = Some(AllowedMention(users = Seq(i.args.user.id))))
+        sendMessage(
+          s"Hey ${i.args.user.mention}",
+          allowedMentions = Some(AllowedMention(users = Seq(i.args.user.id)))
+        )
       }
 
   val asyncTest: Command[ResolvedCommandInteraction, NotUsed] =
@@ -55,10 +66,17 @@ class SlashCommandsController(requests: Requests) extends CacheSlashCommandContr
 
   val asyncEditTest: Command[ResolvedCommandInteraction, (String, String)] =
     Command
-      .withParams(string("par1", "The first parameter") ~ string("par2", "The second parameter"))
+      .withParams(
+        string("par1", "The first parameter") ~ string(
+          "par2",
+          "The second parameter"
+        )
+      )
       .command("asyncEdit", "An async edit test command") { implicit i =>
         sendMessage("An instant message").doAsync { implicit token =>
-          editOriginalMessage(content = JsonSome("An instant message (with an edit)"))
+          editOriginalMessage(content =
+            JsonSome("An instant message (with an edit)")
+          )
         }
       }
 

@@ -39,7 +39,8 @@ import cats.syntax.all._
   * The basic structure for a help command. Only accepts commands that use
   * [[StructuredPrefixParser]].
   */
-abstract class HelpCommand(requests: Requests) extends CommandController(requests) {
+abstract class HelpCommand(requests: Requests)
+    extends CommandController(requests) {
   import requests.system.executionContext
 
   protected val registeredCommands: mutable.Set[HelpCommand.HelpCommandEntry] =
@@ -54,13 +55,21 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
             .semiflatMap(createSearchReply(m.message, query, _))
             .map(CreateMessage(m.textChannel.id, _))
         case Some(HelpCommand.Args.PageArgs(page)) =>
-          OptFuture.fromFuture(createReplyAll(m.message, page)).map(CreateMessage(m.textChannel.id, _))
+          OptFuture
+            .fromFuture(createReplyAll(m.message, page))
+            .map(CreateMessage(m.textChannel.id, _))
         case None =>
-          OptFuture.fromFuture(createReplyAll(m.message, 1)).map(CreateMessage(m.textChannel.id, _))
+          OptFuture
+            .fromFuture(createReplyAll(m.message, 1))
+            .map(CreateMessage(m.textChannel.id, _))
       }
     }
 
-  def registerCommand(prefix: StructuredPrefixParser, description: CommandDescription, done: Future[Done]): Unit = {
+  def registerCommand(
+      prefix: StructuredPrefixParser,
+      description: CommandDescription,
+      done: Future[Done]
+  ): Unit = {
     val entry = HelpCommand.HelpCommandEntry(prefix, description)
     registeredCommands.add(entry)
 
@@ -69,31 +78,51 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
 
   protected def filterCommands(
       query: String
-  )(implicit m: UserCommandMessage[_]): Future[Seq[HelpCommand.HelpCommandProcessedEntry]] = {
+  )(implicit
+      m: UserCommandMessage[_]
+  ): Future[Seq[HelpCommand.HelpCommandProcessedEntry]] = {
     Future
-      .traverse(registeredCommands)(entry => entry.prefixParser.canExecute(m.cache, m.message).map(entry -> _))
+      .traverse(registeredCommands)(entry =>
+        entry.prefixParser.canExecute(m.cache, m.message).map(entry -> _)
+      )
       .flatMap { entries =>
-        Future.traverse(entries.collect { case (entry, execute) if execute => entry })(entry =>
+        Future.traverse(entries.collect {
+          case (entry, execute) if execute => entry
+        })(entry =>
           entry.prefixParser.symbols(m.cache, m.message).map(entry -> _)
         )
       }
       .flatMap { withSymbols =>
-        val entriesWithSymbolMatch = withSymbols.filter(_._2.exists(query.startsWith))
+        val entriesWithSymbolMatch =
+          withSymbols.filter(_._2.exists(query.startsWith))
         Future.traverse(entriesWithSymbolMatch) { case (entry, symbols) =>
-          entry.prefixParser.aliases(m.cache, m.message).map(aliases => (entry, symbols, aliases))
+          entry.prefixParser
+            .aliases(m.cache, m.message)
+            .map(aliases => (entry, symbols, aliases))
         }
       }
       .flatMap { withAliases =>
-        val entriesWithAliasMatch = withAliases.filter { case (_, symbols, aliases) =>
-          val symbolsWithLength = symbols.map(_.length)
-          aliases.exists(alias => symbolsWithLength.exists(query.startsWith(alias, _)))
+        val entriesWithAliasMatch = withAliases.filter {
+          case (_, symbols, aliases) =>
+            val symbolsWithLength = symbols.map(_.length)
+            aliases.exists(alias =>
+              symbolsWithLength.exists(query.startsWith(alias, _))
+            )
         }
-        Future.traverse(entriesWithAliasMatch) { case (entry, symbols, aliases) =>
-          entry.prefixParser
-            .needsMention(m.cache, m.message)
-            .zipWith(entry.prefixParser.caseSensitive(m.cache, m.message)) { (needsMention, caseSensitive) =>
-              HelpCommand.HelpCommandProcessedEntry(needsMention, symbols, aliases, caseSensitive, entry.description)
-            }
+        Future.traverse(entriesWithAliasMatch) {
+          case (entry, symbols, aliases) =>
+            entry.prefixParser
+              .needsMention(m.cache, m.message)
+              .zipWith(entry.prefixParser.caseSensitive(m.cache, m.message)) {
+                (needsMention, caseSensitive) =>
+                  HelpCommand.HelpCommandProcessedEntry(
+                    needsMention,
+                    symbols,
+                    aliases,
+                    caseSensitive,
+                    entry.description
+                  )
+              }
 
         }
       }
@@ -110,8 +139,12 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
     * @return
     *   Data to create a message describing the search
     */
-  def createSearchReply(message: Message, query: String, matches: Seq[HelpCommand.HelpCommandProcessedEntry])(
-      implicit c: CacheSnapshot
+  def createSearchReply(
+      message: Message,
+      query: String,
+      matches: Seq[HelpCommand.HelpCommandProcessedEntry]
+  )(implicit
+      c: CacheSnapshot
   ): Future[CreateMessageData]
 
   /**
@@ -122,13 +155,18 @@ abstract class HelpCommand(requests: Requests) extends CommandController(request
     *   Data to create a message describing the commands tracked by this help
     *   command.
     */
-  def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): Future[CreateMessageData]
+  def createReplyAll(message: Message, page: Int)(implicit
+      c: CacheSnapshot
+  ): Future[CreateMessageData]
 
   def unknownCmd(command: String): Option[CreateMessageData] =
     Some(CreateMessageData(s"Unknown command $command"))
 }
 object HelpCommand {
-  case class HelpCommandEntry(prefixParser: StructuredPrefixParser, description: CommandDescription)
+  case class HelpCommandEntry(
+      prefixParser: StructuredPrefixParser,
+      description: CommandDescription
+  )
   case class HelpCommandProcessedEntry(
       needsMention: Boolean,
       symbols: Seq[String],
@@ -140,10 +178,13 @@ object HelpCommand {
   sealed trait Args
   object Args {
     case class CommandArgs(command: String) extends Args
-    case class PageArgs(page: Int)          extends Args
+    case class PageArgs(page: Int) extends Args
 
     //We write out the parser ourself as string parses any string
     implicit val parser: MessageParser[Args] =
-      MessageParser.intParser.map(PageArgs).orElse(MessageParser.stringParser.map(CommandArgs)).map(_.merge)
+      MessageParser.intParser
+        .map(PageArgs)
+        .orElse(MessageParser.stringParser.map(CommandArgs))
+        .map(_.merge)
   }
 }

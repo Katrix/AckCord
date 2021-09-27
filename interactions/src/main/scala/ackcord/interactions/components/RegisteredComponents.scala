@@ -4,8 +4,9 @@ import scala.collection.concurrent.TrieMap
 
 class RegisteredComponents {
 
-  private val handledComponents    = TrieMap.empty[String, ComponentHandler[_, _]]
-  private val handlerToIdentifiers = TrieMap.empty[ComponentHandler[_, _], Seq[String]]
+  private val handledComponents = TrieMap.empty[String, ComponentHandler[_, _]]
+  private val handlerToIdentifiers =
+    TrieMap.empty[ComponentHandler[_, _], Seq[String]]
 
   def addHandler(identifier: String, handler: ComponentHandler[_, _]): Unit = {
     if (handledComponents.put(identifier, handler).isEmpty) {
@@ -26,7 +27,9 @@ class RegisteredComponents {
       })
 
   def removeHandler(handler: ComponentHandler[_, _]): Unit =
-    handlerToIdentifiers.remove(handler).foreach(_.foreach(handledComponents.remove))
+    handlerToIdentifiers
+      .remove(handler)
+      .foreach(_.foreach(handledComponents.remove))
 
   def handlerForIdentifier(identifier: String): Option[ComponentHandler[_, _]] =
     handledComponents.get(identifier)

@@ -41,19 +41,21 @@ sealed trait ImageFormat {
 object ImageFormat {
   case object JPEG extends ImageFormat {
     override def extensions: Seq[String] = Seq("jpg", "jpeg")
-    override def base64Name: String      = "image/jpeg"
+    override def base64Name: String = "image/jpeg"
   }
   case object PNG extends ImageFormat {
     override def extensions: Seq[String] = Seq("png")
-    override def base64Name: String      = "image/png"
+    override def base64Name: String = "image/png"
   }
   case object WebP extends ImageFormat {
     override def extensions: Seq[String] = Seq("webp")
-    override def base64Name: String = throw new IllegalArgumentException("WepP is not supported as Base64 image data")
+    override def base64Name: String = throw new IllegalArgumentException(
+      "WepP is not supported as Base64 image data"
+    )
   }
   case object GIF extends ImageFormat {
     override def extensions: Seq[String] = Seq("gif")
-    override def base64Name: String      = "image/gif"
+    override def base64Name: String = "image/gif"
   }
 }
 
@@ -67,12 +69,14 @@ object ImageData {
 }
 
 sealed abstract class FormatType(val value: Int) extends IntEnumEntry
-object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[FormatType] {
+object FormatType
+    extends IntEnum[FormatType]
+    with IntCirceEnumWithUnknown[FormatType] {
   override def values: immutable.IndexedSeq[FormatType] = findValues
 
-  case object PNG            extends FormatType(1)
-  case object APNG           extends FormatType(2)
-  case object LOTTIE         extends FormatType(3)
+  case object PNG extends FormatType(1)
+  case object APNG extends FormatType(2)
+  case object LOTTIE extends FormatType(3)
   case class Unknown(i: Int) extends FormatType(i)
 
   override def createUnknown(value: Int): FormatType = Unknown(value)
@@ -80,44 +84,48 @@ object FormatType extends IntEnum[FormatType] with IntCirceEnumWithUnknown[Forma
 
 /** An enum of all the different message types. */
 sealed abstract class MessageType(val value: Int) extends IntEnumEntry
-object MessageType extends IntEnum[MessageType] with IntCirceEnumWithUnknown[MessageType] {
+object MessageType
+    extends IntEnum[MessageType]
+    with IntCirceEnumWithUnknown[MessageType] {
   override def values: immutable.IndexedSeq[MessageType] = findValues
 
-  case object Default                                 extends MessageType(0)
-  case object RecipientAdd                            extends MessageType(1)
-  case object RecipientRemove                         extends MessageType(2)
-  case object Call                                    extends MessageType(3)
-  case object ChannelNameChange                       extends MessageType(4)
-  case object ChannelIconChange                       extends MessageType(5)
-  case object ChannelPinnedMessage                    extends MessageType(6)
-  case object GuildMemberJoin                         extends MessageType(7)
-  case object UserPremiumGuildSubscription            extends MessageType(8)
-  case object UserPremiumGuildTier1                   extends MessageType(9)
-  case object UserPremiumGuildTier2                   extends MessageType(10)
-  case object UserPremiumGuildTier3                   extends MessageType(11)
-  case object ChannelFollowAdd                        extends MessageType(12)
-  case object GuildDiscoveryDisqualified              extends MessageType(14)
-  case object GuildDiscoveryRequalified               extends MessageType(15)
+  case object Default extends MessageType(0)
+  case object RecipientAdd extends MessageType(1)
+  case object RecipientRemove extends MessageType(2)
+  case object Call extends MessageType(3)
+  case object ChannelNameChange extends MessageType(4)
+  case object ChannelIconChange extends MessageType(5)
+  case object ChannelPinnedMessage extends MessageType(6)
+  case object GuildMemberJoin extends MessageType(7)
+  case object UserPremiumGuildSubscription extends MessageType(8)
+  case object UserPremiumGuildTier1 extends MessageType(9)
+  case object UserPremiumGuildTier2 extends MessageType(10)
+  case object UserPremiumGuildTier3 extends MessageType(11)
+  case object ChannelFollowAdd extends MessageType(12)
+  case object GuildDiscoveryDisqualified extends MessageType(14)
+  case object GuildDiscoveryRequalified extends MessageType(15)
   case object GuildDiscoveryGracePeriodInitialWarning extends MessageType(16)
-  case object GuildDiscoveryGracePeriodFinalWarning   extends MessageType(17)
-  case object ThreadCreated                           extends MessageType(18)
-  case object Reply                                   extends MessageType(19)
-  case object ApplicationCommand                      extends MessageType(20)
-  case object ThreadStarterMessage                    extends MessageType(21)
-  case object GuildInviteReminder                     extends MessageType(22)
-  case object ContextMenuCommand                      extends MessageType(23)
-  case class Unknown(i: Int)                          extends MessageType(i)
+  case object GuildDiscoveryGracePeriodFinalWarning extends MessageType(17)
+  case object ThreadCreated extends MessageType(18)
+  case object Reply extends MessageType(19)
+  case object ApplicationCommand extends MessageType(20)
+  case object ThreadStarterMessage extends MessageType(21)
+  case object GuildInviteReminder extends MessageType(22)
+  case object ContextMenuCommand extends MessageType(23)
+  case class Unknown(i: Int) extends MessageType(i)
 
   override def createUnknown(value: Int): MessageType = Unknown(value)
 }
 
 sealed abstract class PremiumType(val value: Int) extends IntEnumEntry
-object PremiumType extends IntEnum[PremiumType] with IntCirceEnumWithUnknown[PremiumType] {
+object PremiumType
+    extends IntEnum[PremiumType]
+    with IntCirceEnumWithUnknown[PremiumType] {
   override def values: immutable.IndexedSeq[PremiumType] = findValues
 
-  case object None           extends PremiumType(0)
-  case object NitroClassic   extends PremiumType(1)
-  case object Nitro          extends PremiumType(2)
+  case object None extends PremiumType(0)
+  case object NitroClassic extends PremiumType(1)
+  case object Nitro extends PremiumType(2)
   case class Unknown(i: Int) extends PremiumType(i)
 
   override def createUnknown(value: Int): PremiumType = Unknown(value)
@@ -151,8 +159,12 @@ sealed trait Author[A] {
   * @param avatar
   *   The webhook's avatar hash
   */
-case class WebhookAuthor(id: SnowflakeType[Webhook], username: String, discriminator: String, avatar: Option[String])
-    extends Author[Webhook] {
+case class WebhookAuthor(
+    id: SnowflakeType[Webhook],
+    username: String,
+    discriminator: String,
+    avatar: Option[String]
+) extends Author[Webhook] {
   override def isUser: Boolean = false
 }
 
@@ -247,13 +259,15 @@ case class Connection(
     visibility: ConnectionVisibility
 )
 sealed abstract class ConnectionVisibility(val value: Int) extends IntEnumEntry
-object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceEnumWithUnknown[ConnectionVisibility] {
+object ConnectionVisibility
+    extends IntEnum[ConnectionVisibility]
+    with IntCirceEnumWithUnknown[ConnectionVisibility] {
 
   override def values: immutable.IndexedSeq[ConnectionVisibility] = findValues
 
   //We use a different name here so that people don't accidentially switch up this and Option.None
   case object NoneVisibility extends ConnectionVisibility(0)
-  case object Everyone       extends ConnectionVisibility(1)
+  case object Everyone extends ConnectionVisibility(1)
 
   case class Unknown(i: Int) extends ConnectionVisibility(i)
 
@@ -261,13 +275,15 @@ object ConnectionVisibility extends IntEnum[ConnectionVisibility] with IntCirceE
 }
 
 sealed abstract class MessageActivityType(val value: Int) extends IntEnumEntry
-object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnumWithUnknown[MessageActivityType] {
+object MessageActivityType
+    extends IntEnum[MessageActivityType]
+    with IntCirceEnumWithUnknown[MessageActivityType] {
   override def values: immutable.IndexedSeq[MessageActivityType] = findValues
 
-  case object Join           extends MessageActivityType(1)
-  case object Spectate       extends MessageActivityType(2)
-  case object Listen         extends MessageActivityType(3)
-  case object JoinRequest    extends MessageActivityType(5)
+  case object Join extends MessageActivityType(1)
+  case object Spectate extends MessageActivityType(2)
+  case object Listen extends MessageActivityType(3)
+  case object JoinRequest extends MessageActivityType(5)
   case class Unknown(i: Int) extends MessageActivityType(i)
 
   override def createUnknown(value: Int): MessageActivityType = Unknown(value)
@@ -279,7 +295,10 @@ object MessageActivityType extends IntEnum[MessageActivityType] with IntCirceEnu
   * @param partyId
   *   Party id from rich presence.
   */
-case class MessageActivity(activityType: MessageActivityType, partyId: Option[String])
+case class MessageActivity(
+    activityType: MessageActivityType,
+    partyId: Option[String]
+)
 
 sealed trait Message {
 
@@ -384,13 +403,15 @@ sealed trait Message {
   def components: Seq[ActionRow]
 
   /** If the author is a user, their user id. */
-  def authorUserId: Option[UserId] = if (isAuthorUser) Some(UserId(authorId)) else None
+  def authorUserId: Option[UserId] =
+    if (isAuthorUser) Some(UserId(authorId)) else None
 
   /**
     * Gets the author of this message, ignoring the case where the author might
     * be a webhook.
     */
-  def authorUser(implicit c: CacheSnapshot): Option[User] = authorUserId.fold(None: Option[User])(c.getUser)
+  def authorUser(implicit c: CacheSnapshot): Option[User] =
+    authorUserId.fold(None: Option[User])(c.getUser)
 
   /** Expands all mentions in the message. */
   def formatMentions(implicit c: CacheSnapshot): String
@@ -444,19 +465,26 @@ case class SparseMessage(
   override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] =
     for {
       userId <- authorUserId
-      g      <- guild
+      g <- guild
       member <- g.members.get(userId)
     } yield member
 
   override def formatMentions(implicit c: CacheSnapshot): String = {
     val userList = mentions.toList.flatMap(_.resolve)
 
-    userList.foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
+    userList.foldRight(content)((user, content) =>
+      content.replace(user.mention, s"@${user.username}")
+    )
   }
 
-  override private[ackcord] def withReactions(reactions: Seq[Reaction]): SparseMessage = copy(reactions = reactions)
+  override private[ackcord] def withReactions(
+      reactions: Seq[Reaction]
+  ): SparseMessage = copy(reactions = reactions)
 
-  override def updateButton(identifier: String, f: TextButton => Button): SparseMessage =
+  override def updateButton(
+      identifier: String,
+      f: TextButton => Button
+  ): SparseMessage =
     copy(components = components.map(_.updateButton(identifier, f)))
 }
 
@@ -511,7 +539,8 @@ case class GuildGatewayMessage(
   override def guild(implicit c: CacheSnapshot): Option[GatewayGuild] =
     c.getGuild(guildId)
 
-  override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] = member
+  override def guildMember(implicit c: CacheSnapshot): Option[GuildMember] =
+    member
 
   private val channelRegex = """<#(\d+)>""".r
 
@@ -527,26 +556,41 @@ case class GuildGatewayMessage(
   }
 
   override def formatMentions(implicit c: CacheSnapshot): String = {
-    val userList   = mentions.toList.flatMap(_.resolve)
-    val roleList   = mentionRoles.toList.flatMap(_.resolve)
-    val optGuildId = channelId.resolve.collect { case channel: GuildChannel => channel.guildId }
+    val userList = mentions.toList.flatMap(_.resolve)
+    val roleList = mentionRoles.toList.flatMap(_.resolve)
+    val optGuildId = channelId.resolve.collect { case channel: GuildChannel =>
+      channel.guildId
+    }
     val channelList =
-      optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId => channelMentions.toList.map(_.resolve(guildId)))
+      optGuildId.fold[List[Option[GuildChannel]]](Nil)(guildId =>
+        channelMentions.toList.map(_.resolve(guildId))
+      )
 
     val withUsers = userList
-      .foldRight(content)((user, content) => content.replace(user.mention, s"@${user.username}"))
+      .foldRight(content)((user, content) =>
+        content.replace(user.mention, s"@${user.username}")
+      )
     val withRoles = roleList
-      .foldRight(withUsers)((role, content) => content.replace(role.mention, s"@${role.name}"))
+      .foldRight(withUsers)((role, content) =>
+        content.replace(role.mention, s"@${role.name}")
+      )
     val withChannels = channelList.flatten
-      .foldRight(withRoles)((channel, content) => content.replace(channel.mention, s"@${channel.name}"))
+      .foldRight(withRoles)((channel, content) =>
+        content.replace(channel.mention, s"@${channel.name}")
+      )
 
     withChannels
   }
 
-  override private[ackcord] def withReactions(reactions: Seq[Reaction]): GuildGatewayMessage =
+  override private[ackcord] def withReactions(
+      reactions: Seq[Reaction]
+  ): GuildGatewayMessage =
     copy(reactions = reactions)
 
-  override def updateButton(identifier: String, f: TextButton => Button): GuildGatewayMessage =
+  override def updateButton(
+      identifier: String,
+      f: TextButton => Button
+  ): GuildGatewayMessage =
     copy(components = components.map(_.updateButton(identifier, f)))
 }
 
@@ -593,7 +637,11 @@ case class Reaction(count: Int, me: Boolean, emoji: PartialEmoji)
   * @param name
   *   The name of the emoji.
   */
-case class PartialEmoji(id: Option[EmojiId] = None, name: Option[String] = None, animated: Option[Boolean] = None) {
+case class PartialEmoji(
+    id: Option[EmojiId] = None,
+    name: Option[String] = None,
+    animated: Option[Boolean] = None
+) {
 
   /** Returns a string representation of this emoji for use in requests. */
   def asString: String = (id, name) match {
@@ -664,15 +712,17 @@ case class ReceivedEmbed(
 }
 
 sealed abstract class EmbedType(val value: String) extends StringEnumEntry
-object EmbedType extends StringEnum[EmbedType] with StringCirceEnumWithUnknown[EmbedType] {
+object EmbedType
+    extends StringEnum[EmbedType]
+    with StringCirceEnumWithUnknown[EmbedType] {
   override def values: immutable.IndexedSeq[EmbedType] = findValues
 
-  case object Rich                extends EmbedType("rich")
-  case object Image               extends EmbedType("image")
-  case object Video               extends EmbedType("video")
-  case object GifV                extends EmbedType("gifv")
-  case object Article             extends EmbedType("article")
-  case object Link                extends EmbedType("link")
+  case object Rich extends EmbedType("rich")
+  case object Image extends EmbedType("image")
+  case object Video extends EmbedType("video")
+  case object GifV extends EmbedType("gifv")
+  case object Article extends EmbedType("article")
+  case object Link extends EmbedType("link")
   case class Unknown(str: String) extends EmbedType(str)
 
   override def createUnknown(value: String): EmbedType = Unknown(value)
@@ -696,7 +746,8 @@ case class ReceivedEmbedThumbnail(
     width: Option[Int]
 ) {
 
-  def toOutgoing: Option[OutgoingEmbedThumbnail] = url.map(OutgoingEmbedThumbnail)
+  def toOutgoing: Option[OutgoingEmbedThumbnail] =
+    url.map(OutgoingEmbedThumbnail)
 }
 
 /**
@@ -710,7 +761,12 @@ case class ReceivedEmbedThumbnail(
   * @param width
   *   The width of the video.
   */
-case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+case class ReceivedEmbedVideo(
+    url: Option[String],
+    proxyUrl: Option[String],
+    height: Option[Int],
+    width: Option[Int]
+) {
   def toOutgoing: Option[OutgoingEmbedVideo] = url.map(OutgoingEmbedVideo)
 }
 
@@ -725,7 +781,12 @@ case class ReceivedEmbedVideo(url: Option[String], proxyUrl: Option[String], hei
   * @param width
   *   The width of the image.
   */
-case class ReceivedEmbedImage(url: Option[String], proxyUrl: Option[String], height: Option[Int], width: Option[Int]) {
+case class ReceivedEmbedImage(
+    url: Option[String],
+    proxyUrl: Option[String],
+    height: Option[Int],
+    width: Option[Int]
+) {
   def toOutgoing: Option[OutgoingEmbedImage] = url.map(OutgoingEmbedImage)
 }
 
@@ -756,7 +817,8 @@ case class ReceivedEmbedAuthor(
     proxyIconUrl: Option[String]
 ) {
 
-  def toOutgoing: Option[OutgoingEmbedAuthor] = name.map(n => OutgoingEmbedAuthor(n, url, iconUrl))
+  def toOutgoing: Option[OutgoingEmbedAuthor] =
+    name.map(n => OutgoingEmbedAuthor(n, url, iconUrl))
 }
 
 /**
@@ -768,7 +830,11 @@ case class ReceivedEmbedAuthor(
   * @param proxyIconUrl
   *   A proxy url for the footer.
   */
-case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconUrl: Option[String]) {
+case class ReceivedEmbedFooter(
+    text: String,
+    iconUrl: Option[String],
+    proxyIconUrl: Option[String]
+) {
   def toOutgoing: OutgoingEmbedFooter = OutgoingEmbedFooter(text, iconUrl)
 }
 
@@ -781,9 +847,19 @@ case class ReceivedEmbedFooter(text: String, iconUrl: Option[String], proxyIconU
   * @param inline
   *   If the field is rendered inline.
   */
-case class EmbedField(name: String, value: String, `inline`: Option[Boolean] = None) {
-  require(name.length <= 256, "A field name of an embed can't be more than 256 characters")
-  require(value.length <= 1024, "A field value of an embed can't be more than 1024 characters")
+case class EmbedField(
+    name: String,
+    value: String,
+    `inline`: Option[Boolean] = None
+) {
+  require(
+    name.length <= 256,
+    "A field name of an embed can't be more than 256 characters"
+  )
+  require(
+    value.length <= 1024,
+    "A field value of an embed can't be more than 1024 characters"
+  )
 }
 
 /**
@@ -852,18 +928,30 @@ case class OutgoingEmbed(
     author: Option[OutgoingEmbedAuthor] = None,
     fields: Seq[EmbedField] = Seq.empty
 ) {
-  require(title.forall(_.length <= 256), "The title of an embed can't be longer than 256 characters")
-  require(description.forall(_.length <= 4096), "The description of an embed can't be longer than 2048 characters")
-  require(fields.lengthCompare(25) <= 0, "An embed can't have more than 25 fields")
-  require(totalCharAmount <= 6000, "An embed can't have more than 6000 characters in total")
+  require(
+    title.forall(_.length <= 256),
+    "The title of an embed can't be longer than 256 characters"
+  )
+  require(
+    description.forall(_.length <= 4096),
+    "The description of an embed can't be longer than 2048 characters"
+  )
+  require(
+    fields.lengthCompare(25) <= 0,
+    "An embed can't have more than 25 fields"
+  )
+  require(
+    totalCharAmount <= 6000,
+    "An embed can't have more than 6000 characters in total"
+  )
 
   /** The total amount of characters in this embed so far. */
   def totalCharAmount: Int = {
-    val fromTitle       = title.fold(0)(_.length)
+    val fromTitle = title.fold(0)(_.length)
     val fromDescription = description.fold(0)(_.length)
-    val fromFooter      = footer.fold(0)(_.text.length)
-    val fromAuthor      = author.fold(0)(_.name.length)
-    val fromFields      = fields.map(f => f.name.length + f.value.length).sum
+    val fromFooter = footer.fold(0)(_.text.length)
+    val fromAuthor = author.fold(0)(_.name.length)
+    val fromFields = fields.map(f => f.name.length + f.value.length).sum
 
     fromTitle + fromDescription + fromFooter + fromAuthor + fromFields
   }
@@ -899,8 +987,15 @@ case class OutgoingEmbedVideo(url: String)
   * @param iconUrl
   *   The icon to show besides the author.
   */
-case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl: Option[String] = None) {
-  require(name.length <= 256, "The author name of an embed can't have more than 256 characters")
+case class OutgoingEmbedAuthor(
+    name: String,
+    url: Option[String] = None,
+    iconUrl: Option[String] = None
+) {
+  require(
+    name.length <= 256,
+    "The author name of an embed can't have more than 256 characters"
+  )
 }
 
 /**
@@ -911,7 +1006,10 @@ case class OutgoingEmbedAuthor(name: String, url: Option[String] = None, iconUrl
   *   The icon url of the footer.
   */
 case class OutgoingEmbedFooter(text: String, iconUrl: Option[String] = None) {
-  require(text.length <= 2048, "The footer text of an embed can't have more that 2048 characters")
+  require(
+    text.length <= 2048,
+    "The footer text of an embed can't have more that 2048 characters"
+  )
 }
 
 /**
@@ -1000,20 +1098,27 @@ case class AllowedMention(
 object AllowedMention {
   val none: AllowedMention = AllowedMention()
   val all: AllowedMention = AllowedMention(
-    parse = Seq(AllowedMentionTypes.Roles, AllowedMentionTypes.Users, AllowedMentionTypes.Everyone)
+    parse = Seq(
+      AllowedMentionTypes.Roles,
+      AllowedMentionTypes.Users,
+      AllowedMentionTypes.Everyone
+    )
   )
 }
 
-sealed abstract class AllowedMentionTypes(val value: String) extends StringEnumEntry
+sealed abstract class AllowedMentionTypes(val value: String)
+    extends StringEnumEntry
 object AllowedMentionTypes
     extends StringEnum[AllowedMentionTypes]
     with StringCirceEnumWithUnknown[AllowedMentionTypes] {
   override def values: immutable.IndexedSeq[AllowedMentionTypes] = findValues
 
-  case object Roles               extends AllowedMentionTypes("roles")
-  case object Users               extends AllowedMentionTypes("users")
-  case object Everyone            extends AllowedMentionTypes("everyone")
+  case object Roles extends AllowedMentionTypes("roles")
+  case object Users extends AllowedMentionTypes("users")
+  case object Everyone extends AllowedMentionTypes("everyone")
   case class Unknown(str: String) extends AllowedMentionTypes(str)
 
-  override def createUnknown(value: String): AllowedMentionTypes = Unknown(value)
+  override def createUnknown(value: String): AllowedMentionTypes = Unknown(
+    value
+  )
 }

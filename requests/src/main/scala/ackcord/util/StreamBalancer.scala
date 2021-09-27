@@ -29,11 +29,14 @@ import akka.stream.{FlowShape, Graph}
 
 object StreamBalancer {
 
-  def balanceMerge[I, O](parallelism: Int, flow: Graph[FlowShape[I, O], NotUsed]): Flow[I, O, NotUsed] = {
+  def balanceMerge[I, O](
+      parallelism: Int,
+      flow: Graph[FlowShape[I, O], NotUsed]
+  ): Flow[I, O, NotUsed] = {
     Flow.fromGraph(GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
       val balance = builder.add(Balance[I](parallelism))
-      val merge   = builder.add(Merge[O](parallelism))
+      val merge = builder.add(Merge[O](parallelism))
 
       for (i <- 0 until parallelism) {
         balance.out(i) ~> flow.async ~> merge.in(i)

@@ -63,7 +63,8 @@ object VoiceUDPHandler {
                   ssrc,
                   serverId,
                   userId,
-                  Source.queue[Option[ByteString]](0, OverflowStrategy.dropBuffer)
+                  Source
+                    .queue[Option[ByteString]](0, OverflowStrategy.dropBuffer)
                 )
                 .watchTermination()(Keep.both)
             )(Keep.right)
@@ -110,8 +111,10 @@ object VoiceUDPHandler {
 
   case object Shutdown extends Command
 
-  private case class SendExeption(e: Throwable)                       extends Command
-  private case object ConnectionDied                                  extends Command
-  private case class IPDiscoveryResult(foundIP: VoiceUDPFlow.FoundIP) extends Command
-  private[voice] case class SetSecretKey(key: Option[ByteString])     extends Command
+  private case class SendExeption(e: Throwable) extends Command
+  private case object ConnectionDied extends Command
+  private case class IPDiscoveryResult(foundIP: VoiceUDPFlow.FoundIP)
+      extends Command
+  private[voice] case class SetSecretKey(key: Option[ByteString])
+      extends Command
 }

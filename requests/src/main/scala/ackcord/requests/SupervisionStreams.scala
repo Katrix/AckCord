@@ -31,7 +31,9 @@ import akka.stream.{ActorAttributes, Attributes, Supervision}
 
 object SupervisionStreams {
 
-  def addLogAndContinueFunction[G](addAtributes: Attributes => G)(implicit system: ActorSystem[Nothing]): G =
+  def addLogAndContinueFunction[G](
+      addAtributes: Attributes => G
+  )(implicit system: ActorSystem[Nothing]): G =
     addAtributes(ActorAttributes.supervisionStrategy {
       case _: RetryFailedRequestException[_] => Supervision.Stop
       case e =>
@@ -39,10 +41,14 @@ object SupervisionStreams {
         Supervision.Resume
     })
 
-  def logAndContinue[M](graph: RunnableGraph[M])(implicit system: ActorSystem[Nothing]): RunnableGraph[M] =
+  def logAndContinue[M](graph: RunnableGraph[M])(implicit
+      system: ActorSystem[Nothing]
+  ): RunnableGraph[M] =
     addLogAndContinueFunction(graph.addAttributes)
 
-  def logAndContinue[Out, Mat](source: Source[Out, Mat])(implicit system: ActorSystem[Nothing]): Source[Out, Mat] =
+  def logAndContinue[Out, Mat](source: Source[Out, Mat])(implicit
+      system: ActorSystem[Nothing]
+  ): Source[Out, Mat] =
     addLogAndContinueFunction(source.addAttributes)
 
   def logAndContinue[In, Out, Mat](
@@ -50,6 +56,8 @@ object SupervisionStreams {
   )(implicit system: ActorSystem[Nothing]): Flow[In, Out, Mat] =
     addLogAndContinueFunction(flow.addAttributes)
 
-  def logAndContinue[In, Mat](sink: Sink[In, Mat])(implicit system: ActorSystem[Nothing]): Sink[In, Mat] =
+  def logAndContinue[In, Mat](sink: Sink[In, Mat])(implicit
+      system: ActorSystem[Nothing]
+  ): Sink[In, Mat] =
     addLogAndContinueFunction(sink.addAttributes)
 }

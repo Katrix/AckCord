@@ -72,7 +72,9 @@ case class Webhook(
 ) extends GetGuildOpt {
 
   /** Resolve the channel of this webhook as a guild channel */
-  def textGuildChannel(implicit snapshot: CacheSnapshot): Option[TextGuildChannel] =
+  def textGuildChannel(implicit
+      snapshot: CacheSnapshot
+  ): Option[TextGuildChannel] =
     guildId
       .flatMap(snapshot.getGuildChannel(_, channelId))
       .orElse(snapshot.getGuildChannel(channelId))
@@ -83,13 +85,15 @@ case class WebhookSourceGuild(id: GuildId, name: String, icon: Option[String])
 case class WebhookSourceChannel(id: GuildId, name: String)
 
 sealed abstract class WebhookType(val value: Int) extends IntEnumEntry
-object WebhookType extends IntEnum[WebhookType] with IntCirceEnumWithUnknown[WebhookType] {
+object WebhookType
+    extends IntEnum[WebhookType]
+    with IntCirceEnumWithUnknown[WebhookType] {
   override def values: immutable.IndexedSeq[WebhookType] = findValues
 
-  case object Incomming       extends WebhookType(1)
+  case object Incomming extends WebhookType(1)
   case object ChannelFollower extends WebhookType(2)
-  case object Application     extends WebhookType(3)
-  case class Unknown(i: Int)  extends WebhookType(i)
+  case object Application extends WebhookType(3)
+  case class Unknown(i: Int) extends WebhookType(i)
 
   override def createUnknown(value: Int): WebhookType = Unknown(value)
 }

@@ -33,14 +33,18 @@ import akka.stream.scaladsl.Flow
   * @tparam Mat
   *   The materialized result of creating this command
   */
-case class ComplexCommand[A, Mat](parser: MessageParser[A], flow: Flow[CommandMessage[A], CommandError, Mat]) {
+case class ComplexCommand[A, Mat](
+    parser: MessageParser[A],
+    flow: Flow[CommandMessage[A], CommandError, Mat]
+) {
 
   /**
     * Converts this command into a named command.
     * @param Parser
     *   The prefix parser to use
     */
-  def toNamed(Parser: StructuredPrefixParser): NamedComplexCommand[A, Mat] = NamedComplexCommand(this, Parser)
+  def toNamed(Parser: StructuredPrefixParser): NamedComplexCommand[A, Mat] =
+    NamedComplexCommand(this, Parser)
 }
 
 /**
@@ -56,7 +60,9 @@ case class NamedComplexCommand[A, Mat](
     prefixParser: StructuredPrefixParser
 ) {
 
-  def toDescribed(description: CommandDescription): NamedDescribedComplexCommand[A, Mat] =
+  def toDescribed(
+      description: CommandDescription
+  ): NamedDescribedComplexCommand[A, Mat] =
     NamedDescribedComplexCommand(command, prefixParser, description)
 }
 

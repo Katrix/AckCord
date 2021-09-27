@@ -25,4 +25,7 @@
 package ackcord.gateway
 
 class GatewayRatelimitedException(cause: Throwable)
-    extends Exception("Be careful about the amount of payloads you send to the gateway", cause)
+    extends Exception(
+      "Be careful about the amount of payloads you send to the gateway",
+      cause
+    )

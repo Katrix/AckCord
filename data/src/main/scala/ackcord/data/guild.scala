@@ -42,7 +42,9 @@ sealed trait UnknownStatusGuild {
 
 /** The different verification levels that can be used for a guild. */
 sealed abstract class VerificationLevel(val value: Int) extends IntEnumEntry
-object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnumWithUnknown[VerificationLevel] {
+object VerificationLevel
+    extends IntEnum[VerificationLevel]
+    with IntCirceEnumWithUnknown[VerificationLevel] {
 
   /** Unrestricted access */
   case object NoVerification extends VerificationLevel(0)
@@ -68,7 +70,9 @@ object VerificationLevel extends IntEnum[VerificationLevel] with IntCirceEnumWit
 
 /** The different notification levels that can be used for a guild */
 sealed abstract class NotificationLevel(val value: Int) extends IntEnumEntry
-object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnumWithUnknown[NotificationLevel] {
+object NotificationLevel
+    extends IntEnum[NotificationLevel]
+    with IntCirceEnumWithUnknown[NotificationLevel] {
 
   /** All messages trigger a notification */
   case object AllMessages extends NotificationLevel(0)
@@ -85,7 +89,9 @@ object NotificationLevel extends IntEnum[NotificationLevel] with IntCirceEnumWit
 
 /** The different explicit content filter levels to use for a guild. */
 sealed abstract class FilterLevel(val value: Int) extends IntEnumEntry
-object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnumWithUnknown[FilterLevel] {
+object FilterLevel
+    extends IntEnum[FilterLevel]
+    with IntCirceEnumWithUnknown[FilterLevel] {
 
   /** No filtering is done. */
   case object Disabled extends FilterLevel(0)
@@ -104,24 +110,28 @@ object FilterLevel extends IntEnum[FilterLevel] with IntCirceEnumWithUnknown[Fil
 }
 
 sealed abstract class MFALevel(val value: Int) extends IntEnumEntry
-object MFALevel extends IntEnum[MFALevel] with IntCirceEnumWithUnknown[MFALevel] {
+object MFALevel
+    extends IntEnum[MFALevel]
+    with IntCirceEnumWithUnknown[MFALevel] {
   override def values: immutable.IndexedSeq[MFALevel] = findValues
 
-  case object NoneMFA        extends MFALevel(0)
-  case object Elevated       extends MFALevel(1)
+  case object NoneMFA extends MFALevel(0)
+  case object Elevated extends MFALevel(1)
   case class Unknown(i: Int) extends MFALevel(i)
 
   override def createUnknown(value: Int): MFALevel = Unknown(value)
 }
 
 sealed abstract class PremiumTier(val value: Int) extends IntEnumEntry
-object PremiumTier extends IntEnum[PremiumTier] with IntCirceEnumWithUnknown[PremiumTier] {
+object PremiumTier
+    extends IntEnum[PremiumTier]
+    with IntCirceEnumWithUnknown[PremiumTier] {
   override def values: immutable.IndexedSeq[PremiumTier] = findValues
 
-  case object None           extends PremiumTier(0)
-  case object Tier1          extends PremiumTier(1)
-  case object Tier2          extends PremiumTier(2)
-  case object Tier3          extends PremiumTier(3)
+  case object None extends PremiumTier(0)
+  case object Tier1 extends PremiumTier(1)
+  case object Tier2 extends PremiumTier(2)
+  case object Tier3 extends PremiumTier(3)
   case class Unknown(i: Int) extends PremiumTier(i)
 
   override def createUnknown(value: Int): PremiumTier = Unknown(value)
@@ -269,7 +279,9 @@ sealed trait Guild extends UnknownStatusGuild {
   def nsfwLevel: NSFWLevel
 
   /** Get the everyone role in this guild. */
-  def everyoneRole: Role = roles(RoleId(id)) //The everyone role should always be present
+  def everyoneRole: Role = roles(
+    RoleId(id)
+  ) //The everyone role should always be present
 
   /** Get the everyone mention for this guild. */
   def mentionEveryone: String = "@everyone"
@@ -346,7 +358,9 @@ case class RequestsGuild(
   ): GatewayGuild = {
     val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
     val threads =
-      rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect { case thread: ThreadGuildChannel => thread }
+      rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
+        case thread: ThreadGuildChannel => thread
+      }
 
     GatewayGuild(
       id,
@@ -375,7 +389,9 @@ case class RequestsGuild(
       large,
       memberCount,
       SnowflakeMap.withKey(voiceStates)(_.userId),
-      SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+      SnowflakeMap.from(
+        members.map(mem => mem.user.id -> mem.toGuildMember(id))
+      ),
       SnowflakeMap.withKey(channels)(_.id),
       SnowflakeMap.withKey(threads)(_.id),
       SnowflakeMap.from(presences.map(p => p.user.id -> p.toPresence)),
@@ -444,7 +460,10 @@ case class GatewayGuild(
     joinedAt: OffsetDateTime,
     large: Boolean,
     memberCount: Int,
-    voiceStates: SnowflakeMap[User, VoiceState], //guildId is absent in those received in GuildCreate
+    voiceStates: SnowflakeMap[
+      User,
+      VoiceState
+    ], //guildId is absent in those received in GuildCreate
     members: SnowflakeMap[User, GuildMember],
     channels: SnowflakeMap[GuildChannel, GuildChannel],
     threads: SnowflakeMap[ThreadGuildChannel, ThreadGuildChannel],
@@ -465,17 +484,22 @@ case class GatewayGuild(
 
   /** Get the AFK channel of this guild. */
   def afkChannel: Option[NormalVoiceGuildChannel] =
-    afkChannelId.flatMap(channels.get).collect { case ch: NormalVoiceGuildChannel => ch }
+    afkChannelId.flatMap(channels.get).collect {
+      case ch: NormalVoiceGuildChannel => ch
+    }
 
   /** Get the widget channel of this guild. */
-  def widgetChannel: Option[GuildChannel] = widgetChannelId.flatMap(channels.get)
+  def widgetChannel: Option[GuildChannel] =
+    widgetChannelId.flatMap(channels.get)
 
   /**
     * Get the system channel of this guild. This is the first channel new users
     * see when they join the guild.
     */
   def systemChannel: Option[TextGuildChannel] =
-    systemChannelId.flatMap(channels.get).collect { case ch: TextGuildChannel => ch }
+    systemChannelId.flatMap(channels.get).collect { case ch: TextGuildChannel =>
+      ch
+    }
 }
 
 /**
@@ -507,12 +531,14 @@ case class WelcomeScreenChannel(
 )
 
 sealed abstract class NSFWLevel(val value: Int) extends IntEnumEntry
-object NSFWLevel extends IntEnum[NSFWLevel] with IntCirceEnumWithUnknown[NSFWLevel] {
+object NSFWLevel
+    extends IntEnum[NSFWLevel]
+    with IntCirceEnumWithUnknown[NSFWLevel] {
   override def values: immutable.IndexedSeq[NSFWLevel] = findValues
 
-  case object Default       extends NSFWLevel(0)
-  case object Explicit      extends NSFWLevel(1)
-  case object Safe          extends NSFWLevel(2)
+  case object Default extends NSFWLevel(0)
+  case object Explicit extends NSFWLevel(1)
+  case object Safe extends NSFWLevel(2)
   case object AgeRestricted extends NSFWLevel(3)
 
   case class Unknown(override val value: Int) extends NSFWLevel(value)
@@ -527,33 +553,41 @@ object NSFWLevel extends IntEnum[NSFWLevel] with IntCirceEnumWithUnknown[NSFWLev
   * @param unavailable
   *   If the guild is unavailable because of an outage.
   */
-case class UnavailableGuild(id: GuildId, unavailable: Option[Boolean]) extends UnknownStatusGuild
+case class UnavailableGuild(id: GuildId, unavailable: Option[Boolean])
+    extends UnknownStatusGuild
 
 sealed abstract class GuildFeature(val value: String) extends StringEnumEntry
-object GuildFeature extends StringEnum[GuildFeature] with StringCirceEnumWithUnknown[GuildFeature] {
+object GuildFeature
+    extends StringEnum[GuildFeature]
+    with StringCirceEnumWithUnknown[GuildFeature] {
   override def values: immutable.IndexedSeq[GuildFeature] = findValues
 
-  case object AnimatedIcon                  extends GuildFeature("ANIMATED_ICON")
-  case object Banner                        extends GuildFeature("BANNER")
-  case object Commerce                      extends GuildFeature("COMMERCE")
-  case object Community                     extends GuildFeature("COMMUNITY")
-  case object Discoverable                  extends GuildFeature("DISCOVERABLE")
-  case object Featureable                   extends GuildFeature("FEATURABLE")
-  case object InviteSplash                  extends GuildFeature("INVITE_SPLASH")
-  case object MemberVerificationGateEnabled extends GuildFeature("MEMBER_VERIFICATION_GATE_ENABLED")
-  case object News                          extends GuildFeature("NEWS")
-  case object Partnered                     extends GuildFeature("PARTNERED")
-  case object PreviewEnabled                extends GuildFeature("PREVIEW_ENABLED")
-  case object VanityUrl                     extends GuildFeature("VANITY_URL")
-  case object Verified                      extends GuildFeature("VERIFIED")
-  case object VipRegions                    extends GuildFeature("VIP_REGIONS")
-  case object WelcomeScreenEnabled          extends GuildFeature("TICKETED_EVENTS_ENABLED")
-  case object TicketedEventsEnabled         extends GuildFeature("WELCOME_SCREEN_ENABLED")
-  case object MonetizationEnabled           extends GuildFeature("MONETIZATION_ENABLED")
-  case object MoreStickers                  extends GuildFeature("MORE_STICKERS")
-  case object ThreeDayThreadArchive         extends GuildFeature("THREE_DAY_THREAD_ARCHIVE")
-  case object SevenDayThreadArchive         extends GuildFeature("SEVEN_DAY_THREAD_ARCHIVE")
-  case object PrivateThreads                extends GuildFeature("PRIVATE_THREADS")
+  case object AnimatedIcon extends GuildFeature("ANIMATED_ICON")
+  case object Banner extends GuildFeature("BANNER")
+  case object Commerce extends GuildFeature("COMMERCE")
+  case object Community extends GuildFeature("COMMUNITY")
+  case object Discoverable extends GuildFeature("DISCOVERABLE")
+  case object Featureable extends GuildFeature("FEATURABLE")
+  case object InviteSplash extends GuildFeature("INVITE_SPLASH")
+  case object MemberVerificationGateEnabled
+      extends GuildFeature("MEMBER_VERIFICATION_GATE_ENABLED")
+  case object News extends GuildFeature("NEWS")
+  case object Partnered extends GuildFeature("PARTNERED")
+  case object PreviewEnabled extends GuildFeature("PREVIEW_ENABLED")
+  case object VanityUrl extends GuildFeature("VANITY_URL")
+  case object Verified extends GuildFeature("VERIFIED")
+  case object VipRegions extends GuildFeature("VIP_REGIONS")
+  case object WelcomeScreenEnabled
+      extends GuildFeature("TICKETED_EVENTS_ENABLED")
+  case object TicketedEventsEnabled
+      extends GuildFeature("WELCOME_SCREEN_ENABLED")
+  case object MonetizationEnabled extends GuildFeature("MONETIZATION_ENABLED")
+  case object MoreStickers extends GuildFeature("MORE_STICKERS")
+  case object ThreeDayThreadArchive
+      extends GuildFeature("THREE_DAY_THREAD_ARCHIVE")
+  case object SevenDayThreadArchive
+      extends GuildFeature("SEVEN_DAY_THREAD_ARCHIVE")
+  case object PrivateThreads extends GuildFeature("PRIVATE_THREADS")
 
   case class Unknown(str: String) extends GuildFeature(str)
 
@@ -599,11 +633,14 @@ case class GuildMember(
     if (guild.ownerId == userId) Permission.All
     else {
       val userPermissions = roleIds.flatMap(guild.roles.get).map(_.permissions)
-      val everyonePerms   = guild.everyoneRole.permissions
+      val everyonePerms = guild.everyoneRole.permissions
 
-      val guildPermissions = everyonePerms.addPermissions(Permission(userPermissions: _*))
+      val guildPermissions =
+        everyonePerms.addPermissions(Permission(userPermissions: _*))
 
-      if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All else guildPermissions
+      if (guildPermissions.hasPermissions(Permission.Administrator))
+        Permission.All
+      else guildPermissions
     }
   }
 
@@ -613,23 +650,26 @@ case class GuildMember(
       guildPermissions: Permission,
       channelId: GuildChannelId
   ): Permission = {
-    if (guildPermissions.hasPermissions(Permission.Administrator)) Permission.All
+    if (guildPermissions.hasPermissions(Permission.Administrator))
+      Permission.All
     else {
       val res = guild.channels.get(channelId).map { channel =>
         if (guild.ownerId == userId) Permission.All
         else {
-          val everyoneOverwrite = channel.permissionOverwrites.get(guild.everyoneRole.id)
-          val everyoneAllow     = everyoneOverwrite.map(_.allow)
-          val everyoneDeny      = everyoneOverwrite.map(_.deny)
+          val everyoneOverwrite =
+            channel.permissionOverwrites.get(guild.everyoneRole.id)
+          val everyoneAllow = everyoneOverwrite.map(_.allow)
+          val everyoneDeny = everyoneOverwrite.map(_.deny)
 
-          val rolesForUser   = roleIds.flatMap(guild.roles.get)
-          val roleOverwrites = rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
-          val roleAllow      = Permission(roleOverwrites.map(_.allow): _*)
-          val roleDeny       = Permission(roleOverwrites.map(_.deny): _*)
+          val rolesForUser = roleIds.flatMap(guild.roles.get)
+          val roleOverwrites =
+            rolesForUser.flatMap(r => channel.permissionOverwrites.get(r.id))
+          val roleAllow = Permission(roleOverwrites.map(_.allow): _*)
+          val roleDeny = Permission(roleOverwrites.map(_.deny): _*)
 
           val userOverwrite = channel.permissionOverwrites.get(userId)
-          val userAllow     = userOverwrite.map(_.allow)
-          val userDeny      = userOverwrite.map(_.deny)
+          val userAllow = userOverwrite.map(_.allow)
+          val userDeny = userOverwrite.map(_.deny)
 
           def mapOrElse(
               permission: Permission,
@@ -638,14 +678,23 @@ case class GuildMember(
           ): Permission =
             opt.map(f(permission, _)).getOrElse(permission)
 
-          def addOrElse(opt: Option[Permission])(permission: Permission): Permission =
+          def addOrElse(
+              opt: Option[Permission]
+          )(permission: Permission): Permission =
             mapOrElse(permission, opt, _.addPermissions(_))
-          def removeOrElse(opt: Option[Permission])(permission: Permission): Permission =
+          def removeOrElse(
+              opt: Option[Permission]
+          )(permission: Permission): Permission =
             mapOrElse(permission, opt, _.removePermissions(_))
 
-          val withEveryone = (addOrElse(everyoneAllow) _).andThen(removeOrElse(everyoneDeny)).apply(guildPermissions)
-          val withRole     = withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
-          val withUser     = (addOrElse(userAllow) _).andThen(removeOrElse(userDeny)).apply(withRole)
+          val withEveryone = (addOrElse(everyoneAllow) _)
+            .andThen(removeOrElse(everyoneDeny))
+            .apply(guildPermissions)
+          val withRole =
+            withEveryone.addPermissions(roleAllow).removePermissions(roleDeny)
+          val withUser = (addOrElse(userAllow) _)
+            .andThen(removeOrElse(userDeny))
+            .apply(withRole)
 
           withUser
         }
@@ -656,7 +705,10 @@ case class GuildMember(
   }
 
   /** Calculate the permissions of this user in a channel given a guild. */
-  def channelPermissionsId(guild: GatewayGuild, channelId: GuildChannelId): Permission =
+  def channelPermissionsId(
+      guild: GatewayGuild,
+      channelId: GuildChannelId
+  ): Permission =
     permissionsWithOverridesId(guild, permissions(guild), channelId)
 
   /** Check if this user has any roles above the passed in roles. */
@@ -665,7 +717,7 @@ case class GuildMember(
     if (this.userId == ownerId) true
     else {
       def maxRolesPosition(roles: Seq[RoleId]): Int = {
-        val optList   = roles.toList.map(guild.roles.get(_).map(_.position))
+        val optList = roles.toList.map(guild.roles.get(_).map(_.position))
         val positions = optList.flatten
         if (positions.isEmpty) 0 else positions.max
       }
@@ -676,7 +728,8 @@ case class GuildMember(
 
   /** Check if this user has any roles above the passed in roles. */
   def hasRoleAboveId(guild: Guild, other: GuildMember): Boolean =
-    if (other.userId == guild.ownerId) false else hasRoleAboveId(guild, other.roleIds)
+    if (other.userId == guild.ownerId) false
+    else hasRoleAboveId(guild, other.roleIds)
 }
 
 /**
@@ -716,7 +769,8 @@ case class Emoji(
     else s"$name"
 
   /** Returns a string representation of this emoji for use in requests. */
-  def asString: String = if (!managed.getOrElse(false)) s"$name:$id" else s"$name"
+  def asString: String =
+    if (!managed.getOrElse(false)) s"$name:$id" else s"$name"
 
   /** Get the creator of this emoji if it has one. */
   def creator(implicit c: CacheSnapshot): Option[User] =
@@ -770,7 +824,11 @@ case class ActivitySecrets(
   * @param maxSize
   *   The max size of the party.
   */
-case class ActivityParty(id: Option[String], currentSize: Option[Int], maxSize: Option[Int])
+case class ActivityParty(
+    id: Option[String],
+    currentSize: Option[Int],
+    maxSize: Option[Int]
+)
 
 /** The text in a presence */
 sealed trait Activity {
@@ -794,14 +852,16 @@ sealed trait Activity {
 }
 
 sealed abstract class ActivityType(val value: Int) extends IntEnumEntry
-object ActivityType extends IntEnum[ActivityType] with IntCirceEnumWithUnknown[ActivityType] {
+object ActivityType
+    extends IntEnum[ActivityType]
+    with IntCirceEnumWithUnknown[ActivityType] {
   override def values: immutable.IndexedSeq[ActivityType] = findValues
 
-  case object Game      extends ActivityType(0)
+  case object Game extends ActivityType(0)
   case object Streaming extends ActivityType(1)
   case object Listening extends ActivityType(2)
-  case object Watching  extends ActivityType(3)
-  case object Custom    extends ActivityType(4)
+  case object Watching extends ActivityType(3)
+  case object Custom extends ActivityType(4)
   case object Competing extends ActivityType(5)
 
   case class Unknown(override val value: Int) extends ActivityType(value)
@@ -900,14 +960,16 @@ case class ActivityEmoji(
 
 /** The different statuses a user can have */
 sealed abstract class PresenceStatus(val value: String) extends StringEnumEntry
-object PresenceStatus extends StringEnum[PresenceStatus] with StringCirceEnumWithUnknown[PresenceStatus] {
+object PresenceStatus
+    extends StringEnum[PresenceStatus]
+    with StringCirceEnumWithUnknown[PresenceStatus] {
   override def values: immutable.IndexedSeq[PresenceStatus] = findValues
 
-  case object Online              extends PresenceStatus("online")
-  case object DoNotDisturb        extends PresenceStatus("dnd")
-  case object Idle                extends PresenceStatus("idle")
-  case object Invisible           extends PresenceStatus("invisible")
-  case object Offline             extends PresenceStatus("offline")
+  case object Online extends PresenceStatus("online")
+  case object DoNotDisturb extends PresenceStatus("dnd")
+  case object Idle extends PresenceStatus("idle")
+  case object Invisible extends PresenceStatus("invisible")
+  case object Offline extends PresenceStatus("offline")
   case class Unknown(str: String) extends PresenceStatus(str)
 
   override def createUnknown(value: String): PresenceStatus = Unknown(value)
@@ -932,8 +994,12 @@ case class ClientStatus(
   * @param clientStatus
   *   The status of the user over several platforms
   */
-case class Presence(userId: UserId, status: PresenceStatus, activities: Seq[Activity], clientStatus: ClientStatus)
-    extends GetUser
+case class Presence(
+    userId: UserId,
+    status: PresenceStatus,
+    activities: Seq[Activity],
+    clientStatus: ClientStatus
+) extends GetUser
 
 sealed trait Integration {
 
@@ -1026,28 +1092,34 @@ case class ExternalIntegration(
 ) extends Integration
 
 sealed abstract class IntegrationType(val value: String) extends StringEnumEntry
-object IntegrationType extends StringEnum[IntegrationType] with StringCirceEnumWithUnknown[IntegrationType] {
+object IntegrationType
+    extends StringEnum[IntegrationType]
+    with StringCirceEnumWithUnknown[IntegrationType] {
   override def values: immutable.IndexedSeq[IntegrationType] = findValues
 
-  case object Twitch            extends IntegrationType("twitch")
-  case object Youtube           extends IntegrationType("youtube")
-  case object Discord           extends IntegrationType("discord")
+  case object Twitch extends IntegrationType("twitch")
+  case object Youtube extends IntegrationType("youtube")
+  case object Discord extends IntegrationType("discord")
   case class Unknown(s: String) extends IntegrationType(s)
 
   override def createUnknown(value: String): IntegrationType = Unknown(value)
 }
 
-sealed abstract class IntegrationExpireBehavior(val value: Int) extends IntEnumEntry
+sealed abstract class IntegrationExpireBehavior(val value: Int)
+    extends IntEnumEntry
 object IntegrationExpireBehavior
     extends IntEnum[IntegrationExpireBehavior]
     with IntCirceEnumWithUnknown[IntegrationExpireBehavior] {
-  override def values: immutable.IndexedSeq[IntegrationExpireBehavior] = findValues
+  override def values: immutable.IndexedSeq[IntegrationExpireBehavior] =
+    findValues
 
-  case object RemoveRole     extends IntegrationExpireBehavior(0)
-  case object Kick           extends IntegrationExpireBehavior(1)
+  case object RemoveRole extends IntegrationExpireBehavior(0)
+  case object Kick extends IntegrationExpireBehavior(1)
   case class Unknown(i: Int) extends IntegrationExpireBehavior(i)
 
-  override def createUnknown(value: Int): IntegrationExpireBehavior = Unknown(value)
+  override def createUnknown(value: Int): IntegrationExpireBehavior = Unknown(
+    value
+  )
 }
 
 /**
@@ -1081,7 +1153,10 @@ case class IntegrationApplication(
   */
 case class IntegrationAccount(id: String, name: String)
 
-case class GuildWidgetSettings(enabled: Boolean, channelId: Option[GuildChannelId])
+case class GuildWidgetSettings(
+    enabled: Boolean,
+    channelId: Option[GuildChannelId]
+)
 
 /** The object returned when getting the widget for a guild */
 case class GuildWidget(

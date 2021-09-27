@@ -32,8 +32,10 @@ import com.typesafe.config.Config
 class AckCordVoiceSettings(config: Config) {
   import config._
 
-  val LogReceivedWs: Boolean = getBoolean("ackcord.logging.payloads.log-received-ws")
-  val LogSentWs: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-ws")
+  val LogReceivedWs: Boolean = getBoolean(
+    "ackcord.logging.payloads.log-received-ws"
+  )
+  val LogSentWs: Boolean = getBoolean("ackcord.logging.payloads.log-sent-ws")
 }
 object AckCordVoiceSettings {
 

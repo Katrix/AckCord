@@ -34,7 +34,9 @@ import io.circe.Codec
 
 /** Different type of channels */
 sealed abstract class ChannelType(val value: Int) extends IntEnumEntry
-object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[ChannelType] {
+object ChannelType
+    extends IntEnum[ChannelType]
+    with IntCirceEnumWithUnknown[ChannelType] {
   override def values: immutable.IndexedSeq[ChannelType] = findValues
 
   sealed trait ThreadChannelType extends ChannelType
@@ -42,23 +44,23 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
     implicit val codec: Codec[ThreadChannelType] = Codec.from(
       ChannelType.codec.emap {
         case channelType: ThreadChannelType => Right(channelType)
-        case _                              => Left("Not a valid thread channel type")
+        case _ => Left("Not a valid thread channel type")
       },
       ChannelType.codec.contramap(identity)
     )
   }
 
-  case object GuildText          extends ChannelType(0)
-  case object DM                 extends ChannelType(1)
-  case object GuildVoice         extends ChannelType(2)
-  case object GroupDm            extends ChannelType(3)
-  case object GuildCategory      extends ChannelType(4)
-  case object GuildNews          extends ChannelType(5)
-  case object GuildStore         extends ChannelType(6)
-  case object GuildNewsThread    extends ChannelType(10) with ThreadChannelType
-  case object GuildPublicThread  extends ChannelType(11) with ThreadChannelType
+  case object GuildText extends ChannelType(0)
+  case object DM extends ChannelType(1)
+  case object GuildVoice extends ChannelType(2)
+  case object GroupDm extends ChannelType(3)
+  case object GuildCategory extends ChannelType(4)
+  case object GuildNews extends ChannelType(5)
+  case object GuildStore extends ChannelType(6)
+  case object GuildNewsThread extends ChannelType(10) with ThreadChannelType
+  case object GuildPublicThread extends ChannelType(11) with ThreadChannelType
   case object GuildPrivateThread extends ChannelType(12) with ThreadChannelType
-  case object GuildStageVoice    extends ChannelType(13)
+  case object GuildStageVoice extends ChannelType(13)
 
   case class Unknown(i: Int) extends ChannelType(i)
 
@@ -69,17 +71,21 @@ object ChannelType extends IntEnum[ChannelType] with IntCirceEnumWithUnknown[Cha
   * Permission overwrites can apply to both users and role. This tells you
   * what's being overwritten for a specific overwrite.
   */
-sealed abstract class PermissionOverwriteType(val value: Int) extends IntEnumEntry
+sealed abstract class PermissionOverwriteType(val value: Int)
+    extends IntEnumEntry
 object PermissionOverwriteType
     extends IntEnum[PermissionOverwriteType]
     with IntCirceEnumWithUnknown[PermissionOverwriteType] {
-  override def values: immutable.IndexedSeq[PermissionOverwriteType] = findValues
+  override def values: immutable.IndexedSeq[PermissionOverwriteType] =
+    findValues
 
-  case object Role           extends PermissionOverwriteType(0)
-  case object Member         extends PermissionOverwriteType(1)
+  case object Role extends PermissionOverwriteType(0)
+  case object Member extends PermissionOverwriteType(1)
   case class Unknown(i: Int) extends PermissionOverwriteType(i)
 
-  override def createUnknown(value: Int): PermissionOverwriteType = Unknown(value)
+  override def createUnknown(value: Int): PermissionOverwriteType = Unknown(
+    value
+  )
 }
 
 /**
@@ -94,14 +100,20 @@ object PermissionOverwriteType
   * @param deny
   *   The permissions denied by this overwrite.
   */
-case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType, allow: Permission, deny: Permission) {
+case class PermissionOverwrite(
+    id: UserOrRoleId,
+    `type`: PermissionOverwriteType,
+    allow: Permission,
+    deny: Permission
+) {
 
   /**
     * If this overwrite applies to a user, get's that user, otherwise returns
     * None.
     */
   def user(implicit c: CacheSnapshot): Option[User] =
-    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id)) else None
+    if (`type` == PermissionOverwriteType.Member) c.getUser(UserId(id))
+    else None
 
   /**
     * If this overwrite applies to a user, get that user's member, otherwise
@@ -110,7 +122,8 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
     *   The guild this overwrite belongs to.
     */
   def member(guild: GatewayGuild): Option[GuildMember] =
-    if (`type` == PermissionOverwriteType.Member) guild.members.get(UserId(id)) else None
+    if (`type` == PermissionOverwriteType.Member) guild.members.get(UserId(id))
+    else None
 
   /**
     * If this overwrite applies to a role, get that role, otherwise returns
@@ -119,7 +132,8 @@ case class PermissionOverwrite(id: UserOrRoleId, `type`: PermissionOverwriteType
     *   The guild this overwrite belongs to.
     */
   def role(guild: Guild): Option[Role] =
-    if (`type` == PermissionOverwriteType.Role) guild.roles.get(RoleId(id)) else None
+    if (`type` == PermissionOverwriteType.Role) guild.roles.get(RoleId(id))
+    else None
 }
 
 /** Base channel type */
@@ -139,7 +153,8 @@ sealed trait Channel {
   * A channel that is of a type that AckCord knows about, but doesn't implement.
   * Normally because it's not yet part of the public API.
   */
-case class UnsupportedChannel(id: ChannelId, channelType: ChannelType) extends Channel
+case class UnsupportedChannel(id: ChannelId, channelType: ChannelType)
+    extends Channel
 
 /** A text channel that has text messages */
 sealed trait TextChannel extends Channel {
@@ -182,7 +197,9 @@ sealed trait GuildChannel extends Channel with GetGuild {
 
   /** Gets the category for this channel if it has one. */
   def category(implicit c: CacheSnapshot): Option[GuildCategory] =
-    parentId.flatMap(c.getGuildChannel(guildId, _)).collect { case cat: GuildCategory => cat }
+    parentId.flatMap(c.getGuildChannel(guildId, _)).collect {
+      case cat: GuildCategory => cat
+    }
 }
 
 /** A texual channel in a guild */
@@ -271,11 +288,14 @@ case class ThreadGuildChannel(
 
   override def lastPinTimestamp: Option[OffsetDateTime] = None
 
-  override def defaultAutoArchiveDuration: Option[Int] = Some(autoArchiveDuration)
+  override def defaultAutoArchiveDuration: Option[Int] = Some(
+    autoArchiveDuration
+  )
 
   override def position: Int = -1
 
-  override def permissionOverwrites: SnowflakeMap[UserOrRole, PermissionOverwrite] = SnowflakeMap.empty
+  override def permissionOverwrites
+      : SnowflakeMap[UserOrRole, PermissionOverwrite] = SnowflakeMap.empty
 
   override def nsfw: Boolean = false
 }
@@ -364,8 +384,11 @@ case class GuildStoreChannel(
 }
 
 /** A DM text channel */
-case class DMChannel(id: SnowflakeType[DMChannel], lastMessageId: Option[MessageId], userId: UserId)
-    extends Channel
+case class DMChannel(
+    id: SnowflakeType[DMChannel],
+    lastMessageId: Option[MessageId],
+    userId: UserId
+) extends Channel
     with TextChannel
     with GetUser {
   override def channelType: ChannelType = ChannelType.DM
@@ -400,11 +423,13 @@ case class GroupDMChannel(
 }
 
 sealed abstract class VideoQualityMode(val value: Int) extends IntEnumEntry
-object VideoQualityMode extends IntEnum[VideoQualityMode] with IntCirceEnumWithUnknown[VideoQualityMode] {
+object VideoQualityMode
+    extends IntEnum[VideoQualityMode]
+    with IntCirceEnumWithUnknown[VideoQualityMode] {
   override def values: immutable.IndexedSeq[VideoQualityMode] = findValues
 
-  case object Auto                            extends VideoQualityMode(1)
-  case object Full                            extends VideoQualityMode(2)
+  case object Auto extends VideoQualityMode(1)
+  case object Full extends VideoQualityMode(2)
   case class Unknown(override val value: Int) extends VideoQualityMode(value)
 
   override def createUnknown(value: Int): VideoQualityMode = Unknown(value)

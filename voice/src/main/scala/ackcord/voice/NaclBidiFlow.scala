@@ -42,122 +42,163 @@ case class BidiShapeWithExtraIn[-In1, +Out1, -In2, +Out2, -EIn](
     out2: Outlet[Out2 @uncheckedVariance],
     extraIn: Inlet[EIn @uncheckedVariance]
 ) extends Shape {
-  override def inlets: immutable.Seq[Inlet[_]] = immutable.Seq(in1, in2, extraIn)
+  override def inlets: immutable.Seq[Inlet[_]] =
+    immutable.Seq(in1, in2, extraIn)
 
   override def outlets: immutable.Seq[Outlet[_]] = immutable.Seq(out1, out2)
 
   override def deepCopy(): Shape =
-    BidiShapeWithExtraIn(in1.carbonCopy(), out1.carbonCopy(), in2.carbonCopy(), out2.carbonCopy(), extraIn.carbonCopy())
+    BidiShapeWithExtraIn(
+      in1.carbonCopy(),
+      out1.carbonCopy(),
+      in2.carbonCopy(),
+      out2.carbonCopy(),
+      extraIn.carbonCopy()
+    )
 }
 
 class NaclBidiFlow(ssrc: Int, serverId: RawSnowflake, userId: UserId)
     extends GraphStage[
-      BidiShapeWithExtraIn[ByteString, ByteString, ByteString, AudioAPIMessage.ReceivedData, Option[ByteString]]
+      BidiShapeWithExtraIn[
+        ByteString,
+        ByteString,
+        ByteString,
+        AudioAPIMessage.ReceivedData,
+        Option[ByteString]
+      ]
     ] {
 
-  val in1: Inlet[ByteString]                     = Inlet("NaclBidiFlow.in1")
-  val out1: Outlet[ByteString]                   = Outlet("NaclBidiFlow.out1")
-  val in2: Inlet[ByteString]                     = Inlet("NaclBidiFlow.in2")
+  val in1: Inlet[ByteString] = Inlet("NaclBidiFlow.in1")
+  val out1: Outlet[ByteString] = Outlet("NaclBidiFlow.out1")
+  val in2: Inlet[ByteString] = Inlet("NaclBidiFlow.in2")
   val out2: Outlet[AudioAPIMessage.ReceivedData] = Outlet("NaclBidiFlow.out2")
 
-  val secretKeysIn: Inlet[Option[ByteString]] = Inlet("NaclBidiFlow.secretKeysIn")
+  val secretKeysIn: Inlet[Option[ByteString]] = Inlet(
+    "NaclBidiFlow.secretKeysIn"
+  )
 
-  override def shape
-      : BidiShapeWithExtraIn[ByteString, ByteString, ByteString, AudioAPIMessage.ReceivedData, Option[ByteString]] =
+  override def shape: BidiShapeWithExtraIn[
+    ByteString,
+    ByteString,
+    ByteString,
+    AudioAPIMessage.ReceivedData,
+    Option[ByteString]
+  ] =
     BidiShapeWithExtraIn(in1, out1, in2, out2, secretKeysIn)
 
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic = new GraphStageLogic(shape) {
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
 
-    private val nonceEncryptBuffer = ByteBuffer.allocate(24)
-    private val nonceDecryptBuffer = ByteBuffer.allocate(24)
+      private val nonceEncryptBuffer = ByteBuffer.allocate(24)
+      private val nonceDecryptBuffer = ByteBuffer.allocate(24)
 
-    var sequence: Short = 0
-    var timestamp       = 0
+      var sequence: Short = 0
+      var timestamp = 0
 
-    var currentSecretKey: Option[ByteString] = None
+      var currentSecretKey: Option[ByteString] = None
 
-    private def consuming[A, B](in: Inlet[A], out: Outlet[B]) = new InHandler with OutHandler {
-      override def onPush(): Unit = grab(in)
+      private def consuming[A, B](in: Inlet[A], out: Outlet[B]) = new InHandler
+        with OutHandler {
+        override def onPush(): Unit = grab(in)
 
-      override def onPull(): Unit = pull(in)
-    }
-
-    setHandlers(in1, out1, consuming(in1, out1))
-    setHandlers(in2, out2, consuming(in2, out2))
-
-    setHandler(
-      secretKeysIn,
-      new InHandler {
-        override def onPush(): Unit = {
-          val newKey = grab(secretKeysIn)
-
-          if (currentSecretKey != newKey) {
-            currentSecretKey = newKey
-
-            newKey match {
-              case Some(someKey) => gotNewSecretKey(someKey)
-              case None =>
-                setHandlers(in1, out1, consuming(in1, out1))
-                setHandlers(in2, out2, consuming(in2, out2))
-            }
-          }
-        }
+        override def onPull(): Unit = pull(in)
       }
-    )
 
-    override def preStart(): Unit =
-      pull(secretKeysIn)
+      setHandlers(in1, out1, consuming(in1, out1))
+      setHandlers(in2, out2, consuming(in2, out2))
 
-    def gotNewSecretKey(secretKey: ByteString): Unit = {
-      val secret = new TweetNaclFast.SecretBox(secretKey.toArray)
-
-      setHandlers(
-        in1,
-        out1,
-        new InHandler with OutHandler {
+      setHandler(
+        secretKeysIn,
+        new InHandler {
           override def onPush(): Unit = {
-            val data   = grab(in1)
-            val header = RTPHeader(sequence, timestamp, ssrc)
-            sequence = (sequence + 1).toShort
-            timestamp += VoiceUDPFlow.FrameSize
+            val newKey = grab(secretKeysIn)
 
-            nonceEncryptBuffer.clear()
-            header.nonceToBuffer(nonceEncryptBuffer)
-            val encrypted = secret.box(data.toArray, nonceEncryptBuffer.array())
-            push(out1, header.byteString ++ ByteString.fromArrayUnsafe(encrypted))
-          }
+            if (currentSecretKey != newKey) {
+              currentSecretKey = newKey
 
-          override def onPull(): Unit = pull(in1)
-        }
-      )
-
-      setHandlers(
-        in2,
-        out2,
-        new InHandler with OutHandler {
-          override def onPush(): Unit = {
-            val data               = grab(in2)
-            val (rtpHeader, voice) = RTPHeader.fromBytes(data)
-            if (voice.length >= 16 && rtpHeader.version != -55 && rtpHeader.version != -56) { //FIXME: These break stuff
-              rtpHeader.nonceToBuffer(nonceDecryptBuffer)
-
-              nonceDecryptBuffer.clear()
-              val decryptedData = secret.open(voice.toArray, nonceDecryptBuffer.array())
-              if (decryptedData != null) {
-                val byteStringDecrypted = ByteString(decryptedData)
-                push(out2, AudioAPIMessage.ReceivedData(byteStringDecrypted, rtpHeader, serverId, userId))
-              } else {
-                failStage(new Exception(s"Failed to decrypt voice data Header: $rtpHeader Received voice: $voice"))
+              newKey match {
+                case Some(someKey) => gotNewSecretKey(someKey)
+                case None =>
+                  setHandlers(in1, out1, consuming(in1, out1))
+                  setHandlers(in2, out2, consuming(in2, out2))
               }
             }
           }
-
-          override def onPull(): Unit = pull(in2)
         }
       )
-    }
 
-  }
+      override def preStart(): Unit =
+        pull(secretKeysIn)
+
+      def gotNewSecretKey(secretKey: ByteString): Unit = {
+        val secret = new TweetNaclFast.SecretBox(secretKey.toArray)
+
+        setHandlers(
+          in1,
+          out1,
+          new InHandler with OutHandler {
+            override def onPush(): Unit = {
+              val data = grab(in1)
+              val header = RTPHeader(sequence, timestamp, ssrc)
+              sequence = (sequence + 1).toShort
+              timestamp += VoiceUDPFlow.FrameSize
+
+              nonceEncryptBuffer.clear()
+              header.nonceToBuffer(nonceEncryptBuffer)
+              val encrypted =
+                secret.box(data.toArray, nonceEncryptBuffer.array())
+              push(
+                out1,
+                header.byteString ++ ByteString.fromArrayUnsafe(encrypted)
+              )
+            }
+
+            override def onPull(): Unit = pull(in1)
+          }
+        )
+
+        setHandlers(
+          in2,
+          out2,
+          new InHandler with OutHandler {
+            override def onPush(): Unit = {
+              val data = grab(in2)
+              val (rtpHeader, voice) = RTPHeader.fromBytes(data)
+              if (
+                voice.length >= 16 && rtpHeader.version != -55 && rtpHeader.version != -56
+              ) { //FIXME: These break stuff
+                rtpHeader.nonceToBuffer(nonceDecryptBuffer)
+
+                nonceDecryptBuffer.clear()
+                val decryptedData =
+                  secret.open(voice.toArray, nonceDecryptBuffer.array())
+                if (decryptedData != null) {
+                  val byteStringDecrypted = ByteString(decryptedData)
+                  push(
+                    out2,
+                    AudioAPIMessage.ReceivedData(
+                      byteStringDecrypted,
+                      rtpHeader,
+                      serverId,
+                      userId
+                    )
+                  )
+                } else {
+                  failStage(
+                    new Exception(
+                      s"Failed to decrypt voice data Header: $rtpHeader Received voice: $voice"
+                    )
+                  )
+                }
+              }
+            }
+
+            override def onPull(): Unit = pull(in2)
+          }
+        )
+      }
+
+    }
 }
 object NaclBidiFlow {
 
@@ -166,7 +207,13 @@ object NaclBidiFlow {
       serverId: RawSnowflake,
       userId: UserId,
       secretKeys: Source[Option[ByteString], Mat]
-  ): BidiFlow[ByteString, ByteString, ByteString, AudioAPIMessage.ReceivedData, Mat] = {
+  ): BidiFlow[
+    ByteString,
+    ByteString,
+    ByteString,
+    AudioAPIMessage.ReceivedData,
+    Mat
+  ] = {
     val graph = GraphDSL.create(secretKeys) { implicit b => keys =>
       import GraphDSL.Implicits._
 
@@ -174,7 +221,12 @@ object NaclBidiFlow {
 
       keys ~> naclBidiFlow.extraIn
 
-      BidiShape(naclBidiFlow.in1, naclBidiFlow.out1, naclBidiFlow.in2, naclBidiFlow.out2)
+      BidiShape(
+        naclBidiFlow.in1,
+        naclBidiFlow.out1,
+        naclBidiFlow.in2,
+        naclBidiFlow.out2
+      )
     }
 
     BidiFlow.fromGraph(graph)

@@ -43,13 +43,18 @@ import akka.stream.scaladsl.{Flow, Sink}
 import cats.syntax.all._
 
 //Lot's of different examples of how to use commands
-class CommandsController(requests: Requests) extends CommandController(requests) {
+class CommandsController(requests: Requests)
+    extends CommandController(requests) {
 
   val general = Seq("!")
 
   val hello: NamedDescribedCommand[NotUsed] =
     Command
-      .named(general, Seq("hello"), mustMention = true) //Simplest way to name a command
+      .named(
+        general,
+        Seq("hello"),
+        mustMention = true
+      ) //Simplest way to name a command
       .described("Hello", "Say hello")
       .withRequest(m => m.textChannel.sendMessage(s"Hello ${m.user.username}"))
 
@@ -59,14 +64,19 @@ class CommandsController(requests: Requests) extends CommandController(requests)
     GuildCommand
       //You can use functions to give different names depending on the context the command is executed in
       .namedFunction(
-        (c, m) => if (m.guild(c).map(_.id).exists(mentionGuilds.contains)) general else Seq("m!"),
+        (c, m) =>
+          if (m.guild(c).map(_.id).exists(mentionGuilds.contains)) general
+          else Seq("m!"),
         (_, _) => Seq("copy"),
-        mustMention = (c, m) => m.guild(c).map(_.id).exists(mentionGuilds.contains)
+        mustMention =
+          (c, m) => m.guild(c).map(_.id).exists(mentionGuilds.contains)
       )
       .described("Copy", "Make the bot say what you said")
       .parsing[Int]
       .withRequestOpt { implicit m =>
-        m.message.channelId.resolve(m.guild.id).map(_.sendMessage(s"You said ${m.parsed}"))
+        m.message.channelId
+          .resolve(m.guild.id)
+          .map(_.sendMessage(s"You said ${m.parsed}"))
       }
 
   //Here we just store this in-memory, but in a real application you'd
@@ -85,15 +95,22 @@ class CommandsController(requests: Requests) extends CommandController(requests)
   //The future returning function is also available on the builder itself
   def dynamicPrefix(aliases: String*): StructuredPrefixParser =
     PrefixParser.structuredAsync(
-      (c, m) => m.guild(c).fold(Future.successful(false))(g => needMentionInGuild(g.id)),
-      (c, m) => m.guild(c).fold(Future.successful(Seq("m!")))(g => prefixSymbolsInGuild(g.id)),
+      (c, m) =>
+        m.guild(c)
+          .fold(Future.successful(false))(g => needMentionInGuild(g.id)),
+      (c, m) =>
+        m.guild(c)
+          .fold(Future.successful(Seq("m!")))(g => prefixSymbolsInGuild(g.id)),
       (_, _) => Future.successful(aliases)
     )
 
   val setShouldMention: NamedDescribedCommand[Boolean] =
     GuildCommand
       .namedParser(dynamicPrefix("setShouldMention"))
-      .described("Set should mention", "Set if commands need a mention of the bot before the prefix")
+      .described(
+        "Set should mention",
+        "Set if commands need a mention of the bot before the prefix"
+      )
       .parsing[Boolean]
       .withRequest { m =>
         shouldMentionMap.put(m.guild.id, m.parsed)
@@ -113,14 +130,18 @@ class CommandsController(requests: Requests) extends CommandController(requests)
               case Some(existing) => Some((existing :+ m.parsed._2).distinct)
               case None           => Some(Seq(m.parsed._2))
             }
-            m.textChannel.sendMessage(s"Added ${m.parsed._2} as a prefix symbol")
+            m.textChannel.sendMessage(
+              s"Added ${m.parsed._2} as a prefix symbol"
+            )
 
           case "set" | "=" =>
             Compat.updateWith(prefixSymbolsMap, m.guild.id) {
               case Some(_) => Some(Seq(m.parsed._2))
               case None    => Some(Seq(m.parsed._2))
             }
-            m.textChannel.sendMessage(s"Set ${m.parsed._2} as the only prefix symbol")
+            m.textChannel.sendMessage(
+              s"Set ${m.parsed._2} as the only prefix symbol"
+            )
           case "remove" | "-" =>
             //Race condition here, but I don't care
             if (prefixSymbolsMap.get(m.guild.id).exists(_.length > 1)) {
@@ -129,12 +150,19 @@ class CommandsController(requests: Requests) extends CommandController(requests)
                 case None           => throw new Exception("Race condition")
                 case Some(existing) => Some(existing.filter(_ != m.parsed._2))
               }
-              m.textChannel.sendMessage(s"Removed ${m.parsed._2} as a prefix symbol")
+              m.textChannel.sendMessage(
+                s"Removed ${m.parsed._2} as a prefix symbol"
+              )
             } else {
               m.textChannel
-                .sendMessage(s"Couldn't remove ${m.parsed._2} as a prefix symbol. Not enough existing prefixes")
+                .sendMessage(
+                  s"Couldn't remove ${m.parsed._2} as a prefix symbol. Not enough existing prefixes"
+                )
             }
-          case _ => m.textChannel.sendMessage(s"${m.parsed._1} is not a valid operation")
+          case _ =>
+            m.textChannel.sendMessage(
+              s"${m.parsed._1} is not a valid operation"
+            )
         }
       }
   }
@@ -144,9 +172,9 @@ class CommandsController(requests: Requests) extends CommandController(requests)
       .namedParser(dynamicPrefix("guildInfo"))
       .described("Guild info", "Prints info about the current guild")
       .withRequest { m =>
-        val guildName   = m.guild.name
+        val guildName = m.guild.name
         val channelName = m.textChannel.name
-        val userNick    = m.guildMember.nick.getOrElse(m.user.username)
+        val userNick = m.guildMember.nick.getOrElse(m.user.username)
 
         m.textChannel.sendMessage(
           s"This guild is named $guildName, the channel is named $channelName and you are called $userNick"
@@ -158,21 +186,36 @@ class CommandsController(requests: Requests) extends CommandController(requests)
       .namedParser(dynamicPrefix("parseNum"))
       .described("Parse numbers", "Have the bot parse two numbers")
       .parsing((MessageParser[Int], MessageParser[Int]).tupled)
-      .withRequest(m => m.textChannel.sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}"))
-
-  val sendFile: NamedDescribedCommand[NotUsed] =
-    Command.namedParser(dynamicPrefix("sendFile")).described("Send file", "Send a file in an embed").withRequest { m =>
-      val embed = OutgoingEmbed(
-        title = Some("This is an embed"),
-        description = Some("This embed is sent together with a file"),
-        fields = Seq(EmbedField("FileName", "theFile.txt"))
+      .withRequest(m =>
+        m.textChannel
+          .sendMessage(s"Arg 1: ${m.parsed._1}, Arg 2: ${m.parsed._2}")
       )
 
-      m.textChannel.sendMessage("Here is the file", files = Seq(Paths.get("theFile.txt")), embeds = Seq(embed))
-    }
+  val sendFile: NamedDescribedCommand[NotUsed] =
+    Command
+      .namedParser(dynamicPrefix("sendFile"))
+      .described("Send file", "Send a file in an embed")
+      .withRequest { m =>
+        val embed = OutgoingEmbed(
+          title = Some("This is an embed"),
+          description = Some("This embed is sent together with a file"),
+          fields = Seq(EmbedField("FileName", "theFile.txt"))
+        )
 
-  private val ElevatedCommand: CommandBuilder[GuildUserCommandMessage, NotUsed] =
-    GuildCommand.andThen(CommandBuilder.needPermission[GuildUserCommandMessage](Permission.Administrator))
+        m.textChannel.sendMessage(
+          "Here is the file",
+          files = Seq(Paths.get("theFile.txt")),
+          embeds = Seq(embed)
+        )
+      }
+
+  private val ElevatedCommand
+      : CommandBuilder[GuildUserCommandMessage, NotUsed] =
+    GuildCommand.andThen(
+      CommandBuilder.needPermission[GuildUserCommandMessage](
+        Permission.Administrator
+      )
+    )
 
   val adminsOnly: NamedDescribedCommand[NotUsed] =
     ElevatedCommand
@@ -183,51 +226,81 @@ class CommandsController(requests: Requests) extends CommandController(requests)
   val timeDiff: NamedDescribedCommand[NotUsed] =
     Command
       .namedParser(dynamicPrefix("timeDiff"))
-      .described("Time diff", "Checks the time between sending and seeing a message")
+      .described(
+        "Time diff",
+        "Checks the time between sending and seeing a message"
+      )
       .asyncOpt { implicit m =>
         import requestHelper._
         for {
           sentMsg <- run(m.textChannel.sendMessage("Msg"))
-          time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)
-          _ <- run(m.textChannel.sendMessage(s"$time ms between command and response"))
+          time = ChronoUnit.MILLIS.between(
+            m.message.timestamp,
+            sentMsg.timestamp
+          )
+          _ <- run(
+            m.textChannel.sendMessage(s"$time ms between command and response")
+          )
         } yield ()
       }
 
   val ping: NamedDescribedCommand[NotUsed] =
-    Command.namedParser(dynamicPrefix("ping")).described("Ping", "Checks if the bot is alive").toSink {
-      Flow[CommandMessage[NotUsed]]
-        .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
-        .to(requests.sinkIgnore)
-    }
+    Command
+      .namedParser(dynamicPrefix("ping"))
+      .described("Ping", "Checks if the bot is alive")
+      .toSink {
+        Flow[CommandMessage[NotUsed]]
+          .map(m => CreateMessage.mkContent(m.message.channelId, "Pong"))
+          .to(requests.sinkIgnore)
+      }
 
   val timeDiff2: NamedDescribedCommand[NotUsed] =
     Command
       .namedParser(dynamicPrefix("timeDiff2"))
-      .described("Time diff", "Checks the time between sending and seeing a message")
+      .described(
+        "Time diff",
+        "Checks the time between sending and seeing a message"
+      )
       .async { implicit m =>
         //The ExecutionContext is provided by the controller
         for {
-          answer  <- requests.singleFuture(m.textChannel.sendMessage("Msg"))
+          answer <- requests.singleFuture(m.textChannel.sendMessage("Msg"))
           sentMsg <- Future.fromTry(answer.eitherData.toTry)
-          time = ChronoUnit.MILLIS.between(m.message.timestamp, sentMsg.timestamp)
-          _ <- requests.singleFuture(m.textChannel.sendMessage(s"$time ms between command and response"))
+          time = ChronoUnit.MILLIS.between(
+            m.message.timestamp,
+            sentMsg.timestamp
+          )
+          _ <- requests.singleFuture(
+            m.textChannel.sendMessage(s"$time ms between command and response")
+          )
         } yield ()
       }
 
-  def ratelimitTest(name: String, sink: Sink[Request[_], _]): NamedDescribedCommand[Int] =
+  def ratelimitTest(
+      name: String,
+      sink: Sink[Request[_], _]
+  ): NamedDescribedCommand[Int] =
     Command
       .namedParser(dynamicPrefix(name))
-      .described("Ratelimit test", "Checks that ratelimiting is working as intended")
+      .described(
+        "Ratelimit test",
+        "Checks that ratelimiting is working as intended"
+      )
       .parsing[Int]
       .toSink {
         Flow[CommandMessage[Int]]
-          .mapConcat(implicit m => List.tabulate(m.parsed)(i => m.textChannel.sendMessage(s"Msg$i")))
+          .mapConcat(implicit m =>
+            List.tabulate(m.parsed)(i => m.textChannel.sendMessage(s"Msg$i"))
+          )
           .to(sink)
       }
 
   val maybeFail: NamedDescribedCommand[NotUsed] = Command
     .namedParser(dynamicPrefix("maybeFail"))
-    .described("MaybeFail", "A command that sometimes fails and throws an exception")
+    .described(
+      "MaybeFail",
+      "A command that sometimes fails and throws an exception"
+    )
     .withRequest { r =>
       if (Random.nextInt(100) < 25) {
         throw new Exception("Failed")
@@ -240,5 +313,8 @@ class CommandsController(requests: Requests) extends CommandController(requests)
     ElevatedCommand
       .namedParser(dynamicPrefix("kill", "die"))
       .described("Kill", "Kills the bot")
-      .withSideEffects(_ => CoordinatedShutdown(requests.system.toClassic).run(CoordinatedShutdown.JvmExitReason))
+      .withSideEffects(_ =>
+        CoordinatedShutdown(requests.system.toClassic)
+          .run(CoordinatedShutdown.JvmExitReason)
+      )
 }

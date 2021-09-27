@@ -18,20 +18,22 @@ case class ActionRow private (
 
   override def tpe: ComponentType = ComponentType.ActionRow
 
-  def mapButtons(f: Button => Button): ActionRow = copy(components = components.map {
-    case button: Button   => f(button)
-    case menu: SelectMenu => menu
-  })
+  def mapButtons(f: Button => Button): ActionRow =
+    copy(components = components.map {
+      case button: Button   => f(button)
+      case menu: SelectMenu => menu
+    })
 
-  def updateButton(identifier: String, f: TextButton => Button): ActionRow = copy(components = components.map {
-    case button: TextButton if button.identifier == identifier => f(button)
-    case button                                                => button
-  })
+  def updateButton(identifier: String, f: TextButton => Button): ActionRow =
+    copy(components = components.map {
+      case button: TextButton if button.identifier == identifier => f(button)
+      case button                                                => button
+    })
 }
 object ActionRow {
   def ofUnsafe(components: Seq[ActionRowContent]) = new ActionRow(components)
-  def of(buttons: Button*): ActionRow             = new ActionRow(buttons)
-  def of(selectMenu: SelectMenu): ActionRow       = new ActionRow(Seq(selectMenu))
+  def of(buttons: Button*): ActionRow = new ActionRow(buttons)
+  def of(selectMenu: SelectMenu): ActionRow = new ActionRow(Seq(selectMenu))
 }
 
 sealed trait ActionRowContent extends Component
@@ -63,14 +65,16 @@ object Button {
       style: TextButtonStyle = ButtonStyle.Secondary,
       emoji: Option[PartialEmoji] = None,
       disabled: Boolean = false
-  ): TextButton = TextButton(Some(label), identifier, style, emoji, Some(disabled))
+  ): TextButton =
+    TextButton(Some(label), identifier, style, emoji, Some(disabled))
 
   def textEmoji(
       emoji: PartialEmoji,
       identifier: String = UUID.randomUUID().toString,
       style: TextButtonStyle = ButtonStyle.Secondary,
       disabled: Boolean = false
-  ): TextButton = TextButton(None, identifier, style, Some(emoji), Some(disabled))
+  ): TextButton =
+    TextButton(None, identifier, style, Some(emoji), Some(disabled))
 
   def link(
       label: String,
@@ -96,9 +100,11 @@ case class RawButton(
 ) extends Button {
   override def withLabel(label: String): Button = copy(label = Some(label))
 
-  override def withEmoji(emoji: PartialEmoji): Button = copy(emoji = Some(emoji))
+  override def withEmoji(emoji: PartialEmoji): Button =
+    copy(emoji = Some(emoji))
 
-  override def withDisabled(disabled: Boolean): Button = copy(disabled = Some(disabled))
+  override def withDisabled(disabled: Boolean): Button =
+    copy(disabled = Some(disabled))
 }
 
 case class TextButton(
@@ -118,13 +124,16 @@ case class TextButton(
 
   override def withLabel(label: String): TextButton = copy(label = Some(label))
 
-  def withIdentifier(identifier: String): TextButton = copy(identifier = identifier)
+  def withIdentifier(identifier: String): TextButton =
+    copy(identifier = identifier)
 
   def withStyle(style: TextButtonStyle): TextButton = copy(style = style)
 
-  override def withEmoji(emoji: PartialEmoji): TextButton = copy(emoji = Some(emoji))
+  override def withEmoji(emoji: PartialEmoji): TextButton =
+    copy(emoji = Some(emoji))
 
-  override def withDisabled(disabled: Boolean): TextButton = copy(disabled = Some(disabled))
+  override def withDisabled(disabled: Boolean): TextButton =
+    copy(disabled = Some(disabled))
 }
 
 case class LinkButton(
@@ -145,23 +154,27 @@ case class LinkButton(
 
   override def withLabel(label: String): LinkButton = copy(label = Some(label))
 
-  override def withEmoji(emoji: PartialEmoji): LinkButton = copy(emoji = Some(emoji))
+  override def withEmoji(emoji: PartialEmoji): LinkButton =
+    copy(emoji = Some(emoji))
 
   def withUrl(link: String): LinkButton = copy(urlLink = link)
 
-  override def withDisabled(disabled: Boolean): LinkButton = copy(disabled = Some(disabled))
+  override def withDisabled(disabled: Boolean): LinkButton =
+    copy(disabled = Some(disabled))
 }
 
 sealed abstract class ButtonStyle(val value: Int) extends IntEnumEntry
-sealed trait TextButtonStyle                      extends ButtonStyle
-object ButtonStyle extends IntEnum[ButtonStyle] with IntCirceEnumWithUnknown[ButtonStyle] {
+sealed trait TextButtonStyle extends ButtonStyle
+object ButtonStyle
+    extends IntEnum[ButtonStyle]
+    with IntCirceEnumWithUnknown[ButtonStyle] {
   override def values: immutable.IndexedSeq[ButtonStyle] = findValues
 
-  case object Primary   extends ButtonStyle(1) with TextButtonStyle // Blurple
+  case object Primary extends ButtonStyle(1) with TextButtonStyle // Blurple
   case object Secondary extends ButtonStyle(2) with TextButtonStyle // Gray
-  case object Success   extends ButtonStyle(3) with TextButtonStyle // Green
-  case object Danger    extends ButtonStyle(4) with TextButtonStyle // Red
-  case object Link      extends ButtonStyle(5)
+  case object Success extends ButtonStyle(3) with TextButtonStyle // Green
+  case object Danger extends ButtonStyle(4) with TextButtonStyle // Red
+  case object Link extends ButtonStyle(5)
 
   case class Unknown(id: Int) extends ButtonStyle(id)
 
@@ -199,15 +212,18 @@ object SelectOption {
       description: Option[String] = None,
       emoji: Option[PartialEmoji] = None,
       default: Boolean = false
-  ): SelectOption = new SelectOption(content, content, description, emoji, default)
+  ): SelectOption =
+    new SelectOption(content, content, description, emoji, default)
 }
 
 sealed abstract class ComponentType(val value: Int) extends IntEnumEntry
-object ComponentType extends IntEnum[ComponentType] with IntCirceEnumWithUnknown[ComponentType] {
+object ComponentType
+    extends IntEnum[ComponentType]
+    with IntCirceEnumWithUnknown[ComponentType] {
   override def values: immutable.IndexedSeq[ComponentType] = findValues
 
-  case object ActionRow  extends ComponentType(1)
-  case object Button     extends ComponentType(2)
+  case object ActionRow extends ComponentType(1)
+  case object Button extends ComponentType(2)
   case object SelectMenu extends ComponentType(3)
 
   case class Unknown(id: Int) extends ComponentType(id)

@@ -34,9 +34,18 @@ import akka.util.ByteString
 
 /** Base traits for all traits to get images */
 trait ImageRequest extends Request[ByteString] {
-  require(desiredSize >= 16 && desiredSize <= 4096, "Can't request an image smaller than 16 or bigger than 4096")
-  require(ImageRequest.isPowerOf2(desiredSize), "Can only request an image sizes that are powers of 2")
-  require(allowedFormats.contains(format), "That format is not allowed for this image")
+  require(
+    desiredSize >= 16 && desiredSize <= 4096,
+    "Can't request an image smaller than 16 or bigger than 4096"
+  )
+  require(
+    ImageRequest.isPowerOf2(desiredSize),
+    "Can only request an image sizes that are powers of 2"
+  )
+  require(
+    allowedFormats.contains(format),
+    "That format is not allowed for this image"
+  )
 
   /**
     * The desired size of the image. Must be between 16 and 2048, and must be a
@@ -54,8 +63,13 @@ trait ImageRequest extends Request[ByteString] {
 
   override def bodyForLogging: Option[String] = None
 
-  override def parseResponse(entity: ResponseEntity)(implicit system: ActorSystem[Nothing]): Future[ByteString] =
-    Source.single(entity).via(RequestStreams.bytestringFromResponse).runWith(Sink.head)
+  override def parseResponse(
+      entity: ResponseEntity
+  )(implicit system: ActorSystem[Nothing]): Future[ByteString] =
+    Source
+      .single(entity)
+      .via(RequestStreams.bytestringFromResponse)
+      .runWith(Sink.head)
 
   override def hasPermissions(implicit c: CacheSnapshot): Boolean = true
 }
@@ -70,7 +84,8 @@ case class GetCustomEmojiImage(
     format: ImageFormat,
     emojiId: EmojiId
 ) extends ImageRequest {
-  override def route: RequestRoute = Routes.emojiImage(emojiId, format, Some(desiredSize))
+  override def route: RequestRoute =
+    Routes.emojiImage(emojiId, format, Some(desiredSize))
   override def allowedFormats: Seq[ImageFormat] =
     Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
 }
@@ -84,7 +99,8 @@ case class GetGuildIconImage(
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] =
     Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
-  override def route: RequestRoute = Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
+  override def route: RequestRoute =
+    Routes.guildIconImage(guildId, iconHash, format, Some(desiredSize))
 }
 
 /** Get a guild splash image. Allowed formats are PNG, JPEG and WebP. */
@@ -94,8 +110,10 @@ case class GetGuildSplashImage(
     guildId: GuildId,
     splashHash: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute =
+    Routes.guildSplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
 case class GetDiscoverySplashImage(
@@ -104,8 +122,10 @@ case class GetDiscoverySplashImage(
     guildId: GuildId,
     splashHash: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.discoverySplashImage(guildId, splashHash, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute =
+    Routes.discoverySplashImage(guildId, splashHash, format, Some(desiredSize))
 }
 
 case class GetGuildBannerImage(
@@ -114,15 +134,19 @@ case class GetGuildBannerImage(
     guildId: GuildId,
     bannerHash: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute =
+    Routes.guildBannerImage(guildId, bannerHash, format, Some(desiredSize))
 }
 
 /** Get the default avatar of a user. Always returns a PNG. */
-case class GetDefaultUserAvatarImage(desiredSize: Int, discriminator: Int) extends ImageRequest {
+case class GetDefaultUserAvatarImage(desiredSize: Int, discriminator: Int)
+    extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
-  override def format: ImageFormat              = ImageFormat.PNG
-  override def route: RequestRoute = Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
+  override def format: ImageFormat = ImageFormat.PNG
+  override def route: RequestRoute =
+    Routes.defaultUserAvatarImage(discriminator, format, Some(desiredSize))
 }
 
 /**
@@ -136,7 +160,8 @@ case class GetUserAvatarImage(
 ) extends ImageRequest {
   override def allowedFormats: Seq[ImageFormat] =
     Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP, ImageFormat.GIF)
-  override def route: RequestRoute = Routes.userAvatarImage(userId, avatarHash, format, Some(desiredSize))
+  override def route: RequestRoute =
+    Routes.userAvatarImage(userId, avatarHash, format, Some(desiredSize))
 }
 
 /** Get the icon of an application. Allowed formats are PNG, JPEG and WebP. */
@@ -146,8 +171,14 @@ case class GetApplicationIconImage(
     applicationId: ApplicationId,
     iconHash: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.applicationIconImage(applicationId, iconHash, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute = Routes.applicationIconImage(
+    applicationId,
+    iconHash,
+    format,
+    Some(desiredSize)
+  )
 }
 
 /** Get the asset of an application. Allowed formats are PNG, JPEG and WebP. */
@@ -157,8 +188,14 @@ case class GetApplicationAssetImage(
     applicationId: ApplicationId,
     assetId: String
 ) extends ImageRequest {
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
-  override def route: RequestRoute = Routes.applicationAssetImage(applicationId, assetId, format, Some(desiredSize))
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def route: RequestRoute = Routes.applicationAssetImage(
+    applicationId,
+    assetId,
+    format,
+    Some(desiredSize)
+  )
 }
 
 /**
@@ -172,11 +209,12 @@ case class GetGuildWidgetImage(
     guildId: GuildId,
     style: WidgetImageStyle = WidgetImageStyle.Shield
 ) extends ImageRequest {
-  override def route: RequestRoute = Routes.getGuildWidgetImage(guildId, Some(style))
+  override def route: RequestRoute =
+    Routes.getGuildWidgetImage(guildId, Some(style))
 
   //Dummy fields which aren't used
-  override def desiredSize: Int                 = 16
-  override def format: ImageFormat              = ImageFormat.PNG
+  override def desiredSize: Int = 16
+  override def format: ImageFormat = ImageFormat.PNG
   override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG)
 }
 
@@ -193,7 +231,9 @@ case class GetTeamIconImage(
     teamId: SnowflakeType[Team],
     teamIcon: String
 ) extends ImageRequest {
-  override def route: RequestRoute = Routes.teamIconImage(teamId, teamIcon, format, Some(desiredSize))
+  override def route: RequestRoute =
+    Routes.teamIconImage(teamId, teamIcon, format, Some(desiredSize))
 
-  override def allowedFormats: Seq[ImageFormat] = Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
+  override def allowedFormats: Seq[ImageFormat] =
+    Seq(ImageFormat.PNG, ImageFormat.JPEG, ImageFormat.WebP)
 }

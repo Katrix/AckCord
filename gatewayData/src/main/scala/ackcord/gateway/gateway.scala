@@ -29,7 +29,8 @@ package object gateway {
   object GatewayIntents {
     type GatewayIntents
 
-    private[gateway] def apply(int: Int): GatewayIntents = int.asInstanceOf[GatewayIntents]
+    private[gateway] def apply(int: Int): GatewayIntents =
+      int.asInstanceOf[GatewayIntents]
 
     /** Create a UserFlag that has all the flags passed in. */
     def apply(flags: GatewayIntents*): GatewayIntents = flags.fold(None)(_ ++ _)
@@ -168,9 +169,11 @@ package object gateway {
       DirectMessagesReactions,
       DirectMessageTyping
     )
-    val All: GatewayIntents = GatewayIntents(AllNonPrivileged, GuildMembers, GuildPresences)
+    val All: GatewayIntents =
+      GatewayIntents(AllNonPrivileged, GuildMembers, GuildPresences)
   }
-  implicit class GatewayIntentsSyntax(private val intents: GatewayIntents) extends AnyVal {
+  implicit class GatewayIntentsSyntax(private val intents: GatewayIntents)
+      extends AnyVal {
 
     def toInt: Int = intents.asInstanceOf[Int]
 
@@ -179,21 +182,26 @@ package object gateway {
       * @param other
       *   The other intent.
       */
-    def ++(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt | other.toInt)
+    def ++(other: GatewayIntents): GatewayIntents = GatewayIntents(
+      toInt | other.toInt
+    )
 
     /**
       * Remove an intent from these intents.
       * @param other
       *   The intent to remove.
       */
-    def --(other: GatewayIntents): GatewayIntents = GatewayIntents(toInt & ~other.toInt)
+    def --(other: GatewayIntents): GatewayIntents = GatewayIntents(
+      toInt & ~other.toInt
+    )
 
     /**
       * Check if these intents has an intent.
       * @param other
       *   The intent to check against.
       */
-    def hasFlag(other: GatewayIntents): Boolean = (toInt & other.toInt) == other.toInt
+    def hasFlag(other: GatewayIntents): Boolean =
+      (toInt & other.toInt) == other.toInt
 
     /** Check if these intents is empty. */
     def isNone: Boolean = toInt == 0

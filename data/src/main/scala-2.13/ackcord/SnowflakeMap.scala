@@ -49,9 +49,13 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     b.result()
   }
 
-  override protected def newSpecificBuilder
-      : mutable.Builder[(SnowflakeType[K], V), SnowflakeMap[K, V]] @uncheckedVariance =
-    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](empty) {
+  override protected def newSpecificBuilder: mutable.Builder[
+    (SnowflakeType[K], V),
+    SnowflakeMap[K, V]
+  ] @uncheckedVariance =
+    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](
+      empty
+    ) {
       override def addOne(elem: (SnowflakeType[K], V)): this.type = {
         elems = elems + elem
         this
@@ -68,7 +72,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     buffer.toList
   }
 
-  override def iterator: Iterator[(Key, V)] = inner.iterator.map { case (k, v) => (keyToSnowflake(k), v) }
+  override def iterator: Iterator[(Key, V)] = inner.iterator.map {
+    case (k, v) => (keyToSnowflake(k), v)
+  }
 
   final override def foreach[U](f: ((Key, V)) => U): Unit =
     inner.foreach { case (k, v) => f((keyToSnowflake(k), v)) }
@@ -76,7 +82,8 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
   final override def foreachEntry[U](f: (Key, V) => U): Unit =
     inner.foreachEntry((k, v) => f(keyToSnowflake(k), v))
 
-  override def keysIterator: Iterator[Key] = inner.keysIterator.map(keyToSnowflake)
+  override def keysIterator: Iterator[Key] =
+    inner.keysIterator.map(keyToSnowflake)
 
   /**
     * Loop over the keys of the map. The same as keys.foreach(f), but may be
@@ -85,7 +92,8 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @param f
     *   The loop body
     */
-  final def foreachKey(f: Key => Unit): Unit = inner.foreachKey(k => f(keyToSnowflake(k)))
+  final def foreachKey(f: Key => Unit): Unit =
+    inner.foreachKey(k => f(keyToSnowflake(k)))
 
   override def valuesIterator: Iterator[V] = inner.valuesIterator
 
@@ -108,13 +116,16 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     new SnowflakeMap(inner.filter { case (k, v) => p((keyToSnowflake(k), v)) })
 
   override def transform[S](f: (Key, V) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.transform[S] { case (k, v) => f(keyToSnowflake(k), v) })
+    new SnowflakeMap(inner.transform[S] { case (k, v) =>
+      f(keyToSnowflake(k), v)
+    })
 
   final override def size: Int = inner.size
 
   final override def get(key: Key): Option[V] = inner.get(key.toUnsignedLong)
 
-  final override def getOrElse[V1 >: V](key: Key, default: => V1): V1 = inner.getOrElse(key.toUnsignedLong, default)
+  final override def getOrElse[V1 >: V](key: Key, default: => V1): V1 =
+    inner.getOrElse(key.toUnsignedLong, default)
 
   final override def apply(key: Key): V = inner.apply(key.toUnsignedLong)
 
@@ -147,10 +158,16 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     * @return
     *   The updated map.
     */
-  def updateWith[S >: V](key: Key, value: S, f: (V, S) => S): SnowflakeMap[K, S] =
+  def updateWith[S >: V](
+      key: Key,
+      value: S,
+      f: (V, S) => S
+  ): SnowflakeMap[K, S] =
     new SnowflakeMap(inner.updateWith(key.toUnsignedLong, value, f))
 
-  override def removed(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(inner.removed(key.toUnsignedLong))
+  override def removed(key: Key): SnowflakeMap[K, V] = new SnowflakeMap(
+    inner.removed(key.toUnsignedLong)
+  )
 
   /**
     * A combined transform and filter function. Returns an `SnowflakeMap` such
@@ -165,7 +182,9 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *   The modified map.
     */
   def modifyOrRemove[S](f: (Key, V) => Option[S]): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.modifyOrRemove { case (k, v) => f(keyToSnowflake(k), v) })
+    new SnowflakeMap(inner.modifyOrRemove { case (k, v) =>
+      f(keyToSnowflake(k), v)
+    })
 
   /**
     * Forms a union map with that map, using the combining function to resolve
@@ -181,8 +200,14 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *   Union of `this` and `that`, with identical key conflicts resolved using
     *   the function `f`.
     */
-  def unionWith[S >: V](that: SnowflakeMap[Key, S], f: (Key, S, S) => S): SnowflakeMap[K, S] =
-    new SnowflakeMap(inner.unionWith[S](that.inner, (l, s1, s2) => f(keyToSnowflake(l), s1, s2)))
+  def unionWith[S >: V](
+      that: SnowflakeMap[Key, S],
+      f: (Key, S, S) => S
+  ): SnowflakeMap[K, S] =
+    new SnowflakeMap(
+      inner
+        .unionWith[S](that.inner, (l, s1, s2) => f(keyToSnowflake(l), s1, s2))
+    )
 
   /**
     * Forms the intersection of these two maps with a combining function. The
@@ -201,8 +226,16 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *   Intersection of `this` and `that`, with values for identical keys
     *   produced by function `f`.
     */
-  def intersectionWith[S, R](that: SnowflakeMap[Key, S], f: (Key, V, S) => R): SnowflakeMap[K, R] =
-    new SnowflakeMap(inner.intersectionWith[S, R](that.inner, (l, v, s) => f(keyToSnowflake(l), v, s)))
+  def intersectionWith[S, R](
+      that: SnowflakeMap[Key, S],
+      f: (Key, V, S) => R
+  ): SnowflakeMap[K, R] =
+    new SnowflakeMap(
+      inner.intersectionWith[S, R](
+        that.inner,
+        (l, v, s) => f(keyToSnowflake(l), v, s)
+      )
+    )
 
   /**
     * Left biased intersection. Returns the map that has all the same mappings
@@ -216,30 +249,50 @@ class SnowflakeMap[K, +V](private val inner: LongMap[V])
     *   A map with all the keys both in `this` and `that`, mapped to
     *   corresponding values from `this`.
     */
-  def intersection[R](that: SnowflakeMap[K, R]): SnowflakeMap[K, V] = new SnowflakeMap(inner.intersection(that.inner))
+  def intersection[R](that: SnowflakeMap[K, R]): SnowflakeMap[K, V] =
+    new SnowflakeMap(inner.intersection(that.inner))
 
-  def ++[S >: V](that: SnowflakeMap[K, S]): SnowflakeMap[K, S] = new SnowflakeMap(inner ++ that.inner)
+  def ++[S >: V](that: SnowflakeMap[K, S]): SnowflakeMap[K, S] =
+    new SnowflakeMap(inner ++ that.inner)
 
   final def firstKey: Key = keyToSnowflake(inner.firstKey)
 
   final def lastKey: Key = keyToSnowflake(inner.lastKey)
 
-  def map[K2, V2](f: ((Key, V)) => (SnowflakeType[K2], V2)): SnowflakeMap[K2, V2] =
+  def map[K2, V2](
+      f: ((Key, V)) => (SnowflakeType[K2], V2)
+  ): SnowflakeMap[K2, V2] =
     SnowflakeMap.from(new View.Map(coll, f))
 
-  def flatMap[K2, V2](f: ((Key, V)) => IterableOnce[(SnowflakeType[K2], V2)]): SnowflakeMap[K2, V2] =
+  def flatMap[K2, V2](
+      f: ((Key, V)) => IterableOnce[(SnowflakeType[K2], V2)]
+  ): SnowflakeMap[K2, V2] =
     SnowflakeMap.from(new View.FlatMap(coll, f))
 
-  override def concat[V1 >: V](that: collection.IterableOnce[(Key, V1)]): SnowflakeMap[K, V1] =
-    super.concat(that).asInstanceOf[SnowflakeMap[K, V1]] // Already has corect type but not declared as such
+  override def concat[V1 >: V](
+      that: collection.IterableOnce[(Key, V1)]
+  ): SnowflakeMap[K, V1] =
+    super
+      .concat(that)
+      .asInstanceOf[SnowflakeMap[
+        K,
+        V1
+      ]] // Already has corect type but not declared as such
 
-  override def ++[V1 >: V](that: collection.IterableOnce[(Key, V1)]): SnowflakeMap[K, V1] = concat(that)
+  override def ++[V1 >: V](
+      that: collection.IterableOnce[(Key, V1)]
+  ): SnowflakeMap[K, V1] = concat(that)
 
-  def collect[K2, V2](pf: PartialFunction[(Key, V), (SnowflakeType[K2], V2)]): SnowflakeMap[K2, V2] =
+  def collect[K2, V2](
+      pf: PartialFunction[(Key, V), (SnowflakeType[K2], V2)]
+  ): SnowflakeMap[K2, V2] =
     strictOptimizedCollect(SnowflakeMap.newBuilder[K2, V2], pf)
 
   protected[this] def writeReplace(): AnyRef =
-    new DefaultSerializationProxy(SnowflakeMap.toFactory[K, V](SnowflakeMap), this)
+    new DefaultSerializationProxy(
+      SnowflakeMap.toFactory[K, V](SnowflakeMap),
+      this
+    )
 }
 object SnowflakeMap {
 
@@ -252,14 +305,21 @@ object SnowflakeMap {
 
   /** Create a snowflake map from multiple values. */
   def apply[K, V](elems: (SnowflakeType[K], V)*): SnowflakeMap[K, V] =
-    new SnowflakeMap(LongMap.apply(elems.map(t => t._1.toUnsignedLong -> t._2): _*))
+    new SnowflakeMap(
+      LongMap.apply(elems.map(t => t._1.toUnsignedLong -> t._2): _*)
+    )
 
   /** Create a snowflake map from an IterableOnce of snowflakes and values. */
-  def from[K, V](coll: IterableOnce[(SnowflakeType[K], V)]): SnowflakeMap[K, V] =
+  def from[K, V](
+      coll: IterableOnce[(SnowflakeType[K], V)]
+  ): SnowflakeMap[K, V] =
     newBuilder[K, V].addAll(coll).result()
 
-  def newBuilder[K, V]: mutable.Builder[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
-    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](empty) {
+  def newBuilder[K, V]
+      : mutable.Builder[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
+    new mutable.ImmutableBuilder[(SnowflakeType[K], V), SnowflakeMap[K, V]](
+      empty
+    ) {
       override def addOne(elem: (SnowflakeType[K], V)): this.type = {
         elems = elems + elem
         this
@@ -270,35 +330,64 @@ object SnowflakeMap {
     * Create a snowflake map from an iterable of values while using a provided
     * function to get the key.
     */
-  def withKey[K, V](iterable: Iterable[V])(f: V => SnowflakeType[K]): SnowflakeMap[K, V] =
+  def withKey[K, V](iterable: Iterable[V])(
+      f: V => SnowflakeType[K]
+  ): SnowflakeMap[K, V] =
     from(iterable.map(v => f(v) -> v))
 
-  implicit def toFactory[K, V](dummy: SnowflakeMap.type): Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
+  implicit def toFactory[K, V](
+      dummy: SnowflakeMap.type
+  ): Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] =
     ToFactory.asInstanceOf[Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]]]
 
   @SerialVersionUID(3L)
   private[this] object ToFactory
-      extends Factory[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]]
+      extends Factory[
+        (SnowflakeType[AnyRef], AnyRef),
+        SnowflakeMap[AnyRef, AnyRef]
+      ]
       with Serializable {
-    def fromSpecific(it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]): SnowflakeMap[AnyRef, AnyRef] =
+    def fromSpecific(
+        it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]
+    ): SnowflakeMap[AnyRef, AnyRef] =
       SnowflakeMap.from[AnyRef, AnyRef](it)
-    def newBuilder: mutable.Builder[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] =
+    def newBuilder: mutable.Builder[
+      (SnowflakeType[AnyRef], AnyRef),
+      SnowflakeMap[AnyRef, AnyRef]
+    ] =
       SnowflakeMap.newBuilder[AnyRef, AnyRef]
   }
 
   implicit def toBuildFrom[K, V](
       factory: SnowflakeMap.type
   ): BuildFrom[Any, (SnowflakeType[K], V), SnowflakeMap[K, V]] =
-    ToBuildFrom.asInstanceOf[BuildFrom[Any, (SnowflakeType[K], V), SnowflakeMap[K, V]]]
+    ToBuildFrom
+      .asInstanceOf[BuildFrom[Any, (SnowflakeType[K], V), SnowflakeMap[K, V]]]
   private[this] object ToBuildFrom
-      extends BuildFrom[Any, (SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] {
-    def fromSpecific(from: Any)(it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]): SnowflakeMap[AnyRef, AnyRef] =
+      extends BuildFrom[
+        Any,
+        (SnowflakeType[AnyRef], AnyRef),
+        SnowflakeMap[AnyRef, AnyRef]
+      ] {
+    def fromSpecific(from: Any)(
+        it: IterableOnce[(SnowflakeType[AnyRef], AnyRef)]
+    ): SnowflakeMap[AnyRef, AnyRef] =
       SnowflakeMap.from(it)
-    def newBuilder(from: Any): mutable.Builder[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[AnyRef, AnyRef]] =
+    def newBuilder(
+        from: Any
+    ): mutable.Builder[(SnowflakeType[AnyRef], AnyRef), SnowflakeMap[
+      AnyRef,
+      AnyRef
+    ]] =
       SnowflakeMap.newBuilder[AnyRef, AnyRef]
   }
 
-  implicit def iterableFactory[K, V]: Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] = toFactory(this)
-  implicit def buildFromSnowflakeMap[K, V]: BuildFrom[SnowflakeMap[_, _], (SnowflakeType[K], V), SnowflakeMap[K, V]] =
+  implicit def iterableFactory[K, V]
+      : Factory[(SnowflakeType[K], V), SnowflakeMap[K, V]] = toFactory(this)
+  implicit def buildFromSnowflakeMap[K, V]: BuildFrom[
+    SnowflakeMap[_, _],
+    (SnowflakeType[K], V),
+    SnowflakeMap[K, V]
+  ] =
     toBuildFrom(this)
 }

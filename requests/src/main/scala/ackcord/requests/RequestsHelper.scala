@@ -36,11 +36,19 @@ import ackcord.{CacheSnapshot, OptFuture, RequestPermissionException}
   */
 class RequestsHelper(requests: Requests) {
   import requests.system.executionContext
-  implicit val properties: Requests.RequestProperties = Requests.RequestProperties.retry
+  implicit val properties: Requests.RequestProperties =
+    Requests.RequestProperties.retry
 
-  private def checkPerms(requests: Seq[Request[_]])(implicit c: CacheSnapshot): OptFuture[Unit] =
+  private def checkPerms(
+      requests: Seq[Request[_]]
+  )(implicit c: CacheSnapshot): OptFuture[Unit] =
     if (requests.forall(_.hasPermissions)) OptFuture.unit
-    else OptFuture.fromFuture(Future.failed(new RequestPermissionException(requests.find(!_.hasPermissions).get)))
+    else
+      OptFuture.fromFuture(
+        Future.failed(
+          new RequestPermissionException(requests.find(!_.hasPermissions).get)
+        )
+      )
 
   /**
     * Runs a single requests and returns the result.
@@ -48,7 +56,9 @@ class RequestsHelper(requests: Requests) {
     *   The request to run
     */
   def run[A](request: Request[A])(implicit c: CacheSnapshot): OptFuture[A] =
-    checkPerms(Seq(request)).semiflatMap(_ => requests.singleFutureSuccess(request))
+    checkPerms(Seq(request)).semiflatMap(_ =>
+      requests.singleFutureSuccess(request)
+    )
 
   /**
     * Runs many requests in order, and returns the result. The result is only a
@@ -56,8 +66,12 @@ class RequestsHelper(requests: Requests) {
     * @param requests
     *   The requests to run
     */
-  def runMany[A](requests: Request[A]*)(implicit c: CacheSnapshot): OptFuture[immutable.Seq[A]] =
-    checkPerms(requests).semiflatMap(_ => this.requests.manyFutureSuccess(immutable.Seq(requests: _*)))
+  def runMany[A](
+      requests: Request[A]*
+  )(implicit c: CacheSnapshot): OptFuture[immutable.Seq[A]] =
+    checkPerms(requests).semiflatMap(_ =>
+      this.requests.manyFutureSuccess(immutable.Seq(requests: _*))
+    )
 
   //From here on it's all convenience methods
 
@@ -65,9 +79,13 @@ class RequestsHelper(requests: Requests) {
 
   def optionPure[A](opt: Option[A]): OptFuture[A] = OptFuture.fromOption(opt)
 
-  def runOption[A](opt: Option[Request[A]])(implicit c: CacheSnapshot): OptFuture[A] =
+  def runOption[A](opt: Option[Request[A]])(implicit
+      c: CacheSnapshot
+  ): OptFuture[A] =
     optionPure(opt).flatMap(run)
 
-  def runOptFuture[H[_], A](opt: OptFuture[Request[A]])(implicit c: CacheSnapshot): OptFuture[A] =
+  def runOptFuture[H[_], A](opt: OptFuture[Request[A]])(implicit
+      c: CacheSnapshot
+  ): OptFuture[A] =
     opt.flatMap(run)
 }

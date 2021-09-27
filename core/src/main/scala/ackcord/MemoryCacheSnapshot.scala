@@ -50,10 +50,14 @@ case class MemoryCacheSnapshot(
 
   override type MapType[K, V] = SnowflakeMap[K, V]
 
-  override def getChannelMessages(channelId: TextChannelId): SnowflakeMap[Message, Message] =
+  override def getChannelMessages(
+      channelId: TextChannelId
+  ): SnowflakeMap[Message, Message] =
     messageMap.getOrElse(channelId, SnowflakeMap.empty)
 
-  override def getChannelLastTyped(channelId: TextChannelId): SnowflakeMap[User, Instant] =
+  override def getChannelLastTyped(
+      channelId: TextChannelId
+  ): SnowflakeMap[User, Instant] =
     lastTypedMap.getOrElse(channelId, SnowflakeMap.empty)
 
   override def getGuildBans(id: GuildId): SnowflakeMap[User, Ban] =
@@ -73,9 +77,16 @@ object MemoryCacheSnapshot {
       * @return
       *   The processor to be used for the next update
       */
-    def apply(current: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor
+    def apply(
+        current: CacheProcessor,
+        builder: CacheSnapshotBuilder
+    ): CacheProcessor
 
-    def safeApply(current: CacheProcessor, next: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor =
+    def safeApply(
+        current: CacheProcessor,
+        next: CacheProcessor,
+        builder: CacheSnapshotBuilder
+    ): CacheProcessor =
       if (this eq current) next
       else current(next, builder)
   }
@@ -102,12 +113,23 @@ object MemoryCacheSnapshot {
     *   How many updates until the processor is run
     */
   //noinspection ConvertExpressionToSAM
-  def everyN(every: Int, remaining: Int, doAction: CacheProcessor): CacheProcessor = new CacheProcessor {
-    override def apply(processor: CacheProcessor, builder: CacheSnapshotBuilder): CacheProcessor =
+  def everyN(
+      every: Int,
+      remaining: Int,
+      doAction: CacheProcessor
+  ): CacheProcessor = new CacheProcessor {
+    override def apply(
+        processor: CacheProcessor,
+        builder: CacheSnapshotBuilder
+    ): CacheProcessor =
       if (remaining > 0)
         safeApply(processor, everyN(every, remaining - 1, doAction), builder)
       else
-        safeApply(processor, doAction(everyN(every, every, doAction), builder), builder)
+        safeApply(
+          processor,
+          doAction(everyN(every, every, doAction), builder),
+          builder
+        )
   }
 
   /**
@@ -132,33 +154,41 @@ object MemoryCacheSnapshot {
       alwaysKeep: Set[MessageId]
   ): CacheProcessor =
     (processor, builder) => {
-      val messagesCleanThreshold = OffsetDateTime.now().minusMinutes(keepMessagesFor.toMinutes)
-      val typedCleanThreshold    = Instant.now().minus(keepTypedFor.toMinutes, ChronoUnit.MINUTES)
+      val messagesCleanThreshold =
+        OffsetDateTime.now().minusMinutes(keepMessagesFor.toMinutes)
+      val typedCleanThreshold =
+        Instant.now().minus(keepTypedFor.toMinutes, ChronoUnit.MINUTES)
 
       var totalMessages = 0
 
-      builder.messageMap = builder.messageMap.modifyOrRemove { (_, messageMap) =>
-        var channelMessages = 0
+      builder.messageMap = builder.messageMap.modifyOrRemove {
+        (_, messageMap) =>
+          var channelMessages = 0
 
-        val newMap = messageMap.modifyOrRemove { (_, m) =>
-          totalMessages += 1
-          channelMessages += 1
-          if (
-            m.editedTimestamp.getOrElse(m.timestamp).isAfter(messagesCleanThreshold)
-            || alwaysKeep.contains(m.id)
-            || channelMessages < minMessagesPerChannel
-            || totalMessages < minMessages
-          ) Some(m)
-          else None
-        }
+          val newMap = messageMap.modifyOrRemove { (_, m) =>
+            totalMessages += 1
+            channelMessages += 1
+            if (
+              m.editedTimestamp
+                .getOrElse(m.timestamp)
+                .isAfter(messagesCleanThreshold)
+              || alwaysKeep.contains(m.id)
+              || channelMessages < minMessagesPerChannel
+              || totalMessages < minMessages
+            ) Some(m)
+            else None
+          }
 
-        if (newMap.nonEmpty) Some(newMap) else None
+          if (newMap.nonEmpty) Some(newMap) else None
       }
 
-      builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove { (_, typedMap) =>
-        val newMap = typedMap.modifyOrRemove((_, i) => if (i.isAfter(typedCleanThreshold)) Some(i) else None)
+      builder.lastTypedMap = builder.lastTypedMap.modifyOrRemove {
+        (_, typedMap) =>
+          val newMap = typedMap.modifyOrRemove((_, i) =>
+            if (i.isAfter(typedCleanThreshold)) Some(i) else None
+          )
 
-        if (newMap.nonEmpty) Some(newMap) else None
+          if (newMap.nonEmpty) Some(newMap) else None
       }
 
       processor

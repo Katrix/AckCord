@@ -43,7 +43,13 @@ case class GetGuildAuditLog(
     queryParams: GetGuildAuditLogData
 ) extends NoParamsNiceResponseRequest[AuditLog] {
   override def route: RequestRoute =
-    Routes.getGuildAuditLogs(guildId, queryParams.userId, queryParams.actionType, queryParams.before, queryParams.limit)
+    Routes.getGuildAuditLogs(
+      guildId,
+      queryParams.userId,
+      queryParams.actionType,
+      queryParams.before,
+      queryParams.limit
+    )
 
   override def responseDecoder: Decoder[AuditLog] = Decoder[AuditLog]
 

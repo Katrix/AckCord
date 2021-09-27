@@ -24,11 +24,19 @@
 
 package ackcord.util
 
-import enumeratum.values.{IntEnum, IntEnumEntry, StringEnum, StringEnumEntry, ValueEnum, ValueEnumEntry}
+import enumeratum.values.{
+  IntEnum,
+  IntEnumEntry,
+  StringEnum,
+  StringEnumEntry,
+  ValueEnum,
+  ValueEnumEntry
+}
 import io.circe.Decoder.Result
 import io.circe._
 
-trait ValueEnumWithUnknown[ValueType, EntryType <: ValueEnumEntry[ValueType]] { self: ValueEnum[ValueType, EntryType] =>
+trait ValueEnumWithUnknown[ValueType, EntryType <: ValueEnumEntry[ValueType]] {
+  self: ValueEnum[ValueType, EntryType] =>
 
   def createUnknown(value: ValueType): EntryType
 }
@@ -43,7 +51,9 @@ trait IntCirceEnumWithUnknown[EntryType <: IntEnumEntry]
 
     def apply(a: EntryType): Json = valueEncoder.apply(a.value)
     def apply(c: HCursor): Result[EntryType] =
-      valueDecoder.apply(c).map(v => withValueOpt(v).getOrElse(createUnknown(v)))
+      valueDecoder
+        .apply(c)
+        .map(v => withValueOpt(v).getOrElse(createUnknown(v)))
   }
 }
 
@@ -57,6 +67,8 @@ trait StringCirceEnumWithUnknown[EntryType <: StringEnumEntry]
 
     def apply(a: EntryType): Json = valueEncoder.apply(a.value)
     def apply(c: HCursor): Result[EntryType] =
-      valueDecoder.apply(c).map(v => withValueOpt(v).getOrElse(createUnknown(v)))
+      valueDecoder
+        .apply(c)
+        .map(v => withValueOpt(v).getOrElse(createUnknown(v)))
   }
 }

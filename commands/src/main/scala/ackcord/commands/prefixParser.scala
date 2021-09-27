@@ -33,7 +33,10 @@ import cats.{Monad, MonadError}
 
 trait PrefixParser {
 
-  def apply(message: Message)(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]]
+  def apply(message: Message)(implicit
+      c: CacheSnapshot,
+      ec: ExecutionContext
+  ): Future[MessageParser[Unit]]
 }
 object PrefixParser {
 
@@ -74,24 +77,44 @@ object PrefixParser {
       needsMention: (CacheSnapshot, Message) => Future[Boolean],
       symbols: (CacheSnapshot, Message) => Future[Seq[String]],
       aliases: (CacheSnapshot, Message) => Future[Seq[String]],
-      caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false),
-      canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true),
-      mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
+      caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+        Future.successful(false),
+      canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+        Future.successful(true),
+      mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+        Future.successful(true)
   ): StructuredPrefixParser =
-    StructuredPrefixParser(needsMention, symbols, aliases, caseSensitive, canExecute, mentionOrPrefix)
+    StructuredPrefixParser(
+      needsMention,
+      symbols,
+      aliases,
+      caseSensitive,
+      canExecute,
+      mentionOrPrefix
+    )
 
-  def fromFunctionAsync(f: (CacheSnapshot, Message) => Future[MessageParser[Unit]]): PrefixParser =
+  def fromFunctionAsync(
+      f: (CacheSnapshot, Message) => Future[MessageParser[Unit]]
+  ): PrefixParser =
     new PrefixParser {
       override def apply(
           message: Message
-      )(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]] = f(c, message)
+      )(implicit
+          c: CacheSnapshot,
+          ec: ExecutionContext
+      ): Future[MessageParser[Unit]] = f(c, message)
     }
 
-  def fromFunction(f: (CacheSnapshot, Message) => MessageParser[Unit]): PrefixParser =
+  def fromFunction(
+      f: (CacheSnapshot, Message) => MessageParser[Unit]
+  ): PrefixParser =
     new PrefixParser {
       override def apply(
           message: Message
-      )(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]] =
+      )(implicit
+          c: CacheSnapshot,
+          ec: ExecutionContext
+      ): Future[MessageParser[Unit]] =
         Future.successful(f(c, message))
     }
 }
@@ -117,18 +140,24 @@ case class StructuredPrefixParser(
     needsMention: (CacheSnapshot, Message) => Future[Boolean],
     symbols: (CacheSnapshot, Message) => Future[Seq[String]],
     aliases: (CacheSnapshot, Message) => Future[Seq[String]],
-    caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(false),
-    canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true),
-    mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) => Future.successful(true)
+    caseSensitive: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+      Future.successful(false),
+    canExecute: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+      Future.successful(true),
+    mentionOrPrefix: (CacheSnapshot, Message) => Future[Boolean] = (_, _) =>
+      Future.successful(true)
 ) extends PrefixParser {
 
-  override def apply(message: Message)(implicit c: CacheSnapshot, ec: ExecutionContext): Future[MessageParser[Unit]] =
+  override def apply(message: Message)(implicit
+      c: CacheSnapshot,
+      ec: ExecutionContext
+  ): Future[MessageParser[Unit]] =
     for {
-      execute             <- canExecute(c, message)
-      mentionHere         <- needsMention(c, message)
-      symbolsHere         <- symbols(c, message)
-      aliasesHere         <- aliases(c, message)
-      caseSensitiveHere   <- caseSensitive(c, message)
+      execute <- canExecute(c, message)
+      mentionHere <- needsMention(c, message)
+      symbolsHere <- symbols(c, message)
+      aliasesHere <- aliases(c, message)
+      caseSensitiveHere <- caseSensitive(c, message)
       mentionOrPrefixHere <- mentionOrPrefix(c, message)
     } yield {
       if (execute) {
@@ -137,7 +166,7 @@ case class StructuredPrefixParser(
 
           //We do a quick check first before parsing the message
           val quickCheck = message.mentions.contains(botUser.id)
-          lazy val err   = MonadError[MessageParser, String].raiseError[Unit]("")
+          lazy val err = MonadError[MessageParser, String].raiseError[Unit]("")
 
           if (quickCheck) {
             MessageParser[User].flatMap { user =>
@@ -151,8 +180,13 @@ case class StructuredPrefixParser(
 
         val symbols =
           if (symbolsEmpty) MessageParser.unit
-          else MessageParser.oneOf(symbolsHere.map(MessageParser.startsWith(_))).void
-        val aliases = MessageParser.oneOf(aliasesHere.map(MessageParser.literal(_, caseSensitiveHere)))
+          else
+            MessageParser
+              .oneOf(symbolsHere.map(MessageParser.startsWith(_)))
+              .void
+        val aliases = MessageParser.oneOf(
+          aliasesHere.map(MessageParser.literal(_, caseSensitiveHere))
+        )
 
         if (mentionHere && mentionOrPrefixHere)
           mentionParser *> aliases.void

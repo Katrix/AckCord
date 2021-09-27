@@ -106,13 +106,16 @@ case class RawChannel(
     defaultAutoArchiveDuration: Option[Int]
 ) {
 
-  private def toChannelUsingGuildId(guildId: Option[GuildId], botUserId: Option[UserId]): Option[Channel] = {
+  private def toChannelUsingGuildId(
+      guildId: Option[GuildId],
+      botUserId: Option[UserId]
+  ): Option[Channel] = {
     `type` match {
       case ChannelType.GuildText | ChannelType.GuildNews =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
+          guildId <- guildId
+          name <- name
+          position <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
           if (`type` == ChannelType.GuildNews) {
@@ -155,12 +158,12 @@ case class RawChannel(
         }
       case ChannelType.GuildVoice =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
+          guildId <- guildId
+          name <- name
+          position <- position
           permissionOverwrites <- permissionOverwrites
-          bitrate              <- bitrate
-          userLimit            <- userLimit
+          bitrate <- bitrate
+          userLimit <- userLimit
         } yield {
           NormalVoiceGuildChannel(
             SnowflakeType(id),
@@ -178,11 +181,11 @@ case class RawChannel(
         }
       case ChannelType.GuildStageVoice =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
+          guildId <- guildId
+          name <- name
+          position <- position
           permissionOverwrites <- permissionOverwrites
-          bitrate              <- bitrate
+          bitrate <- bitrate
         } yield {
           StageGuildChannel(
             SnowflakeType(id),
@@ -198,17 +201,25 @@ case class RawChannel(
         }
       case ChannelType.GroupDm =>
         for {
-          name       <- name
+          name <- name
           recipients <- recipients
-          ownerId    <- ownerId
+          ownerId <- ownerId
         } yield {
-          GroupDMChannel(SnowflakeType(id), name, recipients.map(_.id), lastMessageId, ownerId, applicationId, icon)
+          GroupDMChannel(
+            SnowflakeType(id),
+            name,
+            recipients.map(_.id),
+            lastMessageId,
+            ownerId,
+            applicationId,
+            icon
+          )
         }
       case ChannelType.GuildCategory =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
+          guildId <- guildId
+          name <- name
+          position <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildCategory(
@@ -222,9 +233,9 @@ case class RawChannel(
         }
       case ChannelType.GuildStore =>
         for {
-          guildId              <- guildId
-          name                 <- name
-          position             <- position
+          guildId <- guildId
+          name <- name
+          position <- position
           permissionOverwrites <- permissionOverwrites
         } yield {
           GuildStoreChannel(
@@ -239,12 +250,17 @@ case class RawChannel(
         }
       case tpe: ChannelType.ThreadChannelType =>
         for {
-          guildId  <- guildId
-          name     <- name
-          ownerId  <- ownerId
+          guildId <- guildId
+          name <- name
+          ownerId <- ownerId
           parentId <- parentId
           metadata <- threadMetadata
-          RawThreadMetadata(archived, autoArchiveDuration, archiveTimestamp, locked) = metadata
+          RawThreadMetadata(
+            archived,
+            autoArchiveDuration,
+            archiveTimestamp,
+            locked
+          ) = metadata
         } yield {
           ThreadGuildChannel(
             SnowflakeType(id),
@@ -277,10 +293,16 @@ case class RawChannel(
   }
 
   /** Try to convert this to a normal channel. */
-  def toChannel(botUserId: Option[UserId]): Option[Channel] = toChannelUsingGuildId(guildId, botUserId)
+  def toChannel(botUserId: Option[UserId]): Option[Channel] =
+    toChannelUsingGuildId(guildId, botUserId)
 
-  def toGuildChannel(guildId: GuildId, botUserId: Option[UserId]): Option[GuildChannel] =
-    toChannelUsingGuildId(Some(guildId), botUserId).collect { case ch: GuildChannel => ch }
+  def toGuildChannel(
+      guildId: GuildId,
+      botUserId: Option[UserId]
+  ): Option[GuildChannel] =
+    toChannelUsingGuildId(Some(guildId), botUserId).collect {
+      case ch: GuildChannel => ch
+    }
 }
 
 /**
@@ -347,7 +369,17 @@ case class PartialRawGuildMember(
 ) {
 
   def toGuildMember(userId: UserId, guildId: GuildId): GuildMember =
-    GuildMember(userId, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(
+      userId,
+      guildId,
+      nick,
+      roles,
+      joinedAt,
+      premiumSince,
+      deaf,
+      mute,
+      pending
+    )
 }
 
 //Remember to edit RawGuildMemberWithGuild when editing this
@@ -384,7 +416,17 @@ case class RawGuildMember(
 
   /** Convert this to a normal guild member. */
   def toGuildMember(guildId: GuildId): GuildMember =
-    GuildMember(user.id, guildId, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
+    GuildMember(
+      user.id,
+      guildId,
+      nick,
+      roles,
+      joinedAt,
+      premiumSince,
+      deaf,
+      mute,
+      pending
+    )
 }
 
 /**
@@ -393,7 +435,10 @@ case class RawGuildMember(
   * @param partyId
   *   Party id from rich presence.
   */
-case class RawMessageActivity(`type`: MessageActivityType, partyId: Option[String]) {
+case class RawMessageActivity(
+    `type`: MessageActivityType,
+    partyId: Option[String]
+) {
 
   def toMessageActivity: MessageActivity = MessageActivity(`type`, partyId)
 }
@@ -715,18 +760,20 @@ case class RawGuild(
 
   def toGatewayGuild(botUserId: Option[UserId]): Option[GatewayGuild] =
     for {
-      joinedAt    <- joinedAt
-      large       <- large
+      joinedAt <- joinedAt
+      large <- large
       memberCount <- memberCount
       voiceStates <- voiceStates
-      members     <- members
+      members <- members
       rawChannels <- channels
-      rawThreads  <- threads
-      presences   <- presences
+      rawThreads <- threads
+      presences <- presences
     } yield {
       val channels = rawChannels.flatMap(_.toGuildChannel(id, botUserId))
       val threads =
-        rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect { case thread: ThreadGuildChannel => thread }
+        rawThreads.flatMap(_.toGuildChannel(id, botUserId)).collect {
+          case thread: ThreadGuildChannel => thread
+        }
 
       GatewayGuild(
         id,
@@ -755,7 +802,9 @@ case class RawGuild(
         large,
         memberCount,
         SnowflakeMap.withKey(voiceStates)(_.userId),
-        SnowflakeMap.from(members.map(mem => mem.user.id -> mem.toGuildMember(id))),
+        SnowflakeMap.from(
+          members.map(mem => mem.user.id -> mem.toGuildMember(id))
+        ),
         SnowflakeMap.withKey(channels)(_.id),
         SnowflakeMap.withKey(threads)(_.id),
         SnowflakeMap.from(presences.map(p => p.user.id -> p.toPresence)),
@@ -942,7 +991,18 @@ case class RawRole(
 ) {
 
   def toRole(guildId: GuildId): Role =
-    Role(id, guildId, name, color, hoist, position, permissions, managed, mentionable, tags)
+    Role(
+      id,
+      guildId,
+      name,
+      color,
+      hoist,
+      position,
+      permissions,
+      managed,
+      mentionable,
+      tags
+    )
 }
 
 /**
@@ -953,7 +1013,8 @@ case class RawRole(
   */
 case class RawActivityParty(id: Option[String], size: Option[Seq[Int]]) {
 
-  def toParty: ActivityParty = ActivityParty(id, size.map(_.head), size.map(seq => seq(1)))
+  def toParty: ActivityParty =
+    ActivityParty(id, size.map(_.head), size.map(seq => seq(1)))
 }
 
 /**
@@ -1005,7 +1066,9 @@ case class RawActivity(
 
   def requireCanSend(): Unit =
     require(
-      Seq(timestamps, applicationId, details, state, party, assets).forall(_.isEmpty),
+      Seq(timestamps, applicationId, details, state, party, assets).forall(
+        _.isEmpty
+      ),
       "Unsupported field sent to Discord in activity"
     )
 
@@ -1026,7 +1089,17 @@ case class RawActivity(
         buttons
       )
     case ActivityType.Streaming =>
-      PresenceStreaming(name, url, createdAt, timestamps, applicationId, details, state, party.map(_.toParty), assets)
+      PresenceStreaming(
+        name,
+        url,
+        createdAt,
+        timestamps,
+        applicationId,
+        details,
+        state,
+        party.map(_.toParty),
+        assets
+      )
     case ActivityType.Custom => PresenceCustom(name, createdAt, state, emoji)
     case _ =>
       PresenceOther(
@@ -1143,5 +1216,14 @@ case class RawEmoji(
     available: Option[Boolean]
 ) {
 
-  def toEmoji: Emoji = Emoji(id, name, roles, user.map(_.id), requireColons, managed, animated, available)
+  def toEmoji: Emoji = Emoji(
+    id,
+    name,
+    roles,
+    user.map(_.id),
+    requireColons,
+    managed,
+    animated,
+    available
+  )
 }

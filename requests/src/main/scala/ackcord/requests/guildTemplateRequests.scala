@@ -32,7 +32,8 @@ import io.circe.syntax._
 import io.circe.{Decoder, Encoder, derivation}
 
 /** Get a template by it's code. */
-case class GetGuildTemplate(code: String) extends NoParamsRequest[GuildTemplate, GuildTemplate] {
+case class GetGuildTemplate(code: String)
+    extends NoParamsRequest[GuildTemplate, GuildTemplate] {
   override def route: RequestRoute = Routes.getTemplate(code)
 
   override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
@@ -46,8 +47,10 @@ case class CreateGuildFromTemplateData(
 )
 
 /** Create a guild from a guild template. */
-case class CreateGuildFromTemplate(code: String, params: CreateGuildFromTemplateData)
-    extends NoNiceResponseRequest[CreateGuildFromTemplateData, RawGuild] {
+case class CreateGuildFromTemplate(
+    code: String,
+    params: CreateGuildFromTemplateData
+) extends NoNiceResponseRequest[CreateGuildFromTemplateData, RawGuild] {
   override def route: RequestRoute = Routes.createGuildFromTemplate(code)
 
   override def responseDecoder: Decoder[RawGuild] = Decoder[RawGuild]
@@ -57,14 +60,17 @@ case class CreateGuildFromTemplate(code: String, params: CreateGuildFromTemplate
 }
 
 /** Gets the guild templates for a guild. */
-case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseRequest[Seq[GuildTemplate]] {
-  override def responseDecoder: Decoder[Seq[GuildTemplate]] = Decoder[Seq[GuildTemplate]]
+case class GetGuildTemplates(guildId: GuildId)
+    extends NoParamsNiceResponseRequest[Seq[GuildTemplate]] {
+  override def responseDecoder: Decoder[Seq[GuildTemplate]] =
+    Decoder[Seq[GuildTemplate]]
 
   override def route: RequestRoute = Routes.getGuildTemplates(guildId)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
 
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsGuild(guildId, requiredPermissions)
 }
 
 /**
@@ -73,15 +79,23 @@ case class GetGuildTemplates(guildId: GuildId) extends NoParamsNiceResponseReque
   * @param description
   *   Description of the template
   */
-case class CreateGuildTemplateData(name: String, description: JsonOption[String] = JsonUndefined) {
+case class CreateGuildTemplateData(
+    name: String,
+    description: JsonOption[String] = JsonUndefined
+) {
   require(name.nonEmpty, "Name must not be empty")
   require(name.length <= 100, "Name too long. Max length is 100 characters")
-  require(description.forall(_.length <= 120), "Description too long. Max length is 120 characters")
+  require(
+    description.forall(_.length <= 120),
+    "Description too long. Max length is 120 characters"
+  )
 }
 
 /** Create a guild template for the guild. */
-case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData)
-    extends NoNiceResponseRequest[CreateGuildTemplateData, GuildTemplate] {
+case class CreateGuildTemplate(
+    guildId: GuildId,
+    params: CreateGuildTemplateData
+) extends NoNiceResponseRequest[CreateGuildTemplateData, GuildTemplate] {
   override def paramsEncoder: Encoder[CreateGuildTemplateData] =
     (a: CreateGuildTemplateData) =>
       JsonOption.removeUndefinedToObj(
@@ -95,18 +109,21 @@ case class CreateGuildTemplate(guildId: GuildId, params: CreateGuildTemplateData
 
   override def requiredPermissions: Permission = Permission.ManageGuild
 
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsGuild(guildId, requiredPermissions)
 }
 
 /** Syncs the template and the guild. */
-case class SyncGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[GuildTemplate] {
+case class SyncGuildTemplate(guildId: GuildId, code: String)
+    extends NoParamsNiceResponseRequest[GuildTemplate] {
   override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.putGuildTemplate(guildId, code)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
 
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsGuild(guildId, requiredPermissions)
 }
 
 case class ModifyGuildTemplateData(
@@ -114,18 +131,27 @@ case class ModifyGuildTemplateData(
     description: JsonOption[String] = JsonUndefined
 ) {
   require(name.forall(_.nonEmpty), "Name must not be empty")
-  require(name.forall(_.length <= 100), "Name too long. Max length is 100 characters")
-  require(description.forall(_.length <= 120), "Description too long. Max length is 120 characters")
+  require(
+    name.forall(_.length <= 100),
+    "Name too long. Max length is 100 characters"
+  )
+  require(
+    description.forall(_.length <= 120),
+    "Description too long. Max length is 120 characters"
+  )
 }
 
 /** Modify the info around a guild template. */
-case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGuildTemplateData)
-    extends NoNiceResponseRequest[ModifyGuildTemplateData, GuildTemplate] {
+case class ModifyGuildTemplate(
+    guildId: GuildId,
+    code: String,
+    params: ModifyGuildTemplateData
+) extends NoNiceResponseRequest[ModifyGuildTemplateData, GuildTemplate] {
 
   override def paramsEncoder: Encoder[ModifyGuildTemplateData] =
     (a: ModifyGuildTemplateData) =>
       JsonOption.removeUndefinedToObj(
-        "name"        -> a.name.toJson,
+        "name" -> a.name.toJson,
         "description" -> a.description.toJson
       )
 
@@ -135,16 +161,19 @@ case class ModifyGuildTemplate(guildId: GuildId, code: String, params: ModifyGui
 
   override def requiredPermissions: Permission = Permission.ManageGuild
 
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsGuild(guildId, requiredPermissions)
 }
 
 /** Deletes the given guild template. */
-case class DeleteGuildTemplate(guildId: GuildId, code: String) extends NoParamsNiceResponseRequest[GuildTemplate] {
+case class DeleteGuildTemplate(guildId: GuildId, code: String)
+    extends NoParamsNiceResponseRequest[GuildTemplate] {
   override def responseDecoder: Decoder[GuildTemplate] = Decoder[GuildTemplate]
 
   override def route: RequestRoute = Routes.deleteGuildTemplate(guildId, code)
 
   override def requiredPermissions: Permission = Permission.ManageGuild
 
-  override def hasPermissions(implicit c: CacheSnapshot): Boolean = hasPermissionsGuild(guildId, requiredPermissions)
+  override def hasPermissions(implicit c: CacheSnapshot): Boolean =
+    hasPermissionsGuild(guildId, requiredPermissions)
 }

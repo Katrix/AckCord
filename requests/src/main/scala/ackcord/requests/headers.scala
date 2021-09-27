@@ -28,107 +28,152 @@ import java.time.Instant
 import scala.concurrent.duration._
 import scala.util.{Success, Try}
 
-import akka.http.scaladsl.model.headers.{GenericHttpCredentials, ModeledCustomHeader, ModeledCustomHeaderCompanion}
+import akka.http.scaladsl.model.headers.{
+  GenericHttpCredentials,
+  ModeledCustomHeader,
+  ModeledCustomHeaderCompanion
+}
 
 object BotAuthentication {
-  def apply(token: String): GenericHttpCredentials = GenericHttpCredentials("Bot", token)
+  def apply(token: String): GenericHttpCredentials =
+    GenericHttpCredentials("Bot", token)
 }
 
-final class `X-RateLimit-Remaining`(val remaining: Int) extends ModeledCustomHeader[`X-RateLimit-Remaining`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Remaining`] = `X-RateLimit-Remaining`
+final class `X-RateLimit-Remaining`(val remaining: Int)
+    extends ModeledCustomHeader[`X-RateLimit-Remaining`] {
+  override def companion
+      : ModeledCustomHeaderCompanion[`X-RateLimit-Remaining`] =
+    `X-RateLimit-Remaining`
 
-  override def value: String              = remaining.toString
-  override def renderInRequests: Boolean  = false
+  override def value: String = remaining.toString
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-RateLimit-Remaining` extends ModeledCustomHeaderCompanion[`X-RateLimit-Remaining`] {
-  override def name: String                                       = "X-RateLimit-Remaining"
-  override def parse(value: String): Try[`X-RateLimit-Remaining`] = Try(new `X-RateLimit-Remaining`(value.toInt))
+object `X-RateLimit-Remaining`
+    extends ModeledCustomHeaderCompanion[`X-RateLimit-Remaining`] {
+  override def name: String = "X-RateLimit-Remaining"
+  override def parse(value: String): Try[`X-RateLimit-Remaining`] = Try(
+    new `X-RateLimit-Remaining`(value.toInt)
+  )
 }
 
-final class `X-RateLimit-Reset`(val resetAt: Instant) extends ModeledCustomHeader[`X-RateLimit-Reset`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] = `X-RateLimit-Reset`
+final class `X-RateLimit-Reset`(val resetAt: Instant)
+    extends ModeledCustomHeader[`X-RateLimit-Reset`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] =
+    `X-RateLimit-Reset`
 
-  override def value: String              = resetAt.getEpochSecond.toString
-  override def renderInRequests: Boolean  = false
+  override def value: String = resetAt.getEpochSecond.toString
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-RateLimit-Reset` extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] {
+object `X-RateLimit-Reset`
+    extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset`] {
   override def name: String = "X-RateLimit-Reset"
   override def parse(value: String): Try[`X-RateLimit-Reset`] =
-    Try(new `X-RateLimit-Reset`(Instant.ofEpochMilli((value.toDouble * 1000).toLong)))
+    Try(
+      new `X-RateLimit-Reset`(
+        Instant.ofEpochMilli((value.toDouble * 1000).toLong)
+      )
+    )
 }
 final class `X-RateLimit-Reset-After`(val resetIn: FiniteDuration)
     extends ModeledCustomHeader[`X-RateLimit-Reset-After`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] = `X-RateLimit-Reset-After`
+  override def companion
+      : ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] =
+    `X-RateLimit-Reset-After`
 
-  override def value: String              = (resetIn.toMillis.toDouble / 1000).toString
-  override def renderInRequests: Boolean  = false
+  override def value: String = (resetIn.toMillis.toDouble / 1000).toString
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-RateLimit-Reset-After` extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] {
+object `X-RateLimit-Reset-After`
+    extends ModeledCustomHeaderCompanion[`X-RateLimit-Reset-After`] {
   override def name: String = "X-RateLimit-Reset-After"
   override def parse(value: String): Try[`X-RateLimit-Reset-After`] =
     Try(new `X-RateLimit-Reset-After`(value.toDouble.millis))
 }
 
-final class `X-RateLimit-Bucket`(val identifier: String) extends ModeledCustomHeader[`X-RateLimit-Bucket`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] = `X-RateLimit-Bucket`
+final class `X-RateLimit-Bucket`(val identifier: String)
+    extends ModeledCustomHeader[`X-RateLimit-Bucket`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] =
+    `X-RateLimit-Bucket`
 
-  override def value: String              = identifier
-  override def renderInRequests: Boolean  = false
+  override def value: String = identifier
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-RateLimit-Bucket` extends ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] {
+object `X-RateLimit-Bucket`
+    extends ModeledCustomHeaderCompanion[`X-RateLimit-Bucket`] {
   override def name: String = "X-RateLimit-Bucket"
 
-  override def parse(value: String): Try[`X-RateLimit-Bucket`] = Success(new `X-RateLimit-Bucket`(value))
+  override def parse(value: String): Try[`X-RateLimit-Bucket`] = Success(
+    new `X-RateLimit-Bucket`(value)
+  )
 }
 
-final class `X-Ratelimit-Global`(val isGlobal: Boolean) extends ModeledCustomHeader[`X-Ratelimit-Global`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-Ratelimit-Global`] = `X-Ratelimit-Global`
+final class `X-Ratelimit-Global`(val isGlobal: Boolean)
+    extends ModeledCustomHeader[`X-Ratelimit-Global`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-Ratelimit-Global`] =
+    `X-Ratelimit-Global`
 
-  override def value: String              = isGlobal.toString
-  override def renderInRequests: Boolean  = false
+  override def value: String = isGlobal.toString
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-Ratelimit-Global` extends ModeledCustomHeaderCompanion[`X-Ratelimit-Global`] {
-  override def name: String         = "X-Ratelimit-Global"
-  override def parse(value: String) = Try(new `X-Ratelimit-Global`(value.toBoolean))
+object `X-Ratelimit-Global`
+    extends ModeledCustomHeaderCompanion[`X-Ratelimit-Global`] {
+  override def name: String = "X-Ratelimit-Global"
+  override def parse(value: String) = Try(
+    new `X-Ratelimit-Global`(value.toBoolean)
+  )
 }
 
-final class `X-RateLimit-Limit`(val limit: Int) extends ModeledCustomHeader[`X-RateLimit-Limit`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] = `X-RateLimit-Limit`
+final class `X-RateLimit-Limit`(val limit: Int)
+    extends ModeledCustomHeader[`X-RateLimit-Limit`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] =
+    `X-RateLimit-Limit`
 
-  override def value: String              = limit.toString
-  override def renderInRequests: Boolean  = false
+  override def value: String = limit.toString
+  override def renderInRequests: Boolean = false
   override def renderInResponses: Boolean = true
 }
-object `X-RateLimit-Limit` extends ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] {
-  override def name: String                                   = "X-RateLimit-Limit"
-  override def parse(value: String): Try[`X-RateLimit-Limit`] = Try(new `X-RateLimit-Limit`(value.toInt))
+object `X-RateLimit-Limit`
+    extends ModeledCustomHeaderCompanion[`X-RateLimit-Limit`] {
+  override def name: String = "X-RateLimit-Limit"
+  override def parse(value: String): Try[`X-RateLimit-Limit`] = Try(
+    new `X-RateLimit-Limit`(value.toInt)
+  )
 }
 
-final class `Retry-After`(val tilReset: FiniteDuration) extends ModeledCustomHeader[`Retry-After`] {
-  override def companion: ModeledCustomHeaderCompanion[`Retry-After`] = `Retry-After`
+final class `Retry-After`(val tilReset: FiniteDuration)
+    extends ModeledCustomHeader[`Retry-After`] {
+  override def companion: ModeledCustomHeaderCompanion[`Retry-After`] =
+    `Retry-After`
 
-  override def value: String     = tilReset.toMillis.toString
-  override def renderInRequests  = false
+  override def value: String = tilReset.toMillis.toString
+  override def renderInRequests = false
   override def renderInResponses = true
 }
 object `Retry-After` extends ModeledCustomHeaderCompanion[`Retry-After`] {
-  override def name: String                             = "Retry-After"
-  override def parse(value: String): Try[`Retry-After`] = Try(new `Retry-After`(value.toLong.seconds))
+  override def name: String = "Retry-After"
+  override def parse(value: String): Try[`Retry-After`] = Try(
+    new `Retry-After`(value.toLong.seconds)
+  )
 }
 
-final class `X-Audit-Log-Reason`(val reason: String) extends ModeledCustomHeader[`X-Audit-Log-Reason`] {
-  override def companion: ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] = `X-Audit-Log-Reason`
+final class `X-Audit-Log-Reason`(val reason: String)
+    extends ModeledCustomHeader[`X-Audit-Log-Reason`] {
+  override def companion: ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] =
+    `X-Audit-Log-Reason`
 
-  override def value: String     = reason
-  override def renderInRequests  = false
+  override def value: String = reason
+  override def renderInRequests = false
   override def renderInResponses = true
 }
-object `X-Audit-Log-Reason` extends ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] {
-  override def name: String                                    = "X-Audit-Log-Reason"
-  override def parse(value: String): Try[`X-Audit-Log-Reason`] = Success(new `X-Audit-Log-Reason`(value))
+object `X-Audit-Log-Reason`
+    extends ModeledCustomHeaderCompanion[`X-Audit-Log-Reason`] {
+  override def name: String = "X-Audit-Log-Reason"
+  override def parse(value: String): Try[`X-Audit-Log-Reason`] = Success(
+    new `X-Audit-Log-Reason`(value)
+  )
 }

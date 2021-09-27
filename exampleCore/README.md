@@ -1,5 +1,7 @@
 # example
+
 This module showcases a small example bot using the low level API. The example bot showcases:
+
 * How to run requests
 * Different approaches to running requests
 * How to use commands

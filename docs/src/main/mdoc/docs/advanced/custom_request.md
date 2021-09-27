@@ -1,26 +1,25 @@
 ---
-layout: docs
-title: Custom requests (Advanced)
+layout: docs title: Custom requests (Advanced)
 ---
 
 # Custom requests
-Sometimes Discord releases a new endpoint that you want to use, but AckCord 
-hasn't added it yet, or maybe you want to use an internal endpoint. How can you 
-use AckCord's code to perform the request?
 
-Recall that AckCord's requests are represented as objects. To create a new 
-request, you need a new subclass of this request type. While it's possible to 
-extend `Request` directly, in most cases you probably want to 
-extend `RESTRequest` or one of it's children.
+Sometimes Discord releases a new endpoint that you want to use, but AckCord hasn't added it yet, or maybe you want to
+use an internal endpoint. How can you use AckCord's code to perform the request?
+
+Recall that AckCord's requests are represented as objects. To create a new request, you need a new subclass of this
+request type. While it's possible to extend `Request` directly, in most cases you probably want to extend `RESTRequest`
+or one of it's children.
 
 There are many options here, so let's go over them all:
+
 * `NoParamsRequest`: Use this if it doesn't take a body.
-* `ReasonRequest`: Use this if the action you're perfoming can leave an audit log
-and you want a special message in that audit log entry.
-* `NoNiceResponseRequest`: Most requests have both a raw representation and a nicer
- representation. Not all though. Use this when there is no such distinction.
+* `ReasonRequest`: Use this if the action you're perfoming can leave an audit log and you want a special message in that
+  audit log entry.
+* `NoNiceResponseRequest`: Most requests have both a raw representation and a nicer representation. Not all though. Use
+  this when there is no such distinction.
 * `NoParamsReasonRequest`: Combines `NoParamsRequest` and `ReasonRequest`.
-* `NoNiceResponseReasonRequest`: Combines `NoNiceResponseRequest` and `ReasonRequest`.  
+* `NoNiceResponseReasonRequest`: Combines `NoNiceResponseRequest` and `ReasonRequest`.
 * `NoParamsNiceResponseRequest`: Combines `NoParamsRequest` and `NoNiceResponseRequest`.
 * `NoParamsNiceResponseReasonRequest`: Combines `NoParamsNiceResponseReques` and `ReasonRequest`.
 * `NoResponseRequest`: Used for requests that return 204.
@@ -29,13 +28,13 @@ and you want a special message in that audit log entry.
 * `NoParamsResponseReasonRequest`: Combines `NoParamsResponseRequest` and `ReasonRequest`.
 * `RESTRequest`: If nothing else works
 
-You don't have to choose what first best for your case though. Most of these just 
-help reduce boilerplate.
+You don't have to choose what first best for your case though. Most of these just help reduce boilerplate.
 
-When defining the request itself, you want it to take the needed body, an 
-encoder for the body, a decoder for the result, and the for the request to go to.
+When defining the request itself, you want it to take the needed body, an encoder for the body, a decoder for the
+result, and the for the request to go to.
 
 Everything you need to make the route can be found in `ackcord.requests.Routes`.
+
 ```scala mdoc
 import ackcord.requests.Routes._
 import akka.http.scaladsl.model.HttpMethods._
@@ -72,5 +71,4 @@ val binWithHeight = guildBin +? height
 val binWithWidth = guildBin +? query[Int]("width", _.toString)
 ```
 
-Look at the existing requests and routes in AckCord to get a better idea of 
-how to do it yourself.
+Look at the existing requests and routes in AckCord to get a better idea of how to do it yourself.

@@ -44,7 +44,14 @@ private[lavaplayer] object MovedMonitor {
         .viaMat(KillSwitches.single)(Keep.right)
         .to(
           ActorSink
-            .actorRefWithBackpressure(ctx.self, ReceivedEvent, InitSink, AckSink, CompletedSink, _ => CompletedSink)
+            .actorRefWithBackpressure(
+              ctx.self,
+              ReceivedEvent,
+              InitSink,
+              AckSink,
+              CompletedSink,
+              _ => CompletedSink
+            )
         )
         .run()
 
@@ -65,7 +72,8 @@ private[lavaplayer] object MovedMonitor {
         ackTo ! AckSink
         Behaviors.same
 
-      case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c, _)) if state.userId == c.current.botUser.id =>
+      case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c, _))
+          if state.userId == c.current.botUser.id =>
         handler ! LavaplayerHandler.VoiceChannelMoved(state.channelId)
         ackTo ! AckSink
         Behaviors.same
@@ -83,7 +91,10 @@ private[lavaplayer] object MovedMonitor {
   sealed trait Command
   case object Stop extends Command
 
-  private case class InitSink(ackTo: ActorRef[AckSink.type])                                            extends Command
-  private case class ReceivedEvent(ackTo: ActorRef[AckSink.type], message: APIMessage.VoiceStateUpdate) extends Command
-  private case object CompletedSink                                                                     extends Command
+  private case class InitSink(ackTo: ActorRef[AckSink.type]) extends Command
+  private case class ReceivedEvent(
+      ackTo: ActorRef[AckSink.type],
+      message: APIMessage.VoiceStateUpdate
+  ) extends Command
+  private case object CompletedSink extends Command
 }

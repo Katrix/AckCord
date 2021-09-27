@@ -84,45 +84,47 @@ case class PartialIntegration(
 
 /** A type of change that an entry can represent */
 sealed abstract class AuditLogEvent(val value: Int) extends IntEnumEntry
-object AuditLogEvent extends IntEnum[AuditLogEvent] with IntCirceEnumWithUnknown[AuditLogEvent] {
-  case object GuildUpdate            extends AuditLogEvent(1)
-  case object ChannelCreate          extends AuditLogEvent(10)
-  case object ChannelUpdate          extends AuditLogEvent(11)
-  case object ChannelDelete          extends AuditLogEvent(12)
+object AuditLogEvent
+    extends IntEnum[AuditLogEvent]
+    with IntCirceEnumWithUnknown[AuditLogEvent] {
+  case object GuildUpdate extends AuditLogEvent(1)
+  case object ChannelCreate extends AuditLogEvent(10)
+  case object ChannelUpdate extends AuditLogEvent(11)
+  case object ChannelDelete extends AuditLogEvent(12)
   case object ChannelOverwriteCreate extends AuditLogEvent(13)
   case object ChannelOverwriteUpdate extends AuditLogEvent(14)
   case object ChannelOverwriteDelete extends AuditLogEvent(15)
-  case object MemberKick             extends AuditLogEvent(20)
-  case object MemberPrune            extends AuditLogEvent(21)
-  case object MemberBanAdd           extends AuditLogEvent(22)
-  case object MemberBanRemove        extends AuditLogEvent(23)
-  case object MemberUpdate           extends AuditLogEvent(24)
-  case object MemberRoleUpdate       extends AuditLogEvent(25)
-  case object MemberMove             extends AuditLogEvent(26)
-  case object MemberDisconnect       extends AuditLogEvent(27)
-  case object BotAdd                 extends AuditLogEvent(28)
-  case object RoleCreate             extends AuditLogEvent(30)
-  case object RoleUpdate             extends AuditLogEvent(31)
-  case object RoleDelete             extends AuditLogEvent(32)
-  case object InviteCreate           extends AuditLogEvent(40)
-  case object InviteUpdate           extends AuditLogEvent(41)
-  case object InviteDelete           extends AuditLogEvent(42)
-  case object WebhookCreate          extends AuditLogEvent(50)
-  case object WebhookUpdate          extends AuditLogEvent(51)
-  case object WebhookDelete          extends AuditLogEvent(52)
-  case object EmojiCreate            extends AuditLogEvent(60)
-  case object EmojiUpdate            extends AuditLogEvent(61)
-  case object EmojiDelete            extends AuditLogEvent(62)
-  case object MessageDelete          extends AuditLogEvent(72)
-  case object MessageBulkDelete      extends AuditLogEvent(73)
-  case object MessagePin             extends AuditLogEvent(74)
-  case object MessageUnpin           extends AuditLogEvent(75)
-  case object IntegrationCreate      extends AuditLogEvent(80)
-  case object IntegrationUpdate      extends AuditLogEvent(81)
-  case object IntegrationDelete      extends AuditLogEvent(82)
-  case object StageInstanceCreate    extends AuditLogEvent(83)
-  case object StageInstanceUpdate    extends AuditLogEvent(84)
-  case object StageInstanceDelete    extends AuditLogEvent(85)
+  case object MemberKick extends AuditLogEvent(20)
+  case object MemberPrune extends AuditLogEvent(21)
+  case object MemberBanAdd extends AuditLogEvent(22)
+  case object MemberBanRemove extends AuditLogEvent(23)
+  case object MemberUpdate extends AuditLogEvent(24)
+  case object MemberRoleUpdate extends AuditLogEvent(25)
+  case object MemberMove extends AuditLogEvent(26)
+  case object MemberDisconnect extends AuditLogEvent(27)
+  case object BotAdd extends AuditLogEvent(28)
+  case object RoleCreate extends AuditLogEvent(30)
+  case object RoleUpdate extends AuditLogEvent(31)
+  case object RoleDelete extends AuditLogEvent(32)
+  case object InviteCreate extends AuditLogEvent(40)
+  case object InviteUpdate extends AuditLogEvent(41)
+  case object InviteDelete extends AuditLogEvent(42)
+  case object WebhookCreate extends AuditLogEvent(50)
+  case object WebhookUpdate extends AuditLogEvent(51)
+  case object WebhookDelete extends AuditLogEvent(52)
+  case object EmojiCreate extends AuditLogEvent(60)
+  case object EmojiUpdate extends AuditLogEvent(61)
+  case object EmojiDelete extends AuditLogEvent(62)
+  case object MessageDelete extends AuditLogEvent(72)
+  case object MessageBulkDelete extends AuditLogEvent(73)
+  case object MessagePin extends AuditLogEvent(74)
+  case object MessageUnpin extends AuditLogEvent(75)
+  case object IntegrationCreate extends AuditLogEvent(80)
+  case object IntegrationUpdate extends AuditLogEvent(81)
+  case object IntegrationDelete extends AuditLogEvent(82)
+  case object StageInstanceCreate extends AuditLogEvent(83)
+  case object StageInstanceUpdate extends AuditLogEvent(84)
+  case object StageInstanceDelete extends AuditLogEvent(85)
 
   override def values: immutable.IndexedSeq[AuditLogEvent] = findValues
 
@@ -181,19 +183,24 @@ object AuditLogChange {
   import ackcord.data
 
   /** Name changed */
-  case class Name(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Name(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Description changed */
-  case class Description(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Description(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Icon hash changed */
-  case class IconHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class IconHash(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Splash hash changed */
-  case class SplashHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class SplashHash(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Owner id changed */
-  case class OwnerId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
+  case class OwnerId(oldValue: Option[UserId], newValue: Option[UserId])
+      extends AuditLogChange[UserId] {
 
     def oldOwner(implicit c: CacheSnapshot): Option[User] =
       oldValue.flatMap(c.getUser)
@@ -203,44 +210,63 @@ object AuditLogChange {
   }
 
   /** Region changed */
-  case class Region(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Region(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Region changed */
-  case class PreferredLocale(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class PreferredLocale(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** AFK channelId changed */
-  case class AfkChannelId(oldValue: Option[NormalVoiceGuildChannelId], newValue: Option[NormalVoiceGuildChannelId])
-      extends AuditLogChange[NormalVoiceGuildChannelId] {
+  case class AfkChannelId(
+      oldValue: Option[NormalVoiceGuildChannelId],
+      newValue: Option[NormalVoiceGuildChannelId]
+  ) extends AuditLogChange[NormalVoiceGuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
-      oldValue.flatMap(c.getGuildChannel).collect { case ch: NormalVoiceGuildChannel => ch }
+      oldValue.flatMap(c.getGuildChannel).collect {
+        case ch: NormalVoiceGuildChannel => ch
+      }
 
     def newChannel(implicit c: CacheSnapshot): Option[NormalVoiceGuildChannel] =
-      newValue.flatMap(c.getGuildChannel).collect { case ch: NormalVoiceGuildChannel => ch }
+      newValue.flatMap(c.getGuildChannel).collect {
+        case ch: NormalVoiceGuildChannel => ch
+      }
   }
 
   /** AFK timeout changed */
-  case class AfkTimeout(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class AfkTimeout(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Rules channel changed */
-  case class RulesChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
-      extends AuditLogChange[TextGuildChannelId]
+  case class RulesChannelId(
+      oldValue: Option[TextGuildChannelId],
+      newValue: Option[TextGuildChannelId]
+  ) extends AuditLogChange[TextGuildChannelId]
 
   /** Public updates channel changed */
-  case class PublicUpdatesChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
-      extends AuditLogChange[TextGuildChannelId]
+  case class PublicUpdatesChannelId(
+      oldValue: Option[TextGuildChannelId],
+      newValue: Option[TextGuildChannelId]
+  ) extends AuditLogChange[TextGuildChannelId]
 
   /** MFA level changed */
-  case class MfaLevel(oldValue: Option[data.MFALevel], newValue: Option[data.MFALevel])
-      extends AuditLogChange[data.MFALevel]
+  case class MfaLevel(
+      oldValue: Option[data.MFALevel],
+      newValue: Option[data.MFALevel]
+  ) extends AuditLogChange[data.MFALevel]
 
   /** Required verification level changed */
-  case class VerificationLevel(oldValue: Option[data.VerificationLevel], newValue: Option[data.VerificationLevel])
-      extends AuditLogChange[data.VerificationLevel]
+  case class VerificationLevel(
+      oldValue: Option[data.VerificationLevel],
+      newValue: Option[data.VerificationLevel]
+  ) extends AuditLogChange[data.VerificationLevel]
 
   /** Explicit content filter changed */
-  case class ExplicitContentFilter(oldValue: Option[data.FilterLevel], newValue: Option[data.FilterLevel])
-      extends AuditLogChange[data.FilterLevel]
+  case class ExplicitContentFilter(
+      oldValue: Option[data.FilterLevel],
+      newValue: Option[data.FilterLevel]
+  ) extends AuditLogChange[data.FilterLevel]
 
   /** Default message notification level changed */
   case class DefaultMessageNotification(
@@ -249,15 +275,20 @@ object AuditLogChange {
   ) extends AuditLogChange[data.NotificationLevel]
 
   /** Guild invite vanity url changed */
-  case class VanityUrlCode(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class VanityUrlCode(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Role added */
-  case class $Add(oldValue: Option[Seq[PartialRole]], newValue: Option[Seq[PartialRole]])
-      extends AuditLogChange[Seq[PartialRole]]
+  case class $Add(
+      oldValue: Option[Seq[PartialRole]],
+      newValue: Option[Seq[PartialRole]]
+  ) extends AuditLogChange[Seq[PartialRole]]
 
   /** Role removed */
-  case class $Remove(oldValue: Option[Seq[PartialRole]], newValue: Option[Seq[PartialRole]])
-      extends AuditLogChange[Seq[PartialRole]]
+  case class $Remove(
+      oldValue: Option[Seq[PartialRole]],
+      newValue: Option[Seq[PartialRole]]
+  ) extends AuditLogChange[Seq[PartialRole]]
 
   case class PartialRole(
       name: String,
@@ -265,14 +296,18 @@ object AuditLogChange {
   )
 
   /** Prune delete duration changed */
-  case class PruneDeleteDays(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class PruneDeleteDays(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Widget enabled changed */
-  case class WidgetEnabled(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class WidgetEnabled(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Widget channelId changed */
-  case class WidgetChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
-      extends AuditLogChange[GuildChannelId] {
+  case class WidgetChannelId(
+      oldValue: Option[GuildChannelId],
+      newValue: Option[GuildChannelId]
+  ) extends AuditLogChange[GuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
       oldValue.flatMap(c.getGuildChannel)
@@ -282,8 +317,10 @@ object AuditLogChange {
   }
 
   /** System channelId changed */
-  case class SystemChannelId(oldValue: Option[TextGuildChannelId], newValue: Option[TextGuildChannelId])
-      extends AuditLogChange[TextGuildChannelId] {
+  case class SystemChannelId(
+      oldValue: Option[TextGuildChannelId],
+      newValue: Option[TextGuildChannelId]
+  ) extends AuditLogChange[TextGuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[GuildChannel] =
       oldValue.flatMap(c.getGuildChannel)
@@ -293,13 +330,16 @@ object AuditLogChange {
   }
 
   /** Channel position changed */
-  case class Position(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class Position(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Channel or stage instance topic changed */
-  case class Topic(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Topic(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Voice channel bitrate changed */
-  case class Bitrate(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class Bitrate(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Permission overwrites for channel changed */
   case class PermissionOverwrites(
@@ -308,49 +348,69 @@ object AuditLogChange {
   ) extends AuditLogChange[Seq[PermissionOverwrite]]
 
   /** NSFW for channel changed */
-  case class NSFW(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class NSFW(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** ApplicationId of webhook or bot */
-  case class ApplicationId(oldValue: Option[data.ApplicationId], newValue: Option[data.ApplicationId])
-      extends AuditLogChange[data.ApplicationId]
+  case class ApplicationId(
+      oldValue: Option[data.ApplicationId],
+      newValue: Option[data.ApplicationId]
+  ) extends AuditLogChange[data.ApplicationId]
 
   /** Ratelimit changed */
-  case class RateLimitPerUser(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class RateLimitPerUser(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Permissions of role changed */
-  case class Permissions(oldValue: Option[Permission], newValue: Option[Permission]) extends AuditLogChange[Permission]
+  case class Permissions(
+      oldValue: Option[Permission],
+      newValue: Option[Permission]
+  ) extends AuditLogChange[Permission]
 
   /** Color of role changed */
-  case class Color(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class Color(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Hoist of role changed */
-  case class Hoist(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class Hoist(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** Mentionable of role changed */
-  case class Mentionable(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class Mentionable(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** Permission was allowed for a role on a channel */
-  case class Allow(oldValue: Option[Permission], newValue: Option[Permission]) extends AuditLogChange[Permission]
+  case class Allow(oldValue: Option[Permission], newValue: Option[Permission])
+      extends AuditLogChange[Permission]
 
   /** Permission was denied for role on a channel */
-  case class Deny(oldValue: Option[Permission], newValue: Option[Permission]) extends AuditLogChange[Permission]
+  case class Deny(oldValue: Option[Permission], newValue: Option[Permission])
+      extends AuditLogChange[Permission]
 
   /** Invite code changed */
-  case class Code(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Code(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Invite channelId changed */
-  case class InviteChannelId(oldValue: Option[GuildChannelId], newValue: Option[GuildChannelId])
-      extends AuditLogChange[GuildChannelId] {
+  case class InviteChannelId(
+      oldValue: Option[GuildChannelId],
+      newValue: Option[GuildChannelId]
+  ) extends AuditLogChange[GuildChannelId] {
 
     def oldChannel(implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      oldValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel => ch }
+      oldValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel =>
+        ch
+      }
 
     def newChannel[F[_]](implicit c: CacheSnapshot): Option[TextGuildChannel] =
-      newValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel => ch }
+      newValue.flatMap(c.getGuildChannel).collect { case ch: TextGuildChannel =>
+        ch
+      }
   }
 
   /** Inviter userId changed */
-  case class InviterId(oldValue: Option[UserId], newValue: Option[UserId]) extends AuditLogChange[UserId] {
+  case class InviterId(oldValue: Option[UserId], newValue: Option[UserId])
+      extends AuditLogChange[UserId] {
 
     def oldInvited(implicit c: CacheSnapshot): Option[User] =
       oldValue.flatMap(c.getUser)
@@ -360,51 +420,70 @@ object AuditLogChange {
   }
 
   /** Max uses of an invite changed */
-  case class MaxUses(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class MaxUses(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Amount of times an invite has been used changed */
-  case class Uses(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class Uses(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Max age of invite changed */
-  case class MaxAge(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class MaxAge(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** If invite is temporary changed */
-  case class Temporary(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class Temporary(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** Deaf for user changed */
-  case class Deaf(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class Deaf(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** Mute for user changed */
-  case class Mute(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class Mute(oldValue: Option[Boolean], newValue: Option[Boolean])
+      extends AuditLogChange[Boolean]
 
   /** Nick for user changed */
-  case class Nick(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class Nick(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Avatar hash changed */
-  case class AvatarHash(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class AvatarHash(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Id of changed object */
-  case class Id(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake]) extends AuditLogChange[RawSnowflake]
+  case class Id(oldValue: Option[RawSnowflake], newValue: Option[RawSnowflake])
+      extends AuditLogChange[RawSnowflake]
 
   /** Type of object changed */
-  case class TypeInt(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class TypeInt(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Type of created object */
-  case class TypeString(oldValue: Option[String], newValue: Option[String]) extends AuditLogChange[String]
+  case class TypeString(oldValue: Option[String], newValue: Option[String])
+      extends AuditLogChange[String]
 
   /** Integration emoticons enabled/disabled changed */
-  case class EnableEmoticons(oldValue: Option[Boolean], newValue: Option[Boolean]) extends AuditLogChange[Boolean]
+  case class EnableEmoticons(
+      oldValue: Option[Boolean],
+      newValue: Option[Boolean]
+  ) extends AuditLogChange[Boolean]
 
   /** Integration expire behavior changed */
-  case class ExpireBehavior(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class ExpireBehavior(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Integration grace period changed */
-  case class ExpireGracePeriod(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class ExpireGracePeriod(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** New user limit in a voice channel */
-  case class UserLimit(oldValue: Option[Int], newValue: Option[Int]) extends AuditLogChange[Int]
+  case class UserLimit(oldValue: Option[Int], newValue: Option[Int])
+      extends AuditLogChange[Int]
 
   /** Privacy level of a stage instance */
-  case class PrivacyLevel(oldValue: Option[StageInstancePrivacyLevel], newValue: Option[StageInstancePrivacyLevel])
-      extends AuditLogChange[StageInstancePrivacyLevel]
+  case class PrivacyLevel(
+      oldValue: Option[StageInstancePrivacyLevel],
+      newValue: Option[StageInstancePrivacyLevel]
+  ) extends AuditLogChange[StageInstancePrivacyLevel]
 }

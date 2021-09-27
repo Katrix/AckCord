@@ -25,9 +25,18 @@ package ackcord
 
 import scala.reflect.ClassTag
 
-import ackcord.cachehandlers.{CacheHandler, CacheSnapshotBuilder, CacheTypeRegistry}
+import ackcord.cachehandlers.{
+  CacheHandler,
+  CacheSnapshotBuilder,
+  CacheTypeRegistry
+}
 import ackcord.gateway.Dispatch
-import ackcord.requests.{BaseRESTRequest, Request, RequestAnswer, RequestResponse}
+import ackcord.requests.{
+  BaseRESTRequest,
+  Request,
+  RequestAnswer,
+  RequestResponse
+}
 import akka.NotUsed
 import akka.stream.scaladsl.{Flow, Sink}
 
@@ -76,7 +85,13 @@ object APIMessageCacheUpdate {
       registry: CacheTypeRegistry,
       dispatch: Dispatch[_]
   ): APIMessageCacheUpdate[Data] =
-    new APIMessageCacheUpdate[Data](data, sendEvent(_).toList, handler, registry, dispatch)
+    new APIMessageCacheUpdate[Data](
+      data,
+      sendEvent(_).toList,
+      handler,
+      registry,
+      dispatch
+    )
 
   def many[Data](
       data: Data,
@@ -85,10 +100,17 @@ object APIMessageCacheUpdate {
       registry: CacheTypeRegistry,
       dispatch: Dispatch[_]
   ): APIMessageCacheUpdate[Data] =
-    new APIMessageCacheUpdate[Data](data, sendEvent(_).toList.flatten, handler, registry, dispatch)
+    new APIMessageCacheUpdate[Data](
+      data,
+      sendEvent(_).toList.flatten,
+      handler,
+      registry,
+      dispatch
+    )
 }
 
-case class BatchedAPIMessageCacheUpdate(updates: Seq[APIMessageCacheUpdate[_]]) extends CacheEvent {
+case class BatchedAPIMessageCacheUpdate(updates: Seq[APIMessageCacheUpdate[_]])
+    extends CacheEvent {
   override def process(builder: CacheSnapshotBuilder): Unit =
     updates.foreach(_.process(builder))
 }
@@ -112,12 +134,15 @@ case class RequestCacheUpdate[Data](
 
   override def process(builder: CacheSnapshotBuilder): Unit = {
     registry.getUpdater(ClassTag[Data](requestResponse.data.getClass)) match {
-      case Some(updater) => updater.handle(builder, requestResponse.data, registry)
+      case Some(updater) =>
+        updater.handle(builder, requestResponse.data, registry)
       case None =>
         request match {
           case request: BaseRESTRequest[Data, nice] =>
             val niceData = request.toNiceResponse(requestResponse.data)
-            registry.updateData(builder)(niceData)(ClassTag[nice](niceData.getClass))
+            registry.updateData(builder)(niceData)(
+              ClassTag[nice](niceData.getClass)
+            )
 
           case _ =>
         }
@@ -141,6 +166,8 @@ object RequestCacheUpdate {
       registry: CacheTypeRegistry
   ): Sink[(Request[Data], RequestAnswer[Data]), NotUsed] =
     Flow[(Request[Data], RequestAnswer[Data])]
-      .collect { case (request, response: RequestResponse[Data]) => RequestCacheUpdate(response, request, registry) }
+      .collect { case (request, response: RequestResponse[Data]) =>
+        RequestCacheUpdate(response, request, registry)
+      }
       .to(events.publish)
 }

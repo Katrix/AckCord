@@ -32,53 +32,80 @@ import cats.~>
 class CacheSlashCommandController(val requests: Requests)
     extends SlashCommandControllerBase[ResolvedCommandInteraction] {
 
-  implicit def findCache[A](implicit message: CacheInteraction): CacheSnapshot = message.cache
+  implicit def findCache[A](implicit message: CacheInteraction): CacheSnapshot =
+    message.cache
 
-  override val Command: CommandBuilder[ResolvedCommandInteraction, NotUsed] = new CommandBuilder(
-    true,
-    new DataInteractionTransformer[CommandInteraction, CacheCommandInteraction] {
-      override def filter[A](from: CommandInteraction[A]): Either[Option[String], CacheCommandInteraction[A]] =
-        from.optCache match {
-          case Some(value) => Right(BaseCacheCommandInteraction(from.commandInvocationInfo, value))
-          case None        => Left(Some("This command can only be used when the bot has access to a cache"))
-        }
-    }.andThen(
-      DataInteractionTransformer.resolved((channel, optGuild) =>
-        Lambda[CacheCommandInteraction ~> ResolvedCommandInteraction] { baseInteraction =>
-          BaseResolvedCommandInteraction(
-            baseInteraction.commandInvocationInfo,
-            channel,
-            optGuild,
-            baseInteraction.cache
+  override val Command: CommandBuilder[ResolvedCommandInteraction, NotUsed] =
+    new CommandBuilder(
+      true,
+      new DataInteractionTransformer[
+        CommandInteraction,
+        CacheCommandInteraction
+      ] {
+        override def filter[A](
+            from: CommandInteraction[A]
+        ): Either[Option[String], CacheCommandInteraction[A]] =
+          from.optCache match {
+            case Some(value) =>
+              Right(
+                BaseCacheCommandInteraction(from.commandInvocationInfo, value)
+              )
+            case None =>
+              Left(
+                Some(
+                  "This command can only be used when the bot has access to a cache"
+                )
+              )
+          }
+      }.andThen(
+        DataInteractionTransformer.resolved((channel, optGuild) =>
+          Lambda[CacheCommandInteraction ~> ResolvedCommandInteraction] {
+            baseInteraction =>
+              BaseResolvedCommandInteraction(
+                baseInteraction.commandInvocationInfo,
+                channel,
+                optGuild,
+                baseInteraction.cache
+              )
+          }
+        )
+      ),
+      Left(implicitly),
+      Map.empty
+    )
+
+  val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] =
+    Command.andThen(
+      DataInteractionTransformer.onlyInGuild(
+        (guild, guildMember, memberPermissions, channel) =>
+          Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
+            BaseGuildCommandInteraction(
+              i.commandInvocationInfo,
+              channel,
+              guild,
+              guildMember,
+              memberPermissions,
+              i.cache
+            )
           )
-        }
-      )
-    ),
-    Left(implicitly),
-    Map.empty
-  )
-
-  val GuildCommand: CommandBuilder[GuildCommandInteraction, NotUsed] = Command.andThen(
-    DataInteractionTransformer.onlyInGuild((guild, guildMember, memberPermissions, channel) =>
-      Lambda[ResolvedCommandInteraction ~> GuildCommandInteraction](i =>
-        BaseGuildCommandInteraction(i.commandInvocationInfo, channel, guild, guildMember, memberPermissions, i.cache)
       )
     )
-  )
 
-  val GuildVoiceCommand: CommandBuilder[VoiceChannelCommandInteraction, NotUsed] = GuildCommand.andThen(
-    DataInteractionTransformer.inVoiceChannel(voiceChannel =>
-      Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
-        BaseVoiceChannelCommandInteraction(
-          i.commandInvocationInfo,
-          i.textChannel,
-          i.guild,
-          i.member,
-          i.memberPermissions,
-          voiceChannel,
-          i.cache
+  val GuildVoiceCommand
+      : CommandBuilder[VoiceChannelCommandInteraction, NotUsed] =
+    GuildCommand.andThen(
+      DataInteractionTransformer.inVoiceChannel(voiceChannel =>
+        Lambda[GuildCommandInteraction ~> VoiceChannelCommandInteraction](i =>
+          BaseVoiceChannelCommandInteraction(
+            i.commandInvocationInfo,
+            i.textChannel,
+            i.guild,
+            i.member,
+            i.memberPermissions,
+            voiceChannel,
+            i.cache
+          )
         )
       )
     )
-  )
 }

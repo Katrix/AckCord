@@ -45,7 +45,14 @@ object VoiceServerNegotiator {
 
     Source
       .single(
-        VoiceStateUpdate(VoiceStateUpdateData(guildId, Some(voiceChannelId), selfMute = false, selfDeaf = false))
+        VoiceStateUpdate(
+          VoiceStateUpdateData(
+            guildId,
+            Some(voiceChannelId),
+            selfMute = false,
+            selfDeaf = false
+          )
+        )
           .asInstanceOf[GatewayMessage[Any]]
       )
       .runWith(events.toGatewayPublish)
@@ -58,7 +65,14 @@ object VoiceServerNegotiator {
       .viaMat(KillSwitches.single)(Keep.right)
       .to(
         ActorSink
-          .actorRefWithBackpressure(ctx.self, ReceivedEvent, InitSink, AckSink, CompletedSink, _ => CompletedSink)
+          .actorRefWithBackpressure(
+            ctx.self,
+            ReceivedEvent,
+            InitSink,
+            AckSink,
+            CompletedSink,
+            _ => CompletedSink
+          )
       )
       .run()
 
@@ -75,29 +89,52 @@ object VoiceServerNegotiator {
     case InitSink(ackTo) =>
       ackTo ! AckSink
       Behaviors.same
-    case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c, _)) if state.userId == c.current.botUser.id =>
+    case ReceivedEvent(ackTo, APIMessage.VoiceStateUpdate(state, c, _))
+        if state.userId == c.current.botUser.id =>
       ackTo ! AckSink
 
       tokenEndpoint match {
         case Some((token, endpoint)) =>
-          replyTo ! GotVoiceData(state.sessionId, token, endpoint, c.current.botUser.id)
+          replyTo ! GotVoiceData(
+            state.sessionId,
+            token,
+            endpoint,
+            c.current.botUser.id
+          )
           killSwitch.shutdown()
           Behaviors.same
 
-        case None => running(guildId, None, Some(state.sessionId), replyTo, killSwitch)
+        case None =>
+          running(guildId, None, Some(state.sessionId), replyTo, killSwitch)
       }
 
-    case ReceivedEvent(ackTo, APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c, _)) if guild.id == guildId =>
+    case ReceivedEvent(
+          ackTo,
+          APIMessage.VoiceServerUpdate(vToken, guild, endPoint, c, _)
+        ) if guild.id == guildId =>
       ackTo ! AckSink
 
-      val usedEndpoint = if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
+      val usedEndpoint =
+        if (endPoint.endsWith(":80")) endPoint.dropRight(3) else endPoint
 
       sessionId match {
         case Some(session) =>
-          replyTo ! GotVoiceData(session, vToken, usedEndpoint, c.current.botUser.id)
+          replyTo ! GotVoiceData(
+            session,
+            vToken,
+            usedEndpoint,
+            c.current.botUser.id
+          )
           killSwitch.shutdown()
           Behaviors.same
-        case None => running(guildId, Some((vToken, usedEndpoint)), None, replyTo, killSwitch)
+        case None =>
+          running(
+            guildId,
+            Some((vToken, usedEndpoint)),
+            None,
+            replyTo,
+            killSwitch
+          )
       }
 
     case ReceivedEvent(ackTo, _) =>
@@ -117,10 +154,18 @@ object VoiceServerNegotiator {
   sealed trait Command
   case object Stop extends Command
 
-  private case class InitSink(ackTo: ActorRef[AckSink.type])                           extends Command
-  private case class ReceivedEvent(ackTo: ActorRef[AckSink.type], message: APIMessage) extends Command
-  private case object CompletedSink                                                    extends Command
+  private case class InitSink(ackTo: ActorRef[AckSink.type]) extends Command
+  private case class ReceivedEvent(
+      ackTo: ActorRef[AckSink.type],
+      message: APIMessage
+  ) extends Command
+  private case object CompletedSink extends Command
 
-  case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId)
+  case class GotVoiceData(
+      sessionId: String,
+      token: String,
+      endpoint: String,
+      userId: UserId
+  )
 
 }

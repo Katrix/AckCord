@@ -45,11 +45,11 @@ class UdpConnectedFlow(
     remoteAddress: InetSocketAddress,
     localAddress: Option[InetSocketAddress],
     connectOptions: immutable.Iterable[SocketOption]
-)(
-    implicit system: ActorSystem[Nothing]
+)(implicit
+    system: ActorSystem[Nothing]
 ) extends GraphStage[FlowShape[ByteString, ByteString]] {
 
-  val in: Inlet[ByteString]   = Inlet("UdpConnectedFlow.in")
+  val in: Inlet[ByteString] = Inlet("UdpConnectedFlow.in")
   val out: Outlet[ByteString] = Outlet("UdpConnectedFlow.out")
 
   override def shape: FlowShape[ByteString, ByteString] = FlowShape(in, out)
@@ -57,19 +57,24 @@ class UdpConnectedFlow(
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogicWithLogging(shape) with InHandler with OutHandler {
 
-      private var socket: ActorRef        = _
+      private var socket: ActorRef = _
       private var nextElement: ByteString = _
 
-      private var canSend           = true
+      private var canSend = true
       private var hasSentDisconnect = false
-      private var shouldDisconnect  = false
+      private var shouldDisconnect = false
 
       var self: ActorRef = _
 
       override def preStart(): Unit = {
         self = getStageActor(actorReceive).ref
         implicit val selfSender: ActorRef = self
-        IO(UdpConnected)(system.toClassic) ! UdpConnected.Connect(self, remoteAddress, localAddress, connectOptions)
+        IO(UdpConnected)(system.toClassic) ! UdpConnected.Connect(
+          self,
+          remoteAddress,
+          localAddress,
+          connectOptions
+        )
       }
 
       override def onUpstreamFinish(): Unit =
@@ -114,8 +119,13 @@ class UdpConnectedFlow(
         case (_, UdpConnected.Disconnected) =>
           completeStage()
         case (_, UdpConnected.CommandFailed(cmd: UdpConnected.Connect)) =>
-          failStage(new IllegalArgumentException(s"Unable to bind to [${cmd.localAddress}]"))
-        case (_, UdpConnected.CommandFailed(cmd)) => failStage(new IllegalStateException(s"Command failed: $cmd"))
+          failStage(
+            new IllegalArgumentException(
+              s"Unable to bind to [${cmd.localAddress}]"
+            )
+          )
+        case (_, UdpConnected.CommandFailed(cmd)) =>
+          failStage(new IllegalStateException(s"Command failed: $cmd"))
         case (_, UdpConnected.Received(data)) =>
           emit(out, data)
         case (_, UDPAck) =>
@@ -162,8 +172,10 @@ object UdpConnectedFlow {
       remoteAddress: InetSocketAddress,
       localAddress: Option[InetSocketAddress] = None,
       connectOptions: immutable.Iterable[SocketOption] = Nil
-  )(
-      implicit system: ActorSystem[Nothing]
+  )(implicit
+      system: ActorSystem[Nothing]
   ): Flow[ByteString, ByteString, NotUsed] =
-    Flow.fromGraph(new UdpConnectedFlow(remoteAddress, localAddress, connectOptions))
+    Flow.fromGraph(
+      new UdpConnectedFlow(remoteAddress, localAddress, connectOptions)
+    )
 }

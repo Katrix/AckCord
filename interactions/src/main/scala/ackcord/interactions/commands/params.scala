@@ -41,15 +41,19 @@ sealed trait Param[Orig, A, F[_]] {
   def name: String
 
   private[commands] def fTransformer: Param.FTransformer[F]
-  private[commands] def isRequired: Boolean = fTransformer == Param.FTransformer.Required
+  private[commands] def isRequired: Boolean =
+    fTransformer == Param.FTransformer.Required
   private[commands] def optionToFa(
       opt: Option[Orig],
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, F[A]]
 
-  def mapWithResolve[B](f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]): Param[Orig, B, F]
+  def mapWithResolve[B](
+      f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]
+  ): Param[Orig, B, F]
 
-  def ~[B, G[_]](other: Param[Orig, B, G]): ParamList[F[A] ~ G[B]] = ParamList.ParamListStart(this) ~ other
+  def ~[B, G[_]](other: Param[Orig, B, G]): ParamList[F[A] ~ G[B]] =
+    ParamList.ParamListStart(this) ~ other
 
   def toCommandOption: ApplicationCommandOption
 }
@@ -65,7 +69,9 @@ object Param {
       }
     }
     case object Optional extends FTransformer[Option] {
-      override def apply[A](opt: Option[A]): Either[String, Option[A]] = Right(opt)
+      override def apply[A](opt: Option[A]): Either[String, Option[A]] = Right(
+        opt
+      )
     }
   }
 }
@@ -81,12 +87,17 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
     contramap: A => Orig
 ) extends Param[Orig, A, F] {
 
-  def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] = copy(choices = choices)
-  def withChoices(choices: Seq[String])(implicit ev: String =:= A): ChoiceParam[Orig, A, F] =
+  def withChoices(choices: Map[String, A]): ChoiceParam[Orig, A, F] =
+    copy(choices = choices)
+  def withChoices(choices: Seq[String])(implicit
+      ev: String =:= A
+  ): ChoiceParam[Orig, A, F] =
     withChoices(choices.map(s => s -> ev(s)).toMap)
 
-  def required: ChoiceParam[Orig, A, Id]        = copy(fTransformer = Param.FTransformer.Required)
-  def notRequired: ChoiceParam[Orig, A, Option] = copy(fTransformer = Param.FTransformer.Optional)
+  def required: ChoiceParam[Orig, A, Id] =
+    copy(fTransformer = Param.FTransformer.Required)
+  def notRequired: ChoiceParam[Orig, A, Option] =
+    copy(fTransformer = Param.FTransformer.Optional)
 
   def map[B](f: A => B): ValueParam[Orig, B, F] = ValueParam(
     tpe,
@@ -117,18 +128,20 @@ case class ChoiceParam[Orig, A, F[_]] private[interactions] (
       opt: Option[Orig],
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, F[A]] = {
-    val mappedOpt = opt.traverse(orig => map(orig, resolved).toRight(s"Unknown object $orig"))
+    val mappedOpt =
+      opt.traverse(orig => map(orig, resolved).toRight(s"Unknown object $orig"))
     mappedOpt.flatMap(fTransformer(_))
   }
 
-  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    tpe,
-    name,
-    description,
-    Some(fTransformer == Param.FTransformer.Required),
-    Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
-    Some(Nil)
-  )
+  override def toCommandOption: ApplicationCommandOption =
+    ApplicationCommandOption(
+      tpe,
+      name,
+      description,
+      Some(fTransformer == Param.FTransformer.Required),
+      Some(choices.map(t => makeOptionChoice(t._1, contramap(t._2))).toSeq),
+      Some(Nil)
+    )
 }
 object ChoiceParam {
   private[interactions] def default[A](
@@ -156,9 +169,12 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
     fTransformer: Param.FTransformer[F],
     map: (Orig, ApplicationCommandInteractionDataResolved) => Option[A]
 ) extends Param[Orig, A, F] {
-  def required: ValueParam[Orig, A, Id]         = copy(fTransformer = Param.FTransformer.Required)
-  def notRequired: ValueParam[Orig, A, Option]  = copy(fTransformer = Param.FTransformer.Optional)
-  def map[B](f: A => B): ValueParam[Orig, B, F] = copy(map = (orig, resolve) => this.map(orig, resolve).map(f))
+  def required: ValueParam[Orig, A, Id] =
+    copy(fTransformer = Param.FTransformer.Required)
+  def notRequired: ValueParam[Orig, A, Option] =
+    copy(fTransformer = Param.FTransformer.Optional)
+  def map[B](f: A => B): ValueParam[Orig, B, F] =
+    copy(map = (orig, resolve) => this.map(orig, resolve).map(f))
 
   override def mapWithResolve[B](
       f: (Orig, ApplicationCommandInteractionDataResolved) => Option[B]
@@ -169,18 +185,20 @@ case class ValueParam[Orig, A, F[_]] private[interactions] (
       opt: Option[Orig],
       resolved: ApplicationCommandInteractionDataResolved
   ): Either[String, F[A]] = {
-    val mappedOpt = opt.traverse(orig => map(orig, resolved).toRight(s"Unknown object $orig"))
+    val mappedOpt =
+      opt.traverse(orig => map(orig, resolved).toRight(s"Unknown object $orig"))
     mappedOpt.flatMap(fTransformer(_))
   }
 
-  override def toCommandOption: ApplicationCommandOption = ApplicationCommandOption(
-    tpe,
-    name,
-    description,
-    Some(fTransformer == Param.FTransformer.Required),
-    Some(Nil),
-    Some(Nil)
-  )
+  override def toCommandOption: ApplicationCommandOption =
+    ApplicationCommandOption(
+      tpe,
+      name,
+      description,
+      Some(fTransformer == Param.FTransformer.Required),
+      Some(Nil),
+      Some(Nil)
+    )
 }
 object ValueParam {
   private[interactions] def default[A](
@@ -198,8 +216,10 @@ object ValueParam {
 }
 
 sealed trait ParamList[A] {
-  def ~[B, G[_]](param: Param[_, B, G]): ParamList[A ~ G[B]] = ParamList.ParamListBranch(this, param)
-  def map[B](f: Param[_, _, Any] => B): List[B]              = foldRight(Nil: List[B])(f(_) :: _)
+  def ~[B, G[_]](param: Param[_, B, G]): ParamList[A ~ G[B]] =
+    ParamList.ParamListBranch(this, param)
+  def map[B](f: Param[_, _, Any] => B): List[B] =
+    foldRight(Nil: List[B])(f(_) :: _)
 
   protected def constructParam[Orig, A1, F[_]](
       param: Param[Orig, A1, F],
@@ -208,7 +228,8 @@ sealed trait ParamList[A] {
   ): Either[String, F[A1]] = {
     dataOption match {
       case Some(dataOption) if dataOption.tpe == param.tpe =>
-        val castedDataOption = dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Orig]]
+        val castedDataOption =
+          dataOption.asInstanceOf[ApplicationCommandInteractionDataOption[Orig]]
         param.optionToFa(castedDataOption.value, resolved)
 
       case Some(_) => Left("Got invalid parameter type")
@@ -225,7 +246,8 @@ sealed trait ParamList[A] {
   def foldRight[B](start: B)(f: (Param[_, _, Any], B) => B): B = {
     @tailrec
     def inner(list: ParamList[_], b: B): B = list match {
-      case startParam: ParamList.ParamListStart[_, _, Any @unchecked] => f(startParam.leaf, b)
+      case startParam: ParamList.ParamListStart[_, _, Any @unchecked] =>
+        f(startParam.leaf, b)
       case branchParam: ParamList.ParamListBranch[_, _, Any @unchecked] =>
         inner(branchParam.left, f(branchParam.right, b))
     }
@@ -234,24 +256,38 @@ sealed trait ParamList[A] {
   }
 }
 object ParamList {
-  implicit def paramToParamList[A, F[_]](param: Param[_, A, F]): ParamList[F[A]] = ParamListStart(param)
+  implicit def paramToParamList[A, F[_]](
+      param: Param[_, A, F]
+  ): ParamList[F[A]] = ParamListStart(param)
 
-  case class ParamListStart[Orig, A, F[_]](leaf: Param[Orig, A, F]) extends ParamList[F[A]] {
+  case class ParamListStart[Orig, A, F[_]](leaf: Param[Orig, A, F])
+      extends ParamList[F[A]] {
     override def constructValues(
         options: Map[String, ApplicationCommandInteractionDataOption[_]],
         resolved: ApplicationCommandInteractionDataResolved
     ): Either[String, F[A]] =
-      constructParam(leaf, options.get(leaf.name.toLowerCase(Locale.ROOT)), resolved)
+      constructParam(
+        leaf,
+        options.get(leaf.name.toLowerCase(Locale.ROOT)),
+        resolved
+      )
   }
 
-  case class ParamListBranch[T, B, G[_]](left: ParamList[T], right: Param[_, B, G]) extends ParamList[T ~ G[B]] {
+  case class ParamListBranch[T, B, G[_]](
+      left: ParamList[T],
+      right: Param[_, B, G]
+  ) extends ParamList[T ~ G[B]] {
     override def constructValues(
         options: Map[String, ApplicationCommandInteractionDataOption[_]],
         resolved: ApplicationCommandInteractionDataResolved
     ): Either[String, (T, G[B])] =
       for {
-        left  <- left.constructValues(options, resolved)
-        right <- constructParam(right, options.get(right.name.toLowerCase(Locale.ROOT)), resolved)
+        left <- left.constructValues(options, resolved)
+        right <- constructParam(
+          right,
+          options.get(right.name.toLowerCase(Locale.ROOT)),
+          resolved
+        )
       } yield (left, right)
   }
 }

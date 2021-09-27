@@ -60,7 +60,8 @@ object AudioAPIMessage {
   ) extends AudioAPIMessage
 
   /** Sent to the listener when everything is ready to send voice data. */
-  case class Ready(serverId: RawSnowflake, userId: UserId) extends AudioAPIMessage
+  case class Ready(serverId: RawSnowflake, userId: UserId)
+      extends AudioAPIMessage
 
   /**
     * Sent to the data receiver when a user speaks.
@@ -70,6 +71,10 @@ object AudioAPIMessage {
     *   The RTP header. This contains the ssrc of the speaker. To get the userId
     *   of the speaker, use [[UserSpeaking]].
     */
-  case class ReceivedData(data: ByteString, header: RTPHeader, serverId: RawSnowflake, userId: UserId)
-      extends AudioAPIMessage
+  case class ReceivedData(
+      data: ByteString,
+      header: RTPHeader,
+      serverId: RawSnowflake,
+      userId: UserId
+  ) extends AudioAPIMessage
 }

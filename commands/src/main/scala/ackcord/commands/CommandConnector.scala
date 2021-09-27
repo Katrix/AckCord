@@ -30,7 +30,14 @@ import ackcord.syntax._
 import ackcord.util.StreamBalancer
 import akka.NotUsed
 import akka.stream.SourceShape
-import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Partition, RunnableGraph, Source}
+import akka.stream.scaladsl.{
+  Flow,
+  GraphDSL,
+  Merge,
+  Partition,
+  RunnableGraph,
+  Source
+}
 import cats.instances.future._
 import cats.syntax.all._
 
@@ -61,7 +68,7 @@ class CommandConnector(
         .findAllMatchIn(arguments)
         .map { m =>
           val quoted = m.group(1) != null
-          val group  = if (quoted) 1 else 2
+          val group = if (quoted) 1 else 2
           m.group(group)
         }
         .toList
@@ -88,47 +95,63 @@ class CommandConnector(
       command: ComplexCommand[A, Mat]
   ): Source[CommandError, CommandRegistration[Mat]] = {
 
-    val messageSource = messages.mapAsyncUnordered(parallelism) { case t @ (message, cache) =>
-      prefix(message)(cache, requests.system.executionContext).tupleLeft(t)
+    val messageSource = messages.mapAsyncUnordered(parallelism) {
+      case t @ (message, cache) =>
+        prefix(message)(cache, requests.system.executionContext).tupleLeft(t)
     }
 
-    val getCommandMessages = Flow[((Message, CacheSnapshot), MessageParser[Unit])].mapConcat {
-      case ((message, cache), prefixParser) =>
-        implicit val c: CacheSnapshot = cache
+    val getCommandMessages =
+      Flow[((Message, CacheSnapshot), MessageParser[Unit])].mapConcat {
+        case ((message, cache), prefixParser) =>
+          implicit val c: CacheSnapshot = cache
 
-        val res = for {
-          args    <- MessageParser.parseEither(stringToArgsQuoted(message.content), prefixParser).map(_._1).toOption
-          channel <- message.channelId.resolve
-        } yield MessageParser
-          .parseResultEither(args, command.parser)
-          .map(a => CommandMessage.Default(requests, cache, channel, message, a): CommandMessage[A])
-          .leftMap(e => CommandError(e, channel, cache))
+          val res = for {
+            args <- MessageParser
+              .parseEither(stringToArgsQuoted(message.content), prefixParser)
+              .map(_._1)
+              .toOption
+            channel <- message.channelId.resolve
+          } yield MessageParser
+            .parseResultEither(args, command.parser)
+            .map(a =>
+              CommandMessage
+                .Default(requests, cache, channel, message, a): CommandMessage[
+                A
+              ]
+            )
+            .leftMap(e => CommandError(e, channel, cache))
 
-        res.toList
-    }
+          res.toList
+      }
 
-    val commandMessageSource = messageSource.via(StreamBalancer.balanceMerge(parallelism, getCommandMessages))
+    val commandMessageSource = messageSource.via(
+      StreamBalancer.balanceMerge(parallelism, getCommandMessages)
+    )
 
     CommandRegistration.withRegistration(
       Source.fromGraph(
-        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) { implicit b => thatFlow =>
-          import GraphDSL.Implicits._
+        GraphDSL.create(SupervisionStreams.logAndContinue(command.flow)) {
+          implicit b => thatFlow =>
+            import GraphDSL.Implicits._
 
-          val selfSource = b.add(commandMessageSource)
+            val selfSource = b.add(commandMessageSource)
 
-          val selfPartition = b.add(
-            Partition[Either[CommandError, CommandMessage[A]]](
-              2,
-              {
-                case Left(_)  => 0
-                case Right(_) => 1
-              }
+            val selfPartition = b.add(
+              Partition[Either[CommandError, CommandMessage[A]]](
+                2,
+                {
+                  case Left(_)  => 0
+                  case Right(_) => 1
+                }
+              )
             )
-          )
-          val selfErr = selfPartition.out(0).map(_.swap.getOrElse(sys.error("impossible")))
-          val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
+            val selfErr = selfPartition
+              .out(0)
+              .map(_.swap.getOrElse(sys.error("impossible")))
+            val selfOut =
+              selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
-          val resMerge = b.add(Merge[CommandError](2))
+            val resMerge = b.add(Merge[CommandError](2))
 
           // format: OFF
             selfSource ~> selfPartition
@@ -136,7 +159,7 @@ class CommandConnector(
             selfErr ~>             resMerge
             // format: ON
 
-          SourceShape(resMerge.out)
+            SourceShape(resMerge.out)
         }
       )
     )
@@ -203,7 +226,9 @@ class CommandConnector(
     * @see
     *   [[newCommandWithErrors]]
     */
-  def newNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): RunnableGraph[CommandRegistration[Mat]] =
+  def newNamedCommand[A, Mat](
+      command: NamedComplexCommand[A, Mat]
+  ): RunnableGraph[CommandRegistration[Mat]] =
     newCommand(command.prefixParser, command.command)
 
   /**
@@ -220,7 +245,10 @@ class CommandConnector(
     *   The materialized result of running the command, in addition to a future
     *   signaling when the command is done running.
     */
-  def runNewCommand[A, Mat](prefix: PrefixParser, command: ComplexCommand[A, Mat]): CommandRegistration[Mat] =
+  def runNewCommand[A, Mat](
+      prefix: PrefixParser,
+      command: ComplexCommand[A, Mat]
+  ): CommandRegistration[Mat] =
     newCommand(prefix, command).run()
 
   /**
@@ -235,7 +263,9 @@ class CommandConnector(
     *   The materialized result of running the command, in addition to a future
     *   signaling when the command is done running.
     */
-  def runNewNamedCommand[A, Mat](command: NamedComplexCommand[A, Mat]): CommandRegistration[Mat] =
+  def runNewNamedCommand[A, Mat](
+      command: NamedComplexCommand[A, Mat]
+  ): CommandRegistration[Mat] =
     runNewCommand(command.prefixParser, command.command)
 
   /**
@@ -257,7 +287,11 @@ class CommandConnector(
       helpCommand: HelpCommand
   ): CommandRegistration[Mat] = {
     val registration = runNewCommand(command.prefixParser, command.command)
-    helpCommand.registerCommand(command.prefixParser, command.description, registration.onDone)
+    helpCommand.registerCommand(
+      command.prefixParser,
+      command.description,
+      registration.onDone
+    )
     registration
   }
 
@@ -269,7 +303,9 @@ class CommandConnector(
     * @return
     *   The commands together with their completions.
     */
-  def bulkRunNamed(commands: NamedCommand[_]*): Seq[(NamedCommand[_], CommandRegistration[_])] =
+  def bulkRunNamed(
+      commands: NamedCommand[_]*
+  ): Seq[(NamedCommand[_], CommandRegistration[_])] =
     commands.map(c => c -> runNewNamedCommand(c))
 
   /**

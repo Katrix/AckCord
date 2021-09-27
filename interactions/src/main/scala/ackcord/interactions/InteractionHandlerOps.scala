@@ -36,10 +36,15 @@ import io.circe.Json
 trait InteractionHandlerOps {
   def requests: Requests
 
-  implicit def executionContext: ExecutionContext = requests.system.executionContext
+  implicit def executionContext: ExecutionContext =
+    requests.system.executionContext
 
-  def async(handle: AsyncToken => OptFuture[_])(implicit interaction: Interaction): InteractionResponse =
-    InteractionResponse.Acknowledge(() => handle(AsyncToken.fromInteraction(interaction)))
+  def async(
+      handle: AsyncToken => OptFuture[_]
+  )(implicit interaction: Interaction): InteractionResponse =
+    InteractionResponse.Acknowledge(() =>
+      handle(AsyncToken.fromInteraction(interaction))
+    )
 
   def acknowledge: InteractionResponse =
     InteractionResponse.Acknowledge(() => OptFuture.unit)
@@ -82,7 +87,9 @@ trait InteractionHandlerOps {
     () => OptFuture.unit
   )
 
-  private def interactionRequest[Response](request: Request[Response]): OptFuture[Response] =
+  private def interactionRequest[Response](
+      request: Request[Response]
+  ): OptFuture[Response] =
     OptFuture.fromFuture(requests.singleFutureSuccess(request))
 
   def sendAsyncMessage(
@@ -135,7 +142,9 @@ trait InteractionHandlerOps {
       )
     ).map(_.get)
 
-  def getOriginalMessage()(implicit async: AsyncMessageToken): OptFuture[Message] = interactionRequest(
+  def getOriginalMessage()(implicit
+      async: AsyncMessageToken
+  ): OptFuture[Message] = interactionRequest(
     GetOriginalWebhookMessage(async.webhookId, async.webhookToken)
   ).map(_.toMessage)
 
@@ -160,7 +169,9 @@ trait InteractionHandlerOps {
       )
     )
 
-  def deleteOriginalMessage(implicit async: AsyncMessageToken): OptFuture[NotUsed] = interactionRequest(
+  def deleteOriginalMessage(implicit
+      async: AsyncMessageToken
+  ): OptFuture[NotUsed] = interactionRequest(
     DeleteOriginalWebhookMessage(async.webhookId, async.webhookToken)
   )
 
@@ -187,7 +198,9 @@ trait InteractionHandlerOps {
       )
     )
 
-  def getPreviousMessage(messageId: MessageId)(implicit async: AsyncMessageToken): OptFuture[Message] =
+  def getPreviousMessage(messageId: MessageId)(implicit
+      async: AsyncMessageToken
+  ): OptFuture[Message] =
     interactionRequest(
       GetWebhookMessage(async.webhookId, async.webhookToken, messageId)
     ).map(_.toMessage)

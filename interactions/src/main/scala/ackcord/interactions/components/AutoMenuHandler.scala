@@ -6,9 +6,12 @@ import ackcord.requests.Requests
 abstract class AutoMenuHandler[Interaction <: MenuInteraction](
     identifier: String,
     requests: Requests,
-    interactionTransformer: DataInteractionTransformer[shapeless.Const[MenuInteraction]#λ, shapeless.Const[
+    interactionTransformer: DataInteractionTransformer[shapeless.Const[
+      MenuInteraction
+    ]#λ, shapeless.Const[
       Interaction
-    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[MenuInteraction]#λ],
+    ]#λ] =
+      DataInteractionTransformer.identity[shapeless.Const[MenuInteraction]#λ],
     registeredButtons: RegisteredComponents = GlobalRegisteredComponents
 ) extends MenuHandler(requests, interactionTransformer) {
   registeredButtons.addHandler(identifier, this)

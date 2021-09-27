@@ -1,15 +1,23 @@
 package ackcord.interactions.components
 
 import ackcord.CacheSnapshot
-import ackcord.data.{ApplicationComponentInteractionData, ComponentType, Message, RawInteraction}
+import ackcord.data.{
+  ApplicationComponentInteractionData,
+  ComponentType,
+  Message,
+  RawInteraction
+}
 import ackcord.interactions._
 import ackcord.requests.Requests
 
 abstract class MenuHandler[InteractionTpe <: MenuInteraction](
     requests: Requests,
-    interactionTransformer: DataInteractionTransformer[shapeless.Const[MenuInteraction]#λ, shapeless.Const[
+    interactionTransformer: DataInteractionTransformer[shapeless.Const[
+      MenuInteraction
+    ]#λ, shapeless.Const[
       InteractionTpe
-    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[MenuInteraction]#λ]
+    ]#λ] =
+      DataInteractionTransformer.identity[shapeless.Const[MenuInteraction]#λ]
 ) extends ComponentHandler[MenuInteraction, InteractionTpe](
       requests,
       interactionTransformer,
@@ -27,7 +35,9 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         invocationInfo,
         message,
         interaction.data
-          .collect { case ApplicationComponentInteractionData(_, _, values) => values }
+          .collect { case ApplicationComponentInteractionData(_, _, values) =>
+            values
+          }
           .flatten
           .getOrElse(Nil),
         c
@@ -37,7 +47,9 @@ abstract class MenuHandler[InteractionTpe <: MenuInteraction](
         invocationInfo,
         message,
         interaction.data
-          .collect { case ApplicationComponentInteractionData(_, _, values) => values }
+          .collect { case ApplicationComponentInteractionData(_, _, values) =>
+            values
+          }
           .flatten
           .getOrElse(Nil)
       )

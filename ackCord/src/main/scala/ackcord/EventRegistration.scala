@@ -29,18 +29,26 @@ import akka.Done
 import akka.stream.scaladsl.{Keep, RunnableGraph, Sink, Source}
 import akka.stream.{KillSwitches, UniqueKillSwitch}
 
-case class EventRegistration[Mat](materialized: Mat, onDone: Future[Done], killSwitch: UniqueKillSwitch) {
+case class EventRegistration[Mat](
+    materialized: Mat,
+    onDone: Future[Done],
+    killSwitch: UniqueKillSwitch
+) {
 
   def stop(): Unit = killSwitch.shutdown()
 }
 object EventRegistration {
   def toSink[A, M](source: Source[A, M]): RunnableGraph[EventRegistration[M]] =
-    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) { case ((m, killSwitch), done) =>
-      EventRegistration(m, done, killSwitch)
+    source.viaMat(KillSwitches.single)(Keep.both).toMat(Sink.ignore) {
+      case ((m, killSwitch), done) =>
+        EventRegistration(m, done, killSwitch)
     }
 
-  def withRegistration[A, M](source: Source[A, M]): Source[A, EventRegistration[M]] =
-    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() { case ((m, killSwitch), done) =>
-      EventRegistration(m, done, killSwitch)
+  def withRegistration[A, M](
+      source: Source[A, M]
+  ): Source[A, EventRegistration[M]] =
+    source.viaMat(KillSwitches.single)(Keep.both).watchTermination() {
+      case ((m, killSwitch), done) =>
+        EventRegistration(m, done, killSwitch)
     }
 }

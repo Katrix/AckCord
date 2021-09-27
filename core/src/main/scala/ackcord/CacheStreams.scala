@@ -50,10 +50,13 @@ object CacheStreams {
   def cacheStreams(
       cacheProcessor: MemoryCacheSnapshot.CacheProcessor,
       bufferSize: PubSubBufferSize = PubSubBufferSize()
-  )(
-      implicit system: ActorSystem[Nothing]
+  )(implicit
+      system: ActorSystem[Nothing]
   ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) =
-    cacheStreamsCustom(cacheUpdater(emptyStartingCache(cacheProcessor)), bufferSize)
+    cacheStreamsCustom(
+      cacheUpdater(emptyStartingCache(cacheProcessor)),
+      bufferSize
+    )
 
   /**
     * Creates a set of publish subscribe streams that go through a custom cache
@@ -62,7 +65,9 @@ object CacheStreams {
   def cacheStreamsCustom(
       updater: Flow[CacheEvent, (CacheEvent, CacheState), NotUsed],
       bufferSize: PubSubBufferSize = PubSubBufferSize()
-  )(implicit system: ActorSystem[Nothing]): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
+  )(implicit
+      system: ActorSystem[Nothing]
+  ): (Sink[CacheEvent, NotUsed], Source[(CacheEvent, CacheState), NotUsed]) = {
     SupervisionStreams
       .addLogAndContinueFunction(
         MergeHub
@@ -104,14 +109,19 @@ object CacheStreams {
           val event = sendEvent(state)
           if (event.isEmpty) {
             if (expectedFailedApiMessageCreation.contains(d.event.getClass)) {
-              logger.debug(s"Failed to create API message for ${d.event.getClass}")
+              logger.debug(
+                s"Failed to create API message for ${d.event.getClass}"
+              )
             } else {
-              logger.warn(s"Failed to create API message for ${d.event.getClass}")
+              logger.warn(
+                s"Failed to create API message for ${d.event.getClass}"
+              )
             }
           }
 
           event
-        case (BatchedAPIMessageCacheUpdate(updates), state) => updates.flatMap(_.sendEvent(state)).toList
+        case (BatchedAPIMessageCacheUpdate(updates), state) =>
+          updates.flatMap(_.sendEvent(state)).toList
       }
       .mapConcat(identity)
   }
@@ -120,7 +130,9 @@ object CacheStreams {
     * Creates a new empty cache snapshot builder. This is not thread safe, and
     * should not be updated from multiple threads at the same time.
     */
-  def emptyStartingCache(cacheProcessor: MemoryCacheSnapshot.CacheProcessor): CacheSnapshotBuilder = {
+  def emptyStartingCache(
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor
+  ): CacheSnapshotBuilder = {
     val dummyUser = User(
       UserId("0"),
       "Placeholder",
@@ -139,7 +151,9 @@ object CacheStreams {
 
     new CacheSnapshotBuilder(
       0,
-      shapeless.tag[CacheSnapshot.BotUser](dummyUser), //The ready event will populate this,
+      shapeless.tag[CacheSnapshot.BotUser](
+        dummyUser
+      ), //The ready event will populate this,
       SnowflakeMap.empty,
       SnowflakeMap.empty,
       SnowflakeMap.empty,
@@ -152,31 +166,43 @@ object CacheStreams {
     )
   }
 
-  case class GuildCacheEvent(event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)])
+  case class GuildCacheEvent(
+      event: CacheEvent,
+      respondTo: ActorRef[(CacheEvent, CacheState)]
+  )
 
-  def guildCacheBehavior(cacheBuilder: CacheSnapshotBuilder): Behavior[GuildCacheEvent] = {
-    def guildUpdaterBehavior(guildCacheBuilder: CacheSnapshotBuilder): Behavior[GuildCacheEvent] = Behaviors.setup {
-      context =>
-        var state: CacheState = CacheState(guildCacheBuilder.toImmutable, guildCacheBuilder.toImmutable)
+  def guildCacheBehavior(
+      cacheBuilder: CacheSnapshotBuilder
+  ): Behavior[GuildCacheEvent] = {
+    def guildUpdaterBehavior(
+        guildCacheBuilder: CacheSnapshotBuilder
+    ): Behavior[GuildCacheEvent] = Behaviors.setup { context =>
+      var state: CacheState =
+        CacheState(guildCacheBuilder.toImmutable, guildCacheBuilder.toImmutable)
 
-        Behaviors.receiveMessage { case GuildCacheEvent(event, respondTo) =>
-          event.process(guildCacheBuilder)
-          guildCacheBuilder.executeProcessor()
+      Behaviors.receiveMessage { case GuildCacheEvent(event, respondTo) =>
+        event.process(guildCacheBuilder)
+        guildCacheBuilder.executeProcessor()
 
-          state = state.update(guildCacheBuilder.toImmutable)
-          respondTo ! ((event, state))
-          Behaviors.same
-        }
+        state = state.update(guildCacheBuilder.toImmutable)
+        respondTo ! ((event, state))
+        Behaviors.same
+      }
     }
 
     Behaviors.setup[GuildCacheEvent] { context =>
       val extract = GuildStreams.createGatewayGuildInfoExtractor(context.log)
 
-      var state: CacheState = CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
-      val guildHandlers: collection.mutable.Map[GuildId, ActorRef[GuildCacheEvent]] =
+      var state: CacheState =
+        CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
+      val guildHandlers
+          : collection.mutable.Map[GuildId, ActorRef[GuildCacheEvent]] =
         collection.mutable.Map.empty[GuildId, ActorRef[GuildCacheEvent]]
 
-      def sendToAll(event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)]): Unit = {
+      def sendToAll(
+          event: CacheEvent,
+          respondTo: ActorRef[(CacheEvent, CacheState)]
+      ): Unit = {
         event.process(cacheBuilder)
         cacheBuilder.executeProcessor()
 
@@ -184,14 +210,27 @@ object CacheStreams {
         respondTo ! ((event, state))
       }
 
-      def sendToGuild(id: GuildId, event: CacheEvent, respondTo: ActorRef[(CacheEvent, CacheState)]): Unit = {
+      def sendToGuild(
+          id: GuildId,
+          event: CacheEvent,
+          respondTo: ActorRef[(CacheEvent, CacheState)]
+      ): Unit = {
         guildHandlers.getOrElseUpdate(
           id,
-          context.spawn(guildUpdaterBehavior(cacheBuilder.copy), "GuildCacheUpdater" + id.asString)
+          context.spawn(
+            guildUpdaterBehavior(cacheBuilder.copy),
+            "GuildCacheUpdater" + id.asString
+          )
         ) ! GuildCacheEvent(event, respondTo)
 
         event match {
-          case APIMessageCacheUpdate(_, _, _, _, Dispatch(_, event: GuildDelete, _)) =>
+          case APIMessageCacheUpdate(
+                _,
+                _,
+                _,
+                _,
+                Dispatch(_, event: GuildDelete, _)
+              ) =>
             event.data.value.foreach { guild =>
               if (!guild.unavailable.getOrElse(false)) {
                 guildHandlers.remove(guild.id)
@@ -220,7 +259,10 @@ object CacheStreams {
         case GuildCacheEvent(update: APIMessageCacheUpdate[_], respondTo) =>
           handleApiUpdate(update, respondTo)
           Behaviors.same
-        case GuildCacheEvent(BatchedAPIMessageCacheUpdate(updates), respondTo) =>
+        case GuildCacheEvent(
+              BatchedAPIMessageCacheUpdate(updates),
+              respondTo
+            ) =>
           updates.foreach(handleApiUpdate(_, respondTo))
           Behaviors.same
         case GuildCacheEvent(event, respondTo) =>
@@ -241,9 +283,12 @@ object CacheStreams {
     * A flow that keeps track of the current cache state, and updates it from
     * cache update events.
     */
-  def cacheUpdater(cacheBuilder: CacheSnapshotBuilder): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
+  def cacheUpdater(
+      cacheBuilder: CacheSnapshotBuilder
+  ): Flow[CacheEvent, (CacheEvent, CacheState), NotUsed] =
     Flow[CacheEvent].statefulMapConcat { () =>
-      var state: CacheState = CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
+      var state: CacheState =
+        CacheState(cacheBuilder.toImmutable, cacheBuilder.toImmutable)
 
       { handlerEvent: CacheEvent =>
         handlerEvent.process(cacheBuilder)

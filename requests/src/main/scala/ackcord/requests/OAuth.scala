@@ -46,29 +46,33 @@ object OAuth {
   object Scope extends StringEnum[Scope] {
     override def values: immutable.IndexedSeq[Scope] = findValues
 
-    case object ActivitiesRead             extends Scope("activities.read")
-    case object ActivitiesWrite            extends Scope("activities.write")
-    case object ApplicationsBuildsRead     extends Scope("applications.builds.read")
-    case object ApplicationsBuildsUpload   extends Scope("applications.builds.upload")
-    case object ApplicationsCommands       extends Scope("applications.commands")
-    case object ApplicationsCommandsUpdate extends Scope("applications.commands.update")
-    case object ApplicationsEntitlements   extends Scope("applications.entitlements")
-    case object ApplicationsStoreUpdate    extends Scope("applications.store.update")
-    case object Bot                        extends Scope("bot")
-    case object Connections                extends Scope("connections")
-    case object Email                      extends Scope("email")
-    case object GDMJoin                    extends Scope("gdm.join")
-    case object Guilds                     extends Scope("guilds")
-    case object GuildsJoin                 extends Scope("guilds.join")
-    case object Identify                   extends Scope("identify")
-    case object MessagesRead               extends Scope("messages.read")
-    case object RelationshipsRead          extends Scope("relationships.read")
-    case object Rpc                        extends Scope("rpc")
-    case object RpcActivitiesWrite         extends Scope("rpc.activities.write")
-    case object RpcNotificationsRead       extends Scope("rpc.notifications.read")
-    case object RpcVoiceRead               extends Scope("rpc.voice.read")
-    case object RpcWriteRead               extends Scope("rpc.voice.write")
-    case object WebhookIncoming            extends Scope("webhook.incoming")
+    case object ActivitiesRead extends Scope("activities.read")
+    case object ActivitiesWrite extends Scope("activities.write")
+    case object ApplicationsBuildsRead extends Scope("applications.builds.read")
+    case object ApplicationsBuildsUpload
+        extends Scope("applications.builds.upload")
+    case object ApplicationsCommands extends Scope("applications.commands")
+    case object ApplicationsCommandsUpdate
+        extends Scope("applications.commands.update")
+    case object ApplicationsEntitlements
+        extends Scope("applications.entitlements")
+    case object ApplicationsStoreUpdate
+        extends Scope("applications.store.update")
+    case object Bot extends Scope("bot")
+    case object Connections extends Scope("connections")
+    case object Email extends Scope("email")
+    case object GDMJoin extends Scope("gdm.join")
+    case object Guilds extends Scope("guilds")
+    case object GuildsJoin extends Scope("guilds.join")
+    case object Identify extends Scope("identify")
+    case object MessagesRead extends Scope("messages.read")
+    case object RelationshipsRead extends Scope("relationships.read")
+    case object Rpc extends Scope("rpc")
+    case object RpcActivitiesWrite extends Scope("rpc.activities.write")
+    case object RpcNotificationsRead extends Scope("rpc.notifications.read")
+    case object RpcVoiceRead extends Scope("rpc.voice.read")
+    case object RpcWriteRead extends Scope("rpc.voice.write")
+    case object WebhookIncoming extends Scope("webhook.incoming")
   }
 
   case class AccessToken(
@@ -81,52 +85,67 @@ object OAuth {
   object AccessToken {
     implicit val encoder: Encoder[AccessToken] = (a: AccessToken) =>
       Json.obj(
-        "access_token"  -> a.accessToken.asJson,
-        "token_type"    -> a.tokenType.asJson,
-        "expires_in"    -> a.expiresIn.asJson,
+        "access_token" -> a.accessToken.asJson,
+        "token_type" -> a.tokenType.asJson,
+        "expires_in" -> a.expiresIn.asJson,
         "refresh_token" -> a.refreshToken.asJson,
-        "scope"         -> a.scopes.map(_.value).mkString(" ").asJson
+        "scope" -> a.scopes.map(_.value).mkString(" ").asJson
       )
 
     implicit val decoder: Decoder[AccessToken] = (c: HCursor) =>
       for {
-        accessToken  <- c.get[String]("access_token")
-        tokenType    <- c.get[String]("token_type")
-        expiresIn    <- c.get[Int]("expires_in")
+        accessToken <- c.get[String]("access_token")
+        tokenType <- c.get[String]("token_type")
+        expiresIn <- c.get[Int]("expires_in")
         refreshToken <- c.get[String]("refresh_token")
-        scopes       <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
-      } yield AccessToken(accessToken, tokenType, expiresIn, refreshToken, scopes)
+        scopes <- c
+          .get[String]("scope")
+          .map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
+      } yield AccessToken(
+        accessToken,
+        tokenType,
+        expiresIn,
+        refreshToken,
+        scopes
+      )
   }
 
-  case class ClientAccessToken(accessToken: String, tokenType: String, expiresIn: Int, scopes: Seq[Scope])
+  case class ClientAccessToken(
+      accessToken: String,
+      tokenType: String,
+      expiresIn: Int,
+      scopes: Seq[Scope]
+  )
   object ClientAccessToken {
     implicit val encoder: Encoder[ClientAccessToken] = (a: ClientAccessToken) =>
       Json.obj(
         "access_token" -> a.accessToken.asJson,
-        "token_type"   -> a.tokenType.asJson,
-        "expires_in"   -> a.expiresIn.asJson,
-        "scope"        -> a.scopes.map(_.value).mkString(" ").asJson
+        "token_type" -> a.tokenType.asJson,
+        "expires_in" -> a.expiresIn.asJson,
+        "scope" -> a.scopes.map(_.value).mkString(" ").asJson
       )
 
     implicit val decoder: Decoder[ClientAccessToken] = (c: HCursor) =>
       for {
         accessToken <- c.get[String]("access_token")
-        tokenType   <- c.get[String]("token_type")
-        expiresIn   <- c.get[Int]("expires_in")
-        scopes      <- c.get[String]("scope").map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
+        tokenType <- c.get[String]("token_type")
+        expiresIn <- c.get[Int]("expires_in")
+        scopes <- c
+          .get[String]("scope")
+          .map(s => s.split(" ").toSeq.flatMap(Scope.withValueOpt))
       } yield ClientAccessToken(accessToken, tokenType, expiresIn, scopes)
   }
 
   sealed abstract class GrantType(val name: String)
   object GrantType {
     case object AuthorizationCode extends GrantType("authorization_code")
-    case object RefreshToken      extends GrantType("refresh_token")
+    case object RefreshToken extends GrantType("refresh_token")
     case object ClientCredentials extends GrantType("client_credentials")
   }
 
   sealed abstract class PromptType(val name: String)
   object PromptType {
-    case object Consent    extends PromptType("consent")
+    case object Consent extends PromptType("consent")
     case object NonePrompt extends PromptType("none")
   }
 
@@ -141,18 +160,29 @@ object OAuth {
     Routes.oAuth2Authorize.applied.withQuery(
       Uri.Query(
         "response_type" -> responseType,
-        "client_id"     -> clientId,
-        "scope"         -> scopes.map(_.value).mkString(" "),
-        "state"         -> state,
-        "redirect_uri"  -> redirectUri,
-        "prompt"        -> prompt.name
+        "client_id" -> clientId,
+        "scope" -> scopes.map(_.value).mkString(" "),
+        "state" -> state,
+        "redirect_uri" -> redirectUri,
+        "prompt" -> prompt.name
       )
     )
 
-  def codeGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String, prompt: PromptType): Uri =
+  def codeGrantUri(
+      clientId: String,
+      scopes: Seq[Scope],
+      state: String,
+      redirectUri: String,
+      prompt: PromptType
+  ): Uri =
     baseGrant(clientId, scopes, state, redirectUri, "code", prompt)
 
-  def implicitGrantUri(clientId: String, scopes: Seq[Scope], state: String, redirectUri: String): Uri =
+  def implicitGrantUri(
+      clientId: String,
+      scopes: Seq[Scope],
+      state: String,
+      redirectUri: String
+  ): Uri =
     baseGrant(clientId, scopes, state, redirectUri, "token", PromptType.Consent)
 
   def baseExchange(
@@ -163,30 +193,39 @@ object OAuth {
       refreshToken: Option[String],
       redirectUri: String,
       scopes: Seq[Scope]
-  )(
-      implicit system: ActorSystem[Nothing]
+  )(implicit
+      system: ActorSystem[Nothing]
   ): Future[AccessToken] = {
     import system.executionContext
     val baseFormData = Map(
-      "grant_type"   -> grantType.name,
+      "grant_type" -> grantType.name,
       "redirect_uri" -> redirectUri,
-      "scope"        -> scopes.map(_.value).mkString(" ")
+      "scope" -> scopes.map(_.value).mkString(" ")
     )
 
-    val formDataWithCode = code.fold(baseFormData)(code => baseFormData + ("code" -> code))
+    val formDataWithCode =
+      code.fold(baseFormData)(code => baseFormData + ("code" -> code))
     val formDataWithRefresh =
-      refreshToken.fold(formDataWithCode)(token => formDataWithCode + ("refresh_token" -> token))
+      refreshToken.fold(formDataWithCode)(token =>
+        formDataWithCode + ("refresh_token" -> token)
+      )
 
     val request = HttpRequest(
       method = HttpMethods.POST,
       uri = Routes.oAuth2Token.applied,
-      headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
+      headers =
+        List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
       entity = FormData(formDataWithRefresh).toEntity
     )
 
     Http(system.toClassic)
       .singleRequest(request)
-      .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
+      .flatMap(r =>
+        Source
+          .single(r.entity)
+          .via(RequestStreams.jsonDecode)
+          .runWith(Sink.head)
+      )
       .map(_.as[AccessToken].fold(throw _, identity))
   }
 
@@ -197,9 +236,17 @@ object OAuth {
       code: String,
       redirectUri: String,
       scopes: Seq[Scope]
-  )(
-      implicit system: ActorSystem[Nothing]
-  ): Future[AccessToken] = baseExchange(clientId, clientSecret, grantType, Some(code), None, redirectUri, scopes)
+  )(implicit
+      system: ActorSystem[Nothing]
+  ): Future[AccessToken] = baseExchange(
+    clientId,
+    clientSecret,
+    grantType,
+    Some(code),
+    None,
+    redirectUri,
+    scopes
+  )
 
   def refreshTokenExchange(
       clientId: String,
@@ -208,40 +255,64 @@ object OAuth {
       refreshToken: String,
       redirectUri: String,
       scopes: Seq[Scope]
-  )(
-      implicit system: ActorSystem[Nothing]
+  )(implicit
+      system: ActorSystem[Nothing]
   ): Future[AccessToken] =
-    baseExchange(clientId, clientSecret, grantType, None, Some(refreshToken), redirectUri, scopes)
+    baseExchange(
+      clientId,
+      clientSecret,
+      grantType,
+      None,
+      Some(refreshToken),
+      redirectUri,
+      scopes
+    )
 
-  def clientCredentialsGrant(clientId: String, clientSecret: String, scopes: Seq[Scope])(
-      implicit system: ActorSystem[Nothing]
+  def clientCredentialsGrant(
+      clientId: String,
+      clientSecret: String,
+      scopes: Seq[Scope]
+  )(implicit
+      system: ActorSystem[Nothing]
   ): Future[ClientAccessToken] = {
     import system.executionContext
     val formData =
-      FormData("grant_type" -> GrantType.ClientCredentials.name, "scope" -> scopes.map(_.value).mkString(" "))
+      FormData(
+        "grant_type" -> GrantType.ClientCredentials.name,
+        "scope" -> scopes.map(_.value).mkString(" ")
+      )
 
     val request = HttpRequest(
       method = HttpMethods.POST,
       uri = Routes.oAuth2Token.applied,
-      headers = List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
+      headers =
+        List(Authorization(BasicHttpCredentials(clientId, clientSecret))),
       entity = formData.toEntity
     )
 
     Http(system.toClassic)
       .singleRequest(request)
-      .flatMap(r => Source.single(r.entity).via(RequestStreams.jsonDecode).runWith(Sink.head))
+      .flatMap(r =>
+        Source
+          .single(r.entity)
+          .via(RequestStreams.jsonDecode)
+          .runWith(Sink.head)
+      )
       .map(_.as[ClientAccessToken].fold(throw _, identity))
   }
 
-  case object GetCurrentBotApplicationInformation extends NoParamsNiceResponseRequest[Application] {
+  case object GetCurrentBotApplicationInformation
+      extends NoParamsNiceResponseRequest[Application] {
     //noinspection NameBooleanParameters
     override def responseDecoder: Decoder[Application] = Decoder[Application]
-    override def route: RequestRoute                   = Routes.getCurrentApplication
+    override def route: RequestRoute = Routes.getCurrentApplication
   }
 
-  case object GetCurrentAuthorizationInformation extends NoParamsNiceResponseRequest[AuthorizationInformation] {
+  case object GetCurrentAuthorizationInformation
+      extends NoParamsNiceResponseRequest[AuthorizationInformation] {
     override def responseDecoder: Decoder[AuthorizationInformation] = {
-      implicit val applicationDecoder: Decoder[AuthorizationInformationApplication] =
+      implicit val applicationDecoder
+          : Decoder[AuthorizationInformationApplication] =
         derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
       derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)

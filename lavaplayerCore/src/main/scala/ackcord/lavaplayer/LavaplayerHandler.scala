@@ -40,9 +40,17 @@ import akka.stream.scaladsl.{GraphDSL, Sink, Source}
 import akka.stream.{SourceShape, ThrottleMode}
 import akka.util.ByteString
 import com.sedmelluq.discord.lavaplayer.player.event._
-import com.sedmelluq.discord.lavaplayer.player.{AudioLoadResultHandler, AudioPlayer, AudioPlayerManager}
+import com.sedmelluq.discord.lavaplayer.player.{
+  AudioLoadResultHandler,
+  AudioPlayer,
+  AudioPlayerManager
+}
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack}
+import com.sedmelluq.discord.lavaplayer.track.{
+  AudioItem,
+  AudioPlaylist,
+  AudioTrack
+}
 import org.slf4j.Logger
 
 object LavaplayerHandler {
@@ -81,16 +89,28 @@ object LavaplayerHandler {
       log: Logger
   )
 
-  def apply(player: AudioPlayer, guildId: GuildId, events: Events): Behavior[Command] =
-    Behaviors.setup(context => inactive(Parameters(player, guildId, events, context, context.log), Idle))
+  def apply(
+      player: AudioPlayer,
+      guildId: GuildId,
+      events: Events
+  ): Behavior[Command] =
+    Behaviors.setup(context =>
+      inactive(Parameters(player, guildId, events, context, context.log), Idle)
+    )
 
   private def soundProducer(toggle: AtomicBoolean, player: AudioPlayer) =
     Source.fromGraph(GraphDSL.create() { implicit b =>
       import GraphDSL.Implicits._
 
-      val switch  = b.add(new Switch[ByteString](toggle, List.fill(5)(VoiceUDPFlow.silence), Nil))
+      val switch = b.add(
+        new Switch[ByteString](toggle, List.fill(5)(VoiceUDPFlow.silence), Nil)
+      )
       val silence = b.add(Source.maybe[ByteString])
-      val music = b.add(LavaplayerSource.source(player).throttle(1, 20.millis, maximumBurst = 10, ThrottleMode.Shaping))
+      val music = b.add(
+        LavaplayerSource
+          .source(player)
+          .throttle(1, 20.millis, maximumBurst = 10, ThrottleMode.Shaping)
+      )
 
       music ~> switch.in0
       silence ~> switch.in1
@@ -98,7 +118,9 @@ object LavaplayerHandler {
       SourceShape(switch.out)
     })
 
-  private def readyListenerBehavior(replyTo: ActorRef[WsReady]): Behavior[AudioAPIMessage] =
+  private def readyListenerBehavior(
+      replyTo: ActorRef[WsReady]
+  ): Behavior[AudioAPIMessage] =
     Behaviors.receiveMessage {
       case AudioAPIMessage.Ready(serverId, userId) =>
         replyTo ! WsReady(serverId, userId)
@@ -131,7 +153,10 @@ object LavaplayerHandler {
         readyListener.foreach(parameters.context.stop)
         movedMonitor.foreach(_ ! MovedMonitor.Stop)
 
-        firstSender ! ForcedConnectionFailure(inVoiceChannelId, newVoiceChannelId)
+        firstSender ! ForcedConnectionFailure(
+          inVoiceChannelId,
+          newVoiceChannelId
+        )
 
         inactive(parameters, Idle)
       } else {
@@ -144,7 +169,10 @@ object LavaplayerHandler {
     }
   }
 
-  def inactive(parameters: Parameters, state: InactiveState): Behavior[Command] = Behaviors.receiveMessage { msg =>
+  def inactive(
+      parameters: Parameters,
+      state: InactiveState
+  ): Behavior[Command] = Behaviors.receiveMessage { msg =>
     import parameters._
     implicit val system: ActorSystem[Nothing] = context.system
 
@@ -156,10 +184,11 @@ object LavaplayerHandler {
         token: String,
         sender: ActorRef[Reply]
     ): Behavior[Command] = {
-      val toggle   = new AtomicBoolean(true)
+      val toggle = new AtomicBoolean(true)
       val producer = soundProducer(toggle, player)
 
-      val readyListenerActor = context.spawn(readyListenerBehavior(context.self), "ReadyListener")
+      val readyListenerActor =
+        context.spawn(readyListenerBehavior(context.self), "ReadyListener")
 
       val voiceWs = context.spawn(
         VoiceHandler(
@@ -174,24 +203,42 @@ object LavaplayerHandler {
         ),
         "VoiceHandler"
       )
-      val movedMonitor = context.spawn(MovedMonitor(events, context.self), "MovedMonitor")
+      val movedMonitor =
+        context.spawn(MovedMonitor(events, context.self), "MovedMonitor")
 
       log.debug("Music connecting")
-      inactive(parameters, HasVoiceWs(voiceWs, voiceChannelId, sender, toggle, readyListenerActor, movedMonitor))
+      inactive(
+        parameters,
+        HasVoiceWs(
+          voiceWs,
+          voiceChannelId,
+          sender,
+          toggle,
+          readyListenerActor,
+          movedMonitor
+        )
+      )
     }
 
     (msg, state) match {
       case (ConnectVoiceChannel(vChannelId, _, replyTo), Idle) =>
         log.debug("Connecting to new voice channel")
-        val adaptedSelf = context.messageAdapter[VoiceServerNegotiator.GotVoiceData] { m =>
-          GotVoiceData(m.sessionId, m.token, m.endpoint, m.userId)
-        }
+        val adaptedSelf =
+          context.messageAdapter[VoiceServerNegotiator.GotVoiceData] { m =>
+            GotVoiceData(m.sessionId, m.token, m.endpoint, m.userId)
+          }
         val negotiator =
-          context.spawn(VoiceServerNegotiator(guildId, vChannelId, events, adaptedSelf), "ServerNegotiator")
+          context.spawn(
+            VoiceServerNegotiator(guildId, vChannelId, events, adaptedSelf),
+            "ServerNegotiator"
+          )
 
         inactive(parameters, Connecting(vChannelId, replyTo, negotiator))
 
-      case (connect @ ConnectVoiceChannel(newVChannelId, force, replyTo), Connecting(inVChannelId, firstSender, _)) =>
+      case (
+            connect @ ConnectVoiceChannel(newVChannelId, force, replyTo),
+            Connecting(inVChannelId, firstSender, _)
+          ) =>
         handleConflictingConnect(
           connect,
           parameters,
@@ -207,7 +254,14 @@ object LavaplayerHandler {
 
       case (
             connect @ ConnectVoiceChannel(newVChannelId, force, replyTo),
-            HasVoiceWs(voiceHandler, inVChannelId, firstSender, _, readyListener, movedMonitor)
+            HasVoiceWs(
+              voiceHandler,
+              inVChannelId,
+              firstSender,
+              _,
+              readyListener,
+              movedMonitor
+            )
           ) =>
         handleConflictingConnect(
           connect,
@@ -230,7 +284,14 @@ object LavaplayerHandler {
 
         Source
           .single(
-            VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+            VoiceStateUpdate(
+              VoiceStateUpdateData(
+                guildId,
+                None,
+                selfMute = false,
+                selfDeaf = false
+              )
+            )
               .asInstanceOf[GatewayMessage[Any]]
           )
           .runWith(events.toGatewayPublish)
@@ -242,7 +303,14 @@ object LavaplayerHandler {
 
         Source
           .single(
-            VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+            VoiceStateUpdate(
+              VoiceStateUpdateData(
+                guildId,
+                None,
+                selfMute = false,
+                selfDeaf = false
+              )
+            )
               .asInstanceOf[GatewayMessage[Any]]
           )
           .runWith(events.toGatewayPublish)
@@ -261,8 +329,13 @@ object LavaplayerHandler {
       case (VoiceChannelMoved(Some(newChannelId)), state: HasVoiceWs) =>
         inactive(parameters, state.copy(voiceChannelId = newChannelId))
 
-      case (GotVoiceData(sessionId, token, endpoint, userId), Connecting(inVChannelId, replyTo, _)) =>
-        log.debug(s"Received session id, token and endpoint: $sessionId $token $endpoint")
+      case (
+            GotVoiceData(sessionId, token, endpoint, userId),
+            Connecting(inVChannelId, replyTo, _)
+          ) =>
+        log.debug(
+          s"Received session id, token and endpoint: $sessionId $token $endpoint"
+        )
         connect(inVChannelId, endpoint, userId, sessionId, token, replyTo)
 
       case (GotVoiceData(_, _, _, _), _) =>
@@ -270,18 +343,38 @@ object LavaplayerHandler {
 
       case (
             WsReady(serverId, userId),
-            HasVoiceWs(voiceWs, vChannelId, sendEventsTo, toggle, readyListener, movedMonitor)
+            HasVoiceWs(
+              voiceWs,
+              vChannelId,
+              sendEventsTo,
+              toggle,
+              readyListener,
+              movedMonitor
+            )
           ) =>
         log.debug("Audio ready")
 
         sendEventsTo ! MusicReady(serverId, userId)
 
-        active(parameters, CanSendAudio(voiceWs, vChannelId, toggle, sendEventsTo, readyListener, movedMonitor))
+        active(
+          parameters,
+          CanSendAudio(
+            voiceWs,
+            vChannelId,
+            toggle,
+            sendEventsTo,
+            readyListener,
+            movedMonitor
+          )
+        )
 
       case (WsReady(_, _), _) =>
         Behaviors.same
 
-      case (Shutdown, HasVoiceWs(voiceWs, _, _, _, readyListener, movedMonitor)) =>
+      case (
+            Shutdown,
+            HasVoiceWs(voiceWs, _, _, _, readyListener, movedMonitor)
+          ) =>
         context.stop(readyListener)
 
         context.watchWith(voiceWs, StopNow)
@@ -299,7 +392,10 @@ object LavaplayerHandler {
     }
   }
 
-  def active(parameters: LavaplayerHandler.Parameters, state: CanSendAudio): Behavior[Command] = {
+  def active(
+      parameters: LavaplayerHandler.Parameters,
+      state: CanSendAudio
+  ): Behavior[Command] = {
     import parameters._
     import state._
     implicit val system: ActorSystem[Nothing] = context.system
@@ -325,7 +421,14 @@ object LavaplayerHandler {
 
         Source
           .single(
-            VoiceStateUpdate(VoiceStateUpdateData(guildId, None, selfMute = false, selfDeaf = false))
+            VoiceStateUpdate(
+              VoiceStateUpdateData(
+                guildId,
+                None,
+                selfMute = false,
+                selfDeaf = false
+              )
+            )
               .asInstanceOf[GatewayMessage[Any]]
           )
           .runWith(events.toGatewayPublish)
@@ -375,8 +478,11 @@ object LavaplayerHandler {
     *   If it should connect even if it's already connecting, or is connected to
     *   another channel(move)
     */
-  case class ConnectVoiceChannel(channelId: VoiceGuildChannelId, force: Boolean = false, replyTo: ActorRef[Reply])
-      extends Command
+  case class ConnectVoiceChannel(
+      channelId: VoiceGuildChannelId,
+      force: Boolean = false,
+      replyTo: ActorRef[Reply]
+  ) extends Command
 
   /** Disconnect from a voice channel */
   case object DisconnectVoiceChannel extends Command
@@ -406,8 +512,10 @@ object LavaplayerHandler {
     * @param newVoiceChannelId
     *   The new voice channel id after the switch
     */
-  case class ForcedConnectionFailure(oldVoiceChannelId: VoiceGuildChannelId, newVoiceChannelId: VoiceGuildChannelId)
-      extends Reply
+  case class ForcedConnectionFailure(
+      oldVoiceChannelId: VoiceGuildChannelId,
+      newVoiceChannelId: VoiceGuildChannelId
+  ) extends Reply
 
   /**
     * Set if the bot should be playing(speaking) or not. This is required to
@@ -421,11 +529,19 @@ object LavaplayerHandler {
     */
   case object Shutdown extends Command
 
-  private case object StopNow                                        extends Command
-  private case class WsReady(serverId: RawSnowflake, userId: UserId) extends Command
+  private case object StopNow extends Command
+  private case class WsReady(serverId: RawSnowflake, userId: UserId)
+      extends Command
 
-  private case class GotVoiceData(sessionId: String, token: String, endpoint: String, userId: UserId) extends Command
-  private[lavaplayer] case class VoiceChannelMoved(newVoiceChannel: Option[VoiceGuildChannelId])      extends Command
+  private case class GotVoiceData(
+      sessionId: String,
+      token: String,
+      endpoint: String,
+      userId: UserId
+  ) extends Command
+  private[lavaplayer] case class VoiceChannelMoved(
+      newVoiceChannel: Option[VoiceGuildChannelId]
+  ) extends Command
 
   /**
     * Tries to load an item given an identifier and returns it as a future. If
@@ -433,7 +549,10 @@ object LavaplayerHandler {
     * Otherwise it fails with
     * [[com.sedmelluq.discord.lavaplayer.tools.FriendlyException]].
     */
-  def loadItem(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] = {
+  def loadItem(
+      playerManager: AudioPlayerManager,
+      identifier: String
+  ): Future[AudioItem] = {
     val promise = Promise[AudioItem]()
 
     playerManager.loadItem(
@@ -441,11 +560,14 @@ object LavaplayerHandler {
       new AudioLoadResultHandler {
         override def loadFailed(e: FriendlyException): Unit = promise.failure(e)
 
-        override def playlistLoaded(playlist: AudioPlaylist): Unit = promise.success(playlist)
+        override def playlistLoaded(playlist: AudioPlaylist): Unit =
+          promise.success(playlist)
 
-        override def noMatches(): Unit = promise.failure(new NoMatchException(identifier))
+        override def noMatches(): Unit =
+          promise.failure(new NoMatchException(identifier))
 
-        override def trackLoaded(track: AudioTrack): Unit = promise.success(track)
+        override def trackLoaded(track: AudioTrack): Unit =
+          promise.success(track)
       }
     )
 
@@ -459,7 +581,8 @@ object LavaplayerHandler {
     * @param sendTo
     *   The actor to send the events to.
     */
-  class AudioEventSender[A](sendTo: ActorRef[A], wrap: AudioEvent => A) extends AudioEventListener {
+  class AudioEventSender[A](sendTo: ActorRef[A], wrap: AudioEvent => A)
+      extends AudioEventListener {
     override def onEvent(event: AudioEvent): Unit = sendTo ! wrap(event)
   }
 
@@ -468,7 +591,8 @@ object LavaplayerHandler {
     * [[com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager]] find a
     * track.
     */
-  class NoMatchException(val identifier: String) extends Exception(s"No match for identifier $identifier")
+  class NoMatchException(val identifier: String)
+      extends Exception(s"No match for identifier $identifier")
 
   class ForcedConnectedException(inChannel: VoiceGuildChannelId)
       extends Exception("Connection was forced to another channel")

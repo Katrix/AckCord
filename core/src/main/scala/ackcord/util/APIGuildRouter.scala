@@ -36,14 +36,25 @@ class APIGuildRouter[Inner](
     notGuildHandler: Option[ActorRef[Inner]],
     handleEvent: (ActorRef[Inner], APIMessage) => Unit,
     shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
-) extends GuildRouter[APIMessage, Inner](ctx, replyTo, behavior, notGuildHandler, shutdownBehavior) {
+) extends GuildRouter[APIMessage, Inner](
+      ctx,
+      replyTo,
+      behavior,
+      notGuildHandler,
+      shutdownBehavior
+    ) {
 
   override def handleThroughMessage(a: APIMessage): Unit = a match {
     case msg: APIMessage.Ready =>
-      msg.cache.current.unavailableGuildMap.keys.foreach(sendToGuild(_, msg, handleEvent))
-    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate) => sendToAll(msg, handleEvent)
-    case APIMessage.GuildDelete(guild, unavailable, _, _) if !unavailable.getOrElse(false) => stopHandler(guild.id)
-    case msg: APIMessage.GuildMessage => sendToGuild(msg.guild.id, msg, handleEvent)
+      msg.cache.current.unavailableGuildMap.keys
+        .foreach(sendToGuild(_, msg, handleEvent))
+    case msg @ (_: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
+      sendToAll(msg, handleEvent)
+    case APIMessage.GuildDelete(guild, unavailable, _, _)
+        if !unavailable.getOrElse(false) =>
+      stopHandler(guild.id)
+    case msg: APIMessage.GuildMessage =>
+      sendToGuild(msg.guild.id, msg, handleEvent)
     case msg: APIMessage.OptGuildMessage =>
       msg.guild match {
         case Some(guild) => sendToGuild(guild.id, msg, handleEvent)
@@ -57,8 +68,9 @@ class APIGuildRouter[Inner](
       }
     case msg: APIMessage.MessageMessage =>
       msg.message.channelId.resolve(msg.cache.current) match {
-        case Some(guildChannel: GuildChannel) => sendToGuild(guildChannel.guildId, msg, handleEvent)
-        case _                                => sendToNotGuild(msg, handleEvent)
+        case Some(guildChannel: GuildChannel) =>
+          sendToGuild(guildChannel.guildId, msg, handleEvent)
+        case _ => sendToNotGuild(msg, handleEvent)
       }
     case msg @ APIMessage.VoiceStateUpdate(state, _, _) =>
       state.guildId match {
@@ -73,8 +85,16 @@ object APIGuildRouter {
       replyTo: Option[ActorRef[GuildRouter.GuildActorCreated[APIMessage]]],
       behavior: GuildId => Behavior[APIMessage],
       notGuildHandler: Option[ActorRef[APIMessage]]
-  ): Behavior[GuildRouter.Command[APIMessage, APIMessage]] = Behaviors.setup { ctx =>
-    new APIGuildRouter(ctx, replyTo, behavior, notGuildHandler, _ ! _, GuildRouter.OnShutdownStop)
+  ): Behavior[GuildRouter.Command[APIMessage, APIMessage]] = Behaviors.setup {
+    ctx =>
+      new APIGuildRouter(
+        ctx,
+        replyTo,
+        behavior,
+        notGuildHandler,
+        _ ! _,
+        GuildRouter.OnShutdownStop
+      )
   }
 
   def partitioner[Inner](
@@ -83,6 +103,13 @@ object APIGuildRouter {
       notGuildHandler: Option[ActorRef[Inner]],
       shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
   ): Behavior[GuildRouter.Command[APIMessage, Inner]] = Behaviors.setup { ctx =>
-    new APIGuildRouter(ctx, replyTo, behavior, notGuildHandler, (_, _) => (), shutdownBehavior)
+    new APIGuildRouter(
+      ctx,
+      replyTo,
+      behavior,
+      notGuildHandler,
+      (_, _) => (),
+      shutdownBehavior
+    )
   }
 }

@@ -42,12 +42,14 @@ abstract class GuildRouter[Event, Inner](
 
   val log: Logger = context.log
 
-  val handlers       = mutable.HashMap.empty[GuildId, ActorRef[Inner]]
+  val handlers = mutable.HashMap.empty[GuildId, ActorRef[Inner]]
   var isShuttingDown = false
 
   def handleThroughMessage(a: Event): Unit
 
-  override def onMessage(msg: Command[Event, Inner]): Behavior[Command[Event, Inner]] = msg match {
+  override def onMessage(
+      msg: Command[Event, Inner]
+  ): Behavior[Command[Event, Inner]] = msg match {
     case EventMessage(a) =>
       handleThroughMessage(a)
       Behaviors.same
@@ -74,8 +76,9 @@ abstract class GuildRouter[Event, Inner](
 
       if (handlers.nonEmpty) {
         shutdownBehavior match {
-          case OnShutdownSendMsg(msg)     => sendToAll[Inner](msg, _ ! _)
-          case GuildRouter.OnShutdownStop => handlers.values.foreach(context.stop)
+          case OnShutdownSendMsg(msg) => sendToAll[Inner](msg, _ ! _)
+          case GuildRouter.OnShutdownStop =>
+            handlers.values.foreach(context.stop)
         }
 
         Behaviors.same
@@ -84,13 +87,18 @@ abstract class GuildRouter[Event, Inner](
       }
   }
 
-  def sendToGuild[A](guildId: GuildId, msg: A, handle: (ActorRef[Inner], A) => Unit): Unit =
+  def sendToGuild[A](
+      guildId: GuildId,
+      msg: A,
+      handle: (ActorRef[Inner], A) => Unit
+  ): Unit =
     if (!isShuttingDown) handle(getGuild(guildId), msg)
 
   def sendToNotGuild[A](msg: A, handle: (ActorRef[Inner], A) => Unit): Unit =
     if (!isShuttingDown) notGuildHandler.foreach(handle(_, msg))
 
-  def sendToAll[A](msg: A, handle: (ActorRef[Inner], A) => Unit): Unit = handlers.values.foreach(handle(_, msg))
+  def sendToAll[A](msg: A, handle: (ActorRef[Inner], A) => Unit): Unit =
+    handlers.values.foreach(handle(_, msg))
 
   def getGuild(guildId: GuildId): ActorRef[Inner] = {
     lazy val newActor = {
@@ -103,12 +111,13 @@ abstract class GuildRouter[Event, Inner](
     handlers.getOrElseUpdate(guildId, newActor)
   }
 
-  def stopHandler(guildId: GuildId): Unit = handlers.get(guildId).foreach { handler =>
-    shutdownBehavior match {
-      case GuildRouter.OnShutdownSendMsg(msg) => handler ! msg
-      case GuildRouter.OnShutdownStop         => context.stop(handler)
+  def stopHandler(guildId: GuildId): Unit =
+    handlers.get(guildId).foreach { handler =>
+      shutdownBehavior match {
+        case GuildRouter.OnShutdownSendMsg(msg) => handler ! msg
+        case GuildRouter.OnShutdownStop         => context.stop(handler)
+      }
     }
-  }
 }
 
 object GuildRouter {
@@ -119,28 +128,39 @@ object GuildRouter {
       notGuildHandler: Option[ActorRef[Inner]],
       shutdownBehavior: GuildRouter.ShutdownBehavior[Inner]
   ): Behavior[Command[Nothing, Inner]] = Behaviors.setup { ctx =>
-    new GuildRouter[Nothing, Inner](ctx, replyTo, behavior, notGuildHandler, shutdownBehavior) {
-      override def handleThroughMessage(a: Nothing): Unit = sys.error("impossible")
+    new GuildRouter[Nothing, Inner](
+      ctx,
+      replyTo,
+      behavior,
+      notGuildHandler,
+      shutdownBehavior
+    ) {
+      override def handleThroughMessage(a: Nothing): Unit =
+        sys.error("impossible")
     }
   }
 
   sealed trait ShutdownBehavior[+Inner]
-  case class OnShutdownSendMsg[Inner](msg: Inner) extends ShutdownBehavior[Inner]
-  case object OnShutdownStop                      extends ShutdownBehavior[Nothing]
+  case class OnShutdownSendMsg[Inner](msg: Inner)
+      extends ShutdownBehavior[Inner]
+  case object OnShutdownStop extends ShutdownBehavior[Nothing]
 
   sealed trait Command[+Event, +Inner]
   case class EventMessage[Event](a: Event) extends Command[Event, Nothing]
-  case object Shutdown                     extends Command[Nothing, Nothing]
+  case object Shutdown extends Command[Nothing, Nothing]
 
-  private case class TerminatedGuild(guildId: GuildId) extends Command[Nothing, Nothing]
+  private case class TerminatedGuild(guildId: GuildId)
+      extends Command[Nothing, Nothing]
 
   /**
     * Send to the guild dispatcher to get the actor for that guild
     * @param guildId
     *   The guildId to get the actor for
     */
-  case class GetGuildActor[Inner](guildId: GuildId, replyTo: ActorRef[GetGuildActorReply[Inner]])
-      extends Command[Nothing, Inner]
+  case class GetGuildActor[Inner](
+      guildId: GuildId,
+      replyTo: ActorRef[GetGuildActorReply[Inner]]
+  ) extends Command[Nothing, Inner]
 
   /**
     * Send a message to a guild actor that this router manages.
@@ -149,7 +169,8 @@ object GuildRouter {
     * @param msg
     *   The message to send.
     */
-  case class SendToGuildActor[Inner](guildId: GuildId, msg: Inner) extends Command[Nothing, Inner]
+  case class SendToGuildActor[Inner](guildId: GuildId, msg: Inner)
+      extends Command[Nothing, Inner]
 
   /**
     * Sent as a response to [[GetGuildActor]]
