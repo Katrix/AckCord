@@ -59,27 +59,20 @@ case class Events(
     * Messages sent to this flow will be sent to the gateway. Messages coming
     * out of this flow are received from the gateway.
     */
-  def gatewayClientConnection
-      : Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
+  def gatewayClientConnection: Flow[GatewayMessage[_], GatewayMessage[_], NotUsed] =
     Flow.fromSinkAndSourceCoupled(fromGatewayPublish, toGatewaySubscribe)
 
   /** Publish a single cache event. */
-  def publishCacheEvent(elem: CacheEvent): Unit =
-    publish.runWith(Source.single(elem))
+  def publishCacheEvent(elem: CacheEvent): Unit = publish.runWith(Source.single(elem))
 
   /** A source used to subscribe to [[APIMessage]]s sent to this cache. */
-  def subscribeAPI: Source[APIMessage, NotUsed] =
-    subscribe.via(CacheStreams.createApiMessages)
+  def subscribeAPI: Source[APIMessage, NotUsed] = subscribe.via(CacheStreams.createApiMessages)
 
   /**
     * Subscribe an actor to this cache using
     * [[https://doc.akka.io/api/akka/current/akka/stream/scaladsl/Sink$.html#actorRef[T](ref:akka.actor.ActorRef,onCompleteMessage:Any):akka.stream.scaladsl.Sink[T,akka.NotUsed] Sink.actorRef]].
     */
-  def subscribeAPIActor(
-      actor: classic.ActorRef,
-      completeMessage: Any,
-      onFailureMessage: Throwable => Any
-  )(
+  def subscribeAPIActor(actor: classic.ActorRef, completeMessage: Any, onFailureMessage: Throwable => Any)(
       specificEvent: Class[_ <: APIMessage]*
   ): Unit =
     subscribeAPI
@@ -99,15 +92,7 @@ case class Events(
   )(specificEvent: Class[_ <: APIMessage]*): Unit =
     subscribeAPI
       .filter(msg => specificEvent.exists(_.isInstance(msg)))
-      .runWith(
-        Sink.actorRefWithBackpressure(
-          actor,
-          initMessage,
-          ackMessage,
-          completeMessage,
-          failureMessage
-        )
-      )
+      .runWith(Sink.actorRefWithBackpressure(actor, initMessage, ackMessage, completeMessage, failureMessage))
 
   /** Exposes the command interactions sent to this bot. */
   def interactions: Source[(RawInteraction, Option[CacheSnapshot]), NotUsed] =
@@ -119,24 +104,19 @@ case class Events(
   def sendGatewayPublish: Sink[GatewayMessage[Any], NotUsed] = toGatewayPublish
 
   @deprecated("Use toGatewaySubscribe instead", since = "0.18.0")
-  def sendGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] =
-    toGatewaySubscribe
+  def sendGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] = toGatewaySubscribe
 
   @deprecated("Use fromGatewayPublish instead", since = "0.18.0")
-  def receiveGatewayPublish: Sink[GatewayMessage[Any], NotUsed] =
-    fromGatewayPublish
+  def receiveGatewayPublish: Sink[GatewayMessage[Any], NotUsed] = fromGatewayPublish
 
   @deprecated("Use fromGatewaySubscribe instead", since = "0.18.0")
-  def receiveGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] =
-    fromGatewaySubscribe
+  def receiveGatewaySubscribe: Source[GatewayMessage[Any], NotUsed] = fromGatewaySubscribe
 }
 object Events {
 
   def connectGatewayToApiMessages(
       events: Events,
-      gatewayToApiMessageConverter: Option[
-        CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ],
+      gatewayToApiMessageConverter: Option[CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]],
       parallelism: Int,
       ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]],
       cacheTypeRegistry: CacheTypeRegistry,
@@ -147,21 +127,15 @@ object Events {
 
     //Pipe events gotten into the main pubsub
     gatewayToApiMessageConverter.foreach { apiMessageCreatorFun =>
-      val settings = AckCordGatewaySettings()(system)
+      val settings            = AckCordGatewaySettings()(system)
       val apiMessageConverter = apiMessageCreatorFun(cacheTypeRegistry)
 
       val baseSource: Source[APIMessageCacheUpdate[Any], NotUsed] =
         events.fromGatewaySubscribe
           .collectType[Dispatch[_]]
-          .filter(dispatch =>
-            !ignoredEvents.exists(_.isInstance(dispatch.event))
-          )
+          .filter(dispatch => !ignoredEvents.exists(_.isInstance(dispatch.event)))
           .mapAsync(parallelism)(dispatch =>
-            Future(
-              CacheEventCreator
-                .eventToCacheUpdate(dispatch, apiMessageConverter, settings)
-                .toList
-            )
+            Future(CacheEventCreator.eventToCacheUpdate(dispatch, apiMessageConverter, settings).toList)
           )
           .mapConcat(identity)
           .map(update => update.asInstanceOf[APIMessageCacheUpdate[Any]])
@@ -169,18 +143,14 @@ object Events {
       val sourceWithBatching =
         if (maxBatch != 1)
           baseSource
-            .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)(
-              (xs, update) => update :: xs
-            )
+            .batchWeighted(maxBatch, batchCostFun, update => update :: Nil)((xs, update) => update :: xs)
             .map(xs => BatchedAPIMessageCacheUpdate(xs.reverse))
         else
           baseSource
 
       val completeGraph = sourceWithBatching.to(events.publish)
 
-      SupervisionStreams
-        .addLogAndContinueFunction(completeGraph.addAttributes)
-        .run()
+      SupervisionStreams.addLogAndContinueFunction(completeGraph.addAttributes).run()
     }
   }
 
@@ -192,16 +162,13 @@ object Events {
       cacheTypeRegistry: CacheTypeRegistry,
       maxBatch: Long = 1,
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
-      gatewayToApiMessageConverter: Option[
-        CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some(
+      gatewayToApiMessageConverter: Option[CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]] = Some(
         CacheEventCreator.ackcordGatewayToCacheUpdateOnly
       ),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): Events = {
-    val (sendGatewayPublish, sendGatewaySubscribe) =
-      CacheStreams.gatewayEvents[Any](sendGatewayEventsBufferSize)
+    val (sendGatewayPublish, sendGatewaySubscribe) = CacheStreams.gatewayEvents[Any](sendGatewayEventsBufferSize)
     val (receiveGatewayPublish, receiveGatewaySubscribe) =
       CacheStreams.gatewayEvents[Any](receiveGatewayEventsBufferSize)
 
@@ -238,8 +205,7 @@ object Events {
     *   How many cache updates to construct at the same time.
     */
   def create(
-      cacheProcessor: MemoryCacheSnapshot.CacheProcessor =
-        MemoryCacheSnapshot.defaultCacheProcessor,
+      cacheProcessor: MemoryCacheSnapshot.CacheProcessor = MemoryCacheSnapshot.defaultCacheProcessor,
       parallelism: Int = 4,
       ignoredEvents: Seq[Class[_ <: GatewayEvent[_]]] = Nil,
       cacheTypeRegistry: CacheTypeRegistry = CacheTypeRegistry.default,
@@ -247,15 +213,12 @@ object Events {
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
       gatewayToApiMessageConverter: Option[
         CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some(registry =>
-        CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)
-      ),
+      ] = Some(registry => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): Events = {
-    val (publish, subscribe) =
-      CacheStreams.cacheStreams(cacheProcessor, cacheBufferSize)
+    val (publish, subscribe) = CacheStreams.cacheStreams(cacheProcessor, cacheBufferSize)
 
     createWithPubSub(
       publish,
@@ -292,18 +255,13 @@ object Events {
       batchCostFun: APIMessageCacheUpdate[_] => Long = _ => 1,
       gatewayToApiMessageConverter: Option[
         CacheTypeRegistry => Dispatch[_] => Option[APIMessageCacheUpdate[_]]
-      ] = Some(registry =>
-        CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)
-      ),
+      ] = Some(registry => CacheEventCreator.ackcordGatewayToCacheUpdateOnly(registry)),
       cacheBufferSize: PubSubBufferSize = PubSubBufferSize(),
       sendGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize(),
       receiveGatewayEventsBufferSize: PubSubBufferSize = PubSubBufferSize()
   )(implicit system: ActorSystem[Nothing]): Events = {
     val (publish, subscribe) =
-      CacheStreams.cacheStreamsCustom(
-        CacheStreams.guildCacheUpdater(guildCacheActor),
-        cacheBufferSize
-      )
+      CacheStreams.cacheStreamsCustom(CacheStreams.guildCacheUpdater(guildCacheActor), cacheBufferSize)
     createWithPubSub(
       publish,
       subscribe,

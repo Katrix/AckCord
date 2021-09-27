@@ -109,9 +109,7 @@ trait CacheSnapshot {
   def getUserDmChannel(id: UserId): Option[DMChannel]
 
   /** Get a group dm channel by id. */
-  def getGroupDmChannel(
-      id: SnowflakeType[GroupDMChannel]
-  ): Option[GroupDMChannel]
+  def getGroupDmChannel(id: SnowflakeType[GroupDMChannel]): Option[GroupDMChannel]
 
   /** Get a guild by id. */
   def getGuild(id: GuildId): Option[GatewayGuild]
@@ -127,10 +125,7 @@ trait CacheSnapshot {
   def getChannelMessages(channelId: TextChannelId): MapType[Message, Message]
 
   /** Get a message, specifying both the channel, and message id. */
-  def getMessage(
-      channelId: TextChannelId,
-      messageId: MessageId
-  ): Option[Message]
+  def getMessage(channelId: TextChannelId, messageId: MessageId): Option[Message]
 
   /** Get a message by id without knowing the channel it belongs to. */
   def getMessage(messageId: MessageId): Option[Message]
@@ -142,10 +137,7 @@ trait CacheSnapshot {
     * @param id
     *   The channel id
     */
-  def getGuildChannel(
-      guildId: GuildId,
-      id: GuildChannelId
-  ): Option[GuildChannel]
+  def getGuildChannel(guildId: GuildId, id: GuildChannelId): Option[GuildChannel]
 
   /** Get a guild channel by id without knowing the guild it belongs to. */
   def getGuildChannel(id: GuildChannelId): Option[GuildChannel]
@@ -157,10 +149,7 @@ trait CacheSnapshot {
     * @param id
     *   The thread id
     */
-  def getThread(
-      guildId: GuildId,
-      id: ThreadGuildChannelId
-  ): Option[ThreadGuildChannel]
+  def getThread(guildId: GuildId, id: ThreadGuildChannelId): Option[ThreadGuildChannel]
 
   /** Get a thread channel by id without knowing the guild it belongs to. */
   def getThread(id: ThreadGuildChannelId): Option[ThreadGuildChannel]

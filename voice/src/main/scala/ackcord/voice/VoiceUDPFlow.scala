@@ -42,8 +42,8 @@ object VoiceUDPFlow {
   val silence = ByteString(0xF8, 0xFF, 0xFE)
 
   val SampleRate = 48000
-  val FrameSize = 960
-  val FrameTime = 20
+  val FrameSize  = 960
+  val FrameTime  = 20
 
   def flow[Mat](
       remoteAddress: InetSocketAddress,
@@ -51,24 +51,14 @@ object VoiceUDPFlow {
       serverId: RawSnowflake,
       userId: UserId,
       secretKeys: Source[Option[ByteString], Mat]
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Flow[ByteString, AudioAPIMessage.ReceivedData, (Mat, Future[FoundIP])] =
+  )(implicit system: ActorSystem[Nothing]): Flow[ByteString, AudioAPIMessage.ReceivedData, (Mat, Future[FoundIP])] =
     NaclBidiFlow
       .bidiFlow(ssrc, serverId, userId, secretKeys)
       .atopMat(voiceBidi(ssrc).reversed)(Keep.both)
       .async
-      .join(
-        Flow[ByteString]
-          .buffer(32, OverflowStrategy.backpressure)
-          .via(UdpConnectedFlow.flow(remoteAddress))
-      )
+      .join(Flow[ByteString].buffer(32, OverflowStrategy.backpressure).via(UdpConnectedFlow.flow(remoteAddress)))
 
-  def voiceBidi(
-      ssrc: Int
-  ): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[
-    FoundIP
-  ]] = {
+  def voiceBidi(ssrc: Int): BidiFlow[ByteString, ByteString, ByteString, ByteString, Future[FoundIP]] = {
     implicit val byteOrder: ByteOrder = ByteOrder.BIG_ENDIAN
     val ipDiscoveryPacket = {
       val byteBuilder = ByteString.createBuilder
@@ -81,10 +71,7 @@ object VoiceUDPFlow {
     }
 
     val valvePromise = Promise[Unit]()
-    val valve = Source
-      .future(valvePromise.future)
-      .drop(1)
-      .asInstanceOf[Source[ByteString, NotUsed]]
+    val valve        = Source.future(valvePromise.future).drop(1).asInstanceOf[Source[ByteString, NotUsed]]
 
     val ipDiscoveryFlow = Flow[ByteString]
       .viaMat(new IPDiscoveryFlow(() => valvePromise.success(())))(Keep.right)
@@ -95,7 +82,7 @@ object VoiceUDPFlow {
 
         val voiceIn = b.add(Flow[ByteString])
 
-        val ipDiscoverySource = b.add(Source.single(ipDiscoveryPacket) ++ valve)
+        val ipDiscoverySource           = b.add(Source.single(ipDiscoveryPacket) ++ valve)
         val ipDiscoveryAndThenVoiceData = b.add(Concat[ByteString]())
 
         ipDiscoverySource ~> ipDiscoveryAndThenVoiceData

@@ -35,13 +35,7 @@ import ackcord.examplecore.music.MusicHandler
 import ackcord.gateway.{GatewayEvent, GatewaySettings}
 import ackcord.interactions.InteractionsRegistrar
 import ackcord.interactions.raw.GetGuildCommands
-import ackcord.requests.{
-  BotAuthentication,
-  Ratelimiter,
-  RatelimiterActor,
-  RequestSettings,
-  Requests
-}
+import ackcord.requests.{BotAuthentication, Ratelimiter, RatelimiterActor, RequestSettings, Requests}
 import ackcord.util.{APIGuildRouter, GuildRouter}
 import akka.Done
 import akka.actor.CoordinatedShutdown
@@ -67,20 +61,12 @@ object Example {
     val token = args.head
 
     val settings = GatewaySettings(token = token)
-    ActorSystem(
-      Behaviors.setup[ExampleMain.Command](ctx =>
-        new ExampleMain(ctx, ctx.log, settings)
-      ),
-      "ExampleCore"
-    )
+    ActorSystem(Behaviors.setup[ExampleMain.Command](ctx => new ExampleMain(ctx, ctx.log, settings)), "ExampleCore")
   }
 }
 
-class ExampleMain(
-    ctx: ActorContext[ExampleMain.Command],
-    log: Logger,
-    settings: GatewaySettings
-) extends AbstractBehavior[ExampleMain.Command](ctx) {
+class ExampleMain(ctx: ActorContext[ExampleMain.Command], log: Logger, settings: GatewaySettings)
+    extends AbstractBehavior[ExampleMain.Command](ctx) {
   implicit val system: ActorSystem[Nothing] = context.system
   import ExampleMain._
   import system.executionContext
@@ -109,8 +95,7 @@ class ExampleMain(
         throw e
     }
 
-  private val shard =
-    context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
+  private val shard          = context.spawn(DiscordShard(wsUri, settings, events), "DiscordShard")
   private val ratelimitActor = context.spawn(RatelimiterActor(), "Ratelimiter")
 
   private val requests: Requests = {
@@ -138,10 +123,7 @@ class ExampleMain(
       controller.ping,
       controller.maybeFail,
       controller.ratelimitTest("ratelimitTest", requests.sinkIgnore[Any]),
-      controller.ratelimitTest(
-        "ratelimitTestOrdered",
-        requests.sinkIgnore[Any](Requests.RequestProperties.ordered)
-      ),
+      controller.ratelimitTest("ratelimitTestOrdered", requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
       controller.kill
     )
   }
@@ -150,9 +132,7 @@ class ExampleMain(
     case mc: APIMessage.MessageCreate =>
       import ackcord.syntax._
       if (mc.message.content.startsWith("Msg")) {
-        requests.singleIgnore(mc.message.createReaction("❌"))(
-          Requests.RequestProperties.retry
-        )
+        requests.singleIgnore(mc.message.createReaction("❌"))(Requests.RequestProperties.retry)
       }
     case _ =>
   }
@@ -166,12 +146,7 @@ class ExampleMain(
   val registerCommands = true
   if (registerCommands) {
     requests
-      .singleFuture(
-        GetGuildCommands(
-          ApplicationId("288367502130413568"),
-          GuildId("269988507378909186")
-        )
-      )
+      .singleFuture(GetGuildCommands(ApplicationId("288367502130413568"), GuildId("269988507378909186")))
       .onComplete(println)
 
     /*
@@ -217,23 +192,16 @@ class ExampleMain(
   controllerCommands.foreach(registerCommand)
   registerCommand(
     helpCommand.command
-      .toNamed(
-        PrefixParser.structured(needsMention = true, Seq("!"), Seq("help"))
-      )
-      .toDescribed(
-        CommandDescription("Help", "This command right here", "[query]|[page]")
-      )
+      .toNamed(PrefixParser.structured(needsMention = true, Seq("!"), Seq("help")))
+      .toDescribed(CommandDescription("Help", "This command right here", "[query]|[page]"))
   )
 
-  private def registerCmdObjMusic[A]
-      : FunctionK[NamedDescribedComplexCommand[A, *], cats.Id] =
+  private def registerCmdObjMusic[A]: FunctionK[NamedDescribedComplexCommand[A, *], cats.Id] =
     new FunctionK[NamedDescribedComplexCommand[A, *], cats.Id] {
-      override def apply[C](fa: NamedDescribedComplexCommand[A, C]): C =
-        registerCommand(fa)
+      override def apply[C](fa: NamedDescribedComplexCommand[A, C]): C = registerCommand(fa)
     }
 
-  val guildRouterMusic
-      : ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
+  val guildRouterMusic: ActorRef[GuildRouter.Command[APIMessage, MusicHandler.Command]] = {
     context.spawn(
       APIGuildRouter.partitioner(
         None,
@@ -251,25 +219,18 @@ class ExampleMain(
       case ready: APIMessage.Ready        => GuildRouter.EventMessage(ready)
       case create: APIMessage.GuildCreate => GuildRouter.EventMessage(create)
     }
-    .to(
-      ActorSink.actorRef(
-        guildRouterMusic,
-        GuildRouter.Shutdown,
-        _ => GuildRouter.Shutdown
-      )
-    )
+    .to(ActorSink.actorRef(guildRouterMusic, GuildRouter.Shutdown, _ => GuildRouter.Shutdown))
     .run()
   shard ! DiscordShard.StartShard
 
-  private var shutdownCount = 0
-  private var isShuttingDown = false
+  private var shutdownCount              = 0
+  private var isShuttingDown             = false
   private var doneSender: ActorRef[Done] = _
 
   private val shutdown = CoordinatedShutdown(system.toClassic)
 
   shutdown.addTask("before-service-unbind", "begin-deathwatch") { () =>
-    implicit val timeout: Timeout =
-      Timeout(shutdown.timeout("before-service-unbind"))
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("before-service-unbind"))
     context.self.ask[Done](ExampleMain.BeginDeathwatch)
   }
 
@@ -279,8 +240,7 @@ class ExampleMain(
   }
 
   shutdown.addTask("service-requests-done", "stop-music") { () =>
-    implicit val timeout: Timeout =
-      Timeout(shutdown.timeout("service-requests-done"))
+    implicit val timeout: Timeout = Timeout(shutdown.timeout("service-requests-done"))
     context.self.ask[Done](ExampleMain.StopMusic)
   }
 
@@ -327,11 +287,7 @@ class ExampleMain(
   override def onSignal: PartialFunction[Signal, Behavior[Command]] = {
     case Terminated(act) if isShuttingDown =>
       shutdownCount += 1
-      log.info(
-        "Actor shut down: {} Shutdown count: {}",
-        act.path,
-        shutdownCount
-      )
+      log.info("Actor shut down: {} Shutdown count: {}", act.path, shutdownCount)
 
       doneSender ! Done
       doneSender = null
@@ -345,24 +301,18 @@ class ExampleMain(
 object ExampleMain {
   sealed trait Command
 
-  case class BeginDeathwatch(replyTo: ActorRef[Done]) extends Command
+  case class BeginDeathwatch(replyTo: ActorRef[Done])    extends Command
   case class UnregisterCommands(replyTo: ActorRef[Done]) extends Command
-  case class StopMusic(replyTo: ActorRef[Done]) extends Command
-  case class StopShard(replyTo: ActorRef[Done]) extends Command
-  case object RestartShard extends Command
-  case object CommandsUnregistered extends Command
+  case class StopMusic(replyTo: ActorRef[Done])          extends Command
+  case class StopShard(replyTo: ActorRef[Done])          extends Command
+  case object RestartShard                               extends Command
+  case object CommandsUnregistered                       extends Command
 
-  def registerNewCommand[Mat](
-      connector: CommandConnector,
-      helpCommand: HelpCommand
-  )(
+  def registerNewCommand[Mat](connector: CommandConnector, helpCommand: HelpCommand)(
       command: NamedDescribedComplexCommand[_, Mat]
   )(implicit ec: ExecutionContext): Mat = {
-    val registration =
-      connector.runNewNamedCommandWithHelp(command, helpCommand)
-    registration.onDone.foreach(_ =>
-      println(s"Command completed: ${command.description.name}")
-    )
+    val registration = connector.runNewNamedCommandWithHelp(command, helpCommand)
+    registration.onDone.foreach(_ => println(s"Command completed: ${command.description.name}"))
     registration.materialized
   }
 }

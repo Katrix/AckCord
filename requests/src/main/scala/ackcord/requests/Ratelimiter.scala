@@ -12,10 +12,7 @@ import akka.util.Timeout
 
 trait Ratelimiter {
 
-  def ratelimitRequests[A, Ctx]: FlowWithContext[Request[A], Ctx, Either[
-    RequestDropped,
-    Request[A]
-  ], Ctx, NotUsed]
+  def ratelimitRequests[A, Ctx]: FlowWithContext[Request[A], Ctx, Either[RequestDropped, Request[A]], Ctx, NotUsed]
 
   def queryRemainingRequests(route: RequestRoute): Future[Either[Duration, Int]]
 
@@ -41,48 +38,33 @@ object Ratelimiter {
       parallelism
     )
 
-  class RecipientRatelimiter(
-      ref: RecipientRef[RatelimiterActor.Command],
-      parallelism: Int
-  )(implicit
-      system: ActorSystem[Nothing],
+  class RecipientRatelimiter(ref: RecipientRef[RatelimiterActor.Command], parallelism: Int)(
+      implicit system: ActorSystem[Nothing],
       timeout: Timeout
   ) extends Ratelimiter {
-    protected def watchFlow[A]: Flow[A, A, NotUsed] =
-      Flow[A] //Not possible to watch
+    protected def watchFlow[A]: Flow[A, A, NotUsed] = Flow[A] //Not possible to watch
 
-    override def ratelimitRequests[A, Ctx]: FlowWithContext[Request[
-      A
-    ], Ctx, Either[RequestDropped, Request[A]], Ctx, NotUsed] =
+    override def ratelimitRequests[A, Ctx]
+        : FlowWithContext[Request[A], Ctx, Either[RequestDropped, Request[A]], Ctx, NotUsed] =
       FlowWithContext.fromTuples(
         watchFlow[(Request[A], Ctx)]
           .mapAsyncUnordered(parallelism) { case (request, ctx) =>
             //We don't use ask here to get be able to create a RequestDropped instance
             import system.executionContext
             val future = ref.ask[RatelimiterActor.Response[(Request[A], Ctx)]](
-              RatelimiterActor.WantToPass(
-                request.route,
-                request.identifier,
-                _,
-                (request, ctx)
-              )
+              RatelimiterActor.WantToPass(request.route, request.identifier, _, (request, ctx))
             )
 
             future
               .flatMap {
-                case RatelimiterActor.CanPass(a) =>
-                  Future.successful((Right(a._1), a._2))
+                case RatelimiterActor.CanPass(a)       => Future.successful((Right(a._1), a._2))
                 case RatelimiterActor.FailedRequest(e) => Future.failed(e)
               }
-              .recover { case _: TimeoutException =>
-                Left(RequestDropped(request.route, request.identifier)) -> ctx
-              }
+              .recover { case _: TimeoutException => Left(RequestDropped(request.route, request.identifier)) -> ctx }
           }
       )
 
-    override def queryRemainingRequests(
-        route: RequestRoute
-    ): Future[Either[Duration, Int]] =
+    override def queryRemainingRequests(route: RequestRoute): Future[Either[Duration, Int]] =
       ref.ask(RatelimiterActor.QueryRatelimits(route, _))
 
     override def reportRatelimits[A]: Sink[RequestAnswer[A], NotUsed] =
@@ -102,15 +84,11 @@ object Ratelimiter {
         .mapMaterializedValue(_ => NotUsed)
   }
 
-  class ActorRatelimiter(
-      ref: ActorRef[RatelimiterActor.Command],
-      parallelism: Int
-  )(implicit
-      system: ActorSystem[Nothing],
+  class ActorRatelimiter(ref: ActorRef[RatelimiterActor.Command], parallelism: Int)(
+      implicit system: ActorSystem[Nothing],
       timeout: Timeout
   ) extends RecipientRatelimiter(ref, parallelism) {
 
-    override protected def watchFlow[A]: Flow[A, A, NotUsed] =
-      Flow[A].watch(ref.toClassic)
+    override protected def watchFlow[A]: Flow[A, A, NotUsed] = Flow[A].watch(ref.toClassic)
   }
 }

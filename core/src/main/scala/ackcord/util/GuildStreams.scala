@@ -46,12 +46,10 @@ object GuildStreams {
     *   - [[APIMessage.MessageMessage]]
     *   - [[APIMessage.VoiceStateUpdate]]
     */
-  def withGuildInfoApiMessage[Msg <: APIMessage]
-      : Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
+  def withGuildInfoApiMessage[Msg <: APIMessage]: Flow[Msg, (Msg, Option[GuildId]), NotUsed] =
     Flow[Msg].map { msg =>
       val optGuildId = msg match {
-        case _ @(_: APIMessage.Ready | _: APIMessage.Resumed |
-            _: APIMessage.UserUpdate) =>
+        case _ @(_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate) =>
           None
         case msg: APIMessage.GuildMessage =>
           Some(msg.guild.id)
@@ -82,14 +80,10 @@ object GuildStreams {
     * The function returned by this contains multiple state, and is not safe to
     * share.
     */
-  def createGatewayGuildInfoExtractor(
-      log: Logger
-  ): GatewayEvent[_] => Option[GuildId] = {
+  def createGatewayGuildInfoExtractor(log: Logger): GatewayEvent[_] => Option[GuildId] = {
     val channelToGuild = collection.mutable.Map.empty[GuildChannelId, GuildId]
 
-    def handleLazy[A, B](
-        later: Eval[Decoder.Result[A]]
-    )(f: A => B): Option[B] = {
+    def handleLazy[A, B](later: Eval[Decoder.Result[A]])(f: A => B): Option[B] = {
       later.value match {
         case Right(value) => Some(f(value))
         case Left(e) =>
@@ -98,9 +92,7 @@ object GuildStreams {
       }
     }
 
-    def handleLazyOpt[A, B](
-        later: Eval[Decoder.Result[Option[A]]]
-    )(f: A => B): Option[B] = {
+    def handleLazyOpt[A, B](later: Eval[Decoder.Result[Option[A]]])(f: A => B): Option[B] = {
       later.value match {
         case Right(value) => value.map(f)
         case Left(e) =>
@@ -109,53 +101,37 @@ object GuildStreams {
       }
     }
 
-    def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] =
-      handleLazy(later)(identity)
+    def lazyToOption(later: Eval[Decoder.Result[GuildId]]): Option[GuildId] = handleLazy(later)(identity)
 
-    def lazyOptToOption(
-        later: Eval[Decoder.Result[Option[GuildId]]]
-    ): Option[GuildId] =
+    def lazyOptToOption(later: Eval[Decoder.Result[Option[GuildId]]]): Option[GuildId] =
       handleLazyOpt(later)(identity)
 
     {
-      case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed |
-          _: GatewayEvent.UserUpdate | _: IgnoredEvent) =>
+      case _ @(_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate | _: IgnoredEvent) =>
         None
       case msg: GatewayEvent.GuildCreate =>
         handleLazy(msg.guildId) { guildId =>
           handleLazy(msg.data)(data =>
-            data.channels.foreach(
-              channelToGuild ++= _.map(
-                _.id.asChannelId[GuildChannel] -> guildId
-              )
-            )
+            data.channels.foreach(channelToGuild ++= _.map(_.id.asChannelId[GuildChannel] -> guildId))
           )
           guildId
         }
       case msg: GatewayEvent.ChannelCreate =>
         handleLazyOpt(msg.guildId) { guildId =>
-          handleLazy(msg.channelId)(id =>
-            channelToGuild.put(id.asChannelId[GuildChannel], guildId)
-          )
+          handleLazy(msg.channelId)(id => channelToGuild.put(id.asChannelId[GuildChannel], guildId))
           guildId
         }
       case msg: GatewayEvent.ChannelDelete =>
-        handleLazy(msg.channelId)(id =>
-          channelToGuild.remove(id.asChannelId[GuildChannel])
-        )
+        handleLazy(msg.channelId)(id => channelToGuild.remove(id.asChannelId[GuildChannel]))
         lazyOptToOption(msg.guildId)
       case msg: GatewayEvent.GuildEvent[_] =>
         lazyToOption(msg.guildId)
       case msg: GatewayEvent.OptGuildEvent[_] =>
         lazyOptToOption(msg.guildId)
       case msg: GatewayEvent.ChannelEvent[_] =>
-        handleLazy(msg.channelId)(id =>
-          channelToGuild.get(id.asChannelId[GuildChannel])
-        ).flatten
+        handleLazy(msg.channelId)(id => channelToGuild.get(id.asChannelId[GuildChannel])).flatten
       case msg: ThreadMemberUpdate =>
-        handleLazy(msg.mapData(_.id))(optThreadId =>
-          optThreadId.flatMap(channelToGuild.get)
-        ).flatten
+        handleLazy(msg.mapData(_.id))(optThreadId => optThreadId.flatMap(channelToGuild.get)).flatten
       case _: GatewayEvent.UnknownEvent[_] =>
         None
     }
@@ -195,17 +171,10 @@ object GuildStreams {
     * @param guildId
     *   The only guildID to allow through.
     */
-  def guildFilterApiMessage[Msg <: APIMessage](
-      guildId: GuildId
-  ): Flow[Msg, Msg, NotUsed] =
+  def guildFilterApiMessage[Msg <: APIMessage](guildId: GuildId): Flow[Msg, Msg, NotUsed] =
     withGuildInfoApiMessage[Msg].collect {
-      case (
-            msg @ (_: APIMessage.Ready | _: APIMessage.Resumed |
-            _: APIMessage.UserUpdate),
-            _
-          ) =>
-        msg
-      case (msg, Some(`guildId`)) => msg
+      case (msg @ (_: APIMessage.Ready | _: APIMessage.Resumed | _: APIMessage.UserUpdate), _) => msg
+      case (msg, Some(`guildId`))                                                              => msg
     }
 
   /**
@@ -230,13 +199,8 @@ object GuildStreams {
       log: Logger
   ): Flow[Msg, Msg, NotUsed] =
     withGuildInfoGatewayEvent[Msg](log).collect {
-      case (
-            msg @ (_: GatewayEvent.Ready | _: GatewayEvent.Resumed |
-            _: GatewayEvent.UserUpdate),
-            _
-          ) =>
-        msg
-      case (msg, Some(`guildId`)) => msg
+      case (msg @ (_: GatewayEvent.Ready | _: GatewayEvent.Resumed | _: GatewayEvent.UserUpdate), _) => msg
+      case (msg, Some(`guildId`))                                                                    => msg
     }
 
   /** Creates a subflow grouped by what GuildId a message belongs to. */

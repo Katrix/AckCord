@@ -51,12 +51,7 @@ import com.sedmelluq.discord.lavaplayer.player.{
 }
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.{
-  AudioItem,
-  AudioPlaylist,
-  AudioTrack,
-  AudioTrackEndReason
-}
+import com.sedmelluq.discord.lavaplayer.track.{AudioItem, AudioPlaylist, AudioTrack, AudioTrackEndReason}
 import org.slf4j.Logger
 
 object MusicHandler {
@@ -71,31 +66,25 @@ object MusicHandler {
       lavaplayerHandler: ActorRef[LavaplayerHandler.Command]
   )
 
-  def apply(
-      requests: Requests,
-      registerCmd: FunctionK[NamedDescribedComplexCommand[Any, *], cats.Id],
-      events: Events
-  )(
+  def apply(requests: Requests, registerCmd: FunctionK[NamedDescribedComplexCommand[Any, *], cats.Id], events: Events)(
       guildId: GuildId
   ): Behavior[Command] =
     Behaviors.setup { ctx =>
       implicit val system: ActorSystem[Nothing] = ctx.system
-      val player = MusicHandler.playerManager.createPlayer()
+      val player                                = MusicHandler.playerManager.createPlayer()
 
       player.addListener(new AudioEventSender(ctx.self, AudioEventWrapper))
 
       {
         implicit val timeout: Timeout = 30.seconds
-        val cmds = new MusicCommands(requests, guildId, ctx.self)
+        val cmds                      = new MusicCommands(requests, guildId, ctx.self)
 
         Seq(
           cmds.queue,
           cmds.stop,
           cmds.next,
           cmds.pause
-        ).foreach { command: NamedDescribedCommand[_] =>
-          registerCmd(command.asInstanceOf[NamedDescribedCommand[Any]])
-        }
+        ).foreach { command: NamedDescribedCommand[_] => registerCmd(command.asInstanceOf[NamedDescribedCommand[Any]]) }
       }
 
       inactive(
@@ -105,14 +94,8 @@ object MusicHandler {
           ctx,
           ctx.log,
           player,
-          Source
-            .queue(32, OverflowStrategy.dropHead)
-            .to(requests.sinkIgnore[RawMessage])
-            .run(),
-          ctx.spawn(
-            LavaplayerHandler(player, guildId, events),
-            "LavaplayerHandler"
-          )
+          Source.queue(32, OverflowStrategy.dropHead).to(requests.sinkIgnore[RawMessage]).run(),
+          ctx.spawn(LavaplayerHandler(player, guildId, events), "LavaplayerHandler")
         ),
         None,
         None,
@@ -140,26 +123,19 @@ object MusicHandler {
 
         case GotoActive =>
           log.debug("MusicReady")
-          active(
-            parameters,
-            inVoiceChannel.get,
-            lastTextChannel,
-            nextTrack(queue, parameters)
-          )
+          active(parameters, inVoiceChannel.get, lastTextChannel, nextTrack(queue, parameters))
 
-        case QueueUrl(url, tChannel, vChannelId, replyTo)
-            if inVoiceChannel.isEmpty =>
+        case QueueUrl(url, tChannel, vChannelId, replyTo) if inVoiceChannel.isEmpty =>
           //TODO: Stop this at some point
-          val lavaplayerReplyHandler =
-            Behaviors.receiveMessage[LavaplayerHandler.Reply] {
-              case LavaplayerHandler.MusicReady(_, _) =>
-                context.self ! GotoActive
-                Behaviors.same
-              case LavaplayerHandler.AlreadyConnectedFailure(_, _) =>
-                Behaviors.same
-              case LavaplayerHandler.ForcedConnectionFailure(_, _) =>
-                Behaviors.same
-            }
+          val lavaplayerReplyHandler = Behaviors.receiveMessage[LavaplayerHandler.Reply] {
+            case LavaplayerHandler.MusicReady(_, _) =>
+              context.self ! GotoActive
+              Behaviors.same
+            case LavaplayerHandler.AlreadyConnectedFailure(_, _) =>
+              Behaviors.same
+            case LavaplayerHandler.ForcedConnectionFailure(_, _) =>
+              Behaviors.same
+          }
 
           log.info("Received queue item in Inactive")
           lavaplayerHandler ! LavaplayerHandler.ConnectVoiceChannel(
@@ -167,31 +143,21 @@ object MusicHandler {
             replyTo = context.spawnAnonymous(lavaplayerReplyHandler)
           )
 
-          LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach {
-            item =>
-              replyTo ! CommandAck
-              context.self ! ReceivedAudioItem(item)
+          LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach { item =>
+            replyTo ! CommandAck
+            context.self ! ReceivedAudioItem(item)
           }
-          inactive(
-            parameters,
-            inVoiceChannel = Some(vChannelId),
-            lastTextChannel = Some(tChannel),
-            queue
-          )
+          inactive(parameters, inVoiceChannel = Some(vChannelId), lastTextChannel = Some(tChannel), queue)
 
         case QueueUrl(url, tChannel, vChannelId, replyTo) =>
           if (inVoiceChannel.contains(vChannelId)) {
-            LavaplayerHandler
-              .loadItem(MusicHandler.playerManager, url)
-              .foreach { item =>
-                replyTo ! CommandAck
-                context.self ! ReceivedAudioItem(item)
-              }
+            LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach { item =>
+              replyTo ! CommandAck
+              context.self ! ReceivedAudioItem(item)
+            }
           } else {
             msgQueue
-              .offer(
-                tChannel.sendMessage("Currently joining different channel")
-              )
+              .offer(tChannel.sendMessage("Currently joining different channel"))
               .foreach(_ => replyTo ! CommandAck)
           }
           Behaviors.same
@@ -205,12 +171,7 @@ object MusicHandler {
 
         case ReceivedAudioItem(track: AudioTrack) =>
           log.info("Received track")
-          inactive(
-            parameters,
-            inVoiceChannel,
-            lastTextChannel,
-            queueTrack(isActive = false, parameters, queue, track)
-          )
+          inactive(parameters, inVoiceChannel, lastTextChannel, queueTrack(isActive = false, parameters, queue, track))
 
         case ReceivedAudioItem(playlist: AudioPlaylist) =>
           log.info("Received playlist")
@@ -218,21 +179,14 @@ object MusicHandler {
             Option(playlist.getSelectedTrack)
               .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
               .fold(queue)(queueTrack(false, parameters, queue, _))
-          } else
-            queueTracks(
-              false,
-              parameters,
-              queue,
-              Compat.convertJavaList(playlist.getTracks): _*
-            )
+          } else queueTracks(false, parameters, queue, Compat.convertJavaList(playlist.getTracks): _*)
           inactive(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case ReceivedAudioItem(item) =>
           log.warn(s"Unknown audio item type ${item.getClass}")
           Behaviors.same
 
-        case SentFriendlyException(e) =>
-          handleFriendlyException(e, None, msgQueue, lastTextChannel)
+        case SentFriendlyException(e) => handleFriendlyException(e, None, msgQueue, lastTextChannel)
 
         case StopMusicInside =>
           log.info("Stopped and left")
@@ -289,46 +243,30 @@ object MusicHandler {
         case QueueUrl(url, tChannel, vChannelId, replyTo) =>
           log.info("Received queue item")
           if (vChannelId == inVoiceChannel) {
-            LavaplayerHandler
-              .loadItem(MusicHandler.playerManager, url)
-              .foreach { item =>
-                replyTo ! CommandAck
-                context.self ! ReceivedAudioItem(item)
-              }
+            LavaplayerHandler.loadItem(MusicHandler.playerManager, url).foreach { item =>
+              replyTo ! CommandAck
+              context.self ! ReceivedAudioItem(item)
+            }
           } else {
             msgQueue
-              .offer(
-                tChannel
-                  .sendMessage("Currently playing music for different channel")
-              )
+              .offer(tChannel.sendMessage("Currently playing music for different channel"))
               .foreach(_ => replyTo ! CommandAck)
           }
           Behaviors.same
 
         case NextTrack(tChannel, replyTo) =>
           replyTo ! CommandAck
-          active(
-            parameters,
-            inVoiceChannel,
-            Some(tChannel),
-            nextTrack(queue, parameters)
-          )
+          active(parameters, inVoiceChannel, Some(tChannel), nextTrack(queue, parameters))
 
         case TogglePause(tChannel, replyTo) =>
           player.setPaused(!player.isPaused)
           replyTo ! CommandAck
           active(parameters, inVoiceChannel, Some(tChannel), queue)
 
-        case SentFriendlyException(e) =>
-          handleFriendlyException(e, None, msgQueue, lastTextChannel)
+        case SentFriendlyException(e) => handleFriendlyException(e, None, msgQueue, lastTextChannel)
         case ReceivedAudioItem(track: AudioTrack) =>
           log.info("Received track")
-          active(
-            parameters,
-            inVoiceChannel,
-            lastTextChannel,
-            queueTrack(isActive = true, parameters, queue, track)
-          )
+          active(parameters, inVoiceChannel, lastTextChannel, queueTrack(isActive = true, parameters, queue, track))
 
         case ReceivedAudioItem(playlist: AudioPlaylist) =>
           log.info("Received playlist")
@@ -336,13 +274,7 @@ object MusicHandler {
             Option(playlist.getSelectedTrack)
               .orElse(Compat.convertJavaList(playlist.getTracks).headOption)
               .fold(queue)(queueTrack(isActive = true, parameters, queue, _))
-          } else
-            queueTracks(
-              isActive = true,
-              parameters,
-              queue,
-              Compat.convertJavaList(playlist.getTracks): _*
-            )
+          } else queueTracks(isActive = true, parameters, queue, Compat.convertJavaList(playlist.getTracks): _*)
           active(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case AudioEventWrapper(_: PlayerPauseEvent) =>
@@ -354,31 +286,22 @@ object MusicHandler {
           Behaviors.same
 
         case AudioEventWrapper(e: TrackStartEvent) =>
-          lastTextChannel.foreach(tChannel =>
-            msgQueue.offer(
-              tChannel.sendMessage(s"Playing: ${trackName(e.track)}")
-            )
-          )
+          lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Playing: ${trackName(e.track)}")))
           Behaviors.same
 
         case AudioEventWrapper(e: TrackEndEvent) =>
           val msg = e.endReason match {
-            case AudioTrackEndReason.FINISHED =>
-              s"Finished: ${trackName(e.track)}"
-            case AudioTrackEndReason.LOAD_FAILED =>
-              s"Failed to load: ${trackName(e.track)}"
-            case AudioTrackEndReason.STOPPED  => "Stop requested"
-            case AudioTrackEndReason.REPLACED => "Requested next track"
-            case AudioTrackEndReason.CLEANUP  => "Leaking audio player"
+            case AudioTrackEndReason.FINISHED    => s"Finished: ${trackName(e.track)}"
+            case AudioTrackEndReason.LOAD_FAILED => s"Failed to load: ${trackName(e.track)}"
+            case AudioTrackEndReason.STOPPED     => "Stop requested"
+            case AudioTrackEndReason.REPLACED    => "Requested next track"
+            case AudioTrackEndReason.CLEANUP     => "Leaking audio player"
           }
 
-          lastTextChannel.foreach(tChannel =>
-            msgQueue.offer(tChannel.sendMessage(msg))
-          )
+          lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(msg)))
 
           val newQueue =
-            if (e.endReason.mayStartNext && queue.nonEmpty)
-              nextTrack(queue, parameters)
+            if (e.endReason.mayStartNext && queue.nonEmpty) nextTrack(queue, parameters)
             else if (e.endReason != AudioTrackEndReason.REPLACED) {
               context.self ! StopMusicInside
               queue
@@ -387,32 +310,16 @@ object MusicHandler {
           active(parameters, inVoiceChannel, lastTextChannel, newQueue)
 
         case AudioEventWrapper(e: TrackExceptionEvent) =>
-          handleFriendlyException(
-            e.exception,
-            Some(e.track),
-            msgQueue,
-            lastTextChannel
-          )
+          handleFriendlyException(e.exception, Some(e.track), msgQueue, lastTextChannel)
 
         case AudioEventWrapper(e: TrackStuckEvent) =>
           lastTextChannel.foreach(tChannel =>
-            msgQueue.offer(
-              tChannel.sendMessage(
-                s"Track stuck: ${trackName(e.track)}. Will play next track"
-              )
-            )
+            msgQueue.offer(tChannel.sendMessage(s"Track stuck: ${trackName(e.track)}. Will play next track"))
           )
-          active(
-            parameters,
-            inVoiceChannel,
-            lastTextChannel,
-            nextTrack(queue, parameters)
-          )
-        case AudioEventWrapper(e) =>
-          throw new Exception(s"Unknown audio event $e")
-        case ReceivedAudioItem(e) =>
-          throw new Exception(s"Unknown audio item $e")
-        case GotoActive => Behaviors.same
+          active(parameters, inVoiceChannel, lastTextChannel, nextTrack(queue, parameters))
+        case AudioEventWrapper(e) => throw new Exception(s"Unknown audio event $e")
+        case ReceivedAudioItem(e) => throw new Exception(s"Unknown audio item $e")
+        case GotoActive           => Behaviors.same
       }
       .receiveSignal { case (_, PostStop) =>
         player.destroy()
@@ -430,24 +337,14 @@ object MusicHandler {
   ): Behavior[Command] = {
     e.severity match {
       case FriendlyException.Severity.COMMON =>
-        lastTextChannel.foreach(tChannel =>
-          msgQueue.offer(
-            tChannel.sendMessage(s"Encountered error: ${e.getMessage}")
-          )
-        )
+        lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
         Behaviors.same
       case FriendlyException.Severity.SUSPICIOUS =>
-        lastTextChannel.foreach(tChannel =>
-          msgQueue.offer(
-            tChannel.sendMessage(s"Encountered error: ${e.getMessage}")
-          )
-        )
+        lastTextChannel.foreach(tChannel => msgQueue.offer(tChannel.sendMessage(s"Encountered error: ${e.getMessage}")))
         Behaviors.same
       case FriendlyException.Severity.FAULT =>
         lastTextChannel.foreach(tChannel =>
-          msgQueue.offer(
-            tChannel.sendMessage(s"Encountered internal error: ${e.getMessage}")
-          )
+          msgQueue.offer(tChannel.sendMessage(s"Encountered internal error: ${e.getMessage}"))
         )
         throw e
     }
@@ -478,10 +375,7 @@ object MusicHandler {
     Compat.enqueueMany(newQueue, track.tail)
   }
 
-  def nextTrack(
-      queue: Queue[AudioTrack],
-      parameters: Parameters
-  ): Queue[AudioTrack] = {
+  def nextTrack(queue: Queue[AudioTrack], parameters: Parameters): Queue[AudioTrack] = {
     import parameters._
     if (queue.nonEmpty) {
       lavaplayerHandler ! LavaplayerHandler.SetPlaying(true)
@@ -498,13 +392,13 @@ object MusicHandler {
   case object CommandAck
 
   sealed trait Command
-  case class ReceivedAudioItem(item: AudioItem) extends Command
-  case object GotoActive extends Command
-  case object Shutdown extends Command
-  private case object StopNow extends Command
+  case class ReceivedAudioItem(item: AudioItem)                  extends Command
+  case object GotoActive                                         extends Command
+  case object Shutdown                                           extends Command
+  private case object StopNow                                    extends Command
   private case class SentFriendlyException(e: FriendlyException) extends Command
-  private case class AudioEventWrapper(event: AudioEvent) extends Command
-  case object StopMusicInside extends Command
+  private case class AudioEventWrapper(event: AudioEvent)        extends Command
+  case object StopMusicInside                                    extends Command
 
   sealed trait MusicHandlerEvents extends Command {
     def replyTo: ActorRef[CommandAck.type]
@@ -517,27 +411,16 @@ object MusicHandler {
       replyTo: ActorRef[CommandAck.type]
   ) extends MusicHandlerEvents
 
-  case class StopMusic(
-      tChannel: TextChannel,
-      replyTo: ActorRef[CommandAck.type]
-  ) extends MusicHandlerEvents
-  case class TogglePause(
-      tChannel: TextChannel,
-      replyTo: ActorRef[CommandAck.type]
-  ) extends MusicHandlerEvents
-  case class NextTrack(
-      tChannel: TextChannel,
-      replyTo: ActorRef[CommandAck.type]
-  ) extends MusicHandlerEvents
+  case class StopMusic(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
+  case class TogglePause(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type]) extends MusicHandlerEvents
+  case class NextTrack(tChannel: TextChannel, replyTo: ActorRef[CommandAck.type])   extends MusicHandlerEvents
 
   val playerManager: AudioPlayerManager = {
     val man = new DefaultAudioPlayerManager
     AudioSourceManagers.registerRemoteSources(man)
     AudioSourceManagers.registerLocalSource(man)
     man.enableGcMonitoring()
-    man.getConfiguration.setResamplingQuality(
-      AudioConfiguration.ResamplingQuality.HIGH
-    )
+    man.getConfiguration.setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH)
     man
   }
 }

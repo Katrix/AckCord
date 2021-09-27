@@ -37,19 +37,16 @@ package object ackcord {
 
   type RequestsHelper = requests.RequestsHelper
 
-  val BotAuthentication: requests.BotAuthentication.type =
-    requests.BotAuthentication
+  val BotAuthentication: requests.BotAuthentication.type = requests.BotAuthentication
   type BotAuthentication = requests.BotAuthentication.type
 
   val GatewaySettings: gateway.GatewaySettings.type = gateway.GatewaySettings
   type GatewaySettings = gateway.GatewaySettings
 
-  val GatewayLogin: gateway.GatewayHandler.Login.type =
-    gateway.GatewayHandler.Login
+  val GatewayLogin: gateway.GatewayHandler.Login.type = gateway.GatewayHandler.Login
   type GatewayLogin = gateway.GatewayHandler.Login.type
 
-  val GatewayLogout: gateway.GatewayHandler.Logout.type =
-    gateway.GatewayHandler.Logout
+  val GatewayLogout: gateway.GatewayHandler.Logout.type = gateway.GatewayHandler.Logout
   type GatewayLogout = gateway.GatewayHandler.Logout.type
 
   val Streamable: util.Streamable.type = util.Streamable
@@ -69,16 +66,11 @@ package object ackcord {
 
   type SourceRequest[A] = StreamInstances.SourceRequest[A]
 
-  implicit def sourceSyntax[A, M](
-      source: Source[A, M]
-  ): StreamInstances.SourceFlatmap[A, M] =
+  implicit def sourceSyntax[A, M](source: Source[A, M]): StreamInstances.SourceFlatmap[A, M] =
     StreamInstances.SourceFlatmap(source)
 
-  implicit val sourceMonadInstance
-      : MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
+  implicit val sourceMonadInstance: MonadError[SourceRequest, Throwable] with Alternative[SourceRequest] =
     StreamInstances.sourceInstance
-  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, *, Mat]] =
-    StreamInstances.flowInstance[In, Mat]
-  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[*, Mat]] =
-    StreamInstances.sinkInstance[Mat]
+  implicit def flowFunctorInstance[In, Mat]: Functor[Flow[In, *, Mat]]     = StreamInstances.flowInstance[In, Mat]
+  implicit def sinkContravariantInstance[Mat]: Contravariant[Sink[*, Mat]] = StreamInstances.sinkInstance[Mat]
 }

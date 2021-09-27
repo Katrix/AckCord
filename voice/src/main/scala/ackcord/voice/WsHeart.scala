@@ -33,9 +33,7 @@ object WsHeart {
 
   def apply(parent: ActorRef[VoiceWsHandler.Command]): Behavior[Command] =
     Behaviors.setup { ctx =>
-      Behaviors.withTimers(timers =>
-        runningHeart(ctx, timers, parent, None, receivedAck = true)
-      )
+      Behaviors.withTimers(timers => runningHeart(ctx, timers, parent, None, receivedAck = true))
     }
 
   def runningHeart(
@@ -72,13 +70,7 @@ object WsHeart {
         parent ! VoiceWsHandler.SendHeartbeat(nonce)
         log.debug(s"Sent Heartbeat with nonce $nonce")
 
-        runningHeart(
-          context,
-          timers,
-          parent,
-          previousNonce = Some(nonce),
-          receivedAck = false
-        )
+        runningHeart(context, timers, parent, previousNonce = Some(nonce), receivedAck = false)
       } else {
         log.warn("Did not receive HeartbeatACK between heartbeats. Restarting.")
         parent ! VoiceWsHandler.Restart(fresh = false, 0.millis)
@@ -88,7 +80,7 @@ object WsHeart {
 
   sealed trait Command
   case class StartBeating(interval: Double, nonce: Int) extends Command
-  case object StopBeating extends Command
-  case class BeatAck(nonce: Int) extends Command
-  case object Beat extends Command
+  case object StopBeating                               extends Command
+  case class BeatAck(nonce: Int)                        extends Command
+  case object Beat                                      extends Command
 }

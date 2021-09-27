@@ -38,17 +38,15 @@ package object interactions {
   ): Option[V] = updateWithAux(map)(key)(remappingFunction)
 
   @tailrec
-  private def updateWithAux[K, V](
-      map: TrieMap[K, V]
-  )(key: K)(remappingFunction: Option[V] => Option[V]): Option[V] = {
+  private def updateWithAux[K, V](map: TrieMap[K, V])(key: K)(remappingFunction: Option[V] => Option[V]): Option[V] = {
     val previousValue = map.get(key)
-    val nextValue = remappingFunction(previousValue)
+    val nextValue     = remappingFunction(previousValue)
     (previousValue, nextValue) match {
       case (None, None)                                             => None
       case (None, Some(next)) if map.putIfAbsent(key, next).isEmpty => nextValue
       case (Some(prev), None) if map.remove(key, prev)              => None
       case (Some(prev), Some(next)) if map.replace(key, prev, next) => nextValue
-      case _ => updateWithAux(map)(key)(remappingFunction)
+      case _                                                        => updateWithAux(map)(key)(remappingFunction)
     }
   }
 }

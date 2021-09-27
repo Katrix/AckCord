@@ -39,29 +39,22 @@ object BulkRequestMessages {
     require(batchSize > 0, "Batch size must be positive")
     require(batchSize <= 100, "Batch size must be less than or equal to 100")
 
-    val reverse = from > to
-    def makeAfter(id: MessageId): Option[MessageId] =
-      if (reverse) None else Some(id)
-    def makeBefore(id: MessageId): Option[MessageId] =
-      if (reverse) Some(id) else None
-    def isAtEnd(id: MessageId): Boolean = if (reverse) id <= to else id >= to
-    def isOutsideRequestedArea(id: MessageId): Boolean =
-      if (reverse) id < to else id > to
+    val reverse                                        = from > to
+    def makeAfter(id: MessageId): Option[MessageId]    = if (reverse) None else Some(id)
+    def makeBefore(id: MessageId): Option[MessageId]   = if (reverse) Some(id) else None
+    def isAtEnd(id: MessageId): Boolean                = if (reverse) id <= to else id >= to
+    def isOutsideRequestedArea(id: MessageId): Boolean = if (reverse) id < to else id > to
 
     val graph = GraphDSL.create() { implicit dsl =>
       import GraphDSL.Implicits._
 
-      val seed = dsl.add(Source.single(from))
+      val seed     = dsl.add(Source.single(from))
       val afterIds = dsl.add(Merge[MessageId](2))
       val createRequests = dsl.add(
         Flow[MessageId].map { id =>
           GetChannelMessages(
             channel,
-            GetChannelMessagesData(
-              before = makeBefore(id),
-              after = makeAfter(id),
-              limit = Some(batchSize)
-            )
+            GetChannelMessagesData(before = makeBefore(id), after = makeAfter(id), limit = Some(batchSize))
           )
         }
       )
@@ -70,21 +63,17 @@ object BulkRequestMessages {
           Flow[GetChannelMessages]
             .map(_ -> NotUsed)
             .via(
-              requests
-                .flowSuccess[Seq[RawMessage], NotUsed](ignoreFailures = false)(
-                  Requests.RequestProperties(retry = true)
-                )
+              requests.flowSuccess[Seq[RawMessage], NotUsed](ignoreFailures = false)(
+                Requests.RequestProperties(retry = true)
+              )
             )
             .map(_._1)
         )
-      val reverseRequests = dsl.add(
-        if (reverse) Flow[Seq[RawMessage]]
-        else Flow[Seq[RawMessage]].map(_.reverse)
-      )
+      val reverseRequests   = dsl.add(if (reverse) Flow[Seq[RawMessage]] else Flow[Seq[RawMessage]].map(_.reverse))
       val broadcastReceived = dsl.add(Broadcast[Seq[RawMessage]](2))
 
       val completeSwitch = KillSwitches.shared("MessageRequester")
-      val doneSwitch = dsl.add(completeSwitch.flow[MessageId])
+      val doneSwitch     = dsl.add(completeSwitch.flow[MessageId])
 
       val nextAfterId = dsl.add(
         Flow[Seq[RawMessage]]

@@ -36,9 +36,7 @@ package object requests {
     * @param c
     *   The cache
     */
-  def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit
-      c: CacheSnapshot
-  ): Boolean = {
+  def hasPermissionsGuild(guildId: GuildId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val res = for {
       guild <- c.getGuild(guildId)
       botUser = c.botUser
@@ -57,17 +55,13 @@ package object requests {
     * @param c
     *   The cache
     */
-  def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(
-      implicit c: CacheSnapshot
-  ): Boolean = {
+  def hasPermissionsChannel(channelId: ChannelId, permissions: Permission)(implicit c: CacheSnapshot): Boolean = {
     val opt = for {
       gChannel <- c.getGuildChannel(channelId.asChannelId[GuildChannel])
-      guild <- gChannel.guild
+      guild    <- gChannel.guild
       botUser = c.botUser
       botUserMember <- guild.members.get(botUser.id)
-    } yield botUserMember
-      .channelPermissionsId(guild, channelId.asChannelId[GuildChannel])
-      .hasPermissions(permissions)
+    } yield botUserMember.channelPermissionsId(guild, channelId.asChannelId[GuildChannel]).hasPermissions(permissions)
 
     opt.getOrElse(true)
   }

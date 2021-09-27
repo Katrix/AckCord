@@ -28,22 +28,19 @@ import akka.actor.typed.scaladsl._
 
 object ShardShutdownManager {
 
-  private[ackcord] def apply(
-      shards: Seq[ActorRef[DiscordShard.Command]]
-  ): Behavior[DiscordShard.StopShard.type] =
+  private[ackcord] def apply(shards: Seq[ActorRef[DiscordShard.Command]]): Behavior[DiscordShard.StopShard.type] =
     Behaviors
-      .receive[DiscordShard.StopShard.type] {
-        case (ctx, DiscordShard.StopShard) =>
-          if (shards.isEmpty) {
-            Behaviors.stopped
-          } else {
-            shards.foreach { shard =>
-              ctx.watch(shard)
-              shard ! DiscordShard.StopShard
-            }
-
-            Behaviors.same
+      .receive[DiscordShard.StopShard.type] { case (ctx, DiscordShard.StopShard) =>
+        if (shards.isEmpty) {
+          Behaviors.stopped
+        } else {
+          shards.foreach { shard =>
+            ctx.watch(shard)
+            shard ! DiscordShard.StopShard
           }
+
+          Behaviors.same
+        }
       }
       .receiveSignal { case (_, Terminated(deadShard)) =>
         val newShards = shards.filter(_ != deadShard)

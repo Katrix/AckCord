@@ -26,11 +26,7 @@ package ackcord
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-import ackcord.MusicManager.{
-  ConnectToChannel,
-  DisconnectFromChannel,
-  SetChannelPlaying
-}
+import ackcord.MusicManager.{ConnectToChannel, DisconnectFromChannel, SetChannelPlaying}
 import ackcord.commands._
 import ackcord.data.{GuildId, VoiceGuildChannelId}
 import ackcord.lavaplayer.LavaplayerHandler
@@ -66,8 +62,7 @@ trait DiscordClient {
 
   implicit val system: ActorSystem[Nothing] = requests.system
 
-  implicit val executionContext: ExecutionContextExecutor =
-    requests.system.executionContext
+  implicit val executionContext: ExecutionContextExecutor = requests.system.executionContext
 
   /**
     * Login the shards of this client. Note that this method just sends the
@@ -120,10 +115,8 @@ trait DiscordClient {
     * @return
     *   An event registration to handle the listener's lifecycle.
     */
-  def onEventStreamable[G[_]](
-      handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]]
-  )(implicit
-      streamable: Streamable[G]
+  def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
+      implicit streamable: Streamable[G]
   ): EventRegistration[NotUsed]
 
   /**
@@ -134,9 +127,7 @@ trait DiscordClient {
     * @return
     *   An event registration to handle the listener's lifecycle.
     */
-  def onEventSideEffects(
-      handler: CacheSnapshot => PartialFunction[APIMessage, Unit]
-  ): EventRegistration[NotUsed] =
+  def onEventSideEffects(handler: CacheSnapshot => PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
     onEventStreamable[cats.Id](handler)
 
   /**
@@ -148,9 +139,7 @@ trait DiscordClient {
     * @return
     *   An event registration to handle the listener's lifecycle.
     */
-  def onEventSideEffectsIgnore(
-      handler: PartialFunction[APIMessage, Unit]
-  ): EventRegistration[NotUsed] =
+  def onEventSideEffectsIgnore(handler: PartialFunction[APIMessage, Unit]): EventRegistration[NotUsed] =
     onEventStreamable[cats.Id](_ => handler)
 
   /**
@@ -177,9 +166,7 @@ trait DiscordClient {
     * @return
     *   An event registration to handle the listener's lifecycle.
     */
-  def registerListener[A <: APIMessage, Mat](
-      listener: EventListener[A, Mat]
-  ): EventRegistration[Mat]
+  def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): EventRegistration[Mat]
 
   /**
     * Starts many listeners at the same time. They must all have a materialized
@@ -191,9 +178,7 @@ trait DiscordClient {
     */
   def bulkRegisterListeners(
       listeners: EventListener[_ <: APIMessage, NotUsed]*
-  ): Seq[
-    (EventListener[_ <: APIMessage, NotUsed], EventRegistration[NotUsed])
-  ] =
+  ): Seq[(EventListener[_ <: APIMessage, NotUsed], EventRegistration[NotUsed])] =
     listeners.map(l => l -> registerListener(l))
 
   /**
@@ -224,14 +209,7 @@ trait DiscordClient {
     musicManager
       .flatMap(
         _.ask[MusicManager.ConnectToChannelResponse](
-          ConnectToChannel(
-            guildId,
-            channelId,
-            force,
-            () => createPlayer,
-            timeoutDur,
-            _
-          )
+          ConnectToChannel(guildId, channelId, force, () => createPlayer, timeoutDur, _)
         )
       )
       .flatMap {
@@ -258,9 +236,6 @@ trait DiscordClient {
     musicManager.foreach(_ ! SetChannelPlaying(guildId, playing))
 
   /** Load a track using LavaPlayer. */
-  def loadTrack(
-      playerManager: AudioPlayerManager,
-      identifier: String
-  ): Future[AudioItem] =
+  def loadTrack(playerManager: AudioPlayerManager, identifier: String): Future[AudioItem] =
     LavaplayerHandler.loadItem(playerManager, identifier)
 }

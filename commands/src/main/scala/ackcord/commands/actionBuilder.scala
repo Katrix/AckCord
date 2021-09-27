@@ -57,8 +57,7 @@ trait ActionFunction[-I[_], +O[_], E] { self =>
 object ActionFunction {
 
   def identity[M[_], E]: ActionFunction[M, M, E] = new ActionFunction[M, M, E] {
-    override def flow[A]: Flow[M[A], Either[Option[E], M[A]], NotUsed] =
-      Flow[M[A]].map(Right.apply)
+    override def flow[A]: Flow[M[A], Either[Option[E], M[A]], NotUsed] = Flow[M[A]].map(Right.apply)
   }
 
   /** Flow for short circuiting eithers. */
@@ -66,36 +65,34 @@ object ActionFunction {
       flow1: Flow[I, Either[E, M], Mat1],
       flow2: Flow[M, Either[E, O], Mat2]
   )(combine: (Mat1, Mat2) => Mat3): Flow[I, Either[E, O], Mat3] = {
-    Flow.fromGraph(GraphDSL.create(flow1, flow2)(combine) {
-      implicit b => (selfFlow, thatFlow) =>
-        import GraphDSL.Implicits._
+    Flow.fromGraph(GraphDSL.create(flow1, flow2)(combine) { implicit b => (selfFlow, thatFlow) =>
+      import GraphDSL.Implicits._
 
-        val selfPartition = b.add(
-          Partition[Either[E, M]](
-            2,
-            {
-              case Left(_)  => 0
-              case Right(_) => 1
-            }
-          )
+      val selfPartition = b.add(
+        Partition[Either[E, M]](
+          2,
+          {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }
         )
-        val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
-        val selfOut =
-          selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
+      )
+      val selfErr = selfPartition.out(0).map(_.asInstanceOf[Either[E, O]])
+      val selfOut = selfPartition.out(1).map(_.getOrElse(sys.error("impossible")))
 
-        val thatPartition = b.add(
-          Partition[Either[E, O]](
-            2,
-            {
-              case Left(_)  => 0
-              case Right(_) => 1
-            }
-          )
+      val thatPartition = b.add(
+        Partition[Either[E, O]](
+          2,
+          {
+            case Left(_)  => 0
+            case Right(_) => 1
+          }
         )
-        val thatErr = thatPartition.out(0)
-        val thatOut = thatPartition.out(1)
+      )
+      val thatErr = thatPartition.out(0)
+      val thatOut = thatPartition.out(1)
 
-        val resMerge = b.add(Merge[Either[E, O]](3))
+      val resMerge = b.add(Merge[Either[E, O]](3))
 
       // format: OFF
       selfFlow ~> selfPartition
@@ -105,10 +102,10 @@ object ActionFunction {
       thatErr       ~> resMerge
       // format: ON
 
-        FlowShape(
-          selfFlow.in,
-          resMerge.out
-        )
+      FlowShape(
+        selfFlow.in,
+        resMerge.out
+      )
     })
   }
 }
@@ -121,43 +118,33 @@ object ActionFunction {
   * @tparam O
   *   The output message type
   */
-trait ActionTransformer[-I[_], +O[_], E] extends ActionFunction[I, O, E] {
-  self =>
+trait ActionTransformer[-I[_], +O[_], E] extends ActionFunction[I, O, E] { self =>
 
   /** The flow representing this mapping without the eithers. */
   def flowMapper[A]: Flow[I[A], O[A], NotUsed]
 
-  override def flow[A]: Flow[I[A], Either[Option[E], O[A]], NotUsed] =
-    flowMapper.map(Right.apply)
+  override def flow[A]: Flow[I[A], Either[Option[E], O[A]], NotUsed] = flowMapper.map(Right.apply)
 
-  override def andThen[O2[_]](
-      that: ActionFunction[O, O2, E]
-  ): ActionFunction[I, O2, E] =
+  override def andThen[O2[_]](that: ActionFunction[O, O2, E]): ActionFunction[I, O2, E] =
     new ActionFunction[I, O2, E] {
-      override def flow[A]: Flow[I[A], Either[Option[E], O2[A]], NotUsed] =
-        flowMapper.via(that.flow)
+      override def flow[A]: Flow[I[A], Either[Option[E], O2[A]], NotUsed] = flowMapper.via(that.flow)
     }
 
   /**
     * Chains first this transformer, and then another one. More efficient than
     * the base andThen function.
     */
-  def andThen[O2[_]](
-      that: ActionTransformer[O, O2, E]
-  ): ActionTransformer[I, O2, E] =
+  def andThen[O2[_]](that: ActionTransformer[O, O2, E]): ActionTransformer[I, O2, E] =
     new ActionTransformer[I, O2, E] {
-      override def flowMapper[A]: Flow[I[A], O2[A], NotUsed] =
-        self.flowMapper.via(that.flowMapper)
+      override def flowMapper[A]: Flow[I[A], O2[A], NotUsed] = self.flowMapper.via(that.flowMapper)
     }
 }
 object ActionTransformer {
 
   /** Converts a [[cats.arrow.FunctionK]] to an [[ActionTransformer]]. */
-  def fromFuncK[I[_], O[_], E](f: I ~> O): ActionTransformer[I, O, E] =
-    new ActionTransformer[I, O, E] {
-      override def flowMapper[A]: Flow[I[A], O[A], NotUsed] =
-        Flow[I[A]].map(f(_))
-    }
+  def fromFuncK[I[_], O[_], E](f: I ~> O): ActionTransformer[I, O, E] = new ActionTransformer[I, O, E] {
+    override def flowMapper[A]: Flow[I[A], O[A], NotUsed] = Flow[I[A]].map(f(_))
+  }
 }
 
 /**
@@ -169,8 +156,7 @@ object ActionTransformer {
   * @tparam A
   *   The argument type of this command builder.
   */
-trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
-  self =>
+trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] { self =>
   type Action[B, Mat]
 
   /** A request helper that belongs to this builder. */
@@ -192,17 +178,8 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
     * @tparam G
     *   The streamable result type.
     */
-  def streamed[G[_]](
-      block: O[A] => G[Unit]
-  )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
-    toSink(
-      Flow[O[A]]
-        .flatMapMerge(
-          requests.settings.parallelism,
-          m => streamable.toSource(block(m))
-        )
-        .to(Sink.ignore)
-    )
+  def streamed[G[_]](block: O[A] => G[Unit])(implicit streamable: Streamable[G]): Action[A, NotUsed] =
+    toSink(Flow[O[A]].flatMapMerge(requests.settings.parallelism, m => streamable.toSource(block(m))).to(Sink.ignore))
 
   /**
     * Creates an action that might do a single request, wrapped in an effect
@@ -217,10 +194,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
   )(implicit streamable: Streamable[G]): Action[A, NotUsed] =
     toSink(
       Flow[O[A]]
-        .flatMapMerge(
-          requests.settings.parallelism,
-          m => streamable.optionToSource(block(m))
-        )
+        .flatMapMerge(requests.settings.parallelism, m => streamable.optionToSource(block(m)))
         .to(requests.sinkIgnore)
     )
 
@@ -230,11 +204,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
     *   The execution of the action.
     */
   def async(block: O[A] => Future[Unit]): Action[A, NotUsed] =
-    toSink(
-      Flow[O[A]]
-        .mapAsyncUnordered(requests.settings.parallelism)(block)
-        .to(Sink.ignore)
-    )
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block).to(Sink.ignore))
 
   /**
     * Creates an action that results in an partial async result
@@ -242,11 +212,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
     *   The execution of the action.
     */
   def asyncOpt(block: O[A] => OptFuture[Unit]): Action[A, NotUsed] =
-    toSink(
-      Flow[O[A]]
-        .mapAsyncUnordered(requests.settings.parallelism)(block(_).value)
-        .to(Sink.ignore)
-    )
+    toSink(Flow[O[A]].mapAsyncUnordered(requests.settings.parallelism)(block(_).value).to(Sink.ignore))
 
   /**
     * Creates an async action that might do a single request
@@ -273,9 +239,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
   def withRequest(block: O[A] => Request[Any]): Action[A, NotUsed] =
     toSink(
       Flow[O[A]]
-        .mapAsyncUnordered(requests.settings.parallelism)(m =>
-          Future(block(m))(requests.system.executionContext)
-        )
+        .mapAsyncUnordered(requests.settings.parallelism)(m => Future(block(m))(requests.system.executionContext))
         .to(requests.sinkIgnore)
     )
 
@@ -287,9 +251,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
   def withRequestOpt(block: O[A] => Option[Request[Any]]): Action[A, NotUsed] =
     toSink(
       Flow[O[A]]
-        .mapAsync(requests.settings.parallelism)(m =>
-          Future(block(m).toList)(requests.system.executionContext)
-        )
+        .mapAsync(requests.settings.parallelism)(m => Future(block(m).toList)(requests.system.executionContext))
         .mapConcat(identity)
         .to(requests.sinkIgnore)
     )
@@ -302,9 +264,7 @@ trait ActionBuilder[-I[_], +O[_], E, A] extends ActionFunction[I, O, E] {
   def withSideEffects(block: O[A] => Unit): Action[A, NotUsed] =
     toSink(
       Sink
-        .foreachAsync[O[A]](requests.settings.parallelism)(m =>
-          Future(block(m))(requests.system.executionContext)
-        )
+        .foreachAsync[O[A]](requests.settings.parallelism)(m => Future(block(m))(requests.system.executionContext))
         .mapMaterializedValue(_ => NotUsed)
     )
 }

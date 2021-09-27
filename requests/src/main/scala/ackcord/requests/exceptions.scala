@@ -30,14 +30,9 @@ import scala.concurrent.duration.FiniteDuration
 import akka.http.scaladsl.model.{HttpMethod, StatusCode, Uri}
 
 /** An exception for Http errors. */
-case class HttpException(
-    uri: Uri,
-    method: HttpMethod,
-    statusCode: StatusCode,
-    extraInfo: Option[String]
-) extends Exception(
-      s"$method $uri: ${statusCode.intValue()}, ${statusCode
-        .reason()}${extraInfo.fold("")(e => s" $e")}"
+case class HttpException(uri: Uri, method: HttpMethod, statusCode: StatusCode, extraInfo: Option[String])
+    extends Exception(
+      s"$method $uri: ${statusCode.intValue()}, ${statusCode.reason()}${extraInfo.fold("")(e => s" $e")}"
     )
 
 /**
@@ -50,12 +45,8 @@ case class HttpException(
   * @param uri
   *   The Uri for the request.
   */
-case class RatelimitException(
-    global: Boolean,
-    tilRetry: FiniteDuration,
-    uri: Uri,
-    identifier: UUID
-) extends Exception(
+case class RatelimitException(global: Boolean, tilRetry: FiniteDuration, uri: Uri, identifier: UUID)
+    extends Exception(
       if (global) "Encountered global ratelimit"
       else s"Encountered ratelimit at $uri $identifier"
     )
@@ -65,8 +56,7 @@ case class RatelimitException(
   * @param uri
   *   The Uri for the request.
   */
-case class DroppedRequestException(uri: Uri)
-    extends Exception(s"Dropped request at $uri")
+case class DroppedRequestException(uri: Uri) extends Exception(s"Dropped request at $uri")
 
 /** An exception thrown when parsing JSON if something goes wrong. */
 case class HttpJsonDecodeException(message: String) extends Exception(message)

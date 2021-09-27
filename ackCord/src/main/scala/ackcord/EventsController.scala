@@ -34,9 +34,7 @@ abstract class EventsController(val requests: Requests) {
 
   implicit val ec: ExecutionContext = requests.system.executionContext
 
-  implicit def findCache[A](implicit
-      message: EventListenerMessage[A]
-  ): CacheSnapshot = message.cacheSnapshot
+  implicit def findCache[A](implicit message: EventListenerMessage[A]): CacheSnapshot = message.cacheSnapshot
 
   /**
     * The base event handler builder that you can build off if you don't like
@@ -46,66 +44,54 @@ abstract class EventsController(val requests: Requests) {
     EventListenerBuilder.rawBuilder(requests)
 
   /** An alias for the base builder. */
-  val Event: EventListenerBuilder[EventListenerMessage, APIMessage] =
-    baseEventBuilder
+  val Event: EventListenerBuilder[EventListenerMessage, APIMessage] = baseEventBuilder
 
   val GuildEvent: EventListenerBuilder[GuildEventListenerMessage, APIMessage] =
     Event.andThen(
       EventListenerBuilder.guildEvent { g =>
-        Lambda[EventListenerMessage ~> GuildEventListenerMessage](m =>
-          GuildEventListenerMessage.Default(g, m)
-        )
+        Lambda[EventListenerMessage ~> GuildEventListenerMessage](m => GuildEventListenerMessage.Default(g, m))
       }
     )
 
-  val ChannelEvent
-      : EventListenerBuilder[ChannelEventListenerMessage, APIMessage] =
+  val ChannelEvent: EventListenerBuilder[ChannelEventListenerMessage, APIMessage] =
     Event.andThen(
       EventListenerBuilder.channelEvent { c =>
-        Lambda[EventListenerMessage ~> ChannelEventListenerMessage](m =>
-          ChannelEventListenerMessage.Default(c, m)
-        )
+        Lambda[EventListenerMessage ~> ChannelEventListenerMessage](m => ChannelEventListenerMessage.Default(c, m))
       }
     )
 
-  val TextChannelEvent
-      : EventListenerBuilder[TextChannelEventListenerMessage, APIMessage] =
+  val TextChannelEvent: EventListenerBuilder[TextChannelEventListenerMessage, APIMessage] =
     ChannelEvent.andThen(
       EventListenerBuilder.textChannelEvent { c =>
-        Lambda[ChannelEventListenerMessage ~> TextChannelEventListenerMessage](
-          m => TextChannelEventListenerMessage.Default(c, m)
+        Lambda[ChannelEventListenerMessage ~> TextChannelEventListenerMessage](m =>
+          TextChannelEventListenerMessage.Default(c, m)
         )
       }
     )
 
-  val TextGuildChannelEvent
-      : EventListenerBuilder[TextGuildChannelEventListenerMessage, APIMessage] =
+  val TextGuildChannelEvent: EventListenerBuilder[TextGuildChannelEventListenerMessage, APIMessage] =
     ChannelEvent.andThen(
       EventListenerBuilder.textGuildChannelEvent { (c, g) =>
-        Lambda[
-          ChannelEventListenerMessage ~> TextGuildChannelEventListenerMessage
-        ](m => TextGuildChannelEventListenerMessage.Default(c, g, m))
-      }
-    )
-
-  val VGuildChannelEvent
-      : EventListenerBuilder[VGuildChannelEventListenerMessage, APIMessage] =
-    ChannelEvent.andThen(
-      EventListenerBuilder.voiceGuildChannelEvent { (c, g) =>
-        Lambda[
-          ChannelEventListenerMessage ~> VGuildChannelEventListenerMessage
-        ](m => VGuildChannelEventListenerMessage.Default(c, g, m))
-      }
-    )
-
-  val GuildUserEvent
-      : EventListenerBuilder[GuildUserEventListenerMessage, APIMessage] =
-    GuildEvent.andThen(
-      EventListenerBuilder.guildUserEvent { (g, u, gm) =>
-        Lambda[GuildEventListenerMessage ~> GuildUserEventListenerMessage](m =>
-          GuildUserEventListenerMessage.Default(g, u, gm, m)
+        Lambda[ChannelEventListenerMessage ~> TextGuildChannelEventListenerMessage](m =>
+          TextGuildChannelEventListenerMessage.Default(c, g, m)
         )
       }
     )
+
+  val VGuildChannelEvent: EventListenerBuilder[VGuildChannelEventListenerMessage, APIMessage] = ChannelEvent.andThen(
+    EventListenerBuilder.voiceGuildChannelEvent { (c, g) =>
+      Lambda[ChannelEventListenerMessage ~> VGuildChannelEventListenerMessage](m =>
+        VGuildChannelEventListenerMessage.Default(c, g, m)
+      )
+    }
+  )
+
+  val GuildUserEvent: EventListenerBuilder[GuildUserEventListenerMessage, APIMessage] = GuildEvent.andThen(
+    EventListenerBuilder.guildUserEvent { (g, u, gm) =>
+      Lambda[GuildEventListenerMessage ~> GuildUserEventListenerMessage](m =>
+        GuildUserEventListenerMessage.Default(g, u, gm, m)
+      )
+    }
+  )
 
 }

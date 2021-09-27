@@ -32,18 +32,12 @@ sealed trait AsyncToken {
 sealed trait AsyncMessageToken extends AsyncToken
 
 object AsyncToken {
-  private[interactions] case class Impl(
-      webhookId: SnowflakeType[Webhook],
-      webhookToken: String
-  ) extends AsyncMessageToken
+  private[interactions] case class Impl(webhookId: SnowflakeType[Webhook], webhookToken: String)
+      extends AsyncMessageToken
 
-  private[interactions] def fromInteraction(
-      interaction: Interaction
-  ): AsyncToken =
+  private[interactions] def fromInteraction(interaction: Interaction): AsyncToken =
     Impl(interaction.webhookId, interaction.token)
 
-  private[interactions] def fromInteractionWithMessage(
-      interaction: Interaction
-  ): AsyncMessageToken =
+  private[interactions] def fromInteractionWithMessage(interaction: Interaction): AsyncMessageToken =
     Impl(interaction.webhookId, interaction.token)
 }

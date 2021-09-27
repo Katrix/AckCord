@@ -74,11 +74,10 @@ package object syntax {
     }
 
     /** If this is a normal voice channel, convert it to one. */
-    def asNormalVoiceGuildChannel: Option[NormalVoiceGuildChannel] =
-      channel match {
-        case gChannel: NormalVoiceGuildChannel => Some(gChannel)
-        case _                                 => None
-      }
+    def asNormalVoiceGuildChannel: Option[NormalVoiceGuildChannel] = channel match {
+      case gChannel: NormalVoiceGuildChannel => Some(gChannel)
+      case _                                 => None
+    }
 
     /** If this is a stage channel, convert it to one. */
     def asStageGuildChannel: Option[StageGuildChannel] = channel match {
@@ -93,8 +92,7 @@ package object syntax {
     }
   }
 
-  implicit class TextChannelSyntax(private val textChannel: TextChannel)
-      extends AnyVal {
+  implicit class TextChannelSyntax(private val textChannel: TextChannel) extends AnyVal {
 
     /**
       * Send a message to this channel.
@@ -140,10 +138,7 @@ package object syntax {
       *   The max amount of messages to return.
       */
     def fetchMessagesAround(around: MessageId, limit: Option[Int] = None) =
-      GetChannelMessages(
-        textChannel.id,
-        GetChannelMessagesData(Some(around), None, None, limit)
-      )
+      GetChannelMessages(textChannel.id, GetChannelMessagesData(Some(around), None, None, limit))
 
     /**
       * Fetch messages before a message id.
@@ -153,10 +148,7 @@ package object syntax {
       *   The max amount of messages to return.
       */
     def fetchMessagesBefore(before: MessageId, limit: Option[Int] = None) =
-      GetChannelMessages(
-        textChannel.id,
-        GetChannelMessagesData(None, Some(before), None, limit)
-      )
+      GetChannelMessages(textChannel.id, GetChannelMessagesData(None, Some(before), None, limit))
 
     /**
       * Fetch messages after a message id.
@@ -166,10 +158,7 @@ package object syntax {
       *   The max amount of messages to return.
       */
     def fetchMessagesAfter(after: MessageId, limit: Option[Int] = None) =
-      GetChannelMessages(
-        textChannel.id,
-        GetChannelMessagesData(None, None, Some(after), limit)
-      )
+      GetChannelMessages(textChannel.id, GetChannelMessagesData(None, None, Some(after), limit))
 
     /**
       * Fetch messages in this channel.
@@ -177,10 +166,7 @@ package object syntax {
       *   The max amount of messages to return.
       */
     def fetchMessages(limit: Option[Int] = None) =
-      GetChannelMessages(
-        textChannel.id,
-        GetChannelMessagesData(None, None, None, limit)
-      )
+      GetChannelMessages(textChannel.id, GetChannelMessagesData(None, None, None, limit))
 
     /** Fetch a message in this channel. */
     def fetchMessage(id: MessageId) = GetChannelMessage(textChannel.id, id)
@@ -189,8 +175,7 @@ package object syntax {
     def triggerTyping = TriggerTypingIndicator(textChannel.id)
   }
 
-  implicit class GuildChannelSyntax(private val channel: GuildChannel)
-      extends AnyVal {
+  implicit class GuildChannelSyntax(private val channel: GuildChannel) extends AnyVal {
 
     /** Get the category of this channel using a preexisting guild. */
     def categoryFromGuild(guild: GatewayGuild): Option[GuildCategory] =
@@ -256,8 +241,7 @@ package object syntax {
       DeleteChannelPermission(channel.id, roleId)
   }
 
-  implicit class TextGuildChannelSyntax(private val channel: TextGuildChannel)
-      extends AnyVal {
+  implicit class TextGuildChannelSyntax(private val channel: TextGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -283,9 +267,7 @@ package object syntax {
         topic: JsonOption[String] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[
-          SnowflakeMap[UserOrRole, PermissionOverwrite]
-        ] = JsonUndefined,
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined
     ) = ModifyChannel(
       channel.id,
@@ -363,10 +345,7 @@ package object syntax {
         autoArchiveDuration: Int = 1440,
         tpe: ChannelType.ThreadChannelType = ChannelType.GuildPrivateThread
     ) =
-      StartThreadWithoutMessage(
-        channel.id,
-        StartThreadWithoutMessageData(name, autoArchiveDuration, tpe)
-      )
+      StartThreadWithoutMessage(channel.id, StartThreadWithoutMessageData(name, autoArchiveDuration, tpe))
 
     /**
       * Lists all the active threads in this channel. Threads are ordered in
@@ -378,20 +357,14 @@ package object syntax {
       * Lists all the public archived threads in this channel. Threads are
       * ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
       */
-    def listPublicArchivedThreads(
-        before: Option[OffsetDateTime] = None,
-        limit: Option[Int] = None
-    ) =
+    def listPublicArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
       ListPublicArchivedThreads(channel.id, before, limit)
 
     /**
       * Lists all the private archived threads in this channel. Threads are
       * ordered in descending order by [[RawThreadMetadata.archiveTimestamp]].
       */
-    def listPrivateArchivedThreads(
-        before: Option[OffsetDateTime] = None,
-        limit: Option[Int] = None
-    ) =
+    def listPrivateArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
       ListPublicArchivedThreads(channel.id, before, limit)
 
     /**
@@ -399,16 +372,11 @@ package object syntax {
       * are ordered in descending order by
       * [[RawThreadMetadata.archiveTimestamp]].
       */
-    def listJoinedPrivateArchivedThreads(
-        before: Option[OffsetDateTime] = None,
-        limit: Option[Int] = None
-    ) =
+    def listJoinedPrivateArchivedThreads(before: Option[OffsetDateTime] = None, limit: Option[Int] = None) =
       ListPublicArchivedThreads(channel.id, before, limit)
   }
 
-  implicit class VGuildChannelSyntax(
-      private val channel: NormalVoiceGuildChannel
-  ) extends AnyVal {
+  implicit class VGuildChannelSyntax(private val channel: NormalVoiceGuildChannel) extends AnyVal {
 
     /**
       * Update the settings of this channel.
@@ -430,9 +398,7 @@ package object syntax {
         position: JsonOption[Int] = JsonUndefined,
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[
-          SnowflakeMap[UserOrRole, PermissionOverwrite]
-        ] = JsonUndefined,
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
         rtcRegion: JsonOption[String] = JsonUndefined
     ) = ModifyChannel(
@@ -454,8 +420,7 @@ package object syntax {
 
     /** Get the users connected to this voice channel. */
     def connectedUsers(implicit c: CacheSnapshot): Seq[User] =
-      c.getGuild(channel.guildId)
-        .fold(Nil: Seq[User])(g => connectedUsers(g).toList.flatMap(_.resolve))
+      c.getGuild(channel.guildId).fold(Nil: Seq[User])(g => connectedUsers(g).toList.flatMap(_.resolve))
 
     /**
       * Get the users connected to this voice channel using an preexisting
@@ -466,10 +431,7 @@ package object syntax {
 
     /** Get the guild members connected to this voice channel. */
     def connectedMembers(implicit c: CacheSnapshot): Seq[GuildMember] =
-      c.getGuild(channel.guildId)
-        .fold(Nil: Seq[GuildMember])(g =>
-          connectedUsers(g).flatMap(g.memberById(_))
-        )
+      c.getGuild(channel.guildId).fold(Nil: Seq[GuildMember])(g => connectedUsers(g).flatMap(g.memberById(_)))
 
     /**
       * Get the guild members connected to this voice channel using an
@@ -479,8 +441,7 @@ package object syntax {
       connectedUsers(guild).flatMap(guild.memberById(_))
   }
 
-  implicit class CategorySyntax(private val category: GuildCategory)
-      extends AnyVal {
+  implicit class CategorySyntax(private val category: GuildCategory) extends AnyVal {
 
     /** Get all the channels in this category. */
     def channels(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
@@ -494,9 +455,7 @@ package object syntax {
 
     /** Get all the channels in this category using an preexisting guild. */
     def channels(guild: GatewayGuild): Seq[GuildChannel] =
-      guild.channels.collect {
-        case (_, ch) if ch.parentId.contains(category.id) => ch
-      }.toSeq
+      guild.channels.collect { case (_, ch) if ch.parentId.contains(category.id) => ch }.toSeq
 
     /** Get all the text channels in this category. */
     def textChannels(implicit snapshot: CacheSnapshot): Seq[TextGuildChannel] =
@@ -509,9 +468,7 @@ package object syntax {
       channels(guild).collect { case channel: TextGuildChannel => channel }
 
     /** Get all the voice channels in this category. */
-    def voiceChannels(implicit
-        snapshot: CacheSnapshot
-    ): Seq[VoiceGuildChannel] =
+    def voiceChannels(implicit snapshot: CacheSnapshot): Seq[VoiceGuildChannel] =
       channels.collect { case channel: VoiceGuildChannel => channel }
 
     /**
@@ -521,9 +478,7 @@ package object syntax {
       channels(guild).collect { case channel: VoiceGuildChannel => channel }
 
     /** Get all the normal voice channels in this category. */
-    def normalVoiceChannels(implicit
-        snapshot: CacheSnapshot
-    ): Seq[NormalVoiceGuildChannel] =
+    def normalVoiceChannels(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
       channels.collect { case channel: NormalVoiceGuildChannel => channel }
 
     /**
@@ -531,14 +486,10 @@ package object syntax {
       * guild.
       */
     def normalVoiceChannels(guild: GatewayGuild): Seq[NormalVoiceGuildChannel] =
-      channels(guild).collect { case channel: NormalVoiceGuildChannel =>
-        channel
-      }
+      channels(guild).collect { case channel: NormalVoiceGuildChannel => channel }
 
     /** Get all the stage channels in this category. */
-    def stageChannels(implicit
-        snapshot: CacheSnapshot
-    ): Seq[StageGuildChannel] =
+    def stageChannels(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
       channels.collect { case channel: StageGuildChannel => channel }
 
     /**
@@ -552,9 +503,7 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def channelById(id: GuildChannelId)(implicit
-        snapshot: CacheSnapshot
-    ): Option[GuildChannel] =
+    def channelById(id: GuildChannelId)(implicit snapshot: CacheSnapshot): Option[GuildChannel] =
       channels.find(_.id == id)
 
     /**
@@ -562,10 +511,7 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def channelById(
-        id: GuildChannelId,
-        guild: GatewayGuild
-    ): Option[GuildChannel] = channels(guild).find(_.id == id)
+    def channelById(id: GuildChannelId, guild: GatewayGuild): Option[GuildChannel] = channels(guild).find(_.id == id)
 
     /**
       * Get a text channel by id in this category.
@@ -582,13 +528,8 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def textChannelById(
-        id: TextGuildChannelId,
-        guild: GatewayGuild
-    ): Option[TextGuildChannel] =
-      channelById(id, guild).collect { case channel: TextGuildChannel =>
-        channel
-      }
+    def textChannelById(id: TextGuildChannelId, guild: GatewayGuild): Option[TextGuildChannel] =
+      channelById(id, guild).collect { case channel: TextGuildChannel => channel }
 
     /**
       * Get a voice channel by id in this category.
@@ -605,13 +546,8 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def voiceChannelById(
-        id: VoiceGuildChannelId,
-        guild: GatewayGuild
-    ): Option[VoiceGuildChannel] =
-      channelById(id, guild).collect { case channel: VoiceGuildChannel =>
-        channel
-      }
+    def voiceChannelById(id: VoiceGuildChannelId, guild: GatewayGuild): Option[VoiceGuildChannel] =
+      channelById(id, guild).collect { case channel: VoiceGuildChannel => channel }
 
     /**
       * Get a normal voice channel by id in this category.
@@ -621,9 +557,7 @@ package object syntax {
     def normalVoiceChannelById[F[_]](
         id: NormalVoiceGuildChannelId
     )(implicit snapshot: CacheSnapshot): Option[NormalVoiceGuildChannel] =
-      channelById(id).collect { case channel: NormalVoiceGuildChannel =>
-        channel
-      }
+      channelById(id).collect { case channel: NormalVoiceGuildChannel => channel }
 
     /**
       * Get a normal voice channel by id in this category using an preexisting
@@ -631,13 +565,8 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def normalVoiceChannelById(
-        id: NormalVoiceGuildChannelId,
-        guild: GatewayGuild
-    ): Option[NormalVoiceGuildChannel] =
-      channelById(id, guild).collect { case channel: NormalVoiceGuildChannel =>
-        channel
-      }
+    def normalVoiceChannelById(id: NormalVoiceGuildChannelId, guild: GatewayGuild): Option[NormalVoiceGuildChannel] =
+      channelById(id, guild).collect { case channel: NormalVoiceGuildChannel => channel }
 
     /**
       * Get a voice channel by id in this category.
@@ -654,22 +583,15 @@ package object syntax {
       * @param id
       *   The id of the channel.
       */
-    def stageChannelById(
-        id: StageGuildChannelId,
-        guild: GatewayGuild
-    ): Option[StageGuildChannel] =
-      channelById(id, guild).collect { case channel: StageGuildChannel =>
-        channel
-      }
+    def stageChannelById(id: StageGuildChannelId, guild: GatewayGuild): Option[StageGuildChannel] =
+      channelById(id, guild).collect { case channel: StageGuildChannel => channel }
 
     /**
       * Get all the channels with a name in this category.
       * @param name
       *   The name of the guilds.
       */
-    def channelsByName(name: String)(implicit
-        snapshot: CacheSnapshot
-    ): Seq[GuildChannel] =
+    def channelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[GuildChannel] =
       channels.filter(_.name == name)
 
     /**
@@ -686,9 +608,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def textChannelsByName(name: String)(implicit
-        snapshot: CacheSnapshot
-    ): Seq[TextGuildChannel] =
+    def textChannelsByName(name: String)(implicit snapshot: CacheSnapshot): Seq[TextGuildChannel] =
       textChannels.filter(_.name == name)
 
     /**
@@ -697,10 +617,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def textChannelsByName(
-        name: String,
-        guild: GatewayGuild
-    ): Seq[TextGuildChannel] =
+    def textChannelsByName(name: String, guild: GatewayGuild): Seq[TextGuildChannel] =
       textChannels(guild).filter(_.name == name)
 
     /**
@@ -708,9 +625,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def voiceChannelsByName[F[_]](name: String)(implicit
-        snapshot: CacheSnapshot
-    ): Seq[VoiceGuildChannel] =
+    def voiceChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[VoiceGuildChannel] =
       voiceChannels.filter(_.name == name)
 
     /**
@@ -719,10 +634,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def voiceChannelsByName(
-        name: String,
-        guild: GatewayGuild
-    ): Seq[VoiceGuildChannel] =
+    def voiceChannelsByName(name: String, guild: GatewayGuild): Seq[VoiceGuildChannel] =
       voiceChannels(guild).filter(_.name == name)
 
     /**
@@ -730,9 +642,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def normalVoiceChannelsByName[F[_]](name: String)(implicit
-        snapshot: CacheSnapshot
-    ): Seq[NormalVoiceGuildChannel] =
+    def normalVoiceChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[NormalVoiceGuildChannel] =
       normalVoiceChannels.filter(_.name == name)
 
     /**
@@ -741,10 +651,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def normalVoiceChannelsByName(
-        name: String,
-        guild: GatewayGuild
-    ): Seq[NormalVoiceGuildChannel] =
+    def normalVoiceChannelsByName(name: String, guild: GatewayGuild): Seq[NormalVoiceGuildChannel] =
       normalVoiceChannels(guild).filter(_.name == name)
 
     /**
@@ -752,9 +659,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def stageChannelsByName[F[_]](name: String)(implicit
-        snapshot: CacheSnapshot
-    ): Seq[StageGuildChannel] =
+    def stageChannelsByName[F[_]](name: String)(implicit snapshot: CacheSnapshot): Seq[StageGuildChannel] =
       stageChannels.filter(_.name == name)
 
     /**
@@ -763,10 +668,7 @@ package object syntax {
       * @param name
       *   The name of the guilds.
       */
-    def stageChannelsByName(
-        name: String,
-        guild: GatewayGuild
-    ): Seq[StageGuildChannel] =
+    def stageChannelsByName(name: String, guild: GatewayGuild): Seq[StageGuildChannel] =
       stageChannels(guild).filter(_.name == name)
 
     /**
@@ -781,9 +683,7 @@ package object syntax {
     def modify(
         name: JsonOption[String] = JsonUndefined,
         position: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[
-          SnowflakeMap[UserOrRole, PermissionOverwrite]
-        ] = JsonUndefined
+        permissionOverwrites: JsonOption[SnowflakeMap[UserOrRole, PermissionOverwrite]] = JsonUndefined
     ) = ModifyChannel(
       category.id,
       ModifyChannelData(
@@ -796,9 +696,7 @@ package object syntax {
     )
   }
 
-  implicit class ThreadGuildChannelSyntax(
-      private val thread: ThreadGuildChannel
-  ) extends AnyVal {
+  implicit class ThreadGuildChannelSyntax(private val thread: ThreadGuildChannel) extends AnyVal {
 
     /** Adds the current user to this thread. */
     def join = JoinThread(thread.id)
@@ -864,8 +762,7 @@ package object syntax {
     def modify(
         name: JsonOption[String] = JsonUndefined,
         verificationLevel: JsonOption[VerificationLevel] = JsonUndefined,
-        defaultMessageNotifications: JsonOption[NotificationLevel] =
-          JsonUndefined,
+        defaultMessageNotifications: JsonOption[NotificationLevel] = JsonUndefined,
         explicitContentFilter: JsonOption[FilterLevel] = JsonUndefined,
         afkChannelId: JsonOption[NormalVoiceGuildChannelId] = JsonUndefined,
         afkTimeout: JsonOption[Int] = JsonUndefined,
@@ -924,8 +821,7 @@ package object syntax {
         name: String,
         topic: JsonOption[String] = JsonUndefined,
         rateLimitPerUser: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] =
-          JsonUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
@@ -961,8 +857,7 @@ package object syntax {
         name: String,
         bitrate: JsonOption[Int] = JsonUndefined,
         userLimit: JsonOption[Int] = JsonUndefined,
-        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] =
-          JsonUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         category: JsonOption[SnowflakeType[GuildCategory]] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
@@ -990,8 +885,7 @@ package object syntax {
       */
     def createCategory(
         name: String,
-        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] =
-          JsonUndefined,
+        permissionOverwrites: JsonOption[Seq[PermissionOverwrite]] = JsonUndefined,
         nsfw: JsonOption[Boolean] = JsonUndefined
     ) = CreateGuildChannel(
       guild.id,
@@ -1021,9 +915,7 @@ package object syntax {
       * @param newPositions
       *   A sequence indicating the channels to move, and where
       */
-    def modifyChannelPositions(
-        newPositions: Seq[ModifyGuildChannelPositionsData]
-    ) =
+    def modifyChannelPositions(newPositions: Seq[ModifyGuildChannelPositionsData]) =
       ModifyGuildChannelPositions(
         guild.id,
         newPositions
@@ -1070,10 +962,7 @@ package object syntax {
       *   How many members to return at most.
       */
     def fetchSearchGuildMembers(query: String, limit: Int = 1) =
-      SearchGuildMembers(
-        guild.id,
-        SearchGuildMembersData(query, JsonSome(limit))
-      )
+      SearchGuildMembers(guild.id, SearchGuildMembersData(query, JsonSome(limit)))
 
     /**
       * Add a guild member to this guild. Requires the `guilds.join` OAuth2
@@ -1097,11 +986,7 @@ package object syntax {
         roles: Option[Seq[RoleId]] = None,
         mute: Option[Boolean] = None,
         deaf: Option[Boolean] = None
-    ) = AddGuildMember(
-      guild.id,
-      userId,
-      AddGuildMemberData(accessToken, nick, roles, mute, deaf)
-    )
+    ) = AddGuildMember(guild.id, userId, AddGuildMemberData(accessToken, nick, roles, mute, deaf))
 
     /** Fetch all the roles in this guild. */
     def fetchRoles = GetGuildRoles(guild.id)
@@ -1126,10 +1011,7 @@ package object syntax {
         color: Option[Int] = None,
         hoist: Option[Boolean] = None,
         mentionable: Option[Boolean] = None
-    ) = CreateGuildRole(
-      guild.id,
-      CreateGuildRoleData(name, permissions, color, hoist, mentionable)
-    )
+    ) = CreateGuildRole(guild.id, CreateGuildRoleData(name, permissions, color, hoist, mentionable))
 
     /**
       * Modify the positions of several roles
@@ -1138,10 +1020,7 @@ package object syntax {
       *   A map from the role id to their new position.
       */
     def modifyRolePositions(newPositions: SnowflakeMap[Role, Int]) =
-      ModifyGuildRolePositions(
-        guild.id,
-        newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq
-      )
+      ModifyGuildRolePositions(guild.id, newPositions.map(t => ModifyGuildRolePositionsData(t._1, t._2)).toSeq)
 
     /**
       * Check how many members would be removed if a prune was started now.
@@ -1165,10 +1044,7 @@ package object syntax {
           case _                          => false
         },
         includeRoles: Seq[RoleId] = Nil
-    ) = BeginGuildPrune(
-      guild.id,
-      BeginGuildPruneData(days, Some(computePruneCount), includeRoles)
-    )
+    ) = BeginGuildPrune(guild.id, BeginGuildPruneData(days, Some(computePruneCount), includeRoles))
 
     /** Fetch the voice regions for this guild. */
     def fetchVoiceRegions = GetGuildVoiceRegions(guild.id)
@@ -1197,45 +1073,33 @@ package object syntax {
       ModifyGuildWidget(guild.id, embed)
   }
 
-  implicit class GatewayGuildSyntax(private val guild: GatewayGuild)
-      extends AnyVal {
+  implicit class GatewayGuildSyntax(private val guild: GatewayGuild) extends AnyVal {
 
     /** Get all the text channels in the guild. */
     def textChannels: Seq[TextGuildChannel] =
-      guild.channels.values.collect { case tChannel: TextGuildChannel =>
-        tChannel
-      }.toSeq
+      guild.channels.values.collect { case tChannel: TextGuildChannel => tChannel }.toSeq
 
     /** Get all the voice channels in the guild. */
     def voiceChannels: Seq[VoiceGuildChannel] =
-      guild.channels.values.collect { case channel: VoiceGuildChannel =>
-        channel
-      }.toSeq
+      guild.channels.values.collect { case channel: VoiceGuildChannel => channel }.toSeq
 
     /** Get all the normal voice channels in the guild. */
     def normalVoiceChannels: Seq[NormalVoiceGuildChannel] =
-      guild.channels.values.collect { case channel: NormalVoiceGuildChannel =>
-        channel
-      }.toSeq
+      guild.channels.values.collect { case channel: NormalVoiceGuildChannel => channel }.toSeq
 
     /** Get all the stage channels in the guild. */
     def stageChannels: Seq[StageGuildChannel] =
-      guild.channels.values.collect { case channel: StageGuildChannel =>
-        channel
-      }.toSeq
+      guild.channels.values.collect { case channel: StageGuildChannel => channel }.toSeq
 
     /**
       * Get all the categories in this guild.
       * @return
       */
     def categories: Seq[GuildCategory] =
-      guild.channels.values.collect { case category: GuildCategory =>
-        category
-      }.toSeq
+      guild.channels.values.collect { case category: GuildCategory => category }.toSeq
 
     /** Get a channel by id in this guild. */
-    def channelById(id: GuildChannelId): Option[GuildChannel] =
-      guild.channels.get(id)
+    def channelById(id: GuildChannelId): Option[GuildChannel] = guild.channels.get(id)
 
     /** Get a text channel by id in this guild. */
     def textChannelById(id: TextGuildChannelId): Option[TextGuildChannel] =
@@ -1246,9 +1110,7 @@ package object syntax {
       channelById(id).flatMap(_.asVoiceGuildChannel)
 
     /** Get a voice channel by id in this guild. */
-    def normalVoiceChannelById(
-        id: VoiceGuildChannelId
-    ): Option[NormalVoiceGuildChannel] =
+    def normalVoiceChannelById(id: VoiceGuildChannelId): Option[NormalVoiceGuildChannel] =
       channelById(id).flatMap(_.asNormalVoiceGuildChannel)
 
     /** Get a stage channel by id in this guild. */
@@ -1256,50 +1118,41 @@ package object syntax {
       channelById(id).flatMap(_.asStageGuildChannel)
 
     /** Get a category by id in this guild. */
-    def categoryById(id: SnowflakeType[GuildCategory]): Option[GuildCategory] =
-      channelById(id).flatMap(_.asCategory)
+    def categoryById(id: SnowflakeType[GuildCategory]): Option[GuildCategory] = channelById(id).flatMap(_.asCategory)
 
     /** Get all the channels with a name. */
-    def channelsByName(name: String): Seq[GuildChannel] =
-      guild.channels.values.filter(_.name == name).toSeq
+    def channelsByName(name: String): Seq[GuildChannel] = guild.channels.values.filter(_.name == name).toSeq
 
     /** Get all the text channels with a name. */
-    def textChannelsByName(name: String): Seq[TextGuildChannel] =
-      textChannels.filter(_.name == name)
+    def textChannelsByName(name: String): Seq[TextGuildChannel] = textChannels.filter(_.name == name)
 
     /** Get all the voice channels with a name. */
-    def voiceChannelsByName(name: String): Seq[VoiceGuildChannel] =
-      voiceChannels.filter(_.name == name)
+    def voiceChannelsByName(name: String): Seq[VoiceGuildChannel] = voiceChannels.filter(_.name == name)
 
     /** Get all the voice channels with a name. */
     def normalVoiceChannelsByName(name: String): Seq[NormalVoiceGuildChannel] =
       normalVoiceChannels.filter(_.name == name)
 
     /** Get all the stage channels with a name. */
-    def stageChannelsByName(name: String): Seq[StageGuildChannel] =
-      stageChannels.filter(_.name == name)
+    def stageChannelsByName(name: String): Seq[StageGuildChannel] = stageChannels.filter(_.name == name)
 
     /** Get all the categories with a name. */
-    def categoriesByName(name: String): Seq[GuildCategory] =
-      categories.filter(_.name == name)
+    def categoriesByName(name: String): Seq[GuildCategory] = categories.filter(_.name == name)
 
     /** Get the afk channel in this guild. */
-    def afkChannel: Option[NormalVoiceGuildChannel] =
-      guild.afkChannelId.flatMap(normalVoiceChannelById)
+    def afkChannel: Option[NormalVoiceGuildChannel] = guild.afkChannelId.flatMap(normalVoiceChannelById)
 
     /** Get a role by id. */
     def roleById(id: RoleId): Option[Role] = guild.roles.get(id)
 
     /** Get all the roles with a name. */
-    def rolesByName(name: String): Seq[Role] =
-      guild.roles.values.filter(_.name == name).toSeq
+    def rolesByName(name: String): Seq[Role] = guild.roles.values.filter(_.name == name).toSeq
 
     /** Get an emoji by id. */
     def emojiById(id: EmojiId): Option[Emoji] = guild.emojis.get(id)
 
     /** Get all the emoji with a name. */
-    def emojisByName(name: String): Seq[Emoji] =
-      guild.emojis.values.filter(_.name == name).toSeq
+    def emojisByName(name: String): Seq[Emoji] = guild.emojis.values.filter(_.name == name).toSeq
 
     /** Get a guild member by a user id. */
     def memberById(id: UserId): Option[GuildMember] = guild.members.get(id)
@@ -1345,8 +1198,7 @@ package object syntax {
       CreateGuildEmoji(guild.id, CreateGuildEmojiData(name, image, roles))
 
     /** Get a voice state for a user. */
-    def voiceStateFor(userId: UserId): Option[VoiceState] =
-      guild.voiceStates.get(userId)
+    def voiceStateFor(userId: UserId): Option[VoiceState] = guild.voiceStates.get(userId)
 
     /**
       * Modify the clients nickname.
@@ -1354,10 +1206,7 @@ package object syntax {
       *   The new nickname
       */
     def setNick(nick: Option[String]) =
-      ModifyBotUsersNick(
-        guild.id,
-        ModifyBotUsersNickData(JsonOption.fromOptionWithNull(nick))
-      )
+      ModifyBotUsersNick(guild.id, ModifyBotUsersNickData(JsonOption.fromOptionWithNull(nick)))
 
     /** Fetch an audit log for a this guild. */
     def fetchAuditLog(
@@ -1365,10 +1214,7 @@ package object syntax {
         actionType: Option[AuditLogEvent] = None,
         before: Option[RawSnowflake] = None,
         limit: Option[Int] = None
-    ) = GetGuildAuditLog(
-      guild.id,
-      GetGuildAuditLogData(userId, actionType, before, limit)
-    )
+    ) = GetGuildAuditLog(guild.id, GetGuildAuditLogData(userId, actionType, before, limit))
 
     /** Fetch the webhooks in this guild. */
     def fetchWebhooks = GetGuildWebhooks(guild.id)
@@ -1385,20 +1231,14 @@ package object syntax {
         enabled: JsonOption[Boolean] = JsonUndefined,
         welcomeChannels: JsonOption[Seq[WelcomeScreenChannel]] = JsonUndefined,
         description: JsonOption[String] = JsonUndefined
-    ) = ModifyGuildWelcomeScreen(
-      guild.id,
-      ModifyGuildWelcomeScreenData(enabled, welcomeChannels, description)
-    )
+    ) = ModifyGuildWelcomeScreen(guild.id, ModifyGuildWelcomeScreenData(enabled, welcomeChannels, description))
   }
 
-  implicit class GuildMemberSyntax(private val guildMember: GuildMember)
-      extends AnyVal {
+  implicit class GuildMemberSyntax(private val guildMember: GuildMember) extends AnyVal {
 
     /** Get all the roles for this guild member. */
     def rolesForUser(implicit snapshot: CacheSnapshot): Seq[Role] =
-      guildMember.guild
-        .map(g => guildMember.roleIds.flatMap(g.roles.get))
-        .getOrElse(Seq.empty)
+      guildMember.guild.map(g => guildMember.roleIds.flatMap(g.roles.get)).getOrElse(Seq.empty)
 
     /** Get all the roles for this guild member given a preexisting guild. */
     def rolesForUser(guild: Guild): Seq[Role] =
@@ -1455,12 +1295,7 @@ package object syntax {
       *   The number of days to delete messages for this banned user.
       */
     def ban(deleteMessageDays: Option[Int], reason: Option[String]) =
-      CreateGuildBan(
-        guildMember.guildId,
-        guildMember.userId,
-        CreateGuildBanData(deleteMessageDays),
-        reason
-      )
+      CreateGuildBan(guildMember.guildId, guildMember.userId, CreateGuildBanData(deleteMessageDays), reason)
 
     /** Unban this user. */
     def unban = RemoveGuildBan(guildMember.guildId, guildMember.userId)
@@ -1476,11 +1311,7 @@ package object syntax {
       *   The guildId of this emoji.
       */
     def modify(name: String, roles: Seq[RoleId], guildId: GuildId) =
-      ModifyGuildEmoji(
-        emoji.id,
-        guildId,
-        ModifyGuildEmojiData(name, JsonSome(roles))
-      )
+      ModifyGuildEmoji(emoji.id, guildId, ModifyGuildEmojiData(name, JsonSome(roles)))
 
     /**
       * Delete this emoji.
@@ -1512,11 +1343,7 @@ package object syntax {
         hoist: JsonOption[Boolean] = JsonUndefined,
         mentionable: JsonOption[Boolean] = JsonUndefined
     ) =
-      ModifyGuildRole(
-        role.guildId,
-        role.id,
-        ModifyGuildRoleData(name, permissions, color, hoist, mentionable)
-      )
+      ModifyGuildRole(role.guildId, role.id, ModifyGuildRoleData(name, permissions, color, hoist, mentionable))
 
     /** Delete this role. */
     def delete = DeleteGuildRole(role.guildId, role.id)
@@ -1565,12 +1392,7 @@ package object syntax {
       *   The userId to remove for.
       */
     def deleteUserReaction(guildEmoji: Emoji, userId: UserId) =
-      DeleteUserReaction(
-        message.channelId,
-        message.id,
-        guildEmoji.asString,
-        userId
-      )
+      DeleteUserReaction(message.channelId, message.id, guildEmoji.asString, userId)
 
     /**
       * Delete the reaction of a user with an emoji.
@@ -1591,12 +1413,7 @@ package object syntax {
         guildEmoji: Emoji,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(
-      message.channelId,
-      message.id,
-      guildEmoji.asString,
-      GetReactionsData(after, limit)
-    )
+    ) = GetReactions(message.channelId, message.id, guildEmoji.asString, GetReactionsData(after, limit))
 
     /**
       * Fetch all the users that have reacted with an emoji for this message.
@@ -1607,12 +1424,7 @@ package object syntax {
         emoji: String,
         after: Option[UserId] = None,
         limit: Option[Int] = None
-    ) = GetReactions(
-      message.channelId,
-      message.id,
-      emoji,
-      GetReactionsData(after, limit)
-    )
+    ) = GetReactions(message.channelId, message.id, emoji, GetReactionsData(after, limit))
 
     /** Clear all the reactions on this message. */
     def deleteAllReactions =
@@ -1643,14 +1455,7 @@ package object syntax {
     ) = EditMessage(
       message.channelId,
       message.id,
-      EditMessageData(
-        content,
-        files,
-        allowedMentions,
-        embeds,
-        flags,
-        components
-      )
+      EditMessageData(content, files, allowedMentions, embeds, flags, components)
     )
 
     /** Delete this message. */
@@ -1719,24 +1524,16 @@ package object syntax {
         name: JsonOption[String] = JsonUndefined,
         avatar: JsonOption[ImageData] = JsonUndefined,
         channelId: JsonOption[TextGuildChannelId] = JsonUndefined
-    ) = webhook.token.map(
-      ModifyWebhookWithToken(
-        webhook.id,
-        _,
-        ModifyWebhookData(name, avatar, channelId)
-      )
-    )
+    ) = webhook.token.map(ModifyWebhookWithToken(webhook.id, _, ModifyWebhookData(name, avatar, channelId)))
 
     /** Delete this webhook. */
     def delete = DeleteWebhook(webhook.id)
 
     /** Delete this webhook with a token. Doesn't require authentication. */
-    def deleteWithToken =
-      webhook.token.map(DeleteWebhookWithToken(webhook.id, _))
+    def deleteWithToken = webhook.token.map(DeleteWebhookWithToken(webhook.id, _))
   }
 
-  implicit class AckCordSyntax(private val ackCord: AckCord.type)
-      extends AnyVal {
+  implicit class AckCordSyntax(private val ackCord: AckCord.type) extends AnyVal {
     //Global methods which are not tied to a specific object
 
     /** Fetch a channel by id. */

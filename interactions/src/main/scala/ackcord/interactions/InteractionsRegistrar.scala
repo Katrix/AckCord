@@ -32,10 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import ackcord.data.DiscordProtocol._
 import ackcord.data._
 import ackcord.interactions.commands.CommandOrGroup
-import ackcord.interactions.components.{
-  GlobalRegisteredComponents,
-  RegisteredComponents
-}
+import ackcord.interactions.components.{GlobalRegisteredComponents, RegisteredComponents}
 import ackcord.interactions.raw._
 import ackcord.requests.{Requests, SupervisionStreams}
 import ackcord.{CacheSnapshot, OptFuture}
@@ -71,41 +68,30 @@ object InteractionsRegistrar {
               .map(_.head.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
-          case _ =>
-            Left(Some("None or invalid data sent for command execution"))
+          case _ => Left(Some("None or invalid data sent for command execution"))
         }
       case InteractionType.MessageComponent =>
         interaction.data match {
           case Some(data: ApplicationComponentInteractionData) =>
             registeredComponents
               .handlerForIdentifier(data.customId)
-              .orElse(
-                GlobalRegisteredComponents.handlerForIdentifier(data.customId)
-              )
+              .orElse(GlobalRegisteredComponents.handlerForIdentifier(data.customId))
               .flatMap(_.handleRaw(clientId, interaction, optCache))
               .toRight(None)
 
-          case _ =>
-            Left(Some("None or invalid data sent for component execution"))
+          case _ => Left(Some("None or invalid data sent for component execution"))
         }
 
-      case InteractionType.Unknown(i) =>
-        Left(Some(s"Unknown interaction type $i"))
+      case InteractionType.Unknown(i) => Left(Some(s"Unknown interaction type $i"))
     }
 
-  def extractAsyncPart(
-      response: InteractionResponse
-  )(implicit ec: ExecutionContext): () => OptFuture[Unit] =
+  def extractAsyncPart(response: InteractionResponse)(implicit ec: ExecutionContext): () => OptFuture[Unit] =
     response match {
-      case InteractionResponse.Acknowledge(andThenDo) =>
-        () => andThenDo().map(_ => ())
-      case InteractionResponse.UpdateMessageLater(andThenDo) =>
-        () => andThenDo().map(_ => ())
-      case InteractionResponse.UpdateMessage(_, andThenDo) =>
-        () => andThenDo().map(_ => ())
-      case InteractionResponse.ChannelMessage(_, andThenDo) =>
-        () => andThenDo().map(_ => ())
-      case _ => () => OptFuture.unit
+      case InteractionResponse.Acknowledge(andThenDo)        => () => andThenDo().map(_ => ())
+      case InteractionResponse.UpdateMessageLater(andThenDo) => () => andThenDo().map(_ => ())
+      case InteractionResponse.UpdateMessage(_, andThenDo)   => () => andThenDo().map(_ => ())
+      case InteractionResponse.ChannelMessage(_, andThenDo)  => () => andThenDo().map(_ => ())
+      case _                                                 => () => OptFuture.unit
     }
 
   def webFlow(
@@ -115,27 +101,25 @@ object InteractionsRegistrar {
       publicKey: String,
       registeredComponents: RegisteredComponents = GlobalRegisteredComponents,
       parallelism: Int = 4
-  )(implicit
-      system: ActorSystem[Nothing]
+  )(
+      implicit system: ActorSystem[Nothing]
   ): Flow[HttpRequest, (HttpResponse, () => OptFuture[Unit]), NotUsed] = {
     import system.executionContext
     val commandsByName = commands.groupBy(_.name.toLowerCase(Locale.ROOT))
     //https://stackoverflow.com/a/140861
     def hexStringToByteArray(s: String) = {
-      val len = s.length
+      val len  = s.length
       val data = new Array[Byte](len / 2)
-      var i = 0
+      var i    = 0
       while (i < len) {
-        data(i / 2) = ((Character.digit(s.charAt(i), 16) << 4) + Character
-          .digit(s.charAt(i + 1), 16)).toByte
+        data(i / 2) = ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16)).toByte
 
         i += 2
       }
       data
     }
 
-    val signatureObj =
-      new TweetNaclFast.Signature(hexStringToByteArray(publicKey), new Array(0))
+    val signatureObj = new TweetNaclFast.Signature(hexStringToByteArray(publicKey), new Array(0))
 
     SupervisionStreams.logAndContinue(
       Flow[HttpRequest]
@@ -146,76 +130,37 @@ object InteractionsRegistrar {
               request.entity.dataBytes
                 .runFold(ByteString.empty)(_ ++ _)
                 .map(
-                  _.decodeString(
-                    request.entity.contentType.charsetOption
-                      .fold(StandardCharsets.UTF_8)(_.nioCharset)
-                  )
+                  _.decodeString(request.entity.contentType.charsetOption.fold(StandardCharsets.UTF_8)(_.nioCharset))
                 )
 
-          val timestamp = request.headers
-            .find(_.lowercaseName == "X-Signature-Timestamp")
-            .map(_.value)
-          val signature = request.headers
-            .find(_.lowercaseName == "x-signature-ed25519")
-            .map(_.value)
+          val timestamp = request.headers.find(_.lowercaseName == "X-Signature-Timestamp").map(_.value)
+          val signature = request.headers.find(_.lowercaseName == "x-signature-ed25519").map(_.value)
 
           body.map((_, timestamp, signature))
         }
         .map { case (body, optTimestamp, optSignature) =>
           for {
             timestamp <-
-              optTimestamp.toRight(
-                HttpResponse(
-                  StatusCodes.Unauthorized,
-                  entity = "No timestamp in request"
-                )
-              )
+              optTimestamp.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No timestamp in request"))
             signature <-
-              optSignature.toRight(
-                HttpResponse(
-                  StatusCodes.Unauthorized,
-                  entity = "No signature in request"
-                )
-              )
+              optSignature.toRight(HttpResponse(StatusCodes.Unauthorized, entity = "No signature in request"))
             _ <- {
               val isValid =
-                signatureObj.detached_verify(
-                  (timestamp + body).getBytes("UTF-8"),
-                  hexStringToByteArray(signature)
-                )
-              Either.cond(
-                isValid,
-                (),
-                HttpResponse(
-                  StatusCodes.Unauthorized,
-                  entity = "Invalid signature"
-                )
-              )
+                signatureObj.detached_verify((timestamp + body).getBytes("UTF-8"), hexStringToByteArray(signature))
+              Either.cond(isValid, (), HttpResponse(StatusCodes.Unauthorized, entity = "Invalid signature"))
             }
             res <- {
               io.circe.parser
                 .parse(body)
                 .flatMap(_.as[RawInteraction])
                 .leftMap { e =>
-                  logger.error(
-                    s"Error when decoding command interaction: ${e.show}"
-                  )
+                  logger.error(s"Error when decoding command interaction: ${e.show}")
                   HttpResponse(StatusCodes.BadRequest, entity = e.show)
                 }
             }
           } yield res
         }
-        .map(
-          _.map(
-            handleInteraction(
-              clientId,
-              commandsByName,
-              registeredComponents,
-              _,
-              None
-            )
-          )
-        )
+        .map(_.map(handleInteraction(clientId, commandsByName, registeredComponents, _, None)))
         .mapConcat {
           case Left(value)  => List(Left(value))
           case Right(value) => value.toList.map(Right.apply)
@@ -223,11 +168,7 @@ object InteractionsRegistrar {
         .map { e =>
           val httpResponse = e.map { response =>
             HttpResponse(
-              headers = immutable.Seq(
-                `Content-Type`(
-                  ContentType.WithFixedCharset(MediaTypes.`application/json`)
-                )
-              ),
+              headers = immutable.Seq(`Content-Type`(ContentType.WithFixedCharset(MediaTypes.`application/json`))),
               entity = response.toRawInteractionResponse.asJson.noSpaces
             )
           }.merge
@@ -254,13 +195,7 @@ object InteractionsRegistrar {
     SupervisionStreams.logAndContinue(
       Flow[(RawInteraction, Option[CacheSnapshot])]
         .mapConcat { case (interaction, optCache) =>
-          handleInteraction(
-            clientId,
-            commandsByName,
-            registeredButtons,
-            interaction,
-            optCache
-          )
+          handleInteraction(clientId, commandsByName, registeredButtons, interaction, optCache)
             .map(_ -> interaction)
             .toList
         }
@@ -273,9 +208,7 @@ object InteractionsRegistrar {
         }
         .via(requests.flowSuccess(ignoreFailures = false))
         .map(_._2)
-        .to(
-          Sink.foreachAsync(parallelism)(action => action().value.map(_ => ()))
-        )
+        .to(Sink.foreachAsync(parallelism)(action => action().value.map(_ => ())))
     )
   }
 
@@ -287,25 +220,16 @@ object InteractionsRegistrar {
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
-    implicit val requestProperties: Requests.RequestProperties =
-      Requests.RequestProperties.ordered
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
     if (replaceAll) {
       requests.singleFutureSuccess(
-        BulkReplaceGuildCommand(
-          applicationId,
-          guildId,
-          commands.map(CreateCommandData.fromCommand)
-        )
+        BulkReplaceGuildCommand(applicationId, guildId, commands.map(CreateCommandData.fromCommand))
       )
     } else {
       requests.manyFutureSuccess(
         commands.toVector.map(command =>
-          CreateGuildCommand(
-            applicationId,
-            guildId,
-            CreateCommandData.fromCommand(command)
-          )
+          CreateGuildCommand(applicationId, guildId, CreateCommandData.fromCommand(command))
         )
       )
     }
@@ -318,24 +242,15 @@ object InteractionsRegistrar {
       commands: CommandOrGroup*
   ): Future[Seq[ApplicationCommand]] = {
     //Ordered as this will likely be called once with too many requests
-    implicit val requestProperties: Requests.RequestProperties =
-      Requests.RequestProperties.ordered
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
     if (replaceAll) {
       requests.singleFutureSuccess(
-        BulkReplaceGlobalCommands(
-          applicationId,
-          commands.map(CreateCommandData.fromCommand)
-        )
+        BulkReplaceGlobalCommands(applicationId, commands.map(CreateCommandData.fromCommand))
       )
     } else {
       requests.manyFutureSuccess(
-        commands.toVector.map(command =>
-          CreateGlobalCommand(
-            applicationId,
-            CreateCommandData.fromCommand(command)
-          )
-        )
+        commands.toVector.map(command => CreateGlobalCommand(applicationId, CreateCommandData.fromCommand(command)))
       )
     }
   }
@@ -349,18 +264,15 @@ object InteractionsRegistrar {
     import requests.system
     import requests.system.executionContext
     //Ordered as this will likely be called once with too many requests
-    implicit val requestProperties: Requests.RequestProperties =
-      Requests.RequestProperties.ordered
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap {
-      globalCommands =>
-        Source(
-          globalCommands
-            .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
-            .map(gc => (DeleteGuildCommand(applicationId, guildId, gc.id), gc))
-            .toVector
-        ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2))
-          .runWith(Sink.seq)
+    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+      Source(
+        globalCommands
+          .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
+          .map(gc => (DeleteGuildCommand(applicationId, guildId, gc.id), gc))
+          .toVector
+      ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
     }
   }
 
@@ -372,18 +284,15 @@ object InteractionsRegistrar {
     import requests.system
     import requests.system.executionContext
     //Ordered as this will likely be called once with too many requests
-    implicit val requestProperties: Requests.RequestProperties =
-      Requests.RequestProperties.ordered
+    implicit val requestProperties: Requests.RequestProperties = Requests.RequestProperties.ordered
 
-    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap {
-      globalCommands =>
-        Source(
-          globalCommands
-            .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
-            .map(gc => (DeleteGlobalCommand(applicationId, gc.id), gc))
-            .toVector
-        ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2))
-          .runWith(Sink.seq)
+    requests.singleFutureSuccess(GetGlobalCommands(applicationId)).flatMap { globalCommands =>
+      Source(
+        globalCommands
+          .filter(gc => commands.exists(_.name.equalsIgnoreCase(gc.name)))
+          .map(gc => (DeleteGlobalCommand(applicationId, gc.id), gc))
+          .toVector
+      ).via(requests.flowSuccess(ignoreFailures = false).asFlow.map(_._2)).runWith(Sink.seq)
     }
   }
 }

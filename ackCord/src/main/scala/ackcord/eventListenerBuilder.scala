@@ -49,37 +49,25 @@ case class EventListenerBuilder[+M[_], A <: APIMessage](
 ) extends ActionBuilder[EventListenerMessage, M, Nothing, A] { self =>
   override type Action[B, Mat] = EventListener[B, Mat]
 
-  override def flow[C]
-      : Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] =
-    actionFunction.flow[C]
+  override def flow[C]: Flow[EventListenerMessage[C], Either[Option[Nothing], M[C]], NotUsed] = actionFunction.flow[C]
 
-  def on[B <: A](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] =
-    copy(refineEvent = tag.unapply)
+  def on[B <: A](implicit tag: ClassTag[B]): EventListenerBuilder[M, B] = copy(refineEvent = tag.unapply)
 
-  override def toSink[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] =
-    new EventListener[A, Mat] {
-      override def sink: Sink[EventListenerMessage[A], Mat] =
-        self
-          .flow[A]
-          .collect { case Right(ma) => ma }
-          .toMat(sinkBlock)(Keep.right)
+  override def toSink[Mat](sinkBlock: Sink[M[A], Mat]): EventListener[A, Mat] = new EventListener[A, Mat] {
+    override def sink: Sink[EventListenerMessage[A], Mat] =
+      self.flow[A].collect { case Right(ma) => ma }.toMat(sinkBlock)(Keep.right)
 
-      override def refineEvent(msg: APIMessage): Option[A] =
-        self.refineEvent(msg)
-    }
+    override def refineEvent(msg: APIMessage): Option[A] = self.refineEvent(msg)
+  }
 
-  override def andThen[O2[_]](
-      that: ActionFunction[M, O2, Nothing]
-  ): EventListenerBuilder[O2, A] =
+  override def andThen[O2[_]](that: ActionFunction[M, O2, Nothing]): EventListenerBuilder[O2, A] =
     copy(actionFunction = actionFunction.andThen(that))
 }
 object EventListenerBuilder {
-  type EventFunction[-I[_], +O[_]] = ActionFunction[I, O, Nothing]
+  type EventFunction[-I[_], +O[_]]    = ActionFunction[I, O, Nothing]
   type EventTransformer[-I[_], +O[_]] = ActionTransformer[I, O, Nothing]
 
-  def rawBuilder(
-      requests: Requests
-  ): EventListenerBuilder[EventListenerMessage, APIMessage] =
+  def rawBuilder(requests: Requests): EventListenerBuilder[EventListenerMessage, APIMessage] =
     EventListenerBuilder(requests, Some(_), ActionFunction.identity)
 
   def guildEvent[I[A] <: EventListenerMessage[A], O[_]](
@@ -95,21 +83,14 @@ object EventListenerBuilder {
               Some(create(e.guild)(i))
             case e: APIMessage.OptGuildMessage =>
               e.guild.map(create(_)(i))
-            case e: APIMessage.ChannelMessage
-                if e.channel.isInstanceOf[GuildChannel] =>
+            case e: APIMessage.ChannelMessage if e.channel.isInstanceOf[GuildChannel] =>
               e.channel
                 .asInstanceOf[GuildChannel]
                 .guild
                 .map(create(_)(i))
-            case e: APIMessage.MessageMessage
-                if e.message.isInstanceOf[GuildGatewayMessage] =>
-              e.message
-                .asInstanceOf[GuildGatewayMessage]
-                .guildId
-                .resolve
-                .map(create(_)(i))
-            case e: APIMessage.VoiceStateUpdate
-                if e.voiceState.guildId.isDefined =>
+            case e: APIMessage.MessageMessage if e.message.isInstanceOf[GuildGatewayMessage] =>
+              e.message.asInstanceOf[GuildGatewayMessage].guildId.resolve.map(create(_)(i))
+            case e: APIMessage.VoiceStateUpdate if e.voiceState.guildId.isDefined =>
               e.voiceState.guild.map(create(_)(i))
 
             case _ => None
@@ -127,13 +108,10 @@ object EventListenerBuilder {
         .map { i =>
           implicit val c: CacheSnapshot = i.cacheSnapshot
           (i.event: APIMessage) match {
-            case e: APIMessage.ChannelMessage => Some(create(e.channel)(i))
-            case e: APIMessage.TextChannelIdMessage =>
-              e.channel.map(create(_)(i))
-            case e: APIMessage.MessageMessage =>
-              c.getChannel(e.message.channelId).map(create(_)(i))
-            case APIMessage.VoiceStateUpdate(voiceState, _, _)
-                if voiceState.channelId.isDefined =>
+            case e: APIMessage.ChannelMessage       => Some(create(e.channel)(i))
+            case e: APIMessage.TextChannelIdMessage => e.channel.map(create(_)(i))
+            case e: APIMessage.MessageMessage       => c.getChannel(e.message.channelId).map(create(_)(i))
+            case APIMessage.VoiceStateUpdate(voiceState, _, _) if voiceState.channelId.isDefined =>
               voiceState.voiceChannel.map(create(_)(i))
             case _ => None
           }
@@ -159,7 +137,7 @@ object EventListenerBuilder {
           implicit val c: CacheSnapshot = i.cacheSnapshot
           for {
             tgChannel <- i.channel.asTextGuildChannel
-            guild <- tgChannel.guild
+            guild     <- tgChannel.guild
           } yield create(tgChannel, guild)(i)
         }
         .mapConcat(_.toList)
@@ -174,7 +152,7 @@ object EventListenerBuilder {
           implicit val c: CacheSnapshot = i.cacheSnapshot
           for {
             tgChannel <- i.channel.asVoiceGuildChannel
-            guild <- tgChannel.guild
+            guild     <- tgChannel.guild
           } yield create(tgChannel, guild)(i)
         }
         .mapConcat(_.toList)
@@ -187,32 +165,24 @@ object EventListenerBuilder {
       Flow[I[A]]
         .map { i =>
           implicit val c: CacheSnapshot = i.cacheSnapshot
-          val guild = i.guild
+          val guild                     = i.guild
 
-          def doCreate(user: User) = guild
-            .memberById(user.id)
-            .map(member => create(guild, user, member)(i))
+          def doCreate(user: User) = guild.memberById(user.id).map(member => create(guild, user, member)(i))
 
           (i.event: APIMessage) match {
-            case APIMessage.GuildBanAdd(_, user, _, _)    => doCreate(user)
-            case APIMessage.GuildBanRemove(_, user, _, _) => doCreate(user)
-            case APIMessage.GuildMemberAdd(member, _, _, _) =>
-              member.user.map(user => create(guild, user, member)(i))
+            case APIMessage.GuildBanAdd(_, user, _, _)       => doCreate(user)
+            case APIMessage.GuildBanRemove(_, user, _, _)    => doCreate(user)
+            case APIMessage.GuildMemberAdd(member, _, _, _)  => member.user.map(user => create(guild, user, member)(i))
             case APIMessage.GuildMemberRemove(user, _, _, _) => doCreate(user)
-            case msg: APIMessage.GuildMemberUpdate => doCreate(msg.user)
-            case APIMessage.MessageCreate(_, message, _, _) =>
-              message.authorUser.flatMap(doCreate)
-            case msg: APIMessage.MessageUpdate =>
-              msg.message.flatMap(_.authorUser).flatMap(doCreate)
-            case msg: APIMessage.MessageReactionAdd =>
-              msg.user.flatMap(doCreate)
-            case msg: APIMessage.MessageReactionRemove =>
-              msg.user.flatMap(doCreate)
+            case msg: APIMessage.GuildMemberUpdate           => doCreate(msg.user)
+            case APIMessage.MessageCreate(_, message, _, _)  => message.authorUser.flatMap(doCreate)
+            case msg: APIMessage.MessageUpdate               => msg.message.flatMap(_.authorUser).flatMap(doCreate)
+            case msg: APIMessage.MessageReactionAdd          => msg.user.flatMap(doCreate)
+            case msg: APIMessage.MessageReactionRemove       => msg.user.flatMap(doCreate)
             case APIMessage.PresenceUpdate(_, user, _, _, _) => doCreate(user)
-            case msg: APIMessage.TypingStart => msg.user.flatMap(doCreate)
-            case APIMessage.VoiceStateUpdate(voiceState, _, _) =>
-              voiceState.user.flatMap(doCreate)
-            case _ => None
+            case msg: APIMessage.TypingStart                 => msg.user.flatMap(doCreate)
+            case APIMessage.VoiceStateUpdate(voiceState, _, _) => voiceState.user.flatMap(doCreate)
+            case _                                             => None
           }
         }
         .mapConcat(_.toList)
@@ -232,16 +202,12 @@ trait EventListenerMessage[A] {
   def cacheSnapshot: CacheSnapshot = event.cache.current
 }
 object EventListenerMessage {
-  implicit def findCache[A](implicit
-      message: EventListenerMessage[A]
-  ): CacheSnapshot = message.cacheSnapshot
+  implicit def findCache[A](implicit message: EventListenerMessage[A]): CacheSnapshot = message.cacheSnapshot
 
-  case class Default[A](event: A with APIMessage)
-      extends EventListenerMessage[A]
+  case class Default[A](event: A with APIMessage) extends EventListenerMessage[A]
 }
 
-class WrappedEventListenerMessage[A](m: EventListenerMessage[A])
-    extends EventListenerMessage[A] {
+class WrappedEventListenerMessage[A](m: EventListenerMessage[A]) extends EventListenerMessage[A] {
   override def event: A with APIMessage = m.event
 }
 
@@ -265,8 +231,7 @@ object ChannelEventListenerMessage {
       with ChannelEventListenerMessage[A]
 }
 
-trait TextChannelEventListenerMessage[A]
-    extends ChannelEventListenerMessage[A] {
+trait TextChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] {
   def channel: TextChannel
 }
 object TextChannelEventListenerMessage {
@@ -281,25 +246,17 @@ trait TextGuildChannelEventListenerMessage[A]
   def channel: TextGuildChannel
 }
 object TextGuildChannelEventListenerMessage {
-  case class Default[A](
-      channel: TextGuildChannel,
-      guild: GatewayGuild,
-      m: EventListenerMessage[A]
-  ) extends WrappedEventListenerMessage(m)
+  case class Default[A](channel: TextGuildChannel, guild: GatewayGuild, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
       with TextGuildChannelEventListenerMessage[A]
 }
 
-trait VGuildChannelEventListenerMessage[A]
-    extends ChannelEventListenerMessage[A]
-    with GuildEventListenerMessage[A] {
+trait VGuildChannelEventListenerMessage[A] extends ChannelEventListenerMessage[A] with GuildEventListenerMessage[A] {
   def channel: VoiceGuildChannel
 }
 object VGuildChannelEventListenerMessage {
-  case class Default[A](
-      channel: VoiceGuildChannel,
-      guild: GatewayGuild,
-      m: EventListenerMessage[A]
-  ) extends WrappedEventListenerMessage(m)
+  case class Default[A](channel: VoiceGuildChannel, guild: GatewayGuild, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
       with VGuildChannelEventListenerMessage[A]
 }
 
@@ -307,17 +264,11 @@ trait UserEventListenerMessage[A] extends EventListenerMessage[A] {
   def user: User
 }
 
-trait GuildUserEventListenerMessage[A]
-    extends GuildEventListenerMessage[A]
-    with UserEventListenerMessage[A] {
+trait GuildUserEventListenerMessage[A] extends GuildEventListenerMessage[A] with UserEventListenerMessage[A] {
   def guildMember: GuildMember
 }
 object GuildUserEventListenerMessage {
-  case class Default[A](
-      guild: GatewayGuild,
-      user: User,
-      guildMember: GuildMember,
-      m: EventListenerMessage[A]
-  ) extends WrappedEventListenerMessage(m)
+  case class Default[A](guild: GatewayGuild, user: User, guildMember: GuildMember, m: EventListenerMessage[A])
+      extends WrappedEventListenerMessage(m)
       with GuildUserEventListenerMessage[A]
 }

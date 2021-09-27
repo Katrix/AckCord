@@ -36,18 +36,11 @@ import com.typesafe.config.Config
 class AckCordRequestSettings(config: Config) {
   import config._
 
-  val LogReceivedREST: Boolean = getBoolean(
-    "ackcord.logging.payloads.log-received-rest"
-  )
-  val LogSentREST: Boolean = getBoolean(
-    "ackcord.logging.payloads.log-sent-rest"
-  )
+  val LogReceivedREST: Boolean = getBoolean("ackcord.logging.payloads.log-received-rest")
+  val LogSentREST: Boolean     = getBoolean("ackcord.logging.payloads.log-sent-rest")
 
-  val LogRatelimitEvents: Boolean = getBoolean(
-    "ackcord.logging.log-ratelimit-events"
-  )
-  val SpuriousWakeup: FiniteDuration =
-    getDuration("ackcord.requests.spurious-wakeup", TimeUnit.SECONDS).seconds
+  val LogRatelimitEvents: Boolean    = getBoolean("ackcord.logging.log-ratelimit-events")
+  val SpuriousWakeup: FiniteDuration = getDuration("ackcord.requests.spurious-wakeup", TimeUnit.SECONDS).seconds
 }
 object AckCordRequestSettings {
 

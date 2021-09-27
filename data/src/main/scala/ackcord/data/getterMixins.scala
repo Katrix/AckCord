@@ -29,8 +29,7 @@ trait GetGuild {
   def guildId: GuildId
 
   /** The guild for this object */
-  def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] =
-    snapshot.getGuild(guildId)
+  def guild(implicit snapshot: CacheSnapshot): Option[GatewayGuild] = snapshot.getGuild(guildId)
 }
 
 trait GetGuildOpt {
@@ -45,18 +44,13 @@ trait GetUser {
   def userId: UserId
 
   /** The user for this object */
-  def user(implicit snapshot: CacheSnapshot): Option[User] =
-    snapshot.getUser(userId)
+  def user(implicit snapshot: CacheSnapshot): Option[User] = snapshot.getUser(userId)
 }
 
 trait GetVoiceChannelOpt {
   def channelId: Option[VoiceGuildChannelId]
 
   /** Resolve the channelId of this object as a voice channel. */
-  def voiceChannel(implicit
-      snapshot: CacheSnapshot
-  ): Option[VoiceGuildChannel] =
-    channelId.flatMap(snapshot.getGuildChannel).collect {
-      case voiceChannel: VoiceGuildChannel => voiceChannel
-    }
+  def voiceChannel(implicit snapshot: CacheSnapshot): Option[VoiceGuildChannel] =
+    channelId.flatMap(snapshot.getGuildChannel).collect { case voiceChannel: VoiceGuildChannel => voiceChannel }
 }

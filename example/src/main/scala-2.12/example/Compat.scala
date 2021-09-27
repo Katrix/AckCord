@@ -28,17 +28,15 @@ import scala.annotation.tailrec
 object Compat {
 
   @tailrec
-  def updateWith[K, V](map: collection.concurrent.Map[K, V], key: K)(
-      f: Option[V] => Option[V]
-  ): Option[V] = {
+  def updateWith[K, V](map: collection.concurrent.Map[K, V], key: K)(f: Option[V] => Option[V]): Option[V] = {
     val previousValue = map.get(key)
-    val nextValue = f(previousValue)
+    val nextValue     = f(previousValue)
     (previousValue, nextValue) match {
       case (None, None)                                             => None
       case (None, Some(next)) if map.putIfAbsent(key, next).isEmpty => nextValue
       case (Some(prev), None) if map.remove(key, prev)              => None
       case (Some(prev), Some(next)) if map.replace(key, prev, next) => nextValue
-      case _ => updateWith(map, key)(f)
+      case _                                                        => updateWith(map, key)(f)
     }
   }
 }

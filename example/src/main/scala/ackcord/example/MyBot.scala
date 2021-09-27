@@ -32,24 +32,19 @@ import ackcord.syntax._
 object MyBot extends App {
 
   val GeneralCommands = "!"
-  val MusicCommands = "&"
+  val MusicCommands   = "&"
 
   require(args.nonEmpty, "Please provide a token")
-  val token = args.head
-  val settings =
-    ClientSettings(token, intents = GatewayIntents.AllNonPrivileged)
+  val token    = args.head
+  val settings = ClientSettings(token, intents = GatewayIntents.AllNonPrivileged)
   import settings.executionContext
 
   settings
     .createClient()
     .foreach { client =>
-      client.onEventSideEffectsIgnore { case APIMessage.Ready(_, _, _) =>
-        println("Now ready")
-      }
+      client.onEventSideEffectsIgnore { case APIMessage.Ready(_, _, _) => println("Now ready") }
 
-      client.onEventSideEffectsIgnore { case msg =>
-        println(msg.getClass.getName)
-      }
+      client.onEventSideEffectsIgnore { case msg => println(msg.getClass.getName) }
 
       {
         import client.system
@@ -65,15 +60,12 @@ object MyBot extends App {
           case APIMessage.ChannelCreate(_, channel, _, _) =>
             for {
               tChannel <- optionPure(channel.asTextChannel)
-              _ <- run(tChannel.sendMessage("First"))
+              _        <- run(tChannel.sendMessage("First"))
             } yield ()
           case APIMessage.ChannelDelete(optGuild, channel, _, _) =>
             for {
               guild <- optionPure(optGuild)
-              _ <- runOption(
-                guild.textChannels.headOption
-                  .map(_.sendMessage(s"${channel.name} was deleted"))
-              )
+              _     <- runOption(guild.textChannels.headOption.map(_.sendMessage(s"${channel.name} was deleted")))
             } yield ()
         }
       }
@@ -101,9 +93,9 @@ object MyBot extends App {
       }
        */
 
-      val myEvents = new MyEvents(client.requests)
-      val myListeners = new Listeners(client)
-      val myCommands = new MyCommands(client, client.requests)
+      val myEvents      = new MyEvents(client.requests)
+      val myListeners   = new Listeners(client)
+      val myCommands    = new MyCommands(client, client.requests)
       val myHelpCommand = new MyHelpCommand(client.requests)
 
       client.bulkRegisterListeners(
@@ -130,13 +122,9 @@ object MyBot extends App {
         myCommands.timeDiff,
         myCommands.ping,
         myCommands.maybeFail,
+        myCommands.ratelimitTest("ratelimitTest", client.requests.sinkIgnore[Any]),
         myCommands
-          .ratelimitTest("ratelimitTest", client.requests.sinkIgnore[Any]),
-        myCommands
-          .ratelimitTest(
-            "ratelimitTestOrdered",
-            client.requests.sinkIgnore[Any](Requests.RequestProperties.ordered)
-          ),
+          .ratelimitTest("ratelimitTestOrdered", client.requests.sinkIgnore[Any](Requests.RequestProperties.ordered)),
         myCommands.kill
       )
 
@@ -149,14 +137,10 @@ object MyBot extends App {
 
       import client.system
 
-      client.onEventSideEffectsIgnore {
-        case APIMessage.Ready(applicationId, _, _) =>
-          client.events.interactions
-            .to(
-              InteractionsRegistrar
-                .gatewayInteractions()(applicationId.asString, client.requests)
-            )
-            .run()
+      client.onEventSideEffectsIgnore { case APIMessage.Ready(applicationId, _, _) =>
+        client.events.interactions
+          .to(InteractionsRegistrar.gatewayInteractions()(applicationId.asString, client.requests))
+          .run()
       }
 
       client.login()

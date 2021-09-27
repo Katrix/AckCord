@@ -43,47 +43,35 @@ object VoiceWsProtocol extends DiscordProtocol {
   implicit val selectProtocolDataCodec: Codec[SelectProtocolData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val selectProtocolConnectionDataCodec
-      : Codec[SelectProtocolConnectionData] =
+  implicit val selectProtocolConnectionDataCodec: Codec[SelectProtocolConnectionData] =
     derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val readyDataCodec: Codec[ReadyData] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val readyDataCodec: Codec[ReadyData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] =
-    (a: SessionDescriptionData) => {
-      Json.obj(
-        "mode" -> a.mode.asJson,
-        "secret_key" -> a.secretKey.toArray.asJson
-      )
-    }
+  implicit val sessionDescriptionDataEncoder: Encoder[SessionDescriptionData] = (a: SessionDescriptionData) => {
+    Json.obj("mode" -> a.mode.asJson, "secret_key" -> a.secretKey.toArray.asJson)
+  }
 
-  implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] =
-    (c: HCursor) => {
-      for {
-        mode <- c.get[String]("mode")
-        secretKey <- c.get[Seq[Int]]("secret_key")
-      } yield SessionDescriptionData(
-        mode,
-        ByteString(secretKey.map(_.toByte): _*)
-      )
-    }
+  implicit val sessionDescriptionDataDecoder: Decoder[SessionDescriptionData] = (c: HCursor) => {
+    for {
+      mode      <- c.get[String]("mode")
+      secretKey <- c.get[Seq[Int]]("secret_key")
+    } yield SessionDescriptionData(mode, ByteString(secretKey.map(_.toByte): _*))
+  }
 
   implicit val speakingDataEncoder: Encoder[SpeakingData] = (a: SpeakingData) =>
     JsonOption.removeUndefinedToObj(
       "speaking" -> JsonSome(a.speaking.asJson),
-      "delay" -> a.delay.toJson,
-      "ssrc" -> a.ssrc.toJson,
-      "user_id" -> a.userId.toJson
+      "delay"    -> a.delay.toJson,
+      "ssrc"     -> a.ssrc.toJson,
+      "user_id"  -> a.userId.toJson
     )
   implicit val speakingDataDecoder: Decoder[SpeakingData] =
     derivation.deriveDecoder(derivation.renaming.snakeCase, false, None)
 
-  implicit val resumeDataCodec: Codec[ResumeData] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val resumeDataCodec: Codec[ResumeData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
-  implicit val helloDataCodec: Codec[HelloData] =
-    derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
+  implicit val helloDataCodec: Codec[HelloData] = derivation.deriveCodec(derivation.renaming.snakeCase, false, None)
 
   implicit def wsMessageEncoder[Data]: Encoder[VoiceMessage[Data]] =
     (a: VoiceMessage[Data]) => {
@@ -104,8 +92,8 @@ object VoiceWsProtocol extends DiscordProtocol {
 
       JsonOption.removeUndefinedToObj(
         "op" -> JsonSome(a.op.asJson),
-        "d" -> JsonSome(data),
-        "s" -> a.s.toJson
+        "d"  -> JsonSome(data),
+        "s"  -> a.s.toJson
       )
     }
 
@@ -128,10 +116,9 @@ object VoiceWsProtocol extends DiscordProtocol {
       case VoiceOpCode.HeartbeatACK       => mkMsg(HeartbeatACK)
       case VoiceOpCode.Resume             => mkMsg(Resume)
       case VoiceOpCode.Resumed            => Right(Resumed)
-      case VoiceOpCode.ClientDisconnect =>
-        Right(IgnoreClientDisconnect) //We don't know what to do with this
-      case VoiceOpCode.Hello            => mkMsg(Hello)
-      case tpe @ VoiceOpCode.Unknown(_) => Right(UnknownVoiceMessage(tpe))
+      case VoiceOpCode.ClientDisconnect   => Right(IgnoreClientDisconnect) //We don't know what to do with this
+      case VoiceOpCode.Hello              => mkMsg(Hello)
+      case tpe @ VoiceOpCode.Unknown(_)   => Right(UnknownVoiceMessage(tpe))
     }
   }
 }

@@ -41,9 +41,7 @@ trait RequestRunner[F[_]] {
 
   def run[A](request: Request[A])(implicit c: CacheSnapshot): F[A]
 
-  def runMany[A](requests: immutable.Seq[Request[A]])(implicit
-      c: CacheSnapshot
-  ): F[A]
+  def runMany[A](requests: immutable.Seq[Request[A]])(implicit c: CacheSnapshot): F[A]
 
   def fromSource[A](source: Source[A, NotUsed]): F[A]
 
@@ -53,36 +51,22 @@ trait RequestRunner[F[_]] {
 
   def pure[A](a: A)(implicit F: Applicative[F]): F[A] = F.pure(a)
 
-  def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] =
-    opt.fold(F.empty[A])(F.pure)
+  def optionPure[A](opt: Option[A])(implicit F: Alternative[F]): F[A] = opt.fold(F.empty[A])(F.pure)
 
-  def runOption[A](
-      opt: Option[Request[A]]
-  )(implicit F: Alternative[F], c: CacheSnapshot): F[A] =
+  def runOption[A](opt: Option[Request[A]])(implicit F: Alternative[F], c: CacheSnapshot): F[A] =
     opt.fold(F.empty[A])(run[A])
 
-  def liftStreamable[H[_], A](ga: H[A])(implicit
-      streamable: Streamable[H]
-  ): F[A] = fromSource(streamable.toSource(ga))
+  def liftStreamable[H[_], A](ga: H[A])(implicit streamable: Streamable[H]): F[A] = fromSource(streamable.toSource(ga))
 
-  def liftOptionT[H[_], A](opt: OptionT[H, A])(implicit
-      streamable: Streamable[H]
-  ): F[A] =
+  def liftOptionT[H[_], A](opt: OptionT[H, A])(implicit streamable: Streamable[H]): F[A] =
     fromSource(streamable.optionToSource(opt))
 
-  def liftFoldable[H[_], A](
-      ga: H[A]
-  )(implicit F: Alternative[F], G: Foldable[H]): F[A] =
+  def liftFoldable[H[_], A](ga: H[A])(implicit F: Alternative[F], G: Foldable[H]): F[A] =
     G.foldLeft(ga, F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
 
   def runFoldable[H[_], A](
       request: H[Request[A]]
-  )(implicit
-      F: Alternative[F],
-      FM: Monad[F],
-      G: Foldable[H],
-      c: CacheSnapshot
-  ): F[A] =
+  )(implicit F: Alternative[F], FM: Monad[F], G: Foldable[H], c: CacheSnapshot): F[A] =
     FM.flatMap(liftFoldable(request))(run[A])
 
   def runOptionT[H[_], A](
@@ -94,84 +78,64 @@ trait RequestRunner[F[_]] {
 object RequestRunner {
   def apply[F[_]](implicit runner: RequestRunner[F]): RequestRunner[F] = runner
 
-  implicit def sourceRequestRunner(implicit
-      requests: Requests
+  implicit def sourceRequestRunner(
+      implicit requests: Requests
   ): RequestRunner[SourceRequest] =
     new RequestRunner[SourceRequest] {
-      override def run[A](
-          request: Request[A]
-      )(implicit c: CacheSnapshot): SourceRequest[A] =
+      override def run[A](request: Request[A])(implicit c: CacheSnapshot): SourceRequest[A] =
         if (request.hasPermissions) {
           requests.singleSuccess(request)
         } else Source.failed(new RequestPermissionException(request))
 
-      override def runMany[A](requestSeq: immutable.Seq[Request[A]])(implicit
-          c: CacheSnapshot
+      override def runMany[A](requestSeq: immutable.Seq[Request[A]])(
+          implicit c: CacheSnapshot
       ): SourceRequest[A] = {
         val requestVec = requestSeq.toVector
         if (requestVec.forall(_.hasPermissions)) {
           requests.manySuccess(requestSeq)(Requests.RequestProperties.ordered)
         } else {
-          Source.failed(
-            new RequestPermissionException(
-              requestVec.find(!_.hasPermissions).get
-            )
-          )
+          Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
         }
       }
 
-      override def fromSource[A](source: Source[A, NotUsed]): SourceRequest[A] =
-        source
+      override def fromSource[A](source: Source[A, NotUsed]): SourceRequest[A] = source
 
       override def unit: SourceRequest[Unit] = Source.single(())
     }
 
-  implicit def futureRequestRunner[F[_]](implicit
-      requests: Requests,
+  implicit def futureRequestRunner[F[_]](
+      implicit requests: Requests,
       F: Alternative[F]
-  ): RequestRunner[λ[A => Future[F[A]]]] =
-    new RequestRunner[λ[A => Future[F[A]]]] {
-      import requests.system
-      import requests.system.executionContext
+  ): RequestRunner[λ[A => Future[F[A]]]] = new RequestRunner[λ[A => Future[F[A]]]] {
+    import requests.system
+    import requests.system.executionContext
 
-      override def run[A](
-          request: Request[A]
-      )(implicit c: CacheSnapshot): Future[F[A]] =
-        if (request.hasPermissions) {
-          requests
-            .singleFuture(request)
-            .flatMap(res =>
-              Future.fromTry(res.eitherData.fold(Failure.apply, Success.apply))
-            )
-            .map(F.pure)
-        } else {
-          Future.failed(new RequestPermissionException(request))
-        }
-
-      override def runMany[A](requestSeq: immutable.Seq[Request[A]])(implicit
-          c: CacheSnapshot
-      ): Future[F[A]] = {
-        val requestVec = requestSeq.toVector
-        val source = if (requestVec.forall(_.hasPermissions)) {
-          requests.many(requestSeq).collect {
-            case RequestResponse(data, _, _, _) => data
-          }
-        } else {
-          Source.failed(
-            new RequestPermissionException(
-              requestVec.find(!_.hasPermissions).get
-            )
-          )
-        }
-
-        source.runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
+    override def run[A](request: Request[A])(implicit c: CacheSnapshot): Future[F[A]] =
+      if (request.hasPermissions) {
+        requests
+          .singleFuture(request)
+          .flatMap(res => Future.fromTry(res.eitherData.fold(Failure.apply, Success.apply)))
+          .map(F.pure)
+      } else {
+        Future.failed(new RequestPermissionException(request))
       }
 
-      override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =
-        source.runWith(
-          Sink.fold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
-        )
+    override def runMany[A](requestSeq: immutable.Seq[Request[A]])(
+        implicit c: CacheSnapshot
+    ): Future[F[A]] = {
+      val requestVec = requestSeq.toVector
+      val source = if (requestVec.forall(_.hasPermissions)) {
+        requests.many(requestSeq).collect { case RequestResponse(data, _, _, _) => data }
+      } else {
+        Source.failed(new RequestPermissionException(requestVec.find(!_.hasPermissions).get))
+      }
 
-      override def unit: Future[F[Unit]] = Future.successful(F.pure(()))
+      source.runFold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a)))
     }
+
+    override def fromSource[A](source: Source[A, NotUsed]): Future[F[A]] =
+      source.runWith(Sink.fold(F.empty[A])((acc, a) => F.combineK(acc, F.pure(a))))
+
+    override def unit: Future[F[Unit]] = Future.successful(F.pure(()))
+  }
 }

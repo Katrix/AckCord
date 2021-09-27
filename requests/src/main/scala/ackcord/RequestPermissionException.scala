@@ -27,6 +27,4 @@ package ackcord
 import ackcord.requests.Request
 
 class RequestPermissionException(val request: Request[_])
-    extends Exception(
-      s"Do not have enough permissions to run request: $request"
-    )
+    extends Exception(s"Do not have enough permissions to run request: $request")

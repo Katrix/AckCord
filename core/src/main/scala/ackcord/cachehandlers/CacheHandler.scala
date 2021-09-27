@@ -37,11 +37,7 @@ sealed trait CacheHandler[-Obj] {
     * @param obj
     *   The logger to update with
     */
-  def handle(
-      builder: CacheSnapshotBuilder,
-      obj: Obj,
-      registry: CacheTypeRegistry
-  ): Unit
+  def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit
 
   /**
     * If true, the Cache registry won't return this if asked for a type of this
@@ -53,38 +49,24 @@ sealed trait CacheHandler[-Obj] {
 /** A [[CacheHandler]] for deletions. */
 trait CacheDeleter[-Obj] extends CacheHandler[Obj]
 object CacheDeleter {
-  def dummy[Obj](shouldBeIgnored: Boolean): CacheDeleter[Obj] =
-    new CacheDeleter[Obj] {
-      override def handle(
-          builder: CacheSnapshotBuilder,
-          obj: Obj,
-          registry: CacheTypeRegistry
-      ): Unit = ()
+  def dummy[Obj](shouldBeIgnored: Boolean): CacheDeleter[Obj] = new CacheDeleter[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit = ()
 
-      override def ignore: Boolean = shouldBeIgnored
-    }
+    override def ignore: Boolean = shouldBeIgnored
+  }
 }
 
 /** A [[CacheHandler]] for updates. */
 trait CacheUpdater[-Obj] extends CacheHandler[Obj]
 object CacheUpdater {
-  def dummy[Obj](shouldBeIgnored: Boolean): CacheUpdater[Obj] =
-    new CacheUpdater[Obj] {
-      override def handle(
-          builder: CacheSnapshotBuilder,
-          obj: Obj,
-          registry: CacheTypeRegistry
-      ): Unit = ()
+  def dummy[Obj](shouldBeIgnored: Boolean): CacheUpdater[Obj] = new CacheUpdater[Obj] {
+    override def handle(builder: CacheSnapshotBuilder, obj: Obj, registry: CacheTypeRegistry): Unit = ()
 
-      override def ignore: Boolean = shouldBeIgnored
-    }
+    override def ignore: Boolean = shouldBeIgnored
+  }
 }
 
 /** A handler that takes no action */
 object NOOPHandler extends CacheHandler[Any] {
-  override def handle(
-      builder: CacheSnapshotBuilder,
-      obj: Any,
-      registry: CacheTypeRegistry
-  ): Unit = ()
+  override def handle(builder: CacheSnapshotBuilder, obj: Any, registry: CacheTypeRegistry): Unit = ()
 }

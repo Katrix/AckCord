@@ -35,22 +35,9 @@ import akka.actor.typed.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
-import akka.http.scaladsl.model.ws.{
-  BinaryMessage,
-  Message,
-  TextMessage,
-  WebSocketUpgradeResponse
-}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage, WebSocketUpgradeResponse}
 import akka.stream._
-import akka.stream.scaladsl.{
-  Broadcast,
-  Compression,
-  Flow,
-  GraphDSL,
-  Keep,
-  Merge,
-  Partition
-}
+import akka.stream.scaladsl.{Broadcast, Compression, Flow, GraphDSL, Keep, Merge, Partition}
 import akka.stream.stage._
 import akka.util.ByteString
 import cats.syntax.all._
@@ -58,14 +45,12 @@ import io.circe
 import io.circe.syntax._
 import io.circe.{Encoder, parser}
 
-class GatewayHandlerGraphStage(
-    settings: GatewaySettings,
-    prevResume: Option[ResumeData]
-) extends GraphStageWithMaterializedValue[
+class GatewayHandlerGraphStage(settings: GatewaySettings, prevResume: Option[ResumeData])
+    extends GraphStageWithMaterializedValue[
       FlowShape[GatewayMessage[_], GatewayMessage[_]],
       (Future[(Option[ResumeData], Boolean)], Future[Unit])
     ] {
-  val in: Inlet[GatewayMessage[_]] = Inlet("GatewayHandlerGraphStage.in")
+  val in: Inlet[GatewayMessage[_]]   = Inlet("GatewayHandlerGraphStage.in")
   val out: Outlet[GatewayMessage[_]] = Outlet("GatewayHandlerGraphStage.out")
 
   override def shape: FlowShape[GatewayMessage[_], GatewayMessage[_]] =
@@ -73,21 +58,16 @@ class GatewayHandlerGraphStage(
 
   override def createLogicAndMaterializedValue(
       inheritedAttributes: Attributes
-  ): (
-      GraphStageLogic,
-      (Future[(Option[ResumeData], Boolean)], Future[Unit])
-  ) = {
-    val resumePromise = Promise[(Option[ResumeData], Boolean)]()
+  ): (GraphStageLogic, (Future[(Option[ResumeData], Boolean)], Future[Unit])) = {
+    val resumePromise          = Promise[(Option[ResumeData], Boolean)]()
     val successullStartPromise = Promise[Unit]()
 
-    val logic = new TimerGraphStageLogicWithLogging(shape)
-      with InHandler
-      with OutHandler {
+    val logic = new TimerGraphStageLogicWithLogging(shape) with InHandler with OutHandler {
       var resume: ResumeData = prevResume.orNull
-      var receivedAck = false
-      var currentSeq: Int = -1
+      var receivedAck        = false
+      var currentSeq: Int    = -1
 
-      val HeartbeatTimerKey: String = "HeartbeatTimer"
+      val HeartbeatTimerKey: String  = "HeartbeatTimer"
       val ReidentifyTimerKey: String = "ReidentifyTimer"
 
       def currentGatewayInfo(): GatewayInfo = GatewayInfo(
@@ -99,10 +79,7 @@ class GatewayHandlerGraphStage(
       )
 
       def restart(resumable: Boolean, waitBeforeRestart: Boolean): Unit = {
-        resumePromise.success(
-          if (resumable) (Some(resume), waitBeforeRestart)
-          else (None, waitBeforeRestart)
-        )
+        resumePromise.success(if (resumable) (Some(resume), waitBeforeRestart) else (None, waitBeforeRestart))
         completeStage()
       }
 
@@ -117,12 +94,7 @@ class GatewayHandlerGraphStage(
                 compress = settings.compress == Compress.PerMessageCompress,
                 largeThreshold = settings.largeThreshold,
                 shard = Seq(settings.shardNum, settings.shardTotal),
-                presence = PresenceData(
-                  settings.idleSince,
-                  settings.activities,
-                  settings.status,
-                  afk = settings.afk
-                ),
+                presence = PresenceData(settings.idleSince, settings.activities, settings.status, afk = settings.afk),
                 intents = settings.intents
               )
             )
@@ -133,11 +105,7 @@ class GatewayHandlerGraphStage(
       def handleHello(data: HelloData): Unit = {
         identify()
         receivedAck = true
-        scheduleAtFixedRate(
-          HeartbeatTimerKey,
-          0.millis,
-          data.heartbeatInterval.millis
-        )
+        scheduleAtFixedRate(HeartbeatTimerKey, 0.millis, data.heartbeatInterval.millis)
       }
 
       override def onPush(): Unit = {
@@ -156,13 +124,9 @@ class GatewayHandlerGraphStage(
             resume = event match {
               case GatewayEvent.Ready(_, readyData) =>
                 readyData.value match {
-                  case Right(ready) =>
-                    ResumeData(settings.token, ready.sessionId, seq)
+                  case Right(ready) => ResumeData(settings.token, ready.sessionId, seq)
                   case Left(e) =>
-                    log.error(
-                      e,
-                      "Failed to decode ready event. Stuff will probably break on resume"
-                    )
+                    log.error(e, "Failed to decode ready event. Stuff will probably break on resume")
                     null
                 }
 
@@ -180,17 +144,12 @@ class GatewayHandlerGraphStage(
             log.debug("Restarting connection because of reconnect")
             restart(resumable = true, waitBeforeRestart = false)
           case InvalidSession(resumable, _) =>
-            log.debug(
-              s"Restarting connection because of invalid session. Resumable: $resumable"
-            )
+            log.debug(s"Restarting connection because of invalid session. Resumable: $resumable")
             if (!resumable) {
               resume = null
             }
 
-            scheduleOnce(
-              ReidentifyTimerKey,
-              ThreadLocalRandom.current().nextDouble(1, 5).seconds
-            )
+            scheduleOnce(ReidentifyTimerKey, ThreadLocalRandom.current().nextDouble(1, 5).seconds)
           case _ => //Ignore
         }
 
@@ -212,8 +171,7 @@ class GatewayHandlerGraphStage(
       }
 
       override def onDownstreamFinish(cause: Throwable): Unit = {
-        if (!resumePromise.isCompleted)
-          resumePromise.trySuccess((Option(resume), false))
+        if (!resumePromise.isCompleted) resumePromise.trySuccess((Option(resume), false))
 
         super.onDownstreamFinish(cause)
       }
@@ -223,14 +181,9 @@ class GatewayHandlerGraphStage(
           case HeartbeatTimerKey =>
             if (receivedAck) {
               log.debug("Sending heartbeat")
-              emit(
-                out,
-                Heartbeat(Option(resume).map(_.seq), currentGatewayInfo())
-              )
+              emit(out, Heartbeat(Option(resume).map(_.seq), currentGatewayInfo()))
             } else {
-              val e = new IllegalStateException(
-                "Did not receive HeartbeatACK between heartbeats"
-              )
+              val e = new IllegalStateException("Did not receive HeartbeatACK between heartbeats")
               failStage(e)
               resumePromise.failure(e)
               successullStartPromise.tryFailure(e)
@@ -249,8 +202,7 @@ class GatewayHandlerGraphStage(
       override def postStop(): Unit = {
         val e = new AbruptStageTerminationException(this)
         if (!resumePromise.isCompleted) resumePromise.tryFailure(e)
-        if (!successullStartPromise.isCompleted)
-          successullStartPromise.tryFailure(e)
+        if (!successullStartPromise.isCompleted) successullStartPromise.tryFailure(e)
       }
 
       setHandler(out, this)
@@ -261,12 +213,8 @@ class GatewayHandlerGraphStage(
 }
 object GatewayHandlerGraphStage {
 
-  def flow(
-      wsUri: Uri,
-      settings: GatewaySettings,
-      prevResume: Option[ResumeData]
-  )(implicit
-      system: ActorSystem[Nothing]
+  def flow(wsUri: Uri, settings: GatewaySettings, prevResume: Option[ResumeData])(
+      implicit system: ActorSystem[Nothing]
   ): Flow[GatewayMessage[_], GatewayMessage[
     _
   ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] = {
@@ -274,11 +222,7 @@ object GatewayHandlerGraphStage {
       createMessage
         .viaMat(wsFlow(wsUri))(Keep.right)
         .viaMat(
-          parseMessage(
-            settings.compress,
-            settings.eventDecoders,
-            ShardInfo(settings.shardTotal, settings.shardNum)
-          )
+          parseMessage(settings.compress, settings.eventDecoders, ShardInfo(settings.shardTotal, settings.shardNum))
         )(Keep.left)
         .collect {
           case Right(msg) => msg
@@ -286,17 +230,14 @@ object GatewayHandlerGraphStage {
         }
         .named("GatewayMessageProcessing")
 
-    val gatewayLifecycle =
-      new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
+    val gatewayLifecycle = new GatewayHandlerGraphStage(settings, prevResume).named("GatewayLogic")
 
     val graph = GraphDSL.create(msgFlow, gatewayLifecycle)(Keep.both) {
       implicit builder => (network, gatewayLifecycle) =>
         import GraphDSL.Implicits._
 
-        val sendMessages =
-          builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
-        val receivedMessages =
-          builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
+        val sendMessages     = builder.add(Merge[GatewayMessage[_]](2, eagerComplete = true))
+        val receivedMessages = builder.add(Broadcast[GatewayMessage[_]](2, eagerCancel = true))
 
         // format: OFF
         network ~> receivedMessages
@@ -314,20 +255,15 @@ object GatewayHandlerGraphStage {
     * Turn a websocket [[akka.http.scaladsl.model.ws.Message]] into a
     * [[GatewayMessage]].
     */
-  def parseMessage(
-      compress: Compress,
-      eventDecoders: GatewayProtocol.EventDecoders,
-      shardInfo: ShardInfo
-  )(implicit
-      system: ActorSystem[Nothing]
+  def parseMessage(compress: Compress, eventDecoders: GatewayProtocol.EventDecoders, shardInfo: ShardInfo)(
+      implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, GatewayMessage[_]], NotUsed] = {
     val stringFlow = compress match {
       case Compress.NoCompress =>
         Flow[Message]
           .collect {
-            case t: TextMessage => t.textStream
-            case b: BinaryMessage =>
-              b.dataStream.fold(ByteString.empty)(_ ++ _).map(_.utf8String)
+            case t: TextMessage   => t.textStream
+            case b: BinaryMessage => b.dataStream.fold(ByteString.empty)(_ ++ _).map(_.utf8String)
           }
           .flatMapConcat(_.fold("")(_ + _))
       case Compress.PerMessageCompress =>
@@ -335,10 +271,7 @@ object GatewayHandlerGraphStage {
           .collect {
             case t: TextMessage => t.textStream
             case b: BinaryMessage =>
-              b.dataStream
-                .fold(ByteString.empty)(_ ++ _)
-                .via(Compression.inflate())
-                .map(_.utf8String)
+              b.dataStream.fold(ByteString.empty)(_ ++ _).via(Compression.inflate()).map(_.utf8String)
           }
           .flatMapConcat(_.fold("")(_ + _))
       case Compress.ZLibStreamCompress =>
@@ -355,14 +288,11 @@ object GatewayHandlerGraphStage {
               }
             )
           )
-          val splitBinaryText =
-            splitBinary.out(0).map(_.asInstanceOf[TextMessage])
-          val splitBinaryBinary =
-            splitBinary.out(1).map(_.asInstanceOf[BinaryMessage])
-          val allStrings = builder.add(Merge[String](2))
+          val splitBinaryText   = splitBinary.out(0).map(_.asInstanceOf[TextMessage])
+          val splitBinaryBinary = splitBinary.out(1).map(_.asInstanceOf[BinaryMessage])
+          val allStrings        = builder.add(Merge[String](2))
 
-          val unwrapText =
-            Flow[TextMessage].flatMapConcat(_.textStream.fold("")(_ + _))
+          val unwrapText = Flow[TextMessage].flatMapConcat(_.textStream.fold("")(_ + _))
 
           // format: OFF
           in ~> splitBinary
@@ -376,13 +306,10 @@ object GatewayHandlerGraphStage {
         Flow.fromGraph(graph)
     }
 
-    implicit val logger: LoggingAdapter =
-      Logging(system.classicSystem, "ackcord.gateway.ReceivedWSMessage")
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.ReceivedWSMessage")
 
     val withLogging = if (AckCordGatewaySettings().LogReceivedWs) {
-      stringFlow
-        .log("Received payload")
-        .withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
+      stringFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
     } else stringFlow
 
     withLogging.map(parser.parse).statefulMapConcat { () =>
@@ -390,13 +317,7 @@ object GatewayHandlerGraphStage {
 
       parsed => {
         val wsMessageParsed = parsed
-          .flatMap(json =>
-            GatewayProtocol.decodeWsMessage(
-              eventDecoders,
-              GatewayInfo(shardInfo, seq),
-              json.hcursor
-            )
-          )
+          .flatMap(json => GatewayProtocol.decodeWsMessage(eventDecoders, GatewayInfo(shardInfo, seq), json.hcursor))
         wsMessageParsed.foreach {
           case Dispatch(sequence, _, _) => seq = sequence
           case _                        =>
@@ -411,38 +332,26 @@ object GatewayHandlerGraphStage {
     * Turn a [[GatewayMessage]] into a websocket
     * [[akka.http.scaladsl.model.ws.Message]].
     */
-  def createMessage(implicit
-      system: ActorSystem[Nothing]
-  ): Flow[GatewayMessage[_], Message, NotUsed] = {
-    implicit val logger: LoggingAdapter =
-      Logging(system.classicSystem, "ackcord.gateway.SentWSMessage")
+  def createMessage(implicit system: ActorSystem[Nothing]): Flow[GatewayMessage[_], Message, NotUsed] = {
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.gateway.SentWSMessage")
 
     val flow = Flow[GatewayMessage[_]].map { case msg: GatewayMessage[d] =>
       msg match {
-        case PresenceUpdate(data, _) =>
-          data.activities.foreach(_.requireCanSend())
-        case _ =>
+        case PresenceUpdate(data, _) => data.activities.foreach(_.requireCanSend())
+        case _                       =>
       }
 
-      val json = msg
-        .asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]])
-        .noSpaces
-      require(
-        json.getBytes.length < 4096,
-        "Can only send at most 4096 bytes in a message over the gateway"
-      )
+      val json = msg.asJson(wsMessageEncoder.asInstanceOf[Encoder[GatewayMessage[d]]]).noSpaces
+      require(json.getBytes.length < 4096, "Can only send at most 4096 bytes in a message over the gateway")
       TextMessage(json)
     }
 
-    if (AckCordGatewaySettings().LogSentWs) flow.log("Sending payload", _.text)
-    else flow
+    if (AckCordGatewaySettings().LogSentWs) flow.log("Sending payload", _.text) else flow
   }
 
   private def wsFlow(
       wsUri: Uri
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Flow[Message, Message, Future[WebSocketUpgradeResponse]] = {
+  )(implicit system: ActorSystem[Nothing]): Flow[Message, Message, Future[WebSocketUpgradeResponse]] = {
     import akka.actor.typed.scaladsl.adapter._
     Http(system.toClassic).webSocketClientFlow(wsUri)
   }

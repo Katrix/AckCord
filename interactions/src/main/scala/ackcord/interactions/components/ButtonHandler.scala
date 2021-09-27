@@ -7,12 +7,9 @@ import ackcord.requests.Requests
 
 abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
     requests: Requests,
-    interactionTransformer: DataInteractionTransformer[shapeless.Const[
-      ComponentInteraction
-    ]#λ, shapeless.Const[
+    interactionTransformer: DataInteractionTransformer[shapeless.Const[ComponentInteraction]#λ, shapeless.Const[
       InteractionTpe
-    ]#λ] = DataInteractionTransformer
-      .identity[shapeless.Const[ComponentInteraction]#λ]
+    ]#λ] = DataInteractionTransformer.identity[shapeless.Const[ComponentInteraction]#λ]
 ) extends ComponentHandler[ComponentInteraction, InteractionTpe](
       requests,
       interactionTransformer,
@@ -25,8 +22,7 @@ abstract class ButtonHandler[InteractionTpe <: ComponentInteraction](
       interaction: RawInteraction,
       cacheSnapshot: Option[CacheSnapshot]
   ): ComponentInteraction = cacheSnapshot match {
-    case Some(value) =>
-      BaseCacheComponentInteraction(invocationInfo, message, value)
-    case None => StatelessComponentInteraction(invocationInfo, message)
+    case Some(value) => BaseCacheComponentInteraction(invocationInfo, message, value)
+    case None        => StatelessComponentInteraction(invocationInfo, message)
   }
 }

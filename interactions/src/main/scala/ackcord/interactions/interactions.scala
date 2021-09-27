@@ -51,27 +51,24 @@ case class CommandInvocationInfo[A](
 trait Interaction {
   def interactionInvocationInfo: InteractionInvocationInfo
 
-  def id: InteractionId = interactionInvocationInfo.id
-  def optGuildId: Option[GuildId] = interactionInvocationInfo.guildId
-  def channelId: TextChannelId = interactionInvocationInfo.channelId
-  def user: User = interactionInvocationInfo.user
-  def optMember: Option[GuildMember] =
-    interactionInvocationInfo.member.map(_.toGuildMember(optGuildId.get))
-  def optMemberPermissions: Option[Permission] =
-    interactionInvocationInfo.memberPermissions
-  def token: String = interactionInvocationInfo.token
-  def webhookId: SnowflakeType[Webhook] = interactionInvocationInfo.webhookId
+  def id: InteractionId                        = interactionInvocationInfo.id
+  def optGuildId: Option[GuildId]              = interactionInvocationInfo.guildId
+  def channelId: TextChannelId                 = interactionInvocationInfo.channelId
+  def user: User                               = interactionInvocationInfo.user
+  def optMember: Option[GuildMember]           = interactionInvocationInfo.member.map(_.toGuildMember(optGuildId.get))
+  def optMemberPermissions: Option[Permission] = interactionInvocationInfo.memberPermissions
+  def token: String                            = interactionInvocationInfo.token
+  def webhookId: SnowflakeType[Webhook]        = interactionInvocationInfo.webhookId
 
   def optCache: Option[CacheSnapshot]
 }
 
 trait CommandInteraction[A] extends Interaction {
   def commandInvocationInfo: CommandInvocationInfo[A]
-  override def interactionInvocationInfo: InteractionInvocationInfo =
-    commandInvocationInfo.interactionInfo
+  override def interactionInvocationInfo: InteractionInvocationInfo = commandInvocationInfo.interactionInfo
 
   def commandId: CommandId = commandInvocationInfo.commandId
-  def args: A = commandInvocationInfo.args
+  def args: A              = commandInvocationInfo.args
 }
 
 trait ComponentInteraction extends Interaction {
@@ -86,13 +83,9 @@ trait CacheInteraction extends Interaction {
   def cache: CacheSnapshot
   override def optCache: Option[CacheSnapshot] = Some(cache)
 }
-trait CacheComponentInteraction
-    extends CacheInteraction
-    with ComponentInteraction
-trait CacheMenuInteraction extends CacheInteraction with MenuInteraction
-trait CacheCommandInteraction[A]
-    extends CacheInteraction
-    with CommandInteraction[A]
+trait CacheComponentInteraction  extends CacheInteraction with ComponentInteraction
+trait CacheMenuInteraction       extends CacheInteraction with MenuInteraction
+trait CacheCommandInteraction[A] extends CacheInteraction with CommandInteraction[A]
 
 case class BaseCacheComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
@@ -105,22 +98,16 @@ case class BaseCacheMenuInteraction(
     values: Seq[String],
     cache: CacheSnapshot
 ) extends CacheMenuInteraction
-case class BaseCacheCommandInteraction[A](
-    commandInvocationInfo: CommandInvocationInfo[A],
-    cache: CacheSnapshot
-) extends CacheCommandInteraction[A]
+case class BaseCacheCommandInteraction[A](commandInvocationInfo: CommandInvocationInfo[A], cache: CacheSnapshot)
+    extends CacheCommandInteraction[A]
 
 trait ResolvedInteraction extends CacheInteraction {
   def textChannel: TextChannel
   def optGuild: Option[GatewayGuild]
 }
-trait ResolvedComponentInteraction
-    extends ResolvedInteraction
-    with ComponentInteraction
-trait ResolvedMenuInteraction extends ResolvedInteraction with MenuInteraction
-trait ResolvedCommandInteraction[A]
-    extends ResolvedInteraction
-    with CommandInteraction[A]
+trait ResolvedComponentInteraction  extends ResolvedInteraction with ComponentInteraction
+trait ResolvedMenuInteraction       extends ResolvedInteraction with MenuInteraction
+trait ResolvedCommandInteraction[A] extends ResolvedInteraction with CommandInteraction[A]
 
 case class BaseResolvedComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
@@ -153,13 +140,9 @@ trait GuildInteraction extends ResolvedInteraction {
 
   override def optGuild: Option[GatewayGuild] = Some(guild)
 }
-trait GuildComponentInteraction
-    extends GuildInteraction
-    with ComponentInteraction
-trait GuildMenuInteraction extends GuildInteraction with MenuInteraction
-trait GuildCommandInteraction[A]
-    extends GuildInteraction
-    with CommandInteraction[A]
+trait GuildComponentInteraction  extends GuildInteraction with ComponentInteraction
+trait GuildMenuInteraction       extends GuildInteraction with MenuInteraction
+trait GuildCommandInteraction[A] extends GuildInteraction with CommandInteraction[A]
 
 case class BaseGuildComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
@@ -192,15 +175,9 @@ case class BaseGuildCommandInteraction[A](
 trait VoiceChannelInteraction extends GuildInteraction {
   def voiceChannel: VoiceGuildChannel
 }
-trait VoiceChannelComponentInteraction
-    extends VoiceChannelInteraction
-    with ComponentInteraction
-trait VoiceChannelMenuInteraction
-    extends VoiceChannelInteraction
-    with MenuInteraction
-trait VoiceChannelCommandInteraction[A]
-    extends VoiceChannelInteraction
-    with CommandInteraction[A]
+trait VoiceChannelComponentInteraction  extends VoiceChannelInteraction with ComponentInteraction
+trait VoiceChannelMenuInteraction       extends VoiceChannelInteraction with MenuInteraction
+trait VoiceChannelCommandInteraction[A] extends VoiceChannelInteraction with CommandInteraction[A]
 
 case class BaseVoiceChannelComponentInteraction(
     interactionInvocationInfo: InteractionInvocationInfo,
@@ -257,9 +234,7 @@ case class StatelessCommandInteraction[A](
 trait DataInteractionTransformer[From[_], To[_]] { outer =>
   def filter[A](from: From[A]): Either[Option[String], To[A]]
 
-  def andThen[To2[_]](
-      transformer: DataInteractionTransformer[To, To2]
-  ): DataInteractionTransformer[From, To2] =
+  def andThen[To2[_]](transformer: DataInteractionTransformer[To, To2]): DataInteractionTransformer[From, To2] =
     new DataInteractionTransformer[From, To2] {
       override def filter[A](from: From[A]): Either[Option[String], To2[A]] =
         outer.filter(from).flatMap(transformer.filter)
@@ -272,12 +247,9 @@ trait DataInteractionTransformer[From[_], To[_]] { outer =>
 }
 object DataInteractionTransformer {
 
-  def identity[F[_]]: DataInteractionTransformer[F, F] =
-    new DataInteractionTransformer[F, F] {
-      override def filter[A](from: F[A]): Either[Option[String], F[A]] = Right(
-        from
-      )
-    }
+  def identity[F[_]]: DataInteractionTransformer[F, F] = new DataInteractionTransformer[F, F] {
+    override def filter[A](from: F[A]): Either[Option[String], F[A]] = Right(from)
+  }
 
   /** A command transformer which resolves most ids from the cache. */
   def resolved[I[A] <: CacheInteraction, O[_]](
@@ -289,10 +261,8 @@ object DataInteractionTransformer {
       val res = from.optGuildId match {
         case Some(guildId) =>
           for {
-            channel <- from.channelId
-              .asChannelId[TextGuildChannel]
-              .resolve(guildId)
-            guild <- guildId.resolve
+            channel <- from.channelId.asChannelId[TextGuildChannel].resolve(guildId)
+            guild   <- guildId.resolve
           } yield create(channel, Some(guild))(from)
 
         case None =>
@@ -305,25 +275,18 @@ object DataInteractionTransformer {
 
   /** A command function that only allows commands sent from a guild. */
   def onlyInGuild[I[A] <: ResolvedInteraction, O[_]](
-      create: (
-          GatewayGuild,
-          GuildMember,
-          Permission,
-          TextGuildChannel
-      ) => I ~> O
+      create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I ~> O
   ): DataInteractionTransformer[I, O] =
     new DataInteractionTransformer[I, O] {
 
       override def filter[A](from: I[A]): Either[Option[String], O[A]] = {
         from.optGuild match {
           case Some(guild) =>
-            val member = from.optMember.get
+            val member            = from.optMember.get
             val memberPermissions = from.optMemberPermissions.get
-            val textGuildChannel = from.asInstanceOf[TextGuildChannel]
+            val textGuildChannel  = from.asInstanceOf[TextGuildChannel]
 
-            Right(
-              create(guild, member, memberPermissions, textGuildChannel)(from)
-            )
+            Right(create(guild, member, memberPermissions, textGuildChannel)(from))
           case None =>
             Left(Some(s"This command can only be used in a guild"))
         }
@@ -341,9 +304,7 @@ object DataInteractionTransformer {
         .get(from.user.id)
         .flatMap(_.channelId)
         .flatMap(_.resolve(from.guild.id))
-        .toRight(
-          Some(s"This command can only be used while in a voice channel")
-        )
+        .toRight(Some(s"This command can only be used while in a voice channel"))
         .map(vCh => create(vCh)(from))
     }
   }
@@ -365,29 +326,20 @@ object DataInteractionTransformer {
   }
 }
 
-class DataInteractionFunction[From[_], To[_]](f: FunctionK[From, To])
-    extends DataInteractionTransformer[From, To] {
-  override def filter[A](from: From[A]): Either[Option[String], To[A]] = Right(
-    f(from)
-  )
+class DataInteractionFunction[From[_], To[_]](f: FunctionK[From, To]) extends DataInteractionTransformer[From, To] {
+  override def filter[A](from: From[A]): Either[Option[String], To[A]] = Right(f(from))
 }
 
 trait InteractionTransformer[From, To]
-    extends DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[
-      To
-    ]#λ] {
-  override def filter[A](from: From): Either[Option[String], To] = filterSimple(
-    from
-  )
+    extends DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ] {
+  override def filter[A](from: From): Either[Option[String], To] = filterSimple(from)
 
   def filterSimple(from: From): Either[Option[String], To]
 }
 object InteractionTransformer {
 
   def fromComplex[From, To](
-      complex: DataInteractionTransformer[shapeless.Const[
-        From
-      ]#λ, shapeless.Const[To]#λ]
+      complex: DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ]
   ): InteractionTransformer[From, To] =
     (from: From) => complex.filter(from)
 
@@ -395,9 +347,7 @@ object InteractionTransformer {
       create: Info1 => From => To,
       makeComplex: (
           Info1 => shapeless.Const[From]#λ ~> shapeless.Const[To]#λ
-      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[
-        To
-      ]#λ]
+      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ]
   ): InteractionTransformer[From, To] = {
     fromComplex(
       makeComplex(info1 =>
@@ -412,9 +362,7 @@ object InteractionTransformer {
       create: (Info1, Info2) => From => To,
       makeComplex: (
           (Info1, Info2) => shapeless.Const[From]#λ ~> shapeless.Const[To]#λ
-      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[
-        To
-      ]#λ]
+      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ]
   ): InteractionTransformer[From, To] =
     fromComplexCreate1[From, To, (Info1, Info2)](
       create.tupled,
@@ -424,15 +372,8 @@ object InteractionTransformer {
   def fromComplexCreate[From, To, Info1, Info2, Info3, Info4](
       create: (Info1, Info2, Info3, Info4) => From => To,
       makeComplex: (
-          (
-              Info1,
-              Info2,
-              Info3,
-              Info4
-          ) => shapeless.Const[From]#λ ~> shapeless.Const[To]#λ
-      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[
-        To
-      ]#λ]
+          (Info1, Info2, Info3, Info4) => shapeless.Const[From]#λ ~> shapeless.Const[To]#λ
+      ) => DataInteractionTransformer[shapeless.Const[From]#λ, shapeless.Const[To]#λ]
   ): InteractionTransformer[From, To] =
     fromComplexCreate1[From, To, (Info1, Info2, Info3, Info4)](
       create.tupled,
@@ -447,30 +388,16 @@ object InteractionTransformer {
   ): InteractionTransformer[I, O] =
     fromComplexCreate[I, O, TextChannel, Option[GatewayGuild]](
       create,
-      DataInteractionTransformer
-        .resolved[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
+      DataInteractionTransformer.resolved[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   /** A command function that only allows commands sent from a guild. */
   def onlyInGuild[I <: ResolvedInteraction, O](
-      create: (
-          GatewayGuild,
-          GuildMember,
-          Permission,
-          TextGuildChannel
-      ) => I => O
+      create: (GatewayGuild, GuildMember, Permission, TextGuildChannel) => I => O
   ): InteractionTransformer[I, O] =
-    fromComplexCreate[
-      I,
-      O,
-      GatewayGuild,
-      GuildMember,
-      Permission,
-      TextGuildChannel
-    ](
+    fromComplexCreate[I, O, GatewayGuild, GuildMember, Permission, TextGuildChannel](
       create,
-      DataInteractionTransformer
-        .onlyInGuild[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
+      DataInteractionTransformer.onlyInGuild[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   def inVoiceChannel[I <: GuildInteraction, O](
@@ -478,8 +405,7 @@ object InteractionTransformer {
   ): InteractionTransformer[I, O] =
     fromComplexCreate1[I, O, VoiceGuildChannel](
       create,
-      DataInteractionTransformer
-        .inVoiceChannel[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
+      DataInteractionTransformer.inVoiceChannel[shapeless.Const[I]#λ, shapeless.Const[O]#λ]
     )
 
   /**
@@ -489,57 +415,42 @@ object InteractionTransformer {
   def needPermission[M <: GuildInteraction](
       neededPermission: Permission
   ): InteractionTransformer[M, M] = fromComplex(
-    DataInteractionTransformer
-      .needPermission[shapeless.Const[M]#λ](neededPermission)
+    DataInteractionTransformer.needPermission[shapeless.Const[M]#λ](neededPermission)
   )
 }
 
 sealed trait InteractionResponse {
   def toRawInteractionResponse: RawInteractionResponse = this match {
-    case InteractionResponse.Pong =>
-      RawInteractionResponse(InteractionResponseType.Pong, None)
+    case InteractionResponse.Pong => RawInteractionResponse(InteractionResponseType.Pong, None)
     case InteractionResponse.Acknowledge(_) =>
-      RawInteractionResponse(
-        InteractionResponseType.DeferredChannelMessageWithSource,
-        None
-      )
+      RawInteractionResponse(InteractionResponseType.DeferredChannelMessageWithSource, None)
     case InteractionResponse.UpdateMessageLater(_) =>
-      RawInteractionResponse(
-        InteractionResponseType.DeferredUpdateMessage,
-        None
-      )
+      RawInteractionResponse(InteractionResponseType.DeferredUpdateMessage, None)
     case InteractionResponse.UpdateMessage(data, _) =>
       RawInteractionResponse(InteractionResponseType.UpdateMessage, Some(data))
     case InteractionResponse.ChannelMessage(message, _) =>
-      RawInteractionResponse(
-        InteractionResponseType.ChannelMessageWithSource,
-        Some(message)
-      )
+      RawInteractionResponse(InteractionResponseType.ChannelMessageWithSource, Some(message))
   }
 }
 object InteractionResponse {
   sealed trait AsyncMessageable extends InteractionResponse {
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(
+        implicit interaction: Interaction
     ): InteractionResponse
   }
 
-  case object Pong extends InteractionResponse
-  case class Acknowledge(andThenDo: () => OptFuture[_])
-      extends InteractionResponse
-  case class UpdateMessageLater(andThenDo: () => OptFuture[_])
-      extends InteractionResponse
+  case object Pong                                             extends InteractionResponse
+  case class Acknowledge(andThenDo: () => OptFuture[_])        extends InteractionResponse
+  case class UpdateMessageLater(andThenDo: () => OptFuture[_]) extends InteractionResponse
   case class UpdateMessage(
       message: RawInteractionApplicationCommandCallbackData,
       andThenDo: () => OptFuture[_]
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    override def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
-    ): InteractionResponse = copy(andThenDo =
-      () => action(AsyncToken.fromInteractionWithMessage(interaction))
-    )
+    override def doAsync(action: AsyncMessageToken => OptFuture[_])(
+        implicit interaction: Interaction
+    ): InteractionResponse = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
   case class ChannelMessage(
       message: RawInteractionApplicationCommandCallbackData,
@@ -547,10 +458,8 @@ object InteractionResponse {
   ) extends InteractionResponse
       with AsyncMessageable {
 
-    def doAsync(action: AsyncMessageToken => OptFuture[_])(implicit
-        interaction: Interaction
-    ): ChannelMessage = copy(andThenDo =
-      () => action(AsyncToken.fromInteractionWithMessage(interaction))
-    )
+    def doAsync(action: AsyncMessageToken => OptFuture[_])(
+        implicit interaction: Interaction
+    ): ChannelMessage = copy(andThenDo = () => action(AsyncToken.fromInteractionWithMessage(interaction)))
   }
 }

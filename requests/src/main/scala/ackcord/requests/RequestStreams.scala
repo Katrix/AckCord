@@ -35,15 +35,7 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.stream.scaladsl.{
-  Flow,
-  FlowWithContext,
-  GraphDSL,
-  Keep,
-  Merge,
-  Partition,
-  Source
-}
+import akka.stream.scaladsl.{Flow, FlowWithContext, GraphDSL, Keep, Merge, Partition, Source}
 import akka.stream.{Attributes, FlowShape}
 import akka.util.ByteString
 import io.circe.Json
@@ -55,8 +47,7 @@ object RequestStreams {
       response: HttpResponse
   ): Option[H] =
     response.headers.collectFirst {
-      case h if h.lowercaseName == companion.lowercaseName =>
-        companion.parse(h.value).toOption
+      case h if h.lowercaseName == companion.lowercaseName => companion.parse(h.value).toOption
     }.flatten
 
   private def remainingRequests(response: HttpResponse): Int =
@@ -65,24 +56,17 @@ object RequestStreams {
   private def requestsForUri(response: HttpResponse): Int =
     findCustomHeader(`X-RateLimit-Limit`, response).fold(-1)(_.limit)
 
-  private def timeTilReset(
-      relativeTime: Boolean,
-      response: HttpResponse
-  ): FiniteDuration = {
+  private def timeTilReset(relativeTime: Boolean, response: HttpResponse): FiniteDuration = {
     if (relativeTime) {
-      findCustomHeader(`X-RateLimit-Reset-After`, response).fold(-1.millis)(
-        _.resetIn
-      )
+      findCustomHeader(`X-RateLimit-Reset-After`, response).fold(-1.millis)(_.resetIn)
     } else {
-      findCustomHeader(`X-RateLimit-Reset`, response).fold(-1.millis) {
-        header =>
-          // A race condition exists with using the absolute rate limit
-          // if the reset time sent from Discord is before the time that this line runs
-          // then this value would be negative and RatelimitInfo would be invalid
-          // Taking the max of the difference and 1 millisecond ensures that the next
-          // rate limit reset is in the future.
-          (header.resetAt.toEpochMilli - System.currentTimeMillis()).millis
-            .max(1.milli)
+      findCustomHeader(`X-RateLimit-Reset`, response).fold(-1.millis) { header =>
+        // A race condition exists with using the absolute rate limit
+        // if the reset time sent from Discord is before the time that this line runs
+        // then this value would be negative and RatelimitInfo would be invalid
+        // Taking the max of the difference and 1 millisecond ensures that the next
+        // rate limit reset is in the future.
+        (header.resetAt.toEpochMilli - System.currentTimeMillis()).millis.max(1.milli)
       }
     }
   }
@@ -90,13 +74,8 @@ object RequestStreams {
   private def isGlobalRatelimit(response: HttpResponse): Boolean =
     findCustomHeader(`X-Ratelimit-Global`, response).fold(false)(_.isGlobal)
 
-  private def requestBucket(
-      route: RequestRoute,
-      response: HttpResponse
-  ): String =
-    findCustomHeader(`X-RateLimit-Bucket`, response).fold(
-      route.uriWithoutMajor
-    )(
+  private def requestBucket(route: RequestRoute, response: HttpResponse): String =
+    findCustomHeader(`X-RateLimit-Bucket`, response).fold(route.uriWithoutMajor)(
       _.identifier
     ) //Sadly this is not always present
 
@@ -111,17 +90,11 @@ object RequestStreams {
     */
   def requestFlowWithoutRatelimit[Data, Ctx](
       requestSettings: RequestSettings
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] =
     FlowWithContext.fromTuples(
       createHttpRequestFlow[Data, Ctx](requestSettings)
         .via(requestHttpFlow)
-        .via(
-          Flow
-            .apply[(Try[HttpResponse], (Request[Data], Ctx))]
-            .map(t => ((t._1, t._2._1), t._2._2))
-        )
+        .via(Flow.apply[(Try[HttpResponse], (Request[Data], Ctx))].map(t => ((t._1, t._2._1), t._2._2)))
         .via(requestParser[Data, Ctx](requestSettings))
         .asFlow
         .alsoTo(
@@ -138,26 +111,15 @@ object RequestStreams {
     */
   def requestFlow[Data, Ctx](
       requestSettings: RequestSettings
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
 
     val graph = GraphDSL.create() { implicit builder =>
       import GraphDSL.Implicits._
 
       val in = builder.add(Flow[(Request[Data], Ctx)])
       val buffer =
-        builder.add(
-          Flow[(Request[Data], Ctx)].buffer(
-            requestSettings.bufferSize,
-            requestSettings.overflowStrategy
-          )
-        )
-      val ratelimits = builder.add(
-        requestSettings.ratelimiter
-          .ratelimitRequests[Data, Ctx]
-          .named("Ratelimiter")
-      )
+        builder.add(Flow[(Request[Data], Ctx)].buffer(requestSettings.bufferSize, requestSettings.overflowStrategy))
+      val ratelimits = builder.add(requestSettings.ratelimiter.ratelimitRequests[Data, Ctx].named("Ratelimiter"))
 
       val partition = builder.add(
         Partition[(Either[RequestDropped, Request[Data]], Ctx)](
@@ -168,15 +130,11 @@ object RequestStreams {
           }
         )
       )
-      val requests = partition.out(0).collect { case (Right(request), ctx) =>
-        request -> ctx
-      }
-      val dropped =
-        partition.out(1).collect { case (Left(dropped), ctx) => dropped -> ctx }
+      val requests = partition.out(0).collect { case (Right(request), ctx) => request -> ctx }
+      val dropped  = partition.out(1).collect { case (Left(dropped), ctx) => dropped -> ctx }
 
-      val network =
-        builder.add(requestFlowWithoutRatelimit[Data, Ctx](requestSettings))
-      val out = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
+      val network = builder.add(requestFlowWithoutRatelimit[Data, Ctx](requestSettings))
+      val out     = builder.add(Merge[(RequestAnswer[Data], Ctx)](2))
 
       // format: OFF
       in ~> buffer ~> ratelimits ~> partition
@@ -190,15 +148,10 @@ object RequestStreams {
     FlowWithContext.fromTuples(Flow.fromGraph(graph))
   }
 
-  private def createHttpRequestFlow[Data, Ctx](
-      requestSettings: RequestSettings
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[
-    Data
-  ], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
-    implicit val logger: LoggingAdapter =
-      Logging(system.classicSystem, "ackcord.rest.SentRESTRequest")
+  private def createHttpRequestFlow[Data, Ctx](requestSettings: RequestSettings)(
+      implicit system: ActorSystem[Nothing]
+  ): FlowWithContext[Request[Data], Ctx, HttpRequest, (Request[Data], Ctx), NotUsed] = {
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.rest.SentRESTRequest")
 
     val baseFlow = FlowWithContext[Request[Data], Ctx]
 
@@ -207,8 +160,7 @@ object RequestStreams {
         baseFlow.log(
           "Sent REST request",
           { request =>
-            val loggingBody =
-              request.bodyForLogging.fold("")(body => s" and content $body")
+            val loggingBody = request.bodyForLogging.fold("")(body => s" and content $body")
             s"to ${request.route.uri} with method ${request.route.method}$loggingBody"
           }
         )
@@ -216,7 +168,7 @@ object RequestStreams {
 
     withLogging.via(Flow[(Request[Data], Ctx)].map { case (request, ctx) =>
       val route = request.route
-      val auth = requestSettings.credentials.map(Authorization(_))
+      val auth  = requestSettings.credentials.map(Authorization(_))
       val httpRequest = HttpRequest(
         route.method,
         route.uri,
@@ -228,22 +180,16 @@ object RequestStreams {
     })
   }.withAttributes(Attributes.name("CreateRequest"))
 
-  private def requestHttpFlow[Data, Ctx](implicit
-      system: ActorSystem[Nothing]
-  ): FlowWithContext[HttpRequest, (Request[Data], Ctx), Try[
-    HttpResponse
-  ], (Request[Data], Ctx), NotUsed] = {
+  private def requestHttpFlow[Data, Ctx](
+      implicit system: ActorSystem[Nothing]
+  ): FlowWithContext[HttpRequest, (Request[Data], Ctx), Try[HttpResponse], (Request[Data], Ctx), NotUsed] = {
     import akka.actor.typed.scaladsl.adapter._
-    FlowWithContext.fromTuples(
-      Http(system.toClassic).superPool[(Request[Data], Ctx)]()
-    )
+    FlowWithContext.fromTuples(Http(system.toClassic).superPool[(Request[Data], Ctx)]())
   }
 
   private def requestParser[Data, Ctx](requestSettings: RequestSettings)(
       implicit system: ActorSystem[Nothing]
-  ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[
-    Data
-  ], Ctx, NotUsed] = {
+  ): FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext[(Try[HttpResponse], Request[Data]), Ctx]
       .mapAsync(requestSettings.parallelism) { case (response, request) =>
         import system.executionContext
@@ -251,11 +197,10 @@ object RequestStreams {
         val route = request.route
         response match {
           case Success(httpResponse) =>
-            val tilReset =
-              timeTilReset(requestSettings.relativeTime, httpResponse)
+            val tilReset     = timeTilReset(requestSettings.relativeTime, httpResponse)
             val tilRatelimit = remainingRequests(httpResponse)
-            val bucketLimit = requestsForUri(httpResponse)
-            val bucket = requestBucket(route, httpResponse)
+            val bucketLimit  = requestsForUri(httpResponse)
+            val bucket       = requestBucket(route, httpResponse)
 
             val ratelimitInfo = RatelimitInfo(
               tilReset,
@@ -280,12 +225,7 @@ object RequestStreams {
                   .runFold(ByteString.empty)(_ ++ _)
                   .map { eBytes =>
                     RequestError(
-                      HttpException(
-                        route.uri,
-                        route.method,
-                        e,
-                        Some(eBytes.utf8String)
-                      ),
+                      HttpException(route.uri, route.method, e, Some(eBytes.utf8String)),
                       route,
                       request.identifier
                     )
@@ -295,15 +235,11 @@ object RequestStreams {
 
                 request
                   .parseResponse(HttpEntity.Empty)
-                  .map(
-                    RequestResponse(_, ratelimitInfo, route, request.identifier)
-                  )
+                  .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
               case _ => //Should be success
                 request
                   .parseResponse(httpResponse.entity)
-                  .map(
-                    RequestResponse(_, ratelimitInfo, route, request.identifier)
-                  )
+                  .map(RequestResponse(_, ratelimitInfo, route, request.identifier))
             }
 
           case Failure(e) =>
@@ -313,18 +249,13 @@ object RequestStreams {
   }.withAttributes(Attributes.name("RequestParser"))
 
   /** A flow that only returns successful responses. */
-  def dataResponses[Data, Ctx]
-      : FlowWithContext[RequestAnswer[Data], Ctx, Data, Ctx, NotUsed] =
-    FlowWithContext[RequestAnswer[Data], Ctx].collect {
-      case response: RequestResponse[Data] => response.data
-    }
+  def dataResponses[Data, Ctx]: FlowWithContext[RequestAnswer[Data], Ctx, Data, Ctx, NotUsed] =
+    FlowWithContext[RequestAnswer[Data], Ctx].collect { case response: RequestResponse[Data] => response.data }
 
   /** A request flow that will retry failed requests. */
   def retryRequestFlow[Data, Ctx](
       requestSettings: RequestSettings
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): FlowWithContext[Request[Data], Ctx, RequestAnswer[Data], Ctx, NotUsed] = {
     FlowWithContext.fromTuples(
       Flow[(Request[Data], Ctx)].flatMapMerge(
         requestSettings.parallelism,
@@ -334,8 +265,7 @@ object RequestStreams {
             .via(RequestStreams.requestFlow(requestSettings))
             .map {
               case (value: RequestResponse[Data], ctx) => value -> ctx
-              case (err: FailedRequest, ctx) =>
-                throw RetryFailedRequestException(err, ctx)
+              case (err: FailedRequest, ctx)           => throw RetryFailedRequestException(err, ctx)
             }
 
           singleFlow
@@ -343,23 +273,18 @@ object RequestStreams {
               requestSettings.maxRetryCount,
               { case RetryFailedRequestException(_, _) => singleFlow }
             )
-            .recover { case RetryFailedRequestException(err, ctx) =>
-              err -> ctx.asInstanceOf[Ctx]
-            }
+            .recover { case RetryFailedRequestException(err, ctx) => err -> ctx.asInstanceOf[Ctx] }
         }
       )
     )
   }
 
-  def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] =
-    Flow[A].flatMapConcat { a =>
-      Source.single(a).via(inner)
-    }
+  def addOrdering[A, B](inner: Flow[A, B, NotUsed]): Flow[A, B, NotUsed] = Flow[A].flatMapConcat { a =>
+    Source.single(a).via(inner)
+  }
 
   def bytestringFromResponse: Flow[ResponseEntity, ByteString, NotUsed] =
-    Flow[ResponseEntity].flatMapConcat(
-      _.dataBytes.fold(ByteString.empty)(_ ++ _)
-    )
+    Flow[ResponseEntity].flatMapConcat(_.dataBytes.fold(ByteString.empty)(_ ++ _))
 
   def jsonDecode: Flow[ResponseEntity, Json, NotUsed] = {
     Flow[ResponseEntity]
@@ -375,15 +300,12 @@ object RequestStreams {
       }
       .via(bytestringFromResponse)
       .map {
-        case ByteString.empty =>
-          throw HttpJsonDecodeException("No data for json decode")
-        case bytes => io.circe.jawn.parseByteBuffer(bytes.asByteBuffer)
+        case ByteString.empty => throw HttpJsonDecodeException("No data for json decode")
+        case bytes            => io.circe.jawn.parseByteBuffer(bytes.asByteBuffer)
       }
       .map(_.fold(throw _, identity))
   }
 
-  def removeContext[I, O, Mat](
-      withContext: FlowWithContext[I, NotUsed, O, NotUsed, Mat]
-  ): Flow[I, O, Mat] =
+  def removeContext[I, O, Mat](withContext: FlowWithContext[I, NotUsed, O, NotUsed, Mat]): Flow[I, O, Mat] =
     Flow[I].map(_ -> NotUsed).viaMat(withContext)(Keep.right).map(_._1)
 }

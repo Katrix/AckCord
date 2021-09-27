@@ -29,12 +29,7 @@ import scala.collection.immutable
 
 import ackcord.data._
 import ackcord.data.raw._
-import ackcord.util.{
-  IntCirceEnumWithUnknown,
-  JsonOption,
-  JsonSome,
-  JsonUndefined
-}
+import ackcord.util.{IntCirceEnumWithUnknown, JsonOption, JsonSome, JsonUndefined}
 import cats.{Eval, Later, Now}
 import enumeratum.values.{IntEnum, IntEnumEntry}
 import io.circe.Decoder.Result
@@ -95,14 +90,11 @@ case class GatewayInfo(
   * @param event
   *   The sent event.
   */
-case class Dispatch[+D](
-    sequence: Int,
-    event: GatewayEvent[D],
-    gatewayInfo: GatewayInfo
-) extends ServerGatewayMessage[D] {
-  override val s: JsonSome[Int] = JsonSome(sequence)
-  override val t: JsonSome[GatewayEvent[D]] = JsonSome(event)
-  override def op: GatewayOpCode = GatewayOpCode.Dispatch
+case class Dispatch[+D](sequence: Int, event: GatewayEvent[D], gatewayInfo: GatewayInfo)
+    extends ServerGatewayMessage[D] {
+  override val s: JsonSome[Int]                    = JsonSome(sequence)
+  override val t: JsonSome[GatewayEvent[D]]        = JsonSome(event)
+  override def op: GatewayOpCode                   = GatewayOpCode.Dispatch
   override def d: Eval[Either[DecodingFailure, D]] = event.data
 }
 
@@ -147,16 +139,11 @@ object IdentifyData {
     * Create a map of the default properties to send with the identify message.
     */
   def createProperties: Map[String, String] =
-    Map(
-      "$os" -> System.getProperty("os.name"),
-      "$browser" -> "AckCord",
-      "$device" -> "AckCord"
-    )
+    Map("$os" -> System.getProperty("os.name"), "$browser" -> "AckCord", "$device" -> "AckCord")
 }
 
 /** Sent by the shard to log in. */
-case class Identify(nowD: IdentifyData)
-    extends EagerGatewayMessage[IdentifyData] {
+case class Identify(nowD: IdentifyData) extends EagerGatewayMessage[IdentifyData] {
   override def op: GatewayOpCode = GatewayOpCode.Identify
 }
 
@@ -202,8 +189,7 @@ case class VoiceStateUpdateData(
 )
 
 /** Sent by the bot to connect to a voice channel. */
-case class VoiceStateUpdate(nowD: VoiceStateUpdateData)
-    extends EagerGatewayMessage[VoiceStateUpdateData] {
+case class VoiceStateUpdate(nowD: VoiceStateUpdateData) extends EagerGatewayMessage[VoiceStateUpdateData] {
   override def op: GatewayOpCode = GatewayOpCode.VoiceStateUpdate
 }
 
@@ -215,15 +201,9 @@ case class VoiceStateUpdate(nowD: VoiceStateUpdateData)
   * @param endpoint
   *   The voice server.
   */
-case class VoiceServerUpdateData(
-    token: String,
-    guildId: GuildId,
-    endpoint: String
-)
-case class VoiceServerUpdate(
-    nowD: VoiceServerUpdateData,
-    gatewayInfo: GatewayInfo
-) extends EagerGatewayMessage[VoiceServerUpdateData]
+case class VoiceServerUpdateData(token: String, guildId: GuildId, endpoint: String)
+case class VoiceServerUpdate(nowD: VoiceServerUpdateData, gatewayInfo: GatewayInfo)
+    extends EagerGatewayMessage[VoiceServerUpdateData]
     with ServerGatewayMessage[VoiceServerUpdateData] {
   override def op: GatewayOpCode = GatewayOpCode.VoiceServerPing
 }
@@ -246,11 +226,9 @@ case class Resume(nowD: ResumeData, gatewayInfo: GatewayInfo)
 }
 
 /** Sent by the gateway to indicate that the shard should reconnect. */
-case class Reconnect(gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[Unit]
-    with ServerGatewayMessage[Unit] {
+case class Reconnect(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[Unit] with ServerGatewayMessage[Unit] {
   override def op: GatewayOpCode = GatewayOpCode.Reconnect
-  override def nowD: Unit = ()
+  override def nowD: Unit        = ()
 }
 
 /**
@@ -274,22 +252,15 @@ case class RequestGuildMembersData(
     userIds: Option[Seq[UserId]],
     nonce: Option[String]
 ) {
-  require(
-    query.isDefined || userIds.isDefined,
-    "Neither query not userIds is specified"
-  )
-  require(
-    nonce.forall(_.getBytes("UTF-8").length <= 32),
-    "Nonce can only be up to 32 bytes"
-  )
+  require(query.isDefined || userIds.isDefined, "Neither query not userIds is specified")
+  require(nonce.forall(_.getBytes("UTF-8").length <= 32), "Nonce can only be up to 32 bytes")
 }
 
 /**
   * Sent by the shard to receive all the members of a guild, even logged out
   * ones.
   */
-case class RequestGuildMembers(nowD: RequestGuildMembersData)
-    extends EagerGatewayMessage[RequestGuildMembersData] {
+case class RequestGuildMembers(nowD: RequestGuildMembersData) extends EagerGatewayMessage[RequestGuildMembersData] {
   override def op: GatewayOpCode = GatewayOpCode.RequestGuildMembers
 }
 
@@ -302,7 +273,7 @@ case class InvalidSession(resumable: Boolean, gatewayInfo: GatewayInfo)
     extends EagerGatewayMessage[Boolean]
     with ServerGatewayMessage[Boolean] {
   override def op: GatewayOpCode = GatewayOpCode.InvalidSession
-  override def nowD: Boolean = resumable
+  override def nowD: Boolean     = resumable
 }
 
 /**
@@ -319,11 +290,9 @@ case class Hello(nowD: HelloData, gatewayInfo: GatewayInfo)
 }
 
 /** Sent by the gateway as a response to [[Heartbeat]]. */
-case class HeartbeatACK(gatewayInfo: GatewayInfo)
-    extends EagerGatewayMessage[Unit]
-    with ServerGatewayMessage[Unit] {
+case class HeartbeatACK(gatewayInfo: GatewayInfo) extends EagerGatewayMessage[Unit] with ServerGatewayMessage[Unit] {
   override def op: GatewayOpCode = GatewayOpCode.HeartbeatACK
-  override def nowD: Unit = ()
+  override def nowD: Unit        = ()
 }
 
 /** All unknown gateway messages. */
@@ -339,21 +308,19 @@ case class UnknownGatewayMessage(op: GatewayOpCode, gatewayInfo: GatewayInfo)
   *   The number of the opcode.
   */
 sealed abstract class GatewayOpCode(val value: Int) extends IntEnumEntry
-object GatewayOpCode
-    extends IntEnum[GatewayOpCode]
-    with IntCirceEnumWithUnknown[GatewayOpCode] {
-  object Dispatch extends GatewayOpCode(0)
-  object Heartbeat extends GatewayOpCode(1)
-  object Identify extends GatewayOpCode(2)
-  object StatusUpdate extends GatewayOpCode(3)
-  object VoiceStateUpdate extends GatewayOpCode(4)
-  object VoiceServerPing extends GatewayOpCode(5)
-  object Resume extends GatewayOpCode(6)
-  object Reconnect extends GatewayOpCode(7)
+object GatewayOpCode extends IntEnum[GatewayOpCode] with IntCirceEnumWithUnknown[GatewayOpCode] {
+  object Dispatch            extends GatewayOpCode(0)
+  object Heartbeat           extends GatewayOpCode(1)
+  object Identify            extends GatewayOpCode(2)
+  object StatusUpdate        extends GatewayOpCode(3)
+  object VoiceStateUpdate    extends GatewayOpCode(4)
+  object VoiceServerPing     extends GatewayOpCode(5)
+  object Resume              extends GatewayOpCode(6)
+  object Reconnect           extends GatewayOpCode(7)
   object RequestGuildMembers extends GatewayOpCode(8)
-  object InvalidSession extends GatewayOpCode(9)
-  object Hello extends GatewayOpCode(10)
-  object HeartbeatACK extends GatewayOpCode(11)
+  object InvalidSession      extends GatewayOpCode(9)
+  object Hello               extends GatewayOpCode(10)
+  object HeartbeatACK        extends GatewayOpCode(11)
 
   override def values: immutable.IndexedSeq[GatewayOpCode] = findValues
 
@@ -415,8 +382,7 @@ object GatewayEvent {
     * Sent to the shard when Discord is ready to serve requests. No requests
     * should be sent before this has been received.
     */
-  case class Ready(rawData: Json, data: Later[Decoder.Result[ReadyData]])
-      extends GatewayEvent[ReadyData] {
+  case class Ready(rawData: Json, data: Later[Decoder.Result[ReadyData]]) extends GatewayEvent[ReadyData] {
     override def name: String = "READY"
   }
 
@@ -439,16 +405,12 @@ object GatewayEvent {
     * @param data
     *   The channel that was created.
     */
-  case class ChannelCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawChannel]]
-  ) extends OptGuildEvent[RawChannel]
+  case class ChannelCreate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends OptGuildEvent[RawChannel]
       with ChannelEvent[RawChannel] {
-    override def name: String = "CHANNEL_CREATE"
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.id)
+    override def name: String                                   = "CHANNEL_CREATE"
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.id)
   }
 
   /**
@@ -456,16 +418,12 @@ object GatewayEvent {
     * @param data
     *   The channel that was edited. This will always be a guild channel.
     */
-  case class ChannelUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawChannel]]
-  ) extends OptGuildEvent[RawChannel]
+  case class ChannelUpdate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends OptGuildEvent[RawChannel]
       with ChannelEvent[RawChannel] {
-    override def name: String = "CHANNEL_UPDATE"
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.id)
+    override def name: String                                   = "CHANNEL_UPDATE"
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.id)
   }
 
   /**
@@ -474,16 +432,12 @@ object GatewayEvent {
     * @param data
     *   The channel that was deleted.
     */
-  case class ChannelDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[RawChannel]]
-  ) extends OptGuildEvent[RawChannel]
+  case class ChannelDelete(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends OptGuildEvent[RawChannel]
       with ChannelEvent[RawChannel] {
-    override def name: String = "CHANNEL_DELETE"
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.id)
+    override def name: String                                   = "CHANNEL_DELETE"
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.id)
   }
 
   /**
@@ -492,14 +446,12 @@ object GatewayEvent {
     * @param data
     *   The thread created or added to.
     */
-  case class ThreadCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawChannel]]
-  ) extends GuildEvent[RawChannel]
+  case class ThreadCreate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends GuildEvent[RawChannel]
       with ChannelEvent[RawChannel] {
-    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId.get)
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId.get)
     override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
-    override def name: String = "THREAD_CREATE"
+    override def name: String                       = "THREAD_CREATE"
   }
 
   /**
@@ -507,14 +459,12 @@ object GatewayEvent {
     * @param data
     *   The thread updated.
     */
-  case class ThreadUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawChannel]]
-  ) extends GuildEvent[RawChannel]
+  case class ThreadUpdate(rawData: Json, data: Later[Decoder.Result[RawChannel]])
+      extends GuildEvent[RawChannel]
       with ChannelEvent[RawChannel] {
-    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId.get)
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId.get)
     override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
-    override def name: String = "THREAD_UPDATE"
+    override def name: String                       = "THREAD_UPDATE"
   }
 
   case class ThreadDeleteData(
@@ -529,14 +479,12 @@ object GatewayEvent {
     * @param data
     *   The deleted thread.
     */
-  case class ThreadDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[ThreadDeleteData]]
-  ) extends GuildEvent[ThreadDeleteData]
+  case class ThreadDelete(rawData: Json, data: Later[Decoder.Result[ThreadDeleteData]])
+      extends GuildEvent[ThreadDeleteData]
       with ChannelEvent[ThreadDeleteData] {
-    override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
+    override def guildId: Eval[Result[GuildId]]     = mapData(_.guildId)
     override def channelId: Eval[Result[ChannelId]] = mapData(_.id)
-    override def name: String = "THREAD_DELETE"
+    override def name: String                       = "THREAD_DELETE"
   }
 
   case class ThreadListSyncData(
@@ -551,12 +499,10 @@ object GatewayEvent {
     * @param data
     *   Data to update threads the user can now see.
     */
-  case class ThreadListSync(
-      rawData: Json,
-      data: Later[Decoder.Result[ThreadListSyncData]]
-  ) extends GuildEvent[ThreadListSyncData] {
+  case class ThreadListSync(rawData: Json, data: Later[Decoder.Result[ThreadListSyncData]])
+      extends GuildEvent[ThreadListSyncData] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
-    override def name: String = "THREAD_LIST_SYNC"
+    override def name: String                   = "THREAD_LIST_SYNC"
   }
 
   /**
@@ -564,10 +510,8 @@ object GatewayEvent {
     * @param data
     *   An updated thread member for the current user.
     */
-  case class ThreadMemberUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawThreadMember]]
-  ) extends GatewayEvent[RawThreadMember] {
+  case class ThreadMemberUpdate(rawData: Json, data: Later[Decoder.Result[RawThreadMember]])
+      extends GatewayEvent[RawThreadMember] {
     override def name: String = "THREAD_MEMBER_UPDATE"
   }
 
@@ -586,12 +530,10 @@ object GatewayEvent {
     * @param data
     *   Data indicating who was added and removed.
     */
-  case class ThreadMembersUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[ThreadMembersUpdateData]]
-  ) extends GuildEvent[ThreadMembersUpdateData] {
+  case class ThreadMembersUpdate(rawData: Json, data: Later[Decoder.Result[ThreadMembersUpdateData]])
+      extends GuildEvent[ThreadMembersUpdateData] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
-    override def name: String = "THREAD_MEMBERS_UPDATE"
+    override def name: String                   = "THREAD_MEMBERS_UPDATE"
   }
 
   /** Base trait for an event that includes a channel. */
@@ -619,14 +561,10 @@ object GatewayEvent {
     * Sent to the shard when a message is pinned or unpinned in a text channel.
     * This is not sent when a pinned message is deleted.
     */
-  case class ChannelPinsUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[ChannelPinsUpdateData]]
-  ) extends ChannelEvent[ChannelPinsUpdateData] {
-    override def name: String = "CHANNEL_PINS_UPDATE"
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
+  case class ChannelPinsUpdate(rawData: Json, data: Later[Decoder.Result[ChannelPinsUpdateData]])
+      extends ChannelEvent[ChannelPinsUpdateData] {
+    override def name: String                               = "CHANNEL_PINS_UPDATE"
+    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
   }
 
   /** Base trait for all simple events that include an optional guild. */
@@ -643,9 +581,8 @@ object GatewayEvent {
     * @param data
     *   The created guild object.
     */
-  case class GuildCreate(rawData: Json, data: Later[Decoder.Result[RawGuild]])
-      extends GuildEvent[RawGuild] {
-    override def name: String = "GUILD_CREATE"
+  case class GuildCreate(rawData: Json, data: Later[Decoder.Result[RawGuild]]) extends GuildEvent[RawGuild] {
+    override def name: String                           = "GUILD_CREATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.id)
   }
 
@@ -654,9 +591,8 @@ object GatewayEvent {
     * @param data
     *   The updated guild.
     */
-  case class GuildUpdate(rawData: Json, data: Later[Decoder.Result[RawGuild]])
-      extends GuildEvent[RawGuild] {
-    override def name: String = "GUILD_UPDATE"
+  case class GuildUpdate(rawData: Json, data: Later[Decoder.Result[RawGuild]]) extends GuildEvent[RawGuild] {
+    override def name: String                           = "GUILD_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.id)
   }
 
@@ -666,11 +602,9 @@ object GatewayEvent {
     * @param data
     *   The deleted or unavailable guild.
     */
-  case class GuildDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[UnavailableGuild]]
-  ) extends GuildEvent[UnavailableGuild] {
-    override def name: String = "GUILD_DELETE"
+  case class GuildDelete(rawData: Json, data: Later[Decoder.Result[UnavailableGuild]])
+      extends GuildEvent[UnavailableGuild] {
+    override def name: String                           = "GUILD_DELETE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.id)
   }
 
@@ -681,11 +615,9 @@ object GatewayEvent {
     * @param data
     *   The banned user with a guildId of what guild the user was banned from.
     */
-  case class GuildBanAdd(
-      rawData: Json,
-      data: Later[Decoder.Result[UserWithGuildId]]
-  ) extends GuildEvent[UserWithGuildId] {
-    override def name: String = "GUILD_BAN_ADD"
+  case class GuildBanAdd(rawData: Json, data: Later[Decoder.Result[UserWithGuildId]])
+      extends GuildEvent[UserWithGuildId] {
+    override def name: String                           = "GUILD_BAN_ADD"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -695,11 +627,9 @@ object GatewayEvent {
     *   The unbanned user with a guildId of what guild the user was unbanned
     *   from.
     */
-  case class GuildBanRemove(
-      rawData: Json,
-      data: Later[Decoder.Result[UserWithGuildId]]
-  ) extends GuildEvent[UserWithGuildId] {
-    override def name: String = "GUILD_BAN_REMOVE"
+  case class GuildBanRemove(rawData: Json, data: Later[Decoder.Result[UserWithGuildId]])
+      extends GuildEvent[UserWithGuildId] {
+    override def name: String                           = "GUILD_BAN_REMOVE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -712,11 +642,9 @@ object GatewayEvent {
   case class GuildEmojisUpdateData(guildId: GuildId, emojis: Seq[RawEmoji])
 
   /** Sent to the shard when the emojis of a guild have been updated. */
-  case class GuildEmojisUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildEmojisUpdateData]]
-  ) extends GuildEvent[GuildEmojisUpdateData] {
-    override def name: String = "GUILD_EMOJIS_UPDATE"
+  case class GuildEmojisUpdate(rawData: Json, data: Later[Decoder.Result[GuildEmojisUpdateData]])
+      extends GuildEvent[GuildEmojisUpdateData] {
+    override def name: String                           = "GUILD_EMOJIS_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -727,11 +655,9 @@ object GatewayEvent {
     * Sent to the shard when the integrations of a guild were updated. You have
     * to fetch the integrations yourself.
     */
-  case class GuildIntegrationsUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildIntegrationsUpdateData]]
-  ) extends GuildEvent[GuildIntegrationsUpdateData] {
-    override def name: String = "GUILD_INTEGRATIONS_UPDATE"
+  case class GuildIntegrationsUpdate(rawData: Json, data: Later[Decoder.Result[GuildIntegrationsUpdateData]])
+      extends GuildEvent[GuildIntegrationsUpdateData] {
+    override def name: String                           = "GUILD_INTEGRATIONS_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -748,16 +674,7 @@ object GatewayEvent {
       pending: Option[Boolean]
   ) {
     def toRawGuildMember: RawGuildMember =
-      RawGuildMember(
-        user,
-        nick,
-        roles,
-        joinedAt,
-        premiumSince,
-        deaf,
-        mute,
-        pending
-      )
+      RawGuildMember(user, nick, roles, joinedAt, premiumSince, deaf, mute, pending)
   }
 
   object RawGuildMemberWithGuild {
@@ -780,10 +697,8 @@ object GatewayEvent {
     * @param data
     *   The new guild member, includes a guild id.
     */
-  case class GuildMemberAdd(
-      rawData: Json,
-      data: Later[Decoder.Result[RawGuildMemberWithGuild]]
-  ) extends GuildEvent[RawGuildMemberWithGuild] {
+  case class GuildMemberAdd(rawData: Json, data: Later[Decoder.Result[RawGuildMemberWithGuild]])
+      extends GuildEvent[RawGuildMemberWithGuild] {
     override def name: String = "GUILD_MEMBER_ADD"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -800,11 +715,9 @@ object GatewayEvent {
   /**
     * Sent to the shard when a user leaves the guild (or is kicked or banned).
     */
-  case class GuildMemberRemove(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildMemberRemoveData]]
-  ) extends GuildEvent[GuildMemberRemoveData] {
-    override def name: String = "GUILD_MEMBER_REMOVE"
+  case class GuildMemberRemove(rawData: Json, data: Later[Decoder.Result[GuildMemberRemoveData]])
+      extends GuildEvent[GuildMemberRemoveData] {
+    override def name: String                           = "GUILD_MEMBER_REMOVE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -835,10 +748,8 @@ object GatewayEvent {
   )
 
   /** Sent to the shard when a guild member is updated. */
-  case class GuildMemberUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildMemberUpdateData]]
-  ) extends GuildEvent[GuildMemberUpdateData] {
+  case class GuildMemberUpdate(rawData: Json, data: Later[Decoder.Result[GuildMemberUpdateData]])
+      extends GuildEvent[GuildMemberUpdateData] {
     override def name: String = "GUILD_MEMBER_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -869,10 +780,8 @@ object GatewayEvent {
     * Sent to the shard if the shard requests to get all members (even offline
     * ones) for large guilds using [[RequestGuildMembers]].
     */
-  case class GuildMemberChunk(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildMemberChunkData]]
-  ) extends GuildEvent[GuildMemberChunkData] {
+  case class GuildMemberChunk(rawData: Json, data: Later[Decoder.Result[GuildMemberChunkData]])
+      extends GuildEvent[GuildMemberChunkData] {
     override def name: String = "GUILD_MEMBERS_CHUNK"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -887,21 +796,17 @@ object GatewayEvent {
   case class GuildRoleModifyData(guildId: GuildId, role: RawRole)
 
   /** Sent to the shard when a new role is created. */
-  case class GuildRoleCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildRoleModifyData]]
-  ) extends GuildEvent[GuildRoleModifyData] {
+  case class GuildRoleCreate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]])
+      extends GuildEvent[GuildRoleModifyData] {
     override def name: String = "GUILD_ROLE_CREATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
   /** Sent to the shard when a role is updated. */
-  case class GuildRoleUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildRoleModifyData]]
-  ) extends GuildEvent[GuildRoleModifyData] {
-    override def name: String = "GUILD_ROLE_UPDATE"
+  case class GuildRoleUpdate(rawData: Json, data: Later[Decoder.Result[GuildRoleModifyData]])
+      extends GuildEvent[GuildRoleModifyData] {
+    override def name: String                           = "GUILD_ROLE_UPDATE"
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
@@ -914,10 +819,8 @@ object GatewayEvent {
   case class GuildRoleDeleteData(guildId: GuildId, roleId: RoleId)
 
   /** Sent to the shard when a role is deleted. */
-  case class GuildRoleDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[GuildRoleDeleteData]]
-  ) extends GuildEvent[GuildRoleDeleteData] {
+  case class GuildRoleDelete(rawData: Json, data: Later[Decoder.Result[GuildRoleDeleteData]])
+      extends GuildEvent[GuildRoleDeleteData] {
     override def name: String = "GUILD_ROLE_DELETE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -939,14 +842,12 @@ object GatewayEvent {
   )
 
   /** Sent when an invite is created. */
-  case class InviteCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[InviteCreateData]]
-  ) extends OptGuildEvent[InviteCreateData]
+  case class InviteCreate(rawData: Json, data: Later[Decoder.Result[InviteCreateData]])
+      extends OptGuildEvent[InviteCreateData]
       with ChannelEvent[InviteCreateData] {
-    override def name: String = "INVITE_CREATE"
+    override def name: String                           = "INVITE_CREATE"
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
-    override def channelId: Eval[Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Result[ChannelId]]     = mapData(_.channelId)
   }
 
   case class InviteDeleteData(
@@ -956,14 +857,12 @@ object GatewayEvent {
   )
 
   /** Sent when an invite is deleted. */
-  case class InviteDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[InviteDeleteData]]
-  ) extends OptGuildEvent[InviteDeleteData]
+  case class InviteDelete(rawData: Json, data: Later[Decoder.Result[InviteDeleteData]])
+      extends OptGuildEvent[InviteDeleteData]
       with ChannelEvent[InviteDeleteData] {
-    override def name: String = "INVITE_DELETE"
+    override def name: String                           = "INVITE_DELETE"
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
-    override def channelId: Eval[Result[ChannelId]] = mapData(_.channelId)
+    override def channelId: Eval[Result[ChannelId]]     = mapData(_.channelId)
   }
 
   /**
@@ -971,14 +870,9 @@ object GatewayEvent {
     * @param data
     *   The sent message.
     */
-  case class MessageCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawMessage]]
-  ) extends ChannelEvent[RawMessage] {
-    override def name: String = "MESSAGE_CREATE"
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
+  case class MessageCreate(rawData: Json, data: Later[Decoder.Result[RawMessage]]) extends ChannelEvent[RawMessage] {
+    override def name: String                               = "MESSAGE_CREATE"
+    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
   }
 
   //RawPartialMessage is defined explicitly because we need to handle the author
@@ -1020,14 +914,10 @@ object GatewayEvent {
     * @param data
     *   The new message.
     */
-  case class MessageUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawPartialMessage]]
-  ) extends ChannelEvent[RawPartialMessage] {
-    override def name: String = "MESSAGE_UPDATE"
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
+  case class MessageUpdate(rawData: Json, data: Later[Decoder.Result[RawPartialMessage]])
+      extends ChannelEvent[RawPartialMessage] {
+    override def name: String                               = "MESSAGE_UPDATE"
+    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
   }
 
   /**
@@ -1038,26 +928,16 @@ object GatewayEvent {
     * @param guildId
     *   The guild this was done in. Can be missing.
     */
-  case class MessageDeleteData(
-      id: MessageId,
-      channelId: TextChannelId,
-      guildId: Option[GuildId]
-  )
+  case class MessageDeleteData(id: MessageId, channelId: TextChannelId, guildId: Option[GuildId])
 
   /** Sent to the shard when a message is deleted. */
-  case class MessageDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageDeleteData]]
-  ) extends ChannelEvent[MessageDeleteData]
+  case class MessageDelete(rawData: Json, data: Later[Decoder.Result[MessageDeleteData]])
+      extends ChannelEvent[MessageDeleteData]
       with OptGuildEvent[MessageDeleteData] {
     override def name: String = "MESSAGE_DELETE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -1068,29 +948,19 @@ object GatewayEvent {
     * @param guildId
     *   The guild this was done in. Can be missing.
     */
-  case class MessageDeleteBulkData(
-      ids: Seq[MessageId],
-      channelId: TextChannelId,
-      guildId: Option[GuildId]
-  )
+  case class MessageDeleteBulkData(ids: Seq[MessageId], channelId: TextChannelId, guildId: Option[GuildId])
 
   /**
     * Sent to the shard when multiple messages are deleted at the same time.
     * Often this is performed by a bot.
     */
-  case class MessageDeleteBulk(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageDeleteBulkData]]
-  ) extends ChannelEvent[MessageDeleteBulkData]
+  case class MessageDeleteBulk(rawData: Json, data: Later[Decoder.Result[MessageDeleteBulkData]])
+      extends ChannelEvent[MessageDeleteBulkData]
       with OptGuildEvent[MessageDeleteBulkData] {
     override def name: String = "MESSAGE_DELETE_BULK"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -1115,35 +985,23 @@ object GatewayEvent {
   )
 
   /** Sent to the shard when a user adds a reaction to a message. */
-  case class MessageReactionAdd(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageReactionData]]
-  ) extends ChannelEvent[MessageReactionData]
+  case class MessageReactionAdd(rawData: Json, data: Later[Decoder.Result[MessageReactionData]])
+      extends ChannelEvent[MessageReactionData]
       with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_ADD"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /** Sent to the shard when a user removes a reaction from a message. */
-  case class MessageReactionRemove(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageReactionData]]
-  ) extends ChannelEvent[MessageReactionData]
+  case class MessageReactionRemove(rawData: Json, data: Later[Decoder.Result[MessageReactionData]])
+      extends ChannelEvent[MessageReactionData]
       with OptGuildEvent[MessageReactionData] {
     override def name: String = "MESSAGE_REACTION_REMOVE"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -1154,26 +1012,16 @@ object GatewayEvent {
     * @param guildId
     *   The guild this was done in. Can be missing.
     */
-  case class MessageReactionRemoveAllData(
-      channelId: TextChannelId,
-      messageId: MessageId,
-      guildId: Option[GuildId]
-  )
+  case class MessageReactionRemoveAllData(channelId: TextChannelId, messageId: MessageId, guildId: Option[GuildId])
 
   /** Sent to the shard when a user removes all reactions from a message. */
-  case class MessageReactionRemoveAll(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageReactionRemoveAllData]]
-  ) extends ChannelEvent[MessageReactionRemoveAllData]
+  case class MessageReactionRemoveAll(rawData: Json, data: Later[Decoder.Result[MessageReactionRemoveAllData]])
+      extends ChannelEvent[MessageReactionRemoveAllData]
       with OptGuildEvent[MessageReactionRemoveAllData] {
     override def name: String = "MESSAGE_REACTION_REMOVE_ALL"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -1197,19 +1045,13 @@ object GatewayEvent {
     * Sent to the shard when a user removes all reactions of a specific emoji
     * from a message.
     */
-  case class MessageReactionRemoveEmoji(
-      rawData: Json,
-      data: Later[Decoder.Result[MessageReactionRemoveEmojiData]]
-  ) extends ChannelEvent[MessageReactionRemoveEmojiData]
+  case class MessageReactionRemoveEmoji(rawData: Json, data: Later[Decoder.Result[MessageReactionRemoveEmojiData]])
+      extends ChannelEvent[MessageReactionRemoveEmojiData]
       with OptGuildEvent[MessageReactionRemoveEmojiData] {
     override def name: String = "MESSAGE_REACTION_REMOVE_EMOJI"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]]     = mapData(_.channelId)
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
@@ -1231,10 +1073,8 @@ object GatewayEvent {
   )
 
   /** Sent to the shard when the presence of a user updates. */
-  case class PresenceUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[PresenceUpdateData]]
-  ) extends GuildEvent[PresenceUpdateData] {
+  case class PresenceUpdate(rawData: Json, data: Later[Decoder.Result[PresenceUpdateData]])
+      extends GuildEvent[PresenceUpdateData] {
     override def name: String = "PRESENCE_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -1259,15 +1099,11 @@ object GatewayEvent {
   )
 
   /** Sent to the shard when a user starts typing in a channel. */
-  case class TypingStart(
-      rawData: Json,
-      data: Later[Decoder.Result[TypingStartData]]
-  ) extends ChannelEvent[TypingStartData] {
+  case class TypingStart(rawData: Json, data: Later[Decoder.Result[TypingStartData]])
+      extends ChannelEvent[TypingStartData] {
     override def name: String = "TYPING_START"
 
-    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(
-      _.channelId
-    )
+    override def channelId: Eval[Decoder.Result[ChannelId]] = mapData(_.channelId)
   }
 
   /**
@@ -1275,8 +1111,7 @@ object GatewayEvent {
     * @param data
     *   The new user.
     */
-  case class UserUpdate(rawData: Json, data: Later[Decoder.Result[User]])
-      extends GatewayEvent[User] {
+  case class UserUpdate(rawData: Json, data: Later[Decoder.Result[User]]) extends GatewayEvent[User] {
     override def name: String = "USER_UPDATE"
   }
 
@@ -1285,24 +1120,18 @@ object GatewayEvent {
     * @param data
     *   New voice states.
     */
-  case class VoiceStateUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[VoiceState]]
-  ) extends OptGuildEvent[VoiceState] {
-    override def name: String = "VOICE_STATUS_UPDATE"
-    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(
-      _.guildId
-    )
+  case class VoiceStateUpdate(rawData: Json, data: Later[Decoder.Result[VoiceState]])
+      extends OptGuildEvent[VoiceState] {
+    override def name: String                                   = "VOICE_STATUS_UPDATE"
+    override def guildId: Eval[Decoder.Result[Option[GuildId]]] = mapData(_.guildId)
   }
 
   /**
     * Sent a guilds voice server is updated. Also used when connecting to a
     * voice channel.
     */
-  case class VoiceServerUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[VoiceServerUpdateData]]
-  ) extends GuildEvent[VoiceServerUpdateData] {
+  case class VoiceServerUpdate(rawData: Json, data: Later[Decoder.Result[VoiceServerUpdateData]])
+      extends GuildEvent[VoiceServerUpdateData] {
     override def name: String = "VOICE_SERVER_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
@@ -1317,19 +1146,15 @@ object GatewayEvent {
   case class WebhookUpdateData(guildId: GuildId, channelId: TextChannelId)
 
   /** Sent to the shard when guilds webhooks are updated. */
-  case class WebhookUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[WebhookUpdateData]]
-  ) extends GuildEvent[WebhookUpdateData] {
+  case class WebhookUpdate(rawData: Json, data: Later[Decoder.Result[WebhookUpdateData]])
+      extends GuildEvent[WebhookUpdateData] {
     override def name: String = "WEBHOOK_UPDATE"
 
     override def guildId: Eval[Decoder.Result[GuildId]] = mapData(_.guildId)
   }
 
-  case class InteractionCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[RawInteraction]]
-  ) extends OptGuildEvent[RawInteraction] {
+  case class InteractionCreate(rawData: Json, data: Later[Decoder.Result[RawInteraction]])
+      extends OptGuildEvent[RawInteraction] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "INTERACTION_CREATE"
@@ -1340,28 +1165,22 @@ object GatewayEvent {
       guildId: Option[GuildId]
   )
 
-  case class ApplicationCommandCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[ApplicationCommandWithGuildId]]
-  ) extends OptGuildEvent[ApplicationCommandWithGuildId] {
+  case class ApplicationCommandCreate(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_CREATE"
   }
 
-  case class ApplicationCommandUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[ApplicationCommandWithGuildId]]
-  ) extends OptGuildEvent[ApplicationCommandWithGuildId] {
+  case class ApplicationCommandUpdate(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_UPDATE"
   }
 
-  case class ApplicationCommandDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[ApplicationCommandWithGuildId]]
-  ) extends OptGuildEvent[ApplicationCommandWithGuildId] {
+  case class ApplicationCommandDelete(rawData: Json, data: Later[Decoder.Result[ApplicationCommandWithGuildId]])
+      extends OptGuildEvent[ApplicationCommandWithGuildId] {
     override def guildId: Eval[Result[Option[GuildId]]] = mapData(_.guildId)
 
     override def name: String = "APPLICATION_COMMAND_DELETE"
@@ -1369,61 +1188,45 @@ object GatewayEvent {
 
   case class IntegrationWithGuildId(guildId: GuildId, integration: Integration)
 
-  case class IntegrationCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[IntegrationWithGuildId]]
-  ) extends GuildEvent[IntegrationWithGuildId] {
+  case class IntegrationCreate(rawData: Json, data: Later[Decoder.Result[IntegrationWithGuildId]])
+      extends GuildEvent[IntegrationWithGuildId] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTEGRATION_CREATE"
   }
 
-  case class IntegrationUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[IntegrationWithGuildId]]
-  ) extends GuildEvent[IntegrationWithGuildId] {
+  case class IntegrationUpdate(rawData: Json, data: Later[Decoder.Result[IntegrationWithGuildId]])
+      extends GuildEvent[IntegrationWithGuildId] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTEGRATION_UPDATE"
   }
 
-  case class DeletedIntegration(
-      id: IntegrationId,
-      guildId: GuildId,
-      applicationId: Option[ApplicationId]
-  )
+  case class DeletedIntegration(id: IntegrationId, guildId: GuildId, applicationId: Option[ApplicationId])
 
-  case class IntegrationDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[DeletedIntegration]]
-  ) extends GuildEvent[DeletedIntegration] {
+  case class IntegrationDelete(rawData: Json, data: Later[Decoder.Result[DeletedIntegration]])
+      extends GuildEvent[DeletedIntegration] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "INTEGRATION_DELETE"
   }
 
-  case class StageInstanceCreate(
-      rawData: Json,
-      data: Later[Decoder.Result[StageInstance]]
-  ) extends GuildEvent[StageInstance] {
+  case class StageInstanceCreate(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_CREATE"
   }
 
-  case class StageInstanceUpdate(
-      rawData: Json,
-      data: Later[Decoder.Result[StageInstance]]
-  ) extends GuildEvent[StageInstance] {
+  case class StageInstanceUpdate(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_UPDATE"
   }
 
-  case class StageInstanceDelete(
-      rawData: Json,
-      data: Later[Decoder.Result[StageInstance]]
-  ) extends GuildEvent[StageInstance] {
+  case class StageInstanceDelete(rawData: Json, data: Later[Decoder.Result[StageInstance]])
+      extends GuildEvent[StageInstance] {
     override def guildId: Eval[Result[GuildId]] = mapData(_.guildId)
 
     override def name: String = "STAGE_INSTANCE_DELETE"
@@ -1437,14 +1240,10 @@ object GatewayEvent {
     */
   trait UnknownEvent[A] extends GatewayEvent[A]
   object UnknownEvent {
-    trait UnknownChannelEvent[A] extends UnknownEvent[A] with ChannelEvent[A]
-    trait UnknownGuildEvent[A] extends UnknownEvent[A] with GuildEvent[A]
+    trait UnknownChannelEvent[A]  extends UnknownEvent[A] with ChannelEvent[A]
+    trait UnknownGuildEvent[A]    extends UnknownEvent[A] with GuildEvent[A]
     trait UnknownOptGuildEvent[A] extends UnknownEvent[A] with OptGuildEvent[A]
   }
 
-  case class IgnoredEvent(
-      name: String,
-      rawData: Json,
-      data: Later[Decoder.Result[Unit]]
-  ) extends GatewayEvent[Unit]
+  case class IgnoredEvent(name: String, rawData: Json, data: Later[Decoder.Result[Unit]]) extends GatewayEvent[Unit]
 }

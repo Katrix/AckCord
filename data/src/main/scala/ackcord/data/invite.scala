@@ -225,13 +225,11 @@ case class InviteGuild(
 case class InviteChannel(id: GuildChannelId, name: String, `type`: ChannelType)
 
 sealed abstract class InviteTargetType(val value: Int) extends IntEnumEntry
-object InviteTargetType
-    extends IntEnum[InviteTargetType]
-    with IntCirceEnumWithUnknown[InviteTargetType] {
+object InviteTargetType extends IntEnum[InviteTargetType] with IntCirceEnumWithUnknown[InviteTargetType] {
   override def values: immutable.IndexedSeq[InviteTargetType] = findValues
 
-  case object Stream extends InviteTargetType(1)
-  case object EmbeddedApplication extends InviteTargetType(2)
+  case object Stream                          extends InviteTargetType(1)
+  case object EmbeddedApplication             extends InviteTargetType(2)
   case class Unknown(override val value: Int) extends InviteTargetType(value)
 
   override def createUnknown(value: Int): InviteTargetType = Unknown(value)

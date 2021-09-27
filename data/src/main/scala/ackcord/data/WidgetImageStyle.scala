@@ -31,12 +31,11 @@ import enumeratum.values.{StringEnum, StringEnumEntry}
   * A style the widget image might be shown as. See examples here.
   * https://discord.com/developers/docs/resources/guild#get-guild-widget-image
   */
-sealed abstract class WidgetImageStyle(val value: String)
-    extends StringEnumEntry
+sealed abstract class WidgetImageStyle(val value: String) extends StringEnumEntry
 object WidgetImageStyle extends StringEnum[WidgetImageStyle] {
   override def values: immutable.IndexedSeq[WidgetImageStyle] = findValues
 
-  case object Shield extends WidgetImageStyle("shield")
+  case object Shield  extends WidgetImageStyle("shield")
   case object Banner1 extends WidgetImageStyle("banner1")
   case object Banner2 extends WidgetImageStyle("banner2")
   case object Banner3 extends WidgetImageStyle("banner3")

@@ -7,11 +7,7 @@ import scala.concurrent.duration._
 
 import ackcord.Events
 import ackcord.data.{GuildId, UserId}
-import ackcord.gateway.GatewayEvent.{
-  GuildMemberChunk,
-  GuildMemberChunkData,
-  RawGuildMemberWithGuild
-}
+import ackcord.gateway.GatewayEvent.{GuildMemberChunk, GuildMemberChunkData, RawGuildMemberWithGuild}
 import ackcord.gateway.{Dispatch, RequestGuildMembers, RequestGuildMembersData}
 import akka.NotUsed
 import akka.actor.typed.ActorSystem
@@ -40,9 +36,7 @@ object BulkRequestMembers {
       userIds: Seq[UserId],
       events: Events,
       timeout: FiniteDuration = 30.seconds
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
+  )(implicit system: ActorSystem[Nothing]): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
     require(userIds.nonEmpty, "Must request at least one member")
     val nonce = UUID.randomUUID().toString.replace("-", "")
 
@@ -86,18 +80,14 @@ object BulkRequestMembers {
       userIds: Seq[UserId],
       events: Events,
       timeout: FiniteDuration = 30.seconds
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Future[Ior[Seq[(GuildId, UserId)], Seq[RawGuildMemberWithGuild]]] = {
+  )(implicit system: ActorSystem[Nothing]): Future[Ior[Seq[(GuildId, UserId)], Seq[RawGuildMemberWithGuild]]] = {
     import system.executionContext
     val (futureNotFound, futureMembers) =
-      sourceUserIds(guild, userIds, events, timeout)
-        .toMat(Sink.seq)(Keep.both)
-        .run()
+      sourceUserIds(guild, userIds, events, timeout).toMat(Sink.seq)(Keep.both).run()
 
     for {
       notFound <- futureNotFound
-      members <- futureMembers
+      members  <- futureMembers
     } yield (notFound, members) match {
       case (Seq(), result)  => Ior.Right(result)
       case (errors, Seq())  => Ior.Left(errors)
@@ -128,9 +118,7 @@ object BulkRequestMembers {
       events: Events,
       limit: Int = 100,
       timeout: FiniteDuration = 30.seconds
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Source[RawGuildMemberWithGuild, NotUsed] = {
+  )(implicit system: ActorSystem[Nothing]): Source[RawGuildMemberWithGuild, NotUsed] = {
     require(
       query.nonEmpty,
       """|Requesting all members of a guild might have adverse effects on other parts of AckCord. 
@@ -178,25 +166,15 @@ object BulkRequestMembers {
       events: Events,
       limit: Int = 100,
       timeout: FiniteDuration = 30.seconds
-  )(implicit
-      system: ActorSystem[Nothing]
-  ): Future[Seq[RawGuildMemberWithGuild]] =
+  )(implicit system: ActorSystem[Nothing]): Future[Seq[RawGuildMemberWithGuild]] =
     sourceUsernameQuery(guild, query, events, limit, timeout).runWith(Sink.seq)
 
-  private def source(
-      request: RequestGuildMembers,
-      events: Events,
-      nonce: String,
-      timeout: FiniteDuration
-  )(implicit
-      system: ActorSystem[Nothing]
+  private def source(request: RequestGuildMembers, events: Events, nonce: String, timeout: FiniteDuration)(
+      implicit system: ActorSystem[Nothing]
   ): Source[RawGuildMemberWithGuild, Future[Seq[(GuildId, UserId)]]] = {
     val sendRequest = Source.single(request).to(events.toGatewayPublish)
 
-    val getMembers: Source[
-      (Seq[RawGuildMemberWithGuild], Seq[(GuildId, UserId)]),
-      NotUsed
-    ] =
+    val getMembers: Source[(Seq[RawGuildMemberWithGuild], Seq[(GuildId, UserId)]), NotUsed] =
       events.fromGatewaySubscribe
         .collect { case Dispatch(_, GuildMemberChunk(_, data), _) =>
           data.value match {
@@ -205,24 +183,9 @@ object BulkRequestMembers {
           }
         }
         .flatMapConcat(identity)
-        .takeWhile(
-          chunk => chunk.chunkIndex < (chunk.chunkCount - 1),
-          inclusive = true
-        )
-        .collect {
-          case GuildMemberChunkData(
-                guildId,
-                members,
-                _,
-                _,
-                notFound,
-                _,
-                Some(`nonce`)
-              ) =>
-            (
-              members.map(RawGuildMemberWithGuild(guildId, _)),
-              notFound.toSeq.flatten.map(guildId -> _)
-            )
+        .takeWhile(chunk => chunk.chunkIndex < (chunk.chunkCount - 1), inclusive = true)
+        .collect { case GuildMemberChunkData(guildId, members, _, _, notFound, _, Some(`nonce`)) =>
+          (members.map(RawGuildMemberWithGuild(guildId, _)), notFound.toSeq.flatten.map(guildId -> _))
         }
 
     //We do this to only send the request when there is demand for it

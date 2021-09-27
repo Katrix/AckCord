@@ -69,15 +69,7 @@ object VoiceHandler {
       soundConsumer: Sink[AudioAPIMessage, NotUsed]
   ): Behavior[Command] = Behaviors.setup { ctx =>
     val wsHandler = ctx.spawn(
-      VoiceWsHandler(
-        address,
-        ctx.self,
-        sendTo,
-        serverId,
-        userId,
-        sessionId,
-        token
-      ),
+      VoiceWsHandler(address, ctx.self, sendTo, serverId, userId, sessionId, token),
       "WsHandler"
     )
     ctx.watch(wsHandler)
@@ -107,12 +99,7 @@ object VoiceHandler {
       .receiveMessage[Command] {
         case ip @ GotLocalIP(localAddress, localPort) =>
           wsHandler ! VoiceWsHandler.GotLocalIP(localAddress, localPort)
-          handler(
-            parameters,
-            state.copy(currentUdpSettings =
-              currentUdpSettings.map(_.copy(localIp = Some(ip)))
-            )
-          )
+          handler(parameters, state.copy(currentUdpSettings = currentUdpSettings.map(_.copy(localIp = Some(ip)))))
 
         case gotIp @ GotServerIP(address, port, ssrc) =>
           currentUdpSettings match {
@@ -122,10 +109,7 @@ object VoiceHandler {
               //If we don't have it, it will be sent when we do
 
               udpHandler.get ! VoiceUDPHandler.SetSecretKey(None)
-              localIp.foreach(ip =>
-                wsHandler ! VoiceWsHandler
-                  .GotLocalIP(ip.localAddress, ip.localPort)
-              )
+              localIp.foreach(ip => wsHandler ! VoiceWsHandler.GotLocalIP(ip.localAddress, ip.localPort))
               Behaviors.same
 
             case Some(_) =>
@@ -154,8 +138,7 @@ object VoiceHandler {
                 parameters,
                 state.copy(
                   udpHandler = Some(udpHandler),
-                  currentUdpSettings =
-                    Some(UDPSettings(address, port, ssrc, None))
+                  currentUdpSettings = Some(UDPSettings(address, port, ssrc, None))
                 )
               )
           }
@@ -168,9 +151,9 @@ object VoiceHandler {
 
         case SetSpeaking(speaking, soundshare, priority) =>
           val flags = Seq(
-            speaking -> SpeakingFlag.Microphone,
+            speaking   -> SpeakingFlag.Microphone,
             soundshare -> SpeakingFlag.Soundshare,
-            priority -> SpeakingFlag.Priority
+            priority   -> SpeakingFlag.Priority
           ).collect {
             case (b, f) if b => f
           }.fold(SpeakingFlag.None)(_ ++ _)
@@ -185,16 +168,11 @@ object VoiceHandler {
           shutdownPhase(parameters, state)
       }
       .receiveSignal { case (_, Terminated(actor)) =>
-        throw new IllegalStateException(
-          s"Voice Handler actor $actor stopped unexpectedly"
-        )
+        throw new IllegalStateException(s"Voice Handler actor $actor stopped unexpectedly")
       }
   }
 
-  private def shutdownPhase(
-      parameters: Parameters,
-      state: State
-  ): Behavior[Command] = Behaviors.receiveSignal {
+  private def shutdownPhase(parameters: Parameters, state: State): Behavior[Command] = Behaviors.receiveSignal {
     case (ctx, Terminated(actor)) if actor == parameters.wsHandler =>
       if (state.udpHandler.isEmpty) {
         ctx.log.info("Both WS and UDP handler shut down. Stopping")
@@ -215,17 +193,11 @@ object VoiceHandler {
 
   sealed trait Command
 
-  private[voice] case class GotLocalIP(localAddress: String, localPort: Int)
-      extends Command
-  private[voice] case class GotSecretKey(key: ByteString) extends Command
-  private[voice] case class GotServerIP(address: String, port: Int, ssrc: Int)
-      extends Command
+  private[voice] case class GotLocalIP(localAddress: String, localPort: Int)   extends Command
+  private[voice] case class GotSecretKey(key: ByteString)                      extends Command
+  private[voice] case class GotServerIP(address: String, port: Int, ssrc: Int) extends Command
 
-  case class SetSpeaking(
-      speaking: Boolean,
-      soundshare: Boolean = false,
-      priority: Boolean = false
-  ) extends Command
+  case class SetSpeaking(speaking: Boolean, soundshare: Boolean = false, priority: Boolean = false) extends Command
 
   /** Send this to a [[VoiceWsHandler]] to stop it gracefully. */
   case object Logout extends Command

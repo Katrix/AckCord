@@ -35,25 +35,21 @@ import cats.{Foldable, Id}
 trait Streamable[F[_]] {
   def toSource[A](fa: F[A]): Source[A, NotUsed]
 
-  def optionToSource[A](opt: OptionT[F, A]): Source[A, NotUsed] =
-    toSource(opt.value).mapConcat(_.toList)
+  def optionToSource[A](opt: OptionT[F, A]): Source[A, NotUsed] = toSource(opt.value).mapConcat(_.toList)
 }
 object Streamable {
   def apply[F[_]](implicit F: Streamable[F]): Streamable[F] = F
 
   implicit val idStreamable: Streamable[Id] = new Streamable[Id] {
-    override def toSource[A](fa: Id[A]): Source[A, NotUsed] = Source.single(fa)
-    override def optionToSource[A](opt: OptionT[Id, A]): Source[A, NotUsed] =
-      Source(opt.value.toList)
+    override def toSource[A](fa: Id[A]): Source[A, NotUsed]                 = Source.single(fa)
+    override def optionToSource[A](opt: OptionT[Id, A]): Source[A, NotUsed] = Source(opt.value.toList)
   }
 
   implicit val futureStreamable: Streamable[Future] = new Streamable[Future] {
-    override def toSource[A](fa: Future[A]): Source[A, NotUsed] =
-      Source.future(fa)
+    override def toSource[A](fa: Future[A]): Source[A, NotUsed] = Source.future(fa)
   }
 
-  implicit def futureFoldableStreamable[F[_]: Foldable]
-      : Streamable[λ[A => Future[F[A]]]] =
+  implicit def futureFoldableStreamable[F[_]: Foldable]: Streamable[λ[A => Future[F[A]]]] =
     new Streamable[λ[A => Future[F[A]]]] {
       override def toSource[A](fa: Future[F[A]]): Source[A, NotUsed] = {
         import cats.syntax.all._
@@ -61,20 +57,15 @@ object Streamable {
       }
     }
 
-  implicit val futureOptionTStreamable: Streamable[OptionT[Future, *]] =
-    new Streamable[OptionT[Future, *]] {
-      override def toSource[A](fa: OptionT[Future, A]): Source[A, NotUsed] =
-        Source.future(fa.value).mapConcat(_.toList)
-    }
+  implicit val futureOptionTStreamable: Streamable[OptionT[Future, *]] = new Streamable[OptionT[Future, *]] {
+    override def toSource[A](fa: OptionT[Future, A]): Source[A, NotUsed] = Source.future(fa.value).mapConcat(_.toList)
+  }
 
-  implicit val optFutureStreamable: Streamable[OptFuture] =
-    new Streamable[OptFuture] {
-      override def toSource[A](fa: OptFuture[A]): Source[A, NotUsed] =
-        Source.future(fa.value).mapConcat(_.toList)
-    }
+  implicit val optFutureStreamable: Streamable[OptFuture] = new Streamable[OptFuture] {
+    override def toSource[A](fa: OptFuture[A]): Source[A, NotUsed] = Source.future(fa.value).mapConcat(_.toList)
+  }
 
-  implicit val sourceStreamable: Streamable[Source[*, NotUsed]] =
-    new Streamable[Source[*, NotUsed]] {
-      override def toSource[A](fa: Source[A, NotUsed]): Source[A, NotUsed] = fa
-    }
+  implicit val sourceStreamable: Streamable[Source[*, NotUsed]] = new Streamable[Source[*, NotUsed]] {
+    override def toSource[A](fa: Source[A, NotUsed]): Source[A, NotUsed] = fa
+  }
 }

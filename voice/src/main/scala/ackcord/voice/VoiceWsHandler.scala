@@ -41,13 +41,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ws._
-import akka.stream.scaladsl.{
-  Compression,
-  Flow,
-  Keep,
-  Source,
-  SourceQueueWithComplete
-}
+import akka.stream.scaladsl.{Compression, Flow, Keep, Source, SourceQueueWithComplete}
 import akka.stream.typed.scaladsl.ActorSink
 import akka.stream.{ActorAttributes, Attributes, OverflowStrategy, Supervision}
 import akka.util.ByteString
@@ -73,8 +67,8 @@ object VoiceWsHandler {
       token: String
   )
 
-  private def parseMessage(implicit
-      system: ActorSystem[Nothing]
+  private def parseMessage(
+      implicit system: ActorSystem[Nothing]
   ): Flow[Message, Either[circe.Error, VoiceMessage[_]], NotUsed] = {
     val jsonFlow = Flow[Message]
       .collect {
@@ -87,26 +81,20 @@ object VoiceWsHandler {
       }
       .flatMapConcat(_.fold("")(_ + _))
 
-    implicit val logger: LoggingAdapter =
-      Logging(system.classicSystem, "ackcord.voice.ReceivedWSMessage")
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.voice.ReceivedWSMessage")
 
     val withLogging =
       if (AckCordVoiceSettings().LogReceivedWs)
-        jsonFlow
-          .log("Received payload")
-          .withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
+        jsonFlow.log("Received payload").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel))
       else jsonFlow
 
     withLogging.map(parser.parse(_).flatMap(_.as[VoiceMessage[_]]))
   }
 
-  def createMessage(implicit
-      system: ActorSystem[Nothing]
-  ): Flow[VoiceMessage[_], Message, NotUsed] = {
+  def createMessage(implicit system: ActorSystem[Nothing]): Flow[VoiceMessage[_], Message, NotUsed] = {
     val baseFlow = Flow[VoiceMessage[_]].map(_.asJson.noSpaces)
 
-    implicit val logger: LoggingAdapter =
-      Logging(system.classicSystem, "ackcord.voice.SentWSMessage")
+    implicit val logger: LoggingAdapter = Logging(system.classicSystem, "ackcord.voice.SentWSMessage")
 
     val withLogging =
       if (AckCordVoiceSettings().LogSentWs)
@@ -116,22 +104,16 @@ object VoiceWsHandler {
     withLogging.map(TextMessage.apply)
   }
 
-  def wsUri(address: String): Uri =
-    Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
+  def wsUri(address: String): Uri = Uri(s"wss://$address").withQuery(Query("v" -> AckCord.DiscordVoiceVersion))
 
-  def wsFlow(
-      address: String,
-      system: ActorSystem[Nothing]
-  ): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
+  def wsFlow(address: String, system: ActorSystem[Nothing]): Flow[Message, Message, Future[WebSocketUpgradeResponse]] =
     Http(system.toClassic).webSocketClientFlow(wsUri(address))
 
   def runWsFlow(ctx: ActorContext[Command], log: Logger, address: String)(
       implicit system: ActorSystem[Nothing]
   ): SourceQueueWithComplete[VoiceMessage[_]] = {
     log.debug("Logging in")
-    val src = Source
-      .queue[VoiceMessage[_]](64, OverflowStrategy.fail)
-      .named("GatewayQueue")
+    val src = Source.queue[VoiceMessage[_]](64, OverflowStrategy.fail).named("GatewayQueue")
 
     val sink = ActorSink
       .actorRefWithBackpressure(
@@ -178,7 +160,7 @@ object VoiceWsHandler {
   ): Behavior[Command] = Behaviors.setup { ctx =>
     Behaviors.withTimers { timers =>
       implicit val system: ActorSystem[Nothing] = ctx.system
-      val log = ctx.log
+      val log                                   = ctx.log
 
       val queue = runWsFlow(ctx, log, address)
       val heart = ctx.spawn(WsHeart(ctx.self), "Heart")
@@ -186,20 +168,7 @@ object VoiceWsHandler {
       ctx.self ! SendHandshake
 
       wsHandling(
-        Parameters(
-          ctx,
-          timers,
-          log,
-          parent,
-          queue,
-          sendTo,
-          heart,
-          address,
-          serverId,
-          userId,
-          sessionId,
-          token
-        ),
+        Parameters(ctx, timers, log, parent, queue, sendTo, heart, address, serverId, userId, sessionId, token),
         isRestarting = false,
         canResume = false
       )
@@ -252,11 +221,7 @@ object VoiceWsHandler {
           val queue = runWsFlow(context, log, address)
           context.self ! SendHandshake
 
-          wsHandling(
-            parameters.copy(queue = queue),
-            isRestarting = false,
-            canResume = false
-          )
+          wsHandling(parameters.copy(queue = queue), isRestarting = false, canResume = false)
 
         case SendHandshake =>
           log.debug("Sending handshake")
@@ -277,9 +242,7 @@ object VoiceWsHandler {
         case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
           response.discardEntityBytes()
           queue.complete()
-          throw new IllegalStateException(
-            s"Could not connect to gateway: $cause"
-          ) //TODO
+          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
 
         case UpgradeResponse(ValidUpgrade(response, _)) =>
           log.debug("Valid login: {}", response.entity.toString)
@@ -318,14 +281,7 @@ object VoiceWsHandler {
           Behaviors.same
 
         case SetSpeaking(speaking) =>
-          queue.offer(
-            Speaking(
-              speaking = speaking,
-              delay = JsonSome(0),
-              ssrc = JsonUndefined,
-              userId = JsonUndefined
-            )
-          )
+          queue.offer(Speaking(speaking = speaking, delay = JsonSome(0), ssrc = JsonUndefined, userId = JsonUndefined))
           Behaviors.same
 
         case Restart(fresh, duration) =>
@@ -337,11 +293,7 @@ object VoiceWsHandler {
 
           heart ! WsHeart.StopBeating
 
-          wsHandling(
-            parameters,
-            isRestarting = true,
-            canResume = canResume && !fresh
-          )
+          wsHandling(parameters, isRestarting = true, canResume = canResume && !fresh)
 
         case Shutdown =>
           queue.complete()
@@ -361,9 +313,7 @@ object VoiceWsHandler {
 
     voiceMessage match {
       case Ready(ReadyData(readySsrc, port, address, _)) =>
-        log.debug(
-          s"Received ready with ssrc port address: $readySsrc $port $address"
-        )
+        log.debug(s"Received ready with ssrc port address: $readySsrc $port $address")
 
         parent ! VoiceHandler.GotServerIP(address, port, readySsrc)
 
@@ -379,9 +329,7 @@ object VoiceWsHandler {
         log.debug("Received session description")
         parent ! VoiceHandler.GotSecretKey(secretKey)
 
-      case Speaking(
-            SpeakingData(isSpeaking, delay, userSsrc, JsonSome(speakingUserId))
-          ) =>
+      case Speaking(SpeakingData(isSpeaking, delay, userSsrc, JsonSome(speakingUserId))) =>
         sendTo.foreach { actor =>
           actor ! AudioAPIMessage.UserSpeaking(
             speakingUserId,
@@ -409,26 +357,23 @@ object VoiceWsHandler {
 
   sealed trait Command
 
-  private case object Relogin extends Command
-  private case object SendHandshake extends Command
+  private case object Relogin                                  extends Command
+  private case object SendHandshake                            extends Command
   case class Restart(fresh: Boolean, duration: FiniteDuration) extends Command
-  case object Shutdown extends Command
+  case object Shutdown                                         extends Command
 
   private case object AckSink
   private case class InitSink(replyTo: ActorRef[AckSink.type]) extends Command
-  private case object CompletedSink extends Command
-  private case class FailedSink(e: Throwable) extends Command
-  private case class SinkMessage(
-      replyTo: ActorRef[AckSink.type],
-      message: Either[Error, VoiceMessage[_]]
-  ) extends Command
-
-  private case class UpgradeResponse(response: WebSocketUpgradeResponse)
+  private case object CompletedSink                            extends Command
+  private case class FailedSink(e: Throwable)                  extends Command
+  private case class SinkMessage(replyTo: ActorRef[AckSink.type], message: Either[Error, VoiceMessage[_]])
       extends Command
-  private case class SendExeption(e: Throwable) extends Command
+
+  private case class UpgradeResponse(response: WebSocketUpgradeResponse) extends Command
+  private case class SendExeption(e: Throwable)                          extends Command
 
   case class GotLocalIP(localAddress: String, localPort: Int) extends Command
 
-  case class SendHeartbeat(nonce: Int) extends Command
+  case class SendHeartbeat(nonce: Int)           extends Command
   case class SetSpeaking(speaking: SpeakingFlag) extends Command
 }

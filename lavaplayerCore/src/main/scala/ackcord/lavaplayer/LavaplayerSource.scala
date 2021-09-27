@@ -28,18 +28,12 @@ import scala.concurrent.duration._
 
 import akka.NotUsed
 import akka.stream.scaladsl.Source
-import akka.stream.stage.{
-  GraphStage,
-  GraphStageLogic,
-  OutHandler,
-  TimerGraphStageLogicWithLogging
-}
+import akka.stream.stage.{GraphStage, GraphStageLogic, OutHandler, TimerGraphStageLogicWithLogging}
 import akka.stream.{Attributes, Outlet, SourceShape}
 import akka.util.ByteString
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 
-class LavaplayerSource(player: AudioPlayer)
-    extends GraphStage[SourceShape[ByteString]] {
+class LavaplayerSource(player: AudioPlayer) extends GraphStage[SourceShape[ByteString]] {
   val out: Outlet[ByteString] = Outlet("LavaplayerSource.out")
 
   override def shape: SourceShape[ByteString] = SourceShape(out)

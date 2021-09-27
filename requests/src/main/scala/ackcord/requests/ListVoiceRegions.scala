@@ -29,10 +29,8 @@ import ackcord.data.VoiceRegion
 import io.circe._
 
 /** List all the voice regions that can be used when creating a guild. */
-case object ListVoiceRegions
-    extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
+case object ListVoiceRegions extends NoParamsNiceResponseRequest[Seq[VoiceRegion]] {
   override def route: RequestRoute = Routes.listVoiceRegions
 
-  override def responseDecoder: Decoder[Seq[VoiceRegion]] =
-    Decoder[Seq[VoiceRegion]]
+  override def responseDecoder: Decoder[Seq[VoiceRegion]] = Decoder[Seq[VoiceRegion]]
 }

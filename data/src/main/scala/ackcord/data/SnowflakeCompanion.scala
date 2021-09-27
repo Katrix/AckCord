@@ -26,10 +26,7 @@ package ackcord.data
 import java.lang.{Long => JLong}
 
 private[data] trait SnowflakeCompanion[Type] {
-  def apply(content: String): SnowflakeType[Type] =
-    JLong.parseUnsignedLong(content).asInstanceOf[SnowflakeType[Type]]
-  def apply(long: Long): SnowflakeType[Type] =
-    long.asInstanceOf[SnowflakeType[Type]]
-  def apply(other: SnowflakeType[_]): SnowflakeType[Type] =
-    other.asInstanceOf[SnowflakeType[Type]]
+  def apply(content: String): SnowflakeType[Type] = JLong.parseUnsignedLong(content).asInstanceOf[SnowflakeType[Type]]
+  def apply(long: Long): SnowflakeType[Type]      = long.asInstanceOf[SnowflakeType[Type]]
+  def apply(other: SnowflakeType[_]): SnowflakeType[Type] = other.asInstanceOf[SnowflakeType[Type]]
 }

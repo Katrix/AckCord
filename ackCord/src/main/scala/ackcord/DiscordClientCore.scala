@@ -43,19 +43,15 @@ class DiscordClientCore(
 ) extends DiscordClient {
 
   val commands = new CommandConnector(
-    events.subscribeAPI
-      .collectType[APIMessage.MessageCreate]
-      .map(m => (m.message, m.cache.current)),
+    events.subscribeAPI.collectType[APIMessage.MessageCreate].map(m => (m.message, m.cache.current)),
     requests,
     requests.settings.parallelism
   )
 
   val requestsHelper: RequestsHelper = new RequestsHelper(requests)
 
-  override def onEventStreamable[G[_]](
-      handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]]
-  )(implicit
-      streamable: Streamable[G]
+  override def onEventStreamable[G[_]](handler: CacheSnapshot => PartialFunction[APIMessage, G[Unit]])(
+      implicit streamable: Streamable[G]
   ): EventRegistration[NotUsed] =
     SupervisionStreams
       .addLogAndContinueFunction(
@@ -63,8 +59,7 @@ class DiscordClientCore(
           .toSink(
             events.subscribeAPI
               .collect {
-                case m if handler(m.cache.current).isDefinedAt(m) =>
-                  handler(m.cache.current)(m)
+                case m if handler(m.cache.current).isDefinedAt(m) => handler(m.cache.current)(m)
               }
               .flatMapConcat(streamable.toSource)
           )
@@ -72,17 +67,14 @@ class DiscordClientCore(
       )
       .run()
 
-  override def registerListener[A <: APIMessage, Mat](
-      listener: EventListener[A, Mat]
-  ): EventRegistration[Mat] = {
+  override def registerListener[A <: APIMessage, Mat](listener: EventListener[A, Mat]): EventRegistration[Mat] = {
     val (reg, mat) = SupervisionStreams
       .addLogAndContinueFunction(
         EventRegistration
           .withRegistration(
             events.subscribeAPI
               .collect {
-                case msg if listener.refineEvent(msg).isDefined =>
-                  listener.refineEvent(msg).get
+                case msg if listener.refineEvent(msg).isDefined => listener.refineEvent(msg).get
               }
               .map(a => EventListenerMessage.Default(a))
           )
@@ -108,11 +100,7 @@ class DiscordClientCore(
 
   override def logout(timeout: FiniteDuration): Future[Boolean] = {
     implicit val impTimeout: Timeout = Timeout(1.second + timeout)
-    actor
-      .ask[DiscordClientActor.LogoutReply](
-        DiscordClientActor.Logout(timeout, _)
-      )
-      .flatMap(_.done)
+    actor.ask[DiscordClientActor.LogoutReply](DiscordClientActor.Logout(timeout, _)).flatMap(_.done)
   }
 
   override def shutdownJVM(timeout: FiniteDuration): Future[Unit] =
@@ -121,7 +109,5 @@ class DiscordClientCore(
       .map { _ =>
         println("Stopping")
         sys.exit(0)
-      }(
-        scala.concurrent.ExecutionContext.global
-      ) //Just in case CoordinatedShutdown doesn't stop the JVM
+      }(scala.concurrent.ExecutionContext.global) //Just in case CoordinatedShutdown doesn't stop the JVM
 }

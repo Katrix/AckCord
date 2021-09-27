@@ -38,48 +38,25 @@ object MusicManager {
 
   private[ackcord] def apply(
       events: Events,
-      players: Map[
-        GuildId,
-        (AudioPlayer, ActorRef[LavaplayerHandler.Command])
-      ] = Map.empty
+      players: Map[GuildId, (AudioPlayer, ActorRef[LavaplayerHandler.Command])] = Map.empty
   ): Behavior[Command] = Behaviors.receive {
-    case (
-          ctx,
-          ConnectToChannel(
-            guildId,
-            channelId,
-            force,
-            createPlayer,
-            timeoutDur,
-            replyTo
-          )
-        ) =>
-      implicit val timeout: Timeout = Timeout(timeoutDur)
+    case (ctx, ConnectToChannel(guildId, channelId, force, createPlayer, timeoutDur, replyTo)) =>
+      implicit val timeout: Timeout             = Timeout(timeoutDur)
       implicit val system: ActorSystem[Nothing] = ctx.system
       import ctx.executionContext
 
       val (usedPlayer, actor) = players.getOrElse(
         guildId, {
           val player = createPlayer()
-          (
-            player,
-            ctx.spawn(
-              LavaplayerHandler(player, guildId, events),
-              guildId.asString
-            )
-          )
+          (player, ctx.spawn(LavaplayerHandler(player, guildId, events), guildId.asString))
         }
       )
 
       //TODO: Handle errors
-      actor
-        .ask[LavaplayerHandler.Reply](
-          LavaplayerHandler.ConnectVoiceChannel(channelId, force, _)
-        )
-        .onComplete {
-          case Success(_) => replyTo ! GotPlayer(usedPlayer)
-          case Failure(e) => replyTo ! GotError(e)
-        }
+      actor.ask[LavaplayerHandler.Reply](LavaplayerHandler.ConnectVoiceChannel(channelId, force, _)).onComplete {
+        case Success(_) => replyTo ! GotPlayer(usedPlayer)
+        case Failure(e) => replyTo ! GotError(e)
+      }
 
       apply(events, players.updated(guildId, (usedPlayer, actor)))
 
@@ -109,7 +86,7 @@ object MusicManager {
 
   sealed trait ConnectToChannelResponse
   case class GotPlayer(player: AudioPlayer) extends ConnectToChannelResponse
-  case class GotError(e: Throwable) extends ConnectToChannelResponse
+  case class GotError(e: Throwable)         extends ConnectToChannelResponse
 
   private[ackcord] case class ConnectToChannel(
       guildId: GuildId,
@@ -120,12 +97,6 @@ object MusicManager {
       replyTo: ActorRef[ConnectToChannelResponse]
   ) extends Command
 
-  private[ackcord] case class DisconnectFromChannel(
-      guildId: GuildId,
-      destroyPlayer: Boolean
-  ) extends Command
-  private[ackcord] case class SetChannelPlaying(
-      guildId: GuildId,
-      playing: Boolean
-  ) extends Command
+  private[ackcord] case class DisconnectFromChannel(guildId: GuildId, destroyPlayer: Boolean) extends Command
+  private[ackcord] case class SetChannelPlaying(guildId: GuildId, playing: Boolean)           extends Command
 }

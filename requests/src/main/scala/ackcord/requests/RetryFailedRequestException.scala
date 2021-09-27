@@ -24,7 +24,4 @@
 
 package ackcord.requests
 
-private[requests] case class RetryFailedRequestException[Ctx](
-    failed: FailedRequest,
-    ctx: Ctx
-) extends Exception
+private[requests] case class RetryFailedRequestException[Ctx](failed: FailedRequest, ctx: Ctx) extends Exception

@@ -40,9 +40,7 @@ abstract class CommandController(val requests: Requests) {
 
   implicit val ec: ExecutionContext = requests.system.executionContext
 
-  implicit def findCache[A](implicit
-      message: CommandMessage[A]
-  ): CacheSnapshot = message.cache
+  implicit def findCache[A](implicit message: CommandMessage[A]): CacheSnapshot = message.cache
 
   /** Determines the default value for if a mention should required. */
   def defaultMustMention: Boolean = false
@@ -58,11 +56,7 @@ abstract class CommandController(val requests: Requests) {
     * default provided builder.
     */
   val baseCommandBuilder: CommandBuilder[CommandMessage, NotUsed] =
-    CommandBuilder.rawBuilder(
-      requests,
-      defaultMustMention,
-      defaultMentionOrPrefix
-    )
+    CommandBuilder.rawBuilder(requests, defaultMustMention, defaultMentionOrPrefix)
 
   /**
     * The default command builder you will use to create most of your commands.
@@ -70,9 +64,7 @@ abstract class CommandController(val requests: Requests) {
     */
   val Command: CommandBuilder[UserCommandMessage, NotUsed] =
     baseCommandBuilder.andThen(CommandBuilder.nonBot { user =>
-      λ[CommandMessage ~> UserCommandMessage](m =>
-        UserCommandMessage.Default(user, m)
-      )
+      λ[CommandMessage ~> UserCommandMessage](m => UserCommandMessage.Default(user, m))
     })
 
   /**
@@ -82,31 +74,19 @@ abstract class CommandController(val requests: Requests) {
   val GuildCommand: CommandBuilder[GuildMemberCommandMessage, NotUsed] =
     Command
       .andThen(CommandBuilder.onlyInGuild { (chG, message, g) =>
-        λ[UserCommandMessage ~> GuildUserCommandMessage](m =>
-          GuildCommandMessage.WithUser(chG, message, g, m.user, m)
-        )
+        λ[UserCommandMessage ~> GuildUserCommandMessage](m => GuildCommandMessage.WithUser(chG, message, g, m.user, m))
       })
       .andThen(CommandBuilder.withGuildMember { member =>
         λ[GuildUserCommandMessage ~> GuildMemberCommandMessage](m =>
-          GuildMemberCommandMessage
-            .Default(m.textChannel, m.message, m.guild, m.user, member, m)
+          GuildMemberCommandMessage.Default(m.textChannel, m.message, m.guild, m.user, member, m)
         )
       })
 
   /** A command builder that only accepts users that are in a voice channel. */
-  val GuildVoiceCommand
-      : CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
+  val GuildVoiceCommand: CommandBuilder[VoiceGuildMemberCommandMessage, NotUsed] =
     GuildCommand.andThen(CommandBuilder.inVoiceChannel { vCh =>
       λ[GuildMemberCommandMessage ~> VoiceGuildMemberCommandMessage](m =>
-        VoiceGuildCommandMessage.WithGuildMember(
-          m.textChannel,
-          m.message,
-          m.guild,
-          m.user,
-          m.guildMember,
-          vCh,
-          m
-        )
+        VoiceGuildCommandMessage.WithGuildMember(m.textChannel, m.message, m.guild, m.user, m.guildMember, vCh, m)
       )
     })
 }

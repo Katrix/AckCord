@@ -1,14 +1,14 @@
 import sbtcrossproject.CrossPlugin.autoImport.{CrossType, crossProject}
 
-lazy val akkaVersion = "2.6.15"
+lazy val akkaVersion     = "2.6.15"
 lazy val akkaHttpVersion = "10.2.5"
-lazy val circeVersion = "0.13.0"
-lazy val ackCordVersion = "0.18.0-SNAPSHOT"
+lazy val circeVersion    = "0.13.0"
+lazy val ackCordVersion  = "0.18.0-SNAPSHOT"
 
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.6",
+  scalaVersion       := "2.13.6",
   crossScalaVersions := Seq("2.12.12", scalaVersion.value),
-  organization := "net.katsstuff",
+  organization       := "net.katsstuff",
   scalacOptions ++= Seq(
     "-deprecation",
     "-feature",
@@ -18,24 +18,17 @@ lazy val commonSettings = Seq(
   ),
   scalacOptions ++= (
     if (scalaVersion.value.startsWith("2.12"))
-      Seq(
-        "-Yno-adapted-args",
-        "-Ywarn-unused-import",
-        "-Ypartial-unification",
-        "-language:higherKinds"
-      )
+      Seq("-Yno-adapted-args", "-Ywarn-unused-import", "-Ypartial-unification", "-language:higherKinds")
     else Nil
   ),
-  libraryDependencies += compilerPlugin(
-    "org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full
-  ),
+  libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.13.0" cross CrossVersion.full),
   publishTo := sonatypePublishToBundle.value
 )
 
 lazy val publishSettings = Seq(
-  publishMavenStyle := true,
+  publishMavenStyle      := true,
   Test / publishArtifact := false,
-  licenses := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
+  licenses               := Seq("MIT" -> url("http://opensource.org/licenses/MIT")),
   scmInfo := Some(
     ScmInfo(
       url("https://github.com/Katrix/AckCord"),
@@ -47,69 +40,61 @@ lazy val publishSettings = Seq(
     val old = moduleName.value
     s"ackcord-$old"
   },
-  homepage := Some(url("https://github.com/Katrix/AckCord")),
-  developers := List(
-    Developer(
-      "Katrix",
-      "Kathryn Frid",
-      "katrix97@hotmail.com",
-      url("http://katsstuff.net/")
-    )
-  ),
+  homepage        := Some(url("https://github.com/Katrix/AckCord")),
+  developers      := List(Developer("Katrix", "Kathryn Frid", "katrix97@hotmail.com", url("http://katsstuff.net/"))),
   autoAPIMappings := true
 )
 
-lazy val noPublishSettings =
-  Seq(publish := {}, publishLocal := {}, publishArtifact := false)
+lazy val noPublishSettings = Seq(publish := {}, publishLocal := {}, publishArtifact := false)
 
 lazy val data = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     commonSettings,
     publishSettings,
-    name := "data",
-    version := ackCordVersion,
+    name                                  := "data",
+    version                               := ackCordVersion,
     libraryDependencies += "com.chuusai" %%% "shapeless" % "2.3.7",
     libraryDependencies ++= Seq(
-      "io.circe" %%% "circe-core" % circeVersion,
-      "io.circe" %%% "circe-parser" % circeVersion,
+      "io.circe" %%% "circe-core"           % circeVersion,
+      "io.circe" %%% "circe-parser"         % circeVersion,
       "io.circe" %%% "circe-generic-extras" % circeVersion,
-      "io.circe" %%% "circe-derivation" % "0.13.0-M5"
+      "io.circe" %%% "circe-derivation"     % "0.13.0-M5"
     ),
     libraryDependencies ++= Seq(
-      "com.beachape" %%% "enumeratum" % "1.7.0",
+      "com.beachape" %%% "enumeratum"       % "1.7.0",
       "com.beachape" %%% "enumeratum-circe" % "1.7.0"
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
 
 lazy val dataJVM = data.jvm
-lazy val dataJS = data.js
+lazy val dataJS  = data.js
 
 lazy val gatewayData = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
   .settings(
     commonSettings,
     publishSettings,
-    name := "gateway-data",
+    name    := "gateway-data",
     version := ackCordVersion
   )
   .dependsOn(data)
 
 lazy val gatewayDataJVM = gatewayData.jvm
-lazy val gatewayDataJS = gatewayData.js
+lazy val gatewayDataJS  = gatewayData.js
 
 lazy val requests = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "requests",
-    version := ackCordVersion,
+    name        := "requests",
+    version     := ackCordVersion,
     description := "The request module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
       "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -119,13 +104,13 @@ lazy val gateway = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "gateway",
-    version := ackCordVersion,
+    name        := "gateway",
+    version     := ackCordVersion,
     description := "The gateway module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
       "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -135,19 +120,16 @@ lazy val voice = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "voice",
-    version := ackCordVersion,
+    name        := "voice",
+    version     := ackCordVersion,
     description := "The voice websocket module of AckCord",
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-typed"  % akkaVersion,
       "com.typesafe.akka" %% "akka-stream-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-http-core" % akkaHttpVersion
+      "com.typesafe.akka" %% "akka-http-core"    % akkaHttpVersion
     ),
     libraryDependencies += "com.typesafe.akka" %% "akka-stream-testkit" % akkaVersion % Test,
-    Compile / doc / scalacOptions ++= Seq(
-      "-skip-packages",
-      "com.iwebpp:akka.pattern"
-    )
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern")
   )
   .dependsOn(dataJVM)
 
@@ -155,10 +137,10 @@ lazy val commands = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "commands",
-    version := ackCordVersion,
+    name                                   := "commands",
+    version                                := ackCordVersion,
     libraryDependencies += "org.typelevel" %% "cats-mtl-core" % "0.7.1",
-    description := "ackCord-commands provides a Play like commands framework for AckCord"
+    description                            := "ackCord-commands provides a Play like commands framework for AckCord"
   )
   .dependsOn(requests)
 
@@ -166,8 +148,8 @@ val interactions = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "interactions",
-    version := ackCordVersion,
+    name        := "interactions",
+    version     := ackCordVersion,
     description := "ackCord-interactions provides a high level API to interact with Discord's interactions"
   )
   .dependsOn(requests)
@@ -176,11 +158,11 @@ lazy val core = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "core",
+    name    := "core",
     version := ackCordVersion,
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-testkit" % akkaVersion % Test,
-      "org.scalatest" %% "scalatest" % "3.2.9" % Test
+      "org.scalatest"     %% "scalatest"    % "3.2.9"     % Test
     ),
     description := "AckCord is a Scala library using Akka for the Discord API giving as much freedom as possible to the user"
   )
@@ -190,7 +172,7 @@ lazy val lavaplayerCore = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "lavaplayer-core",
+    name    := "lavaplayer-core",
     version := ackCordVersion,
     resolvers += Resolver.JCenterRepository,
     resolvers += "dv8tion" at "https://m2.dv8tion.net/releases",
@@ -203,10 +185,10 @@ lazy val ackCord = project
   .settings(
     commonSettings,
     publishSettings,
-    name := "ackcord",
-    version := ackCordVersion,
+    name                                       := "ackcord",
+    version                                    := ackCordVersion,
     libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    moduleName := "ackcord",
+    moduleName                                 := "ackcord",
     description := "A higher level extension to AckCord so you don't have to deal with the lower level stuff as much",
     Compile / doc / scalacOptions ++= Seq("-skip-packages", "akka.pattern")
   )
@@ -216,11 +198,11 @@ lazy val exampleCore = project
   .settings(
     commonSettings,
     noPublishSettings,
-    name := "exampleCore",
-    version := "1.0",
-    Compile / mainClass := Some("ackcord.examplecore.Example"),
-    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
-    libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.5"
+    name                                       := "exampleCore",
+    version                                    := "1.0",
+    Compile / mainClass                        := Some("ackcord.examplecore.Example"),
+    libraryDependencies += "com.typesafe.akka" %% "akka-slf4j"      % akkaVersion,
+    libraryDependencies += "ch.qos.logback"     % "logback-classic" % "1.2.5"
   )
   .dependsOn(core, lavaplayerCore, commands, interactions)
 
@@ -228,32 +210,30 @@ lazy val example = project
   .settings(
     commonSettings,
     noPublishSettings,
-    name := "example",
-    version := "1.0",
+    name                                   := "example",
+    version                                := "1.0",
     libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.5"
   )
   .dependsOn(ackCord)
 
-lazy val docsMappingsAPIDir = settingKey[String](
-  "Name of subdirectory in site target directory for api docs"
-)
+lazy val docsMappingsAPIDir = settingKey[String]("Name of subdirectory in site target directory for api docs")
 
 lazy val docs = project
   .enablePlugins(MicrositesPlugin, ScalaUnidocPlugin, GhpagesPlugin)
   .settings(commonSettings: _*)
   .settings(
-    micrositeName := "AckCord",
-    micrositeAuthor := "Katrix",
-    micrositeDescription := "A Discord library built for flexibility and speed",
-    micrositeDocumentationUrl := "/api/ackcord",
+    micrositeName                          := "AckCord",
+    micrositeAuthor                        := "Katrix",
+    micrositeDescription                   := "A Discord library built for flexibility and speed",
+    micrositeDocumentationUrl              := "/api/ackcord",
     micrositeDocumentationLabelDescription := "ScalaDoc",
-    micrositeHomepage := "https://ackcord.katsstuff.net",
-    micrositeGithubOwner := "Katrix",
-    micrositeGithubRepo := "AckCord",
-    micrositeGitterChannel := false,
-    micrositeShareOnSocial := false,
-    micrositeTheme := "pattern",
-    ghpagesCleanSite / excludeFilter := "CNAME",
+    micrositeHomepage                      := "https://ackcord.katsstuff.net",
+    micrositeGithubOwner                   := "Katrix",
+    micrositeGithubRepo                    := "AckCord",
+    micrositeGitterChannel                 := false,
+    micrositeShareOnSocial                 := false,
+    micrositeTheme                         := "pattern",
+    ghpagesCleanSite / excludeFilter       := "CNAME",
     Compile / scalacOptions ++= Seq("-language:higherKinds"),
     autoAPIMappings := true,
     ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(
@@ -268,15 +248,9 @@ lazy val docs = project
       lavaplayerCore,
       ackCord
     ),
-    Compile / doc / scalacOptions ++= Seq(
-      "-skip-packages",
-      "com.iwebpp:akka.pattern"
-    ),
+    Compile / doc / scalacOptions ++= Seq("-skip-packages", "com.iwebpp:akka.pattern"),
     docsMappingsAPIDir := "api",
-    addMappingsToSiteDir(
-      ScalaUnidoc / packageDoc / mappings,
-      docsMappingsAPIDir
-    ),
+    addMappingsToSiteDir(ScalaUnidoc / packageDoc / mappings, docsMappingsAPIDir),
     //mdoc / fork := true,
     mdocIn := sourceDirectory.value / "main" / "mdoc",
     //ScalaUnidoc / unidoc / fork := true,

@@ -55,12 +55,7 @@ sealed trait VoiceMessage[D] {
   * @param token
   *   The token received in [[ackcord.APIMessage.VoiceServerUpdate]]
   */
-case class IdentifyData(
-    serverId: RawSnowflake,
-    userId: UserId,
-    sessionId: String,
-    token: String
-)
+case class IdentifyData(serverId: RawSnowflake, userId: UserId, sessionId: String, token: String)
 
 /**
   * Sent by the client to inform Discord that we want to send voice data.
@@ -79,11 +74,7 @@ case class Identify(d: IdentifyData) extends VoiceMessage[IdentifyData] {
   * @param mode
   *   The encryption mode, currently supports only xsalsa20_poly1305
   */
-case class SelectProtocolConnectionData(
-    address: String,
-    port: Int,
-    mode: String
-)
+case class SelectProtocolConnectionData(address: String, port: Int, mode: String)
 
 /**
   * Data used by [[SelectProtocol]]
@@ -92,17 +83,13 @@ case class SelectProtocolConnectionData(
   * @param data
   *   The connection data
   */
-case class SelectProtocolData(
-    protocol: String,
-    data: SelectProtocolConnectionData
-)
+case class SelectProtocolData(protocol: String, data: SelectProtocolConnectionData)
 
 /**
   * Sent by the client when everything else is done. Discord responds with
   * [[SessionDescription]]
   */
-case class SelectProtocol(d: SelectProtocolData)
-    extends VoiceMessage[SelectProtocolData] {
+case class SelectProtocol(d: SelectProtocolData) extends VoiceMessage[SelectProtocolData] {
   override def op: VoiceOpCode = VoiceOpCode.SelectProtocol
 }
 object SelectProtocol {
@@ -111,12 +98,7 @@ object SelectProtocol {
       address: String,
       port: Int,
       mode: String
-  ): SelectProtocol = SelectProtocol(
-    SelectProtocolData(
-      protocol,
-      SelectProtocolConnectionData(address, port, mode)
-    )
-  )
+  ): SelectProtocol = SelectProtocol(SelectProtocolData(protocol, SelectProtocolConnectionData(address, port, mode)))
 }
 
 /**
@@ -156,8 +138,7 @@ case class Heartbeat(d: Int) extends VoiceMessage[Int] {
 case class SessionDescriptionData(mode: String, secretKey: ByteString)
 
 /** Sent by Discord in response to [[SelectProtocol]] */
-case class SessionDescription(d: SessionDescriptionData)
-    extends VoiceMessage[SessionDescriptionData] {
+case class SessionDescription(d: SessionDescriptionData) extends VoiceMessage[SessionDescriptionData] {
   override def op: VoiceOpCode = VoiceOpCode.SessionDescription
 }
 
@@ -239,13 +220,13 @@ case class Hello(d: HelloData) extends VoiceMessage[HelloData] {
 /** Send by Discord when we successfully resume a connection */
 case object Resumed extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.Resumed
-  override def d: NotUsed = NotUsed
+  override def d: NotUsed      = NotUsed
 }
 
 /** Message for OpCode 13, should be ignored */
 case object IgnoreClientDisconnect extends VoiceMessage[NotUsed] {
   override def op: VoiceOpCode = VoiceOpCode.ClientDisconnect
-  override def d: NotUsed = NotUsed
+  override def d: NotUsed      = NotUsed
 }
 
 /** Message for unknown voice opcode */
@@ -259,22 +240,20 @@ case class UnknownVoiceMessage(op: VoiceOpCode) extends VoiceMessage[NotUsed] {
   *   The int value of the code
   */
 sealed abstract class VoiceOpCode(val value: Int) extends IntEnumEntry
-object VoiceOpCode
-    extends IntEnum[VoiceOpCode]
-    with IntCirceEnumWithUnknown[VoiceOpCode] {
+object VoiceOpCode extends IntEnum[VoiceOpCode] with IntCirceEnumWithUnknown[VoiceOpCode] {
   override def values: immutable.IndexedSeq[VoiceOpCode] = findValues
 
-  object Identify extends VoiceOpCode(0)
-  object SelectProtocol extends VoiceOpCode(1)
-  object Ready extends VoiceOpCode(2)
-  object Heartbeat extends VoiceOpCode(3)
-  object SessionDescription extends VoiceOpCode(4)
-  object Speaking extends VoiceOpCode(5)
-  object HeartbeatACK extends VoiceOpCode(6)
-  object Resume extends VoiceOpCode(7)
-  object Hello extends VoiceOpCode(8)
-  object Resumed extends VoiceOpCode(9)
-  object ClientDisconnect extends VoiceOpCode(13)
+  object Identify            extends VoiceOpCode(0)
+  object SelectProtocol      extends VoiceOpCode(1)
+  object Ready               extends VoiceOpCode(2)
+  object Heartbeat           extends VoiceOpCode(3)
+  object SessionDescription  extends VoiceOpCode(4)
+  object Speaking            extends VoiceOpCode(5)
+  object HeartbeatACK        extends VoiceOpCode(6)
+  object Resume              extends VoiceOpCode(7)
+  object Hello               extends VoiceOpCode(8)
+  object Resumed             extends VoiceOpCode(9)
+  object ClientDisconnect    extends VoiceOpCode(13)
   case class Unknown(i: Int) extends VoiceOpCode(i)
 
   override def createUnknown(value: Int): VoiceOpCode = Unknown(value)

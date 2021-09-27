@@ -92,18 +92,7 @@ object GatewayHandler {
       wsFlow: WsFlowFunc = defaultWsFlow
   ): Behavior[Command] = Behaviors.setup { context =>
     Behaviors.withTimers { timers =>
-      inactive(
-        Parameters(
-          rawWsUri,
-          settings,
-          handlerFlow,
-          context,
-          timers,
-          context.log
-        ),
-        State(),
-        wsFlow
-      )
+      inactive(Parameters(rawWsUri, settings, handlerFlow, context, timers, context.log), State(), wsFlow)
     }
   }
 
@@ -114,9 +103,7 @@ object GatewayHandler {
   ): Flow[GatewayMessage[_], GatewayMessage[
     _
   ], (Future[WebSocketUpgradeResponse], Future[(Option[ResumeData], Boolean)], Future[Unit])] =
-    GatewayHandlerGraphStage.flow(wsUri, parameters.settings, state.resume)(
-      parameters.context.system
-    )
+    GatewayHandlerGraphStage.flow(wsUri, parameters.settings, state.resume)(parameters.context.system)
 
   private def retryLogin(
       forceWait: Boolean,
@@ -131,21 +118,13 @@ object GatewayHandler {
         else Math.pow(2, state.retryCount).seconds
 
       val waitTime =
-        if (forceWait)
-          Seq(
-            ThreadLocalRandom.current().nextDouble(1, 5).seconds,
-            backoffWaitTime
-          ).max
+        if (forceWait) Seq(ThreadLocalRandom.current().nextDouble(1, 5).seconds, backoffWaitTime).max
         else backoffWaitTime
 
       timers.startSingleTimer("RetryLogin", Login, waitTime)
       inactive(
         parameters,
-        state.copy(
-          killSwitch = None,
-          retryCount = state.retryCount + 1,
-          currentIteration = None
-        ),
+        state.copy(killSwitch = None, retryCount = state.retryCount + 1, currentIteration = None),
         wsFlow
       )
     } else {
@@ -185,28 +164,14 @@ object GatewayHandler {
 
       // Invalid seq
       case 4007 =>
-        log.warn(
-          """|Tried to resume with an invalid seq. Likely a bug in AckCord. 
-                    |Submit a bug with a debug log on the issue tracker""".stripMargin
-        )
-        retryLogin(
-          forceWait = true,
-          parameters,
-          state.copy(resume = None),
-          timers,
-          wsFlow
-        )
+        log.warn("""|Tried to resume with an invalid seq. Likely a bug in AckCord. 
+                    |Submit a bug with a debug log on the issue tracker""".stripMargin)
+        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
 
       //Session timed out
       case 4009 =>
         log.debug("""|Tried to resume with a timed out session""".stripMargin)
-        retryLogin(
-          forceWait = true,
-          parameters,
-          state.copy(resume = None),
-          timers,
-          wsFlow
-        )
+        retryLogin(forceWait = true, parameters, state.copy(resume = None), timers, wsFlow)
 
       //Ratelimited
       case 4008 =>
@@ -226,23 +191,16 @@ object GatewayHandler {
     state.killSwitch.foreach(_.shutdown())
   }
 
-  private def inactive(
-      parameters: Parameters,
-      state: State,
-      wsFlow: WsFlowFunc
-  ): Behavior[Command] = {
+  private def inactive(parameters: Parameters, state: State, wsFlow: WsFlowFunc): Behavior[Command] = {
     import akka.actor.typed.scaladsl.adapter._
     import parameters._
     import state._
     implicit val oldSystem: classic.ActorSystem = context.system.toClassic
 
     val wsUri: Uri = {
-      val alwaysPresent =
-        Seq("v" -> AckCord.DiscordApiVersion, "encoding" -> "json")
+      val alwaysPresent = Seq("v" -> AckCord.DiscordApiVersion, "encoding" -> "json")
       val query =
-        if (settings.compress == Compress.ZLibStreamCompress)
-          alwaysPresent :+ ("compress" -> "zlib")
-        else alwaysPresent
+        if (settings.compress == Compress.ZLibStreamCompress) alwaysPresent :+ ("compress" -> "zlib") else alwaysPresent
 
       rawWsUri.withQuery(Query(query: _*))
     }
@@ -266,9 +224,8 @@ object GatewayHandler {
               .run()
 
           context.pipeToSelf(newResumeData) {
-            case Success((resumeData, shouldWait)) =>
-              ConnectionDied(resumeData, shouldWait)
-            case Failure(e) => SendException(e, iteration)
+            case Success((resumeData, shouldWait)) => ConnectionDied(resumeData, shouldWait)
+            case Failure(e)                        => SendException(e, iteration)
           }
 
           context.pipeToSelf(wsUpgrade) {
@@ -281,40 +238,26 @@ object GatewayHandler {
             case Failure(e) => SendException(e, iteration)
           }
 
-          inactive(
-            parameters,
-            state.copy(
-              killSwitch = Some(switch),
-              currentIteration = Some(iteration)
-            ),
-            wsFlow
-          )
+          inactive(parameters, state.copy(killSwitch = Some(switch), currentIteration = Some(iteration)), wsFlow)
 
         case UpgradeResponse(ValidUpgrade(response, _)) =>
-          log.info(
-            "Valid login. Going to active. Response: {}",
-            response.entity.toString
-          )
+          log.info("Valid login. Going to active. Response: {}", response.entity.toString)
           response.discardEntityBytes()
           active(parameters, state, wsFlow)
 
         case UpgradeResponse(InvalidUpgradeResponse(response, cause)) =>
           response.discardEntityBytes()
           shutdownStream(state, log)
-          throw new IllegalStateException(
-            s"Could not connect to gateway: $cause"
-          ) //TODO
+          throw new IllegalStateException(s"Could not connect to gateway: $cause") //TODO
 
         case ResetRetryCount =>
           log.debug("Managed to connect successfully, resetting retry count")
           active(parameters, state.copy(retryCount = 0), wsFlow)
 
-        case SendException(e: PeerClosedConnectionException, iteration)
-            if currentIteration.contains(iteration) =>
+        case SendException(e: PeerClosedConnectionException, iteration) if currentIteration.contains(iteration) =>
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
-        case SendException(e, iteration)
-            if currentIteration.contains(iteration) =>
+        case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state, log)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
@@ -324,17 +267,12 @@ object GatewayHandler {
           Behaviors.same
 
         case GatewayHandler.ConnectionDied(_, _) =>
-          log.error(
-            "Connection died before starting. Retry count {}",
-            retryCount
-          )
+          log.error("Connection died before starting. Retry count {}", retryCount)
           shutdownStream(state, log)
           retryLogin(forceWait = false, parameters, state, timers, wsFlow)
 
         case Logout =>
-          log.warn(
-            "Logged out before connection could be established. This is likely a bug"
-          )
+          log.warn("Logged out before connection could be established. This is likely a bug")
           Behaviors.stopped
       }
       .receiveSignal { case (_, PostStop) =>
@@ -343,11 +281,7 @@ object GatewayHandler {
       }
   }
 
-  private def active(
-      parameters: Parameters,
-      state: State,
-      wsFlow: WsFlowFunc
-  ): Behavior[Command] = {
+  private def active(parameters: Parameters, state: State, wsFlow: WsFlowFunc): Behavior[Command] = {
     import parameters._
     import state._
 
@@ -360,29 +294,18 @@ object GatewayHandler {
           } else {
             shutdownStream(state, log)
 
-            log.info(
-              "Websocket connection died. Logging in again. Retry count {}",
-              retryCount
-            )
-            retryLogin(
-              waitBeforeRestart,
-              parameters,
-              state.copy(resume = newResume),
-              timers,
-              wsFlow
-            )
+            log.info("Websocket connection died. Logging in again. Retry count {}", retryCount)
+            retryLogin(waitBeforeRestart, parameters, state.copy(resume = newResume), timers, wsFlow)
           }
 
         case ResetRetryCount =>
           log.debug("Managed to connect successfully, resetting retry count")
           active(parameters, state.copy(retryCount = 0), wsFlow)
 
-        case SendException(e: PeerClosedConnectionException, iteration)
-            if currentIteration.contains(iteration) =>
+        case SendException(e: PeerClosedConnectionException, iteration) if currentIteration.contains(iteration) =>
           handlePeerClosedConnection(e, parameters, state, timers, wsFlow, log)
 
-        case SendException(e, iteration)
-            if currentIteration.contains(iteration) =>
+        case SendException(e, iteration) if currentIteration.contains(iteration) =>
           log.error(s"Websocket error. Retry count $retryCount", e)
           shutdownStream(state, log)
           retryLogin(forceWait = true, parameters, state, timers, wsFlow)
@@ -416,13 +339,8 @@ object GatewayHandler {
   /** Send this to a [[GatewayHandler]] to stop it gracefully. */
   case object Logout extends Command
 
-  private case object ResetRetryCount extends Command
-  private case class ConnectionDied(
-      resume: Option[ResumeData],
-      waitBeforeRestart: Boolean
-  ) extends Command
-  private case class UpgradeResponse(response: WebSocketUpgradeResponse)
-      extends Command
-  private case class SendException(e: Throwable, iteration: UUID)
-      extends Command
+  private case object ResetRetryCount                                                       extends Command
+  private case class ConnectionDied(resume: Option[ResumeData], waitBeforeRestart: Boolean) extends Command
+  private case class UpgradeResponse(response: WebSocketUpgradeResponse)                    extends Command
+  private case class SendException(e: Throwable, iteration: UUID)                           extends Command
 }

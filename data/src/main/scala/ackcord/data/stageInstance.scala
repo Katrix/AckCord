@@ -30,21 +30,16 @@ case class StageInstance(
     discoverableDisabled: Boolean
 )
 
-sealed abstract class StageInstancePrivacyLevel(val value: Int)
-    extends IntEnumEntry
+sealed abstract class StageInstancePrivacyLevel(val value: Int) extends IntEnumEntry
 object StageInstancePrivacyLevel
     extends IntEnum[StageInstancePrivacyLevel]
     with IntCirceEnumWithUnknown[StageInstancePrivacyLevel] {
-  override def values: immutable.IndexedSeq[StageInstancePrivacyLevel] =
-    findValues
+  override def values: immutable.IndexedSeq[StageInstancePrivacyLevel] = findValues
 
-  case object Public extends StageInstancePrivacyLevel(1)
+  case object Public    extends StageInstancePrivacyLevel(1)
   case object GuildOnly extends StageInstancePrivacyLevel(2)
 
-  case class Unknown(override val value: Int)
-      extends StageInstancePrivacyLevel(value)
+  case class Unknown(override val value: Int) extends StageInstancePrivacyLevel(value)
 
-  override def createUnknown(value: Int): StageInstancePrivacyLevel = Unknown(
-    value
-  )
+  override def createUnknown(value: Int): StageInstancePrivacyLevel = Unknown(value)
 }

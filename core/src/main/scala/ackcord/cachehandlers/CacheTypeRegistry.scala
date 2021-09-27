@@ -43,9 +43,7 @@ class CacheTypeRegistry(
       tpe: String,
       data: => D,
       builder: CacheSnapshotBuilder
-  ): Unit = getWithData[D, HandlerTpe](tpe, handlers).foreach(
-    _.handle(builder, data, this)
-  )
+  ): Unit = getWithData[D, HandlerTpe](tpe, handlers).foreach(_.handle(builder, data, this))
 
   def updateData[D: ClassTag](builder: CacheSnapshotBuilder)(data: => D): Unit =
     handleWithData(updateHandlers, "updater", data, builder)
@@ -60,17 +58,10 @@ class CacheTypeRegistry(
     val res = handlers
       .get(tag.runtimeClass)
       .asInstanceOf[Option[HandlerTpe[D]]]
-      .orElse(
-        handlers
-          .find(_._1.isAssignableFrom(tag.runtimeClass))
-          .map(_._2.asInstanceOf[HandlerTpe[D]])
-      )
+      .orElse(handlers.find(_._1.isAssignableFrom(tag.runtimeClass)).map(_._2.asInstanceOf[HandlerTpe[D]]))
 
     if (res.isEmpty) {
-      log.debug(
-        s"$tpe not found",
-        new Exception(s"No $tpe found for ${tag.runtimeClass}")
-      )
+      log.debug(s"$tpe not found", new Exception(s"No $tpe found for ${tag.runtimeClass}"))
     }
 
     res.filter(!_.ignore)
@@ -90,54 +81,48 @@ class CacheTypeRegistry(
 }
 object CacheTypeRegistry {
 
-  private val noPresencesBansEmojiUpdaters: Map[Class[_], CacheUpdater[_]] =
-    Map(
-      classOf[PartialUser] -> CacheHandlers.partialUserUpdater,
-      classOf[Guild] -> CacheHandlers.guildUpdater,
-      classOf[GuildMember] -> CacheHandlers.guildMemberUpdater,
-      classOf[
-        RawGuildMemberWithGuild
-      ] -> CacheHandlers.rawGuildMemberWithGuildUpdater,
-      classOf[ThreadGuildChannel] -> CacheHandlers.threadChannelUpdater,
-      classOf[GuildChannel] -> CacheHandlers.guildChannelUpdater,
-      classOf[DMChannel] -> CacheHandlers.dmChannelUpdater,
-      classOf[GroupDMChannel] -> CacheHandlers.dmGroupChannelUpdater,
-      classOf[RawGuild] -> CacheHandlers.rawGuildUpdater,
-      classOf[RawThreadMember] -> CacheHandlers.rawThreadMemberUpdater,
-      classOf[User] -> CacheHandlers.userUpdater,
-      classOf[UnavailableGuild] -> CacheHandlers.unavailableGuildUpdater,
-      classOf[Message] -> CacheHandlers.messageUpdater,
-      classOf[Role] -> CacheHandlers.roleUpdater,
-      classOf[StageInstance] -> CacheHandlers.stageInstanceUpdater,
-      classOf[Ban] -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
-      classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
-      classOf[Presence] -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
-    )
+  private val noPresencesBansEmojiUpdaters: Map[Class[_], CacheUpdater[_]] = Map(
+    classOf[PartialUser]             -> CacheHandlers.partialUserUpdater,
+    classOf[Guild]                   -> CacheHandlers.guildUpdater,
+    classOf[GuildMember]             -> CacheHandlers.guildMemberUpdater,
+    classOf[RawGuildMemberWithGuild] -> CacheHandlers.rawGuildMemberWithGuildUpdater,
+    classOf[ThreadGuildChannel]      -> CacheHandlers.threadChannelUpdater,
+    classOf[GuildChannel]            -> CacheHandlers.guildChannelUpdater,
+    classOf[DMChannel]               -> CacheHandlers.dmChannelUpdater,
+    classOf[GroupDMChannel]          -> CacheHandlers.dmGroupChannelUpdater,
+    classOf[RawGuild]                -> CacheHandlers.rawGuildUpdater,
+    classOf[RawThreadMember]         -> CacheHandlers.rawThreadMemberUpdater,
+    classOf[User]                    -> CacheHandlers.userUpdater,
+    classOf[UnavailableGuild]        -> CacheHandlers.unavailableGuildUpdater,
+    classOf[Message]                 -> CacheHandlers.messageUpdater,
+    classOf[Role]                    -> CacheHandlers.roleUpdater,
+    classOf[StageInstance]           -> CacheHandlers.stageInstanceUpdater,
+    classOf[Ban]                     -> CacheUpdater.dummy[Ban](shouldBeIgnored = true),
+    classOf[Emoji]                   -> CacheUpdater.dummy[Emoji](shouldBeIgnored = true),
+    classOf[Presence]                -> CacheUpdater.dummy[Presence](shouldBeIgnored = true)
+  )
 
-  private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] =
-    noPresencesBansEmojiUpdaters ++ Map(
-      classOf[Ban] -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
-      classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false)
-    )
+  private val noPresencesUpdaters: Map[Class[_], CacheUpdater[_]] = noPresencesBansEmojiUpdaters ++ Map(
+    classOf[Ban]   -> CacheUpdater.dummy[Ban](shouldBeIgnored = false),
+    classOf[Emoji] -> CacheUpdater.dummy[Emoji](shouldBeIgnored = false)
+  )
 
   private val allUpdaters: Map[Class[_], CacheUpdater[_]] =
-    noPresencesUpdaters + (classOf[Presence] -> CacheUpdater
-      .dummy[Presence](shouldBeIgnored = false))
+    noPresencesUpdaters + (classOf[Presence] -> CacheUpdater.dummy[Presence](shouldBeIgnored = false))
 
   private val noBanDeleters: Map[Class[_], CacheDeleter[_]] = Map(
-    classOf[GuildChannel] -> CacheHandlers.guildChannelDeleter,
-    classOf[DMChannel] -> CacheHandlers.dmChannelDeleter,
+    classOf[GuildChannel]   -> CacheHandlers.guildChannelDeleter,
+    classOf[DMChannel]      -> CacheHandlers.dmChannelDeleter,
     classOf[GroupDMChannel] -> CacheHandlers.groupDmChannelDeleter,
-    classOf[GuildMember] -> CacheHandlers.guildMemberDeleter,
-    classOf[Role] -> CacheHandlers.roleDeleter,
-    classOf[Message] -> CacheHandlers.messageDeleter,
-    classOf[StageInstance] -> CacheHandlers.stageInstanceDeleter,
-    classOf[Ban] -> CacheDeleter.dummy[Ban](shouldBeIgnored = true)
+    classOf[GuildMember]    -> CacheHandlers.guildMemberDeleter,
+    classOf[Role]           -> CacheHandlers.roleDeleter,
+    classOf[Message]        -> CacheHandlers.messageDeleter,
+    classOf[StageInstance]  -> CacheHandlers.stageInstanceDeleter,
+    classOf[Ban]            -> CacheDeleter.dummy[Ban](shouldBeIgnored = true)
   )
 
   private val allDeleters: Map[Class[_], CacheDeleter[_]] =
-    noBanDeleters + (classOf[Ban] -> CacheDeleter
-      .dummy[Ban](shouldBeIgnored = false))
+    noBanDeleters + (classOf[Ban] -> CacheDeleter.dummy[Ban](shouldBeIgnored = false))
 
   def default = new CacheTypeRegistry(allUpdaters, allDeleters)
 

@@ -6,9 +6,7 @@ package object components {
 
   implicit class TextButtonOps(private val button: TextButton) extends AnyVal {
 
-    def onClick[A <: ComponentInteraction](
-        makeHandler: String => ButtonHandler[A]
-    ): TextButton =
+    def onClick[A <: ComponentInteraction](makeHandler: String => ButtonHandler[A]): TextButton =
       onClickBoth(makeHandler)._1
 
     def onClickBoth[A <: ComponentInteraction](
@@ -19,9 +17,7 @@ package object components {
 
   implicit class SelectMenuOps(private val menu: SelectMenu) extends AnyVal {
 
-    def onSelect[A <: MenuInteraction](
-        makeHandler: String => MenuHandler[A]
-    ): SelectMenu =
+    def onSelect[A <: MenuInteraction](makeHandler: String => MenuHandler[A]): SelectMenu =
       onSelectBoth(makeHandler)._1
 
     def onSelectBoth[A <: MenuInteraction](

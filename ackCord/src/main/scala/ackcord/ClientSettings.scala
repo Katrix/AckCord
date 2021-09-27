@@ -80,8 +80,7 @@ case class ClientSettings(
     status: PresenceStatus = PresenceStatus.Online,
     afk: Boolean = false,
     compress: Compress = Compress.ZLibStreamCompress,
-    eventDecoders: GatewayProtocol.EventDecoders =
-      GatewayProtocol.ackcordEventDecoders,
+    eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     system: ActorSystem[Nothing] = ActorSystem(Behaviors.ignore, "AckCord"),
     requestSettings: RequestSettings = RequestSettings(),
@@ -113,23 +112,16 @@ case class ClientSettings(
     )
 
     implicit val timeout: Timeout = Timeout(1.second)
-    clientActor
-      .ask[DiscordClientActor.GetRatelimiterAndEventsReply](
-        DiscordClientActor.GetRatelimiterAndEvents
-      )
-      .map {
-        case DiscordClientActor.GetRatelimiterAndEventsReply(
-              ratelimiter,
-              cache
-            ) =>
-          val requests = requestSettings.toRequestsActor(token, ratelimiter)
+    clientActor.ask[DiscordClientActor.GetRatelimiterAndEventsReply](DiscordClientActor.GetRatelimiterAndEvents).map {
+      case DiscordClientActor.GetRatelimiterAndEventsReply(ratelimiter, cache) =>
+        val requests = requestSettings.toRequestsActor(token, ratelimiter)
 
-          new DiscordClientCore(
-            cache,
-            requests,
-            clientActor
-          )
-      }
+        new DiscordClientCore(
+          cache,
+          requests,
+          clientActor
+        )
+    }
   }
 
   /** Create a [[DiscordClient]] from these settings. */
@@ -137,9 +129,7 @@ case class ClientSettings(
     implicit val actorSystem: ActorSystem[Nothing] = system
 
     DiscordShard.fetchWsGateway.flatMap { uri =>
-      createClientWithShards(events =>
-        Seq(DiscordShard(uri, gatewaySettings, events))
-      )
+      createClientWithShards(events => Seq(DiscordShard(uri, gatewaySettings, events)))
     }
   }
 
@@ -150,11 +140,10 @@ case class ClientSettings(
   def createClientAutoShards(): Future[DiscordClient] = {
     implicit val actorSystem: ActorSystem[Nothing] = system
 
-    DiscordShard.fetchWsGatewayWithShards(token).flatMap {
-      case FetchWSGatewayBotInfo(uri, shards, _) =>
-        createClientWithShards(
-          DiscordShard.many(uri, shards, gatewaySettings, _)
-        )
+    DiscordShard.fetchWsGatewayWithShards(token).flatMap { case FetchWSGatewayBotInfo(uri, shards, _) =>
+      createClientWithShards(
+        DiscordShard.many(uri, shards, gatewaySettings, _)
+      )
     }
   }
 }
@@ -181,17 +170,13 @@ case class RequestSettings(
     maxAllowedWait: FiniteDuration = 2.minutes
 ) {
 
-  def toRequestsActor(
-      token: String,
-      ratelimitActor: ActorRef[RatelimiterActor.Command]
-  )(implicit
-      system: ActorSystem[Nothing]
+  def toRequestsActor(token: String, ratelimitActor: ActorRef[RatelimiterActor.Command])(
+      implicit system: ActorSystem[Nothing]
   ): Requests =
     new Requests(
       ackcord.requests.RequestSettings(
         Some(BotAuthentication(token)),
-        Ratelimiter
-          .ofActor(ratelimitActor, parallelism)(system, maxAllowedWait),
+        Ratelimiter.ofActor(ratelimitActor, parallelism)(system, maxAllowedWait),
         relativeTime,
         parallelism,
         maxRetryCount,

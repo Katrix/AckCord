@@ -31,12 +31,8 @@ import ackcord.requests.CreateMessageData
 import ackcord.{CacheSnapshot, Requests}
 
 class MyHelpCommand(requests: Requests) extends HelpCommand(requests) {
-  override def createSearchReply(
-      message: Message,
-      query: String,
-      matches: Seq[HelpCommand.HelpCommandProcessedEntry]
-  )(implicit
-      c: CacheSnapshot
+  override def createSearchReply(message: Message, query: String, matches: Seq[HelpCommand.HelpCommandProcessedEntry])(
+      implicit c: CacheSnapshot
   ): Future[CreateMessageData] = Future.successful(
     CreateMessageData(
       embeds = Seq(
@@ -48,15 +44,9 @@ class MyHelpCommand(requests: Requests) extends HelpCommand(requests) {
     )
   )
 
-  override def createReplyAll(message: Message, page: Int)(implicit
-      c: CacheSnapshot
-  ): Future[CreateMessageData] = {
+  override def createReplyAll(message: Message, page: Int)(implicit c: CacheSnapshot): Future[CreateMessageData] = {
     if (page <= 0) {
-      Future.successful(
-        CreateMessageData(embeds =
-          Seq(OutgoingEmbed(description = Some("Invalid Page")))
-        )
-      )
+      Future.successful(CreateMessageData(embeds = Seq(OutgoingEmbed(description = Some("Invalid Page")))))
     } else {
       Future
         .traverse(registeredCommands.toSeq) { entry =>
@@ -71,26 +61,13 @@ class MyHelpCommand(requests: Requests) extends HelpCommand(requests) {
         .map { entries =>
           val commandSlice = entries
             .collect {
-              case (
-                    entry,
-                    (
-                      (((canExecute, needsMention), symbols), aliases),
-                      caseSensitive
-                    )
-                  ) if canExecute =>
-                HelpCommand.HelpCommandProcessedEntry(
-                  needsMention,
-                  symbols,
-                  aliases,
-                  caseSensitive,
-                  entry.description
-                )
+              case (entry, ((((canExecute, needsMention), symbols), aliases), caseSensitive)) if canExecute =>
+                HelpCommand.HelpCommandProcessedEntry(needsMention, symbols, aliases, caseSensitive, entry.description)
             }
             .sortBy(e => (e.symbols.head, e.aliases.head))
             .slice((page - 1) * 10, page * 10)
 
-          val maxPages =
-            Math.max(Math.ceil(registeredCommands.size / 10D).toInt, 1)
+          val maxPages = Math.max(Math.ceil(registeredCommands.size / 10D).toInt, 1)
           if (commandSlice.isEmpty) {
             CreateMessageData(s"Max pages: $maxPages")
           } else {
@@ -99,8 +76,7 @@ class MyHelpCommand(requests: Requests) extends HelpCommand(requests) {
               embeds = Seq(
                 OutgoingEmbed(
                   fields = commandSlice.map(createContent(_)),
-                  footer =
-                    Some(OutgoingEmbedFooter(s"Page: $page of $maxPages"))
+                  footer = Some(OutgoingEmbedFooter(s"Page: $page of $maxPages"))
                 )
               )
             )
@@ -109,17 +85,11 @@ class MyHelpCommand(requests: Requests) extends HelpCommand(requests) {
     }
   }
 
-  def createContent(
-      entry: HelpCommand.HelpCommandProcessedEntry
-  )(implicit c: CacheSnapshot): EmbedField = {
+  def createContent(entry: HelpCommand.HelpCommandProcessedEntry)(implicit c: CacheSnapshot): EmbedField = {
     val invocation = {
       val mention = if (entry.needsMention) s"${c.botUser.mention} " else ""
-      val symbol =
-        if (entry.symbols.length > 1) entry.symbols.mkString("(", "|", ")")
-        else entry.symbols.head
-      val alias =
-        if (entry.aliases.length > 1) entry.aliases.mkString("(", "|", ")")
-        else entry.aliases.head
+      val symbol  = if (entry.symbols.length > 1) entry.symbols.mkString("(", "|", ")") else entry.symbols.head
+      val alias   = if (entry.aliases.length > 1) entry.aliases.mkString("(", "|", ")") else entry.aliases.head
 
       mention + symbol + alias
     }

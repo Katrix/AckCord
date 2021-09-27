@@ -27,31 +27,20 @@ import ackcord.data.{Guild, Presence}
 import ackcord.gateway.GatewayEvent.PresenceUpdateData
 
 object PresenceUpdater extends CacheUpdater[PresenceUpdateData] {
-  override def handle(
-      builder: CacheSnapshotBuilder,
-      obj: PresenceUpdateData,
-      registry: CacheTypeRegistry
-  ): Unit = {
-    val PresenceUpdateData(
-      partialUser,
-      guildId,
-      status,
-      rawActivities,
-      clientStatus
-    ) = obj
+  override def handle(builder: CacheSnapshotBuilder, obj: PresenceUpdateData, registry: CacheTypeRegistry): Unit = {
+    val PresenceUpdateData(partialUser, guildId, status, rawActivities, clientStatus) = obj
 
     registry.updateData(builder)(partialUser)
 
     for {
       guildHandler <- registry.getUpdater[Guild]
-      oldGuild <- builder.guildMap.get(guildId)
+      oldGuild     <- builder.guildMap.get(guildId)
     } {
 
       val presencesToUse = if (registry.hasUpdater[Presence]) {
         val newActivities = rawActivities.map(_.toActivity)
 
-        val newPresence =
-          Presence(partialUser.id, status, newActivities, clientStatus)
+        val newPresence = Presence(partialUser.id, status, newActivities, clientStatus)
         oldGuild.presences.updated(partialUser.id, newPresence)
       } else {
         oldGuild.presences
