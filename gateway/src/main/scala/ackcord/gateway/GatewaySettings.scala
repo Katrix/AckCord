@@ -25,6 +25,8 @@ package ackcord.gateway
 
 import java.time.Instant
 
+import scala.concurrent.duration._
+
 import ackcord.data.PresenceStatus
 import ackcord.data.raw.RawActivity
 
@@ -61,7 +63,8 @@ case class GatewaySettings(
     afk: Boolean = false,
     intents: GatewayIntents = GatewayIntents.AllNonPrivileged,
     compress: Compress = Compress.ZLibStreamCompress,
-    eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders
+    eventDecoders: GatewayProtocol.EventDecoders = GatewayProtocol.ackcordEventDecoders,
+    restartBackoff: () => FiniteDuration = () => 5.minutes
 ) {
   activities.foreach(_.requireCanSend())
 }

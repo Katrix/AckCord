@@ -107,8 +107,9 @@ object DiscordShard {
         Behaviors.stopped
 
       case GatewayHandlerTerminated =>
-        val restartTime = if (isRestarting) 1.second else 5.minutes
-        log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else "5 minutes"}")
+        val calculatedRestart = parameters.settings.restartBackoff()
+        val restartTime       = if (isRestarting) 1.second else calculatedRestart
+        log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else calculatedRestart}")
         timers.startSingleTimer("RestartGateway", CreateGateway, restartTime)
 
         shard(parameters, state.copy(isRestarting = false))
