@@ -107,8 +107,12 @@ object DiscordShard {
         Behaviors.stopped
 
       case GatewayHandlerTerminated =>
-        val restartTime = if (isRestarting) 1.second else 5.minutes
-        log.info(s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second" else "5 minutes"}")
+        val calculatedRestart = parameters.settings.restartBackoff()
+        val restartTime = if (isRestarting) 1.second else calculatedRestart
+        log.info(
+          s"Gateway handler shut down. Restarting in ${if (isRestarting) "1 second"
+          else calculatedRestart}"
+        )
         timers.startSingleTimer("RestartGateway", CreateGateway, restartTime)
 
         shard(parameters, state.copy(isRestarting = false))
@@ -154,7 +158,9 @@ object DiscordShard {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(shards: Seq[ActorRef[Command]])(implicit system: ActorSystem[Nothing]): Future[Done] =
+  def startShards(
+      shards: Seq[ActorRef[Command]]
+  )(implicit system: ActorSystem[Nothing]): Future[Done] =
     Source(shards.toIndexedSeq)
       .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
       .runForeach(shard => shard ! StartShard)
@@ -165,7 +171,7 @@ object DiscordShard {
   /** Send this to the client to log in. */
   case object StartShard extends Command
 
-  private case object CreateGateway            extends Command
+  private case object CreateGateway extends Command
   private case object GatewayHandlerTerminated extends Command
 
   /** Send this to log out and log in again this shard. */
@@ -187,7 +193,10 @@ object DiscordShard {
       .singleRequest(HttpRequest(uri = Routes.gateway.applied))
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
+          Source
+            .single(entity)
+            .via(RequestStreams.jsonDecode)
+            .runWith(Sink.head)
         case response =>
           response.entity.discardBytes()
           Future.failed(
@@ -230,17 +239,24 @@ object DiscordShard {
     * @return
     *   An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
+  def fetchWsGatewayWithShards(
+      token: String
+  )(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
     import akka.actor.typed.scaladsl.adapter._
     import system.executionContext
     val http = Http(system.toClassic)
     val auth = Authorization(BotAuthentication(token))
 
     http
-      .singleRequest(HttpRequest(uri = Routes.botGateway.applied, headers = List(auth)))
+      .singleRequest(
+        HttpRequest(uri = Routes.botGateway.applied, headers = List(auth))
+      )
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
+          Source
+            .single(entity)
+            .via(RequestStreams.jsonDecode)
+            .runWith(Sink.head)
         case response =>
           response.entity.discardBytes()
           Future.failed(
@@ -253,22 +269,27 @@ object DiscordShard {
           )
       }
       .flatMap { json =>
-        val c          = json.hcursor
+        val c = json.hcursor
         val startLimit = c.downField("session_start_limit")
         val res = for {
           gateway <- c.get[String]("url")
-          shards  <- c.get[Int]("shards")
+          shards <- c.get[Int]("shards")
           // TODO: Use these better
-          total          <- startLimit.get[Int]("total")
-          remaining      <- startLimit.get[Int]("remaining")
-          resetAfter     <- startLimit.get[Int]("reset_after")
+          total <- startLimit.get[Int]("total")
+          remaining <- startLimit.get[Int]("remaining")
+          resetAfter <- startLimit.get[Int]("reset_after")
           maxConcurrency <- startLimit.get[Int]("max_concurrency")
         } yield {
           http.system.log.info("Got WS gateway: {}", gateway)
           FetchWSGatewayBotInfo(
             gateway,
             shards,
-            SessionStartLimits(total, remaining, resetAfter.millis, maxConcurrency)
+            SessionStartLimits(
+              total,
+              remaining,
+              resetAfter.millis,
+              maxConcurrency
+            )
           )
         }
 
