@@ -155,9 +155,7 @@ object DiscordShard {
     * Sends a login message to all the shards in the sequence, while obeying
     * IDENTIFY ratelimits.
     */
-  def startShards(
-      shards: Seq[ActorRef[Command]]
-  )(implicit system: ActorSystem[Nothing]): Future[Done] =
+  def startShards(shards: Seq[ActorRef[Command]])(implicit system: ActorSystem[Nothing]): Future[Done] =
     Source(shards.toIndexedSeq)
       .throttle(shards.size, 5.seconds, 0, ThrottleMode.Shaping)
       .runForeach(shard => shard ! StartShard)
@@ -190,10 +188,7 @@ object DiscordShard {
       .singleRequest(HttpRequest(uri = Routes.gateway.applied))
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          Source
-            .single(entity)
-            .via(RequestStreams.jsonDecode)
-            .runWith(Sink.head)
+          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
         case response =>
           response.entity.discardBytes()
           Future.failed(
@@ -236,24 +231,17 @@ object DiscordShard {
     * @return
     *   An URI with the websocket gateway uri.
     */
-  def fetchWsGatewayWithShards(
-      token: String
-  )(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
+  def fetchWsGatewayWithShards(token: String)(implicit system: ActorSystem[Nothing]): Future[FetchWSGatewayBotInfo] = {
     import akka.actor.typed.scaladsl.adapter._
     import system.executionContext
     val http = Http(system.toClassic)
     val auth = Authorization(BotAuthentication(token))
 
     http
-      .singleRequest(
-        HttpRequest(uri = Routes.botGateway.applied, headers = List(auth))
-      )
+      .singleRequest(HttpRequest(uri = Routes.botGateway.applied, headers = List(auth)))
       .flatMap {
         case HttpResponse(StatusCodes.OK, _, entity, _) =>
-          Source
-            .single(entity)
-            .via(RequestStreams.jsonDecode)
-            .runWith(Sink.head)
+          Source.single(entity).via(RequestStreams.jsonDecode).runWith(Sink.head)
         case response =>
           response.entity.discardBytes()
           Future.failed(
@@ -281,12 +269,7 @@ object DiscordShard {
           FetchWSGatewayBotInfo(
             gateway,
             shards,
-            SessionStartLimits(
-              total,
-              remaining,
-              resetAfter.millis,
-              maxConcurrency
-            )
+            SessionStartLimits(total, remaining, resetAfter.millis, maxConcurrency)
           )
         }
 
